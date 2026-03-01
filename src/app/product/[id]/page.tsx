@@ -236,7 +236,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                  </div>
               </div>
 
-              {/* Generic Clinical Details */}
+              {/* Generic Clinical Details - MIRROR OF BRANDED */}
               <div className="bg-green-50/50 p-4 sm:p-8 rounded-[24px] sm:rounded-[40px] border border-green-100 space-y-4 sm:space-y-8 flex-1">
                  <section>
                    <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-green-600 mb-2 border-l-4 border-green-600 pl-2">Composition</h4>
@@ -244,16 +244,27 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                    <p className="text-[8px] sm:text-xs text-green-600/60 mt-1">{genericSubstitute.packSize}</p>
                  </section>
                  <section>
-                   <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-green-600 mb-2 border-l-4 border-green-600 pl-2">Clinical Bio-Equivalence</h4>
-                   <p className="text-[9px] sm:text-sm text-gray-600 font-medium leading-relaxed">{genericSubstitute.description}</p>
+                   <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-green-600 mb-2 border-l-4 border-green-600 pl-2">Description</h4>
+                   <p className="text-[9px] sm:text-sm text-gray-600 font-medium leading-relaxed">{genericSubstitute.description || product.description}</p>
                  </section>
                  <section>
-                   <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-green-600 mb-2 border-l-4 border-green-600 pl-2">Clinical Benefits</h4>
+                   <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-green-600 mb-2 border-l-4 border-green-600 pl-2">Uses</h4>
                    <ul className="space-y-1 sm:space-y-3">
-                     {genericSubstitute.uses.map((use, i) => (
+                     {(genericSubstitute.uses.length > 0 ? genericSubstitute.uses : product.uses).map((use, i) => (
                        <li key={i} className="flex items-start gap-1 sm:gap-2 text-[9px] sm:text-xs font-bold text-gray-700">
                          <CheckCircle2 className="w-3 h-3 text-green-600 shrink-0 mt-0.5" />
                          {use}
+                       </li>
+                     ))}
+                   </ul>
+                 </section>
+                 <section>
+                   <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-green-600 mb-2 border-l-4 border-green-600 pl-2">Side Effects</h4>
+                   <ul className="space-y-1 sm:space-y-3">
+                     {(genericSubstitute.sideEffects.length > 0 ? genericSubstitute.sideEffects : product.sideEffects).map((se, i) => (
+                       <li key={i} className="flex items-start gap-1 sm:gap-2 text-[9px] sm:text-xs font-bold text-gray-700">
+                         <AlertTriangle className="w-3 h-3 text-orange-400 shrink-0 mt-0.5" />
+                         {se}
                        </li>
                      ))}
                    </ul>
@@ -284,7 +295,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </section>
 
-        {/* Visual Medicine Monograph Image Simulation */}
+        {/* Visual Medicine Monograph */}
         <section className="mt-8 mx-2 bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
            <div className="flex items-center gap-3 mb-6">
               <FileText className="w-6 h-6 text-primary" />
