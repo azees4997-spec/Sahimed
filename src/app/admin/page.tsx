@@ -57,7 +57,7 @@ export default function RebuiltAdminPanel() {
   const [password, setPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
-  // 1. Strict Role Verification
+  // 1. Strict Role Verification - THE GATE
   const adminRoleRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, 'roles_admin', user.uid);
@@ -67,6 +67,7 @@ export default function RebuiltAdminPanel() {
   const isVerifiedAdmin = !!adminRole;
 
   // 2. Data Queries - ONLY initiated if isVerifiedAdmin is true to prevent permission errors
+  // We use the gate to ensure these are null (not queried) until authorized
   const medsQuery = useMemoFirebase(() => {
     if (!db || !isVerifiedAdmin) return null;
     return query(collection(db, 'medicines'), orderBy('name', 'asc'));
@@ -114,9 +115,9 @@ export default function RebuiltAdminPanel() {
     if (!db || !isVerifiedAdmin) return;
     
     const initialCats = [
-      { id: 'cat_chronic', name: 'Chronic Care', description: 'Long-term medication management' },
-      { id: 'cat_wellness', name: 'Wellness', description: 'Vitamins and health supplements' },
-      { id: 'cat_acute', name: 'Acute Care', description: 'Short-term illness relief' }
+      { id: 'cat_diabetes', name: 'Diabetes', description: 'Blood sugar management and insulin support.' },
+      { id: 'cat_heart', name: 'Heart Care', description: 'Cholesterol control and cardiac health.' },
+      { id: 'cat_stomach', name: 'Stomach Care', description: 'Digestive relief and acid management.' }
     ];
 
     const initialMeds = [
@@ -126,9 +127,9 @@ export default function RebuiltAdminPanel() {
         price: 1250,
         saltComposition: "Sitagliptin + Metformin",
         manufacturer: "MSD",
-        categoryId: "cat_chronic",
-        category: "Chronic Care",
-        description: "Premium diabetic control medication.",
+        categoryId: "cat_diabetes",
+        category: "Diabetes",
+        description: "Premium branded diabetic control medication.",
         isGeneric: false,
         dosageForm: "Tablet",
         strength: "50/500mg",
@@ -141,9 +142,9 @@ export default function RebuiltAdminPanel() {
         price: 240,
         saltComposition: "Sitagliptin + Metformin",
         manufacturer: "HealthLink Labs",
-        categoryId: "cat_chronic",
-        category: "Chronic Care",
-        description: "Bio-equivalent generic alternative.",
+        categoryId: "cat_diabetes",
+        category: "Diabetes",
+        description: "Bio-equivalent generic alternative at significant savings.",
         isGeneric: true,
         dosageForm: "Tablet",
         strength: "50/500mg",
@@ -525,6 +526,7 @@ function CategoryForm({ initialData, onSave }: { initialData?: any, onSave: (dat
 }
 
 function FulfillmentDetail({ order, db }: { order: any, db: any }) {
+  const { toast } = useToast();
   const updateStatus = (s: string) => {
     if (order.userId) {
       const ref = doc(db, 'userProfiles', order.userId, 'orders', order.id);
