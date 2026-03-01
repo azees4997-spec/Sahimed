@@ -20,7 +20,12 @@ import {
   Tags,
   Layers,
   Search,
-  AlertTriangle
+  AlertTriangle,
+  ShoppingBag,
+  Truck,
+  CheckCircle2,
+  Clock,
+  Eye
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
@@ -35,7 +40,7 @@ import {
   deleteDocumentNonBlocking,
   setDocumentNonBlocking
 } from '@/firebase';
-import { doc, collection, query, orderBy } from 'firebase/firestore';
+import { doc, collection, query, orderBy, collectionGroup } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -50,7 +55,7 @@ export default function AdminDashboard() {
   const auth = useAuth();
   const { toast } = useToast();
   
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'categories'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'categories' | 'orders'>('dashboard');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localAuthLoading, setLocalAuthLoading] = useState(false);
@@ -79,6 +84,13 @@ export default function AdminDashboard() {
     return query(collection(db, 'categories'), orderBy('name', 'asc'));
   }, [db, isAdmin]);
   const { data: categories, isLoading: isCatsLoading } = useCollection(categoriesQuery);
+
+  // Orders Collection Group (Global Master)
+  const allOrdersQuery = useMemoFirebase(() => {
+    if (!db || !isAdmin) return null;
+    return query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc'));
+  }, [db, isAdmin]);
+  const { data: allOrders, isLoading: isOrdersLoading } = useCollection(allOrdersQuery);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -290,14 +302,21 @@ export default function AdminDashboard() {
                 onClick={() => setActiveTab('products')}
                 className="rounded-full gap-2 font-bold px-6"
               >
-                <Package className="w-4 h-4" /> Medicine Master
+                <Package className="w-4 h-4" /> Medicines
+              </Button>
+              <Button 
+                variant={activeTab === 'orders' ? 'secondary' : 'ghost'} 
+                onClick={() => setActiveTab('orders')}
+                className="rounded-full gap-2 font-bold px-6"
+              >
+                <ShoppingBag className="w-4 h-4" /> Fulfillment
               </Button>
               <Button 
                 variant={activeTab === 'categories' ? 'secondary' : 'ghost'} 
                 onClick={() => setActiveTab('categories')}
                 className="rounded-full gap-2 font-bold px-6"
               >
-                <Tags className="w-4 h-4" /> Category Master
+                <Tags className="w-4 h-4" /> Categories
               </Button>
             </nav>
           </div>
@@ -317,14 +336,23 @@ export default function AdminDashboard() {
               <p className="text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">Pharmacological orchestration center</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <Card className="rounded-[40px] border-none shadow-xl bg-white p-10 flex flex-col items-center text-center group hover:shadow-2xl transition-all">
                 <div className="w-20 h-20 bg-primary/10 rounded-[32px] flex items-center justify-center mb-6">
                   <Package className="w-10 h-10 text-primary" />
                 </div>
-                <CardTitle className="text-2xl font-black mb-2">Product Master</CardTitle>
-                <CardDescription className="mb-6">Manage pharmacological inventory and generic equivalence.</CardDescription>
-                <Button onClick={() => setActiveTab('products')} variant="outline" className="rounded-full h-12 px-8 font-bold border-2">Manage Medicines</Button>
+                <CardTitle className="text-2xl font-black mb-2">Medicine Master</CardTitle>
+                <CardDescription className="mb-6 text-xs">Manage catalog and generic equivalence.</CardDescription>
+                <Button onClick={() => setActiveTab('products')} variant="outline" className="rounded-full h-12 px-8 font-bold border-2 w-full">Manage</Button>
+              </Card>
+
+              <Card className="rounded-[40px] border-none shadow-xl bg-white p-10 flex flex-col items-center text-center group hover:shadow-2xl transition-all">
+                <div className="w-20 h-20 bg-green-50 rounded-[32px] flex items-center justify-center mb-6">
+                  <ShoppingBag className="w-10 h-10 text-green-500" />
+                </div>
+                <CardTitle className="text-2xl font-black mb-2">Orders Master</CardTitle>
+                <CardDescription className="mb-6 text-xs">Global fulfillment and order tracking.</CardDescription>
+                <Button onClick={() => setActiveTab('orders')} variant="outline" className="rounded-full h-12 px-8 font-bold border-2 w-full">Manage</Button>
               </Card>
 
               <Card className="rounded-[40px] border-none shadow-xl bg-white p-10 flex flex-col items-center text-center group hover:shadow-2xl transition-all">
@@ -332,8 +360,8 @@ export default function AdminDashboard() {
                   <Tags className="w-10 h-10 text-orange-400" />
                 </div>
                 <CardTitle className="text-2xl font-black mb-2">Category Master</CardTitle>
-                <CardDescription className="mb-6">Define therapeutic hubs and disease-specific clusters.</CardDescription>
-                <Button onClick={() => setActiveTab('categories')} variant="outline" className="rounded-full h-12 px-8 font-bold border-2">Manage Categories</Button>
+                <CardDescription className="mb-6 text-xs">Define therapeutic hubs and clusters.</CardDescription>
+                <Button onClick={() => setActiveTab('categories')} variant="outline" className="rounded-full h-12 px-8 font-bold border-2 w-full">Manage</Button>
               </Card>
 
               <Card className="rounded-[40px] border-none shadow-xl bg-white p-10 flex flex-col items-center text-center group hover:shadow-2xl transition-all">
@@ -341,9 +369,9 @@ export default function AdminDashboard() {
                   <Database className="w-10 h-10 text-gray-400" />
                 </div>
                 <CardTitle className="text-2xl font-black mb-2">Master Seed</CardTitle>
-                <CardDescription className="mb-6">Initialize core collections with clinical-grade catalog data.</CardDescription>
-                <Button onClick={seedMasterData} className="rounded-full h-12 px-10 font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">
-                  Seed Database
+                <CardDescription className="mb-6 text-xs">Initialize core clinical-grade data.</CardDescription>
+                <Button onClick={seedMasterData} className="rounded-full h-12 px-10 font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20 w-full">
+                  Seed DB
                 </Button>
               </Card>
             </div>
@@ -352,7 +380,7 @@ export default function AdminDashboard() {
           <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-4xl font-black font-headline text-gray-900">Product Master</h2>
+                <h2 className="text-4xl font-black font-headline text-gray-900">Medicine Master</h2>
                 <p className="text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">Pharmacological catalog management</p>
               </div>
               <div className="flex items-center gap-4">
@@ -436,6 +464,74 @@ export default function AdminDashboard() {
               </div>
             </Card>
           </div>
+        ) : activeTab === 'orders' ? (
+          <div className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-4xl font-black font-headline text-gray-900">Orders Master</h2>
+                <p className="text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">Global fulfillment tracking</p>
+              </div>
+            </div>
+
+            <Card className="rounded-[40px] border-none shadow-xl overflow-hidden bg-white">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 text-[11px] font-black uppercase text-gray-400 tracking-widest">
+                      <th className="px-10 py-6">Order ID & Date</th>
+                      <th className="px-10 py-6">Customer Context</th>
+                      <th className="px-10 py-6">Total Amount</th>
+                      <th className="px-10 py-6">Status</th>
+                      <th className="px-10 py-6 text-right">Fulfillment</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {isOrdersLoading ? (
+                      <tr><td colSpan={5} className="p-32 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
+                    ) : allOrders?.map((order: any) => (
+                      <tr key={order.id} className="hover:bg-gray-50/50 group">
+                        <td className="px-10 py-8">
+                          <p className="font-black text-gray-900">{order.id.substring(0, 8).toUpperCase()}</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase">
+                            {order.orderDate?.toDate ? order.orderDate.toDate().toLocaleDateString() : 'Processing...'}
+                          </p>
+                        </td>
+                        <td className="px-10 py-8">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[9px] font-black uppercase border-gray-200">UID: {order.userId?.substring(0, 6)}</Badge>
+                          </div>
+                        </td>
+                        <td className="px-10 py-8">
+                          <p className="font-black text-primary text-lg">₹{order.totalAmount}</p>
+                          <p className="text-[10px] text-gray-400 font-bold">{order.items?.length || 0} Line Items</p>
+                        </td>
+                        <td className="px-10 py-8">
+                          <Badge className={`rounded-full px-4 py-1 text-[9px] font-black uppercase border-none ${
+                            order.status === 'Delivered' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                          }`}>
+                            {order.status}
+                          </Badge>
+                        </td>
+                        <td className="px-10 py-8 text-right">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="rounded-full">
+                                <Eye className="w-5 h-5 text-gray-400 hover:text-primary transition-colors" />
+                              </Button>
+                            </DialogTrigger>
+                            <OrderFulfillmentDialog order={order} db={db} />
+                          </Dialog>
+                        </td>
+                      </tr>
+                    ))}
+                    {!isOrdersLoading && allOrders?.length === 0 && (
+                      <tr><td colSpan={5} className="p-32 text-center font-bold text-gray-400 italic">No orders recorded in the system yet.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </div>
         ) : (
           <div className="space-y-8">
              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -485,6 +581,60 @@ export default function AdminDashboard() {
         )}
       </main>
     </div>
+  );
+}
+
+function OrderFulfillmentDialog({ order, db }: { order: any, db: any }) {
+  const updateStatus = (newStatus: string) => {
+    // Note: The path to update needs the full path including userId
+    // However, in a Collection Group query, we can use the ref directly if available
+    // But since order here is from useCollection, it has an ID but we might need the full path
+    // For now, let's assume we can update it via the userId reference if it's in the order object
+    if (order.userId) {
+      updateDocumentNonBlocking(doc(db, 'userProfiles', order.userId, 'orders', order.id), { status: newStatus });
+    }
+  };
+
+  return (
+    <DialogContent className="max-w-3xl rounded-[40px] border-none shadow-2xl p-0 overflow-hidden">
+      <DialogHeader className="p-10 bg-primary text-white">
+        <DialogTitle className="text-3xl font-black">Fulfillment Detail</DialogTitle>
+        <DialogDescription className="text-white/70">Order ID: {order.id.toUpperCase()}</DialogDescription>
+      </DialogHeader>
+      <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto bg-[#F8F8F8]">
+        <div className="grid grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Order Items</h4>
+            <div className="space-y-4">
+              {order.items?.map((item: any, i: number) => (
+                <div key={i} className="bg-white p-5 rounded-3xl border flex justify-between items-center shadow-sm">
+                  <div>
+                    <p className="font-black text-gray-900 text-sm">{item.name}</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Quantity: {item.quantity}</p>
+                  </div>
+                  <p className="font-black text-primary">₹{item.unitPrice * item.quantity}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="space-y-6">
+             <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Order Actions</h4>
+             <div className="bg-white p-8 rounded-[40px] border space-y-4 shadow-sm">
+               <div className="flex items-center gap-3 mb-4">
+                 <Clock className="w-5 h-5 text-orange-400" />
+                 <p className="text-xs font-bold text-gray-600">Current Status: <span className="font-black text-gray-900 uppercase">{order.status}</span></p>
+               </div>
+               <div className="grid grid-cols-1 gap-3">
+                 <Button onClick={() => updateStatus('Processing')} variant="outline" className="rounded-full h-12 border-2 font-black uppercase text-[10px] tracking-widest">Mark as Processing</Button>
+                 <Button onClick={() => updateStatus('Shipped')} variant="outline" className="rounded-full h-12 border-2 font-black uppercase text-[10px] tracking-widest">Mark as Shipped</Button>
+                 <Button onClick={() => updateStatus('Delivered')} className="rounded-full h-12 bg-green-600 hover:bg-green-700 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-green-500/20">Mark as Delivered</Button>
+               </div>
+             </div>
+          </div>
+        </div>
+      </div>
+    </DialogContent>
   );
 }
 

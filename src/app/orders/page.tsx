@@ -5,35 +5,22 @@ import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Package, Truck, CheckCircle2, ChevronRight, MapPin, Clock, ArrowLeft } from 'lucide-react';
+import { Package, Truck, CheckCircle2, ChevronRight, MapPin, Clock, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-
-const DUMMY_ORDERS = [
-  {
-    id: 'ORD-8821',
-    date: 'Oct 24, 2023',
-    status: 'Delivered',
-    total: '₹1,450',
-    items: [
-      { name: 'Janumet 50mg/500mg', qty: 1, price: '₹1,250' },
-      { name: 'Pantoprazole 40mg', qty: 1, price: '₹200' }
-    ],
-    address: 'B-402, Sunshine Apts, Worli, Mumbai'
-  },
-  {
-    id: 'ORD-8905',
-    date: 'Oct 28, 2023',
-    status: 'In Transit',
-    total: '₹535',
-    items: [
-      { name: 'Atorvastatin Generic 20mg', qty: 2, price: '₹170' },
-      { name: 'Standard Gauze Roll', qty: 3, price: '₹365' }
-    ],
-    address: 'B-402, Sunshine Apts, Worli, Mumbai'
-  }
-];
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy } from 'firebase/firestore';
 
 export default function OrdersPage() {
+  const { user } = useUser();
+  const db = useFirestore();
+
+  const ordersQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return query(collection(db, 'userProfiles', user.uid, 'orders'), orderBy('orderDate', 'desc'));
+  }, [db, user]);
+
+  const { data: orders, isLoading } = useCollection(ordersQuery);
+
   return (
     <div className="min-h-screen bg-[#F8F8F8]">
       <Navbar />
@@ -49,8 +36,13 @@ export default function OrdersPage() {
         </div>
 
         <div className="space-y-6">
-          {DUMMY_ORDERS.length > 0 ? (
-            DUMMY_ORDERS.map((order) => (
+          {isLoading ? (
+            <div className="text-center py-24">
+              <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em]">Retrieving Clinical Records...</p>
+            </div>
+          ) : orders && orders.length > 0 ? (
+            orders.map((order) => (
               <Card key={order.id} className="rounded-[40px] border-none shadow-sm overflow-hidden bg-white hover:shadow-xl transition-all duration-300 group">
                 <CardHeader className="p-8 border-b bg-gray-50/50">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -61,8 +53,8 @@ export default function OrdersPage() {
                         {order.status === 'Delivered' ? <CheckCircle2 className="w-6 h-6" /> : <Truck className="w-6 h-6 animate-pulse" />}
                       </div>
                       <div>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Order ID</p>
-                        <h3 className="font-black text-lg text-gray-900">{order.id}</h3>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Order Reference</p>
+                        <h3 className="font-black text-lg text-gray-900">{order.id.substring(0, 8).toUpperCase()}</h3>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -71,7 +63,9 @@ export default function OrdersPage() {
                       }`}>
                         {order.status}
                       </Badge>
-                      <span className="text-sm font-bold text-gray-400">{order.date}</span>
+                      <span className="text-sm font-bold text-gray-400">
+                        {order.orderDate?.toDate ? order.orderDate.toDate().toLocaleDateString() : 'Syncing...'}
+                      </span>
                     </div>
                   </div>
                 </CardHeader>
@@ -80,19 +74,19 @@ export default function OrdersPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     {/* Items List */}
                     <div className="space-y-4">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Items Summary</p>
-                      {order.items.map((item, i) => (
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Prescription Breakdown</p>
+                      {order.items?.map((item: any, i: number) => (
                         <div key={i} className="flex justify-between items-center group/item">
                           <div className="flex flex-col">
                             <span className="font-bold text-gray-900 group-hover/item:text-primary transition-colors">{item.name}</span>
-                            <span className="text-xs text-gray-400">Quantity: {item.qty}</span>
+                            <span className="text-xs text-gray-400">Quantity: {item.quantity}</span>
                           </div>
-                          <span className="font-black text-gray-900">{item.price}</span>
+                          <span className="font-black text-gray-900">₹{item.unitPrice * item.quantity}</span>
                         </div>
                       ))}
                       <div className="pt-4 border-t flex justify-between items-baseline">
-                        <span className="text-sm font-black text-gray-900 uppercase tracking-widest">Total Amount Paid</span>
-                        <span className="text-2xl font-black text-primary">{order.total}</span>
+                        <span className="text-sm font-black text-gray-900 uppercase tracking-widest">Total Paid</span>
+                        <span className="text-2xl font-black text-primary">₹{order.totalAmount}</span>
                       </div>
                     </div>
 
@@ -102,22 +96,22 @@ export default function OrdersPage() {
                           <div className="flex items-start gap-3 mb-4">
                             <MapPin className="w-4 h-4 text-primary shrink-0 mt-1" />
                             <div>
-                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Shipping to</p>
-                              <p className="text-xs font-bold text-gray-700 leading-relaxed">{order.address}</p>
+                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Delivering to Hub</p>
+                              <p className="text-xs font-bold text-gray-700 leading-relaxed">Verified Delivery Address</p>
                             </div>
                           </div>
                           <div className="flex items-start gap-3">
                             <Clock className="w-4 h-4 text-orange-400 shrink-0 mt-1" />
                             <div>
                               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Estimated Arrival</p>
-                              <p className="text-xs font-bold text-gray-700">Delivered within 3 business days</p>
+                              <p className="text-xs font-bold text-gray-700">Standard Healthcare Logistics (2-3 days)</p>
                             </div>
                           </div>
                        </div>
                        
                        <div className="flex gap-3">
-                          <Button className="flex-1 rounded-full h-12 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">Reorder All</Button>
-                          <Button variant="outline" className="flex-1 rounded-full h-12 font-black uppercase text-[10px] tracking-widest border-2">Need Help?</Button>
+                          <Button className="flex-1 rounded-full h-12 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">Refill All</Button>
+                          <Button variant="outline" className="flex-1 rounded-full h-12 font-black uppercase text-[10px] tracking-widest border-2">Report Issue</Button>
                        </div>
                     </div>
                   </div>
@@ -129,10 +123,10 @@ export default function OrdersPage() {
                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                  <Package className="w-10 h-10 text-gray-200" />
                </div>
-               <h2 className="text-2xl font-black mb-2">No orders yet</h2>
-               <p className="text-gray-400 font-bold mb-8">Your health journeys will appear here.</p>
+               <h2 className="text-2xl font-black mb-2 uppercase tracking-tight">No health journeys recorded</h2>
+               <p className="text-gray-400 font-bold mb-8">Your future orders will appear here for tracking.</p>
                <Link href="/">
-                 <Button className="rounded-full px-12 h-14 font-black text-lg">Start Shopping</Button>
+                 <Button className="rounded-full px-12 h-14 font-black text-lg shadow-xl shadow-primary/20 uppercase tracking-widest">Start Shopping</Button>
                </Link>
             </div>
           )}

@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from 'react';
@@ -49,6 +50,7 @@ export default function CheckoutPage() {
     };
 
     try {
+      // Path: /userProfiles/{userId}/orders
       const orderRef = collection(db, 'userProfiles', user.uid, 'orders');
       addDocumentNonBlocking(orderRef, orderData);
       
