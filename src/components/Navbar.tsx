@@ -2,7 +2,7 @@
 "use client"
 
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Upload, Menu, MapPin, ChevronDown, LocateFixed, Loader2, Home, Package, Search as SearchIcon } from 'lucide-react';
+import { Search, ShoppingCart, User, Upload, MapPin, ChevronDown, LocateFixed, Loader2, Home, Package, Search as SearchIcon } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,7 +59,7 @@ export default function Navbar() {
           try {
             const lat = position.coords.latitude.toFixed(4);
             const lng = position.coords.longitude.toFixed(4);
-            setLocation(`Current (Lat: ${lat}, Lng: ${lng})`);
+            setLocation(`My Location (${lat}, ${lng})`);
           } catch (e) {
             console.error(e);
           } finally {
@@ -69,17 +69,17 @@ export default function Navbar() {
         (error) => {
           console.error(error);
           setIsLocating(false);
-          alert("Could not detect location. Please check browser permissions.");
+          alert("Please enable location permissions.");
         },
         { enableHighAccuracy: true }
       );
     } else {
       setIsLocating(false);
-      alert("Geolocation is not supported by your browser.");
+      alert("Location not supported.");
     }
   };
 
-  const manualLocations = ["Mumbai, MH", "Delhi, DL", "Bangalore, KA", "Hyderabad, TS"];
+  const manualLocations = ["Mumbai, MH", "Delhi, DL", "Bangalore, KA"];
 
   const NavItem = ({ href, icon: Icon, label, active }: { href: string, icon: any, label: string, active: boolean }) => (
     <Link href={href} className={`flex flex-col items-center justify-center gap-1 transition-all ${active ? 'text-primary' : 'text-gray-400'}`}>
@@ -90,52 +90,49 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-white border-b shadow-sm safe-top">
+      <nav className="sticky top-0 z-50 bg-white border-b safe-top">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Top Bar */}
           <div className="flex justify-between items-center h-14 md:h-20">
-            <div className="flex items-center gap-2 sm:gap-6">
-              <Link href="/" className="flex items-center gap-2 shrink-0">
-                <div className="bg-primary p-1 rounded-lg sm:p-1.5 sm:rounded-xl shadow-lg shadow-primary/20">
+            <div className="flex items-center gap-3 sm:gap-6">
+              <Link href="/" className="flex items-center gap-2">
+                <div className="bg-primary p-1.5 rounded-xl shadow-lg shadow-primary/20">
                   <div className="text-white font-bold text-sm sm:text-xl tracking-tighter">HL</div>
                 </div>
-                <span className="hidden sm:block font-black text-xl text-primary font-headline tracking-tight">
-                  HealthLink <span className="text-gray-300">Pharmacy</span>
-                </span>
+                <span className="hidden sm:block font-black text-xl text-primary font-headline tracking-tight">HealthLink</span>
               </Link>
 
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-1 text-[9px] sm:text-xs font-black text-gray-500 hover:text-primary p-2 h-auto rounded-xl bg-gray-50 border border-gray-100 uppercase tracking-widest max-w-[100px] sm:max-w-none">
-                    <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary shrink-0" />
+                  <Button variant="ghost" className="flex items-center gap-1 text-[10px] font-black text-gray-500 hover:text-primary p-2 h-auto rounded-xl bg-gray-50 border border-gray-100 uppercase tracking-widest max-w-[120px] sm:max-w-none">
+                    <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
                     <span className="truncate">{location}</span>
                     <ChevronDown className="w-3 h-3 shrink-0" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-72 p-4 rounded-3xl shadow-2xl border-none animate-in fade-in zoom-in-95 duration-200">
+                <PopoverContent className="w-72 p-4 rounded-3xl shadow-2xl border-none">
                   <div className="space-y-4">
                     <Button 
                       onClick={handleGeoLocation} 
                       disabled={isLocating}
-                      className="w-full justify-start gap-3 h-14 rounded-2xl bg-primary/5 text-primary hover:bg-primary/10 border-none font-black text-[10px] uppercase tracking-widest"
+                      className="w-full justify-start gap-3 h-14 rounded-2xl bg-primary/5 text-primary hover:bg-primary/10 font-black text-[10px] uppercase tracking-widest"
                     >
                       {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <LocateFixed className="w-5 h-5" />}
-                      One-Tap GPS Detect
+                      Use GPS Location
                     </Button>
                     <div className="pt-2">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 mb-3">Popular Regions</p>
-                      <div className="grid grid-cols-1 gap-1">
-                        {manualLocations.map((loc) => (
-                          <Button 
-                            key={loc} 
-                            variant="ghost" 
-                            className="w-full justify-start text-sm h-12 rounded-xl hover:bg-gray-50 font-bold px-4" 
-                            onClick={() => setLocation(loc)}
-                          >
-                            <MapPin className="w-4 h-4 mr-2 text-gray-300" />
-                            {loc}
-                          </Button>
-                        ))}
-                      </div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 mb-3">Saved Hubs</p>
+                      {manualLocations.map((loc) => (
+                        <Button 
+                          key={loc} 
+                          variant="ghost" 
+                          className="w-full justify-start text-sm h-12 rounded-xl hover:bg-gray-50 font-bold" 
+                          onClick={() => setLocation(loc)}
+                        >
+                          <MapPin className="w-4 h-4 mr-2 text-gray-300" />
+                          {loc}
+                        </Button>
+                      ))}
                     </div>
                   </div>
                 </PopoverContent>
@@ -143,34 +140,35 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-1 sm:gap-3">
-              <Link href="/cart" className="relative p-2 sm:p-2.5 hover:bg-gray-100 rounded-2xl transition-colors">
-                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
+              <Link href="/cart" className="relative p-2.5 hover:bg-gray-100 rounded-2xl">
+                <ShoppingCart className="w-6 h-6 text-gray-700" />
                 {totalItems > 0 && (
-                  <span className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 bg-accent text-white text-[9px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-white animate-bounce">
+                  <span className="absolute top-1.5 right-1.5 bg-accent text-white text-[9px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-white">
                     {totalItems}
                   </span>
                 )}
               </Link>
-              <Link href="/profile" className="p-2 sm:p-2.5 hover:bg-gray-100 rounded-2xl transition-colors">
-                <User className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
+              <Link href="/profile" className="hidden sm:block p-2.5 hover:bg-gray-100 rounded-2xl">
+                <User className="w-6 h-6 text-gray-700" />
               </Link>
             </div>
           </div>
 
+          {/* Persistent Search Bar */}
           <div className="pb-3 md:pb-4 relative" ref={suggestionRef}>
             <form onSubmit={handleSearch} className="relative group">
               <Input
                 type="text"
-                placeholder="Search medicines, composition, generic..."
-                className="w-full pl-10 pr-4 py-2 rounded-full border-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all bg-gray-100 h-10 sm:h-12 font-bold text-sm"
+                placeholder="Search medicines, salts, generic alternatives..."
+                className="w-full pl-12 pr-4 py-2 rounded-full border-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all bg-gray-100 h-12 sm:h-14 font-bold text-sm shadow-inner"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 group-focus-within:text-primary transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-primary transition-colors" />
             </form>
 
             {suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-gray-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
                 {suggestions.map((p) => (
                   <Link 
                     key={p.id} 
@@ -179,19 +177,19 @@ export default function Navbar() {
                       setSuggestions([]);
                       setSearch('');
                     }}
-                    className="flex items-center gap-4 p-3 hover:bg-gray-50 transition-colors border-b last:border-none"
+                    className="flex items-center gap-4 p-4 hover:bg-gray-50 border-b border-gray-50 last:border-none"
                   >
-                    <div className="w-12 h-12 relative bg-gray-50 rounded-lg overflow-hidden shrink-0">
-                      <img src={p.imageUrl} alt={p.name} className="object-contain p-1" />
+                    <div className="w-12 h-12 relative bg-gray-50 rounded-xl overflow-hidden shrink-0">
+                      <img src={p.imageUrl} alt={p.name} className="object-contain p-2" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-black text-xs text-gray-900 truncate">{p.name}</p>
-                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight truncate">{p.saltComposition}</p>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight truncate">{p.saltComposition}</p>
                     </div>
                     {p.isGeneric ? (
-                      <Badge className="ml-auto bg-green-50 text-green-700 border-none text-[8px] h-5 font-black uppercase tracking-tighter px-2">GENERIC</Badge>
+                      <Badge className="ml-auto bg-green-50 text-green-700 border-none text-[8px] font-black uppercase px-2 h-6">GENERIC</Badge>
                     ) : (
-                      <Badge variant="outline" className="ml-auto text-[8px] h-5 font-black uppercase tracking-tighter px-2 text-gray-400 border-gray-200">BRANDED</Badge>
+                      <Badge variant="outline" className="ml-auto text-[8px] font-black uppercase px-2 h-6 text-gray-400">BRANDED</Badge>
                     )}
                   </Link>
                 ))}
@@ -201,13 +199,14 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t safe-bottom z-50 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+      {/* Mobile Navigation */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t safe-bottom z-50 shadow-2xl">
         <div className="flex justify-around items-center h-16">
           <NavItem href="/" icon={Home} label="Home" active={pathname === '/'} />
           <NavItem href="/search" icon={SearchIcon} label="Explore" active={pathname === '/search'} />
-          <Link href="/prescription" className="-mt-10">
-            <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white shadow-xl shadow-primary/30 border-4 border-white active:scale-90 transition-transform">
-              <Upload className="w-6 h-6" />
+          <Link href="/prescription" className="-mt-12">
+            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white shadow-2xl shadow-primary/40 border-4 border-white active:scale-90 transition-all">
+              <Upload className="w-7 h-7" />
             </div>
           </Link>
           <NavItem href="/orders" icon={Package} label="Orders" active={pathname === '/orders'} />
