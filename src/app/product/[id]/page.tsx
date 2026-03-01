@@ -1,7 +1,7 @@
 
 "use client"
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
@@ -36,12 +36,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { addToCart, cart, updateQuantity } = useCart();
 
   // Fetch Main Product
-  const productRef = useMemoFirebase(() => doc(db, 'medicines', id), [db, id]);
+  const productRef = useMemoFirebase(() => {
+    if (!db || !id) return null;
+    return doc(db, 'medicines', id);
+  }, [db, id]);
+  
   const { data: product, isLoading: productLoading } = useDoc(productRef);
 
   // Fetch Generic Alternative (Bio-equivalent)
   const genericQuery = useMemoFirebase(() => {
-    if (!product || product.isGeneric) return null;
+    if (!db || !product || product.isGeneric) return null;
     return query(
       collection(db, 'medicines'),
       where('saltComposition', '==', product.saltComposition),
@@ -49,29 +53,35 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       limit(1)
     );
   }, [db, product]);
+  
   const { data: genericAlternatives } = useCollection(genericQuery);
   const genericSubstitute = genericAlternatives?.[0];
 
   // Suggested Products (Same Category)
   const suggestedQuery = useMemoFirebase(() => {
-    if (!product) return null;
+    if (!db || !product) return null;
     return query(
       collection(db, 'medicines'),
       where('category', '==', product.category),
       limit(5)
     );
   }, [db, product]);
+  
   const { data: suggestedProducts } = useCollection(suggestedQuery);
 
   if (productLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8]">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 animate-spin text-primary" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading Clinical Data...</p>
+        </div>
       </div>
     );
   }
 
-  if (!product) notFound();
+  if (!product && !productLoading) notFound();
+  if (!product) return null;
 
   const handleAdd = (p: any) => {
     addToCart(p);
@@ -82,7 +92,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   // Unit Economics helper
   const getUnitPrice = (p: any) => {
-    const packSize = p.packSize || "10 tablets";
+    const packSize = p.packSize || "10 units";
     const match = packSize.match(/(\d+)/);
     const count = match ? parseInt(match[0]) : 10;
     return (p.price / count).toFixed(2);
@@ -102,7 +112,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
             <span>{product.category}</span>
             <ArrowRight className="w-3 h-3" />
-            <span className="text-primary">{product.name}</span>
+            <span className="text-primary truncate max-w-[150px]">{product.name}</span>
           </div>
         </div>
 
@@ -124,12 +134,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
         {/* Side-by-Side Comparison Grid */}
         <div className="grid grid-cols-2 gap-3 sm:gap-8">
-          {/* COLUMN 1: BRANDED */}
+          {/* COLUMN 1: CURRENT */}
           <div className="space-y-4 sm:space-y-6">
             <div className="bg-white rounded-[32px] sm:rounded-[48px] p-4 sm:p-10 shadow-sm border border-gray-100 flex flex-col h-full relative group">
                <div className="mb-4">
                   <Badge variant="outline" className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest bg-gray-50 border-gray-100 px-3 py-1 rounded-full text-gray-400">
-                    {product.isGeneric ? "Generic Item" : "Branded Item"}
+                    {product.isGeneric ? "Verified Generic" : "Selected Item"}
                   </Badge>
                </div>
                <div className="flex flex-col items-center text-center gap-4 flex-1">
@@ -168,23 +178,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
             <div className="bg-white p-6 sm:p-10 rounded-[32px] sm:rounded-[48px] border border-gray-100 space-y-8">
                <section>
-                 <h4 className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3 border-l-4 border-primary pl-3">Clinical Uses</h4>
+                 <h4 className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3 border-l-4 border-primary pl-3">Clinical Profile</h4>
+                 <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium mb-4">{product.description}</p>
                  <ul className="space-y-3">
-                   {product.uses?.map((use: string, i: number) => (
+                   {(product.uses || ["Used for " + product.category]).map((use: string, i: number) => (
                      <li key={i} className="flex items-start gap-2 text-xs sm:text-sm font-bold text-gray-700">
                        <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                        {use}
-                     </li>
-                   ))}
-                 </ul>
-               </section>
-               <section>
-                 <h4 className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3 border-l-4 border-primary pl-3">Side Effects</h4>
-                 <ul className="space-y-3">
-                   {product.sideEffects?.map((se: string, i: number) => (
-                     <li key={i} className="flex items-start gap-2 text-xs sm:text-sm font-bold text-gray-700">
-                       <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
-                       {se}
                      </li>
                    ))}
                  </ul>
@@ -243,25 +243,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 </div>
                 <div className="bg-green-50/30 p-6 sm:p-10 rounded-[32px] sm:rounded-[48px] border border-green-100 space-y-8">
                    <section>
-                     <h4 className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-green-600 mb-3 border-l-4 border-green-600 pl-3">Clinical Uses</h4>
+                     <h4 className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-green-600 mb-3 border-l-4 border-green-600 pl-3">Clinical Info</h4>
+                     <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium mb-4">{genericSubstitute.description}</p>
                      <ul className="space-y-3">
-                       {genericSubstitute.uses?.map((use: string, i: number) => (
+                       {(genericSubstitute.uses || ["Economical glycemic control"]).map((use: string, i: number) => (
                          <li key={i} className="flex items-start gap-2 text-xs sm:text-sm font-bold text-gray-700">
                            <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
                            {use}
                          </li>
                        ))}
                      </ul>
-                   </section>
-                   <section>
-                     <h4 className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-green-600 mb-3 border-l-4 border-green-600 pl-3">Manufacturer</h4>
-                     <div className="p-4 bg-white rounded-2xl border border-green-50 flex items-center gap-3">
-                        <Factory className="w-6 h-6 text-green-600 opacity-30" />
-                        <div>
-                          <p className="text-[8px] font-black uppercase text-gray-400 tracking-tighter leading-none mb-1">Certified Generic Lab</p>
-                          <p className="text-[10px] sm:text-xs font-bold text-gray-700 leading-tight">{genericSubstitute.manufacturer}</p>
-                        </div>
-                     </div>
                    </section>
                 </div>
               </>
@@ -278,7 +269,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         </div>
 
         {/* Suggested Products Section */}
-        {suggestedProducts && suggestedProducts.length > 0 && (
+        {suggestedProducts && suggestedProducts.length > 1 && (
           <section className="mt-16 sm:mt-24 pt-16 border-t">
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-xl sm:text-2xl font-black font-headline text-gray-900 uppercase tracking-tight">Suggested Products</h3>

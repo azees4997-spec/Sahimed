@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from 'react';
@@ -117,13 +118,35 @@ export default function AdminDashboard() {
         manufacturer: "MSD Pharmaceuticals",
         categoryId: "cat_diabetes",
         category: "Diabetes",
-        description: "Combination medicine for Type 2 Diabetes control.",
+        description: "Combination medicine for Type 2 Diabetes control. Effective for blood sugar management.",
         isGeneric: false,
         isTopDeal: true,
         dosageForm: "Tablet",
         strength: "50mg/500mg",
+        packSize: "Strip of 15 tablets",
         availableQuantity: 100,
-        imageUrl: "https://picsum.photos/seed/med1/300/300"
+        imageUrl: "https://picsum.photos/seed/med1/300/300",
+        uses: ["Type 2 Diabetes Mellitus", "Blood Sugar Control"],
+        sideEffects: ["Nausea", "Stomach upset"]
+      },
+      {
+        id: "ge-diab-1",
+        name: "Sitagliptin M 50/500",
+        price: 240,
+        saltComposition: "Sitagliptin 50mg + Metformin 500mg",
+        manufacturer: "HealthLink Generic",
+        categoryId: "cat_diabetes",
+        category: "Diabetes",
+        description: "Bio-equivalent to Janumet. Provides exact same glycemic control at 80% lower cost.",
+        isGeneric: true,
+        isTopDeal: true,
+        dosageForm: "Tablet",
+        strength: "50mg/500mg",
+        packSize: "Strip of 15 tablets",
+        availableQuantity: 500,
+        imageUrl: "https://picsum.photos/seed/med2/300/300",
+        uses: ["Affordable Glycemic Control", "Type 2 Diabetes"],
+        sideEffects: ["Mild nausea"]
       },
       {
         id: "atorva-1",
@@ -133,13 +156,35 @@ export default function AdminDashboard() {
         manufacturer: "Zydus Cadila",
         categoryId: "cat_heart",
         category: "Heart care",
-        description: "Statin for cholesterol management.",
+        description: "Statin for cholesterol management. Helps prevent heart attacks and strokes.",
         isGeneric: false,
         isTopDeal: true,
         dosageForm: "Tablet",
         strength: "20mg",
+        packSize: "Strip of 10 tablets",
         availableQuantity: 250,
-        imageUrl: "https://picsum.photos/seed/med2/300/300"
+        imageUrl: "https://picsum.photos/seed/med3/300/300",
+        uses: ["High Cholesterol", "Heart Health"],
+        sideEffects: ["Muscle pain", "Headache"]
+      },
+      {
+        id: "ge-heart-1",
+        name: "Atorvastatin Generic 20mg",
+        price: 85,
+        saltComposition: "Atorvastatin 20mg",
+        manufacturer: "Standard Labs",
+        categoryId: "cat_heart",
+        category: "Heart care",
+        description: "Economical cholesterol management. Verified bio-equivalent statin.",
+        isGeneric: true,
+        isTopDeal: true,
+        dosageForm: "Tablet",
+        strength: "20mg",
+        packSize: "Strip of 10 tablets",
+        availableQuantity: 1000,
+        imageUrl: "https://picsum.photos/seed/med4/300/300",
+        uses: ["Cholesterol Control", "Cardiac Protection"],
+        sideEffects: ["Fatigue"]
       }
     ];
 
@@ -151,7 +196,7 @@ export default function AdminDashboard() {
       setDocumentNonBlocking(doc(db, 'medicines', med.id), med, { merge: true });
     });
     
-    toast({ title: "Master Data Seeded", description: "All core collections initialized." });
+    toast({ title: "Master Data Seeded", description: "All core collections initialized with clinical data." });
   };
 
   if (isUserLoading || isAdminRoleLoading) {
@@ -450,7 +495,10 @@ function ProductFormDialog({ initialData, onSubmit }: { initialData?: any, onSub
     categoryId: 'cat_diabetes',
     category: 'Diabetes',
     dosageForm: 'Tablet',
-    strength: ''
+    strength: '',
+    packSize: 'Strip of 10 tablets',
+    uses: [],
+    sideEffects: []
   });
 
   return (
@@ -493,6 +541,10 @@ function ProductFormDialog({ initialData, onSubmit }: { initialData?: any, onSub
         <div className="space-y-3">
           <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Image Resource</Label>
           <Input value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none text-xs" />
+        </div>
+        <div className="space-y-3">
+          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Full Description</Label>
+          <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[100px] rounded-2xl bg-gray-50 border-none font-medium" />
         </div>
       </div>
       <DialogFooter className="p-10 bg-gray-50 border-t">

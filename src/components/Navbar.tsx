@@ -9,21 +9,32 @@ import { Input } from '@/components/ui/input';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { PRODUCTS } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, limit } from 'firebase/firestore';
 
 export default function Navbar() {
   const { totalItems, location, setLocation } = useCart();
   const [search, setSearch] = useState('');
-  const [suggestions, setSuggestions] = useState<typeof PRODUCTS>([]);
   const [isLocating, setIsLocating] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const suggestionRef = useRef<HTMLDivElement>(null);
+  
+  const db = useFirestore();
+
+  // Search medicines from Firestore
+  const medicinesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'medicines'), limit(100));
+  }, [db]);
+  
+  const { data: allMedicines } = useCollection(medicinesQuery);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
-    if (search.trim().length > 1) {
-      const filtered = PRODUCTS.filter(p => 
+    if (search.trim().length > 1 && allMedicines) {
+      const filtered = allMedicines.filter(p => 
         p.name.toLowerCase().includes(search.toLowerCase()) || 
         p.saltComposition.toLowerCase().includes(search.toLowerCase())
       ).slice(0, 5);
@@ -31,7 +42,7 @@ export default function Navbar() {
     } else {
       setSuggestions([]);
     }
-  }, [search]);
+  }, [search, allMedicines]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
