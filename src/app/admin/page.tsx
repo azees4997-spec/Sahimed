@@ -19,9 +19,9 @@ import {
   Database,
   Search,
   Check,
-  ChevronRight,
   FlaskConical,
-  Stethoscope
+  Stethoscope,
+  ClipboardList
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
@@ -33,7 +33,8 @@ import {
   useCollection,
   addDocumentNonBlocking,
   updateDocumentNonBlocking,
-  deleteDocumentNonBlocking
+  deleteDocumentNonBlocking,
+  setDocumentNonBlocking
 } from '@/firebase';
 import { doc, collection, query, orderBy } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
@@ -50,7 +51,7 @@ export default function AdminDashboard() {
   const auth = useAuth();
   const { toast } = useToast();
   
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders'>('dashboard');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localAuthLoading, setLocalAuthLoading] = useState(false);
@@ -89,9 +90,20 @@ export default function AdminDashboard() {
   const handleLogout = () => signOut(auth);
 
   const seedMasterData = () => {
-    if (!db) return;
+    if (!db || !isAdmin) return;
+    
+    const initialCats = [
+      { id: 'cat_diabetes', name: 'Diabetes', description: 'Blood sugar management' },
+      { id: 'cat_heart', name: 'Heart care', description: 'Cardiac health essentials' },
+      { id: 'cat_stomach', name: 'Stomach care', description: 'Digestive & gut health' },
+      { id: 'cat_liver', name: 'Liver care', description: 'Hepatic support' },
+      { id: 'cat_derma', name: 'Derma care', description: 'Skin & dermatological solutions' },
+      { id: 'cat_resp', name: 'Respicare', description: 'Respiratory & lung health' }
+    ];
+
     const initialMeds = [
       {
+        id: "janumet-1",
         name: "Janumet 50mg/500mg",
         price: 1250,
         saltComposition: "Sitagliptin 50mg + Metformin 500mg",
@@ -107,6 +119,7 @@ export default function AdminDashboard() {
         imageUrl: "https://picsum.photos/seed/med1/300/300"
       },
       {
+        id: "atorva-1",
         name: "Atorva 20mg",
         price: 450,
         saltComposition: "Atorvastatin 20mg",
@@ -122,6 +135,7 @@ export default function AdminDashboard() {
         imageUrl: "https://picsum.photos/seed/med2/300/300"
       },
       {
+        id: "sitagliptin-1",
         name: "Sitagliptin M 50/500",
         price: 240,
         saltComposition: "Sitagliptin 50mg + Metformin 500mg",
@@ -138,21 +152,16 @@ export default function AdminDashboard() {
       }
     ];
 
-    const initialCats = [
-      { id: 'cat_diabetes', name: 'Diabetes', description: 'Blood sugar management' },
-      { id: 'cat_heart', name: 'Heart care', description: 'Cardiac health essentials' },
-      { id: 'cat_stomach', name: 'Stomach care', description: 'Digestive & gut health' }
-    ];
-
+    // Using setDocumentNonBlocking with merge to ensure creation if missing
     initialCats.forEach(cat => {
-      updateDocumentNonBlocking(doc(db, 'categories', cat.id), cat);
+      setDocumentNonBlocking(doc(db, 'categories', cat.id), cat, { merge: true });
     });
 
     initialMeds.forEach(med => {
-      addDocumentNonBlocking(collection(db, 'medicines'), med);
+      setDocumentNonBlocking(doc(db, 'medicines', med.id), med, { merge: true });
     });
     
-    toast({ title: "Master Data Seeded", description: "Initial products and categories added." });
+    toast({ title: "Master Data Seeded", description: "All core collections initialized." });
   };
 
   if (isUserLoading || isAdminRoleLoading) {
@@ -245,6 +254,13 @@ export default function AdminDashboard() {
               >
                 <Package className="w-4 h-4" /> Product Master
               </Button>
+              <Button 
+                variant={activeTab === 'orders' ? 'secondary' : 'ghost'} 
+                onClick={() => setActiveTab('orders')}
+                className="rounded-full gap-2 font-bold px-6"
+              >
+                <ClipboardList className="w-4 h-4" /> Orders
+              </Button>
             </nav>
           </div>
           <div className="flex items-center gap-4">
@@ -291,7 +307,7 @@ export default function AdminDashboard() {
                 </div>
                 <CardTitle className="text-2xl font-black mb-2">Master Tools</CardTitle>
                 <CardDescription className="max-w-xs mx-auto mb-6">
-                  Quickly initialize categories and verified medicines in Firestore.
+                  Initialize clinical categories and verified medicines in Firestore.
                 </CardDescription>
                 <Button onClick={seedMasterData} className="rounded-full h-12 px-10 font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">
                   Seed Database
@@ -310,7 +326,7 @@ export default function AdminDashboard() {
               </Card>
             </div>
           </div>
-        ) : (
+        ) : activeTab === 'products' ? (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
@@ -414,6 +430,14 @@ export default function AdminDashboard() {
                 )}
               </div>
             </Card>
+          </div>
+        ) : (
+          <div className="space-y-8">
+             <h2 className="text-4xl font-black font-headline text-gray-900">Order Management</h2>
+             <Card className="rounded-[40px] p-20 text-center text-gray-400 font-bold bg-white border-none shadow-xl">
+                <ClipboardList className="w-20 h-20 mx-auto mb-6 opacity-20" />
+                <p>Global order monitoring will appear here shortly.</p>
+             </Card>
           </div>
         )}
       </main>
