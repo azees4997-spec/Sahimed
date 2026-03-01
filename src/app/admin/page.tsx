@@ -1,29 +1,64 @@
 
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShieldCheck, LogOut, Package, ClipboardList, Activity, Eye, Search, MapPin, Phone } from 'lucide-react';
+import { ShieldCheck, LogOut, Package, ClipboardList, Activity, Eye, Search, MapPin, Phone, Loader2, Lock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useUser, useFirestore, useDoc, useAuth, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 export default function AdminDashboard() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState('');
-  const [pass, setPass] = useState('');
+  const { user, isUserLoading } = useUser();
+  const db = useFirestore();
+  const auth = useAuth();
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [localAuthLoading, setLocalAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Check for admin role in the dedicated collection based on current UID
+  const adminRoleRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, 'roles_admin', user.uid);
+  }, [db, user]);
+
+  const { data: adminRole, isLoading: isAdminRoleLoading } = useDoc(adminRoleRef);
+  const isAdmin = !!adminRole;
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (user === 'supervisor' && pass === 'admin123') {
-      setIsLoggedIn(true);
-    } else {
-      alert('Invalid Credentials');
+    setAuthError('');
+    setLocalAuthLoading(true);
+    
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err: any) {
+      setAuthError('Invalid credentials. If you are a new admin, please register your account first or check roles_admin.');
+    } finally {
+      setLocalAuthLoading(false);
     }
   };
 
-  if (!isLoggedIn) {
+  const handleLogout = () => {
+    signOut(auth);
+  };
+
+  if (isUserLoading || isAdminRoleLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8]">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // If not logged in or not an admin
+  if (!user || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8] p-4">
         <Card className="max-w-md w-full rounded-[40px] shadow-2xl border-none">
@@ -32,14 +67,51 @@ export default function AdminDashboard() {
               <ShieldCheck className="w-10 h-10 text-white" />
             </div>
             <CardTitle className="text-3xl font-bold font-headline">Pharmacist Portal</CardTitle>
-            <CardDescription className="text-white/80">Secure supervisor access for order fulfillment</CardDescription>
+            <CardDescription className="text-white/80">
+              {user && !isAdmin 
+                ? "Unauthorized Access detected." 
+                : "Secure supervisor access for order fulfillment"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="p-10">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <Input placeholder="Username (supervisor)" value={user} onChange={e => setUser(e.target.value)} className="h-14 rounded-2xl bg-gray-50 border-none" />
-              <Input type="password" placeholder="Password (admin123)" value={pass} onChange={e => setPass(e.target.value)} className="h-14 rounded-2xl bg-gray-50 border-none" />
-              <Button type="submit" className="w-full h-16 rounded-full font-bold text-lg shadow-lg shadow-primary/20">Login to Console</Button>
-            </form>
+            {!user ? (
+              <form onSubmit={handleLogin} className="space-y-4">
+                <Input 
+                  type="email" 
+                  placeholder="Admin Email" 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  className="h-14 rounded-2xl bg-gray-50 border-none font-bold" 
+                  required 
+                />
+                <Input 
+                  type="password" 
+                  placeholder="Password" 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  className="h-14 rounded-2xl bg-gray-50 border-none font-bold" 
+                  required 
+                />
+                {authError && <p className="text-[10px] text-red-500 font-black uppercase text-center">{authError}</p>}
+                <Button type="submit" disabled={localAuthLoading} className="w-full h-16 rounded-full font-black text-lg shadow-lg shadow-primary/20 uppercase tracking-widest">
+                  {localAuthLoading ? <Loader2 className="animate-spin w-5 h-5 mx-auto" /> : "Login to Console"}
+                </Button>
+              </form>
+            ) : (
+              <div className="text-center space-y-6">
+                <div className="p-8 bg-orange-50 text-orange-700 rounded-[32px] border border-orange-100 flex flex-col items-center gap-4">
+                  <Lock className="w-10 h-10 mb-2 opacity-50" />
+                  <p className="text-xs font-black uppercase tracking-widest">Role Not Authorized</p>
+                  <p className="text-[10px] font-bold leading-relaxed opacity-80">
+                    Your UID: <span className="text-primary font-black select-all">{user.uid}</span>
+                  </p>
+                  <p className="text-[9px] font-bold text-gray-500">
+                    To access this panel, add a document with the above UID as the ID to the <code className="bg-gray-200 px-1 rounded text-gray-900">roles_admin</code> collection in your Firebase Console.
+                  </p>
+                </div>
+                <Button onClick={handleLogout} variant="outline" className="w-full h-14 rounded-full font-black uppercase text-[10px] tracking-widest border-2">Logout & Try Again</Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -56,9 +128,15 @@ export default function AdminDashboard() {
             </div>
             <span className="font-bold text-xl font-headline tracking-tight">Supervisor Console</span>
           </div>
-          <Button variant="ghost" onClick={() => setIsLoggedIn(false)} className="gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full font-bold">
-            <LogOut className="w-4 h-4" /> Logout
-          </Button>
+          <div className="flex items-center gap-4">
+            <div className="hidden md:block text-right">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Administrator</p>
+              <p className="text-sm font-bold text-gray-900">{user.email}</p>
+            </div>
+            <Button variant="ghost" onClick={handleLogout} className="gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full font-bold h-10 px-6">
+              <LogOut className="w-4 h-4" /> Logout
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -93,7 +171,7 @@ export default function AdminDashboard() {
               </div>
               <div className="relative w-full md:w-80">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <Input placeholder="Search Customer, Location..." className="pl-12 rounded-full h-12 bg-gray-50 border-none" />
+                <Input placeholder="Search Customer, Location..." className="pl-12 rounded-full h-12 bg-gray-50 border-none font-bold" />
               </div>
             </div>
           </CardHeader>
@@ -150,7 +228,7 @@ export default function AdminDashboard() {
                        </Badge>
                     </TableCell>
                     <TableCell className="pr-10 text-right">
-                      <Button variant="ghost" className="h-10 px-6 rounded-full font-black text-[10px] uppercase tracking-widest text-primary hover:bg-primary hover:text-white transition-all">
+                      <Button variant="ghost" className="h-10 px-8 rounded-full font-black text-[10px] uppercase tracking-widest text-primary hover:bg-primary hover:text-white transition-all border-2 border-primary/10">
                         Review Details
                       </Button>
                     </TableCell>
