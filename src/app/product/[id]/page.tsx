@@ -294,22 +294,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </p>
           </div>
         </section>
-
-        {/* Visual Medicine Monograph */}
-        <section className="mt-8 mx-2 bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
-           <div className="flex items-center gap-3 mb-6">
-              <FileText className="w-6 h-6 text-primary" />
-              <h3 className="font-black text-sm uppercase tracking-widest text-gray-900">Digital Monograph</h3>
-           </div>
-           <div className="aspect-[4/3] relative rounded-2xl overflow-hidden bg-gray-50 border-8 border-gray-50 shadow-inner flex items-center justify-center p-8">
-              <div className="text-center opacity-40">
-                <Image src="https://picsum.photos/seed/monograph/600/800" alt="Medicine Description Monograph" fill className="object-cover" />
-                <div className="absolute inset-0 bg-white/40 flex items-center justify-center">
-                   <div className="text-primary font-black text-2xl uppercase tracking-tighter rotate-12 border-8 border-primary p-4 rounded-xl">VERIFIED DATA</div>
-                </div>
-              </div>
-           </div>
-        </section>
       </main>
     </div>
   );
