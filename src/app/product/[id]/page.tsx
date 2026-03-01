@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import ProductCard from '@/components/ProductCard';
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -43,6 +44,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     p.id !== product.id && 
     p.isGeneric === true
   ) as ExtendedProduct;
+
+  // Suggested Products (Same Category)
+  const suggestedProducts = PRODUCTS.filter(p => 
+    p.category === product.category && 
+    p.id !== product.id && 
+    p.id !== genericSubstitute?.id
+  ).slice(0, 4);
 
   const handleAdd = (p: typeof product) => {
     addToCart(p);
@@ -90,7 +98,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         )}
 
-        {/* Side-by-Side Comparison Grid - Forced 2 Columns */}
+        {/* Side-by-Side Comparison Grid */}
         <div className={`grid ${genericSubstitute ? 'grid-cols-2' : 'grid-cols-1 max-w-2xl mx-auto'} gap-2 sm:gap-8`}>
           
           {/* COLUMN 1: BRANDED */}
@@ -284,16 +292,20 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           )}
         </div>
 
-        {/* Safety Warning */}
-        <section className="mt-8 sm:mt-12 mx-2 p-5 bg-orange-50 rounded-[28px] border border-orange-100 flex items-start gap-4">
-          <AlertTriangle className="w-6 h-6 text-orange-500 shrink-0 mt-0.5" />
-          <div>
-            <h4 className="font-black text-orange-900 text-xs sm:text-sm mb-1 uppercase tracking-tight">Pharmacist Advisory</h4>
-            <p className="text-[10px] sm:text-xs text-orange-800/80 font-medium leading-relaxed">
-              Generics contain the exact same active salt ({product.saltComposition}) and are clinically bio-equivalent. Always consult your healthcare provider before switching chronic medications.
-            </p>
-          </div>
-        </section>
+        {/* Suggested Products Section */}
+        {suggestedProducts.length > 0 && (
+          <section className="mt-12 sm:mt-16">
+            <div className="flex items-center justify-between mb-6 px-2">
+              <h3 className="text-xl font-black font-headline text-gray-900 uppercase tracking-tight">Suggested Products</h3>
+              <Link href="/search" className="text-[10px] font-black text-primary uppercase tracking-widest">View All</Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2">
+              {suggestedProducts.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );
