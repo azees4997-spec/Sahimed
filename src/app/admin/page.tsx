@@ -1,53 +1,31 @@
+
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   ShieldCheck, 
   LogOut, 
-  Package, 
   Loader2, 
-  Lock, 
-  Edit3, 
-  Check, 
-  Plus,
-  ShoppingCart,
-  Trash2,
-  Database,
-  Layers
+  Lock,
+  Settings,
+  UserCheck
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { useUser, useFirestore, useDoc, useAuth, useMemoFirebase, useCollection, updateDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { doc, collection, query, orderBy, collectionGroup, limit } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useAuth, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { PRODUCTS, CATEGORIES } from '@/lib/data';
-import { useToast } from '@/hooks/use-toast';
-
-type AdminTab = 'products' | 'orders' | 'categories';
 
 export default function AdminDashboard() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const auth = useAuth();
-  const { toast } = useToast();
   
-  const [activeTab, setActiveTab] = useState<AdminTab>('products');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localAuthLoading, setLocalAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
-  const [isSeeding, setIsSeeding] = useState(false);
-
-  // Edit/Add State
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null);
-  const [isNew, setIsNew] = useState(false);
-  const [editType, setEditType] = useState<'product' | 'category'>('product');
 
   // Check for admin role - Path-based get is allowed for the owner
   const adminRoleRef = useMemoFirebase(() => {
@@ -59,26 +37,6 @@ export default function AdminDashboard() {
   
   // Important: Explicitly verify admin data is present
   const isAdmin = !!adminRole;
-
-  // Real-time Collections - Only query if confirmed as admin
-  const medicinesQuery = useMemoFirebase(() => {
-    if (!db || !isAdmin) return null;
-    return query(collection(db, 'medicines'), orderBy('name', 'asc'));
-  }, [db, isAdmin]);
-  const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
-
-  const categoriesQuery = useMemoFirebase(() => {
-    if (!db || !isAdmin) return null;
-    return query(collection(db, 'categories'), orderBy('name', 'asc'));
-  }, [db, isAdmin]);
-  const { data: dbCategories, isLoading: catsLoading } = useCollection(categoriesQuery);
-
-  const ordersQuery = useMemoFirebase(() => {
-    if (!db || !isAdmin) return null;
-    // collectionGroup requires explicit recursive security rules
-    return query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc'), limit(50));
-  }, [db, isAdmin]);
-  const { data: orders, isLoading: ordersLoading } = useCollection(ordersQuery);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,113 +53,6 @@ export default function AdminDashboard() {
 
   const handleLogout = () => signOut(auth);
 
-  const seedDatabase = async () => {
-    if (!db || !confirm('This will seed initial categories and products. Continue?')) return;
-    setIsSeeding(true);
-    try {
-      for (const cat of CATEGORIES) {
-        const catId = cat.name.toLowerCase().replace(/\s+/g, '-');
-        setDocumentNonBlocking(doc(db, 'categories', catId), {
-          id: catId,
-          name: cat.name,
-          description: cat.description
-        }, { merge: true });
-      }
-
-      for (const prod of PRODUCTS) {
-        setDocumentNonBlocking(doc(db, 'medicines', prod.id), {
-          ...prod,
-          availableQuantity: 100,
-          mrp: prod.price * 1.2
-        }, { merge: true });
-      }
-
-      toast({ title: "Master Data Seeded", description: "Standard catalog and categories initialized." });
-    } catch (err) {
-      console.error(err);
-      toast({ variant: "destructive", title: "Seeding Failed", description: "Check Firestore permissions." });
-    } finally {
-      setIsSeeding(false);
-    }
-  };
-
-  const startEditProduct = (product: any) => {
-    setEditType('product');
-    setEditingItem({ ...product });
-    setIsEditing(true);
-    setIsNew(false);
-  };
-
-  const startNewProduct = () => {
-    setEditType('product');
-    setEditingItem({
-      name: '',
-      saltComposition: '',
-      price: 0,
-      availableQuantity: 100,
-      isGeneric: false,
-      manufacturer: 'HealthLink Labs',
-      category: dbCategories?.[0]?.name || 'Wellness',
-      imageUrl: 'https://picsum.photos/seed/med-new/300/300',
-      description: '',
-      packSize: 'Strip of 10 tablets',
-      uses: ['General Health'],
-      sideEffects: ['None'],
-      isTopDeal: false
-    });
-    setIsEditing(true);
-    setIsNew(true);
-  };
-
-  const startEditCategory = (cat: any) => {
-    setEditType('category');
-    setEditingItem({ ...cat });
-    setIsEditing(true);
-    setIsNew(false);
-  };
-
-  const startNewCategory = () => {
-    setEditType('category');
-    setEditingItem({
-      name: '',
-      description: ''
-    });
-    setIsEditing(true);
-    setIsNew(true);
-  };
-
-  const saveChanges = () => {
-    if (!editingItem || !db) return;
-    
-    if (editType === 'product') {
-      const data = {
-        ...editingItem,
-        price: Number(editingItem.price),
-        availableQuantity: Number(editingItem.availableQuantity),
-        mrp: Number(editingItem.mrp || editingItem.price * 1.2)
-      };
-      if (isNew) {
-        addDocumentNonBlocking(collection(db, 'medicines'), data);
-      } else {
-        updateDocumentNonBlocking(doc(db, 'medicines', editingItem.id), data);
-      }
-    } else {
-      const catId = editingItem.id || editingItem.name.toLowerCase().replace(/\s+/g, '-');
-      const data = { ...editingItem, id: catId };
-      setDocumentNonBlocking(doc(db, 'categories', catId), data, { merge: true });
-    }
-    
-    setIsEditing(false);
-    setEditingItem(null);
-    toast({ title: "Database Updated", description: "Changes saved successfully." });
-  };
-
-  const deleteItem = (id: string, type: 'product' | 'category') => {
-    if (!db || !confirm(`Delete this ${type}?`)) return;
-    const path = type === 'product' ? 'medicines' : 'categories';
-    deleteDocumentNonBlocking(doc(db, path, id));
-  };
-
   if (isUserLoading || isAdminRoleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8]">
@@ -210,7 +61,7 @@ export default function AdminDashboard() {
     );
   }
 
-  // If logged in but not an admin, show unauthorized screen
+  // If not logged in or not an admin, show unauthorized screen
   if (!user || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8] p-4">
@@ -270,44 +121,14 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-[#F8F8F8]">
       <header className="bg-white border-b sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="bg-primary p-1.5 rounded-lg">
-                <div className="text-white font-bold text-xl tracking-tighter">HL</div>
-              </div>
-              <span className="font-bold text-xl font-headline tracking-tight">Supervisor Console</span>
+          <div className="flex items-center gap-2">
+            <div className="bg-primary p-1.5 rounded-lg">
+              <div className="text-white font-bold text-xl tracking-tighter">HL</div>
             </div>
-            
-            <nav className="hidden md:flex items-center gap-1 bg-gray-50 p-1 rounded-2xl border">
-              <Button 
-                variant={activeTab === 'products' ? 'default' : 'ghost'} 
-                onClick={() => setActiveTab('products')}
-                className="rounded-xl h-10 font-bold text-xs uppercase tracking-widest"
-              >
-                <Package className="w-4 h-4 mr-2" /> Product Master
-              </Button>
-              <Button 
-                variant={activeTab === 'categories' ? 'default' : 'ghost'} 
-                onClick={() => setActiveTab('categories')}
-                className="rounded-xl h-10 font-bold text-xs uppercase tracking-widest"
-              >
-                <Layers className="w-4 h-4 mr-2" /> Category Master
-              </Button>
-              <Button 
-                variant={activeTab === 'orders' ? 'default' : 'ghost'} 
-                onClick={() => setActiveTab('orders')}
-                className="rounded-xl h-10 font-bold text-xs uppercase tracking-widest"
-              >
-                <ShoppingCart className="w-4 h-4 mr-2" /> Order Flow
-              </Button>
-            </nav>
+            <span className="font-bold text-xl font-headline tracking-tight">Supervisor Console</span>
           </div>
-
           <div className="flex items-center gap-4">
-            <Button variant="outline" onClick={seedDatabase} disabled={isSeeding} className="hidden sm:flex rounded-full h-10 border-primary text-primary font-black text-[10px] uppercase tracking-widest">
-              {isSeeding ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Database className="w-4 h-4 mr-2" />}
-              Seed Master Data
-            </Button>
+            <span className="text-[10px] font-black uppercase text-gray-400 bg-gray-50 px-4 py-2 rounded-full border">Verified Administrator</span>
             <Button variant="ghost" onClick={handleLogout} className="text-red-500 hover:text-red-600 rounded-full font-bold">
               <LogOut className="w-4 h-4" />
             </Button>
@@ -315,245 +136,31 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {activeTab === 'products' && (
-          <Card className="rounded-[40px] border-none shadow-xl overflow-hidden bg-white">
-            <CardHeader className="p-8 border-b flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl font-black">Product Master</CardTitle>
-                <CardDescription>Manage your medicine inventory and bio-equivalent mappings</CardDescription>
-              </div>
-              <Button onClick={startNewProduct} className="rounded-full h-12 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">
-                <Plus className="w-4 h-4 mr-2" /> Register Medicine
-              </Button>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-gray-50/50">
-                  <TableRow className="border-none">
-                    <TableHead className="pl-10 text-[10px] font-black uppercase tracking-widest text-gray-400">Medicine & Salt</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-gray-400">Price</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-gray-400">Stock</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-gray-400">Classification</TableHead>
-                    <TableHead className="pr-10 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {medsLoading ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin mx-auto text-primary" /></TableCell></TableRow>
-                  ) : medicines?.map((m) => (
-                    <TableRow key={m.id} className="hover:bg-gray-50 border-b border-gray-50 group">
-                      <TableCell className="pl-10 py-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-gray-50 rounded-xl overflow-hidden p-1 shrink-0 border border-gray-100">
-                            <img src={m.imageUrl} alt="" className="w-full h-full object-contain" />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-black text-gray-900 group-hover:text-primary transition-colors">{m.name}</span>
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{m.saltComposition}</span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-black text-gray-900">₹{m.price}</TableCell>
-                      <TableCell>
-                        <span className={`font-black ${m.availableQuantity < 50 ? 'text-red-500' : 'text-green-600'}`}>
-                          {m.availableQuantity} units
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={`rounded-lg px-3 py-1 text-[10px] font-black uppercase ${m.isGeneric ? 'bg-green-50 text-green-700 border-green-100' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
-                          {m.isGeneric ? 'Generic' : 'Branded'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="pr-10 text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => startEditProduct(m)} className="rounded-full text-primary hover:bg-primary/10">
-                            <Edit3 className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => deleteItem(m.id, 'product')} className="rounded-full text-red-500 hover:bg-red-50">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
+      <main className="max-w-7xl mx-auto px-4 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <Card className="rounded-[40px] border-none shadow-xl bg-white p-10 flex flex-col items-center text-center">
+            <div className="w-20 h-20 bg-primary/10 rounded-[32px] flex items-center justify-center mb-6">
+              <UserCheck className="w-10 h-10 text-primary" />
+            </div>
+            <CardTitle className="text-2xl font-black mb-2">Welcome, Supervisor</CardTitle>
+            <CardDescription className="max-w-xs mx-auto">
+              Your identity has been verified. The administrative portal is currently being configured for real-time inventory and order management.
+            </CardDescription>
+            <Button className="mt-8 rounded-full h-12 px-10 font-bold uppercase text-[10px] tracking-widest">View System Health</Button>
           </Card>
-        )}
 
-        {activeTab === 'categories' && (
-          <Card className="rounded-[40px] border-none shadow-xl overflow-hidden bg-white">
-            <CardHeader className="p-8 border-b flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl font-black">Category Master</CardTitle>
-                <CardDescription>Organize your products into clinical therapeutic segments</CardDescription>
-              </div>
-              <Button onClick={startNewCategory} className="rounded-full h-12 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">
-                <Plus className="w-4 h-4 mr-2" /> Add Category
-              </Button>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-gray-50/50">
-                  <TableRow className="border-none">
-                    <TableHead className="pl-10 text-[10px] font-black uppercase tracking-widest text-gray-400">Category Name</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-gray-400">Description</TableHead>
-                    <TableHead className="pr-10 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {catsLoading ? (
-                    <TableRow><TableCell colSpan={3} className="text-center py-20"><Loader2 className="animate-spin mx-auto text-primary" /></TableCell></TableRow>
-                  ) : dbCategories?.map((c) => (
-                    <TableRow key={c.id} className="hover:bg-gray-50 border-b border-gray-50">
-                      <TableCell className="pl-10 py-6 font-black text-gray-900">{c.name}</TableCell>
-                      <TableCell className="text-xs font-bold text-gray-500">{c.description}</TableCell>
-                      <TableCell className="pr-10 text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => startEditCategory(c)} className="rounded-full text-primary hover:bg-primary/10">
-                            <Edit3 className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => deleteItem(c.id, 'category')} className="rounded-full text-red-500 hover:bg-red-50">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
+          <Card className="rounded-[40px] border-none shadow-xl bg-white p-10 flex flex-col items-center text-center">
+            <div className="w-20 h-20 bg-gray-50 rounded-[32px] flex items-center justify-center mb-6">
+              <Settings className="w-10 h-10 text-gray-400" />
+            </div>
+            <CardTitle className="text-2xl font-black mb-2">Platform Settings</CardTitle>
+            <CardDescription className="max-w-xs mx-auto">
+              Configure global app parameters, shipping logic, and administrative permissions.
+            </CardDescription>
+            <Button variant="outline" className="mt-8 rounded-full h-12 px-10 font-bold uppercase text-[10px] tracking-widest border-2">Manage Access</Button>
           </Card>
-        )}
-
-        {activeTab === 'orders' && (
-          <Card className="rounded-[40px] border-none shadow-xl overflow-hidden bg-white">
-            <CardHeader className="p-8 border-b">
-              <CardTitle className="text-2xl font-black">Order Flow Management</CardTitle>
-              <CardDescription>Monitor and process fulfillment across all users</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-               <Table>
-                <TableHeader className="bg-gray-50/50">
-                  <TableRow className="border-none">
-                    <TableHead className="pl-10 text-[10px] font-black uppercase tracking-widest text-gray-400">Order & Date</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-gray-400">Amount</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-gray-400">Status</TableHead>
-                    <TableHead className="pr-10 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {ordersLoading ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-20"><Loader2 className="animate-spin mx-auto text-primary" /></TableCell></TableRow>
-                  ) : orders?.map((o) => (
-                    <TableRow key={o.id} className="hover:bg-gray-50 border-b border-gray-50">
-                      <TableCell className="pl-10 py-6">
-                        <div className="flex flex-col">
-                          <span className="font-black text-gray-900">ID: {o.id.slice(0, 8)}</span>
-                          <span className="text-xs font-bold text-gray-500">{o.orderDate?.toDate()?.toLocaleDateString()}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-black">₹{o.totalAmount}</TableCell>
-                      <TableCell>
-                        <Badge className="rounded-full bg-orange-100 text-orange-700 border-none font-black text-[10px] uppercase">{o.status}</Badge>
-                      </TableCell>
-                      <TableCell className="pr-10 text-right">
-                        <Button variant="outline" className="rounded-full h-10 font-black text-[10px] uppercase tracking-widest">Process</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {orders?.length === 0 && <TableRow><TableCell colSpan={4} className="text-center py-20 font-bold text-gray-400">No orders in stream</TableCell></TableRow>}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
+        </div>
       </main>
-
-      {/* Edit/Add Master Dialog */}
-      <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="rounded-[40px] max-w-2xl p-10 overflow-y-auto max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-black uppercase tracking-tight">
-              {isNew ? `Register New ${editType}` : `Update ${editType} Entry`}
-            </DialogTitle>
-            <CardDescription>Affects real-time storefront immediately.</CardDescription>
-          </DialogHeader>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6">
-            {editType === 'product' ? (
-              <>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-gray-400">Product Name</Label>
-                    <Input value={editingItem?.name || ''} onChange={e => setEditingItem({ ...editingItem, name: e.target.value })} className="h-12 rounded-xl bg-gray-50 border-none font-bold" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-gray-400">Salt Composition</Label>
-                    <Input value={editingItem?.saltComposition || ''} onChange={e => setEditingItem({ ...editingItem, saltComposition: e.target.value })} className="h-12 rounded-xl bg-gray-50 border-none font-bold" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-gray-400">Price (₹)</Label>
-                      <Input type="number" value={editingItem?.price || ''} onChange={e => setEditingItem({ ...editingItem, price: e.target.value })} className="h-12 rounded-xl bg-gray-50 border-none font-bold" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-gray-400">Stock</Label>
-                      <Input type="number" value={editingItem?.availableQuantity || ''} onChange={e => setEditingItem({ ...editingItem, availableQuantity: e.target.value })} className="h-12 rounded-xl bg-gray-50 border-none font-bold" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-gray-400">Category</Label>
-                    <select 
-                      value={editingItem?.category || ''} 
-                      onChange={e => setEditingItem({ ...editingItem, category: e.target.value })}
-                      className="w-full h-12 rounded-xl bg-gray-50 border-none font-bold px-4 appearance-none"
-                    >
-                      {dbCategories?.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-gray-400">Image URL</Label>
-                    <div className="flex gap-2">
-                      <Input value={editingItem?.imageUrl || ''} onChange={e => setEditingItem({ ...editingItem, imageUrl: e.target.value })} className="h-12 rounded-xl bg-gray-50 border-none font-bold flex-1" />
-                      <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden shrink-0 border">
-                        <img src={editingItem?.imageUrl} alt="" className="w-full h-full object-contain" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl">
-                     <input type="checkbox" id="isGeneric" checked={editingItem?.isGeneric || false} onChange={e => setEditingItem({ ...editingItem, isGeneric: e.target.checked })} className="w-5 h-5 accent-primary" />
-                     <Label htmlFor="isGeneric" className="font-bold text-gray-700 cursor-pointer">Mark as Generic</Label>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="col-span-2 space-y-6">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-gray-400">Category Name</Label>
-                  <Input value={editingItem?.name || ''} onChange={e => setEditingItem({ ...editingItem, name: e.target.value })} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-gray-400">Description</Label>
-                  <Input value={editingItem?.description || ''} onChange={e => setEditingItem({ ...editingItem, description: e.target.value })} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter className="gap-4">
-            <Button variant="outline" onClick={() => setIsEditing(false)} className="h-14 rounded-full px-8 font-black uppercase text-[10px] tracking-widest border-2">Cancel</Button>
-            <Button onClick={saveChanges} className="h-14 rounded-full px-12 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">
-              <Check className="w-4 h-4 mr-2" /> Save Master Data
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
