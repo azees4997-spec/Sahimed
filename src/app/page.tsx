@@ -1,4 +1,3 @@
-
 "use client"
 
 import Navbar from '@/components/Navbar';
@@ -28,15 +27,14 @@ export default function Home() {
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
 
   const getIcon = (name: string) => {
-    switch(name) {
-      case 'Diabetes': return <Activity className="w-6 h-6 sm:w-8 sm:h-8" />;
-      case 'Heart care': return <HeartPulse className="w-6 h-6 sm:w-8 sm:h-8" />;
-      case 'Stomach care': return <Zap className="w-6 h-6 sm:w-8 sm:h-8" />;
-      case 'Liver care': return <ShieldPlus className="w-6 h-6 sm:w-8 sm:h-8" />;
-      case 'Derma care': return <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" />;
-      case 'Respicare': return <Wind className="w-6 h-6 sm:w-8 sm:h-8" />;
-      default: return <Activity className="w-6 h-6 sm:w-8 sm:h-8" />;
-    }
+    const n = name.toLowerCase();
+    if (n.includes('diabet')) return <Activity className="w-6 h-6 sm:w-8 sm:h-8" />;
+    if (n.includes('heart')) return <HeartPulse className="w-6 h-6 sm:w-8 sm:h-8" />;
+    if (n.includes('stomach')) return <Zap className="w-6 h-6 sm:w-8 sm:h-8" />;
+    if (n.includes('liver')) return <ShieldPlus className="w-6 h-6 sm:w-8 sm:h-8" />;
+    if (n.includes('skin') || n.includes('derma')) return <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" />;
+    if (n.includes('resp')) return <Wind className="w-6 h-6 sm:w-8 sm:h-8" />;
+    return <Activity className="w-6 h-6 sm:w-8 sm:h-8" />;
   };
 
   return (
@@ -66,26 +64,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Quick Prescription Upload Card */}
-        <section className="px-4 py-4">
-          <div className="max-w-7xl mx-auto">
-            <Link href="/prescription">
-              <Card className="rounded-[28px] border-none shadow-sm bg-gradient-to-r from-blue-50 to-white border-2 border-primary/5 active:scale-[0.98] transition-all">
-                <CardContent className="p-6 flex items-center gap-4">
-                  <div className="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center shadow-lg shrink-0">
-                    <Upload className="w-6 h-6" />
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="font-black text-gray-900 text-sm sm:text-base">Order with Prescription</h2>
-                    <p className="text-xs text-muted-foreground">Upload and let us handle the rest</p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-primary" />
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
-        </section>
-
         {/* Categories Grid */}
         <section className="py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -105,6 +83,11 @@ export default function Home() {
                     <h3 className="font-bold text-[10px] sm:text-xs text-gray-700 truncate w-full px-1">{cat.name}</h3>
                   </Link>
                 ))}
+                {!catsLoading && categories?.length === 0 && (
+                  <div className="col-span-full py-12 text-center text-gray-400 font-bold italic">
+                    Initialize categories in Admin Dashboard.
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -127,10 +110,14 @@ export default function Home() {
               </div>
             )}
             {!medsLoading && medicines?.length === 0 && (
-              <div className="text-center py-12 bg-gray-50 rounded-3xl border border-dashed">
-                <p className="text-gray-400 font-bold mb-4">Store catalog is empty.</p>
+              <div className="text-center py-24 bg-gray-50 rounded-[40px] border border-dashed">
+                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                  <Activity className="w-10 h-10 text-gray-200" />
+                </div>
+                <h3 className="text-xl font-black mb-2">Pharmacy Catalog Empty</h3>
+                <p className="text-gray-400 font-bold mb-8">Please login to the Admin Dashboard to seed the master data.</p>
                 <Link href="/admin">
-                  <Button variant="outline" className="rounded-full font-black text-[10px] uppercase tracking-widest">Initialize Database in Admin</Button>
+                  <Button className="rounded-full px-12 h-14 font-black uppercase tracking-widest">Admin Dashboard</Button>
                 </Link>
               </div>
             )}
