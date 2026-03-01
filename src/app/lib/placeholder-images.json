@@ -1,0 +1,47 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-1",
+      "description": "Healthcare banner showing professional pharmacy services",
+      "imageUrl": "https://picsum.photos/seed/health1/1200/400",
+      "imageHint": "pharmacy healthcare"
+    },
+    {
+      "id": "cat-chronic",
+      "description": "Medicine for chronic conditions",
+      "imageUrl": "https://picsum.photos/seed/chronic/400/400",
+      "imageHint": "pills medicine"
+    },
+    {
+      "id": "cat-wellness",
+      "description": "Wellness and vitamins",
+      "imageUrl": "https://picsum.photos/seed/wellness/400/400",
+      "imageHint": "vitamins supplements"
+    },
+    {
+      "id": "cat-baby",
+      "description": "Baby care products",
+      "imageUrl": "https://picsum.photos/seed/baby/400/400",
+      "imageHint": "baby care"
+    },
+    {
+      "id": "med-1",
+      "description": "Aspirin pack",
+      "imageUrl": "https://picsum.photos/seed/med1/300/300",
+      "imageHint": "aspirin box"
+    },
+    {
+      "id": "med-2",
+      "description": "Generic Paracetamol",
+      "imageUrl": "https://picsum.photos/seed/med2/300/300",
+      "imageHint": "paracetamol tablets"
+    },
+    {
+      "id": "med-3",
+      "description": "Premium Painkiller",
+      "imageUrl": "https://picsum.photos/seed/med3/300/300",
+      "imageHint": "medicine bottle"
+    }
+  ]
+}
