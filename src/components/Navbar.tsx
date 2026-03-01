@@ -57,7 +57,6 @@ export default function Navbar() {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           try {
-            // In a real app, use reverse geocoding. For demo, we use coordinates.
             const lat = position.coords.latitude.toFixed(4);
             const lng = position.coords.longitude.toFixed(4);
             setLocation(`Current (Lat: ${lat}, Lng: ${lng})`);
@@ -93,9 +92,7 @@ export default function Navbar() {
     <>
       <nav className="sticky top-0 z-50 bg-white border-b shadow-sm safe-top">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Top Row: Logo, Location, Icons */}
           <div className="flex justify-between items-center h-14 md:h-20">
-            {/* Logo & Location */}
             <div className="flex items-center gap-2 sm:gap-6">
               <Link href="/" className="flex items-center gap-2 shrink-0">
                 <div className="bg-primary p-1 rounded-lg sm:p-1.5 sm:rounded-xl shadow-lg shadow-primary/20">
@@ -145,7 +142,6 @@ export default function Navbar() {
               </Popover>
             </div>
 
-            {/* Icons */}
             <div className="flex items-center gap-1 sm:gap-3">
               <Link href="/cart" className="relative p-2 sm:p-2.5 hover:bg-gray-100 rounded-2xl transition-colors">
                 <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
@@ -155,14 +151,12 @@ export default function Navbar() {
                   </span>
                 )}
               </Link>
-
               <Link href="/profile" className="p-2 sm:p-2.5 hover:bg-gray-100 rounded-2xl transition-colors">
                 <User className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
               </Link>
             </div>
           </div>
 
-          {/* Bottom Row: Permanent Search Bar */}
           <div className="pb-3 md:pb-4 relative" ref={suggestionRef}>
             <form onSubmit={handleSearch} className="relative group">
               <Input
@@ -201,16 +195,12 @@ export default function Navbar() {
                     )}
                   </Link>
                 ))}
-                <div className="p-3 bg-gray-50 text-center">
-                  <button onClick={handleSearch} className="text-[10px] font-black text-primary uppercase tracking-widest">See all results for "{search}"</button>
-                </div>
               </div>
             )}
           </div>
         </div>
       </nav>
 
-      {/* Mobile Bottom Navigation Bar */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t safe-bottom z-50 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
         <div className="flex justify-around items-center h-16">
           <NavItem href="/" icon={Home} label="Home" active={pathname === '/'} />
