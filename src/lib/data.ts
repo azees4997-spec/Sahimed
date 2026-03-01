@@ -1,7 +1,14 @@
 
 import { Product } from "@/context/CartContext";
 
-export const PRODUCTS: Product[] = [
+export interface ExtendedProduct extends Product {
+  uses: string[];
+  sideEffects: string[];
+  packSize: string;
+  mfrDetails: string;
+}
+
+export const PRODUCTS: ExtendedProduct[] = [
   {
     id: "br-diab-1",
     name: "Janumet 50mg/500mg",
@@ -10,7 +17,12 @@ export const PRODUCTS: Product[] = [
     manufacturer: "MSD Pharmaceuticals",
     category: "Diabetes",
     imageUrl: "https://picsum.photos/seed/diab1/300/300",
-    isGeneric: false
+    isGeneric: false,
+    packSize: "Strip of 15 tablets",
+    mfrDetails: "MSD Pharmaceuticals Pvt Ltd, Mumbai, India",
+    uses: ["Type 2 Diabetes Mellitus", "Blood Sugar Control"],
+    sideEffects: ["Nausea", "Stomach upset", "Hypoglycemia"],
+    description: "Janumet is a combination medicine used with diet and exercise to improve blood sugar control in adults with type 2 diabetes."
   },
   {
     id: "ge-diab-1",
@@ -20,7 +32,12 @@ export const PRODUCTS: Product[] = [
     manufacturer: "HealthLink Generic",
     category: "Diabetes",
     imageUrl: "https://picsum.photos/seed/diab2/300/300",
-    isGeneric: true
+    isGeneric: true,
+    packSize: "Strip of 15 tablets",
+    mfrDetails: "HealthLink Labs, Hyderabad, India",
+    uses: ["Type 2 Diabetes Mellitus", "Affordable Glycemic Control"],
+    sideEffects: ["Nausea", "Diarrhea"],
+    description: "Generic Sitagliptin + Metformin provides the exact same clinical benefit as branded versions at a significantly lower cost."
   },
   {
     id: "br-heart-1",
@@ -30,7 +47,12 @@ export const PRODUCTS: Product[] = [
     manufacturer: "Zydus Cadila",
     category: "Heart care",
     imageUrl: "https://picsum.photos/seed/heart1/300/300",
-    isGeneric: false
+    isGeneric: false,
+    packSize: "Strip of 10 tablets",
+    mfrDetails: "Zydus Cadila Healthcare Ltd, Ahmedabad",
+    uses: ["High Cholesterol", "Prevention of Heart Attack"],
+    sideEffects: ["Muscle pain", "Weakness", "Headache"],
+    description: "Atorva 20 Tablet belongs to a group of medicines called statins. It is used to lower cholesterol and reduce the risk of heart disease."
   },
   {
     id: "ge-heart-1",
@@ -40,7 +62,12 @@ export const PRODUCTS: Product[] = [
     manufacturer: "PharmaPure",
     category: "Heart care",
     imageUrl: "https://picsum.photos/seed/heart2/300/300",
-    isGeneric: true
+    isGeneric: true,
+    packSize: "Strip of 10 tablets",
+    mfrDetails: "PharmaPure Generics, Baddi, HP",
+    uses: ["High Cholesterol", "Heart Health"],
+    sideEffects: ["Joint pain", "Common cold"],
+    description: "Bio-equivalent to Atorva 20mg. High quality generic cholesterol management."
   },
   {
     id: "br-stomach-1",
@@ -50,7 +77,12 @@ export const PRODUCTS: Product[] = [
     manufacturer: "Alkem Laboratories",
     category: "Stomach care",
     imageUrl: "https://picsum.photos/seed/stomach1/300/300",
-    isGeneric: false
+    isGeneric: false,
+    packSize: "Strip of 15 tablets",
+    mfrDetails: "Alkem Laboratories Ltd, Mumbai",
+    uses: ["Heartburn", "Acid Reflux", "Peptic Ulcer Disease"],
+    sideEffects: ["Dizziness", "Flatulence", "Dry mouth"],
+    description: "Pan 40 Tablet is a medicine that reduces the amount of acid produced in your stomach."
   },
   {
     id: "ge-stomach-1",
@@ -60,17 +92,12 @@ export const PRODUCTS: Product[] = [
     manufacturer: "Standard Generics",
     category: "Stomach care",
     imageUrl: "https://picsum.photos/seed/stomach2/300/300",
-    isGeneric: true
-  },
-  {
-    id: "br-derma-1",
-    name: "Betadine Ointment",
-    price: 220,
-    saltComposition: "Povidone-Iodine",
-    manufacturer: "Win-Medicare",
-    category: "Derma care",
-    imageUrl: "https://picsum.photos/seed/derma1/300/300",
-    isGeneric: false
+    isGeneric: true,
+    packSize: "Strip of 15 tablets",
+    mfrDetails: "Standard Generic Pharma, Gujarat",
+    uses: ["Acidity", "Gastritis"],
+    sideEffects: ["Headache"],
+    description: "Economical alternative to Pan 40 with the same acid-blocking effectiveness."
   }
 ];
 

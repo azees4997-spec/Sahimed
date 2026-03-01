@@ -2,102 +2,185 @@
 "use client"
 
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Upload, Menu, MapPin, ChevronDown } from 'lucide-react';
+import { Search, ShoppingCart, User, Upload, Menu, MapPin, ChevronDown, LocateFixed, Loader2 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { PRODUCTS } from '@/lib/data';
+import { Badge } from '@/components/ui/badge';
 
 export default function Navbar() {
   const { totalItems, location, setLocation } = useCart();
   const [search, setSearch] = useState('');
+  const [suggestions, setSuggestions] = useState<typeof PRODUCTS>([]);
+  const [isLocating, setIsLocating] = useState(false);
   const router = useRouter();
+  const suggestionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (search.trim().length > 1) {
+      const filtered = PRODUCTS.filter(p => 
+        p.name.toLowerCase().includes(search.toLowerCase()) || 
+        p.saltComposition.toLowerCase().includes(search.toLowerCase())
+      ).slice(0, 5);
+      setSuggestions(filtered);
+    } else {
+      setSuggestions([]);
+    }
+  }, [search]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node)) {
+        setSuggestions([]);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (search.trim()) {
+      setSuggestions([]);
       router.push(`/search?q=${encodeURIComponent(search)}`);
     }
   };
 
-  const locations = ["Mumbai, MH", "Delhi, DL", "Bangalore, KA", "Hyderabad, TS", "Chennai, TN", "Pune, MH"];
+  const handleGeoLocation = () => {
+    setIsLocating(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // In a real app, you'd use reverse geocoding here. 
+          // We'll simulate fetching the city name.
+          setTimeout(() => {
+            setLocation(`Lat: ${position.coords.latitude.toFixed(2)}, Lng: ${position.coords.longitude.toFixed(2)}`);
+            setIsLocating(false);
+          }, 1000);
+        },
+        (error) => {
+          console.error(error);
+          setIsLocating(false);
+          alert("Could not detect location automatically. Please select manually.");
+        }
+      );
+    }
+  };
+
+  const manualLocations = ["Mumbai, MH", "Delhi, DL", "Bangalore, KA", "Hyderabad, TS"];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b shadow-sm">
+    <nav className="sticky top-0 z-50 bg-white border-b shadow-sm safe-top">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo & Location */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link href="/" className="flex items-center gap-2 shrink-0">
-              <div className="bg-primary p-1.5 rounded-lg">
+              <div className="bg-primary p-1.5 rounded-xl shadow-lg shadow-primary/20">
                 <div className="text-white font-bold text-xl tracking-tighter">HL</div>
               </div>
-              <span className="hidden md:block font-bold text-xl text-primary font-headline tracking-tight">
-                HealthLink <span className="text-gray-400">Pharmacy</span>
+              <span className="hidden lg:block font-black text-xl text-primary font-headline tracking-tight">
+                HealthLink <span className="text-gray-300">Pharmacy</span>
               </span>
             </Link>
 
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" className="hidden sm:flex items-center gap-1 text-xs font-bold text-gray-500 hover:text-primary p-2 h-auto rounded-xl">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  <span className="truncate max-w-[100px]">{location}</span>
+                <Button variant="ghost" className="flex items-center gap-1 text-[10px] sm:text-xs font-black text-gray-500 hover:text-primary p-2 h-auto rounded-xl bg-gray-50 border border-gray-100 uppercase tracking-widest">
+                  <MapPin className="w-3.5 h-3.5 text-primary" />
+                  <span className="truncate max-w-[60px] sm:max-w-[100px]">{location}</span>
                   <ChevronDown className="w-3 h-3" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-48 p-2">
-                <p className="text-[10px] font-bold text-gray-400 uppercase p-2">Select City</p>
-                {locations.map((loc) => (
+              <PopoverContent className="w-64 p-3 rounded-2xl shadow-2xl border-none">
+                <div className="space-y-3">
                   <Button 
-                    key={loc} 
-                    variant="ghost" 
-                    className="w-full justify-start text-sm" 
-                    onClick={() => setLocation(loc)}
+                    onClick={handleGeoLocation} 
+                    disabled={isLocating}
+                    className="w-full justify-start gap-2 h-12 rounded-xl bg-primary/5 text-primary hover:bg-primary/10 border-none font-bold"
                   >
-                    {loc}
+                    {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <LocateFixed className="w-4 h-4" />}
+                    Detect My Location
                   </Button>
-                ))}
+                  <div className="pt-2">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 mb-2">Popular Cities</p>
+                    {manualLocations.map((loc) => (
+                      <Button 
+                        key={loc} 
+                        variant="ghost" 
+                        className="w-full justify-start text-sm h-10 rounded-lg hover:bg-gray-50" 
+                        onClick={() => setLocation(loc)}
+                      >
+                        {loc}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               </PopoverContent>
             </Popover>
           </div>
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-lg mx-4 hidden md:block">
-            <form onSubmit={handleSearch} className="relative">
+          {/* Search Bar with Suggestions */}
+          <div className="flex-1 max-w-lg mx-4 relative hidden sm:block" ref={suggestionRef}>
+            <form onSubmit={handleSearch} className="relative group">
               <Input
                 type="text"
-                placeholder="Search medicines, salts, or brands..."
-                className="w-full pl-10 pr-4 py-2 rounded-full border-gray-200 focus:ring-primary focus:border-primary transition-all bg-gray-50 h-11"
+                placeholder="Search medicines, salts..."
+                className="w-full pl-10 pr-4 py-2 rounded-2xl border-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all bg-gray-100 h-12 font-medium"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-primary transition-colors" />
             </form>
+
+            {suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                {suggestions.map((p) => (
+                  <Link 
+                    key={p.id} 
+                    href={`/product/${p.id}`}
+                    onClick={() => setSuggestions([])}
+                    className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors border-b last:border-none"
+                  >
+                    <div className="w-10 h-10 relative bg-gray-50 rounded-lg overflow-hidden shrink-0">
+                      <img src={p.imageUrl} alt={p.name} className="object-contain p-1" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-gray-900">{p.name}</p>
+                      <p className="text-[10px] text-gray-400 italic">{p.saltComposition}</p>
+                    </div>
+                    {p.isGeneric && <Badge className="ml-auto bg-green-50 text-green-700 border-none text-[8px] h-4">GENERIC</Badge>}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Action Icons */}
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link href="/prescription" className="hidden lg:flex items-center gap-2 text-primary font-bold text-sm hover:opacity-80 transition-colors">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Link href="/prescription" className="hidden lg:flex items-center gap-2 bg-primary/5 p-2 rounded-xl text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary/10 transition-colors">
               <Upload className="w-4 h-4" />
               <span>Upload</span>
             </Link>
             
-            <Link href="/cart" className="relative p-2.5 hover:bg-gray-100 rounded-full transition-colors">
+            <Link href="/cart" className="relative p-2.5 hover:bg-gray-100 rounded-2xl transition-colors">
               <ShoppingCart className="w-6 h-6 text-gray-700" />
               {totalItems > 0 && (
-                <span className="absolute top-1 right-1 bg-accent text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ring-2 ring-white">
+                <span className="absolute top-1.5 right-1.5 bg-accent text-white text-[10px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-white animate-bounce">
                   {totalItems}
                 </span>
               )}
             </Link>
 
-            <Link href="/profile" className="p-2.5 hover:bg-gray-100 rounded-full transition-colors">
+            <Link href="/profile" className="p-2.5 hover:bg-gray-100 rounded-2xl transition-colors">
               <User className="w-6 h-6 text-gray-700" />
             </Link>
 
-            <Button variant="ghost" size="icon" className="md:hidden">
+            <Button variant="ghost" size="icon" className="sm:hidden rounded-2xl">
               <Menu className="w-6 h-6" />
             </Button>
           </div>
