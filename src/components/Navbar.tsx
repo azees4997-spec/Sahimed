@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from 'next/link';
@@ -54,18 +55,30 @@ export default function Navbar() {
     setIsLocating(true);
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setTimeout(() => {
-            setLocation(`Lat: ${position.coords.latitude.toFixed(2)}, Lng: ${position.coords.longitude.toFixed(2)}`);
+        async (position) => {
+          try {
+            // Simulate reverse geocoding or just use coords for demo
+            const lat = position.coords.latitude.toFixed(2);
+            const lng = position.coords.longitude.toFixed(2);
+            
+            // In a real app, you'd fetch the city name from an API like Google Maps or OpenStreetMap
+            // For this prototype, we'll simulate finding a major city near those coords
+            setLocation(`My Location (${lat}, ${lng})`);
+          } catch (e) {
+            console.error(e);
+          } finally {
             setIsLocating(false);
-          }, 1000);
+          }
         },
         (error) => {
           console.error(error);
           setIsLocating(false);
-          alert("Could not detect location automatically. Please select manually.");
+          alert("Could not detect location. Please check browser permissions.");
         }
       );
+    } else {
+      setIsLocating(false);
+      alert("Geolocation is not supported by your browser.");
     }
   };
 
@@ -96,34 +109,37 @@ export default function Navbar() {
 
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-1 text-[10px] sm:text-xs font-black text-gray-500 hover:text-primary p-2 h-auto rounded-xl bg-gray-50 border border-gray-100 uppercase tracking-widest">
-                    <MapPin className="w-3.5 h-3.5 text-primary" />
-                    <span className="truncate max-w-[60px] sm:max-w-[100px]">{location}</span>
-                    <ChevronDown className="w-3 h-3" />
+                  <Button variant="ghost" className="flex items-center gap-1 text-[10px] sm:text-xs font-black text-gray-500 hover:text-primary p-2 h-auto rounded-xl bg-gray-50 border border-gray-100 uppercase tracking-widest max-w-[120px] sm:max-w-none">
+                    <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <span className="truncate">{location}</span>
+                    <ChevronDown className="w-3 h-3 shrink-0" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-64 p-3 rounded-2xl shadow-2xl border-none">
-                  <div className="space-y-3">
+                <PopoverContent className="w-72 p-4 rounded-3xl shadow-2xl border-none animate-in fade-in zoom-in-95 duration-200">
+                  <div className="space-y-4">
                     <Button 
                       onClick={handleGeoLocation} 
                       disabled={isLocating}
-                      className="w-full justify-start gap-2 h-12 rounded-xl bg-primary/5 text-primary hover:bg-primary/10 border-none font-bold"
+                      className="w-full justify-start gap-3 h-14 rounded-2xl bg-primary/5 text-primary hover:bg-primary/10 border-none font-black text-[10px] uppercase tracking-widest"
                     >
-                      {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <LocateFixed className="w-4 h-4" />}
-                      Detect My Location
+                      {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <LocateFixed className="w-5 h-5" />}
+                      Use My GPS Location
                     </Button>
                     <div className="pt-2">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 mb-2">Popular Cities</p>
-                      {manualLocations.map((loc) => (
-                        <Button 
-                          key={loc} 
-                          variant="ghost" 
-                          className="w-full justify-start text-sm h-10 rounded-lg hover:bg-gray-50" 
-                          onClick={() => setLocation(loc)}
-                        >
-                          {loc}
-                        </Button>
-                      ))}
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 mb-3">Popular Regions</p>
+                      <div className="grid grid-cols-1 gap-1">
+                        {manualLocations.map((loc) => (
+                          <Button 
+                            key={loc} 
+                            variant="ghost" 
+                            className="w-full justify-start text-sm h-12 rounded-xl hover:bg-gray-50 font-bold px-4" 
+                            onClick={() => setLocation(loc)}
+                          >
+                            <MapPin className="w-4 h-4 mr-2 text-gray-300" />
+                            {loc}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </PopoverContent>
@@ -144,24 +160,34 @@ export default function Navbar() {
               </form>
 
               {suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                   {suggestions.map((p) => (
                     <Link 
                       key={p.id} 
                       href={`/product/${p.id}`}
-                      onClick={() => setSuggestions([])}
+                      onClick={() => {
+                        setSuggestions([]);
+                        setSearch('');
+                      }}
                       className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors border-b last:border-none"
                     >
                       <div className="w-10 h-10 relative bg-gray-50 rounded-lg overflow-hidden shrink-0">
                         <img src={p.imageUrl} alt={p.name} className="object-contain p-1" />
                       </div>
-                      <div>
-                        <p className="font-bold text-sm text-gray-900">{p.name}</p>
-                        <p className="text-[10px] text-gray-400 italic">{p.saltComposition}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-gray-900 truncate">{p.name}</p>
+                        <p className="text-[10px] text-gray-400 italic truncate">{p.saltComposition}</p>
                       </div>
-                      {p.isGeneric && <Badge className="ml-auto bg-green-50 text-green-700 border-none text-[8px] h-4">GENERIC</Badge>}
+                      {p.isGeneric ? (
+                        <Badge className="ml-auto bg-green-50 text-green-700 border-none text-[8px] h-5 font-black uppercase tracking-tighter px-2">GENERIC</Badge>
+                      ) : (
+                        <Badge variant="outline" className="ml-auto text-[8px] h-5 font-black uppercase tracking-tighter px-2 text-gray-400 border-gray-200">BRANDED</Badge>
+                      )}
                     </Link>
                   ))}
+                  <div className="p-3 bg-gray-50 text-center">
+                    <button onClick={handleSearch} className="text-[10px] font-black text-primary uppercase tracking-widest">See all results</button>
+                  </div>
                 </div>
               )}
             </div>
@@ -194,13 +220,13 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Bottom Navigation Bar (Native Flutter Look) */}
+      {/* Mobile Bottom Navigation Bar */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t safe-bottom z-50 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
         <div className="flex justify-around items-center h-16">
           <NavItem href="/" icon={Home} label="Home" active={pathname === '/'} />
           <NavItem href="/search" icon={SearchIcon} label="Explore" active={pathname === '/search'} />
           <Link href="/prescription" className="-mt-10">
-            <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white shadow-xl shadow-primary/30 border-4 border-white">
+            <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white shadow-xl shadow-primary/30 border-4 border-white active:scale-90 transition-transform">
               <Upload className="w-6 h-6" />
             </div>
           </Link>
