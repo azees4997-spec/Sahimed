@@ -63,7 +63,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <div className="flex items-center justify-between mb-4 px-2">
           <Link href="/" className="flex items-center gap-1 text-primary font-black active:scale-95 transition-transform">
             <ChevronLeft className="w-5 h-5" />
-            <span className="text-[10px] uppercase tracking-widest">Store</span>
+            <span className="text-[10px] uppercase tracking-widest text-primary">Store</span>
           </Link>
           <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-400">
             <span className="truncate max-w-[80px]">{product.category}</span>
@@ -109,9 +109,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     <h1 className="text-xs sm:text-2xl font-black text-gray-900 mb-0.5 sm:mb-1 leading-tight">{product.name}</h1>
                     <p className="text-[7px] sm:text-xs font-bold text-gray-400 mb-2 sm:mb-4 uppercase tracking-widest line-clamp-1">{product.manufacturer}</p>
                     
-                    <div className="hidden sm:inline-flex items-center gap-2 bg-blue-50/50 px-4 py-2 rounded-2xl mb-6 border border-blue-100">
-                      <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Salt:</span>
-                      <span className="text-xs font-bold text-blue-900">{product.saltComposition}</span>
+                    <div className="inline-flex items-center gap-1 sm:gap-2 bg-blue-50/50 px-2 sm:px-4 py-1 sm:py-2 rounded-[10px] sm:rounded-2xl mb-4 sm:mb-6 border border-blue-100">
+                      <span className="text-[6px] sm:text-[10px] font-black text-blue-600 uppercase tracking-widest">Salt:</span>
+                      <span className="text-[7px] sm:text-xs font-bold text-blue-900 truncate max-w-[100px]">{product.saltComposition}</span>
                     </div>
 
                     <div className="flex items-baseline justify-center gap-1 sm:gap-3">
@@ -146,27 +146,31 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                  <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 sm:mb-4 border-l-4 border-primary pl-2 sm:pl-3">Description</h4>
                  <p className="text-[9px] sm:text-sm text-gray-600 font-medium leading-relaxed line-clamp-3 sm:line-clamp-none">{product.description}</p>
                </section>
-               <section className="hidden sm:block">
-                 <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 border-l-4 border-green-500 pl-3">Standard Uses</h4>
-                 <ul className="space-y-3">
+               <section>
+                 <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 sm:mb-4 border-l-4 border-green-500 pl-2 sm:pl-3">Standard Uses</h4>
+                 <ul className="space-y-1 sm:space-y-3">
                    {product.uses.map((use, i) => (
-                     <li key={i} className="flex items-start gap-2 text-xs font-bold text-gray-700">
-                       <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                     <li key={i} className="flex items-start gap-1 sm:gap-2 text-[9px] sm:text-xs font-bold text-gray-700">
+                       <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 shrink-0 mt-0.5" />
                        {use}
                      </li>
                    ))}
                  </ul>
                </section>
-               <section className="hidden sm:block">
-                 <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 border-l-4 border-orange-500 pl-3">Side Effects</h4>
-                 <ul className="space-y-3">
+               <section>
+                 <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 sm:mb-4 border-l-4 border-orange-500 pl-2 sm:pl-3">Side Effects</h4>
+                 <ul className="space-y-1 sm:space-y-3">
                    {product.sideEffects.map((se, i) => (
-                     <li key={i} className="flex items-start gap-2 text-xs font-bold text-gray-700">
-                       <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+                     <li key={i} className="flex items-start gap-1 sm:gap-2 text-[9px] sm:text-xs font-bold text-gray-700">
+                       <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 text-orange-400 shrink-0 mt-0.5" />
                        {se}
                      </li>
                    ))}
                  </ul>
+               </section>
+               <section>
+                 <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 sm:mb-4 border-l-4 border-gray-400 pl-2 sm:pl-3">Manufacturer</h4>
+                 <p className="text-[9px] sm:text-xs text-gray-500 font-bold">{product.mfrDetails}</p>
                </section>
             </div>
           </div>
@@ -197,7 +201,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
                       <div className="inline-flex items-center gap-1 sm:gap-2 bg-white/70 px-2 sm:px-4 py-1 sm:py-2 rounded-[10px] sm:rounded-2xl mb-4 sm:mb-6 border border-green-100">
                         <span className="text-[6px] sm:text-[10px] font-black text-green-600 uppercase tracking-widest">Salt:</span>
-                        <span className="text-[7px] sm:text-xs font-bold text-green-900 truncate max-w-[60px] sm:max-w-none">{product.saltComposition}</span>
+                        <span className="text-[7px] sm:text-xs font-bold text-green-900 truncate max-w-[100px]">{genericSubstitute.saltComposition}</span>
                       </div>
 
                       <div className="flex items-baseline justify-center gap-1 sm:gap-3">
@@ -232,12 +236,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                    <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-green-600 mb-2 sm:mb-4 border-l-4 border-green-600 pl-2 sm:pl-3">Bio-Equivalence</h4>
                    <p className="text-[9px] sm:text-sm text-gray-600 font-medium leading-relaxed line-clamp-3 sm:line-clamp-none">{genericSubstitute.description}</p>
                  </section>
-                 <section className="hidden sm:block">
-                   <h4 className="text-[10px] font-black uppercase tracking-widest text-green-600 mb-4 border-l-4 border-green-600 pl-3">Clinical Benefits</h4>
-                   <ul className="space-y-3">
+                 <section>
+                   <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-green-600 mb-2 sm:mb-4 border-l-4 border-green-600 pl-2 sm:pl-3">Clinical Benefits</h4>
+                   <ul className="space-y-1 sm:space-y-3">
                      {genericSubstitute.uses.map((use, i) => (
-                       <li key={i} className="flex items-start gap-2 text-xs font-bold text-gray-700">
-                         <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
+                       <li key={i} className="flex items-start gap-1 sm:gap-2 text-[9px] sm:text-xs font-bold text-gray-700">
+                         <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 shrink-0 mt-0.5" />
                          {use}
                        </li>
                      ))}
