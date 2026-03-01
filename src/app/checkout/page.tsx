@@ -32,8 +32,14 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (cart.length === 0) {
+      toast({ variant: "destructive", title: "Cart Empty", description: "Add items to cart first." });
+      return;
+    }
+
     setLoading(true);
     
+    // Create a robust order record including user context for collectionGroup queries
     const orderData = {
       userId: user.uid,
       orderDate: serverTimestamp(),
@@ -45,7 +51,8 @@ export default function CheckoutPage() {
         medicineId: item.id,
         quantity: item.quantity,
         unitPrice: item.price,
-        name: item.name
+        name: item.name,
+        imageUrl: item.imageUrl
       }))
     };
 
@@ -56,7 +63,11 @@ export default function CheckoutPage() {
       
       toast({ title: "Order Placed!", description: "Your healthcare needs are on the way." });
       clearCart();
-      router.push('/orders');
+      
+      // Redirect to orders history after a short delay for non-blocking write to propagate
+      setTimeout(() => {
+        router.push('/orders');
+      }, 500);
     } catch (err) {
       console.error(err);
       toast({ variant: "destructive", title: "Order Failed", description: "Something went wrong." });
@@ -91,7 +102,7 @@ export default function CheckoutPage() {
                </CardContent>
             </Card>
 
-            <Card className="rounded-[40px] border-none shadow-sm overflow-hidden">
+            <Card className="rounded-[40px] border-none shadow-sm overflow-hidden bg-white">
               <CardHeader className="bg-white p-8 border-b">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -180,19 +191,19 @@ export default function CheckoutPage() {
             <div className="bg-white p-10 rounded-[50px] shadow-2xl border border-gray-100 sticky top-24">
               <h2 className="text-2xl font-black mb-10 text-gray-900 uppercase tracking-widest">Order Summary</h2>
               
-              <div className="space-y-6 mb-10">
+              <div className="space-y-6 mb-10 max-h-[30vh] overflow-y-auto scrollbar-hide">
                  {cart.map(item => (
-                   <div key={item.id} className="flex justify-between items-center text-sm">
+                   <div key={item.id} className="flex justify-between items-center text-sm p-2 border-b border-gray-50 last:border-none">
                      <div className="flex flex-col">
                         <span className="text-gray-900 font-black">{item.name}</span>
-                        <span className="text-[10px] text-gray-400 font-bold">Qty: {item.quantity}</span>
+                        <span className="text-[10px] text-gray-400 font-bold">Qty: {item.quantity} • ₹{item.price}</span>
                      </div>
                      <span className="font-black text-gray-900">₹{item.price * item.quantity}</span>
                    </div>
                  ))}
               </div>
 
-              <div className="space-y-5 mb-10 pt-10 border-t border-gray-50">
+              <div className="space-y-5 mb-10 pt-6 border-t border-gray-100">
                 <div className="flex justify-between text-gray-500 font-bold">
                   <span>Cart Total</span>
                   <span>₹{totalPrice}</span>
@@ -207,7 +218,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <Button onClick={handlePlaceOrder} disabled={loading} className="w-full h-16 rounded-full text-lg font-black uppercase tracking-widest shadow-2xl shadow-primary/40 hover:scale-[1.02] transition-all gap-3">
+              <Button onClick={handlePlaceOrder} disabled={loading || cart.length === 0} className="w-full h-16 rounded-full text-lg font-black uppercase tracking-widest shadow-2xl shadow-primary/40 hover:scale-[1.02] transition-all gap-3">
                 {loading ? <Loader2 className="animate-spin" /> : (user ? "Confirm & Pay" : "Login to Checkout")}
               </Button>
               

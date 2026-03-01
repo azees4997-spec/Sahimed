@@ -25,7 +25,8 @@ import {
   Truck,
   CheckCircle2,
   Clock,
-  Eye
+  Eye,
+  User as UserIcon
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
@@ -85,7 +86,7 @@ export default function AdminDashboard() {
   }, [db, isAdmin]);
   const { data: categories, isLoading: isCatsLoading } = useCollection(categoriesQuery);
 
-  // Orders Collection Group (Global Master)
+  // Global Orders Collection Group (Master Fulfillment View)
   const allOrdersQuery = useMemoFirebase(() => {
     if (!db || !isAdmin) return null;
     return query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc'));
@@ -157,44 +158,6 @@ export default function AdminDashboard() {
         imageUrl: "https://picsum.photos/seed/med2/300/300",
         uses: ["Affordable Glycemic Control", "Type 2 Diabetes"],
         sideEffects: ["Mild nausea"]
-      },
-      {
-        id: "atorva-1",
-        name: "Atorva 20mg",
-        price: 450,
-        saltComposition: "Atorvastatin 20mg",
-        manufacturer: "Zydus Cadila",
-        categoryId: "cat_heart",
-        category: "Heart care",
-        description: "Statin for cholesterol management. Helps prevent heart attacks and strokes.",
-        isGeneric: false,
-        isTopDeal: true,
-        dosageForm: "Tablet",
-        strength: "20mg",
-        packSize: "Strip of 10 tablets",
-        availableQuantity: 250,
-        imageUrl: "https://picsum.photos/seed/med3/300/300",
-        uses: ["High Cholesterol", "Heart Health"],
-        sideEffects: ["Muscle pain", "Headache"]
-      },
-      {
-        id: "ge-heart-1",
-        name: "Atorvastatin Generic 20mg",
-        price: 85,
-        saltComposition: "Atorvastatin 20mg",
-        manufacturer: "Standard Labs",
-        categoryId: "cat_heart",
-        category: "Heart care",
-        description: "Economical cholesterol management. Verified bio-equivalent statin.",
-        isGeneric: true,
-        isTopDeal: true,
-        dosageForm: "Tablet",
-        strength: "20mg",
-        packSize: "Strip of 10 tablets",
-        availableQuantity: 1000,
-        imageUrl: "https://picsum.photos/seed/med4/300/300",
-        uses: ["Cholesterol Control", "Cardiac Protection"],
-        sideEffects: ["Fatigue"]
       }
     ];
 
@@ -225,8 +188,8 @@ export default function AdminDashboard() {
   if (!user || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8] p-4">
-        <Card className="max-w-md w-full rounded-[40px] shadow-2xl border-none">
-          <CardHeader className="text-center p-12 bg-primary text-white rounded-t-[40px]">
+        <Card className="max-w-md w-full rounded-[40px] shadow-2xl border-none overflow-hidden">
+          <CardHeader className="text-center p-12 bg-primary text-white">
             <div className="w-20 h-20 bg-white/10 rounded-[32px] flex items-center justify-center mx-auto mb-6 backdrop-blur">
               <ShieldCheck className="w-10 h-10 text-white" />
             </div>
@@ -237,7 +200,7 @@ export default function AdminDashboard() {
                 : "Secure supervisor access for pharmacy management"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-10">
+          <CardContent className="p-10 bg-white">
             {!user ? (
               <form onSubmit={handleLogin} className="space-y-4">
                 <Input 
@@ -267,7 +230,6 @@ export default function AdminDashboard() {
                   <Lock className="w-10 h-10 mb-2 opacity-50" />
                   <p className="text-xs font-black uppercase tracking-widest text-center">Your UID is not authorized</p>
                   <p className="text-[10px] font-bold leading-relaxed bg-white/50 px-4 py-2 rounded-xl border border-orange-200">{user.uid}</p>
-                  <p className="text-[9px] font-medium text-orange-600/70 max-w-[200px] text-center">Please add this UID to the roles_admin collection in the Firebase Console.</p>
                 </div>
                 <Button onClick={handleLogout} variant="outline" className="w-full h-14 rounded-full font-black uppercase text-[10px] tracking-widest border-2">Logout</Button>
               </div>
@@ -342,7 +304,7 @@ export default function AdminDashboard() {
                   <Package className="w-10 h-10 text-primary" />
                 </div>
                 <CardTitle className="text-2xl font-black mb-2">Medicine Master</CardTitle>
-                <CardDescription className="mb-6 text-xs">Manage catalog and generic equivalence.</CardDescription>
+                <CardDescription className="mb-6 text-xs text-muted-foreground">Manage catalog and generic alternatives.</CardDescription>
                 <Button onClick={() => setActiveTab('products')} variant="outline" className="rounded-full h-12 px-8 font-bold border-2 w-full">Manage</Button>
               </Card>
 
@@ -351,7 +313,7 @@ export default function AdminDashboard() {
                   <ShoppingBag className="w-10 h-10 text-green-500" />
                 </div>
                 <CardTitle className="text-2xl font-black mb-2">Orders Master</CardTitle>
-                <CardDescription className="mb-6 text-xs">Global fulfillment and order tracking.</CardDescription>
+                <CardDescription className="mb-6 text-xs text-muted-foreground">Global fulfillment and order tracking.</CardDescription>
                 <Button onClick={() => setActiveTab('orders')} variant="outline" className="rounded-full h-12 px-8 font-bold border-2 w-full">Manage</Button>
               </Card>
 
@@ -360,7 +322,7 @@ export default function AdminDashboard() {
                   <Tags className="w-10 h-10 text-orange-400" />
                 </div>
                 <CardTitle className="text-2xl font-black mb-2">Category Master</CardTitle>
-                <CardDescription className="mb-6 text-xs">Define therapeutic hubs and clusters.</CardDescription>
+                <CardDescription className="mb-6 text-xs text-muted-foreground">Define therapeutic hubs and clusters.</CardDescription>
                 <Button onClick={() => setActiveTab('categories')} variant="outline" className="rounded-full h-12 px-8 font-bold border-2 w-full">Manage</Button>
               </Card>
 
@@ -369,7 +331,7 @@ export default function AdminDashboard() {
                   <Database className="w-10 h-10 text-gray-400" />
                 </div>
                 <CardTitle className="text-2xl font-black mb-2">Master Seed</CardTitle>
-                <CardDescription className="mb-6 text-xs">Initialize core clinical-grade data.</CardDescription>
+                <CardDescription className="mb-6 text-xs text-muted-foreground">Initialize core clinical-grade data.</CardDescription>
                 <Button onClick={seedMasterData} className="rounded-full h-12 px-10 font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20 w-full">
                   Seed DB
                 </Button>
@@ -497,8 +459,11 @@ export default function AdminDashboard() {
                           </p>
                         </td>
                         <td className="px-10 py-8">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-[9px] font-black uppercase border-gray-200">UID: {order.userId?.substring(0, 6)}</Badge>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                              <UserIcon className="w-4 h-4 text-gray-400" />
+                            </div>
+                            <Badge variant="outline" className="text-[9px] font-black uppercase border-gray-200">UID: {order.userId?.substring(0, 8)}</Badge>
                           </div>
                         </td>
                         <td className="px-10 py-8">
@@ -507,7 +472,9 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-10 py-8">
                           <Badge className={`rounded-full px-4 py-1 text-[9px] font-black uppercase border-none ${
-                            order.status === 'Delivered' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                            order.status === 'Delivered' ? 'bg-green-100 text-green-700' : 
+                            order.status === 'Processing' ? 'bg-blue-100 text-blue-700' :
+                            order.status === 'Shipped' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700'
                           }`}>
                             {order.status}
                           </Badge>
@@ -586,10 +553,6 @@ export default function AdminDashboard() {
 
 function OrderFulfillmentDialog({ order, db }: { order: any, db: any }) {
   const updateStatus = (newStatus: string) => {
-    // Note: The path to update needs the full path including userId
-    // However, in a Collection Group query, we can use the ref directly if available
-    // But since order here is from useCollection, it has an ID but we might need the full path
-    // For now, let's assume we can update it via the userId reference if it's in the order object
     if (order.userId) {
       updateDocumentNonBlocking(doc(db, 'userProfiles', order.userId, 'orders', order.id), { status: newStatus });
     }
@@ -629,6 +592,13 @@ function OrderFulfillmentDialog({ order, db }: { order: any, db: any }) {
                  <Button onClick={() => updateStatus('Processing')} variant="outline" className="rounded-full h-12 border-2 font-black uppercase text-[10px] tracking-widest">Mark as Processing</Button>
                  <Button onClick={() => updateStatus('Shipped')} variant="outline" className="rounded-full h-12 border-2 font-black uppercase text-[10px] tracking-widest">Mark as Shipped</Button>
                  <Button onClick={() => updateStatus('Delivered')} className="rounded-full h-12 bg-green-600 hover:bg-green-700 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-green-500/20">Mark as Delivered</Button>
+               </div>
+               <div className="pt-6 border-t mt-4">
+                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Customer Context</p>
+                 <div className="flex items-center gap-2">
+                   <UserIcon className="w-4 h-4 text-gray-400" />
+                   <span className="text-xs font-bold text-gray-700">{order.userId}</span>
+                 </div>
                </div>
              </div>
           </div>
@@ -673,7 +643,7 @@ function ProductFormDialog({ initialData, onSubmit, categories }: { initialData?
       <DialogHeader className="p-10 bg-primary text-white">
         <DialogTitle className="text-3xl font-black">{initialData ? 'Update Medication' : 'Register New Medicine'}</DialogTitle>
       </DialogHeader>
-      <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto">
+      <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto bg-white">
         <div className="grid grid-cols-2 gap-8">
           <div className="space-y-3">
             <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Medicine Name</Label>
@@ -780,7 +750,7 @@ function CategoryFormDialog({ initialData, onSubmit }: { initialData?: any, onSu
       <DialogHeader className="p-10 bg-orange-500 text-white">
         <DialogTitle className="text-3xl font-black">{initialData ? 'Update Category' : 'New Category Hub'}</DialogTitle>
       </DialogHeader>
-      <div className="p-10 space-y-8">
+      <div className="p-10 space-y-8 bg-white">
         <div className="space-y-3">
           <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Category Name</Label>
           <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-black text-lg" placeholder="e.g. Chronic Care" />
