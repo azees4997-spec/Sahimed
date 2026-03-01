@@ -5,46 +5,50 @@ service cloud.firestore {
     /**
      * HEALTHLINK PHARMACY SECURITY RULES
      * 
-     * Core Philosophy:
-     * This ruleset implements a strict Authorization Independence model. Access control is primarily
-     * determined by the document path, where user-specific data is nested under /users/{userId}.
-     * This ensures that security checks are performant and don't require cross-document lookups (get() calls)
-     * for basic ownership validation.
+     * CORE PHILOSOPHY:
+     * This ruleset enforces a strict user-ownership model using path-based authorization. 
+     * Access to sensitive user data (profiles, addresses, prescriptions, orders, carts) is 
+     * primarily determined by comparing the user's authenticated UID against the document's 
+     * path or an internal ownership field.
      * 
-     * Data Structure:
-     * - /users/{userId}: Private user profiles and nested subcollections (addresses, cart, orders, prescriptions).
-     * - /categories: Publicly readable product categories.
-     * - /products: Publicly readable product catalog with generic substitution data.
-     * - /roles_admin: A registry of administrative users for database-backed access control.
+     * DATA STRUCTURE:
+     * - User-specific data is stored under `/userProfiles/{userId}` or `/userCarts/{userId}`.
+     * - Global product data (medicines, categories, manufacturers) is stored in top-level collections.
+     * - Administrative roles are decoupled from user profiles and stored in `/roles_admin/{userId}`.
      * 
-     * Key Security Decisions:
-     * - Prototyping Mode: Rules enforce strict ownership but allow flexible data shapes within documents.
-     * - Public Access: Products and Categories are globally readable to allow browsing without authentication.
-     * - Admin Elevation: Users listed in /roles_admin can access and manage orders and prescriptions for logistics.
-     * - Path Consistency: Rules enforce that the 'id' or 'userId' field within a document matches its path.
+     * KEY SECURITY DECISIONS:
+     * - DBAC (Database Access Control): Admin status is checked by the existence of a document 
+     *   in the `/roles_admin` collection rather than a field within the user's profile.
+     * - Path-Based Authorization: By nesting user data under their UID, we eliminate the need 
+     *   for cross-document lookups (get() calls) for most ownership checks.
+     * - Public Read / Admin Write: Product catalogs are publicly viewable but strictly 
+     *   managed by administrators.
+     * - Order/Prescription Visibility: Administrators are granted read access to user orders 
+     *   and prescriptions for processing and fulfillment.
      * 
-     * Denormalization for Authorization:
-     * The {userId} is present in the path for all private data, allowing for direct comparison with request.auth.uid.
+     * PROTOTYPING MODE:
+     * These rules prioritize strict authorization (who can access what) while remaining 
+     * flexible on the internal data shape of documents to allow for rapid development.
      */
 
-    // --- GLOBAL HELPER FUNCTIONS ---
+    // --- HELPER FUNCTIONS ---
 
-    /** Checks if the request is from an authenticated user. */
+    /** @description Checks if the user is authenticated. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** Checks if the authenticated user's UID matches the provided userId. */
+    /** @description Checks if the authenticated user matches the provided ID. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** Checks if the user exists in the admin roles collection. */
+    /** @description Checks if the user is a registered administrator via DBAC. */
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    /** Verifies ownership and that the document exists for update/delete operations. */
+    /** @description Combines ownership and existence checks for state-changing operations. */
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
@@ -52,114 +56,75 @@ service cloud.firestore {
     // --- COLLECTION RULES ---
 
     /**
-     * @description Rules for user profiles. Users can manage their own profile; admins can view all.
-     * @path /users/{userId}
-     * @allow (create) User 'abc' creates a profile where document ID is 'abc'.
-     * @deny (create) User 'abc' tries to create a profile with document ID 'xyz'.
-     * @principle Self-creation pattern with path-to-data consistency.
+     * @description User profile management. Owners manage their profiles; admins can list all.
+     * @path /userProfiles/{userId}
+     * @allow (get) If user is owner or admin.
+     * @deny (list) If user is not an admin.
+     * @principle Path-based ownership.
      */
-    match /users/{userId} {
-      allow get, list: if isOwner(userId) || isAdmin();
+    match /userProfiles/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update, delete: if isExistingOwner(userId);
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
 
       /**
-       * @description Rules for user delivery addresses. Users can have multiple addresses.
-       * @path /users/{userId}/userAddresses/{addressId}
-       * @allow (create) User 'abc' adds an address to their own subcollection.
-       * @deny (list) User 'abc' tries to list addresses belonging to user 'xyz'.
-       * @principle Restricts access to a user's own data tree.
+       * @description Delivery addresses owned by the user.
+       * @path /userProfiles/{userId}/addresses/{addressId}
+       * @allow (create) If owner and userId in data matches path.
+       * @deny (update) If attempting to change ownership field (userId).
        */
-      match /userAddresses/{addressId} {
-        allow get, list: if isOwner(userId) || isAdmin();
+      match /addresses/{addressId} {
+        allow get, list: if isOwner(userId);
         allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update, delete: if isExistingOwner(userId);
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
       }
 
       /**
-       * @description Rules for the user's active shopping cart.
-       * @path /users/{userId}/cart
-       * @allow (get) User 'abc' retrieves their own cart state.
-       * @deny (update) User 'abc' tries to update user 'xyz's cart.
-       * @principle Owner-only access to private transient data.
-       */
-      match /cart {
-        allow get, list: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update, delete: if isExistingOwner(userId);
-
-        /**
-         * @description Rules for items inside a specific cart.
-         * @path /users/{userId}/cart/cartItems/{cartItemId}
-         * @allow (create) User 'abc' adds a product to their cart.
-         * @deny (delete) User 'abc' tries to remove an item from user 'xyz's cart.
-         * @principle Authorization Independence via path wildcards.
-         */
-        match /cartItems/{cartItemId} {
-          allow get, list: if isOwner(userId) || isAdmin();
-          allow create: if isOwner(userId);
-          allow update, delete: if isExistingOwner(userId);
-        }
-      }
-
-      /**
-       * @description Rules for user orders. Admins can update status for fulfillment.
-       * @path /users/{userId}/orders/{orderId}
-       * @allow (create) User 'abc' places an order.
-       * @deny (update) User 'abc' tries to change the status of their own order (Admin only).
-       * @principle Owner-initiated creation with admin-controlled state changes.
-       */
-      match /orders/{orderId} {
-        allow get, list: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if (isOwner(userId) || isAdmin()) && resource != null;
-        allow delete: if isAdmin() && resource != null;
-
-        /**
-         * @description Rules for items within a specific order. Immutable history.
-         * @path /users/{userId}/orders/{orderId}/orderItems/{orderItemId}
-         * @allow (get) User 'abc' views order history details.
-         * @principle Path-based authorization for nested child resources.
-         */
-        match /orderItems/{orderItemId} {
-          allow get, list: if isOwner(userId) || isAdmin();
-          allow create: if isOwner(userId);
-          allow update, delete: if isAdmin() && resource != null;
-        }
-      }
-
-      /**
-       * @description Rules for user-uploaded prescriptions.
-       * @path /users/{userId}/prescriptions/{prescriptionId}
-       * @allow (create) User 'abc' uploads a prescription image.
-       * @deny (update) User 'abc' tries to modify pharmacistNotes (Admin only).
-       * @principle Ownership for uploads; shared access for review.
+       * @description Prescriptions uploaded by the user. Admins can view for verification.
+       * @path /userProfiles/{userId}/prescriptions/{prescriptionId}
+       * @allow (get) If owner or admin.
        */
       match /prescriptions/{prescriptionId} {
         allow get, list: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if (isOwner(userId) || isAdmin()) && resource != null;
-        allow delete: if isAdmin() && resource != null;
+        allow update: if (isExistingOwner(userId) || isAdmin()) && (request.resource.data.userId == resource.data.userId);
+        allow delete: if isExistingOwner(userId);
+      }
 
-        /**
-         * @description Rules for medications suggested from a prescription.
-         * @path /users/{userId}/prescriptions/{prescriptionId}/suggestedPrescriptionMedications/{medicationId}
-         * @allow (get) User 'abc' views what the pharmacist/AI suggested.
-         * @principle Admin/System-driven data within user context.
-         */
-        match /suggestedPrescriptionMedications/{medicationId} {
+      /**
+       * @description User order history. Admins can view for fulfillment.
+       * @path /userProfiles/{userId}/orders/{orderId}
+       */
+      match /orders/{orderId} {
+        allow get, list: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if (isExistingOwner(userId) || isAdmin()) && (request.resource.data.userId == resource.data.userId);
+        allow delete: if false; // Orders are generally immutable for record keeping
+
+        match /orderItems/{orderItemId} {
           allow get, list: if isOwner(userId) || isAdmin();
-          allow create, update, delete: if isAdmin();
+          allow create: if isOwner(userId);
+          allow update, delete: if false;
         }
       }
     }
 
     /**
-     * @description Rules for product categories. Publicly available for browsing.
+     * @description Global admin role management.
+     * @path /roles_admin/{userId}
+     * @principle DBAC (Database Access Control) - existence defines role.
+     */
+    match /roles_admin/{userId} {
+      allow get, list: if isAdmin();
+      allow write: if false; // Admin roles usually managed via Admin SDK/Cloud Functions
+    }
+
+    /**
+     * @description Publicly readable catalog of medicine categories.
      * @path /categories/{categoryId}
-     * @allow (get) An unauthenticated user browses 'Diabetes' category.
-     * @deny (create) A regular user tries to create a new category.
-     * @principle Public read with restricted administrative writes.
      */
     match /categories/{categoryId} {
       allow get, list: if true;
@@ -167,28 +132,43 @@ service cloud.firestore {
     }
 
     /**
-     * @description Rules for the product catalog. Publicly available for browsing.
-     * @path /products/{productId}
-     * @allow (list) A user searches for generic alternatives.
-     * @deny (delete) A user tries to delete a product.
-     * @principle Public catalog access for consumer transparency.
+     * @description Publicly readable catalog of manufacturers.
+     * @path /manufacturers/{manufacturerId}
      */
-    match /products/{productId} {
+    match /manufacturers/{manufacturerId} {
       allow get, list: if true;
       allow create, update, delete: if isAdmin();
     }
 
     /**
-     * @description Rules for identifying administrators.
-     * @path /roles_admin/{adminId}
-     * @allow (get) An admin checks their own status.
-     * @deny (list) A regular user tries to list all admins.
-     * @principle Secure role registry for database-backed access control.
+     * @description Publicly readable medicine catalog.
+     * @path /medicines/{medicineId}
      */
-    match /roles_admin/{adminId} {
-      allow get: if isSignedIn() && (request.auth.uid == adminId || isAdmin());
-      allow list: if isAdmin();
-      allow create, update, delete: if false; // Only manageable via Firebase Console or Admin SDK
+    match /medicines/{medicineId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description User-specific shopping carts.
+     * @path /userCarts/{userId}
+     */
+    match /userCarts/{userId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Items within a user's cart.
+       * @path /userCarts/{userId}/cartItems/{cartItemId}
+       */
+      match /cartItems/{cartItemId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if isExistingOwner(userId);
+      }
     }
   }
 }
