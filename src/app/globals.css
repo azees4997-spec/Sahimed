@@ -34,11 +34,9 @@
   }
   body {
     @apply bg-[#F8F8F8] text-foreground font-body antialiased select-none;
-    /* Prevents pull-to-refresh on some mobile browsers if desired, or just ensures smooth scrolling */
     overscroll-behavior-y: none;
   }
   
-  /* Safe area padding for mobile notches */
   .safe-top {
     padding-top: env(safe-area-inset-top);
   }
@@ -57,7 +55,6 @@
   }
 }
 
-/* Custom animations for native feel */
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
