@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { MapPin, Truck, ShieldCheck, Plus, CheckCircle2, LocateFixed } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
