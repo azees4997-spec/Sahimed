@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,6 @@ import {
   ShieldCheck, 
   LogOut, 
   Package, 
-  Activity, 
   Loader2, 
   Lock, 
   Edit3, 
@@ -23,7 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { useUser, useFirestore, useDoc, useAuth, useMemoFirebase, useCollection, updateDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useDoc, useAuth, useMemoFirebase, useCollection, updateDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, query, orderBy, collectionGroup, limit } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { PRODUCTS, CATEGORIES } from '@/lib/data';
@@ -50,13 +49,15 @@ export default function AdminDashboard() {
   const [isNew, setIsNew] = useState(false);
   const [editType, setEditType] = useState<'product' | 'category'>('product');
 
-  // Check for admin role
+  // Check for admin role - Path-based get is allowed for the owner
   const adminRoleRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, 'roles_admin', user.uid);
   }, [db, user]);
 
   const { data: adminRole, isLoading: isAdminRoleLoading } = useDoc(adminRoleRef);
+  
+  // Important: Explicitly verify admin data is present
   const isAdmin = !!adminRole;
 
   // Real-time Collections - Only query if confirmed as admin
@@ -74,6 +75,7 @@ export default function AdminDashboard() {
 
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !isAdmin) return null;
+    // collectionGroup requires explicit recursive security rules
     return query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc'), limit(50));
   }, [db, isAdmin]);
   const { data: orders, isLoading: ordersLoading } = useCollection(ordersQuery);
@@ -208,6 +210,7 @@ export default function AdminDashboard() {
     );
   }
 
+  // If logged in but not an admin, show unauthorized screen
   if (!user || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8] p-4">

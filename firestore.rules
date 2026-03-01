@@ -10,58 +10,39 @@ service cloud.firestore {
      * Access to sensitive user data (profiles, addresses, prescriptions, orders, carts) is 
      * primarily determined by comparing the user's authenticated UID against the document's 
      * path or an internal ownership field.
-     * 
-     * DATA STRUCTURE:
-     * - User-specific data is stored under `/userProfiles/{userId}` or `/userCarts/{userId}`.
-     * - Global product data (medicines, categories, manufacturers) is stored in top-level collections.
-     * - Administrative roles are decoupled from user profiles and stored in `/roles_admin/{userId}`.
      */
 
     // --- HELPER FUNCTIONS ---
 
-    /** @description Checks if the user is authenticated. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** @description Checks if the authenticated user matches the provided ID. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** @description Checks if the user is a registered administrator via DBAC. */
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    /** @description Combines ownership and existence checks for state-changing operations. */
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
 
-    // --- COLLECTION GROUP RULES (For Admin Dashboard) ---
+    // --- COLLECTION GROUP RULES ---
     
-    /** 
-     * @description Allows administrators to query orders across all users.
-     * Required for collectionGroup('orders') queries.
-     */
+    // Explicitly allow administrators to query orders and prescriptions across all users
     match /{path=**}/orders/{orderId} {
       allow read: if isAdmin();
     }
 
-    /** 
-     * @description Allows administrators to query prescriptions across all users.
-     * Required for collectionGroup('prescriptions') queries.
-     */
     match /{path=**}/prescriptions/{prescriptionId} {
       allow read: if isAdmin();
     }
 
     // --- TOP-LEVEL COLLECTIONS ---
 
-    /**
-     * @description User profile management. Owners manage their profiles; admins can list all.
-     */
     match /userProfiles/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
@@ -69,7 +50,6 @@ service cloud.firestore {
       allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
       allow delete: if isExistingOwner(userId);
 
-      /** @path /userProfiles/{userId}/addresses/{addressId} */
       match /addresses/{addressId} {
         allow get, list: if isOwner(userId);
         allow create: if isOwner(userId) && request.resource.data.userId == userId;
@@ -77,7 +57,6 @@ service cloud.firestore {
         allow delete: if isExistingOwner(userId);
       }
 
-      /** @path /userProfiles/{userId}/prescriptions/{prescriptionId} */
       match /prescriptions/{prescriptionId} {
         allow get, list: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId) && request.resource.data.userId == userId;
@@ -85,7 +64,6 @@ service cloud.firestore {
         allow delete: if isExistingOwner(userId);
       }
 
-      /** @path /userProfiles/{userId}/orders/{orderId} */
       match /orders/{orderId} {
         allow get, list: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId) && request.resource.data.userId == userId;
@@ -100,32 +78,28 @@ service cloud.firestore {
       }
     }
 
-    /** @path /roles_admin/{userId} */
     match /roles_admin/{userId} {
+      // Allow a user to check if they are an admin
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow write: if false; 
     }
 
-    /** @path /categories/{categoryId} */
     match /categories/{categoryId} {
       allow get, list: if true;
       allow create, update, delete: if isAdmin();
     }
 
-    /** @path /manufacturers/{manufacturerId} */
     match /manufacturers/{manufacturerId} {
       allow get, list: if true;
       allow create, update, delete: if isAdmin();
     }
 
-    /** @path /medicines/{medicineId} */
     match /medicines/{medicineId} {
       allow get, list: if true;
       allow create, update, delete: if isAdmin();
     }
 
-    /** @path /userCarts/{userId} */
     match /userCarts/{userId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && request.resource.data.userId == userId;
