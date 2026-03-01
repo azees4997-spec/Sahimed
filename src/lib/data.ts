@@ -3,81 +3,82 @@ import { Product } from "@/context/CartContext";
 
 export const PRODUCTS: Product[] = [
   {
-    id: "med-aspirin-81",
-    name: "Ecotrin Aspirin 81mg",
-    price: 499,
-    saltComposition: "Acetylsalicylic Acid",
-    manufacturer: "Bayer Pharmaceuticals",
-    category: "Chronic",
-    imageUrl: "https://picsum.photos/seed/med1/300/300"
+    id: "br-diab-1",
+    name: "Janumet 50mg/500mg",
+    price: 1250,
+    saltComposition: "Sitagliptin + Metformin",
+    manufacturer: "MSD Pharmaceuticals",
+    category: "Diabetes",
+    imageUrl: "https://picsum.photos/seed/diab1/300/300",
+    isGeneric: false
   },
   {
-    id: "med-aspirin-generic",
-    name: "HealthLink Aspirin (Generic)",
-    price: 199,
-    saltComposition: "Acetylsalicylic Acid",
-    manufacturer: "HealthLink Labs",
-    category: "Chronic",
-    imageUrl: "https://picsum.photos/seed/med2/300/300"
+    id: "ge-diab-1",
+    name: "Sitagliptin M 50/500",
+    price: 240,
+    saltComposition: "Sitagliptin + Metformin",
+    manufacturer: "HealthLink Generic",
+    category: "Diabetes",
+    imageUrl: "https://picsum.photos/seed/diab2/300/300",
+    isGeneric: true
   },
   {
-    id: "med-tylenol-extra",
-    name: "Tylenol Extra Strength",
-    price: 650,
-    saltComposition: "Paracetamol",
-    manufacturer: "Johnson & Johnson",
-    category: "Wellness",
-    imageUrl: "https://picsum.photos/seed/med3/300/300"
+    id: "br-heart-1",
+    name: "Atorva 20mg",
+    price: 450,
+    saltComposition: "Atorvastatin",
+    manufacturer: "Zydus Cadila",
+    category: "Heart care",
+    imageUrl: "https://picsum.photos/seed/heart1/300/300",
+    isGeneric: false
   },
   {
-    id: "med-para-generic",
-    name: "Generic Paracetamol 500mg",
-    price: 89,
-    saltComposition: "Paracetamol",
-    manufacturer: "Generic Pharma",
-    category: "Wellness",
-    imageUrl: "https://picsum.photos/seed/med4/300/300"
+    id: "ge-heart-1",
+    name: "Atorvastatin Generic 20mg",
+    price: 85,
+    saltComposition: "Atorvastatin",
+    manufacturer: "PharmaPure",
+    category: "Heart care",
+    imageUrl: "https://picsum.photos/seed/heart2/300/300",
+    isGeneric: true
   },
   {
-    id: "med-baby-lotion",
-    name: "Gentle Baby Moisturizer",
-    price: 850,
-    saltComposition: "Aloe Vera, Vitamin E",
-    manufacturer: "BabySoft Care",
-    category: "Baby Care",
-    imageUrl: "https://picsum.photos/seed/baby1/300/300"
+    id: "br-stomach-1",
+    name: "Pan 40mg",
+    price: 180,
+    saltComposition: "Pantoprazole",
+    manufacturer: "Alkem Laboratories",
+    category: "Stomach care",
+    imageUrl: "https://picsum.photos/seed/stomach1/300/300",
+    isGeneric: false
   },
   {
-    id: "med-zinc-complex",
-    name: "Zinc Wellness Complex",
-    price: 1200,
-    saltComposition: "Zinc Gluconate, Vitamin C",
-    manufacturer: "Vitality Labs",
-    category: "Wellness",
-    imageUrl: "https://picsum.photos/seed/wellness1/300/300"
+    id: "ge-stomach-1",
+    name: "Pantoprazole 40mg",
+    price: 45,
+    saltComposition: "Pantoprazole",
+    manufacturer: "Standard Generics",
+    category: "Stomach care",
+    imageUrl: "https://picsum.photos/seed/stomach2/300/300",
+    isGeneric: true
   },
   {
-    id: "med-metformin-500",
-    name: "Glucophage 500mg",
-    price: 350,
-    saltComposition: "Metformin Hydrochloride",
-    manufacturer: "Merck",
-    category: "Chronic",
-    imageUrl: "https://picsum.photos/seed/chronic2/300/300"
-  },
-  {
-    id: "med-met-generic",
-    name: "Metform-G 500mg",
-    price: 120,
-    saltComposition: "Metformin Hydrochloride",
-    manufacturer: "Sandoz",
-    category: "Chronic",
-    imageUrl: "https://picsum.photos/seed/chronic3/300/300"
+    id: "br-derma-1",
+    name: "Betadine Ointment",
+    price: 220,
+    saltComposition: "Povidone-Iodine",
+    manufacturer: "Win-Medicare",
+    category: "Derma care",
+    imageUrl: "https://picsum.photos/seed/derma1/300/300",
+    isGeneric: false
   }
 ];
 
 export const CATEGORIES = [
-  { name: 'Chronic', icon: 'HeartPulse', description: 'Long term care medicines' },
-  { name: 'Wellness', icon: 'Activity', description: 'Vitamins and supplements' },
-  { name: 'Baby Care', icon: 'Baby', description: 'Essentials for your little ones' }
+  { name: 'Diabetes', icon: 'Activity', description: 'Blood sugar management' },
+  { name: 'Heart care', icon: 'HeartPulse', description: 'Cardiac health essentials' },
+  { name: 'Stomach care', icon: 'Zap', description: 'Digestive & gut health' },
+  { name: 'Liver care', icon: 'ShieldPlus', description: 'Hepatic support' },
+  { name: 'Derma care', icon: 'Sparkles', description: 'Skin & dermatological solutions' },
+  { name: 'Respicare', icon: 'Wind', description: 'Respiratory & lung health' }
 ];

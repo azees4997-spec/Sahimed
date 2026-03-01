@@ -9,8 +9,9 @@ export interface Product {
   price: number;
   saltComposition: string;
   manufacturer: string;
-  category: 'Chronic' | 'Wellness' | 'Baby Care';
+  category: string;
   imageUrl: string;
+  isGeneric?: boolean;
 }
 
 interface CartItem extends Product {
@@ -25,12 +26,15 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  location: string;
+  setLocation: (loc: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [location, setLocation] = useState('Select Location');
 
   useEffect(() => {
     const savedCart = localStorage.getItem('hl_cart');
@@ -41,11 +45,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         console.error("Failed to load cart", e);
       }
     }
+    const savedLoc = localStorage.getItem('hl_location');
+    if (savedLoc) setLocation(savedLoc);
   }, []);
 
   useEffect(() => {
     localStorage.setItem('hl_cart', JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    localStorage.setItem('hl_location', location);
+  }, [location]);
 
   const addToCart = (product: Product) => {
     setCart(prev => {
@@ -80,7 +90,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <CartContext.Provider value={{
-      cart, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice
+      cart, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice, location, setLocation
     }}>
       {children}
     </CartContext.Provider>

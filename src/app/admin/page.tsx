@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShieldCheck, LogOut, Package, ClipboardList, Activity, Eye, Search } from 'lucide-react';
+import { ShieldCheck, LogOut, Package, ClipboardList, Activity, Eye, Search, MapPin, Phone } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 export default function AdminDashboard() {
@@ -26,19 +26,19 @@ export default function AdminDashboard() {
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8] p-4">
-        <Card className="max-w-md w-full rounded-3xl shadow-2xl border-none">
-          <CardHeader className="text-center p-12 bg-primary text-white rounded-t-3xl">
-            <div className="w-20 h-20 bg-white/10 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur">
+        <Card className="max-w-md w-full rounded-[40px] shadow-2xl border-none">
+          <CardHeader className="text-center p-12 bg-primary text-white rounded-t-[40px]">
+            <div className="w-20 h-20 bg-white/10 rounded-[32px] flex items-center justify-center mx-auto mb-6 backdrop-blur">
               <ShieldCheck className="w-10 h-10 text-white" />
             </div>
-            <CardTitle className="text-3xl font-bold font-headline">Pharmacist Access</CardTitle>
-            <CardDescription className="text-white/80">Secure supervisor portal for order management</CardDescription>
+            <CardTitle className="text-3xl font-bold font-headline">Pharmacist Portal</CardTitle>
+            <CardDescription className="text-white/80">Secure supervisor access for order fulfillment</CardDescription>
           </CardHeader>
-          <CardContent className="p-8">
+          <CardContent className="p-10">
             <form onSubmit={handleLogin} className="space-y-4">
-              <Input placeholder="Username (supervisor)" value={user} onChange={e => setUser(e.target.value)} className="h-12 rounded-xl" />
-              <Input type="password" placeholder="Password (admin123)" value={pass} onChange={e => setPass(e.target.value)} className="h-12 rounded-xl" />
-              <Button type="submit" className="w-full h-14 rounded-full font-bold text-lg">Login to Console</Button>
+              <Input placeholder="Username (supervisor)" value={user} onChange={e => setUser(e.target.value)} className="h-14 rounded-2xl bg-gray-50 border-none" />
+              <Input type="password" placeholder="Password (admin123)" value={pass} onChange={e => setPass(e.target.value)} className="h-14 rounded-2xl bg-gray-50 border-none" />
+              <Button type="submit" className="w-full h-16 rounded-full font-bold text-lg shadow-lg shadow-primary/20">Login to Console</Button>
             </form>
           </CardContent>
         </Card>
@@ -54,117 +54,105 @@ export default function AdminDashboard() {
             <div className="bg-primary p-1.5 rounded-lg">
               <div className="text-white font-bold text-xl tracking-tighter">HL</div>
             </div>
-            <span className="font-bold text-xl font-headline">Admin Console</span>
+            <span className="font-bold text-xl font-headline tracking-tight">Supervisor Console</span>
           </div>
-          <Button variant="ghost" onClick={() => setIsLoggedIn(false)} className="gap-2 text-red-500 hover:text-red-600 hover:bg-red-50">
+          <Button variant="ghost" onClick={() => setIsLoggedIn(false)} className="gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full font-bold">
             <LogOut className="w-4 h-4" /> Logout
           </Button>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="rounded-2xl border-none shadow-sm">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-50 text-primary rounded-xl flex items-center justify-center">
-                <Package className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase">New Orders</p>
-                <p className="text-2xl font-black">24</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl border-none shadow-sm">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="w-12 h-12 bg-orange-50 text-accent rounded-xl flex items-center justify-center">
-                <ClipboardList className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase">Prescriptions</p>
-                <p className="text-2xl font-black">12</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl border-none shadow-sm">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
-                <Activity className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase">Revenue</p>
-                <p className="text-2xl font-black">₹42,500</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl border-none shadow-sm">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
-                <Eye className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase">Visitors</p>
-                <p className="text-2xl font-black">1.2k</p>
-              </div>
-            </CardContent>
-          </Card>
+      <main className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+          {[
+            { label: 'New Orders', val: '42', icon: Package, color: 'text-blue-600', bg: 'bg-blue-50' },
+            { label: 'Pending Reviews', val: '15', icon: ClipboardList, color: 'text-orange-600', bg: 'bg-orange-50' },
+            { label: 'Live Revenue', val: '₹84,200', icon: Activity, color: 'text-green-600', bg: 'bg-green-50' },
+            { label: 'Avg Delivery', val: '2.4 Days', icon: Eye, color: 'text-purple-600', bg: 'bg-purple-50' }
+          ].map((stat, i) => (
+            <Card key={i} className="rounded-[32px] border-none shadow-sm">
+              <CardContent className="p-8 flex items-center gap-6">
+                <div className={`w-14 h-14 ${stat.bg} ${stat.color} rounded-2xl flex items-center justify-center`}>
+                  <stat.icon className="w-7 h-7" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                  <p className="text-2xl font-black">{stat.val}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        <Card className="rounded-3xl border-none shadow-sm overflow-hidden">
-          <CardHeader className="bg-white border-b p-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <Card className="rounded-[40px] border-none shadow-xl overflow-hidden bg-white">
+          <CardHeader className="bg-white border-b p-10">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div>
-                <CardTitle className="text-2xl font-bold">Pending Orders & Reviews</CardTitle>
-                <CardDescription>Manage incoming orders and pharmacist verification</CardDescription>
+                <CardTitle className="text-2xl font-black">Live Order Stream</CardTitle>
+                <CardDescription className="font-medium">Manage verification, prescription checks & logistics</CardDescription>
               </div>
-              <div className="relative w-full md:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input placeholder="Search orders..." className="pl-10 rounded-full" />
+              <div className="relative w-full md:w-80">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input placeholder="Search Customer, Location..." className="pl-12 rounded-full h-12 bg-gray-50 border-none" />
               </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
-              <TableHeader className="bg-gray-50">
-                <TableRow>
-                  <TableHead className="pl-8">Order ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Prescription</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="pr-8 text-right">Actions</TableHead>
+              <TableHeader className="bg-gray-50/50">
+                <TableRow className="border-none">
+                  <TableHead className="pl-10 text-[10px] font-black uppercase tracking-widest text-gray-400">Order & Customer</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-gray-400">Location Details</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-gray-400">Prescription</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-gray-400">Amount</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-gray-400">Status</TableHead>
+                  <TableHead className="pr-10 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {[
-                  { id: 'ORD-9821', user: 'John Doe', pres: 'Yes', amt: '₹1,240', status: 'Pending Review' },
-                  { id: 'ORD-9822', user: 'Sarah Smith', pres: 'No', amt: '₹599', status: 'Processing' },
-                  { id: 'ORD-9823', user: 'Mike Ross', pres: 'Yes', amt: '₹3,450', status: 'Verified' },
-                  { id: 'ORD-9824', user: 'Rachel Green', pres: 'No', amt: '₹249', status: 'Dispatched' },
+                  { id: 'ORD-9901', user: 'Rahul Khanna', phone: '+91 9988776655', loc: 'Worli, Mumbai', pres: 'Verified', amt: '₹1,450', status: 'Processing' },
+                  { id: 'ORD-9902', user: 'Priya Sharma', phone: '+91 9123456780', loc: 'Whitefield, Bangalore', pres: 'Review Photo', amt: '₹2,840', status: 'Pending Review' },
+                  { id: 'ORD-9903', user: 'Amit Gupta', phone: '+91 9812345678', loc: 'Gurugram, HR', pres: 'N/A', amt: '₹590', status: 'Dispatched' },
+                  { id: 'ORD-9904', user: 'Sneha Reddy', phone: '+91 9441234567', loc: 'Hitech City, Hyderabad', pres: 'Review Photo', amt: '₹4,200', status: 'Pending Review' },
                 ].map((order) => (
-                  <TableRow key={order.id} className="hover:bg-gray-50 transition-colors">
-                    <TableCell className="pl-8 font-bold">{order.id}</TableCell>
-                    <TableCell>{order.user}</TableCell>
+                  <TableRow key={order.id} className="hover:bg-gray-50/80 transition-all border-b border-gray-50 group">
+                    <TableCell className="pl-10 py-6">
+                       <div className="flex flex-col">
+                          <span className="font-black text-gray-900 mb-1 group-hover:text-primary transition-colors">{order.id}</span>
+                          <span className="text-sm font-bold text-gray-500">{order.user}</span>
+                          <span className="text-[10px] text-gray-400 flex items-center gap-1"><Phone className="w-3 h-3" /> {order.phone}</span>
+                       </div>
+                    </TableCell>
                     <TableCell>
-                      {order.pres === 'Yes' ? (
-                        <Badge variant="outline" className="text-primary border-primary bg-blue-50">Review Photo</Badge>
+                       <div className="flex items-center gap-2 text-sm font-bold text-gray-600">
+                          <MapPin className="w-4 h-4 text-primary" />
+                          {order.loc}
+                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {order.pres !== 'N/A' ? (
+                        <Badge variant="outline" className={`rounded-lg px-3 py-1 text-[10px] font-black uppercase border-2 ${order.pres === 'Verified' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-orange-50 text-orange-700 border-orange-100 animate-pulse'}`}>
+                          {order.pres}
+                        </Badge>
                       ) : (
-                        <span className="text-gray-400">N/A</span>
+                        <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No Pres.</span>
                       )}
                     </TableCell>
-                    <TableCell className="font-bold">{order.amt}</TableCell>
+                    <TableCell className="font-black text-gray-900">{order.amt}</TableCell>
                     <TableCell>
-                       <Badge className={
-                         order.status === 'Pending Review' ? 'bg-orange-100 text-orange-700' :
-                         order.status === 'Processing' ? 'bg-blue-100 text-blue-700' :
-                         order.status === 'Verified' ? 'bg-green-100 text-green-700' :
-                         'bg-gray-100 text-gray-700'
-                       }>
+                       <Badge className={`rounded-lg px-4 py-2 text-[10px] font-black uppercase border-none shadow-sm ${
+                         order.status === 'Pending Review' ? 'bg-orange-500 text-white' :
+                         order.status === 'Processing' ? 'bg-blue-500 text-white' :
+                         'bg-gray-100 text-gray-500'
+                       }`}>
                          {order.status}
                        </Badge>
                     </TableCell>
-                    <TableCell className="pr-8 text-right">
-                      <Button variant="ghost" size="sm" className="font-bold text-primary">Details</Button>
+                    <TableCell className="pr-10 text-right">
+                      <Button variant="ghost" className="h-10 px-6 rounded-full font-black text-[10px] uppercase tracking-widest text-primary hover:bg-primary hover:text-white transition-all">
+                        Review Details
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
