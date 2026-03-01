@@ -6,6 +6,7 @@ export interface ExtendedProduct extends Product {
   sideEffects: string[];
   packSize: string;
   mfrDetails: string;
+  description: string;
 }
 
 export const PRODUCTS: ExtendedProduct[] = [
@@ -13,7 +14,7 @@ export const PRODUCTS: ExtendedProduct[] = [
     id: "br-diab-1",
     name: "Janumet 50mg/500mg",
     price: 1250,
-    saltComposition: "Sitagliptin + Metformin",
+    saltComposition: "Sitagliptin 50mg + Metformin 500mg",
     manufacturer: "MSD Pharmaceuticals",
     category: "Diabetes",
     imageUrl: "https://picsum.photos/seed/diab1/300/300",
@@ -28,7 +29,7 @@ export const PRODUCTS: ExtendedProduct[] = [
     id: "ge-diab-1",
     name: "Sitagliptin M 50/500",
     price: 240,
-    saltComposition: "Sitagliptin + Metformin",
+    saltComposition: "Sitagliptin 50mg + Metformin 500mg",
     manufacturer: "HealthLink Generic",
     category: "Diabetes",
     imageUrl: "https://picsum.photos/seed/diab2/300/300",
@@ -43,7 +44,7 @@ export const PRODUCTS: ExtendedProduct[] = [
     id: "br-heart-1",
     name: "Atorva 20mg",
     price: 450,
-    saltComposition: "Atorvastatin",
+    saltComposition: "Atorvastatin 20mg",
     manufacturer: "Zydus Cadila",
     category: "Heart care",
     imageUrl: "https://picsum.photos/seed/heart1/300/300",
@@ -58,7 +59,7 @@ export const PRODUCTS: ExtendedProduct[] = [
     id: "ge-heart-1",
     name: "Atorvastatin Generic 20mg",
     price: 85,
-    saltComposition: "Atorvastatin",
+    saltComposition: "Atorvastatin 20mg",
     manufacturer: "PharmaPure",
     category: "Heart care",
     imageUrl: "https://picsum.photos/seed/heart2/300/300",
@@ -73,7 +74,7 @@ export const PRODUCTS: ExtendedProduct[] = [
     id: "br-stomach-1",
     name: "Pan 40mg",
     price: 180,
-    saltComposition: "Pantoprazole",
+    saltComposition: "Pantoprazole 40mg",
     manufacturer: "Alkem Laboratories",
     category: "Stomach care",
     imageUrl: "https://picsum.photos/seed/stomach1/300/300",
@@ -88,7 +89,7 @@ export const PRODUCTS: ExtendedProduct[] = [
     id: "ge-stomach-1",
     name: "Pantoprazole 40mg",
     price: 45,
-    saltComposition: "Pantoprazole",
+    saltComposition: "Pantoprazole 40mg",
     manufacturer: "Standard Generics",
     category: "Stomach care",
     imageUrl: "https://picsum.photos/seed/stomach2/300/300",

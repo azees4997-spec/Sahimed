@@ -57,12 +57,8 @@ export default function Navbar() {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           try {
-            // Simulate reverse geocoding or just use coords for demo
             const lat = position.coords.latitude.toFixed(2);
             const lng = position.coords.longitude.toFixed(2);
-            
-            // In a real app, you'd fetch the city name from an API like Google Maps or OpenStreetMap
-            // For this prototype, we'll simulate finding a major city near those coords
             setLocation(`My Location (${lat}, ${lng})`);
           } catch (e) {
             console.error(e);
@@ -95,22 +91,23 @@ export default function Navbar() {
     <>
       <nav className="sticky top-0 z-50 bg-white border-b shadow-sm safe-top">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 md:h-20">
+          {/* Top Row: Logo, Location, Icons */}
+          <div className="flex justify-between items-center h-14 md:h-20">
             {/* Logo & Location */}
-            <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-6">
               <Link href="/" className="flex items-center gap-2 shrink-0">
-                <div className="bg-primary p-1.5 rounded-xl shadow-lg shadow-primary/20">
-                  <div className="text-white font-bold text-xl tracking-tighter">HL</div>
+                <div className="bg-primary p-1 rounded-lg sm:p-1.5 sm:rounded-xl shadow-lg shadow-primary/20">
+                  <div className="text-white font-bold text-sm sm:text-xl tracking-tighter">HL</div>
                 </div>
-                <span className="hidden lg:block font-black text-xl text-primary font-headline tracking-tight">
+                <span className="hidden sm:block font-black text-xl text-primary font-headline tracking-tight">
                   HealthLink <span className="text-gray-300">Pharmacy</span>
                 </span>
               </Link>
 
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-1 text-[10px] sm:text-xs font-black text-gray-500 hover:text-primary p-2 h-auto rounded-xl bg-gray-50 border border-gray-100 uppercase tracking-widest max-w-[120px] sm:max-w-none">
-                    <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <Button variant="ghost" className="flex items-center gap-1 text-[9px] sm:text-xs font-black text-gray-500 hover:text-primary p-2 h-auto rounded-xl bg-gray-50 border border-gray-100 uppercase tracking-widest max-w-[100px] sm:max-w-none">
+                    <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary shrink-0" />
                     <span className="truncate">{location}</span>
                     <ChevronDown className="w-3 h-3 shrink-0" />
                   </Button>
@@ -123,7 +120,7 @@ export default function Navbar() {
                       className="w-full justify-start gap-3 h-14 rounded-2xl bg-primary/5 text-primary hover:bg-primary/10 border-none font-black text-[10px] uppercase tracking-widest"
                     >
                       {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <LocateFixed className="w-5 h-5" />}
-                      Use My GPS Location
+                      Use GPS Location
                     </Button>
                     <div className="pt-2">
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 mb-3">Popular Regions</p>
@@ -146,76 +143,72 @@ export default function Navbar() {
               </Popover>
             </div>
 
-            {/* Search Bar with Suggestions */}
-            <div className="flex-1 max-w-lg mx-4 relative hidden sm:block" ref={suggestionRef}>
-              <form onSubmit={handleSearch} className="relative group">
-                <Input
-                  type="text"
-                  placeholder="Search medicines, salts..."
-                  className="w-full pl-10 pr-4 py-2 rounded-2xl border-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all bg-gray-100 h-12 font-medium"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-primary transition-colors" />
-              </form>
-
-              {suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
-                  {suggestions.map((p) => (
-                    <Link 
-                      key={p.id} 
-                      href={`/product/${p.id}`}
-                      onClick={() => {
-                        setSuggestions([]);
-                        setSearch('');
-                      }}
-                      className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors border-b last:border-none"
-                    >
-                      <div className="w-10 h-10 relative bg-gray-50 rounded-lg overflow-hidden shrink-0">
-                        <img src={p.imageUrl} alt={p.name} className="object-contain p-1" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm text-gray-900 truncate">{p.name}</p>
-                        <p className="text-[10px] text-gray-400 italic truncate">{p.saltComposition}</p>
-                      </div>
-                      {p.isGeneric ? (
-                        <Badge className="ml-auto bg-green-50 text-green-700 border-none text-[8px] h-5 font-black uppercase tracking-tighter px-2">GENERIC</Badge>
-                      ) : (
-                        <Badge variant="outline" className="ml-auto text-[8px] h-5 font-black uppercase tracking-tighter px-2 text-gray-400 border-gray-200">BRANDED</Badge>
-                      )}
-                    </Link>
-                  ))}
-                  <div className="p-3 bg-gray-50 text-center">
-                    <button onClick={handleSearch} className="text-[10px] font-black text-primary uppercase tracking-widest">See all results</button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Desktop Action Icons */}
-            <div className="flex items-center gap-1 sm:gap-2">
-              <Link href="/prescription" className="hidden lg:flex items-center gap-2 bg-primary/5 p-2 rounded-xl text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary/10 transition-colors">
+            {/* Icons - Mobile & Desktop */}
+            <div className="flex items-center gap-1 sm:gap-3">
+              <Link href="/prescription" className="hidden sm:flex items-center gap-2 bg-primary/5 p-2 rounded-xl text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary/10 transition-colors">
                 <Upload className="w-4 h-4" />
                 <span>Upload</span>
               </Link>
               
-              <Link href="/cart" className="relative p-2.5 hover:bg-gray-100 rounded-2xl transition-colors">
-                <ShoppingCart className="w-6 h-6 text-gray-700" />
+              <Link href="/cart" className="relative p-2 sm:p-2.5 hover:bg-gray-100 rounded-2xl transition-colors">
+                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
                 {totalItems > 0 && (
-                  <span className="absolute top-1.5 right-1.5 bg-accent text-white text-[10px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-white animate-bounce">
+                  <span className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 bg-accent text-white text-[9px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-white animate-bounce">
                     {totalItems}
                   </span>
                 )}
               </Link>
 
-              <Link href="/profile" className="hidden sm:block p-2.5 hover:bg-gray-100 rounded-2xl transition-colors">
-                <User className="w-6 h-6 text-gray-700" />
+              <Link href="/profile" className="p-2 sm:p-2.5 hover:bg-gray-100 rounded-2xl transition-colors">
+                <User className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
               </Link>
-
-              <Button variant="ghost" size="icon" className="sm:hidden rounded-2xl" onClick={() => router.push('/search')}>
-                <SearchIcon className="w-6 h-6 text-gray-700" />
-              </Button>
             </div>
+          </div>
+
+          {/* Bottom Row: Search Bar (Always Visible) */}
+          <div className="pb-3 md:pb-4 relative" ref={suggestionRef}>
+            <form onSubmit={handleSearch} className="relative group">
+              <Input
+                type="text"
+                placeholder="Search medicines, salts..."
+                className="w-full pl-10 pr-4 py-2 rounded-full border-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all bg-gray-100 h-10 sm:h-12 font-medium"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 group-focus-within:text-primary transition-colors" />
+            </form>
+
+            {suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-gray-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                {suggestions.map((p) => (
+                  <Link 
+                    key={p.id} 
+                    href={`/product/${p.id}`}
+                    onClick={() => {
+                      setSuggestions([]);
+                      setSearch('');
+                    }}
+                    className="flex items-center gap-4 p-3 hover:bg-gray-50 transition-colors border-b last:border-none"
+                  >
+                    <div className="w-10 h-10 relative bg-gray-50 rounded-lg overflow-hidden shrink-0">
+                      <img src={p.imageUrl} alt={p.name} className="object-contain p-1" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-xs text-gray-900 truncate">{p.name}</p>
+                      <p className="text-[9px] text-gray-400 italic truncate">{p.saltComposition}</p>
+                    </div>
+                    {p.isGeneric ? (
+                      <Badge className="ml-auto bg-green-50 text-green-700 border-none text-[7px] h-4 font-black uppercase tracking-tighter px-2">GENERIC</Badge>
+                    ) : (
+                      <Badge variant="outline" className="ml-auto text-[7px] h-4 font-black uppercase tracking-tighter px-2 text-gray-400 border-gray-200">BRANDED</Badge>
+                    )}
+                  </Link>
+                ))}
+                <div className="p-2 bg-gray-50 text-center">
+                  <button onClick={handleSearch} className="text-[9px] font-black text-primary uppercase tracking-widest">See all results</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </nav>
