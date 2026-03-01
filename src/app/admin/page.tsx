@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from 'react';
@@ -17,8 +16,7 @@ import {
   Check, 
   Plus,
   ShoppingCart,
-  Trash2,
-  Image as ImageIcon
+  Trash2
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -52,18 +50,18 @@ export default function AdminDashboard() {
   const { data: adminRole, isLoading: isAdminRoleLoading } = useDoc(adminRoleRef);
   const isAdmin = !!adminRole;
 
-  // Real-time Medicines
+  // Real-time Medicines - Only fetch if user is confirmed admin to avoid permission errors
   const medicinesQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !isAdmin) return null;
     return query(collection(db, 'medicines'), orderBy('name', 'asc'));
-  }, [db]);
+  }, [db, isAdmin]);
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
 
-  // Real-time Orders (Global Stream using Collection Group)
+  // Real-time Orders - Only fetch if user is confirmed admin to avoid permission errors
   const ordersQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !isAdmin) return null;
     return query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc'), limit(20));
-  }, [db]);
+  }, [db, isAdmin]);
   const { data: orders, isLoading: ordersLoading } = useCollection(ordersQuery);
 
   const handleLogin = async (e: React.FormEvent) => {

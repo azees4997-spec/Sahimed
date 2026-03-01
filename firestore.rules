@@ -53,6 +53,22 @@ service cloud.firestore {
       return isOwner(userId) && resource != null;
     }
 
+    // --- COLLECTION GROUP RULES (For Admin Stream) ---
+    
+    /** 
+     * @description Allows administrators to query orders across all users.
+     */
+    match /{path=**}/orders/{orderId} {
+      allow read: if isAdmin();
+    }
+
+    /** 
+     * @description Allows administrators to query prescriptions across all users.
+     */
+    match /{path=**}/prescriptions/{prescriptionId} {
+      allow read: if isAdmin();
+    }
+
     // --- COLLECTION RULES ---
 
     /**
@@ -118,11 +134,9 @@ service cloud.firestore {
      * @principle DBAC (Database Access Control) - existence defines role.
      */
     match /roles_admin/{userId} {
-      // FIX: Allow a user to check their own admin status (get), 
-      // but only admins can list all administrators.
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow write: if false; // Admin roles usually managed via Admin SDK/Cloud Functions
+      allow write: if false; 
     }
 
     /**
