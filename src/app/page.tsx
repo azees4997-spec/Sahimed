@@ -1,3 +1,4 @@
+
 "use client"
 
 import Navbar from '@/components/Navbar';
@@ -8,19 +9,19 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
-import { collection, query, where, limit } from 'firebase/firestore';
+import { collection, query, limit, orderBy } from 'firebase/firestore';
 
 export default function Home() {
   const db = useFirestore();
 
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'medicines'), limit(12));
+    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(12));
   }, [db]);
 
   const categoriesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return collection(db, 'categories');
+    return query(collection(db, 'categories'), orderBy('name', 'asc'));
   }, [db]);
 
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
@@ -123,6 +124,14 @@ export default function Home() {
                 {medicines?.map((p: any) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
+              </div>
+            )}
+            {!medsLoading && medicines?.length === 0 && (
+              <div className="text-center py-12 bg-gray-50 rounded-3xl border border-dashed">
+                <p className="text-gray-400 font-bold mb-4">Store catalog is empty.</p>
+                <Link href="/admin">
+                  <Button variant="outline" className="rounded-full font-black text-[10px] uppercase tracking-widest">Initialize Database in Admin</Button>
+                </Link>
               </div>
             )}
           </div>

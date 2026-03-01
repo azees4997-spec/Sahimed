@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from 'react';
@@ -16,25 +17,30 @@ import {
   Check, 
   Plus,
   ShoppingCart,
-  Trash2
+  Trash2,
+  Database
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { useUser, useFirestore, useDoc, useAuth, useMemoFirebase, useCollection, updateDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useDoc, useAuth, useMemoFirebase, useCollection, updateDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
 import { doc, collection, query, orderBy, collectionGroup, limit } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { PRODUCTS, CATEGORIES } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminDashboard() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const auth = useAuth();
+  const { toast } = useToast();
   
   const [activeTab, setActiveTab] = useState<'orders' | 'products'>('products');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localAuthLoading, setLocalAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [isSeeding, setIsSeeding] = useState(false);
 
   // Edit/Add Medicine State
   const [isEditing, setIsEditing] = useState(false);
@@ -50,17 +56,17 @@ export default function AdminDashboard() {
   const { data: adminRole, isLoading: isAdminRoleLoading } = useDoc(adminRoleRef);
   const isAdmin = !!adminRole;
 
-  // Real-time Medicines - Only fetch if user is confirmed admin to avoid permission errors
+  // Real-time Medicines
   const medicinesQuery = useMemoFirebase(() => {
     if (!db || !isAdmin) return null;
     return query(collection(db, 'medicines'), orderBy('name', 'asc'));
   }, [db, isAdmin]);
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
 
-  // Real-time Orders - Only fetch if user is confirmed admin to avoid permission errors
+  // Real-time Orders
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !isAdmin) return null;
-    return query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc'), limit(20));
+    return query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc'), limit(50));
   }, [db, isAdmin]);
   const { data: orders, isLoading: ordersLoading } = useCollection(ordersQuery);
 
@@ -79,6 +85,38 @@ export default function AdminDashboard() {
 
   const handleLogout = () => signOut(auth);
 
+  const seedDatabase = async () => {
+    if (!db || !confirm('This will seed initial categories and products. Continue?')) return;
+    setIsSeeding(true);
+    try {
+      // Seed Categories
+      for (const cat of CATEGORIES) {
+        const catId = cat.name.toLowerCase().replace(/\s+/g, '-');
+        setDocumentNonBlocking(doc(db, 'categories', catId), {
+          id: catId,
+          name: cat.name,
+          description: cat.description
+        }, { merge: true });
+      }
+
+      // Seed Initial Products
+      for (const prod of PRODUCTS) {
+        setDocumentNonBlocking(doc(db, 'medicines', prod.id), {
+          ...prod,
+          availableQuantity: 100,
+          mrp: prod.price * 1.2
+        }, { merge: true });
+      }
+
+      toast({ title: "Database Initialized", description: "Standard catalog successfully synchronized." });
+    } catch (err) {
+      console.error(err);
+      toast({ variant: "destructive", title: "Seeding Failed", description: "Check permissions." });
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   const startEditing = (product: any) => {
     setEditingProduct({ ...product });
     setIsEditing(true);
@@ -92,12 +130,13 @@ export default function AdminDashboard() {
       price: 0,
       availableQuantity: 100,
       isGeneric: false,
-      manufacturerId: 'mfr-hl-1',
-      categoryId: 'cat-chronic-1',
+      manufacturer: 'HealthLink Labs',
+      category: 'Wellness',
       imageUrl: 'https://picsum.photos/seed/med-new/300/300',
       description: '',
-      dosageForm: 'Tablet',
-      strength: '500mg',
+      packSize: 'Strip of 10 tablets',
+      uses: ['General Health'],
+      sideEffects: ['None'],
       isTopDeal: false
     });
     setIsEditing(true);
@@ -123,6 +162,7 @@ export default function AdminDashboard() {
     
     setIsEditing(false);
     setEditingProduct(null);
+    toast({ title: "Catalog Updated", description: "Changes saved successfully." });
   };
 
   const deleteProduct = (id: string) => {
@@ -227,6 +267,10 @@ export default function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-4">
+            <Button variant="outline" onClick={seedDatabase} disabled={isSeeding} className="hidden sm:flex rounded-full h-10 border-primary text-primary font-black text-[10px] uppercase tracking-widest">
+              {isSeeding ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Database className="w-4 h-4 mr-2" />}
+              Seed Database
+            </Button>
             <Button variant="ghost" onClick={handleLogout} className="text-red-500 hover:text-red-600 rounded-full font-bold">
               <LogOut className="w-4 h-4" />
             </Button>
