@@ -18,8 +18,7 @@ import {
   ShoppingCart,
   Trash2,
   Database,
-  Layers,
-  Settings
+  Layers
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -60,7 +59,7 @@ export default function AdminDashboard() {
   const { data: adminRole, isLoading: isAdminRoleLoading } = useDoc(adminRoleRef);
   const isAdmin = !!adminRole;
 
-  // Real-time Collections
+  // Real-time Collections - Only query if confirmed as admin
   const medicinesQuery = useMemoFirebase(() => {
     if (!db || !isAdmin) return null;
     return query(collection(db, 'medicines'), orderBy('name', 'asc'));
@@ -98,7 +97,6 @@ export default function AdminDashboard() {
     if (!db || !confirm('This will seed initial categories and products. Continue?')) return;
     setIsSeeding(true);
     try {
-      // Seed Categories
       for (const cat of CATEGORIES) {
         const catId = cat.name.toLowerCase().replace(/\s+/g, '-');
         setDocumentNonBlocking(doc(db, 'categories', catId), {
@@ -108,7 +106,6 @@ export default function AdminDashboard() {
         }, { merge: true });
       }
 
-      // Seed Initial Products
       for (const prod of PRODUCTS) {
         setDocumentNonBlocking(doc(db, 'medicines', prod.id), {
           ...prod,
