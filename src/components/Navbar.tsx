@@ -57,9 +57,10 @@ export default function Navbar() {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           try {
-            const lat = position.coords.latitude.toFixed(2);
-            const lng = position.coords.longitude.toFixed(2);
-            setLocation(`My Location (${lat}, ${lng})`);
+            // In a real app, use reverse geocoding. For demo, we use coordinates.
+            const lat = position.coords.latitude.toFixed(4);
+            const lng = position.coords.longitude.toFixed(4);
+            setLocation(`Current (Lat: ${lat}, Lng: ${lng})`);
           } catch (e) {
             console.error(e);
           } finally {
@@ -70,7 +71,8 @@ export default function Navbar() {
           console.error(error);
           setIsLocating(false);
           alert("Could not detect location. Please check browser permissions.");
-        }
+        },
+        { enableHighAccuracy: true }
       );
     } else {
       setIsLocating(false);
@@ -120,7 +122,7 @@ export default function Navbar() {
                       className="w-full justify-start gap-3 h-14 rounded-2xl bg-primary/5 text-primary hover:bg-primary/10 border-none font-black text-[10px] uppercase tracking-widest"
                     >
                       {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <LocateFixed className="w-5 h-5" />}
-                      Use GPS Location
+                      One-Tap GPS Detect
                     </Button>
                     <div className="pt-2">
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 mb-3">Popular Regions</p>
@@ -143,13 +145,8 @@ export default function Navbar() {
               </Popover>
             </div>
 
-            {/* Icons - Mobile & Desktop */}
+            {/* Icons */}
             <div className="flex items-center gap-1 sm:gap-3">
-              <Link href="/prescription" className="hidden sm:flex items-center gap-2 bg-primary/5 p-2 rounded-xl text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary/10 transition-colors">
-                <Upload className="w-4 h-4" />
-                <span>Upload</span>
-              </Link>
-              
               <Link href="/cart" className="relative p-2 sm:p-2.5 hover:bg-gray-100 rounded-2xl transition-colors">
                 <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
                 {totalItems > 0 && (
@@ -165,13 +162,13 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Bottom Row: Search Bar (Always Visible) */}
+          {/* Bottom Row: Permanent Search Bar */}
           <div className="pb-3 md:pb-4 relative" ref={suggestionRef}>
             <form onSubmit={handleSearch} className="relative group">
               <Input
                 type="text"
-                placeholder="Search medicines, salts..."
-                className="w-full pl-10 pr-4 py-2 rounded-full border-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all bg-gray-100 h-10 sm:h-12 font-medium"
+                placeholder="Search medicines, composition, generic..."
+                className="w-full pl-10 pr-4 py-2 rounded-full border-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all bg-gray-100 h-10 sm:h-12 font-bold text-sm"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -190,22 +187,22 @@ export default function Navbar() {
                     }}
                     className="flex items-center gap-4 p-3 hover:bg-gray-50 transition-colors border-b last:border-none"
                   >
-                    <div className="w-10 h-10 relative bg-gray-50 rounded-lg overflow-hidden shrink-0">
+                    <div className="w-12 h-12 relative bg-gray-50 rounded-lg overflow-hidden shrink-0">
                       <img src={p.imageUrl} alt={p.name} className="object-contain p-1" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-xs text-gray-900 truncate">{p.name}</p>
-                      <p className="text-[9px] text-gray-400 italic truncate">{p.saltComposition}</p>
+                      <p className="font-black text-xs text-gray-900 truncate">{p.name}</p>
+                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight truncate">{p.saltComposition}</p>
                     </div>
                     {p.isGeneric ? (
-                      <Badge className="ml-auto bg-green-50 text-green-700 border-none text-[7px] h-4 font-black uppercase tracking-tighter px-2">GENERIC</Badge>
+                      <Badge className="ml-auto bg-green-50 text-green-700 border-none text-[8px] h-5 font-black uppercase tracking-tighter px-2">GENERIC</Badge>
                     ) : (
-                      <Badge variant="outline" className="ml-auto text-[7px] h-4 font-black uppercase tracking-tighter px-2 text-gray-400 border-gray-200">BRANDED</Badge>
+                      <Badge variant="outline" className="ml-auto text-[8px] h-5 font-black uppercase tracking-tighter px-2 text-gray-400 border-gray-200">BRANDED</Badge>
                     )}
                   </Link>
                 ))}
-                <div className="p-2 bg-gray-50 text-center">
-                  <button onClick={handleSearch} className="text-[9px] font-black text-primary uppercase tracking-widest">See all results</button>
+                <div className="p-3 bg-gray-50 text-center">
+                  <button onClick={handleSearch} className="text-[10px] font-black text-primary uppercase tracking-widest">See all results for "{search}"</button>
                 </div>
               </div>
             )}
