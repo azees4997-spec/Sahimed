@@ -118,7 +118,10 @@ service cloud.firestore {
      * @principle DBAC (Database Access Control) - existence defines role.
      */
     match /roles_admin/{userId} {
-      allow get, list: if isAdmin();
+      // FIX: Allow a user to check their own admin status (get), 
+      // but only admins can list all administrators.
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
       allow write: if false; // Admin roles usually managed via Admin SDK/Cloud Functions
     }
 
