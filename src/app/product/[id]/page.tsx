@@ -24,7 +24,8 @@ import {
   TrendingDown,
   Info,
   ChevronLeft,
-  FileText
+  FileText,
+  Activity
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -62,6 +63,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const getQty = (pid: string) => cart.find(i => i.id === pid)?.quantity || 0;
 
+  // Helper to calculate unit price
+  const getUnitPrice = (p: ExtendedProduct) => {
+    const match = p.packSize.match(/(\d+)\s*tablets/i);
+    if (match && match[1]) {
+      const count = parseInt(match[1]);
+      return (p.price / count).toFixed(2);
+    }
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F8F8] pb-24 sm:pb-12">
       <Navbar />
@@ -72,7 +83,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <div className="flex items-center justify-between mb-4 px-2">
           <Link href="/" className="flex items-center gap-1 text-primary font-black active:scale-95 transition-transform">
             <ChevronLeft className="w-5 h-5" />
-            <span className="text-[10px] uppercase tracking-widest text-primary">Store</span>
+            <span className="text-[10px] uppercase tracking-widest text-primary font-black">Store</span>
           </Link>
           <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-400">
             <span className="truncate max-w-[80px]">{product.category}</span>
@@ -84,19 +95,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </Button>
         </div>
 
-        {/* Comparison Hero Banner */}
-        {genericSubstitute && (
-          <div className="bg-primary text-white p-4 rounded-[28px] mb-6 flex items-center justify-between shadow-xl shadow-primary/20 animate-in fade-in slide-in-from-top duration-500 mx-2">
-            <div className="flex items-center gap-3">
-              <Zap className="w-6 h-6 text-accent animate-pulse shrink-0" />
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/70">Switch & Save</p>
-                <h2 className="font-black text-sm sm:text-lg">Save ₹{product.price - genericSubstitute.price} with generic alternative</h2>
-              </div>
+        {/* Salt Composition Banner (Replaces Switch & Save) */}
+        <div className="bg-primary text-white p-4 rounded-[28px] mb-6 flex items-center justify-between shadow-xl shadow-primary/20 animate-in fade-in slide-in-from-top duration-500 mx-2">
+          <div className="flex items-center gap-3">
+            <Activity className="w-6 h-6 text-accent shrink-0" />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/70">Composition</p>
+              <h2 className="font-black text-sm sm:text-lg">{product.saltComposition}</h2>
             </div>
-            <Badge className="bg-white text-primary font-black text-[10px] border-none px-4 py-1.5 rounded-full shrink-0 hidden sm:flex">BIO-EQUIVALENT READY</Badge>
           </div>
-        )}
+          <Badge className="bg-white text-primary font-black text-[10px] border-none px-4 py-1.5 rounded-full shrink-0 hidden sm:flex">BIO-EQUIVALENT READY</Badge>
+        </div>
 
         {/* Side-by-Side Comparison Grid */}
         <div className={`grid ${genericSubstitute ? 'grid-cols-2' : 'grid-cols-1 max-w-2xl mx-auto'} gap-2 sm:gap-8`}>
@@ -118,15 +127,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     <h1 className="text-[11px] sm:text-2xl font-black text-gray-900 mb-0.5 sm:mb-2 leading-tight line-clamp-2">{product.name}</h1>
                     <p className="text-[7px] sm:text-xs font-bold text-gray-400 mb-2 uppercase tracking-widest truncate">{product.manufacturer}</p>
                     
-                    <div className="inline-flex items-center gap-1 sm:gap-2 bg-blue-50/50 px-2 sm:px-4 py-1 sm:py-2 rounded-[10px] sm:rounded-2xl border border-blue-100 mb-4 w-full">
-                      <span className="text-[6px] sm:text-[10px] font-black text-blue-600 uppercase tracking-widest shrink-0">Salt:</span>
-                      <span className="text-[7px] sm:text-xs font-bold text-blue-900 truncate">{product.saltComposition}</span>
-                    </div>
-
-                    <div className="flex items-baseline justify-center gap-1 sm:gap-3">
+                    <div className="flex items-center justify-center gap-1 sm:gap-3 mb-2">
                       <span className="text-sm sm:text-3xl font-black text-gray-900">₹{product.price}</span>
                       <span className="text-gray-300 line-through text-[9px] sm:text-sm font-bold">₹{(product.price * 1.2).toFixed(0)}</span>
                     </div>
+
+                    {getUnitPrice(product) && (
+                      <div className="text-[8px] sm:text-xs font-black text-primary uppercase tracking-widest bg-primary/5 py-1 px-3 rounded-full inline-block">
+                        ₹{getUnitPrice(product)} / tablet
+                      </div>
+                    )}
                   </div>
                </div>
 
@@ -213,15 +223,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                       <h2 className="text-[11px] sm:text-2xl font-black text-green-900 mb-0.5 sm:mb-2 leading-tight line-clamp-2">{genericSubstitute.name}</h2>
                       <p className="text-[7px] sm:text-xs font-bold text-green-600/60 mb-2 uppercase tracking-widest truncate">{genericSubstitute.manufacturer}</p>
 
-                      <div className="inline-flex items-center gap-1 sm:gap-2 bg-white/70 px-2 sm:px-4 py-1 sm:py-2 rounded-[10px] sm:rounded-2xl border border-green-100 mb-4 w-full">
-                        <span className="text-[6px] sm:text-[10px] font-black text-green-600 uppercase tracking-widest shrink-0">Salt:</span>
-                        <span className="text-[7px] sm:text-xs font-bold text-green-900 truncate">{genericSubstitute.saltComposition}</span>
-                      </div>
-
-                      <div className="flex items-baseline justify-center gap-1 sm:gap-3">
+                      <div className="flex items-baseline justify-center gap-1 sm:gap-3 mb-2">
                         <span className="text-sm sm:text-4xl font-black text-green-600">₹{genericSubstitute.price}</span>
                         <span className="text-gray-400 line-through text-[9px] sm:text-sm font-bold">₹{product.price}</span>
                       </div>
+
+                      {getUnitPrice(genericSubstitute) && (
+                        <div className="text-[8px] sm:text-xs font-black text-green-600 uppercase tracking-widest bg-green-50 py-1 px-3 rounded-full inline-block">
+                          ₹{getUnitPrice(genericSubstitute)} / tablet
+                        </div>
+                      )}
                     </div>
                  </div>
 
