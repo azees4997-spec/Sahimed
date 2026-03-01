@@ -1,12 +1,12 @@
+
 "use client"
 
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
-import { Activity, ArrowRight, ShieldCheck, Upload, HeartPulse, Zap, ShieldPlus, Sparkles, Wind, Loader2 } from 'lucide-react';
+import { Activity, HeartPulse, Zap, ShieldPlus, Sparkles, Wind, Loader2, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { collection, query, limit, orderBy } from 'firebase/firestore';
 
@@ -85,7 +85,7 @@ export default function Home() {
                 ))}
                 {!catsLoading && categories?.length === 0 && (
                   <div className="col-span-full py-12 text-center text-gray-400 font-bold italic">
-                    Initialize categories in Admin Dashboard.
+                    Initialize categories in Supervisor Console.
                   </div>
                 )}
               </div>
@@ -114,10 +114,10 @@ export default function Home() {
                 <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
                   <Activity className="w-10 h-10 text-gray-200" />
                 </div>
-                <h3 className="text-xl font-black mb-2">Pharmacy Catalog Empty</h3>
-                <p className="text-gray-400 font-bold mb-8">Please login to the Admin Dashboard to seed the master data.</p>
+                <h3 className="text-xl font-black mb-2 uppercase tracking-tight">Catalog Empty</h3>
+                <p className="text-gray-400 font-bold mb-8">Please seed the product master in the Supervisor Console.</p>
                 <Link href="/admin">
-                  <Button className="rounded-full px-12 h-14 font-black uppercase tracking-widest">Admin Dashboard</Button>
+                  <Button className="rounded-full px-12 h-14 font-black uppercase tracking-widest">Supervisor Console</Button>
                 </Link>
               </div>
             )}

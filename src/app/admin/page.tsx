@@ -9,21 +9,18 @@ import {
   LogOut, 
   Loader2, 
   Lock,
-  Settings,
-  UserCheck,
   Package,
   Plus,
   Edit,
   Trash2,
   LayoutDashboard,
   Database,
-  Search,
   Check,
   FlaskConical,
-  Stethoscope,
-  ClipboardList,
   Tags,
-  Layers
+  Layers,
+  Search,
+  AlertTriangle
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
@@ -53,11 +50,12 @@ export default function AdminDashboard() {
   const auth = useAuth();
   const { toast } = useToast();
   
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'categories' | 'orders'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'categories'>('dashboard');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localAuthLoading, setLocalAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Check for admin role
   const adminRoleRef = useMemoFirebase(() => {
@@ -199,6 +197,11 @@ export default function AdminDashboard() {
     toast({ title: "Master Data Seeded", description: "All core collections initialized with clinical data." });
   };
 
+  const filteredMeds = medicines?.filter(med => 
+    med.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    med.saltComposition.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (isUserLoading || isAdminRoleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8]">
@@ -287,21 +290,14 @@ export default function AdminDashboard() {
                 onClick={() => setActiveTab('products')}
                 className="rounded-full gap-2 font-bold px-6"
               >
-                <Package className="w-4 h-4" /> Medicines
+                <Package className="w-4 h-4" /> Medicine Master
               </Button>
               <Button 
                 variant={activeTab === 'categories' ? 'secondary' : 'ghost'} 
                 onClick={() => setActiveTab('categories')}
                 className="rounded-full gap-2 font-bold px-6"
               >
-                <Tags className="w-4 h-4" /> Categories
-              </Button>
-              <Button 
-                variant={activeTab === 'orders' ? 'secondary' : 'ghost'} 
-                onClick={() => setActiveTab('orders')}
-                className="rounded-full gap-2 font-bold px-6"
-              >
-                <ClipboardList className="w-4 h-4" /> Orders
+                <Tags className="w-4 h-4" /> Category Master
               </Button>
             </nav>
           </div>
@@ -316,11 +312,9 @@ export default function AdminDashboard() {
       <main className="max-w-7xl mx-auto px-4 py-12">
         {activeTab === 'dashboard' ? (
           <div className="space-y-12">
-            <div className="flex items-center justify-between">
-               <div>
-                 <h1 className="text-4xl font-black font-headline text-gray-900">Control Center</h1>
-                 <p className="text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">Real-time pharmacy orchestration</p>
-               </div>
+            <div>
+              <h1 className="text-4xl font-black font-headline text-gray-900">Operational Dashboard</h1>
+              <p className="text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">Pharmacological orchestration center</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -328,8 +322,8 @@ export default function AdminDashboard() {
                 <div className="w-20 h-20 bg-primary/10 rounded-[32px] flex items-center justify-center mb-6">
                   <Package className="w-10 h-10 text-primary" />
                 </div>
-                <CardTitle className="text-2xl font-black mb-2">Medicine Master</CardTitle>
-                <CardDescription className="mb-6">Manage all pharmaceutical inventory and bio-equivalent flags.</CardDescription>
+                <CardTitle className="text-2xl font-black mb-2">Product Master</CardTitle>
+                <CardDescription className="mb-6">Manage pharmacological inventory and generic equivalence.</CardDescription>
                 <Button onClick={() => setActiveTab('products')} variant="outline" className="rounded-full h-12 px-8 font-bold border-2">Manage Medicines</Button>
               </Card>
 
@@ -338,7 +332,7 @@ export default function AdminDashboard() {
                   <Tags className="w-10 h-10 text-orange-400" />
                 </div>
                 <CardTitle className="text-2xl font-black mb-2">Category Master</CardTitle>
-                <CardDescription className="mb-6">Define therapeutic categories and disease-specific browsing hubs.</CardDescription>
+                <CardDescription className="mb-6">Define therapeutic hubs and disease-specific clusters.</CardDescription>
                 <Button onClick={() => setActiveTab('categories')} variant="outline" className="rounded-full h-12 px-8 font-bold border-2">Manage Categories</Button>
               </Card>
 
@@ -346,8 +340,8 @@ export default function AdminDashboard() {
                 <div className="w-20 h-20 bg-gray-50 rounded-[32px] flex items-center justify-center mb-6">
                   <Database className="w-10 h-10 text-gray-400" />
                 </div>
-                <CardTitle className="text-2xl font-black mb-2">Quick Seed</CardTitle>
-                <CardDescription className="mb-6">Initialize core collections with clinical-grade master data.</CardDescription>
+                <CardTitle className="text-2xl font-black mb-2">Master Seed</CardTitle>
+                <CardDescription className="mb-6">Initialize core collections with clinical-grade catalog data.</CardDescription>
                 <Button onClick={seedMasterData} className="rounded-full h-12 px-10 font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">
                   Seed Database
                 </Button>
@@ -355,20 +349,31 @@ export default function AdminDashboard() {
             </div>
           </div>
         ) : activeTab === 'products' ? (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h2 className="text-4xl font-black font-headline text-gray-900">Product Master</h2>
-                <p className="text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">Pharmacological inventory</p>
+                <p className="text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">Pharmacological catalog management</p>
               </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="rounded-full h-14 px-8 font-black gap-3 shadow-xl shadow-primary/20">
-                    <Plus className="w-5 h-5" /> Register Medicine
-                  </Button>
-                </DialogTrigger>
-                <ProductFormDialog onSubmit={(data) => addDocumentNonBlocking(collection(db, 'medicines'), data)} />
-              </Dialog>
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Input 
+                    placeholder="Search medicines..." 
+                    value={searchQuery} 
+                    onChange={e => setSearchQuery(e.target.value)} 
+                    className="h-12 w-64 pl-10 rounded-full bg-white border-none shadow-sm font-bold"
+                  />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                </div>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="rounded-full h-14 px-8 font-black gap-3 shadow-xl shadow-primary/20">
+                      <Plus className="w-5 h-5" /> New Medicine
+                    </Button>
+                  </DialogTrigger>
+                  <ProductFormDialog onSubmit={(data) => addDocumentNonBlocking(collection(db, 'medicines'), data)} categories={categories || []} />
+                </Dialog>
+              </div>
             </div>
 
             <Card className="rounded-[40px] border-none shadow-xl overflow-hidden bg-white">
@@ -376,20 +381,23 @@ export default function AdminDashboard() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-gray-50 text-[11px] font-black uppercase text-gray-400 tracking-widest">
-                      <th className="px-10 py-6">Medicine & Lab</th>
-                      <th className="px-10 py-6">Salt</th>
-                      <th className="px-10 py-6">Stock</th>
+                      <th className="px-10 py-6">Medicine & Brand</th>
+                      <th className="px-10 py-6">Composition</th>
+                      <th className="px-10 py-6">Pricing</th>
+                      <th className="px-10 py-6">Inventory</th>
                       <th className="px-10 py-6 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {isMedsLoading ? (
-                      <tr><td colSpan={4} className="p-32 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
-                    ) : medicines?.map((med: any) => (
+                      <tr><td colSpan={5} className="p-32 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
+                    ) : filteredMeds?.map((med: any) => (
                       <tr key={med.id} className="hover:bg-gray-50/50 group">
                         <td className="px-10 py-8">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-gray-50 rounded-xl p-1 shrink-0"><img src={med.imageUrl} className="w-full h-full object-contain" /></div>
+                            <div className="w-12 h-12 bg-gray-50 rounded-xl p-1 shrink-0 overflow-hidden">
+                              <img src={med.imageUrl} className="w-full h-full object-contain" />
+                            </div>
                             <div>
                               <p className="font-black text-gray-900">{med.name}</p>
                               <p className="text-[10px] font-bold text-gray-400 uppercase">{med.manufacturer}</p>
@@ -397,18 +405,26 @@ export default function AdminDashboard() {
                           </div>
                         </td>
                         <td className="px-10 py-8">
-                          <p className="text-xs font-bold text-gray-500 italic truncate max-w-[200px]">{med.saltComposition}</p>
+                          <p className="text-xs font-bold text-gray-500 italic mb-1">{med.saltComposition}</p>
+                          {med.isGeneric && <Badge className="bg-green-50 text-green-600 border-none text-[8px] font-black px-2 py-0.5">GENERIC</Badge>}
                         </td>
                         <td className="px-10 py-8">
-                          <Badge className={`${med.availableQuantity < 50 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'} border-none font-black`}>
-                            {med.availableQuantity} Units
-                          </Badge>
+                          <p className="font-black text-gray-900">₹{med.price}</p>
+                          <p className="text-[10px] text-gray-400 font-bold">{med.dosageForm} • {med.strength}</p>
+                        </td>
+                        <td className="px-10 py-8">
+                          <div className="flex items-center gap-2">
+                             <Badge className={`${med.availableQuantity < 50 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'} border-none font-black`}>
+                               {med.availableQuantity} Units
+                             </Badge>
+                             {med.availableQuantity < 50 && <AlertTriangle className="w-4 h-4 text-red-500" />}
+                          </div>
                         </td>
                         <td className="px-10 py-8 text-right">
                           <div className="flex justify-end gap-2">
                             <Dialog>
                               <DialogTrigger asChild><Button variant="ghost" size="icon" className="rounded-full"><Edit className="w-4 h-4" /></Button></DialogTrigger>
-                              <ProductFormDialog initialData={med} onSubmit={(data) => updateDocumentNonBlocking(doc(db, 'medicines', med.id), data)} />
+                              <ProductFormDialog initialData={med} onSubmit={(data) => updateDocumentNonBlocking(doc(db, 'medicines', med.id), data)} categories={categories || []} />
                             </Dialog>
                             <Button variant="ghost" size="icon" className="rounded-full text-red-500" onClick={() => deleteDocumentNonBlocking(doc(db, 'medicines', med.id))}><Trash2 className="w-4 h-4" /></Button>
                           </div>
@@ -420,8 +436,8 @@ export default function AdminDashboard() {
               </div>
             </Card>
           </div>
-        ) : activeTab === 'categories' ? (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        ) : (
+          <div className="space-y-8">
              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h2 className="text-4xl font-black font-headline text-gray-900">Category Master</h2>
@@ -429,7 +445,7 @@ export default function AdminDashboard() {
               </div>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button className="rounded-full h-14 px-8 font-black gap-3 shadow-xl shadow-primary/20 bg-orange-500 hover:bg-orange-600">
+                  <Button className="rounded-full h-14 px-8 font-black gap-3 shadow-xl shadow-orange-500/20 bg-orange-500 hover:bg-orange-600 border-none">
                     <Plus className="w-5 h-5" /> New Category
                   </Button>
                 </DialogTrigger>
@@ -441,7 +457,7 @@ export default function AdminDashboard() {
                {isCatsLoading ? (
                  <div className="col-span-full py-24 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>
                ) : categories?.map((cat: any) => (
-                 <Card key={cat.id} className="rounded-[40px] border-none shadow-sm hover:shadow-xl transition-all group overflow-hidden">
+                 <Card key={cat.id} className="rounded-[40px] border-none shadow-sm hover:shadow-xl transition-all group overflow-hidden bg-white">
                     <CardHeader className="p-8 pb-4">
                       <div className="flex items-center justify-between">
                          <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform">
@@ -458,23 +474,13 @@ export default function AdminDashboard() {
                       <CardTitle className="text-2xl font-black mt-4">{cat.name}</CardTitle>
                       <CardDescription className="text-gray-400 font-medium leading-relaxed">{cat.description}</CardDescription>
                     </CardHeader>
-                    <CardContent className="px-8 pb-8">
-                       <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
-                          <span className="text-[10px] font-black uppercase text-gray-300 tracking-widest">Live in Store</span>
-                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                       </div>
+                    <CardContent className="px-8 pb-8 pt-4 border-t border-gray-50 mt-4 flex items-center justify-between">
+                       <span className="text-[10px] font-black uppercase text-gray-300 tracking-widest">Active Hub</span>
+                       <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     </CardContent>
                  </Card>
                ))}
             </div>
-          </div>
-        ) : (
-          <div className="space-y-8">
-             <h2 className="text-4xl font-black font-headline text-gray-900">Order Management</h2>
-             <Card className="rounded-[40px] p-20 text-center text-gray-400 font-bold bg-white border-none shadow-xl">
-                <ClipboardList className="w-20 h-20 mx-auto mb-6 opacity-20" />
-                <p>Global order monitoring will appear here shortly.</p>
-             </Card>
           </div>
         )}
       </main>
@@ -482,18 +488,20 @@ export default function AdminDashboard() {
   );
 }
 
-function ProductFormDialog({ initialData, onSubmit }: { initialData?: any, onSubmit: (data: any) => void }) {
+function ProductFormDialog({ initialData, onSubmit, categories }: { initialData?: any, onSubmit: (data: any) => void, categories: any[] }) {
   const [formData, setFormData] = useState(initialData || {
     name: '',
     manufacturer: '',
     saltComposition: '',
     price: 0,
+    mrp: 0,
     availableQuantity: 100,
     isGeneric: false,
+    isTopDeal: false,
     description: '',
     imageUrl: 'https://picsum.photos/seed/med/300/300',
-    categoryId: 'cat_diabetes',
-    category: 'Diabetes',
+    categoryId: '',
+    category: '',
     dosageForm: 'Tablet',
     strength: '',
     packSize: 'Strip of 10 tablets',
@@ -501,10 +509,19 @@ function ProductFormDialog({ initialData, onSubmit }: { initialData?: any, onSub
     sideEffects: []
   });
 
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const cat = categories.find(c => c.id === e.target.value);
+    setFormData({
+      ...formData,
+      categoryId: e.target.value,
+      category: cat ? cat.name : ''
+    });
+  };
+
   return (
-    <DialogContent className="max-w-3xl rounded-[40px] border-none shadow-2xl p-0 overflow-hidden">
+    <DialogContent className="max-w-4xl rounded-[40px] border-none shadow-2xl p-0 overflow-hidden">
       <DialogHeader className="p-10 bg-primary text-white">
-        <DialogTitle className="text-3xl font-black">{initialData ? 'Edit Medication' : 'Register Medicine'}</DialogTitle>
+        <DialogTitle className="text-3xl font-black">{initialData ? 'Update Medication' : 'Register New Medicine'}</DialogTitle>
       </DialogHeader>
       <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto">
         <div className="grid grid-cols-2 gap-8">
@@ -517,34 +534,80 @@ function ProductFormDialog({ initialData, onSubmit }: { initialData?: any, onSub
             <Input value={formData.manufacturer} onChange={e => setFormData({...formData, manufacturer: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
           </div>
         </div>
-        <div className="space-y-3">
-          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Salt Composition</Label>
-          <Input value={formData.saltComposition} onChange={e => setFormData({...formData, saltComposition: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold italic" />
-        </div>
+
         <div className="grid grid-cols-2 gap-8">
           <div className="space-y-3">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Price (INR)</Label>
-            <Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="h-14 rounded-2xl bg-gray-50 border-none font-black text-xl" />
+            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Category Hub</Label>
+            <select 
+              value={formData.categoryId} 
+              onChange={handleCategoryChange}
+              className="w-full h-14 rounded-2xl bg-gray-50 border-none font-bold px-4 focus:ring-2 focus:ring-primary outline-none"
+            >
+              <option value="">Select Category</option>
+              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
           </div>
           <div className="space-y-3">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Stock Count</Label>
-            <Input type="number" value={formData.availableQuantity} onChange={e => setFormData({...formData, availableQuantity: Number(e.target.value)})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
+            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Salt Composition</Label>
+            <Input value={formData.saltComposition} onChange={e => setFormData({...formData, saltComposition: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold italic" />
           </div>
         </div>
-        <div className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl">
-          <div className="flex items-center gap-3">
-             <FlaskConical className="w-5 h-5 text-primary" />
-             <Label className="font-black text-sm uppercase">Bio-equivalent Generic</Label>
+
+        <div className="grid grid-cols-3 gap-8">
+          <div className="space-y-3">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Sale Price (INR)</Label>
+            <Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="h-14 rounded-2xl bg-gray-50 border-none font-black text-xl text-primary" />
           </div>
-          <Switch checked={formData.isGeneric} onCheckedChange={val => setFormData({...formData, isGeneric: val})} />
+          <div className="space-y-3">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">MRP (INR)</Label>
+            <Input type="number" value={formData.mrp} onChange={e => setFormData({...formData, mrp: Number(e.target.value)})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold text-gray-400 line-through" />
+          </div>
+          <div className="space-y-3">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Stock Units</Label>
+            <Input type="number" value={formData.availableQuantity} onChange={e => setFormData({...formData, availableQuantity: Number(e.target.value)})} className="h-14 rounded-2xl bg-gray-50 border-none font-black" />
+          </div>
         </div>
-        <div className="space-y-3">
-          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Image Resource</Label>
-          <Input value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none text-xs" />
+
+        <div className="grid grid-cols-3 gap-8">
+          <div className="space-y-3">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Form (Tablet/Syrup)</Label>
+            <Input value={formData.dosageForm} onChange={e => setFormData({...formData, dosageForm: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
+          </div>
+          <div className="space-y-3">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Strength (e.g. 500mg)</Label>
+            <Input value={formData.strength} onChange={e => setFormData({...formData, strength: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
+          </div>
+          <div className="space-y-3">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pack Details</Label>
+            <Input value={formData.packSize} onChange={e => setFormData({...formData, packSize: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
+          </div>
         </div>
+
+        <div className="grid grid-cols-2 gap-8">
+          <div className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+            <div className="flex items-center gap-3">
+               <FlaskConical className="w-5 h-5 text-green-500" />
+               <Label className="font-black text-[10px] uppercase tracking-widest">Bio-Equivalent Generic</Label>
+            </div>
+            <Switch checked={formData.isGeneric} onCheckedChange={val => setFormData({...formData, isGeneric: val})} />
+          </div>
+          <div className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+            <div className="flex items-center gap-3">
+               <Database className="w-5 h-5 text-primary" />
+               <Label className="font-black text-[10px] uppercase tracking-widest">Featured Top Deal</Label>
+            </div>
+            <Switch checked={formData.isTopDeal} onCheckedChange={val => setFormData({...formData, isTopDeal: val})} />
+          </div>
+        </div>
+
         <div className="space-y-3">
-          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Full Description</Label>
-          <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[100px] rounded-2xl bg-gray-50 border-none font-medium" />
+          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Product Image URL</Label>
+          <Input value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none text-xs font-mono" />
+        </div>
+
+        <div className="space-y-3">
+          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pharmacological Description</Label>
+          <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[120px] rounded-3xl bg-gray-50 border-none font-medium p-6" />
         </div>
       </div>
       <DialogFooter className="p-10 bg-gray-50 border-t">
@@ -565,7 +628,7 @@ function CategoryFormDialog({ initialData, onSubmit }: { initialData?: any, onSu
   return (
     <DialogContent className="max-w-xl rounded-[40px] border-none shadow-2xl p-0 overflow-hidden">
       <DialogHeader className="p-10 bg-orange-500 text-white">
-        <DialogTitle className="text-3xl font-black">{initialData ? 'Edit Category' : 'New Category'}</DialogTitle>
+        <DialogTitle className="text-3xl font-black">{initialData ? 'Update Category' : 'New Category Hub'}</DialogTitle>
       </DialogHeader>
       <div className="p-10 space-y-8">
         <div className="space-y-3">
@@ -573,12 +636,12 @@ function CategoryFormDialog({ initialData, onSubmit }: { initialData?: any, onSu
           <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-black text-lg" placeholder="e.g. Chronic Care" />
         </div>
         <div className="space-y-3">
-          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Store Description</Label>
+          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Therapeutic Description</Label>
           <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[120px] rounded-3xl bg-gray-50 border-none font-medium p-6" placeholder="Describe clinical usage..." />
         </div>
       </div>
       <DialogFooter className="p-10 bg-gray-50 border-t">
-        <Button onClick={() => onSubmit(formData)} className="rounded-full h-16 px-14 font-black uppercase tracking-widest shadow-xl shadow-orange-500/20 bg-orange-500 hover:bg-orange-600">
+        <Button onClick={() => onSubmit(formData)} className="rounded-full h-16 px-14 font-black uppercase tracking-widest shadow-xl shadow-orange-500/20 bg-orange-500 hover:bg-orange-600 border-none">
           <Check className="w-5 h-5 mr-3" /> Save Category
         </Button>
       </DialogFooter>
