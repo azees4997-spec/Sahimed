@@ -5,14 +5,7 @@ service cloud.firestore {
 
     /**
      * HEALTHLINK PHARMACY SECURITY RULES
-     * 
-     * CORE PHILOSOPHY:
-     * 1. Path-based authorization for private user data.
-     * 2. Role-based global access for administrators (DBAC).
-     * 3. Public access for product catalogs.
      */
-
-    // --- HELPER FUNCTIONS ---
 
     function isSignedIn() {
       return request.auth != null;
@@ -27,59 +20,48 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    
-    // Explicitly allow administrators to query and update orders across all users for fulfillment
+    // Critical: Explicitly allow admins to query and update orders/prescriptions globally
     match /{path=**}/orders/{orderId} {
-      allow read, update: if isAdmin();
+      allow read, list, update: if isAdmin();
     }
 
     match /{path=**}/prescriptions/{prescriptionId} {
-      allow read, update: if isAdmin();
+      allow read, list, update: if isAdmin();
     }
 
     // --- TOP-LEVEL COLLECTIONS ---
 
-    // User Profiles & Private Data
     match /userProfiles/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId);
       allow update: if isOwner(userId);
 
-      // Orders: User can only see theirs, Admin can see all (via group and direct path)
       match /orders/{orderId} {
         allow read, list: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId);
-        allow update: if isAdmin(); // Admin updates fulfillment status
-        
-        match /orderItems/{itemId} {
-          allow read: if isOwner(userId) || isAdmin();
-          allow create: if isOwner(userId);
-        }
+        allow update: if isAdmin(); 
       }
 
-      // Prescriptions
       match /prescriptions/{prescriptionId} {
         allow read, list: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId);
         allow update: if isAdmin();
       }
 
-      // Addresses
       match /addresses/{addressId} {
-        allow read, list: if isOwner(userId);
-        allow write: if isOwner(userId);
+        allow read, list, write: if isOwner(userId);
       }
     }
 
-    // Admin Roles (Read-only for users to verify their own role, write restricted)
     match /roles_admin/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow write: if false; 
+      // Dev access for initial setup
+      allow create: if isSignedIn();
+      allow write: if isAdmin(); 
     }
 
-    // Public Product Master (Read for all, write for Admin)
     match /medicines/{medicineId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -95,7 +77,6 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Shopping Carts (Strictly private)
     match /userCarts/{userId} {
       allow read, write: if isOwner(userId);
       match /cartItems/{itemId} {
