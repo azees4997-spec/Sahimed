@@ -2,6 +2,7 @@ import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
 import { Toaster } from '@/components/ui/toaster';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'HealthLink Pharmacy | Professional Healthcare Solutions',
@@ -37,10 +38,12 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased bg-[#F8F8F8]">
-        <CartProvider>
-          {children}
-          <Toaster />
-        </CartProvider>
+        <FirebaseClientProvider>
+          <CartProvider>
+            {children}
+            <Toaster />
+          </CartProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

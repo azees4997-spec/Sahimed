@@ -2,15 +2,29 @@
 
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
-import { PRODUCTS, CATEGORIES } from '@/lib/data';
-import { Activity, ArrowRight, ShieldCheck, Upload, HeartPulse, Zap, ShieldPlus, Sparkles, Wind } from 'lucide-react';
+import { Activity, ArrowRight, ShieldCheck, Upload, HeartPulse, Zap, ShieldPlus, Sparkles, Wind, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
+import { collection, query, where, limit } from 'firebase/firestore';
 
 export default function Home() {
-  const featuredProducts = PRODUCTS.slice(0, 6);
+  const db = useFirestore();
+
+  const medicinesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'medicines'), limit(12));
+  }, [db]);
+
+  const categoriesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'categories');
+  }, [db]);
+
+  const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
+  const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
 
   const getIcon = (name: string) => {
     switch(name) {
@@ -71,23 +85,27 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Categories Grid - Mobile Optimized 3x2 */}
+        {/* Categories Grid */}
         <section className="py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-black font-headline text-gray-900 uppercase tracking-tight">Shop by Categories</h2>
               <Link href="/search" className="text-[10px] font-black text-primary uppercase tracking-widest">See All</Link>
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-6">
-              {CATEGORIES.map((cat) => (
-                <Link key={cat.name} href={`/search?c=${cat.name}`} className="group flex flex-col items-center text-center active:scale-95 transition-all">
-                  <div className="w-full aspect-square bg-white rounded-[24px] sm:rounded-[32px] flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-100 group-hover:shadow-md group-hover:border-primary/20">
-                    {getIcon(cat.name)}
-                  </div>
-                  <h3 className="font-bold text-[10px] sm:text-xs text-gray-700 truncate w-full px-1">{cat.name}</h3>
-                </Link>
-              ))}
-            </div>
+            {catsLoading ? (
+              <div className="flex justify-center p-12"><Loader2 className="animate-spin text-primary" /></div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-6">
+                {categories?.map((cat: any) => (
+                  <Link key={cat.id} href={`/search?c=${cat.name}`} className="group flex flex-col items-center text-center active:scale-95 transition-all">
+                    <div className="w-full aspect-square bg-white rounded-[24px] sm:rounded-[32px] flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-100 group-hover:shadow-md group-hover:border-primary/20">
+                      {getIcon(cat.name)}
+                    </div>
+                    <h3 className="font-bold text-[10px] sm:text-xs text-gray-700 truncate w-full px-1">{cat.name}</h3>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -98,11 +116,15 @@ export default function Home() {
               <h2 className="text-xl font-black font-headline text-gray-900 uppercase tracking-tight">Top Recommendations</h2>
               <Link href="/search" className="text-[10px] font-black text-primary uppercase tracking-widest">Explore All</Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {featuredProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
+            {medsLoading ? (
+              <div className="flex justify-center p-12"><Loader2 className="animate-spin text-primary" /></div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {medicines?.map((p: any) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
 

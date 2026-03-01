@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from 'react';
@@ -6,15 +5,17 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ShieldCheck, ArrowLeft, Phone, Smartphone, ChevronRight } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Smartphone, ChevronRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { initiateAnonymousSignIn, useAuth } from '@/firebase';
 
 export default function LoginPage() {
-  const [step, setStep] = useState(1); // 1: Number, 2: OTP
+  const [step, setStep] = useState(1); 
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const auth = useAuth();
 
   const handleSendOtp = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +30,8 @@ export default function LoginPage() {
   const handleVerifyOtp = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    // Simulation: Any OTP works for now, connects to Firebase Anonymous for session
+    initiateAnonymousSignIn(auth);
     setTimeout(() => {
       router.push('/');
       setLoading(false);
@@ -70,7 +73,7 @@ export default function LoginPage() {
                 </div>
               </div>
               <Button type="submit" disabled={loading} className="w-full h-16 rounded-full font-bold text-lg gap-2 shadow-lg shadow-primary/20">
-                {loading ? "Sending..." : "Get OTP"}
+                {loading ? <Loader2 className="animate-spin" /> : "Get OTP"}
                 <ChevronRight className="w-5 h-5" />
               </Button>
             </form>
@@ -93,7 +96,7 @@ export default function LoginPage() {
                 />
               </div>
               <Button type="submit" disabled={loading} className="w-full h-16 rounded-full font-bold text-lg shadow-lg shadow-primary/20">
-                {loading ? "Verifying..." : "Login to HealthLink"}
+                {loading ? <Loader2 className="animate-spin" /> : "Login to HealthLink"}
               </Button>
               <p className="text-center text-xs text-gray-400">Didn't receive code? <Button variant="link" className="text-xs p-0 h-auto text-primary font-bold">Resend OTP</Button></p>
             </form>

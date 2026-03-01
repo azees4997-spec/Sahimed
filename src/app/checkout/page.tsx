@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from 'react';
@@ -10,26 +9,58 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Truck, ShieldCheck, Plus, CheckCircle2, LocateFixed } from 'lucide-react';
+import { MapPin, Truck, ShieldCheck, Plus, CheckCircle2, LocateFixed, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp } from 'firebase/firestore';
 
 export default function CheckoutPage() {
   const { cart, totalPrice, clearCart, location } = useCart();
-  const [addressStep, setAddressStep] = useState('select'); // 'select' | 'new'
+  const { user } = useUser();
+  const db = useFirestore();
+  const [addressStep, setAddressStep] = useState('select'); 
   const [selectedAddress, setSelectedAddress] = useState('1');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    
+    const orderData = {
+      userId: user.uid,
+      orderDate: serverTimestamp(),
+      totalAmount: totalPrice,
+      status: 'Pending',
+      shippingAddressId: selectedAddress,
+      paymentStatus: 'Paid',
+      items: cart.map(item => ({
+        medicineId: item.id,
+        quantity: item.quantity,
+        unitPrice: item.price,
+        name: item.name
+      }))
+    };
+
+    try {
+      const orderRef = collection(db, 'userProfiles', user.uid, 'orders');
+      addDocumentNonBlocking(orderRef, orderData);
+      
       toast({ title: "Order Placed!", description: "Your healthcare needs are on the way." });
       clearCart();
-      router.push('/');
-    }, 1500);
+      router.push('/orders');
+    } catch (err) {
+      console.error(err);
+      toast({ variant: "destructive", title: "Order Failed", description: "Something went wrong." });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const deliveryDate = new Date();
@@ -42,10 +73,7 @@ export default function CheckoutPage() {
         <h1 className="text-3xl font-black font-headline mb-12 text-gray-900 uppercase tracking-widest">Secure Checkout</h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Checkout Steps */}
           <div className="lg:col-span-2 space-y-8">
-            
-            {/* Picked Location Info */}
             <Card className="rounded-[40px] border-none shadow-sm bg-primary/5 border border-primary/10">
                <CardContent className="p-8 flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -61,7 +89,6 @@ export default function CheckoutPage() {
                </CardContent>
             </Card>
 
-            {/* Delivery Address */}
             <Card className="rounded-[40px] border-none shadow-sm overflow-hidden">
               <CardHeader className="bg-white p-8 border-b">
                 <div className="flex items-center justify-between">
@@ -129,7 +156,6 @@ export default function CheckoutPage() {
               </CardContent>
             </Card>
 
-            {/* Delivery Method */}
             <Card className="rounded-[40px] border-none shadow-sm overflow-hidden bg-white">
                <CardContent className="p-8 flex items-center justify-between">
                   <div className="flex items-center gap-6">
@@ -146,10 +172,8 @@ export default function CheckoutPage() {
                   <Badge className="bg-green-100 text-green-700 font-black uppercase text-[10px] border-none px-6 py-3 rounded-full">FREE DELIVERY</Badge>
                </CardContent>
             </Card>
-
           </div>
 
-          {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white p-10 rounded-[50px] shadow-2xl border border-gray-100 sticky top-24">
               <h2 className="text-2xl font-black mb-10 text-gray-900 uppercase tracking-widest">Order Summary</h2>
@@ -182,7 +206,7 @@ export default function CheckoutPage() {
               </div>
 
               <Button onClick={handlePlaceOrder} disabled={loading} className="w-full h-16 rounded-full text-lg font-black uppercase tracking-widest shadow-2xl shadow-primary/40 hover:scale-[1.02] transition-all gap-3">
-                {loading ? "Verifying..." : "Confirm & Pay"}
+                {loading ? <Loader2 className="animate-spin" /> : (user ? "Confirm & Pay" : "Login to Checkout")}
               </Button>
               
               <div className="mt-10 flex flex-col gap-4">
