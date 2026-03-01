@@ -7,10 +7,9 @@ service cloud.firestore {
      * HEALTHLINK PHARMACY SECURITY RULES
      * 
      * CORE PHILOSOPHY:
-     * This ruleset enforces a strict user-ownership model using path-based authorization. 
-     * Access to sensitive user data (profiles, addresses, prescriptions, orders, carts) is 
-     * primarily determined by comparing the user's authenticated UID against the document's 
-     * path or an internal ownership field.
+     * 1. Path-based authorization for private user data.
+     * 2. Role-based global access for administrators (DBAC).
+     * 3. Public access for product catalogs.
      */
 
     // --- HELPER FUNCTIONS ---
@@ -19,101 +18,88 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     // --- COLLECTION GROUP RULES ---
     
-    // Explicitly allow administrators to query orders and prescriptions across all users
+    // Explicitly allow administrators to query and update orders across all users for fulfillment
     match /{path=**}/orders/{orderId} {
-      allow read: if isAdmin();
-      allow update: if isAdmin();
+      allow read, update: if isAdmin();
     }
 
     match /{path=**}/prescriptions/{prescriptionId} {
-      allow read: if isAdmin();
-      allow update: if isAdmin();
+      allow read, update: if isAdmin();
     }
 
     // --- TOP-LEVEL COLLECTIONS ---
 
+    // User Profiles & Private Data
     match /userProfiles/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
 
-      match /addresses/{addressId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
-      }
-
-      match /prescriptions/{prescriptionId} {
-        allow get, list: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if (isExistingOwner(userId) || isAdmin()) && (request.resource.data.userId == resource.data.userId);
-        allow delete: if isExistingOwner(userId);
-      }
-
+      // Orders: User can only see theirs, Admin can see all (via group and direct path)
       match /orders/{orderId} {
-        allow get, list: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if (isExistingOwner(userId) || isAdmin()) && (request.resource.data.userId == resource.data.userId);
-        allow delete: if false; 
-
-        match /orderItems/{orderItemId} {
-          allow get, list: if isOwner(userId) || isAdmin();
+        allow read, list: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId);
+        allow update: if isAdmin(); // Admin updates fulfillment status
+        
+        match /orderItems/{itemId} {
+          allow read: if isOwner(userId) || isAdmin();
           allow create: if isOwner(userId);
-          allow update, delete: if false;
         }
+      }
+
+      // Prescriptions
+      match /prescriptions/{prescriptionId} {
+        allow read, list: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId);
+        allow update: if isAdmin();
+      }
+
+      // Addresses
+      match /addresses/{addressId} {
+        allow read, list: if isOwner(userId);
+        allow write: if isOwner(userId);
       }
     }
 
+    // Admin Roles (Read-only for users to verify their own role, write restricted)
     match /roles_admin/{userId} {
-      // Allow a user to check if they are an admin
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow write: if false; 
     }
 
+    // Public Product Master (Read for all, write for Admin)
+    match /medicines/{medicineId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /categories/{categoryId} {
-      allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     match /manufacturers/{manufacturerId} {
-      allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    match /medicines/{medicineId} {
-      allow get, list: if true;
-      allow create, update, delete: if isAdmin();
-    }
-
+    // Shopping Carts (Strictly private)
     match /userCarts/{userId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(userId);
-
-      match /cartItems/{cartItemId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update: if isExistingOwner(userId);
-        allow delete: if isExistingOwner(userId);
+      allow read, write: if isOwner(userId);
+      match /cartItems/{itemId} {
+        allow read, write: if isOwner(userId);
       }
     }
   }
