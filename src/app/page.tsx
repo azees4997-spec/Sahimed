@@ -55,6 +55,7 @@ export default function Home() {
       <Navbar />
 
       <main className="flex-1 pb-10">
+        {/* Banner Section - Taller aspect for mobile fit */}
         <section className="bg-white py-2">
           <div className="max-w-7xl mx-auto px-4">
             <Carousel 
@@ -65,7 +66,7 @@ export default function Home() {
               <CarouselContent>
                 {heroBanners.map((banner, index) => (
                   <CarouselItem key={banner.id}>
-                    <div className="relative rounded-[32px] overflow-hidden aspect-[3/2] sm:aspect-[21/9] bg-primary shadow-sm border border-gray-100">
+                    <div className="relative rounded-[32px] overflow-hidden aspect-[3/4] sm:aspect-[21/9] bg-primary shadow-sm border border-gray-100">
                       <Image 
                         src={banner.imageUrl} 
                         alt={banner.description} 
@@ -74,17 +75,17 @@ export default function Home() {
                         data-ai-hint={banner.imageHint}
                         priority={index === 0}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/60 to-transparent flex items-center p-8 sm:p-12">
-                        <div className="max-w-[90%] sm:max-w-[500px] text-white space-y-4">
+                      <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/40 to-transparent sm:bg-gradient-to-r flex items-end sm:items-center p-8 sm:p-12">
+                        <div className="max-w-full sm:max-w-[500px] text-white space-y-4 mb-4 sm:mb-0">
                           <span className="inline-block bg-accent text-white text-[9px] sm:text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-[0.2em] shadow-lg">
                             {index === 0 ? 'Switch & Save' : index === 1 ? 'Fast Delivery' : 'Clinical Trust'}
                           </span>
-                          <h1 className="text-2xl sm:text-5xl font-black font-headline uppercase tracking-tighter leading-[1] text-balance">
+                          <h1 className="text-3xl sm:text-5xl font-black font-headline uppercase tracking-tighter leading-[1.1] text-balance">
                             {banner.description}
                           </h1>
                           <div className="pt-4">
                             <Link href="/search">
-                              <Button size="sm" className="rounded-full bg-white text-primary h-10 sm:h-14 px-8 sm:px-12 text-[11px] sm:text-[12px] font-black uppercase tracking-widest hover:bg-gray-50 active:scale-95 transition-all shadow-2xl shadow-black/20">
+                              <Button size="sm" className="rounded-full bg-white text-primary h-12 sm:h-14 px-10 sm:px-12 text-[11px] sm:text-[12px] font-black uppercase tracking-widest hover:bg-gray-50 active:scale-95 transition-all shadow-2xl shadow-black/20">
                                 Browse Catalog
                               </Button>
                             </Link>
@@ -99,6 +100,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Action Button */}
         <section className="py-2">
           <div className="max-w-7xl mx-auto px-4">
              <Link href="/prescription">
@@ -120,6 +122,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Therapy Hub */}
         <section className="py-4">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center justify-between mb-4 px-1">
@@ -142,6 +145,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Product Grid */}
         <section className="py-8 bg-white border-t border-gray-100 mt-4 rounded-t-[40px] shadow-2xl">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center justify-between mb-6 px-1">
