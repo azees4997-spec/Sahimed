@@ -63,7 +63,7 @@ export default function SupervisorConsole() {
     try {
       const snap = await getDoc(doc(db, 'roles_admin', user.uid));
       if (snap.exists()) {
-        // Latency buffer for Security Rules propagation
+        // Latency buffer for Security Rules propagation to ensure global queries work
         setTimeout(() => {
           setIsVerified(true);
           setIsVerifying(false);
@@ -132,8 +132,8 @@ export default function SupervisorConsole() {
           </CardHeader>
           <CardContent className="p-8">
             <form onSubmit={handleLogin} className="space-y-4">
-              <Input type="email" placeholder="Clinical ID" value={email} onChange={e => setEmail(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
-              <Input type="password" placeholder="Security Key" value={password} onChange={e => setPassword(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
+              <Input type="email" placeholder="Email ID" value={email} onChange={e => setEmail(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
+              <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
               <Button type="submit" disabled={authLoading} className="w-full h-14 rounded-full font-black uppercase tracking-widest mt-2">
                 {authLoading ? <Loader2 className="animate-spin" /> : "Access Terminal"}
               </Button>

@@ -58,7 +58,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8]">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
           <p className="text-[8px] font-black uppercase tracking-widest text-gray-400">Clinical Sync...</p>
         </div>
       </div>
@@ -112,7 +112,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        {/* SIDE BY SIDE PRODUCT CARDS */}
+        {/* SIDE BY SIDE PRODUCT CARDS (MOBILE OPTIMIZED) */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           {/* Branded Card */}
           <div className="bg-white rounded-[24px] p-3 shadow-sm border border-gray-100 flex flex-col h-full">
@@ -131,9 +131,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
              <div className="mt-4 pt-2 border-t border-gray-50">
                 {getQty(product?.id!) > 0 ? (
                   <div className="flex items-center justify-between border border-primary/20 rounded-lg h-8 px-1 bg-primary/5">
-                    <Button variant="ghost" size="icon" className="w-5 h-5 rounded-full" onClick={() => updateQuantity(product?.id!, -1)}><Minus className="w-2.5 h-2.5" /></Button>
+                    <Button variant="ghost" size="icon" className="w-5 h-5 rounded-full" onClick={() => updateQuantity(product?.id!, -1)}><Minus className="w-2 h-2" /></Button>
                     <span className="font-black text-[10px] text-primary">{getQty(product?.id!)}</span>
-                    <Button variant="ghost" size="icon" className="w-5 h-5 rounded-full" onClick={() => updateQuantity(product?.id!, 1)}><Plus className="w-2.5 h-2.5" /></Button>
+                    <Button variant="ghost" size="icon" className="w-5 h-5 rounded-full" onClick={() => updateQuantity(product?.id!, 1)}><Plus className="w-2 h-2" /></Button>
                   </div>
                 ) : (
                   <Button onClick={() => handleAdd(product)} className="w-full h-8 rounded-lg font-black text-[8px] uppercase tracking-widest">Add</Button>
@@ -165,9 +165,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                  <div className="mt-4 pt-2 border-t border-green-100">
                     {getQty(genericSubstitute.id) > 0 ? (
                       <div className="flex items-center justify-between border border-green-600/20 rounded-lg h-8 px-1 bg-green-50">
-                        <Button variant="ghost" size="icon" className="w-5 h-5 rounded-full" onClick={() => updateQuantity(genericSubstitute.id, -1)}><Minus className="w-2.5 h-2.5" /></Button>
+                        <Button variant="ghost" size="icon" className="w-5 h-5 rounded-full" onClick={() => updateQuantity(genericSubstitute.id, -1)}><Minus className="w-2 h-2" /></Button>
                         <span className="font-black text-[10px] text-green-900">{getQty(genericSubstitute.id)}</span>
-                        <Button variant="ghost" size="icon" className="w-5 h-5 rounded-full" onClick={() => updateQuantity(genericSubstitute.id, 1)}><Plus className="w-2.5 h-2.5" /></Button>
+                        <Button variant="ghost" size="icon" className="w-5 h-5 rounded-full" onClick={() => updateQuantity(genericSubstitute.id, 1)}><Plus className="w-2 h-2" /></Button>
                       </div>
                     ) : (
                       <Button onClick={() => handleAdd(genericSubstitute)} className="w-full h-8 rounded-lg bg-green-600 hover:bg-green-700 text-white font-black text-[8px] uppercase tracking-widest">Switch</Button>
@@ -194,39 +194,39 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         )}
 
-        {/* CLINICAL COMPARISON GRID */}
+        {/* CLINICAL COMPARISON GRID (FORCED SIDE-BY-SIDE ON ALL SCREENS) */}
         <section className="space-y-3">
            {/* Section: Overview */}
            <div className="grid grid-cols-2 gap-3">
-              <Card className="rounded-xl border-none shadow-sm overflow-hidden bg-white">
-                 <CardHeader className="bg-gray-50/30 p-3 border-b border-gray-50">
+              <Card className="rounded-xl border-none shadow-sm overflow-hidden bg-white h-full">
+                 <CardHeader className="bg-gray-50/30 p-2 border-b border-gray-50">
                     <CardTitle className="text-[7px] font-black uppercase tracking-widest text-primary flex items-center gap-1.5">
                        <FlaskConical className="w-3 h-3" /> Branded
                     </CardTitle>
                  </CardHeader>
-                 <CardContent className="p-3">
-                    <p className="text-gray-500 text-[7px] font-bold leading-relaxed line-clamp-[8]">{product?.description}</p>
+                 <CardContent className="p-2">
+                    <p className="text-gray-500 text-[7px] font-bold leading-relaxed line-clamp-[10]">{product?.description}</p>
                  </CardContent>
               </Card>
 
-              <Card className="rounded-xl border-none shadow-sm overflow-hidden bg-white">
-                 <CardHeader className="bg-green-50/20 p-3 border-b border-green-50">
+              <Card className="rounded-xl border-none shadow-sm overflow-hidden bg-white h-full">
+                 <CardHeader className="bg-green-50/20 p-2 border-b border-green-50">
                     <CardTitle className="text-[7px] font-black uppercase tracking-widest text-green-700 flex items-center gap-1.5">
                        <Dna className="w-3 h-3" /> Generic
                     </CardTitle>
                  </CardHeader>
-                 <CardContent className="p-3">
-                    <p className="text-gray-500 text-[7px] font-bold leading-relaxed line-clamp-[8]">{genericSubstitute?.description || 'Molecularly identical generic alternative with verified clinical equivalence.'}</p>
+                 <CardContent className="p-2">
+                    <p className="text-gray-500 text-[7px] font-bold leading-relaxed line-clamp-[10]">{genericSubstitute?.description || 'Molecularly identical generic alternative with verified clinical equivalence.'}</p>
                  </CardContent>
               </Card>
            </div>
 
            {/* Section: Therapeutic Uses */}
-           <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-50">
-              <h3 className="text-[8px] font-black text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+           <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-50">
+              <h3 className="text-[8px] font-black text-gray-900 uppercase tracking-widest mb-3 flex items-center gap-2">
                  <CheckCircle2 className="w-3.5 h-3.5 text-primary" /> Therapeutic Uses
               </h3>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-4">
                  <div>
                     <p className="text-[6px] font-black uppercase text-primary/40 mb-1">{product?.name}</p>
                     <ul className="space-y-1">
@@ -235,7 +235,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                        ))}
                     </ul>
                  </div>
-                 <div className="border-l border-gray-50 pl-6">
+                 <div className="border-l border-gray-50 pl-4">
                     <p className="text-[6px] font-black uppercase text-green-600/40 mb-1">Generic</p>
                     <ul className="space-y-1">
                        {(genericSubstitute?.uses || product?.uses || [product?.category]).map((use: string, i: number) => (
@@ -247,24 +247,24 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            </div>
 
            {/* Section: Side Effects */}
-           <div className="bg-orange-50/10 p-4 rounded-2xl border border-orange-100/30">
-              <h3 className="text-[8px] font-black text-orange-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+           <div className="bg-orange-50/10 p-3 rounded-2xl border border-orange-100/30">
+              <h3 className="text-[8px] font-black text-orange-900 uppercase tracking-widest mb-3 flex items-center gap-2">
                  <AlertCircle className="w-3.5 h-3.5 text-orange-600" /> Clinical Safety
               </h3>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-4">
                  <div className="space-y-1">
                     <p className="text-[6px] font-black uppercase text-orange-600/40">Branded</p>
                     <div className="flex flex-wrap gap-1">
                        {(product?.sideEffects || ['Nausea']).map((effect: string, i: number) => (
-                         <Badge key={i} variant="outline" className="bg-white/50 border-orange-100 text-orange-700 font-bold px-1.5 py-0 text-[6px]">{effect}</Badge>
+                         <Badge key={i} variant="outline" className="bg-white/50 border-orange-100 text-orange-700 font-bold px-1 py-0 text-[6px] h-3.5">{effect}</Badge>
                        ))}
                     </div>
                  </div>
-                 <div className="space-y-1 border-l border-orange-100 pl-6">
+                 <div className="space-y-1 border-l border-orange-100 pl-4">
                     <p className="text-[6px] font-black uppercase text-orange-600/40">Generic</p>
                     <div className="flex flex-wrap gap-1">
                        {(genericSubstitute?.sideEffects || product?.sideEffects || ['Nausea']).map((effect: string, i: number) => (
-                         <Badge key={i} variant="outline" className="bg-white/50 border-orange-100 text-orange-700 font-bold px-1.5 py-0 text-[6px]">{effect}</Badge>
+                         <Badge key={i} variant="outline" className="bg-white/50 border-orange-100 text-orange-700 font-bold px-1 py-0 text-[6px] h-3.5">{effect}</Badge>
                        ))}
                     </div>
                  </div>
