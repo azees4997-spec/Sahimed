@@ -3,15 +3,16 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product, useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
 export default function ProductCard({ product }: { product: Product }) {
-  const { addToCart } = useCart();
+  const { addToCart, updateQuantity, getItemQuantity } = useCart();
   const { toast } = useToast();
+  const quantity = getItemQuantity(product.id);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -21,6 +22,18 @@ export default function ProductCard({ product }: { product: Product }) {
       title: "Added to cart",
       description: `${product.name} is in your cart.`,
     });
+  };
+
+  const handleIncrement = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    updateQuantity(product.id, 1);
+  };
+
+  const handleDecrement = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    updateQuantity(product.id, -1);
   };
 
   return (
@@ -38,7 +51,7 @@ export default function ProductCard({ product }: { product: Product }) {
         )}
       </Link>
       
-      <div className="p-2.5 flex flex-col flex-1">
+      <div className="p-2 flex flex-col flex-1">
         <p className="text-[6px] text-gray-400 font-black uppercase tracking-widest mb-0.5 truncate">{product.manufacturer}</p>
         <Link href={`/product/${product.id}`}>
           <h3 className="font-black text-gray-900 line-clamp-1 mb-0.5 group-hover:text-primary transition-colors text-[9px] sm:text-[10px] leading-tight uppercase tracking-tight">{product.name}</h3>
@@ -48,16 +61,35 @@ export default function ProductCard({ product }: { product: Product }) {
         </p>
         
         <div className="mt-auto flex items-center justify-between gap-1">
-          <div className="flex flex-col">
-            <span className="text-[9px] sm:text-[11px] font-black text-gray-900 tracking-tighter">₹{product.price}</span>
-          </div>
-          <Button 
-            onClick={handleAdd} 
-            size="icon" 
-            className="rounded-xl h-6 w-6 sm:h-8 sm:w-8 p-0 shadow-lg shadow-primary/10 active:scale-90 transition-transform bg-primary/5 hover:bg-primary text-primary hover:text-white"
-          >
-            <Plus className="w-3 h-3 sm:w-4 h-4" />
-          </Button>
+          <span className="text-[9px] sm:text-[10px] font-black text-gray-900 tracking-tighter">₹{product.price}</span>
+          
+          {quantity > 0 ? (
+            <div className="flex items-center gap-1 bg-primary/5 rounded-lg p-0.5 border border-primary/10">
+              <Button 
+                onClick={handleDecrement} 
+                size="icon" 
+                className="h-5 w-5 sm:h-6 sm:w-6 p-0 rounded-md bg-white text-primary hover:bg-primary hover:text-white shadow-sm border border-primary/10"
+              >
+                <Minus className="w-2.5 h-2.5 sm:w-3 h-3" />
+              </Button>
+              <span className="text-[8px] sm:text-[10px] font-black text-primary px-1 min-w-[12px] text-center">{quantity}</span>
+              <Button 
+                onClick={handleIncrement} 
+                size="icon" 
+                className="h-5 w-5 sm:h-6 sm:w-6 p-0 rounded-md bg-white text-primary hover:bg-primary hover:text-white shadow-sm border border-primary/10"
+              >
+                <Plus className="w-2.5 h-2.5 sm:w-3 h-3" />
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              onClick={handleAdd} 
+              size="icon" 
+              className="rounded-lg h-6 w-6 sm:h-8 sm:w-8 p-0 shadow-lg shadow-primary/10 active:scale-90 transition-transform bg-primary/5 hover:bg-primary text-primary hover:text-white border border-primary/20"
+            >
+              <Plus className="w-3 h-3 sm:w-4 h-4" />
+            </Button>
+          )}
         </div>
       </div>
     </div>

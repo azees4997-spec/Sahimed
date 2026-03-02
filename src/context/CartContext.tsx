@@ -25,6 +25,7 @@ interface CartContextType {
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, delta: number) => void;
   clearCart: () => void;
+  getItemQuantity: (id: string) => number;
   totalItems: number;
   totalPrice: number;
   location: string;
@@ -75,13 +76,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateQuantity = (id: string, delta: number) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === id) {
-        const newQty = Math.max(1, item.quantity + delta);
-        return { ...item, quantity: newQty };
+    setCart(prev => {
+      const existing = prev.find(i => i.id === id);
+      if (existing && existing.quantity === 1 && delta === -1) {
+        return prev.filter(i => i.id !== id);
       }
-      return item;
-    }));
+      return prev.map(item => {
+        if (item.id === id) {
+          const newQty = Math.max(0, item.quantity + delta);
+          return { ...item, quantity: newQty };
+        }
+        return item;
+      }).filter(item => item.quantity > 0);
+    });
+  };
+
+  const getItemQuantity = (id: string) => {
+    return cart.find(item => item.id === id)?.quantity || 0;
   };
 
   const clearCart = () => setCart([]);
@@ -91,7 +102,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <CartContext.Provider value={{
-      cart, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice, location, setLocation
+      cart, addToCart, removeFromCart, updateQuantity, clearCart, getItemQuantity, totalItems, totalPrice, location, setLocation
     }}>
       {children}
     </CartContext.Provider>

@@ -30,10 +30,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { id } = use(params);
   const db = useFirestore();
   const { toast } = useToast();
-  const { addToCart } = useCart();
-
-  const [brandedQty, setBrandedQty] = useState(1);
-  const [genericQty, setGenericQty] = useState(1);
+  const { addToCart, updateQuantity, getItemQuantity } = useCart();
 
   const productRef = useMemoFirebase(() => {
     if (!db || !id) return null;
@@ -55,6 +52,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { data: genericAlternatives } = useCollection(genericQuery);
   const genericSubstitute = genericAlternatives?.[0];
 
+  const brandedQty = getItemQuantity(product?.id || '');
+  const genericQty = getItemQuantity(genericSubstitute?.id || '');
+
   if (productLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8]">
@@ -65,9 +65,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   if (!product && !productLoading) return notFound();
 
-  const handleAdd = (p: any, qty: number) => {
-    addToCart(p, qty);
-    toast({ title: "Added to cart", description: `${qty} units of ${p.name} added.` });
+  const handleAdd = (p: any) => {
+    addToCart(p, 1);
+    toast({ title: "Added to cart", description: `${p.name} added.` });
   };
 
   const getUnitCount = (packSize: string) => {
@@ -121,14 +121,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <div className="text-[10px] font-black text-gray-900">₹{product?.price}</div>
                 <p className="text-[6px] font-bold text-gray-400">₹{(product?.price / getUnitCount(product?.packSize || '')).toFixed(1)} / Unit</p>
                 
-                {/* Qty Selector */}
-                <div className="flex items-center justify-between bg-white rounded-full border border-gray-100 mt-2 h-6 px-1.5">
-                  <button onClick={() => setBrandedQty(Math.max(1, brandedQty - 1))} className="p-0.5 text-gray-400 hover:text-primary"><Minus className="w-2.5 h-2.5" /></button>
-                  <span className="text-[8px] font-black">{brandedQty}</span>
-                  <button onClick={() => setBrandedQty(brandedQty + 1)} className="p-0.5 text-gray-400 hover:text-primary"><Plus className="w-2.5 h-2.5" /></button>
+                <div className="mt-2">
+                  {brandedQty > 0 ? (
+                    <div className="flex items-center justify-between bg-primary rounded-full h-7 px-1.5 shadow-md">
+                      <button onClick={() => updateQuantity(product.id, -1)} className="p-1 text-white hover:opacity-80 transition-opacity"><Minus className="w-2.5 h-2.5" /></button>
+                      <span className="text-[9px] font-black text-white">{brandedQty}</span>
+                      <button onClick={() => updateQuantity(product.id, 1)} className="p-1 text-white hover:opacity-80 transition-opacity"><Plus className="w-2.5 h-2.5" /></button>
+                    </div>
+                  ) : (
+                    <Button onClick={() => handleAdd(product)} className="w-full h-7 rounded-full text-[7px] font-black uppercase tracking-widest bg-primary hover:bg-primary/90 shadow-md">Add To Cart</Button>
+                  )}
                 </div>
-
-                <Button onClick={() => handleAdd(product, brandedQty)} className="w-full h-6 mt-1.5 rounded-full text-[7px] font-black uppercase tracking-widest bg-primary hover:bg-primary/90 shadow-md">Add To Cart</Button>
               </div>
             </div>
           </Card>
@@ -154,14 +157,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   <div className="text-[10px] font-black text-green-600">₹{genericSubstitute.price}</div>
                   <p className="text-[6px] font-bold text-gray-400">₹{(genericSubstitute.price / getUnitCount(genericSubstitute.packSize || '')).toFixed(1)} / Unit</p>
                   
-                  {/* Qty Selector */}
-                  <div className="flex items-center justify-between bg-green-50 rounded-full border border-green-100 mt-2 h-6 px-1.5">
-                    <button onClick={() => setGenericQty(Math.max(1, genericQty - 1))} className="p-0.5 text-green-600 hover:text-green-700"><Minus className="w-2.5 h-2.5" /></button>
-                    <span className="text-[8px] font-black text-green-800">{genericQty}</span>
-                    <button onClick={() => setGenericQty(genericQty + 1)} className="p-0.5 text-green-600 hover:text-green-700"><Plus className="w-2.5 h-2.5" /></button>
+                  <div className="mt-2">
+                    {genericQty > 0 ? (
+                      <div className="flex items-center justify-between bg-green-600 rounded-full h-7 px-1.5 shadow-md">
+                        <button onClick={() => updateQuantity(genericSubstitute.id, -1)} className="p-1 text-white hover:opacity-80 transition-opacity"><Minus className="w-2.5 h-2.5" /></button>
+                        <span className="text-[9px] font-black text-white">{genericQty}</span>
+                        <button onClick={() => updateQuantity(genericSubstitute.id, 1)} className="p-1 text-white hover:opacity-80 transition-opacity"><Plus className="w-2.5 h-2.5" /></button>
+                      </div>
+                    ) : (
+                      <Button onClick={() => handleAdd(genericSubstitute)} className="w-full h-7 rounded-full text-[7px] font-black uppercase tracking-widest bg-green-600 hover:bg-green-700 shadow-lg shadow-green-100">Add To Cart</Button>
+                    )}
                   </div>
-
-                  <Button onClick={() => handleAdd(genericSubstitute, genericQty)} className="w-full h-6 mt-1.5 rounded-full text-[7px] font-black uppercase tracking-widest bg-green-600 hover:bg-green-700 shadow-lg shadow-green-100">Add To Cart</Button>
                 </div>
               </div>
             </Card>
