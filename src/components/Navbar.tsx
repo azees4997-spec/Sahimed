@@ -2,7 +2,7 @@
 "use client"
 
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Upload, MapPin, ChevronDown, LocateFixed, Loader2, Home, Package, Search as SearchIcon } from 'lucide-react';
+import { ShoppingCart, User, Upload, MapPin, ChevronDown, LocateFixed, Loader2, Home, Package, Search as SearchIcon } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -93,7 +93,7 @@ export default function Navbar() {
   const manualLocations = ["Mumbai, MH", "Delhi, DL", "Bangalore, KA"];
 
   const NavItem = ({ href, icon: Icon, label, active }: { href: string, icon: any, label: string, active: boolean }) => (
-    <Link href={href} className={`flex flex-col items-center justify-center flex-1 gap-1 transition-all active:scale-90 ${active ? 'text-primary' : 'text-gray-400'}`}>
+    <Link href={href} className={`flex flex-col items-center justify-center flex-1 gap-1 transition-all py-2 ${active ? 'text-primary' : 'text-gray-400'}`}>
       <Icon className={`w-6 h-6 ${active ? 'fill-primary/10' : ''}`} />
       <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
     </Link>
@@ -175,7 +175,7 @@ export default function Navbar() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-primary transition-colors" />
+              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-primary transition-colors" />
             </form>
 
             {suggestions.length > 0 && (
@@ -211,18 +211,18 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Navigation */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t safe-bottom z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.08)]">
-        <div className="flex justify-around items-center h-16 px-2">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.08)]">
+        <div className="flex justify-around items-center h-16 px-2 safe-bottom">
           <NavItem href="/" icon={Home} label="Home" active={pathname === '/'} />
           <NavItem href="/search" icon={SearchIcon} label="Explore" active={pathname === '/search'} />
           
           <div className="relative flex justify-center flex-1 h-full">
-            <Link href="/prescription" className="absolute -top-10 flex items-center justify-center">
+            <Link href="/prescription" className="absolute -top-10 flex flex-col items-center justify-center">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white shadow-[0_10px_25px_rgba(30,58,138,0.4)] border-4 border-white active:scale-90 transition-all group">
                 <Upload className="w-7 h-7 group-hover:animate-bounce" />
               </div>
+              <span className="mt-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Scan</span>
             </Link>
-            <span className="self-end pb-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Scan</span>
           </div>
 
           <NavItem href="/orders" icon={Package} label="Orders" active={pathname === '/orders'} />

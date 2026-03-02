@@ -2,14 +2,13 @@
 "use client"
 
 import Navbar from '@/components/Navbar';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { User, Package, MapPin, Heart, LogOut, ChevronRight, Settings, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ProfilePage() {
   return (
-    <div className="min-h-screen bg-[#F8F8F8]">
+    <div className="min-h-screen bg-[#F8F8F8] pb-32">
       <Navbar />
       <main className="max-w-4xl mx-auto px-4 py-8 md:py-16">
         
