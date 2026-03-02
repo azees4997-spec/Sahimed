@@ -1,4 +1,3 @@
-
 "use client"
 
 import Navbar from '@/components/Navbar';
@@ -49,32 +48,34 @@ export default function Home() {
       <Navbar />
 
       <main className="flex-1 pb-10">
-        {/* Banner Slider - High Density */}
+        {/* Banner Slider - High Fidelity & Mobile Optimized */}
         <section className="bg-white py-2">
           <div className="max-w-7xl mx-auto px-4">
             <Carousel className="w-full" opts={{ loop: true, align: 'start' }}>
               <CarouselContent>
                 {heroBanners.length > 0 ? heroBanners.map((banner, index) => (
                   <CarouselItem key={banner.id}>
-                    <div className="relative rounded-2xl overflow-hidden aspect-[16/7] bg-primary shadow-sm">
+                    <div className="relative rounded-2xl overflow-hidden aspect-[2/1] sm:aspect-[21/9] bg-primary shadow-sm border border-gray-100">
                       <Image 
                         src={banner.imageUrl} 
                         alt={banner.description} 
                         fill 
-                        className="object-cover opacity-80"
+                        className="object-cover opacity-60"
                         data-ai-hint={banner.imageHint}
                         priority={index === 0}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/30 to-transparent flex items-center p-6">
-                        <div className="max-w-[200px] text-white">
-                          <span className="inline-block bg-accent text-white text-[7px] font-black px-2 py-0.5 rounded-full mb-2 uppercase tracking-widest">
-                            {index === 1 ? 'SWITCH & SAVE 80%' : 'CLINICAL GRADE'}
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/40 to-transparent flex items-center p-5 sm:p-10">
+                        <div className="max-w-[70%] sm:max-w-[450px] text-white">
+                          <span className="inline-block bg-accent text-white text-[8px] sm:text-[10px] font-black px-2.5 py-0.5 rounded-full mb-2 uppercase tracking-[0.2em]">
+                            {index === 1 ? 'Switch & Save' : 'Clinical Grade'}
                           </span>
-                          <h1 className="text-xl font-black font-headline mb-3 uppercase tracking-tighter leading-tight">
+                          <h1 className="text-lg sm:text-3xl font-black font-headline mb-4 uppercase tracking-tighter leading-[1.1]">
                             {banner.description}
                           </h1>
                           <Link href="/search">
-                            <Button size="sm" className="rounded-full bg-white text-primary h-9 px-6 text-[9px] font-black uppercase tracking-widest hover:bg-gray-50 active:scale-95 transition-all shadow-xl">Shop Now</Button>
+                            <Button size="sm" className="rounded-full bg-white text-primary h-9 sm:h-12 px-6 sm:px-10 text-[9px] sm:text-[11px] font-black uppercase tracking-widest hover:bg-gray-50 active:scale-95 transition-all shadow-xl shadow-black/10">
+                              Shop Now
+                            </Button>
                           </Link>
                         </div>
                       </div>
@@ -82,7 +83,7 @@ export default function Home() {
                   </CarouselItem>
                 )) : (
                   <CarouselItem>
-                    <div className="w-full aspect-[16/7] bg-gray-100 rounded-2xl flex items-center justify-center">
+                    <div className="w-full aspect-[2/1] bg-gray-100 rounded-2xl flex items-center justify-center">
                       <Loader2 className="animate-spin text-primary" />
                     </div>
                   </CarouselItem>
