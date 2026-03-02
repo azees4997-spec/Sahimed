@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from 'react';
@@ -100,7 +99,7 @@ export default function PrescriptionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] pb-32">
+    <div className="min-h-screen bg-[#F8F8F8] pb-16">
       <Navbar />
       <main className="max-w-2xl mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">

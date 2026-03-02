@@ -1,4 +1,3 @@
-
 "use client"
 
 import Navbar from '@/components/Navbar';
@@ -38,7 +37,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col pb-32 sm:pb-0">
+    <div className="min-h-screen flex flex-col pb-16 sm:pb-0">
       <Navbar />
 
       <main className="flex-1">
@@ -142,7 +141,7 @@ export default function Home() {
         </section>
 
         {/* Trust Banner */}
-        <section className="py-8 bg-gray-50 mb-16 sm:mb-0">
+        <section className="py-8 bg-gray-50 mb-8 sm:mb-0">
           <div className="max-w-7xl mx-auto px-4 text-center">
             <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-1.5 rounded-full mb-3">
               <ShieldCheck className="w-3 h-3" />

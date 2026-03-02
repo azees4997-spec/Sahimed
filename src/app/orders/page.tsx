@@ -1,11 +1,10 @@
-
 "use client"
 
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Package, Truck, CheckCircle2, ChevronRight, MapPin, Clock, ArrowLeft, Loader2 } from 'lucide-react';
+import { Package, Truck, CheckCircle2, MapPin, Clock, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -22,7 +21,7 @@ export default function OrdersPage() {
   const { data: orders, isLoading } = useCollection(ordersQuery);
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8]">
+    <div className="min-h-screen bg-[#F8F8F8] pb-16">
       <Navbar />
       
       <main className="max-w-4xl mx-auto px-4 py-8 md:py-16">

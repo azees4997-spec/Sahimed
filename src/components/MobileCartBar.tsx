@@ -1,8 +1,6 @@
-
 "use client"
 
 import { useCart } from '@/context/CartContext';
-import { Button } from '@/components/ui/button';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -16,7 +14,7 @@ export default function MobileCartBar() {
   if (hideOnPaths.includes(pathname) || totalItems === 0) return null;
 
   return (
-    <div className="sm:hidden fixed bottom-[72px] left-0 right-0 z-40 px-4 pb-4 animate-in slide-in-from-bottom-6 duration-500 ease-out">
+    <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 px-4 pb-4 animate-in slide-in-from-bottom-6 duration-500 ease-out">
       <Link href="/cart">
         <div className="bg-primary text-white rounded-[32px] p-5 shadow-2xl shadow-primary/50 flex items-center justify-between border border-white/20 backdrop-blur-md bg-primary/95 ring-4 ring-white/10 active:scale-95 transition-transform">
           <div className="flex items-center gap-4">

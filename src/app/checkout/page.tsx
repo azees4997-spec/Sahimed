@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from 'react';
@@ -6,11 +5,11 @@ import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Truck, ShieldCheck, Plus, CheckCircle2, LocateFixed, Loader2, ArrowRight } from 'lucide-react';
+import { MapPin, Truck, ShieldCheck, Plus, LocateFixed, Loader2, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
@@ -233,7 +232,7 @@ export default function CheckoutPage() {
       </main>
 
       {/* STICKY MOBILE CHECKOUT BAR */}
-      <div className="sm:hidden fixed bottom-[72px] left-0 right-0 z-50 px-4 pb-4 animate-in slide-in-from-bottom-6 duration-500">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 animate-in slide-in-from-bottom-6 duration-500">
         <div className="bg-primary p-4 rounded-[32px] shadow-2xl shadow-primary/50 flex items-center justify-between gap-4 border border-white/20 backdrop-blur-md bg-primary/95">
           <div className="pl-2">
             <p className="text-[10px] font-black text-white/60 uppercase tracking-widest">Grand Total</p>

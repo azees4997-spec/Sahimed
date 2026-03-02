@@ -1,13 +1,12 @@
-
 "use client"
 
 import Link from 'next/link';
-import { ShoppingCart, User, Upload, MapPin, ChevronDown, LocateFixed, Loader2, Home, Package, Search as SearchIcon } from 'lucide-react';
+import { ShoppingCart, User, MapPin, ChevronDown, LocateFixed, Loader2, Search as SearchIcon } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -18,7 +17,6 @@ export default function Navbar() {
   const [search, setSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);
   const router = useRouter();
-  const pathname = usePathname();
   const suggestionRef = useRef<HTMLDivElement>(null);
   
   const db = useFirestore();
@@ -92,13 +90,6 @@ export default function Navbar() {
 
   const manualLocations = ["Mumbai, MH", "Delhi, DL", "Bangalore, KA"];
 
-  const NavItem = ({ href, icon: Icon, label, active }: { href: string, icon: any, label: string, active: boolean }) => (
-    <Link href={href} className={`flex flex-col items-center justify-center flex-1 gap-1 transition-all py-2 ${active ? 'text-primary' : 'text-gray-400'}`}>
-      <Icon className={`w-6 h-6 ${active ? 'fill-primary/10' : ''}`} />
-      <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
-    </Link>
-  );
-
   return (
     <>
       <nav className="sticky top-0 z-50 bg-white border-b safe-top">
@@ -159,7 +150,7 @@ export default function Navbar() {
                   </span>
                 )}
               </Link>
-              <Link href="/profile" className="hidden sm:block p-2.5 hover:bg-gray-100 rounded-2xl">
+              <Link href="/profile" className="p-2.5 hover:bg-gray-100 rounded-2xl active:scale-95 transition-transform">
                 <User className="w-6 h-6 text-gray-700" />
               </Link>
             </div>
@@ -209,26 +200,6 @@ export default function Navbar() {
           </div>
         </div>
       </nav>
-
-      {/* Mobile Navigation */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.08)]">
-        <div className="flex justify-around items-center h-16 px-2 safe-bottom">
-          <NavItem href="/" icon={Home} label="Home" active={pathname === '/'} />
-          <NavItem href="/search" icon={SearchIcon} label="Explore" active={pathname === '/search'} />
-          
-          <div className="relative flex justify-center flex-1 h-full">
-            <Link href="/prescription" className="absolute -top-10 flex flex-col items-center justify-center">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white shadow-[0_10px_25px_rgba(30,58,138,0.4)] border-4 border-white active:scale-90 transition-all group">
-                <Upload className="w-7 h-7 group-hover:animate-bounce" />
-              </div>
-              <span className="mt-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Scan</span>
-            </Link>
-          </div>
-
-          <NavItem href="/orders" icon={Package} label="Orders" active={pathname === '/orders'} />
-          <NavItem href="/profile" icon={User} label="Profile" active={pathname === '/profile'} />
-        </div>
-      </div>
     </>
   );
 }
