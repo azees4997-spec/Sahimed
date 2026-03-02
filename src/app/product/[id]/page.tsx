@@ -1,3 +1,4 @@
+
 "use client"
 
 import { use, useState, useEffect } from 'react';
@@ -90,6 +91,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+        {/* Breadcrumbs */}
         <div className="flex items-center gap-2 mb-4 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
           <Link href="/" className="hover:text-primary">Home</Link>
           <ChevronRight className="w-2 h-2" />
@@ -98,6 +100,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <span className="text-primary truncate">{product?.name}</span>
         </div>
 
+        {/* Salt Composition Banner */}
         <div className="mb-4 bg-white border border-primary/10 rounded-xl py-2 px-4 shadow-sm">
           <div className="flex flex-col items-center justify-center gap-0.5">
              <div className="flex items-center gap-1.5">
@@ -108,9 +111,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
+        {/* Comparison Section */}
         <div className="grid grid-cols-1 gap-4">
           {genericSubstitute ? (
             <div className="grid grid-cols-2 gap-2 md:gap-4 items-stretch">
+              {/* Branded Card */}
               <Card className="rounded-2xl border-none bg-gray-100/50 overflow-hidden flex flex-col p-3 md:p-6 shadow-sm">
                 <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-3">You Searched</p>
                 <div className="aspect-square w-full max-w-[80px] bg-white rounded-lg mx-auto mb-4 p-1.5 shadow-sm relative overflow-hidden">
@@ -130,6 +135,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 </div>
               </Card>
 
+              {/* Recommended Generic Card */}
               <Card className="rounded-2xl border-2 border-green-500 bg-white overflow-hidden flex flex-col relative p-3 md:p-6 shadow-lg shadow-green-100/50">
                 <div className="absolute top-0 right-0">
                   <div className="bg-green-500 text-white font-black text-[6px] md:text-[8px] uppercase px-1.5 py-0.5 md:px-3 md:py-1 rounded-bl-lg">
@@ -173,6 +179,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </Card>
           )}
 
+          {/* Clinical Insights - Side by Side on Mobile too */}
           <div className="grid grid-cols-2 gap-2 md:gap-4 mt-2">
             <div className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
               <h3 className="text-[7px] font-black text-gray-900 uppercase tracking-widest mb-2 flex items-center gap-1">
@@ -200,6 +207,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
           </div>
 
+          {/* Safety Advice Grid */}
           <div className="grid grid-cols-3 gap-2">
             {[
               { icon: Wine, label: "Alcohol", text: product?.safetyAdvice?.alcohol || "Consult Doctor" },
