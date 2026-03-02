@@ -8,21 +8,21 @@ import {
   Loader2, 
   Package, 
   Database, 
-  Tags, 
   ShoppingBag, 
   ShieldAlert,
   UserPlus,
   Lock,
   FileText,
-  Eye
+  Eye,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { 
   useUser, 
   useFirestore, 
@@ -30,12 +30,13 @@ import {
   useAuth, 
   useMemoFirebase, 
   useCollection,
-  setDocumentNonBlocking
+  setDocumentNonBlocking,
+  updateDocumentNonBlocking
 } from '@/firebase';
 import { doc, collection, query, orderBy, collectionGroup, getDoc } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
-type AdminTab = 'dashboard' | 'medicines' | 'categories' | 'orders' | 'prescriptions';
+type AdminTab = 'dashboard' | 'medicines' | 'prescriptions' | 'orders';
 
 export default function SupervisorConsole() {
   const { user, isUserLoading } = useUser();
@@ -112,7 +113,7 @@ export default function SupervisorConsole() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F4F7F6] p-4">
-        <Card className="max-w-md w-full rounded-[48px] shadow-2xl border-none overflow-hidden">
+        <Card className="max-w-md w-full rounded-[40px] shadow-2xl border-none overflow-hidden">
           <CardHeader className="text-center p-12 bg-primary text-white">
             <div className="w-20 h-20 bg-white/20 rounded-[32px] flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
               <Lock className="w-10 h-10" />
@@ -143,7 +144,7 @@ export default function SupervisorConsole() {
   if (!isServerConfirmed) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F4F7F6] p-4">
-        <Card className="max-w-md w-full rounded-[48px] shadow-2xl border-none p-12 text-center space-y-8 bg-white">
+        <Card className="max-w-md w-full rounded-[40px] shadow-2xl border-none p-12 text-center space-y-8 bg-white">
           <div className="bg-orange-50 w-24 h-24 rounded-[40px] flex items-center justify-center mx-auto">
             <ShieldAlert className="w-12 h-12 text-orange-500" />
           </div>
@@ -168,14 +169,14 @@ export default function SupervisorConsole() {
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-12">
             <div className="flex items-center gap-3">
-              <div className="bg-primary p-2.5 rounded-2xl shadow-xl shadow-primary/20"><ShieldCheck className="text-white w-6 h-6" /></div>
+              <div className="bg-primary p-2.5 rounded-xl shadow-xl shadow-primary/20"><ShieldCheck className="text-white w-6 h-6" /></div>
               <span className="font-black text-2xl tracking-tighter text-gray-900 uppercase">Supervisor Hub</span>
             </div>
             <nav className="hidden lg:flex gap-2">
               {[
                 { id: 'dashboard', label: 'Overview', icon: ShieldCheck },
                 { id: 'medicines', label: 'Inventory', icon: Package },
-                { id: 'prescriptions', label: 'Prescriptions', icon: FileText },
+                { id: 'prescriptions', label: 'Enquiries', icon: FileText },
                 { id: 'orders', label: 'Fulfillment', icon: ShoppingBag }
               ].map(tab => (
                 <Button 
@@ -219,23 +220,22 @@ function DashboardOverview({ onSwitchTab, db, isVerified }: { onSwitchTab: (t: A
 
   const { data: medicines } = useCollection(medsQuery);
   const { data: prescriptions } = useCollection(presQuery);
-  const { toast } = useToast();
 
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
-      <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase">Operations</h1>
+      <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase">Operations Hub</h1>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         {[
           { label: 'Inventory', icon: Package, count: medicines?.length || 0, tab: 'medicines' },
-          { label: 'Prescriptions', icon: FileText, count: prescriptions?.length || 0, tab: 'prescriptions' },
+          { label: 'Enquiries', icon: FileText, count: prescriptions?.length || 0, tab: 'prescriptions' },
         ].map(card => (
-          <Card key={card.label} className="rounded-[56px] p-10 border-none shadow-sm hover:shadow-2xl transition-all cursor-pointer bg-white" onClick={() => onSwitchTab(card.tab as AdminTab)}>
+          <Card key={card.label} className="rounded-[40px] p-10 border-none shadow-sm hover:shadow-2xl transition-all cursor-pointer bg-white" onClick={() => onSwitchTab(card.tab as AdminTab)}>
             <card.icon className="w-10 h-10 text-primary mb-8" />
             <CardTitle className="text-2xl font-black uppercase">{card.label}</CardTitle>
             <p className="text-4xl font-black text-primary mt-3">{card.count}</p>
           </Card>
         ))}
-        <Card className="rounded-[56px] p-10 border-none shadow-sm bg-primary text-white flex flex-col justify-between">
+        <Card className="rounded-[40px] p-10 border-none shadow-sm bg-primary text-white flex flex-col justify-between">
           <Database className="w-10 h-10 mb-8" />
           <h3 className="text-2xl font-black uppercase">Service Status</h3>
           <Badge className="bg-white text-primary rounded-full px-6 py-2 uppercase font-black text-xs">All Systems Operational</Badge>
@@ -255,15 +255,15 @@ function MedicinesMaster({ db, isVerified }: { db: any, isVerified: boolean }) {
 
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl font-black uppercase text-gray-900">Medicine Master</h2>
-      <Card className="rounded-[48px] overflow-hidden border-none shadow-sm bg-white">
+      <h2 className="text-3xl font-black uppercase text-gray-900">Clinical Inventory</h2>
+      <Card className="rounded-[32px] overflow-hidden border-none shadow-sm bg-white">
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
             <tr>
-              <th className="px-10 py-8">Clinical Identity</th>
-              <th className="px-10 py-8">Composition</th>
+              <th className="px-10 py-8">Identity</th>
+              <th className="px-10 py-8">Salt Composition</th>
               <th className="px-10 py-8">Price</th>
-              <th className="px-10 py-8">Stock</th>
+              <th className="px-10 py-8">Stock Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -281,7 +281,7 @@ function MedicinesMaster({ db, isVerified }: { db: any, isVerified: boolean }) {
                 <td className="px-10 py-10 font-black">₹{med.price}</td>
                 <td className="px-10 py-10">
                   <Badge variant={med.availableQuantity < 50 ? 'destructive' : 'secondary'} className="px-4 py-1.5 rounded-full">
-                    {med.availableQuantity} Units
+                    {med.availableQuantity} units
                   </Badge>
                 </td>
               </tr>
@@ -300,29 +300,49 @@ function PrescriptionsReview({ db, isVerified }: { db: any, isVerified: boolean 
   }, [db, isVerified]);
 
   const { data: prescriptions, isLoading } = useCollection(presQuery);
+  const { toast } = useToast();
+
+  const handleUpdateStatus = (pres: any, status: string) => {
+    const presRef = doc(db, 'userProfiles', pres.userId, 'prescriptions', pres.id);
+    updateDocumentNonBlocking(presRef, { status });
+    toast({ title: "Enquiry Updated", description: `Prescription status changed to ${status}.` });
+  };
 
   return (
     <div className="space-y-8">
       <h2 className="text-3xl font-black uppercase text-gray-900">Prescription Enquiries</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {prescriptions?.map(pres => (
-          <Card key={pres.id} className="rounded-[48px] overflow-hidden border-none shadow-sm bg-white hover:shadow-xl transition-all group">
+        {isLoading ? (
+          <div className="col-span-full py-24 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
+        ) : prescriptions?.map(pres => (
+          <Card key={pres.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white hover:shadow-xl transition-all group">
              <div className="aspect-[3/4] relative bg-gray-50 overflow-hidden">
-                <img src={pres.imageUrl} alt="Prescription" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <img src={pres.imageUrl} alt="Prescription" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 <div className="absolute top-4 right-4">
-                   <Badge className="bg-primary text-white rounded-full px-4 py-1.5 uppercase font-black text-[10px]">{pres.status}</Badge>
+                   <Badge className={`${pres.status === 'Pending Review' ? 'bg-orange-500' : 'bg-green-600'} text-white rounded-full px-4 py-1.5 uppercase font-black text-[10px]`}>{pres.status}</Badge>
                 </div>
              </div>
              <CardContent className="p-8">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Analysis Notes</p>
-                <p className="text-sm font-bold text-gray-700 line-clamp-3 mb-6">{pres.analysisSummary}</p>
+                <div className="mb-6">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Customer ID</p>
+                  <p className="text-sm font-bold text-gray-900 truncate">#{pres.userId.substring(0,8).toUpperCase()}</p>
+                  <p className="text-[10px] text-gray-400 mt-1">{pres.uploadDate?.toDate ? pres.uploadDate.toDate().toLocaleString() : 'N/A'}</p>
+                </div>
                 <div className="flex gap-4">
-                  <Button className="flex-1 rounded-full h-12 font-black uppercase text-[10px] tracking-widest">Create Order</Button>
-                  <Button variant="outline" size="icon" className="w-12 h-12 rounded-2xl border-2"><Eye className="w-5 h-5" /></Button>
+                  {pres.status === 'Pending Review' && (
+                    <Button onClick={() => handleUpdateStatus(pres, 'Processing')} className="flex-1 rounded-full h-12 font-black uppercase text-[10px] tracking-widest">Acknowledge</Button>
+                  )}
+                  <Button variant="outline" className="flex-1 rounded-full h-12 font-black uppercase text-[10px] tracking-widest">Full Review</Button>
                 </div>
              </CardContent>
           </Card>
         ))}
+        {!isLoading && prescriptions?.length === 0 && (
+          <div className="col-span-full text-center py-24 bg-white rounded-[40px] border">
+            <FileText className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+            <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">No enquiries found.</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -335,18 +355,25 @@ function OrdersFulfillment({ db, isVerified }: { db: any, isVerified: boolean })
   }, [db, isVerified]);
 
   const { data: orders, isLoading } = useCollection(ordersQuery);
+  const { toast } = useToast();
+
+  const handleUpdateStatus = (order: any, status: string) => {
+    const orderRef = doc(db, 'userProfiles', order.userId, 'orders', order.id);
+    updateDocumentNonBlocking(orderRef, { status });
+    toast({ title: "Order Updated", description: `Order status changed to ${status}.` });
+  };
 
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl font-black uppercase text-gray-900">Fulfillment Command</h2>
-      <Card className="rounded-[48px] overflow-hidden border-none shadow-sm bg-white">
+      <h2 className="text-3xl font-black uppercase text-gray-900">Fulfillment Queue</h2>
+      <Card className="rounded-[32px] overflow-hidden border-none shadow-sm bg-white">
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
             <tr>
               <th className="px-10 py-8">Order ID</th>
-              <th className="px-10 py-8">Status</th>
-              <th className="px-10 py-8">Items</th>
-              <th className="px-10 py-8">Amount</th>
+              <th className="px-10 py-8">Clinical Payload</th>
+              <th className="px-10 py-8">Grand Total</th>
+              <th className="px-10 py-8">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -356,12 +383,25 @@ function OrdersFulfillment({ db, isVerified }: { db: any, isVerified: boolean })
               <tr key={order.id} className="hover:bg-gray-50/50">
                 <td className="px-10 py-10 font-black">#{order.id.substring(0,8).toUpperCase()}</td>
                 <td className="px-10 py-10">
-                  <Badge className="rounded-full px-4">{order.status}</Badge>
-                </td>
-                <td className="px-10 py-10 text-xs font-bold text-gray-400">
-                  {order.items?.length || 0} Clinical SKUs
+                  <Badge variant="outline" className="rounded-full px-4 border-primary/20 text-primary">
+                    {order.items?.length || 0} Clinical SKUs
+                  </Badge>
+                  <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold">{order.status}</p>
                 </td>
                 <td className="px-10 py-10 font-black text-primary text-lg">₹{order.totalAmount}</td>
+                <td className="px-10 py-10">
+                  <div className="flex gap-2">
+                    {order.status === 'Pending' && (
+                      <Button onClick={() => handleUpdateStatus(order, 'Processing')} size="sm" className="rounded-full font-black text-[8px] uppercase px-4 h-8 bg-orange-600">Process</Button>
+                    )}
+                    {order.status === 'Processing' && (
+                      <Button onClick={() => handleUpdateStatus(order, 'Shipped')} size="sm" className="rounded-full font-black text-[8px] uppercase px-4 h-8 bg-blue-600">Ship</Button>
+                    )}
+                    {order.status === 'Shipped' && (
+                      <Button onClick={() => handleUpdateStatus(order, 'Delivered')} size="sm" className="rounded-full font-black text-[8px] uppercase px-4 h-8 bg-green-600">Complete</Button>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
