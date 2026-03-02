@@ -12,10 +12,9 @@ import {
   ShoppingBag, 
   ShieldAlert,
   UserPlus,
-  AlertTriangle,
   Lock,
-  Plus,
-  Trash2
+  FileText,
+  Eye
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,7 +35,7 @@ import {
 import { doc, collection, query, orderBy, collectionGroup, getDoc } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
-type AdminTab = 'dashboard' | 'medicines' | 'categories' | 'orders';
+type AdminTab = 'dashboard' | 'medicines' | 'categories' | 'orders' | 'prescriptions';
 
 export default function SupervisorConsole() {
   const { user, isUserLoading } = useUser();
@@ -51,7 +50,6 @@ export default function SupervisorConsole() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isServerConfirmed, setIsServerConfirmed] = useState(false);
 
-  // 1. Role Check: Watch the roles_admin collection for the current UID
   const adminRoleRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, 'roles_admin', user.uid);
@@ -59,11 +57,9 @@ export default function SupervisorConsole() {
 
   const { data: adminRole, isLoading: isAdminRoleLoading } = useDoc(adminRoleRef);
 
-  // 2. Explicit Verification: Ensure the role is synchronized with the server before unlocking
   useEffect(() => {
     if (adminRole && !isServerConfirmed) {
       setIsVerifying(true);
-      // We add a small artificial delay to allow security rules cache to propagate globally
       const timer = setTimeout(() => {
         getDoc(doc(db, 'roles_admin', user!.uid)).then((snap) => {
           if (snap.exists()) {
@@ -179,7 +175,7 @@ export default function SupervisorConsole() {
               {[
                 { id: 'dashboard', label: 'Overview', icon: ShieldCheck },
                 { id: 'medicines', label: 'Inventory', icon: Package },
-                { id: 'categories', label: 'Categories', icon: Tags },
+                { id: 'prescriptions', label: 'Prescriptions', icon: FileText },
                 { id: 'orders', label: 'Fulfillment', icon: ShoppingBag }
               ].map(tab => (
                 <Button 
@@ -203,7 +199,7 @@ export default function SupervisorConsole() {
       <main className="max-w-7xl mx-auto px-6 py-12">
         {activeTab === 'dashboard' && <DashboardOverview onSwitchTab={setActiveTab} db={db} isVerified={isServerConfirmed} />}
         {activeTab === 'medicines' && <MedicinesMaster db={db} isVerified={isServerConfirmed} />}
-        {activeTab === 'categories' && <CategoriesMaster db={db} isVerified={isServerConfirmed} />}
+        {activeTab === 'prescriptions' && <PrescriptionsReview db={db} isVerified={isServerConfirmed} />}
         {activeTab === 'orders' && <OrdersFulfillment db={db} isVerified={isServerConfirmed} />}
       </main>
     </div>
@@ -216,60 +212,14 @@ function DashboardOverview({ onSwitchTab, db, isVerified }: { onSwitchTab: (t: A
     return query(collection(db, 'medicines'), orderBy('name', 'asc'));
   }, [db, isVerified]);
 
-  const catsQuery = useMemoFirebase(() => {
+  const presQuery = useMemoFirebase(() => {
     if (!isVerified) return null;
-    return query(collection(db, 'categories'), orderBy('name', 'asc'));
+    return query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc'));
   }, [db, isVerified]);
 
   const { data: medicines } = useCollection(medsQuery);
-  const { data: categories } = useCollection(catsQuery);
-
+  const { data: prescriptions } = useCollection(presQuery);
   const { toast } = useToast();
-
-  const seedData = () => {
-    const initialCats = [
-      { id: 'cat_diabetes', name: 'Diabetes', description: 'Blood sugar management.' },
-      { id: 'cat_heart', name: 'Heart Care', description: 'Cardiovascular support.' },
-      { id: 'cat_stomach', name: 'Stomach Care', description: 'Digestive health.' }
-    ];
-    initialCats.forEach(cat => setDocumentNonBlocking(doc(db, 'categories', cat.id), cat, { merge: true }));
-
-    const initialMeds = [
-      { 
-        id: 'med_j_1', 
-        name: 'Janumet 50/500', 
-        price: 1250, 
-        saltComposition: 'Sitagliptin 50mg + Metformin 500mg', 
-        manufacturerId: 'msd', 
-        categoryId: 'cat_diabetes', 
-        isGeneric: false, 
-        isTopDeal: true, 
-        imageUrl: 'https://picsum.photos/seed/med1/300/300', 
-        dosageForm: 'Tablet', 
-        strength: '50/500mg', 
-        availableQuantity: 100,
-        description: 'Advanced glycemic control.'
-      },
-      { 
-        id: 'med_sg_1', 
-        name: 'Sitagliptin Generic', 
-        price: 240, 
-        saltComposition: 'Sitagliptin 50mg + Metformin 500mg', 
-        manufacturerId: 'hl_labs', 
-        categoryId: 'cat_diabetes', 
-        isGeneric: true, 
-        isTopDeal: false, 
-        imageUrl: 'https://picsum.photos/seed/med2/300/300', 
-        dosageForm: 'Tablet', 
-        strength: '50/500mg', 
-        availableQuantity: 500,
-        description: 'Bio-equivalent alternative.'
-      }
-    ];
-    initialMeds.forEach(med => setDocumentNonBlocking(doc(db, 'medicines', med.id), med, { merge: true }));
-    
-    toast({ title: 'Master Catalog Seeded', description: 'Inventory updated with clinical records.' });
-  };
 
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
@@ -277,7 +227,7 @@ function DashboardOverview({ onSwitchTab, db, isVerified }: { onSwitchTab: (t: A
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         {[
           { label: 'Inventory', icon: Package, count: medicines?.length || 0, tab: 'medicines' },
-          { label: 'Therapy Hubs', icon: Tags, count: categories?.length || 0, tab: 'categories' },
+          { label: 'Prescriptions', icon: FileText, count: prescriptions?.length || 0, tab: 'prescriptions' },
         ].map(card => (
           <Card key={card.label} className="rounded-[56px] p-10 border-none shadow-sm hover:shadow-2xl transition-all cursor-pointer bg-white" onClick={() => onSwitchTab(card.tab as AdminTab)}>
             <card.icon className="w-10 h-10 text-primary mb-8" />
@@ -287,8 +237,8 @@ function DashboardOverview({ onSwitchTab, db, isVerified }: { onSwitchTab: (t: A
         ))}
         <Card className="rounded-[56px] p-10 border-none shadow-sm bg-primary text-white flex flex-col justify-between">
           <Database className="w-10 h-10 mb-8" />
-          <h3 className="text-2xl font-black uppercase">Master Seed</h3>
-          <Button onClick={seedData} className="w-full rounded-full h-14 bg-white text-primary font-black uppercase mt-8 shadow-xl">Execute Seed</Button>
+          <h3 className="text-2xl font-black uppercase">Service Status</h3>
+          <Badge className="bg-white text-primary rounded-full px-6 py-2 uppercase font-black text-xs">All Systems Operational</Badge>
         </Card>
       </div>
     </div>
@@ -343,22 +293,34 @@ function MedicinesMaster({ db, isVerified }: { db: any, isVerified: boolean }) {
   );
 }
 
-function CategoriesMaster({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const catsQuery = useMemoFirebase(() => {
+function PrescriptionsReview({ db, isVerified }: { db: any, isVerified: boolean }) {
+  const presQuery = useMemoFirebase(() => {
     if (!isVerified) return null;
-    return query(collection(db, 'categories'), orderBy('name', 'asc'));
+    return query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc'));
   }, [db, isVerified]);
 
-  const { data: categories, isLoading } = useCollection(catsQuery);
+  const { data: prescriptions, isLoading } = useCollection(presQuery);
 
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl font-black uppercase text-gray-900">Therapeutic Hubs</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {categories?.map(cat => (
-          <Card key={cat.id} className="rounded-[48px] p-12 border-none shadow-sm bg-white hover:shadow-xl transition-all">
-            <h3 className="text-2xl font-black uppercase tracking-tight mb-3 text-primary">{cat.name}</h3>
-            <p className="text-xs text-gray-400 font-bold leading-relaxed">{cat.description}</p>
+      <h2 className="text-3xl font-black uppercase text-gray-900">Prescription Enquiries</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {prescriptions?.map(pres => (
+          <Card key={pres.id} className="rounded-[48px] overflow-hidden border-none shadow-sm bg-white hover:shadow-xl transition-all group">
+             <div className="aspect-[3/4] relative bg-gray-50 overflow-hidden">
+                <img src={pres.imageUrl} alt="Prescription" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <div className="absolute top-4 right-4">
+                   <Badge className="bg-primary text-white rounded-full px-4 py-1.5 uppercase font-black text-[10px]">{pres.status}</Badge>
+                </div>
+             </div>
+             <CardContent className="p-8">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Analysis Notes</p>
+                <p className="text-sm font-bold text-gray-700 line-clamp-3 mb-6">{pres.analysisSummary}</p>
+                <div className="flex gap-4">
+                  <Button className="flex-1 rounded-full h-12 font-black uppercase text-[10px] tracking-widest">Create Order</Button>
+                  <Button variant="outline" size="icon" className="w-12 h-12 rounded-2xl border-2"><Eye className="w-5 h-5" /></Button>
+                </div>
+             </CardContent>
           </Card>
         ))}
       </div>
@@ -372,20 +334,7 @@ function OrdersFulfillment({ db, isVerified }: { db: any, isVerified: boolean })
     return query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc'));
   }, [db, isVerified]);
 
-  const { data: orders, isLoading, error } = useCollection(ordersQuery);
-
-  if (error) {
-    return (
-      <Alert variant="destructive" className="rounded-[32px] p-8">
-        <AlertTriangle className="h-6 w-6" />
-        <AlertTitle className="text-xl font-black uppercase">Security Sync Error</AlertTitle>
-        <AlertDescription className="mt-4 font-bold leading-relaxed">
-          The global fulfillment stream is waiting for final server confirmation. 
-          If you just claimed your role, please wait 15 seconds and refresh the page to allow the security rules to synchronize.
-        </AlertDescription>
-      </Alert>
-    );
-  }
+  const { data: orders, isLoading } = useCollection(ordersQuery);
 
   return (
     <div className="space-y-8">
