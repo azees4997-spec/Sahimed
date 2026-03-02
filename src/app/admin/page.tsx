@@ -13,12 +13,12 @@ import {
   UserPlus,
   Lock,
   FileText,
-  Plus,
   Trash2,
-  RefreshCw,
   Search,
   CheckCircle2,
-  Clock
+  Clock,
+  LayoutGrid,
+  Zap
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,9 +35,10 @@ import {
   useDoc,
   setDocumentNonBlocking,
   updateDocumentNonBlocking,
-  deleteDocumentNonBlocking
+  deleteDocumentNonBlocking,
+  addDocumentNonBlocking
 } from '@/firebase';
-import { doc, collection, query, orderBy, collectionGroup, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, query, orderBy, collectionGroup, getDoc, writeBatch } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 type AdminTab = 'overview' | 'inventory' | 'enquiries' | 'fulfillment';
@@ -57,40 +58,33 @@ export default function SupervisorConsole() {
   const [password, setPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Check Admin Role
-  const adminRoleRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return doc(db, 'roles_admin', user.uid);
-  }, [db, user]);
-
-  const { data: adminRole, isLoading: isAdminRoleLoading } = useDoc(adminRoleRef);
-
   const performVerification = async () => {
     if (!db || !user) return;
     setIsVerifying(true);
     try {
-      // Direct getDoc bypasses local cache to ensure server-side rules are satisfied
       const snap = await getDoc(doc(db, 'roles_admin', user.uid));
       if (snap.exists()) {
-        setIsVerified(true);
-        toast({ title: "Verification Successful", description: "Operational context established." });
+        // Add a small buffer for security rules propagation
+        setTimeout(() => {
+          setIsVerified(true);
+          setIsVerifying(false);
+          toast({ title: "Verification Successful", description: "Operational context established." });
+        }, 1000);
       } else {
         setIsVerified(false);
+        setIsVerifying(false);
       }
     } catch (err) {
       setIsVerified(false);
-    } finally {
       setIsVerifying(false);
     }
   };
 
   useEffect(() => {
-    if (adminRole && !isVerified) {
+    if (user && !isVerified) {
       performVerification();
-    } else if (!adminRole && isVerified) {
-      setIsVerified(false);
     }
-  }, [adminRole]);
+  }, [user]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,10 +110,11 @@ export default function SupervisorConsole() {
       role: 'admin',
       activatedAt: new Date().toISOString()
     }, { merge: true });
-    toast({ title: 'Role Requested', description: 'Initializing administrative privileges...' });
+    toast({ title: 'Role Requested', description: 'Syncing with secure server... please wait 2 seconds.' });
+    setTimeout(performVerification, 2000);
   };
 
-  if (isUserLoading || isAdminRoleLoading || isVerifying) {
+  if (isUserLoading || isVerifying) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F7F6] gap-4">
         <Loader2 className="w-12 h-12 animate-spin text-primary" />
@@ -136,7 +131,7 @@ export default function SupervisorConsole() {
             <div className="w-20 h-20 bg-white/20 rounded-[32px] flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
               <Lock className="w-10 h-10" />
             </div>
-            <CardTitle className="text-3xl font-black uppercase tracking-tight">Supervisor Login</CardTitle>
+            <CardTitle className="text-3xl font-black uppercase tracking-tight text-white">Supervisor Login</CardTitle>
             <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Secure Gateway</CardDescription>
           </CardHeader>
           <CardContent className="p-10">
@@ -172,7 +167,7 @@ export default function SupervisorConsole() {
           </div>
           <div className="space-y-4 pt-8 border-t">
             <Button onClick={bootstrapAdmin} className="w-full gap-3 rounded-full h-16 bg-orange-600 hover:bg-orange-700 shadow-xl shadow-orange-100 uppercase font-black text-xs tracking-widest">
-              <UserPlus className="w-6 h-6" /> Initialize Admin Role
+              <UserPlus className="w-6 h-6 text-white" /> Initialize Admin Role
             </Button>
             <Button onClick={handleLogout} variant="ghost" className="w-full text-gray-400 font-bold hover:bg-gray-50 uppercase text-[10px] tracking-widest">Sign Out</Button>
           </div>
@@ -192,7 +187,7 @@ export default function SupervisorConsole() {
             </div>
             <nav className="hidden lg:flex gap-2">
               {[
-                { id: 'overview', label: 'Overview', icon: Database },
+                { id: 'overview', label: 'Overview', icon: LayoutGrid },
                 { id: 'inventory', label: 'Inventory', icon: Package },
                 { id: 'enquiries', label: 'Enquiries', icon: FileText },
                 { id: 'fulfillment', label: 'Fulfillment', icon: ShoppingBag }
@@ -210,25 +205,74 @@ export default function SupervisorConsole() {
             </nav>
           </div>
           <div className="flex items-center gap-4">
+            <SeedDataButton db={db} />
             <Button variant="ghost" onClick={handleLogout} size="icon" className="w-12 h-12 rounded-2xl text-gray-400 hover:text-red-500 hover:bg-red-50"><LogOut className="w-6 h-6" /></Button>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-12">
-        {activeTab === 'overview' && <OverviewTab db={db} setTab={setActiveTab} />}
-        {activeTab === 'inventory' && <InventoryTab db={db} />}
-        {activeTab === 'enquiries' && <EnquiriesTab db={db} />}
-        {activeTab === 'fulfillment' && <FulfillmentTab db={db} />}
+        {activeTab === 'overview' && <OverviewTab db={db} setTab={setActiveTab} isVerified={isVerified} />}
+        {activeTab === 'inventory' && <InventoryTab db={db} isVerified={isVerified} />}
+        {activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} />}
+        {activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} />}
       </main>
     </div>
   );
 }
 
-function OverviewTab({ db, setTab }: { db: any, setTab: (t: AdminTab) => void }) {
+function SeedDataButton({ db }: { db: any }) {
+  const { toast } = useToast();
+  const [seeding, setSeeding] = useState(false);
+
+  const seed = async () => {
+    setSeeding(true);
+    try {
+      const categories = [
+        { name: 'Diabetes', description: 'Blood sugar management' },
+        { name: 'Heart Care', description: 'Cardiac health essentials' },
+        { name: 'Stomach Care', description: 'Digestive & gut health' },
+        { name: 'Liver Care', description: 'Hepatic support' },
+        { name: 'Derma Care', description: 'Skin solutions' },
+        { name: 'Respicare', description: 'Lung health' }
+      ];
+
+      for (const cat of categories) {
+        await addDocumentNonBlocking(collection(db, 'categories'), cat);
+      }
+
+      const medicines = [
+        { name: 'Janumet 50/500', price: 1250, saltComposition: 'Sitagliptin + Metformin', manufacturer: 'MSD', isGeneric: false, category: 'Diabetes', imageUrl: 'https://picsum.photos/seed/dia1/300/300', availableQuantity: 100, description: 'Premium glycemic control.' },
+        { name: 'Sitagliptin Generic', price: 240, saltComposition: 'Sitagliptin + Metformin', manufacturer: 'HealthLink', isGeneric: true, category: 'Diabetes', imageUrl: 'https://picsum.photos/seed/dia2/300/300', availableQuantity: 500, description: 'Affordable glycemic control.' },
+        { name: 'Atorva 20mg', price: 450, saltComposition: 'Atorvastatin', manufacturer: 'Zydus', isGeneric: false, category: 'Heart Care', imageUrl: 'https://picsum.photos/seed/hrt1/300/300', availableQuantity: 80, description: 'Lipid regulator.' },
+        { name: 'Atorvastatin Gen', price: 85, saltComposition: 'Atorvastatin', manufacturer: 'PureLabs', isGeneric: true, category: 'Heart Care', imageUrl: 'https://picsum.photos/seed/hrt2/300/300', availableQuantity: 1000, description: 'Generic lipid regulator.' }
+      ];
+
+      for (const med of medicines) {
+        await addDocumentNonBlocking(collection(db, 'medicines'), med);
+      }
+
+      toast({ title: "Database Seeded", description: "Sample catalog and categories established." });
+    } catch (e) {
+      toast({ variant: 'destructive', title: "Seeding Failed" });
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  return (
+    <Button onClick={seed} disabled={seeding} variant="outline" className="rounded-xl border-2 font-black text-[10px] uppercase gap-2 h-12 px-6">
+      {seeding ? <Loader2 className="animate-spin" /> : <Database className="w-4 h-4" />}
+      Master Seed
+    </Button>
+  );
+}
+
+function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab) => void, isVerified: boolean }) {
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
-  const presQuery = useMemoFirebase(() => query(collectionGroup(db, 'prescriptions')), [db]);
-  const ordersQuery = useMemoFirebase(() => query(collectionGroup(db, 'orders')), [db]);
+  // Strictly gate collectionGroup queries
+  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
+  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
 
   const { data: meds } = useCollection(medsQuery);
   const { data: pres } = useCollection(presQuery);
@@ -254,16 +298,15 @@ function OverviewTab({ db, setTab }: { db: any, setTab: (t: AdminTab) => void })
   );
 }
 
-function InventoryTab({ db }: { db: any }) {
+function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines'), orderBy('name', 'asc')), [db]);
   const { data: medicines, isLoading } = useCollection(medsQuery);
   const { toast } = useToast();
-
   const [search, setSearch] = useState('');
 
   const filtered = medicines?.filter(m => 
-    m.name.toLowerCase().includes(search.toLowerCase()) || 
-    m.saltComposition.toLowerCase().includes(search.toLowerCase())
+    m.name?.toLowerCase().includes(search.toLowerCase()) || 
+    m.saltComposition?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -282,7 +325,7 @@ function InventoryTab({ db }: { db: any }) {
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
               <tr>
                 <th className="px-10 py-8">Medication Identity</th>
-                <th className="px-10 py-8">Molecular Salt</th>
+                <th className="px-10 py-8">Salt</th>
                 <th className="px-10 py-8 text-center">Unit Price</th>
                 <th className="px-10 py-8 text-center">Stock</th>
                 <th className="px-10 py-8 text-right">Actions</th>
@@ -331,15 +374,15 @@ function InventoryTab({ db }: { db: any }) {
   );
 }
 
-function EnquiriesTab({ db }: { db: any }) {
-  const presQuery = useMemoFirebase(() => query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc')), [db]);
+function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, [db, isVerified]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
   const { toast } = useToast();
 
   const updateStatus = (enquiry: any, status: string) => {
     const ref = doc(db, 'userProfiles', enquiry.userId, 'prescriptions', enquiry.id);
     updateDocumentNonBlocking(ref, { status });
-    toast({ title: "Status Synchronized", description: `Enquiry marked as ${status}.` });
+    toast({ title: "Status Updated", description: `Enquiry marked as ${status}.` });
   };
 
   return (
@@ -348,7 +391,7 @@ function EnquiriesTab({ db }: { db: any }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {isLoading ? (
           <div className="col-span-full py-24 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
-        ) : enquiries?.map(enq => (
+        ) : enquiries?.length ? enquiries.map(enq => (
           <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white hover:shadow-2xl transition-all group flex flex-col">
              <div className="aspect-[3/4] relative bg-gray-50 overflow-hidden">
                 <img src={enq.imageUrl} alt="Prescription" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
@@ -372,14 +415,19 @@ function EnquiriesTab({ db }: { db: any }) {
                 </div>
              </CardContent>
           </Card>
-        ))}
+        )) : (
+          <div className="col-span-full py-24 text-center bg-white rounded-[40px] border border-dashed">
+            <FileText className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+            <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">No pending enquiries</p>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function FulfillmentTab({ db }: { db: any }) {
-  const ordersQuery = useMemoFirebase(() => query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')), [db]);
+function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, [db, isVerified]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
   const { toast } = useToast();
 
@@ -405,7 +453,7 @@ function FulfillmentTab({ db }: { db: any }) {
           <tbody className="divide-y divide-gray-50">
             {isLoading ? (
               <tr><td colSpan={4} className="p-32 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
-            ) : orders?.map(order => (
+            ) : orders?.length ? orders.map(order => (
               <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-10 py-10 font-black text-gray-900 tracking-tighter">#{order.id.substring(0,8).toUpperCase()}</td>
                 <td className="px-10 py-10">
@@ -420,13 +468,13 @@ function FulfillmentTab({ db }: { db: any }) {
                 <td className="px-10 py-10 text-right">
                   <div className="flex justify-end gap-2">
                     {order.status === 'Pending' && (
-                      <Button onClick={() => updateStatus(order, 'Processing')} size="sm" className="rounded-full font-black text-[8px] uppercase px-4 h-8 bg-orange-600 shadow-lg shadow-orange-100">Process</Button>
+                      <Button onClick={() => updateStatus(order, 'Processing')} size="sm" className="rounded-full font-black text-[8px] uppercase px-4 h-8 bg-orange-600 shadow-lg shadow-orange-100 text-white">Process</Button>
                     )}
                     {order.status === 'Processing' && (
-                      <Button onClick={() => updateStatus(order, 'Shipped')} size="sm" className="rounded-full font-black text-[8px] uppercase px-4 h-8 bg-blue-600 shadow-lg shadow-blue-100">Dispatch</Button>
+                      <Button onClick={() => updateStatus(order, 'Shipped')} size="sm" className="rounded-full font-black text-[8px] uppercase px-4 h-8 bg-blue-600 shadow-lg shadow-blue-100 text-white">Dispatch</Button>
                     )}
                     {order.status === 'Shipped' && (
-                      <Button onClick={() => updateStatus(order, 'Delivered')} size="sm" className="rounded-full font-black text-[8px] uppercase px-4 h-8 bg-green-600 shadow-lg shadow-green-100">Complete</Button>
+                      <Button onClick={() => updateStatus(order, 'Delivered')} size="sm" className="rounded-full font-black text-[8px] uppercase px-4 h-8 bg-green-600 shadow-lg shadow-green-100 text-white">Complete</Button>
                     )}
                     {order.status === 'Delivered' && (
                       <div className="text-green-600 font-black uppercase text-[10px] px-4 flex items-center gap-2">
@@ -436,7 +484,9 @@ function FulfillmentTab({ db }: { db: any }) {
                   </div>
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr><td colSpan={4} className="p-24 text-center text-gray-400 font-bold uppercase text-[10px] tracking-widest">No orders in pipeline</td></tr>
+            )}
           </tbody>
         </table>
       </Card>

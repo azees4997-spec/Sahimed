@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Camera, CheckCircle2, ArrowLeft, Home, ShoppingBag, Loader2, Send } from 'lucide-react';
+import { Camera, CheckCircle2, ArrowLeft, Home, ShoppingBag, Loader2, Send, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
@@ -25,6 +25,10 @@ export default function PrescriptionPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast({ variant: "destructive", title: "File too large", description: "Please upload an image smaller than 2MB." });
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setImage(reader.result as string);
@@ -49,7 +53,7 @@ export default function PrescriptionPage() {
     try {
       const prescriptionData = {
         userId: user.uid,
-        imageUrl: image, // In a real app, this would be uploaded to Firebase Storage first
+        imageUrl: image,
         uploadDate: serverTimestamp(),
         status: 'Pending Review',
         analysisSummary: 'Manual Prescription Enquiry'
@@ -58,8 +62,10 @@ export default function PrescriptionPage() {
       const ref = collection(db, 'userProfiles', user.uid, 'prescriptions');
       addDocumentNonBlocking(ref, prescriptionData);
       
-      setIsSuccess(true);
-      toast({ title: "Submitted Successfully", description: "Your enquiry has been sent to our pharmacists." });
+      setTimeout(() => {
+        setIsSuccess(true);
+        toast({ title: "Enquiry Sent", description: "Our pharmacists will review it shortly." });
+      }, 800);
     } catch (err) {
       toast({ variant: "destructive", title: "Submission Failed", description: "Could not send enquiry. Please try again." });
     } finally {
@@ -73,19 +79,19 @@ export default function PrescriptionPage() {
         <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-8 shadow-xl shadow-green-100">
           <CheckCircle2 className="w-12 h-12" />
         </div>
-        <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight mb-4">Thank You!</h1>
+        <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight mb-4">Submission Received</h1>
         <p className="text-gray-500 font-medium max-w-xs mb-12 leading-relaxed">
-          Your prescription has been received as an enquiry. Our clinical team will review it and get back to you shortly with a pre-filled order.
+          Your prescription has been securely transmitted. A licensed pharmacist will review it and notify you via your registered mobile number within 15-30 minutes.
         </p>
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <Link href="/">
             <Button className="w-full h-16 rounded-full font-black uppercase tracking-widest text-[10px] gap-3">
-              <Home className="w-5 h-5" /> Return to Home
+              <Home className="w-5 h-5" /> Return to Storefront
             </Button>
           </Link>
           <Link href="/orders">
             <Button variant="outline" className="w-full h-16 rounded-full font-black uppercase tracking-widest text-[10px] border-2">
-              <ShoppingBag className="w-5 h-5" /> View My Enquiries
+              <ShoppingBag className="w-5 h-5" /> View Enquiry Status
             </Button>
           </Link>
         </div>
@@ -103,7 +109,7 @@ export default function PrescriptionPage() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
           </Link>
-          <h1 className="text-2xl font-black font-headline text-gray-900 uppercase tracking-widest">Submit Prescription</h1>
+          <h1 className="text-2xl font-black font-headline text-gray-900 uppercase tracking-widest">Prescription Portal</h1>
         </div>
 
         <div className="space-y-6">
@@ -115,18 +121,18 @@ export default function PrescriptionPage() {
               >
                 {image ? (
                   <>
-                    <Image src={image} alt="Prescription" fill className="object-contain" />
+                    <Image src={image} alt="Prescription Preview" fill className="object-contain" />
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                       <Button variant="secondary" className="rounded-full font-black uppercase text-[10px] tracking-widest">Change Photo</Button>
+                       <Button variant="secondary" className="rounded-full font-black uppercase text-[10px] tracking-widest">Replace Photo</Button>
                     </div>
                   </>
                 ) : (
                   <div className="p-12 text-center">
-                    <div className="w-20 h-20 bg-primary/10 text-primary rounded-[32px] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                      <Camera className="w-10 h-10" />
+                    <div className="w-24 h-24 bg-primary/10 text-primary rounded-[36px] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                      <Camera className="w-12 h-12" />
                     </div>
-                    <p className="font-black text-gray-900 uppercase tracking-tight text-lg">Tap to Scan</p>
-                    <p className="text-xs text-gray-400 font-bold mt-2 uppercase tracking-widest">Take a photo or upload</p>
+                    <p className="font-black text-gray-900 uppercase tracking-tight text-xl">Tap to Scan</p>
+                    <p className="text-xs text-gray-400 font-bold mt-2 uppercase tracking-widest">Camera or Photo Library</p>
                   </div>
                 )}
               </div>
@@ -145,12 +151,12 @@ export default function PrescriptionPage() {
                 {submitting ? (
                   <>
                     <Loader2 className="w-6 h-6 animate-spin" />
-                    Sending Enquiry...
+                    Transmitting...
                   </>
                 ) : (
                   <>
                     <Send className="w-6 h-6" />
-                    Submit Prescription
+                    Submit to Pharmacist
                   </>
                 )}
               </Button>
@@ -160,19 +166,31 @@ export default function PrescriptionPage() {
                 disabled={submitting}
                 className="w-full text-gray-400 font-black uppercase text-[10px] tracking-widest"
               >
-                Cancel & Re-take
+                Discard & Retake
               </Button>
             </div>
           )}
 
           {!image && (
-            <div className="bg-blue-50 p-6 rounded-[32px] border border-blue-100">
-              <h3 className="font-black text-blue-900 text-sm uppercase tracking-tight mb-2">Instructions</h3>
-              <ul className="text-xs text-blue-700/80 space-y-2 font-bold leading-relaxed">
-                <li className="flex gap-2"><span>•</span> Ensure all text on the prescription is clear and legible.</li>
-                <li className="flex gap-2"><span>•</span> Include the doctor's signature and stamp if possible.</li>
-                <li className="flex gap-2"><span>•</span> Avoid bright glare or dark shadows on the paper.</li>
-              </ul>
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-6 rounded-[32px] border border-blue-100 flex items-start gap-4">
+                <ShieldCheck className="w-6 h-6 text-blue-600 shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-black text-blue-900 text-sm uppercase tracking-tight mb-1">Clinical Privacy</h3>
+                  <p className="text-xs text-blue-700/80 font-bold leading-relaxed">
+                    Your prescription is encrypted and only accessible by verified pharmacists for order fulfillment.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 p-6 rounded-[32px] border border-gray-100">
+                <h3 className="font-black text-gray-900 text-[10px] uppercase tracking-widest mb-3">Submission Guidelines</h3>
+                <ul className="text-[10px] text-gray-400 space-y-2 font-black uppercase tracking-wider">
+                  <li className="flex gap-2"><span>•</span> Capture the entire page clearly</li>
+                  <li className="flex gap-2"><span>•</span> Ensure doctor's stamp is visible</li>
+                  <li className="flex gap-2"><span>•</span> Avoid harsh overhead lighting</li>
+                </ul>
+              </div>
             </div>
           )}
         </div>

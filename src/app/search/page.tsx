@@ -71,7 +71,7 @@ function SearchResults() {
 
             <div className="bg-primary p-8 rounded-[40px] text-white shadow-2xl shadow-primary/20 relative overflow-hidden group">
                <Info className="w-12 h-12 mb-6 opacity-20 group-hover:opacity-40 transition-opacity" />
-               <h4 className="font-black text-lg mb-2 uppercase tracking-tight">Save with Generics</h4>
+               <h4 className="font-black text-lg mb-2 uppercase tracking-tight text-white">Save with Generics</h4>
                <p className="text-[10px] font-bold text-white/80 leading-relaxed uppercase tracking-wider">Bio-equivalent medicines cost up to 80% less with the exact same clinical results.</p>
             </div>
           </aside>

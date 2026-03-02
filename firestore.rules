@@ -13,7 +13,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // Existence-over-Content: Check if UID exists in the admin roles collection
+      // Existence-over-Content check for admin role
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
@@ -22,7 +22,7 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Specifically allow admins to perform collection-group queries
+    // Specifically allow admins to perform collection-group queries for global monitoring
     match /{path=**}/orders/{orderId} {
       allow read, list, update: if isAdmin();
     }
@@ -56,12 +56,12 @@ service cloud.firestore {
     }
 
     match /roles_admin/{userId} {
-      // Users can see their own role; Admins can see all
+      // Allow self-read for verification; list for existing admins
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      // Bootstrap access: Any signed-in user can claim the first role
+      // Bootstrap: Allow initial creation by any authenticated user
       allow create: if isSignedIn();
-      allow write: if isAdmin(); 
+      allow update, delete: if isAdmin();
     }
 
     match /medicines/{medicineId} {
