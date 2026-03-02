@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from 'react';
@@ -86,8 +87,8 @@ export default function CheckoutPage() {
             <Card className="rounded-[40px] border-none shadow-sm bg-primary/5 border border-primary/10">
                <CardContent className="p-8 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
-                      <LocateFixed className="w-6 h-6" />
+                    <div className="w-10 h-10 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
+                      <LocateFixed className="w-5 h-5" />
                     </div>
                     <div>
                       <h3 className="font-black text-sm uppercase tracking-widest text-primary">Your Selected Area</h3>
@@ -103,7 +104,7 @@ export default function CheckoutPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
-                      <MapPin className="w-5 h-5" />
+                      <MapPin className="w-4 h-4" />
                     </div>
                     <CardTitle className="text-xl font-black">Delivery Address</CardTitle>
                   </div>
@@ -168,8 +169,8 @@ export default function CheckoutPage() {
             <Card className="rounded-[40px] border-none shadow-sm overflow-hidden bg-white">
                <CardContent className="p-8 flex items-center justify-between">
                   <div className="flex items-center gap-6">
-                    <div className="w-14 h-14 bg-green-50 text-green-600 rounded-[20px] flex items-center justify-center shadow-inner">
-                      <Truck className="w-7 h-7" />
+                    <div className="w-12 h-12 bg-green-50 text-green-600 rounded-[20px] flex items-center justify-center shadow-inner">
+                      <Truck className="w-6 h-6" />
                     </div>
                     <div>
                       <h3 className="font-black text-xl text-gray-900">Estimated Delivery</h3>
@@ -222,7 +223,7 @@ export default function CheckoutPage() {
               
               <div className="mt-10 flex flex-col gap-4">
                  <div className="flex items-center gap-4 text-[10px] font-black uppercase text-gray-400 tracking-widest bg-gray-50 p-5 rounded-[24px] border border-gray-100">
-                   <ShieldCheck className="w-6 h-6 text-green-500 shrink-0" />
+                   <ShieldCheck className="w-5 h-5 text-green-500 shrink-0" />
                    100% Genuine Medicines • Secure Encryption
                  </div>
               </div>

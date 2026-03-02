@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from 'react';
@@ -75,8 +76,8 @@ export default function PrescriptionPage() {
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in duration-500">
-        <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-8 shadow-xl shadow-green-100">
-          <CheckCircle2 className="w-12 h-12" />
+        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-8 shadow-xl shadow-green-100">
+          <CheckCircle2 className="w-10 h-10" />
         </div>
         <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight mb-4">Submission Received</h1>
         <p className="text-gray-500 font-medium max-w-xs mb-12 leading-relaxed">
@@ -85,12 +86,12 @@ export default function PrescriptionPage() {
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <Link href="/">
             <Button className="w-full h-16 rounded-full font-black uppercase tracking-widest text-[10px] gap-3">
-              <Home className="w-5 h-5" /> Return to Storefront
+              <Home className="w-4 h-4" /> Return to Storefront
             </Button>
           </Link>
           <Link href="/orders">
             <Button variant="outline" className="w-full h-16 rounded-full font-black uppercase tracking-widest text-[10px] border-2">
-              <ShoppingBag className="w-5 h-5" /> View Enquiry Status
+              <ShoppingBag className="w-4 h-4" /> View Enquiry Status
             </Button>
           </Link>
         </div>
@@ -105,7 +106,7 @@ export default function PrescriptionPage() {
         <div className="flex items-center gap-4 mb-8">
           <Link href="/">
             <Button variant="ghost" size="icon" className="rounded-full bg-white shadow-sm">
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
           <h1 className="text-2xl font-black font-headline text-gray-900 uppercase tracking-widest">Prescription Portal</h1>
@@ -127,8 +128,8 @@ export default function PrescriptionPage() {
                   </>
                 ) : (
                   <div className="p-12 text-center">
-                    <div className="w-24 h-24 bg-primary/10 text-primary rounded-[36px] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                      <Camera className="w-12 h-12" />
+                    <div className="w-20 h-20 bg-primary/10 text-primary rounded-[36px] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                      <Camera className="w-10 h-10" />
                     </div>
                     <p className="font-black text-gray-900 uppercase tracking-tight text-xl">Tap to Scan</p>
                     <p className="text-xs text-gray-400 font-bold mt-2 uppercase tracking-widest">Camera or Photo Library</p>
@@ -149,12 +150,12 @@ export default function PrescriptionPage() {
               >
                 {submitting ? (
                   <>
-                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                     Transmitting...
                   </>
                 ) : (
                   <>
-                    <Send className="w-6 h-6" />
+                    <Send className="w-5 h-5" />
                     Submit to Pharmacist
                   </>
                 )}
@@ -173,7 +174,7 @@ export default function PrescriptionPage() {
           {!image && (
             <div className="space-y-4">
               <div className="bg-blue-50 p-6 rounded-[32px] border border-blue-100 flex items-start gap-4">
-                <ShieldCheck className="w-6 h-6 text-blue-600 shrink-0 mt-1" />
+                <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-1" />
                 <div>
                   <h3 className="font-black text-blue-900 text-sm uppercase tracking-tight mb-1">Clinical Privacy</h3>
                   <p className="text-xs text-blue-700/80 font-bold leading-relaxed">

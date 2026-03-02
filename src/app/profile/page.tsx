@@ -1,3 +1,4 @@
+
 "use client"
 
 import Navbar from '@/components/Navbar';
@@ -13,13 +14,13 @@ export default function ProfilePage() {
         
         {/* User Intro */}
         <div className="flex flex-col md:flex-row items-center gap-8 mb-12 bg-white p-10 rounded-[40px] shadow-sm border">
-          <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center border-4 border-white shadow-lg shrink-0">
-             <User className="w-12 h-12 text-primary" />
+          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center border-4 border-white shadow-lg shrink-0">
+             <User className="w-10 h-10 text-primary" />
           </div>
           <div className="text-center md:text-left">
             <h1 className="text-3xl font-black text-gray-900 mb-1">John Doe</h1>
             <p className="text-gray-400 font-bold text-sm flex items-center justify-center md:justify-start gap-2">
-              <Smartphone className="w-4 h-4" /> +91 9876543210
+              <Smartphone className="w-3.5 h-3.5" /> +91 9876543210
             </p>
           </div>
           <div className="md:ml-auto">
@@ -40,30 +41,30 @@ export default function ProfilePage() {
               <Link href="/orders" className="block">
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 flex items-center justify-between group hover:shadow-xl transition-all">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Package className="w-6 h-6" />
+                    <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Package className="w-5 h-5" />
                     </div>
                     <div>
                       <h3 className="font-bold text-gray-900">Your Orders</h3>
                       <p className="text-xs text-gray-400 font-medium">Track and reorder medicines</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300" />
+                  <ChevronRight className="w-4 h-4 text-gray-300" />
                 </div>
               </Link>
 
               <Link href="/checkout" className="block">
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 flex items-center justify-between group hover:shadow-xl transition-all">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <MapPin className="w-6 h-6" />
+                    <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <MapPin className="w-5 h-5" />
                     </div>
                     <div>
                       <h3 className="font-bold text-gray-900">Manage Addresses</h3>
                       <p className="text-xs text-gray-400 font-medium">Home, Office & other locations</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300" />
+                  <ChevronRight className="w-4 h-4 text-gray-300" />
                 </div>
               </Link>
            </div>
@@ -75,30 +76,30 @@ export default function ProfilePage() {
               <Link href="#" className="block">
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 flex items-center justify-between group hover:shadow-xl transition-all">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Heart className="w-6 h-6" />
+                    <div className="w-10 h-10 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Heart className="w-5 h-5" />
                     </div>
                     <div>
                       <h3 className="font-bold text-gray-900">Wishlist</h3>
                       <p className="text-xs text-gray-400 font-medium">Save for later</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300" />
+                  <ChevronRight className="w-4 h-4 text-gray-300" />
                 </div>
               </Link>
 
               <Link href="#" className="block">
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 flex items-center justify-between group hover:shadow-xl transition-all">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gray-50 text-gray-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Settings className="w-6 h-6" />
+                    <div className="w-10 h-10 bg-gray-50 text-gray-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Settings className="w-5 h-5" />
                     </div>
                     <div>
                       <h3 className="font-bold text-gray-900">Account Security</h3>
                       <p className="text-xs text-gray-400 font-medium">Login & data permissions</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300" />
+                  <ChevronRight className="w-4 h-4 text-gray-300" />
                 </div>
               </Link>
            </div>

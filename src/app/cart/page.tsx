@@ -16,8 +16,8 @@ export default function CartPage() {
       <div className="min-h-screen bg-[#F8F8F8]">
         <Navbar />
         <main className="max-w-4xl mx-auto px-4 py-16 text-center">
-          <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-            <ShoppingBag className="w-12 h-12 text-gray-200" />
+          <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <ShoppingBag className="w-10 h-10 text-gray-200" />
           </div>
           <h1 className="text-3xl font-bold mb-4 font-headline">Your cart is empty</h1>
           <p className="text-muted-foreground mb-8 text-lg">Looks like you haven't added anything to your cart yet.</p>
@@ -97,13 +97,13 @@ export default function CartPage() {
               <Link href="/checkout">
                  <Button className="w-full rounded-full h-14 text-lg font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform gap-2">
                    Proceed to Checkout
-                   <ArrowRight className="w-5 h-5" />
+                   <ArrowRight className="w-4 h-4" />
                  </Button>
               </Link>
               
               <div className="mt-8 pt-8 border-t">
                  <div className="flex items-center gap-3 text-xs text-muted-foreground bg-gray-50 p-3 rounded-xl">
-                   <ShieldCheck className="w-5 h-5 text-green-500 shrink-0" />
+                   <ShieldCheck className="w-4 h-4 text-green-500 shrink-0" />
                    Safe & secure payments. 100% authentic medicines guaranteed.
                  </div>
               </div>

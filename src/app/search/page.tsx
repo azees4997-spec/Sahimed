@@ -47,7 +47,7 @@ function SearchResults() {
           <aside className="w-full md:w-64 space-y-8 hidden md:block">
             <div className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
               <h3 className="font-black text-[10px] uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-2">
-                <Filter className="w-4 h-4 text-primary" /> Filter Results
+                <Filter className="w-3.5 h-3.5 text-primary" /> Filter Results
               </h3>
               <div className="space-y-6">
                 <div>
@@ -70,7 +70,7 @@ function SearchResults() {
             </div>
 
             <div className="bg-primary p-8 rounded-[40px] text-white shadow-2xl shadow-primary/20 relative overflow-hidden group">
-               <Info className="w-12 h-12 mb-6 opacity-20 group-hover:opacity-40 transition-opacity" />
+               <Info className="w-10 h-10 mb-6 opacity-20 group-hover:opacity-40 transition-opacity" />
                <h4 className="font-black text-lg mb-2 uppercase tracking-tight text-white">Save with Generics</h4>
                <p className="text-[10px] font-bold text-white/80 leading-relaxed uppercase tracking-wider">Bio-equivalent medicines cost up to 80% less with the exact same clinical results.</p>
             </div>
@@ -86,7 +86,7 @@ function SearchResults() {
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{filtered.length} products verified</p>
               </div>
               <Button variant="outline" className="md:hidden gap-2 rounded-full border-2 font-black uppercase text-[10px] tracking-widest h-12 px-6">
-                <SlidersHorizontal className="w-4 h-4" /> Filters
+                <SlidersHorizontal className="w-3.5 h-3.5" /> Filters
               </Button>
             </div>
 
@@ -100,8 +100,8 @@ function SearchResults() {
               </div>
             ) : (
               <div className="bg-white rounded-[40px] p-20 text-center border shadow-sm">
-                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <SearchIcon className="w-10 h-10 text-gray-300" />
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <SearchIcon className="w-8 h-8 text-gray-300" />
                 </div>
                 <h3 className="text-xl font-black mb-2 uppercase tracking-tight">No medicines found</h3>
                 <p className="text-gray-400 font-bold mb-8 text-sm">Try broader terms or browse by categories.</p>
