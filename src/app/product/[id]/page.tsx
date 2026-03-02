@@ -1,6 +1,7 @@
+
 "use client"
 
-import { use, useState, useEffect } from 'react';
+import { use, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,9 @@ import {
   AlertCircle,
   Wine,
   Baby,
-  Car
+  Car,
+  Plus,
+  Minus
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
@@ -28,6 +31,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const db = useFirestore();
   const { toast } = useToast();
   const { addToCart } = useCart();
+
+  const [brandedQty, setBrandedQty] = useState(1);
+  const [genericQty, setGenericQty] = useState(1);
 
   const productRef = useMemoFirebase(() => {
     if (!db || !id) return null;
@@ -59,9 +65,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   if (!product && !productLoading) return notFound();
 
-  const handleAdd = (p: any) => {
-    addToCart(p);
-    toast({ title: "Added to cart", description: `${p.name} added.` });
+  const handleAdd = (p: any, qty: number) => {
+    addToCart(p, qty);
+    toast({ title: "Added to cart", description: `${qty} units of ${p.name} added.` });
   };
 
   const getUnitCount = (packSize: string) => {
@@ -74,7 +80,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     : 0;
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] pb-32">
+    <div className="min-h-screen bg-[#F8F8F8] pb-32 page-transition-wrapper">
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 py-2">
@@ -98,56 +104,76 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        {/* side-by-side Comparison Section */}
+        {/* Comparison Section */}
         <div className="grid grid-cols-2 gap-2 mb-3">
           {/* Branded Product Card */}
-          <Card className="rounded-xl border-none bg-gray-100/30 overflow-hidden flex flex-col p-2 shadow-sm">
-            <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest mb-2">Original</p>
-            <div className="aspect-square w-full max-w-[80px] bg-white rounded-md mx-auto mb-2 p-1 relative">
+          <Card className="rounded-xl border-none bg-gray-100/30 overflow-hidden flex flex-col p-2 shadow-sm relative">
+            <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Original Search</p>
+            <div className="aspect-square w-full max-w-[70px] bg-white rounded-md mx-auto mb-2 p-1 relative shadow-inner">
               <img src={product?.imageUrl} alt={product?.name} className="w-full h-full object-contain" />
             </div>
             <div className="flex-1 flex flex-col gap-1">
               <h3 className="text-[8px] font-black text-gray-900 leading-tight uppercase line-clamp-2">{product?.name}</h3>
               <p className="text-[6px] font-bold text-gray-400 uppercase leading-none">{product?.manufacturer}</p>
-              <div className="mt-auto pt-1">
+              <p className="text-[6px] font-black text-gray-300 uppercase mt-0.5">{product?.packSize}</p>
+              
+              <div className="mt-auto pt-2">
                 <div className="text-[10px] font-black text-gray-900">₹{product?.price}</div>
                 <p className="text-[6px] font-bold text-gray-400">₹{(product?.price / getUnitCount(product?.packSize || '')).toFixed(1)} / Unit</p>
-                <Button onClick={() => handleAdd(product)} className="w-full h-6 mt-1.5 rounded-full text-[7px] font-black uppercase tracking-widest bg-primary hover:bg-primary/90">Add To Cart</Button>
+                
+                {/* Qty Selector */}
+                <div className="flex items-center justify-between bg-white rounded-full border border-gray-100 mt-2 h-6 px-1.5">
+                  <button onClick={() => setBrandedQty(Math.max(1, brandedQty - 1))} className="p-0.5 text-gray-400 hover:text-primary"><Minus className="w-2.5 h-2.5" /></button>
+                  <span className="text-[8px] font-black">{brandedQty}</span>
+                  <button onClick={() => setBrandedQty(brandedQty + 1)} className="p-0.5 text-gray-400 hover:text-primary"><Plus className="w-2.5 h-2.5" /></button>
+                </div>
+
+                <Button onClick={() => handleAdd(product, brandedQty)} className="w-full h-6 mt-1.5 rounded-full text-[7px] font-black uppercase tracking-widest bg-primary hover:bg-primary/90 shadow-md">Add To Cart</Button>
               </div>
             </div>
           </Card>
 
           {/* Recommended Generic Card */}
           {genericSubstitute ? (
-            <Card className="rounded-xl border-2 border-green-500 bg-white overflow-hidden flex flex-col relative p-2 shadow-lg shadow-green-50">
-              <div className="absolute top-0 right-0">
-                <div className="bg-green-500 text-white font-black text-[6px] uppercase px-1 py-0.5 rounded-bl-md">
+            <Card className="rounded-xl border-2 border-green-500 bg-white overflow-hidden flex flex-col relative p-2 shadow-lg shadow-green-100">
+              <div className="absolute top-0 right-0 z-10">
+                <div className="bg-green-500 text-white font-black text-[6px] uppercase px-1.5 py-0.5 rounded-bl-md shadow-sm">
                   Save {percentageSaved}%
                 </div>
               </div>
-              <p className="text-[6px] font-black text-green-600 uppercase tracking-widest mb-2">Recommendation</p>
-              <div className="aspect-square w-full max-w-[80px] bg-gray-50 rounded-md mx-auto mb-2 p-1 relative">
+              <p className="text-[6px] font-black text-green-600 uppercase tracking-widest mb-1.5">Our Recommendation</p>
+              <div className="aspect-square w-full max-w-[70px] bg-gray-50 rounded-md mx-auto mb-2 p-1 relative">
                 <img src={genericSubstitute.imageUrl} alt={genericSubstitute.name} className="w-full h-full object-contain" />
               </div>
               <div className="flex-1 flex flex-col gap-1">
                 <h3 className="text-[8px] font-black text-gray-900 leading-tight uppercase line-clamp-2">{genericSubstitute.name}</h3>
                 <p className="text-[6px] font-bold text-gray-400 uppercase leading-none">{genericSubstitute.manufacturer}</p>
-                <div className="mt-auto pt-1">
+                <p className="text-[6px] font-black text-gray-300 uppercase mt-0.5">{genericSubstitute.packSize}</p>
+
+                <div className="mt-auto pt-2">
                   <div className="text-[10px] font-black text-green-600">₹{genericSubstitute.price}</div>
                   <p className="text-[6px] font-bold text-gray-400">₹{(genericSubstitute.price / getUnitCount(genericSubstitute.packSize || '')).toFixed(1)} / Unit</p>
-                  <Button onClick={() => handleAdd(genericSubstitute)} className="w-full h-6 mt-1.5 rounded-full text-[7px] font-black uppercase tracking-widest bg-green-600 hover:bg-green-700">Add To Cart</Button>
+                  
+                  {/* Qty Selector */}
+                  <div className="flex items-center justify-between bg-green-50 rounded-full border border-green-100 mt-2 h-6 px-1.5">
+                    <button onClick={() => setGenericQty(Math.max(1, genericQty - 1))} className="p-0.5 text-green-600 hover:text-green-700"><Minus className="w-2.5 h-2.5" /></button>
+                    <span className="text-[8px] font-black text-green-800">{genericQty}</span>
+                    <button onClick={() => setGenericQty(genericQty + 1)} className="p-0.5 text-green-600 hover:text-green-700"><Plus className="w-2.5 h-2.5" /></button>
+                  </div>
+
+                  <Button onClick={() => handleAdd(genericSubstitute, genericQty)} className="w-full h-6 mt-1.5 rounded-full text-[7px] font-black uppercase tracking-widest bg-green-600 hover:bg-green-700 shadow-lg shadow-green-100">Add To Cart</Button>
                 </div>
               </div>
             </Card>
           ) : (
             <Card className="rounded-xl border border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center p-4 text-center">
               <Info className="w-4 h-4 text-gray-300 mb-1" />
-              <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">No Generic Alternative</p>
+              <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">No Alternative Found</p>
             </Card>
           )}
         </div>
 
-        {/* Clinical Insights side-by-side */}
+        {/* Clinical Insights */}
         <div className="grid grid-cols-2 gap-2 mb-3">
           <div className="bg-white p-2.5 rounded-xl border border-gray-100 shadow-sm">
             <h3 className="text-[7px] font-black text-gray-900 uppercase tracking-widest mb-1.5 flex items-center gap-1">
