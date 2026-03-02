@@ -37,7 +37,6 @@ export default function Home() {
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
 
-  // Filter exactly 3 banners
   const heroBanners = PlaceHolderImages.filter(img => img.id.startsWith('hero-')).slice(0, 3);
 
   const getIcon = (name: string) => {
@@ -55,7 +54,6 @@ export default function Home() {
       <Navbar />
 
       <main className="flex-1 pb-10">
-        {/* Banner Slider - Exactly 3 Banners with Auto-slide & Mobile Fit */}
         <section className="bg-white py-2">
           <div className="max-w-7xl mx-auto px-4">
             <Carousel 
@@ -75,10 +73,10 @@ export default function Home() {
                         data-ai-hint={banner.imageHint}
                         priority={index === 0}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/60 to-transparent flex items-center p-6 sm:p-12">
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/70 to-transparent flex items-center p-6 sm:p-12">
                         <div className="max-w-[90%] sm:max-w-[500px] text-white space-y-3">
                           <span className="inline-block bg-accent text-white text-[8px] sm:text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-[0.2em] shadow-lg">
-                            {index === 1 ? 'Switch & Save' : 'Clinical Grade'}
+                            {index === 0 ? 'Switch & Save' : index === 1 ? 'Fast Delivery' : 'Clinical Trust'}
                           </span>
                           <h1 className="text-xl sm:text-4xl font-black font-headline uppercase tracking-tighter leading-[1.1] text-balance">
                             {banner.description}
@@ -100,7 +98,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Scan Prescription Quick Action */}
         <section className="py-2">
           <div className="max-w-7xl mx-auto px-4">
              <Link href="/prescription">
@@ -122,11 +119,10 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Therapy Hub */}
         <section className="py-4">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center justify-between mb-4 px-1">
-              <h2 className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Therapeutic Specialities</h2>
+              <h2 className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Therapy Hub</h2>
             </div>
             {catsLoading ? (
               <div className="flex justify-center p-4"><Loader2 className="w-4 h-4 animate-spin text-primary" /></div>
@@ -145,7 +141,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Clinical Top Deals */}
         <section className="py-8 bg-white border-t border-gray-100 mt-4 rounded-t-[40px] shadow-2xl">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center justify-between mb-6 px-1">

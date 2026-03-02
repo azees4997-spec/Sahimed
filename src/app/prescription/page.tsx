@@ -26,7 +26,7 @@ export default function PrescriptionPage() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        toast({ variant: "destructive", title: "File too large", description: "Please upload an image smaller than 2MB." });
+        toast({ variant: "destructive", title: "File too large", description: "Limit: 2MB." });
         return;
       }
       const reader = new FileReader();
@@ -39,13 +39,13 @@ export default function PrescriptionPage() {
 
   const handleSubmitEnquiry = async () => {
     if (!user) {
-      toast({ title: "Login Required", description: "Please login to submit your prescription." });
+      toast({ title: "Login Required", description: "Please sign in to submit your prescription." });
       router.push('/login');
       return;
     }
 
     if (!image) {
-      toast({ variant: "destructive", title: "No Image", description: "Please capture or upload a prescription first." });
+      toast({ variant: "destructive", title: "No Image", description: "Please scan a prescription." });
       return;
     }
 
@@ -64,10 +64,10 @@ export default function PrescriptionPage() {
       
       setTimeout(() => {
         setIsSuccess(true);
-        toast({ title: "Enquiry Sent", description: "Our pharmacists will review it shortly." });
+        toast({ title: "Enquiry Sent", description: "Pharmacist review in progress." });
       }, 800);
     } catch (err) {
-      toast({ variant: "destructive", title: "Submission Failed", description: "Could not send enquiry. Please try again." });
+      toast({ variant: "destructive", title: "Submission Failed" });
     } finally {
       setSubmitting(false);
     }
@@ -76,22 +76,22 @@ export default function PrescriptionPage() {
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in duration-500">
-        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-8 shadow-xl shadow-green-100">
+        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-8 shadow-xl">
           <CheckCircle2 className="w-10 h-10" />
         </div>
-        <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight mb-4">Submission Received</h1>
-        <p className="text-gray-500 font-medium max-w-xs mb-12 leading-relaxed">
-          Your prescription has been securely transmitted. A licensed pharmacist will review it and notify you via your registered mobile number within 15-30 minutes.
+        <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight mb-4">Submission Sent</h1>
+        <p className="text-gray-500 font-medium max-w-xs mb-12 leading-relaxed uppercase text-[10px] tracking-widest">
+          A licensed pharmacist will review your clinical records and notify you within 30 minutes.
         </p>
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <Link href="/">
             <Button className="w-full h-16 rounded-full font-black uppercase tracking-widest text-[10px] gap-3">
-              <Home className="w-4 h-4" /> Return to Storefront
+              <Home className="w-4 h-4" /> Return Home
             </Button>
           </Link>
           <Link href="/orders">
             <Button variant="outline" className="w-full h-16 rounded-full font-black uppercase tracking-widest text-[10px] border-2">
-              <ShoppingBag className="w-4 h-4" /> View Enquiry Status
+              View Status
             </Button>
           </Link>
         </div>
@@ -121,18 +121,17 @@ export default function PrescriptionPage() {
               >
                 {image ? (
                   <>
-                    <Image src={image} alt="Prescription Preview" fill className="object-contain" />
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                       <Button variant="secondary" className="rounded-full font-black uppercase text-[10px] tracking-widest">Replace Photo</Button>
+                    <Image src={image} alt="Prescription" fill className="object-contain" />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center">
+                       <Button variant="secondary" className="rounded-full font-black uppercase text-[10px]">Retake</Button>
                     </div>
                   </>
                 ) : (
                   <div className="p-12 text-center">
-                    <div className="w-20 h-20 bg-primary/10 text-primary rounded-[36px] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                      <Camera className="w-10 h-10" />
+                    <div className="w-16 h-16 bg-primary/10 text-primary rounded-[24px] flex items-center justify-center mx-auto mb-6">
+                      <Camera className="w-8 h-8" />
                     </div>
-                    <p className="font-black text-gray-900 uppercase tracking-tight text-xl">Tap to Scan</p>
-                    <p className="text-xs text-gray-400 font-bold mt-2 uppercase tracking-widest">Camera or Photo Library</p>
+                    <p className="font-black text-gray-900 uppercase tracking-tight text-lg">Scan & Upload</p>
                   </div>
                 )}
               </div>
@@ -142,46 +141,15 @@ export default function PrescriptionPage() {
           <input id="file-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
 
           {image && (
-            <div className="space-y-4 animate-in slide-in-from-bottom-4">
+            <div className="space-y-4">
               <Button 
                 onClick={handleSubmitEnquiry} 
                 disabled={submitting}
-                className="w-full h-16 rounded-full font-black uppercase tracking-widest shadow-2xl shadow-primary/40 text-lg flex items-center justify-center gap-3"
+                className="w-full h-16 rounded-full font-black uppercase tracking-widest shadow-xl text-lg gap-3"
               >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Transmitting...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    Submit to Pharmacist
-                  </>
-                )}
+                {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                {user ? "Submit to Pharmacist" : "Login to Submit"}
               </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => setImage(null)} 
-                disabled={submitting}
-                className="w-full text-gray-400 font-black uppercase text-[10px] tracking-widest"
-              >
-                Discard & Retake
-              </Button>
-            </div>
-          )}
-
-          {!image && (
-            <div className="space-y-4">
-              <div className="bg-blue-50 p-6 rounded-[32px] border border-blue-100 flex items-start gap-4">
-                <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-1" />
-                <div>
-                  <h3 className="font-black text-blue-900 text-sm uppercase tracking-tight mb-1">Clinical Privacy</h3>
-                  <p className="text-xs text-blue-700/80 font-bold leading-relaxed">
-                    Your prescription is encrypted and only accessible by verified pharmacists for order fulfillment.
-                  </p>
-                </div>
-              </div>
             </div>
           )}
         </div>

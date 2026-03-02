@@ -15,7 +15,8 @@ import {
   Download, 
   ShieldCheck,
   SmartphoneNfc,
-  Loader2
+  Loader2,
+  LogIn
 } from 'lucide-react';
 import Link from 'next/link';
 import { useUser, useAuth } from '@/firebase';
@@ -45,13 +46,13 @@ export default function ProfilePage() {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
-        toast({ title: "Welcome!", description: "HealthLink is installing on your home screen." });
+        toast({ title: "Welcome!", description: "HealthLink is installing." });
       }
       setDeferredPrompt(null);
     } else {
       toast({ 
         title: "PWA Installation", 
-        description: "To install, tap the Share icon and then 'Add to Home Screen' in your browser menu." 
+        description: "Tap the Share icon and then 'Add to Home Screen'." 
       });
     }
   };
@@ -77,13 +78,13 @@ export default function ProfilePage() {
           <div className="w-20 h-20 bg-white rounded-[32px] shadow-xl flex items-center justify-center mx-auto mb-8 border border-gray-50">
             <User className="w-10 h-10 text-gray-200" />
           </div>
-          <h1 className="text-2xl font-black uppercase tracking-tight mb-4 text-gray-900">Patient Profile</h1>
+          <h1 className="text-2xl font-black uppercase tracking-tight mb-4 text-gray-900">Patient Access</h1>
           <p className="text-gray-400 font-bold text-[10px] uppercase tracking-widest mb-10 leading-relaxed max-w-[240px] mx-auto">
-            Login to access order history, clinical records, and saved addresses.
+            Login to access clinical records, refill supplies, and manage your health journey.
           </p>
           <Link href="/login">
-            <Button className="w-full h-16 rounded-full font-black uppercase tracking-widest shadow-2xl shadow-primary/20 text-xs">
-              Login / Register
+            <Button className="w-full h-16 rounded-full font-black uppercase tracking-widest shadow-2xl shadow-primary/20 text-xs gap-2">
+              <LogIn className="w-4 h-4" /> Login / Register
             </Button>
           </Link>
           <div className="mt-12 flex items-center justify-center gap-2">
@@ -100,18 +101,15 @@ export default function ProfilePage() {
       <Navbar />
       <main className="max-w-4xl mx-auto px-4 py-6 md:py-16">
         
-        {/* User Intro */}
         <div className="flex flex-col md:flex-row items-center gap-6 mb-8 bg-white p-8 rounded-[32px] shadow-sm border border-gray-100">
           <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center border-2 border-white shadow-sm shrink-0">
              <User className="w-8 h-8 text-primary" />
           </div>
           <div className="text-center md:text-left">
             <h1 className="text-2xl font-black text-gray-900 mb-0.5 uppercase tracking-tighter">
-              {user?.email?.split('@')[0] || 'Patient Access'}
+              {user?.email?.split('@')[0] || 'Patient User'}
             </h1>
-            <p className="text-gray-400 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center md:justify-start gap-1.5">
-              <Smartphone className="w-3 h-3" /> {user?.email || 'Guest User'}
-            </p>
+            <p className="text-gray-400 font-bold text-[10px] uppercase tracking-widest">Clinical Session Active</p>
           </div>
           <div className="md:ml-auto">
             <Button 
@@ -125,76 +123,35 @@ export default function ProfilePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-           
-           {/* Section 1: Account */}
            <div className="space-y-4">
               <h2 className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4">Account Dashboard</h2>
-              
               <Link href="/orders" className="block">
-                <div className="bg-white p-5 rounded-[24px] border border-gray-100 flex items-center justify-between group hover:shadow-lg transition-all active:scale-95">
+                <div className="bg-white p-5 rounded-[24px] border border-gray-100 flex items-center justify-between group active:scale-95">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
-                      <Package className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-black text-gray-900 uppercase">Order History</h3>
-                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wide">Refill clinical supplies</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-3 h-3 text-gray-300" />
-                </div>
-              </Link>
-
-              <Link href="/checkout" className="block">
-                <div className="bg-white p-5 rounded-[24px] border border-gray-100 flex items-center justify-between group hover:shadow-lg transition-all active:scale-95">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center">
-                      <MapPin className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-black text-gray-900 uppercase">Addresses</h3>
-                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wide">Home & office hubs</p>
-                    </div>
+                    <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center"><Package className="w-4 h-4" /></div>
+                    <h3 className="text-xs font-black text-gray-900 uppercase">Order History</h3>
                   </div>
                   <ChevronRight className="w-3 h-3 text-gray-300" />
                 </div>
               </Link>
            </div>
 
-           {/* Section 2: Flutter-like App Integration */}
            <div className="space-y-4">
               <h2 className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4">App Integration</h2>
-              
               <div 
                 onClick={handleInstallClick}
-                className="bg-primary/5 p-6 rounded-[32px] border border-primary/10 flex flex-col items-center text-center gap-4 cursor-pointer hover:bg-primary/10 transition-colors group"
+                className="bg-primary/5 p-6 rounded-[32px] border border-primary/10 flex flex-col items-center text-center gap-4 cursor-pointer hover:bg-primary/10 group"
               >
-                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                  <SmartphoneNfc className="w-6 h-6 text-primary" />
-                </div>
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-md"><SmartphoneNfc className="w-6 h-6 text-primary" /></div>
                 <div>
-                  <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Add to Home Screen</h3>
-                  <p className="text-[10px] text-gray-500 font-bold mt-1 max-w-[200px] uppercase tracking-wide">Install HealthLink for a faster, professional clinical experience.</p>
+                  <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Install App</h3>
+                  <p className="text-[10px] text-gray-500 font-bold mt-1 max-w-[200px] uppercase">Add HealthLink to Home Screen for a professional clinical experience.</p>
                 </div>
-                <Button className="rounded-full h-10 px-8 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-primary/20">
-                  <Download className="w-3.5 h-3.5" /> Install App
+                <Button className="rounded-full h-10 px-8 font-black uppercase text-[10px] tracking-widest gap-2">
+                  <Download className="w-3.5 h-3.5" /> Install
                 </Button>
               </div>
-
-              <div className="bg-white p-5 rounded-[24px] border border-gray-100 flex items-center justify-between group active:scale-95">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center">
-                      <ShieldCheck className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-black text-gray-900 uppercase">Clinical Trust</h3>
-                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wide">100% Genuine Supplies</p>
-                    </div>
-                  </div>
-                  <Settings className="w-3 h-3 text-gray-300" />
-                </div>
            </div>
-
         </div>
       </main>
     </div>
