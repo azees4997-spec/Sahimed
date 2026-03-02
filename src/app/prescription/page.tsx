@@ -182,15 +182,6 @@ export default function PrescriptionPage() {
                   </p>
                 </div>
               </div>
-              
-              <div className="bg-gray-50 p-6 rounded-[32px] border border-gray-100">
-                <h3 className="font-black text-gray-900 text-[10px] uppercase tracking-widest mb-3">Submission Guidelines</h3>
-                <ul className="text-[10px] text-gray-400 space-y-2 font-black uppercase tracking-wider">
-                  <li className="flex gap-2"><span>•</span> Capture the entire page clearly</li>
-                  <li className="flex gap-2"><span>•</span> Ensure doctor's stamp is visible</li>
-                  <li className="flex gap-2"><span>•</span> Avoid harsh overhead lighting</li>
-                </ul>
-              </div>
             </div>
           )}
         </div>

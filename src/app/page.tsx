@@ -37,7 +37,7 @@ export default function Home() {
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
 
-  // Take only the first 3 banners as requested
+  // Filter exactly 3 banners
   const heroBanners = PlaceHolderImages.filter(img => img.id.startsWith('hero-')).slice(0, 3);
 
   const getIcon = (name: string) => {
@@ -55,18 +55,16 @@ export default function Home() {
       <Navbar />
 
       <main className="flex-1 pb-10">
-        {/* Banner Slider - Auto-sliding & Professional Mobile Layout */}
+        {/* Banner Slider - Exactly 3 Banners with Auto-slide & Mobile Fit */}
         <section className="bg-white py-2">
           <div className="max-w-7xl mx-auto px-4">
             <Carousel 
               className="w-full" 
               opts={{ loop: true, align: 'start' }}
               plugins={[autoplayRef.current]}
-              onMouseEnter={autoplayRef.current.stop}
-              onMouseLeave={autoplayRef.current.reset}
             >
               <CarouselContent>
-                {heroBanners.length > 0 ? heroBanners.map((banner, index) => (
+                {heroBanners.map((banner, index) => (
                   <CarouselItem key={banner.id}>
                     <div className="relative rounded-2xl overflow-hidden aspect-[3/2] sm:aspect-[21/9] bg-primary shadow-sm border border-gray-100">
                       <Image 
@@ -96,13 +94,7 @@ export default function Home() {
                       </div>
                     </div>
                   </CarouselItem>
-                )) : (
-                  <CarouselItem>
-                    <div className="w-full aspect-[3/2] bg-gray-100 rounded-2xl flex items-center justify-center">
-                      <Loader2 className="animate-spin text-primary" />
-                    </div>
-                  </CarouselItem>
-                )}
+                ))}
               </CarouselContent>
             </Carousel>
           </div>
@@ -169,17 +161,6 @@ export default function Home() {
                 ))}
               </div>
             )}
-          </div>
-        </section>
-
-        {/* Clinical Trust Banner */}
-        <section className="py-12 pb-32">
-          <div className="max-w-7xl mx-auto px-4 text-center">
-            <div className="inline-flex items-center gap-2 bg-green-50 text-green-600 px-5 py-2 rounded-full mb-3 shadow-sm">
-              <ShieldCheck className="w-4 h-4" />
-              <span className="text-[8px] font-black uppercase tracking-widest">Pharmacist Verified Distribution</span>
-            </div>
-            <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest opacity-60">High-Purity Supply Chain Management • sahimed.com</p>
           </div>
         </section>
       </main>

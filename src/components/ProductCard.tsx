@@ -64,30 +64,27 @@ export default function ProductCard({ product }: { product: Product }) {
           <span className="text-[9px] sm:text-[10px] font-black text-gray-900 tracking-tighter">₹{product.price}</span>
           
           {quantity > 0 ? (
-            <div className="flex items-center gap-1 bg-primary/5 rounded-lg p-0.5 border border-primary/10">
+            <div className="flex items-center gap-1 bg-primary/5 rounded-lg p-0.5 border border-primary/10 w-full">
               <Button 
                 onClick={handleDecrement} 
-                size="icon" 
-                className="h-5 w-5 sm:h-6 sm:w-6 p-0 rounded-md bg-white text-primary hover:bg-primary hover:text-white shadow-sm border border-primary/10"
+                className="h-7 w-7 p-0 rounded-md bg-white text-primary hover:bg-primary hover:text-white shadow-sm border border-primary/10"
               >
-                <Minus className="w-2.5 h-2.5 sm:w-3 h-3" />
+                <Minus className="w-3 h-3" />
               </Button>
-              <span className="text-[8px] sm:text-[10px] font-black text-primary px-1 min-w-[12px] text-center">{quantity}</span>
+              <span className="text-[10px] font-black text-primary flex-1 text-center">{quantity}</span>
               <Button 
                 onClick={handleIncrement} 
-                size="icon" 
-                className="h-5 w-5 sm:h-6 sm:w-6 p-0 rounded-md bg-white text-primary hover:bg-primary hover:text-white shadow-sm border border-primary/10"
+                className="h-7 w-7 p-0 rounded-md bg-white text-primary hover:bg-primary hover:text-white shadow-sm border border-primary/10"
               >
-                <Plus className="w-2.5 h-2.5 sm:w-3 h-3" />
+                <Plus className="w-3 h-3" />
               </Button>
             </div>
           ) : (
             <Button 
               onClick={handleAdd} 
-              size="icon" 
-              className="rounded-lg h-6 w-6 sm:h-8 sm:w-8 p-0 shadow-lg shadow-primary/10 active:scale-90 transition-transform bg-primary/5 hover:bg-primary text-primary hover:text-white border border-primary/20"
+              className="rounded-lg h-7 w-full p-0 shadow-lg shadow-primary/10 bg-primary/5 hover:bg-primary text-primary hover:text-white border border-primary/20 font-black text-[8px] uppercase tracking-widest"
             >
-              <Plus className="w-3 h-3 sm:w-4 h-4" />
+              Add To Cart
             </Button>
           )}
         </div>
