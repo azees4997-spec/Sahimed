@@ -8,6 +8,18 @@
       "imageHint": "pharmacy healthcare"
     },
     {
+      "id": "hero-2",
+      "description": "Switch to generic and save big",
+      "imageUrl": "https://picsum.photos/seed/save80/1200/400",
+      "imageHint": "medicine savings"
+    },
+    {
+      "id": "hero-3",
+      "description": "Fast home delivery of clinical supplies",
+      "imageUrl": "https://picsum.photos/seed/delivery/1200/400",
+      "imageHint": "delivery van"
+    },
+    {
       "id": "cat-chronic",
       "description": "Medicine for chronic conditions",
       "imageUrl": "https://picsum.photos/seed/chronic/400/400",
