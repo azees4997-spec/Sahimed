@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useSearchParams } from 'next/navigation';
@@ -8,6 +9,7 @@ import { Filter, Search as SearchIcon, SlidersHorizontal, Info, Loader2 } from '
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { Suspense } from 'react';
+import Link from 'next/link';
 
 function SearchResults() {
   const searchParams = useSearchParams();

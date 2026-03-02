@@ -63,13 +63,17 @@ export default function SupervisorConsole() {
   useEffect(() => {
     if (adminRole && !isServerConfirmed) {
       setIsVerifying(true);
-      getDoc(doc(db, 'roles_admin', user!.uid)).then((snap) => {
-        if (snap.exists()) {
-          setIsServerConfirmed(true);
-        }
-      }).catch(() => {
-        setIsServerConfirmed(false);
-      }).finally(() => setIsVerifying(false));
+      // We add a small artificial delay to allow security rules cache to propagate globally
+      const timer = setTimeout(() => {
+        getDoc(doc(db, 'roles_admin', user!.uid)).then((snap) => {
+          if (snap.exists()) {
+            setIsServerConfirmed(true);
+          }
+        }).catch(() => {
+          setIsServerConfirmed(false);
+        }).finally(() => setIsVerifying(false));
+      }, 1500);
+      return () => clearTimeout(timer);
     }
   }, [adminRole, db, user, isServerConfirmed]);
 
@@ -197,7 +201,6 @@ export default function SupervisorConsole() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-12">
-        {/* CRITICAL: We pass isServerConfirmed to children to gate their internal queries */}
         {activeTab === 'dashboard' && <DashboardOverview onSwitchTab={setActiveTab} db={db} isVerified={isServerConfirmed} />}
         {activeTab === 'medicines' && <MedicinesMaster db={db} isVerified={isServerConfirmed} />}
         {activeTab === 'categories' && <CategoriesMaster db={db} isVerified={isServerConfirmed} />}
@@ -208,7 +211,6 @@ export default function SupervisorConsole() {
 }
 
 function DashboardOverview({ onSwitchTab, db, isVerified }: { onSwitchTab: (t: AdminTab) => void, db: any, isVerified: boolean }) {
-  // Public collections are safe to query even before verification, but we wait for consistency
   const medsQuery = useMemoFirebase(() => {
     if (!isVerified) return null;
     return query(collection(db, 'medicines'), orderBy('name', 'asc'));
@@ -221,6 +223,8 @@ function DashboardOverview({ onSwitchTab, db, isVerified }: { onSwitchTab: (t: A
 
   const { data: medicines } = useCollection(medsQuery);
   const { data: categories } = useCollection(catsQuery);
+
+  const { toast } = useToast();
 
   const seedData = () => {
     const initialCats = [
@@ -363,7 +367,6 @@ function CategoriesMaster({ db, isVerified }: { db: any, isVerified: boolean }) 
 }
 
 function OrdersFulfillment({ db, isVerified }: { db: any, isVerified: boolean }) {
-  // CRITICAL: This global Collection Group query is ONLY initiated after isVerified is true.
   const ordersQuery = useMemoFirebase(() => {
     if (!isVerified) return null;
     return query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc'));
