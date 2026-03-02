@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from 'react';
@@ -28,6 +27,7 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!user) {
+      toast({ title: "Login Required", description: "Please sign in to complete your order." });
       router.push('/login');
       return;
     }
@@ -246,7 +246,7 @@ export default function CheckoutPage() {
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
               <>
-                Confirm & Pay
+                {user ? "Confirm & Pay" : "Login to Checkout"}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
