@@ -22,7 +22,7 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Specifically allow admins to perform collection-group queries on orders and prescriptions
+    // Specifically allow admins to perform collection-group queries
     match /{path=**}/orders/{orderId} {
       allow read, list, update: if isAdmin();
     }

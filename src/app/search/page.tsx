@@ -31,8 +31,10 @@ function SearchResults() {
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
 
   const filtered = (medicines || []).filter(p => {
-    const matchesQuery = p.name.toLowerCase().includes(q) || p.saltComposition.toLowerCase().includes(q);
-    const matchesCategory = c ? p.category === c : true;
+    const nameMatch = p.name?.toLowerCase().includes(q);
+    const saltMatch = p.saltComposition?.toLowerCase().includes(q);
+    const matchesQuery = !q || nameMatch || saltMatch;
+    const matchesCategory = !c || p.category === c;
     return matchesQuery && matchesCategory;
   });
 
@@ -51,8 +53,10 @@ function SearchResults() {
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Therapeutic Categories</label>
                   <div className="space-y-2">
-                    {catsLoading ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : categories?.map(cat => (
-                      <Link key={cat.id} href={`/search?c=${cat.name}${q ? `&q=${q}` : ''}`} className="block">
+                    {catsLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                    ) : categories?.map(cat => (
+                      <Link key={cat.id} href={`/search?c=${encodeURIComponent(cat.name)}${q ? `&q=${encodeURIComponent(q)}` : ''}`} className="block">
                         <div className={`p-3 rounded-xl flex items-center gap-3 transition-all cursor-pointer ${c === cat.name ? 'bg-primary/5 border border-primary/10' : 'hover:bg-gray-50'}`}>
                           <div className={`w-2 h-2 rounded-full ${c === cat.name ? 'bg-primary animate-pulse' : 'bg-gray-200'}`} />
                           <span className={`text-xs ${c === cat.name ? 'font-black text-primary' : 'font-bold text-gray-600'}`}>{cat.name}</span>
