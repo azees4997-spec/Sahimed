@@ -245,19 +245,103 @@ function SeedDataButton({ db }: { db: any }) {
       }
 
       const medicines = [
-        { name: 'Janumet 50/500', price: 1250, saltComposition: 'Sitagliptin + Metformin', manufacturer: 'MSD Pharmaceuticals', isGeneric: false, category: 'Diabetes', imageUrl: 'https://picsum.photos/seed/dia1/300/300', availableQuantity: 100, description: 'Premium glycemic control used for T2 Diabetes management.' },
-        { name: 'Sitagliptin Generic', price: 240, saltComposition: 'Sitagliptin + Metformin', manufacturer: 'HealthLink Clinical', isGeneric: true, category: 'Diabetes', imageUrl: 'https://picsum.photos/seed/dia2/300/300', availableQuantity: 500, description: 'High-quality bio-equivalent alternative for Sitagliptin + Metformin.' },
-        { name: 'Atorva 20mg', price: 450, saltComposition: 'Atorvastatin', manufacturer: 'Zydus Cadila', isGeneric: false, category: 'Heart Care', imageUrl: 'https://picsum.photos/seed/hrt1/300/300', availableQuantity: 80, description: 'Branded statin used to lower clinical cholesterol levels.' },
-        { name: 'Atorvastatin Pure', price: 85, saltComposition: 'Atorvastatin', manufacturer: 'HealthLink Generic', isGeneric: true, category: 'Heart Care', imageUrl: 'https://picsum.photos/seed/hrt2/300/300', availableQuantity: 1000, description: 'WHO-GMP certified generic Atorvastatin for heart health.' },
-        { name: 'Pan 40', price: 180, saltComposition: 'Pantoprazole', manufacturer: 'Alkem Labs', isGeneric: false, category: 'Gastro', imageUrl: 'https://picsum.photos/seed/gas1/300/300', availableQuantity: 300, description: 'Branded PPI for acid reflux and peptic ulcers.' },
-        { name: 'Pantoprazole Generic', price: 45, saltComposition: 'Pantoprazole', manufacturer: 'HealthLink Generic', isGeneric: true, category: 'Gastro', imageUrl: 'https://picsum.photos/seed/gas2/300/300', availableQuantity: 800, description: 'Affordable clinical Pantoprazole with exact same efficacy.' }
+        { 
+          name: 'Janumet 50/500', 
+          price: 1250, 
+          saltComposition: 'Sitagliptin + Metformin', 
+          manufacturer: 'MSD Pharmaceuticals', 
+          isGeneric: false, 
+          category: 'Diabetes', 
+          imageUrl: 'https://picsum.photos/seed/dia1/300/300', 
+          availableQuantity: 100, 
+          description: 'Premium glycemic control used for T2 Diabetes management. Helps maintain steady blood sugar levels throughout the day.',
+          uses: ['Management of Type 2 Diabetes', 'Glycemic control improvement'],
+          sideEffects: ['Nausea', 'Upper respiratory tract infection', 'Hypoglycemia (low blood sugar)'],
+          packSize: 'Strip of 15 tablets',
+          strength: '50mg/500mg'
+        },
+        { 
+          name: 'Sitagliptin Generic', 
+          price: 240, 
+          saltComposition: 'Sitagliptin + Metformin', 
+          manufacturer: 'HealthLink Clinical', 
+          isGeneric: true, 
+          category: 'Diabetes', 
+          imageUrl: 'https://picsum.photos/seed/dia2/300/300', 
+          availableQuantity: 500, 
+          description: 'High-quality bio-equivalent alternative for Sitagliptin + Metformin. Sourced from WHO-GMP certified facilities.',
+          uses: ['Management of Type 2 Diabetes', 'Affordable glucose control'],
+          sideEffects: ['Nausea', 'Mild digestive upset'],
+          packSize: 'Strip of 15 tablets',
+          strength: '50mg/500mg'
+        },
+        { 
+          name: 'Atorva 20mg', 
+          price: 450, 
+          saltComposition: 'Atorvastatin', 
+          manufacturer: 'Zydus Cadila', 
+          isGeneric: false, 
+          category: 'Heart Care', 
+          imageUrl: 'https://picsum.photos/seed/hrt1/300/300', 
+          availableQuantity: 80, 
+          description: 'Branded statin used to lower clinical cholesterol levels and reduce risk of cardiac events.',
+          uses: ['Lowering high cholesterol', 'Prevention of heart attack and stroke'],
+          sideEffects: ['Muscle pain', 'Weakness', 'Digestive issues'],
+          packSize: 'Strip of 10 tablets',
+          strength: '20mg'
+        },
+        { 
+          name: 'Atorvastatin Pure', 
+          price: 85, 
+          saltComposition: 'Atorvastatin', 
+          manufacturer: 'HealthLink Generic', 
+          isGeneric: true, 
+          category: 'Heart Care', 
+          imageUrl: 'https://picsum.photos/seed/hrt2/300/300', 
+          availableQuantity: 1000, 
+          description: 'WHO-GMP certified generic Atorvastatin for heart health. Offers clinical equivalence at a fraction of the cost.',
+          uses: ['Lowering LDL cholesterol', 'Heart health maintenance'],
+          sideEffects: ['Muscle pain (rare)', 'Headache'],
+          packSize: 'Strip of 10 tablets',
+          strength: '20mg'
+        },
+        { 
+          name: 'Pan 40', 
+          price: 180, 
+          saltComposition: 'Pantoprazole', 
+          manufacturer: 'Alkem Labs', 
+          isGeneric: false, 
+          category: 'Gastro', 
+          imageUrl: 'https://picsum.photos/seed/gas1/300/300', 
+          availableQuantity: 300, 
+          description: 'Branded Proton Pump Inhibitor (PPI) for acid reflux and peptic ulcers. Trusted by physicians for rapid relief.',
+          uses: ['Treatment of acidity and heartburn', 'Gastroesophageal reflux disease (GERD)'],
+          sideEffects: ['Dry mouth', 'Headache', 'Flatulence'],
+          packSize: 'Strip of 15 tablets',
+          strength: '40mg'
+        },
+        { 
+          name: 'Pantoprazole Generic', 
+          price: 45, 
+          saltComposition: 'Pantoprazole', 
+          manufacturer: 'HealthLink Generic', 
+          isGeneric: true, 
+          category: 'Gastro', 
+          imageUrl: 'https://picsum.photos/seed/gas2/300/300', 
+          availableQuantity: 800, 
+          description: 'Affordable clinical Pantoprazole with exact same efficacy. Blocks acid production effectively.',
+          uses: ['Treatment of peptic ulcers', 'Acid suppression'],
+          sideEffects: ['Mild headache', 'Dizziness'],
+          packSize: 'Strip of 15 tablets',
+          strength: '40mg'
+        }
       ];
 
       for (const med of medicines) {
         await addDocumentNonBlocking(collection(db, 'medicines'), med);
       }
 
-      toast({ title: "Master Catalog Seeded", description: "Therapeutic categories and product pairs initialized." });
+      toast({ title: "Master Catalog Seeded", description: "Therapeutic categories and product pairs initialized with full clinical details." });
     } catch (e) {
       toast({ variant: 'destructive', title: "Seeding Aborted" });
     } finally {

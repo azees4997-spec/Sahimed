@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -128,17 +129,17 @@
           "type": "number",
           "description": "The current selling price of the medicine."
         },
-        "manufacturerId": {
+        "manufacturer": {
           "type": "string",
-          "description": "Reference to the Manufacturer of this medicine. (Relationship: Manufacturer 1:N Medicine)"
+          "description": "The name of the manufacturer."
         },
         "saltComposition": {
           "type": "string",
           "description": "The active pharmaceutical ingredient(s) or salt composition of the medicine, used for substitute suggestions."
         },
-        "categoryId": {
+        "category": {
           "type": "string",
-          "description": "Reference to the Category this medicine belongs to. (Relationship: Category 1:N Medicine)"
+          "description": "The category this medicine belongs to."
         },
         "isGeneric": {
           "type": "boolean",
@@ -168,6 +169,20 @@
         "availableQuantity": {
           "type": "number",
           "description": "The current quantity of the medicine available in stock."
+        },
+        "uses": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of clinical uses for the medicine."
+        },
+        "sideEffects": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of potential side effects."
+        },
+        "packSize": {
+          "type": "string",
+          "description": "The size of the pack (e.g. 'Strip of 15 tablets')."
         }
       },
       "required": [
@@ -175,14 +190,10 @@
         "name",
         "description",
         "price",
-        "manufacturerId",
         "saltComposition",
-        "categoryId",
+        "category",
         "isGeneric",
-        "isTopDeal",
         "imageUrl",
-        "dosageForm",
-        "strength",
         "availableQuantity"
       ]
     },
