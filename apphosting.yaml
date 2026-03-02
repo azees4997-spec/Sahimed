@@ -3,6 +3,9 @@
 # https://firebase.google.com/docs/app-hosting/configure
 
 runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
+  # Explicitly using Node 20 for Next.js 15 stability
   maxInstances: 1
+
+env:
+  - variable: NODE_VERSION
+    value: "20"

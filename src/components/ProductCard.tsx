@@ -30,33 +30,33 @@ export default function ProductCard({ product }: { product: Product }) {
           src={product.imageUrl}
           alt={product.name}
           fill
-          className="object-contain p-2 sm:p-3 group-hover:scale-105 transition-transform duration-500"
+          className="object-contain p-2 sm:p-4 group-hover:scale-105 transition-transform duration-500"
           data-ai-hint="medicine box"
         />
         {product.isGeneric && (
-          <Badge className="absolute top-1 left-1 bg-green-600 text-[6px] font-black uppercase tracking-widest px-1 py-0.5 rounded-md border-none shadow-sm">Save</Badge>
+          <Badge className="absolute top-1 left-1 bg-green-600 text-[6px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border-none shadow-sm">Save Big</Badge>
         )}
       </Link>
       
-      <div className="p-2 sm:p-2.5 flex flex-col flex-1">
+      <div className="p-2 sm:p-3 flex flex-col flex-1">
         <p className="text-[6px] sm:text-[7px] text-gray-400 font-black uppercase tracking-widest mb-0.5 truncate">{product.manufacturer}</p>
         <Link href={`/product/${product.id}`}>
-          <h3 className="font-bold text-gray-900 line-clamp-1 mb-0.5 group-hover:text-primary transition-colors text-[9px] sm:text-[11px] leading-tight">{product.name}</h3>
+          <h3 className="font-bold text-gray-900 line-clamp-1 mb-0.5 group-hover:text-primary transition-colors text-[9px] sm:text-[11px] leading-tight uppercase tracking-tight">{product.name}</h3>
         </Link>
-        <p className="text-[7px] text-muted-foreground line-clamp-1 mb-1.5 italic opacity-70">
+        <p className="text-[7px] text-muted-foreground line-clamp-1 mb-2 italic opacity-60">
           {product.saltComposition}
         </p>
         
         <div className="mt-auto flex items-center justify-between gap-1">
           <div className="flex flex-col">
-            <span className="text-[10px] sm:text-[12px] font-black text-gray-900 tracking-tighter">₹{product.price}</span>
+            <span className="text-[10px] sm:text-[13px] font-black text-gray-900 tracking-tighter">₹{product.price}</span>
           </div>
           <Button 
             onClick={handleAdd} 
             size="icon" 
-            className="rounded-lg h-6 w-6 sm:h-7 sm:w-7 p-0 shadow-lg shadow-primary/10 active:scale-90 transition-transform bg-primary/5 hover:bg-primary text-primary hover:text-white"
+            className="rounded-lg h-6 w-6 sm:h-8 sm:w-8 p-0 shadow-lg shadow-primary/10 active:scale-90 transition-transform bg-primary/5 hover:bg-primary text-primary hover:text-white"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </Button>
         </div>
       </div>
