@@ -78,7 +78,7 @@ export default function CheckoutPage() {
   deliveryDate.setDate(deliveryDate.getDate() + 3);
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] pb-32 sm:pb-8">
+    <div className="min-h-screen bg-[#F8F8F8] pb-32 sm:pb-8 page-transition-wrapper">
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 py-8 md:py-16">
         <h1 className="text-3xl font-black font-headline mb-12 text-gray-900 uppercase tracking-widest">Secure Checkout</h1>

@@ -8,14 +8,14 @@ import {
   User, 
   Package, 
   MapPin, 
-  Heart, 
   LogOut, 
   ChevronRight, 
   Settings, 
   Smartphone, 
   Download, 
   ShieldCheck,
-  SmartphoneNfc
+  SmartphoneNfc,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useUser, useAuth } from '@/firebase';
@@ -24,7 +24,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
 export default function ProfilePage() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -60,6 +60,40 @@ export default function ProfilePage() {
     await signOut(auth);
     router.push('/login');
   };
+
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8]">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#F8F8F8] page-transition-wrapper">
+        <Navbar />
+        <main className="max-w-md mx-auto px-6 py-24 text-center">
+          <div className="w-20 h-20 bg-white rounded-[32px] shadow-xl flex items-center justify-center mx-auto mb-8 border border-gray-50">
+            <User className="w-10 h-10 text-gray-200" />
+          </div>
+          <h1 className="text-2xl font-black uppercase tracking-tight mb-4 text-gray-900">Patient Profile</h1>
+          <p className="text-gray-400 font-bold text-[10px] uppercase tracking-widest mb-10 leading-relaxed max-w-[240px] mx-auto">
+            Login to access order history, clinical records, and saved addresses.
+          </p>
+          <Link href="/login">
+            <Button className="w-full h-16 rounded-full font-black uppercase tracking-widest shadow-2xl shadow-primary/20 text-xs">
+              Login / Register
+            </Button>
+          </Link>
+          <div className="mt-12 flex items-center justify-center gap-2">
+            <ShieldCheck className="w-3 h-3 text-green-500" />
+            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Secured Clinical Portal</span>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] page-transition-wrapper">
