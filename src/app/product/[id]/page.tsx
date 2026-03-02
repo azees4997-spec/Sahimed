@@ -26,7 +26,8 @@ import {
   Wine,
   Baby,
   Car,
-  Heart
+  Heart,
+  Target
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -87,6 +88,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   };
 
   const unitSaving = calculateUnitSaving();
+  const percentageSaved = product && genericSubstitute ? Math.round(((product.price - genericSubstitute.price) / product.price) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] pb-32">
@@ -102,103 +104,116 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <span className="text-primary truncate">{product?.name}</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          {/* Left Column: Image and Substitution */}
-          <div className="lg:col-span-8 space-y-8">
-            <Card className="rounded-[40px] border-none shadow-sm overflow-hidden bg-white p-6 md:p-10">
-              <div className="flex flex-col md:flex-row gap-10">
-                <div className="w-full md:w-1/3 aspect-square relative bg-gray-50 rounded-[32px] overflow-hidden p-6 border border-gray-100/50">
-                  <img src={product?.imageUrl} alt={product?.name} className="w-full h-full object-contain" />
-                </div>
-                <div className="flex-1 space-y-4">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">{product?.manufacturer}</p>
-                    <h1 className="text-3xl font-black text-gray-900 leading-tight uppercase tracking-tighter">{product?.name}</h1>
-                    <p className="text-xs text-gray-400 font-bold italic">{product?.saltComposition}</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="rounded-full px-3 py-1 font-black text-[9px] uppercase tracking-widest bg-gray-50 border-none">
-                      {product?.dosageForm}
-                    </Badge>
-                    <Badge variant="outline" className="rounded-full px-3 py-1 font-black text-[9px] uppercase tracking-widest bg-gray-50 border-none">
-                      {product?.packSize}
-                    </Badge>
-                  </div>
-
-                  <div className="pt-4 flex items-baseline gap-4">
-                    <div className="text-4xl font-black text-gray-900">₹{product?.price}</div>
-                    {product?.mrp && (
-                      <div className="text-lg text-gray-300 line-through font-bold">MRP ₹{product.mrp}</div>
-                    )}
-                  </div>
-                  <p className="text-[10px] font-bold text-gray-400 italic">Inclusive of all taxes</p>
-
-                  <div className="pt-6">
-                    {getQty(product?.id!) > 0 ? (
-                      <div className="flex items-center gap-4 bg-gray-50 p-2 rounded-full w-fit border border-gray-100">
-                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full bg-white shadow-sm" onClick={() => updateQuantity(product?.id!, -1)}><Minus className="w-4 h-4" /></Button>
-                        <span className="font-black text-lg w-8 text-center">{getQty(product?.id!)}</span>
-                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full bg-white shadow-sm" onClick={() => updateQuantity(product?.id!, 1)}><Plus className="w-4 h-4" /></Button>
-                      </div>
-                    ) : (
-                      <Button onClick={() => handleAdd(product)} className="h-14 px-12 rounded-full font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20">Add to Cart</Button>
-                    )}
-                  </div>
-                </div>
+        {/* Salt Composition Banner */}
+        {genericSubstitute && (
+           <div className="mb-8 bg-[#FFF1F2] border border-red-100 rounded-2xl py-4 px-6 text-center animate-in fade-in slide-in-from-top-4">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                 <div className="bg-red-500 rounded-full p-1"><Target className="w-3 h-3 text-white" /></div>
+                 <p className="text-[10px] font-black uppercase tracking-widest text-red-900">Salt Composition in both</p>
               </div>
-            </Card>
+              <h2 className="text-sm font-black text-gray-900 uppercase tracking-tighter">{product?.saltComposition}</h2>
+           </div>
+        )}
 
-            {/* Substitution Box (PlatinumRx Style) */}
-            {genericSubstitute && (
-              <Card className="rounded-[40px] border-2 border-green-100 bg-gradient-to-br from-green-50 to-white overflow-hidden shadow-xl shadow-green-100/50">
-                <div className="p-8 space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-green-600 text-white p-2 rounded-2xl shadow-lg shadow-green-200">
-                        <Zap className="w-5 h-5 fill-white" />
-                      </div>
-                      <h2 className="text-xl font-black text-green-900 uppercase tracking-tight">Substitution Available</h2>
-                    </div>
-                    <Badge className="bg-green-600 text-white font-black text-[10px] uppercase px-4 py-2 rounded-full shadow-lg">Save up to {Math.round(((product!.price - genericSubstitute.price) / product!.price) * 100)}%</Badge>
-                  </div>
-
-                  <div className="flex flex-col md:flex-row gap-8 items-center justify-between bg-white/60 p-6 rounded-[32px] border border-green-100">
-                    <div className="flex items-center gap-6">
-                      <div className="w-20 h-20 bg-white rounded-2xl border border-green-50 p-2 shrink-0">
-                        <img src={genericSubstitute.imageUrl} alt={genericSubstitute.name} className="w-full h-full object-contain" />
-                      </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-12 space-y-12">
+            
+            {/* Side-by-Side Comparison Area */}
+            {genericSubstitute ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+                {/* Branded Card - "You Searched" */}
+                <Card className="rounded-[32px] border-none bg-[#F3F4F6] overflow-hidden flex flex-col p-6 md:p-10">
+                   <p className="text-lg font-black text-gray-900 mb-8">You Searched</p>
+                   <div className="aspect-square w-32 md:w-48 bg-white rounded-[24px] mx-auto mb-10 p-4 shadow-sm relative overflow-hidden">
+                      <img src={product?.imageUrl} alt={product?.name} className="w-full h-full object-contain" />
+                   </div>
+                   <div className="space-y-4 flex-1">
                       <div>
-                        <p className="text-[10px] font-black uppercase text-green-600 tracking-widest mb-1">{genericSubstitute.manufacturer}</p>
-                        <h3 className="text-lg font-black text-gray-900 leading-tight uppercase tracking-tight">{genericSubstitute.name}</h3>
-                        <p className="text-[10px] text-gray-400 font-bold italic">{genericSubstitute.saltComposition}</p>
+                        <h3 className="text-xl md:text-2xl font-black text-gray-900 leading-tight uppercase tracking-tight">{product?.name}</h3>
+                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">{product?.manufacturer}</p>
+                        <p className="text-[10px] text-gray-400 font-bold mt-1">{product?.packSize}</p>
                       </div>
-                    </div>
-                    <div className="text-center md:text-right space-y-2">
-                       <div className="text-3xl font-black text-green-600">₹{genericSubstitute.price}</div>
-                       <p className="text-[10px] font-black text-green-900/40 uppercase tracking-widest">₹{(genericSubstitute.price / parseInt(product?.packSize?.match(/\d+/)?.[0] || '1')).toFixed(2)} / Unit</p>
-                       <Button onClick={() => handleAdd(genericSubstitute)} className="rounded-full bg-green-600 hover:bg-green-700 text-white font-black px-10 h-12 uppercase text-[10px] tracking-widest shadow-lg shadow-green-200">Switch & Add</Button>
-                    </div>
-                  </div>
+                      <div className="pt-6">
+                        <div className="text-3xl font-black text-gray-900">₹{product?.price}</div>
+                        <p className="text-[10px] font-bold text-gray-400 mt-1">₹{(product?.price / parseInt(product?.packSize?.match(/\d+/)?.[0] || '1')).toFixed(1)} / Unit</p>
+                      </div>
+                   </div>
+                </Card>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                     {[
-                       { icon: CheckCircle2, text: "Same clinical salt" },
-                       { icon: ShieldCheck, text: "WHO-GMP Certified" },
-                       { icon: Activity, text: "Identical potency" }
-                     ].map((item, i) => (
-                       <div key={i} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-green-700/60">
-                         <item.icon className="w-3.5 h-3.5" />
-                         {item.text}
-                       </div>
-                     ))}
+                {/* Recommended Card - "Our Recommendation" */}
+                <Card className="rounded-[32px] border-2 border-green-600 bg-white overflow-hidden flex flex-col relative p-6 md:p-10 shadow-2xl shadow-green-100">
+                   {/* Savings Ribbon */}
+                   <div className="absolute top-0 right-0">
+                      <div className="bg-green-600 text-white font-black text-[10px] uppercase px-4 py-2 flex items-center gap-1.5 rounded-bl-2xl shadow-lg">
+                        <Zap className="w-3 h-3 fill-white" />
+                        {percentageSaved}% More Savings
+                      </div>
+                   </div>
+
+                   <p className="text-lg font-black text-green-600 mb-8">Our Recommendation</p>
+                   <div className="aspect-square w-32 md:w-48 bg-gray-50 rounded-[24px] mx-auto mb-10 p-4 relative overflow-hidden">
+                      <img src={genericSubstitute.imageUrl} alt={genericSubstitute.name} className="w-full h-full object-contain" />
+                   </div>
+                   <div className="space-y-4 flex-1">
+                      <div>
+                        <h3 className="text-xl md:text-2xl font-black text-gray-900 leading-tight uppercase tracking-tight">{genericSubstitute.name}</h3>
+                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">{genericSubstitute.manufacturer}</p>
+                        <p className="text-[10px] text-gray-400 font-bold mt-1">{genericSubstitute.packSize}</p>
+                      </div>
+                      <div className="pt-6 flex items-center justify-between gap-4 flex-wrap">
+                        <div>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-3xl font-black text-green-600">₹{genericSubstitute.price}</span>
+                            {product && <span className="text-sm text-gray-300 line-through font-bold">MRP ₹{product.price}</span>}
+                          </div>
+                          <p className="text-[10px] font-bold text-gray-400 mt-1">₹{(genericSubstitute.price / parseInt(genericSubstitute.packSize?.match(/\d+/)?.[0] || '1')).toFixed(1)} / Unit</p>
+                        </div>
+                        <Button onClick={() => handleAdd(genericSubstitute)} className="bg-red-500 hover:bg-red-600 text-white font-black h-12 px-8 rounded-full uppercase tracking-widest text-xs shadow-xl shadow-red-100">Add to Cart</Button>
+                      </div>
+                   </div>
+                </Card>
+              </div>
+            ) : (
+              <Card className="rounded-[40px] border-none shadow-sm overflow-hidden bg-white p-6 md:p-10">
+                <div className="flex flex-col md:flex-row gap-10">
+                  <div className="w-full md:w-1/3 aspect-square relative bg-gray-50 rounded-[32px] overflow-hidden p-6 border border-gray-100/50">
+                    <img src={product?.imageUrl} alt={product?.name} className="w-full h-full object-contain" />
+                  </div>
+                  <div className="flex-1 space-y-4">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">{product?.manufacturer}</p>
+                      <h1 className="text-3xl font-black text-gray-900 leading-tight uppercase tracking-tighter">{product?.name}</h1>
+                      <p className="text-xs text-gray-400 font-bold italic">{product?.saltComposition}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge variant="outline" className="rounded-full px-3 py-1 font-black text-[9px] uppercase tracking-widest bg-gray-50 border-none">
+                        {product?.dosageForm}
+                      </Badge>
+                      <Badge variant="outline" className="rounded-full px-3 py-1 font-black text-[9px] uppercase tracking-widest bg-gray-50 border-none">
+                        {product?.packSize}
+                      </Badge>
+                    </div>
+                    <div className="pt-4 flex items-baseline gap-4">
+                      <div className="text-4xl font-black text-gray-900">₹{product?.price}</div>
+                    </div>
+                    <div className="pt-6">
+                      {getQty(product?.id!) > 0 ? (
+                        <div className="flex items-center gap-4 bg-gray-50 p-2 rounded-full w-fit border border-gray-100">
+                          <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full bg-white shadow-sm" onClick={() => updateQuantity(product?.id!, -1)}><Minus className="w-4 h-4" /></Button>
+                          <span className="font-black text-lg w-8 text-center">{getQty(product?.id!)}</span>
+                          <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full bg-white shadow-sm" onClick={() => updateQuantity(product?.id!, 1)}><Plus className="w-4 h-4" /></Button>
+                        </div>
+                      ) : (
+                        <Button onClick={() => handleAdd(product)} className="h-14 px-12 rounded-full font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20">Add to Cart</Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Card>
             )}
 
-            {/* Clinical Comparison (Uses, Side Effects, How it works) */}
-            <div className="space-y-6">
+            {/* Detailed Clinical Sections (Side-by-Side Comparison) */}
+            <div className="space-y-10">
               <h2 className="text-2xl font-black text-gray-900 uppercase tracking-widest ml-4 flex items-center gap-3">
                 <Stethoscope className="w-6 h-6 text-primary" /> Clinical Comparison
               </h2>
@@ -290,53 +305,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     ))}
                  </div>
               </div>
-            </div>
-          </div>
-
-          {/* Right Column: Savings Callout & Sticky Logic */}
-          <div className="lg:col-span-4">
-            <div className="sticky top-24 space-y-6">
-               <Card className="rounded-[40px] bg-primary p-8 text-white shadow-2xl shadow-primary/40 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 opacity-10 group-hover:scale-110 transition-transform">
-                     <Scale className="w-32 h-32" />
-                  </div>
-                  <CardTitle className="text-sm font-black uppercase tracking-[0.2em] mb-4 text-white/60">Value Insights</CardTitle>
-                  <div className="space-y-6 relative">
-                    {unitSaving && (
-                      <div className="space-y-1">
-                        <div className="text-[10px] font-black uppercase text-accent tracking-widest">Savings per unit</div>
-                        <div className="text-4xl font-black">₹{unitSaving}</div>
-                        <p className="text-[8px] font-bold text-white/60 uppercase tracking-widest"> स्विच करें और पैसे बचाएं</p>
-                      </div>
-                    )}
-                    <div className="pt-6 border-t border-white/10 space-y-4">
-                      <div className="flex items-center gap-3">
-                         <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur">
-                            <ShieldCheck className="w-4 h-4" />
-                         </div>
-                         <p className="text-[9px] font-bold uppercase tracking-widest">100% Genuine Clinical Equivalents</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                         <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur">
-                            <CheckCircle2 className="w-4 h-4" />
-                         </div>
-                         <p className="text-[9px] font-bold uppercase tracking-widest">WHO-GMP Certified Manufacturers</p>
-                      </div>
-                    </div>
-                  </div>
-               </Card>
-
-               <div className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Patient Information</h3>
-                  <div className="space-y-4">
-                     <div className="flex items-start gap-3">
-                        <Info className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                        <p className="text-[10px] font-bold text-gray-500 leading-relaxed uppercase tracking-tight">
-                          Images are for representational purposes only. The actual product may vary in packaging and design.
-                        </p>
-                     </div>
-                  </div>
-               </div>
             </div>
           </div>
         </div>
