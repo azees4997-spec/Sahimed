@@ -37,6 +37,7 @@ export default function Home() {
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
 
+  // Exactly 3 banners as requested
   const heroBanners = PlaceHolderImages.filter(img => img.id.startsWith('hero-')).slice(0, 3);
 
   const getIcon = (name: string) => {
@@ -64,7 +65,7 @@ export default function Home() {
               <CarouselContent>
                 {heroBanners.map((banner, index) => (
                   <CarouselItem key={banner.id}>
-                    <div className="relative rounded-2xl overflow-hidden aspect-[3/2] sm:aspect-[21/9] bg-primary shadow-sm border border-gray-100">
+                    <div className="relative rounded-[32px] overflow-hidden aspect-[3/2] sm:aspect-[21/9] bg-primary shadow-sm border border-gray-100">
                       <Image 
                         src={banner.imageUrl} 
                         alt={banner.description} 
@@ -73,18 +74,18 @@ export default function Home() {
                         data-ai-hint={banner.imageHint}
                         priority={index === 0}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/70 to-transparent flex items-center p-6 sm:p-12">
-                        <div className="max-w-[90%] sm:max-w-[500px] text-white space-y-3">
-                          <span className="inline-block bg-accent text-white text-[8px] sm:text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-[0.2em] shadow-lg">
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/60 to-transparent flex items-center p-8 sm:p-12">
+                        <div className="max-w-[90%] sm:max-w-[500px] text-white space-y-4">
+                          <span className="inline-block bg-accent text-white text-[9px] sm:text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-[0.2em] shadow-lg">
                             {index === 0 ? 'Switch & Save' : index === 1 ? 'Fast Delivery' : 'Clinical Trust'}
                           </span>
-                          <h1 className="text-xl sm:text-4xl font-black font-headline uppercase tracking-tighter leading-[1.1] text-balance">
+                          <h1 className="text-2xl sm:text-5xl font-black font-headline uppercase tracking-tighter leading-[1] text-balance">
                             {banner.description}
                           </h1>
-                          <div className="pt-2">
+                          <div className="pt-4">
                             <Link href="/search">
-                              <Button size="sm" className="rounded-full bg-white text-primary h-9 sm:h-12 px-7 sm:px-10 text-[10px] sm:text-[11px] font-black uppercase tracking-widest hover:bg-gray-50 active:scale-95 transition-all shadow-2xl shadow-black/20">
-                                Shop Now
+                              <Button size="sm" className="rounded-full bg-white text-primary h-10 sm:h-14 px-8 sm:px-12 text-[11px] sm:text-[12px] font-black uppercase tracking-widest hover:bg-gray-50 active:scale-95 transition-all shadow-2xl shadow-black/20">
+                                Browse Catalog
                               </Button>
                             </Link>
                           </div>

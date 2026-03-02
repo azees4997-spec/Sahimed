@@ -4,20 +4,20 @@
     {
       "id": "hero-1",
       "description": "Switch to Generic & Save up to 80% on Clinical Supplies",
-      "imageUrl": "https://picsum.photos/seed/save80/1200/800",
+      "imageUrl": "https://picsum.photos/seed/save82/1200/800",
       "imageHint": "medicine savings"
     },
     {
       "id": "hero-2",
       "description": "Professional Pharmacy Services & Fast Home Delivery",
-      "imageUrl": "https://picsum.photos/seed/pharm1/1200/800",
+      "imageUrl": "https://picsum.photos/seed/pharmacy7/1200/800",
       "imageHint": "pharmacy delivery"
     },
     {
       "id": "hero-3",
       "description": "Expert Pharmacist Review for All Your Prescriptions",
-      "imageUrl": "https://picsum.photos/seed/expert1/1200/800",
-      "imageHint": "pharmacist trust"
+      "imageUrl": "https://picsum.photos/seed/trust1/1200/800",
+      "imageHint": "pharmacist care"
     }
   ]
 }
