@@ -58,15 +58,12 @@ export default function SupervisorConsole() {
   const [password, setPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Strictly gate permission check to prevent crash on load
   const performVerification = async () => {
     if (!db || !user) return;
     setIsVerifying(true);
     try {
-      // Force a fresh read to bypass optimistic local cache
       const snap = await getDoc(doc(db, 'roles_admin', user.uid));
       if (snap.exists()) {
-        // Add propagation delay to ensure rules engine catches up
         setTimeout(() => {
           setIsVerified(true);
           setIsVerifying(false);
@@ -463,7 +460,6 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  // STRICT GATE: Physically refuse to build the query object until verified
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, [db, isVerified]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
   const { toast } = useToast();
@@ -521,7 +517,6 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  // STRICT GATE: Physically refuse to build the query object until verified
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, [db, isVerified]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
   const { toast } = useToast();

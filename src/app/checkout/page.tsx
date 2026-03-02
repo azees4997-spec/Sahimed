@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Truck, ShieldCheck, Plus, CheckCircle2, LocateFixed, Loader2 } from 'lucide-react';
+import { MapPin, Truck, ShieldCheck, Plus, CheckCircle2, LocateFixed, Loader2, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
@@ -39,7 +39,6 @@ export default function CheckoutPage() {
 
     setLoading(true);
     
-    // Create a robust order record including user context for collectionGroup queries
     const orderData = {
       userId: user.uid,
       orderDate: serverTimestamp(),
@@ -57,14 +56,12 @@ export default function CheckoutPage() {
     };
 
     try {
-      // Path: /userProfiles/{userId}/orders
       const orderRef = collection(db, 'userProfiles', user.uid, 'orders');
       addDocumentNonBlocking(orderRef, orderData);
       
       toast({ title: "Order Placed!", description: "Your healthcare needs are on the way." });
       clearCart();
       
-      // Redirect to orders history after a short delay for non-blocking write to propagate
       setTimeout(() => {
         router.push('/orders');
       }, 500);
@@ -80,7 +77,7 @@ export default function CheckoutPage() {
   deliveryDate.setDate(deliveryDate.getDate() + 3);
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8]">
+    <div className="min-h-screen bg-[#F8F8F8] pb-32 sm:pb-8">
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 py-8 md:py-16">
         <h1 className="text-3xl font-black font-headline mb-12 text-gray-900 uppercase tracking-widest">Secure Checkout</h1>
@@ -218,9 +215,11 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <Button onClick={handlePlaceOrder} disabled={loading || cart.length === 0} className="w-full h-16 rounded-full text-lg font-black uppercase tracking-widest shadow-2xl shadow-primary/40 hover:scale-[1.02] transition-all gap-3">
-                {loading ? <Loader2 className="animate-spin" /> : (user ? "Confirm & Pay" : "Login to Checkout")}
-              </Button>
+              <div className="hidden sm:block">
+                <Button onClick={handlePlaceOrder} disabled={loading || cart.length === 0} className="w-full h-16 rounded-full text-lg font-black uppercase tracking-widest shadow-2xl shadow-primary/40 hover:scale-[1.02] transition-all gap-3">
+                  {loading ? <Loader2 className="animate-spin" /> : (user ? "Confirm & Pay" : "Login to Checkout")}
+                </Button>
+              </div>
               
               <div className="mt-10 flex flex-col gap-4">
                  <div className="flex items-center gap-4 text-[10px] font-black uppercase text-gray-400 tracking-widest bg-gray-50 p-5 rounded-[24px] border border-gray-100">
@@ -232,6 +231,28 @@ export default function CheckoutPage() {
           </div>
         </div>
       </main>
+
+      {/* STICKY MOBILE CHECKOUT BAR */}
+      <div className="sm:hidden fixed bottom-[72px] left-0 right-0 z-50 px-4 pb-4 animate-in slide-in-from-bottom-6 duration-500">
+        <div className="bg-primary p-4 rounded-[32px] shadow-2xl shadow-primary/50 flex items-center justify-between gap-4 border border-white/20 backdrop-blur-md bg-primary/95">
+          <div className="pl-2">
+            <p className="text-[10px] font-black text-white/60 uppercase tracking-widest">Grand Total</p>
+            <p className="text-2xl font-black text-white">₹{totalPrice}</p>
+          </div>
+          <Button 
+            onClick={handlePlaceOrder} 
+            disabled={loading || cart.length === 0}
+            className="flex-1 bg-white text-primary hover:bg-gray-100 rounded-full h-14 font-black uppercase text-xs tracking-widest gap-2 shadow-lg"
+          >
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+              <>
+                Confirm & Pay
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

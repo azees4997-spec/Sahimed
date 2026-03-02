@@ -20,7 +20,8 @@ import {
   TrendingDown,
   AlertCircle,
   FlaskConical,
-  Dna
+  Dna,
+  Scale
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,18 +58,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { data: genericAlternatives } = useCollection(genericQuery);
   const genericSubstitute = genericAlternatives?.[0];
 
-  // Suggested Products (Same Category)
-  const suggestedQuery = useMemoFirebase(() => {
-    if (!db || !product) return null;
-    return query(
-      collection(db, 'medicines'),
-      where('category', '==', product.category),
-      limit(5)
-    );
-  }, [db, product]);
-  
-  const { data: suggestedProducts } = useCollection(suggestedQuery);
-
   if (productLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8]">
@@ -90,6 +79,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   };
 
   const getQty = (pid: string) => cart.find(i => i.id === pid)?.quantity || 0;
+
+  // Helper to calculate savings per unit
+  const getUnitSavings = () => {
+    if (!product || !genericSubstitute) return null;
+    const match = product.packSize?.match(/\d+/);
+    if (!match) return null;
+    const units = parseInt(match[0]);
+    const totalSaving = product.price - genericSubstitute.price;
+    return (totalSaving / units).toFixed(2);
+  };
+
+  const unitSaving = getUnitSavings();
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] pb-32">
@@ -218,6 +219,21 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
+        {/* UNIT WISE SAVINGS CALLOUT */}
+        {unitSaving && (
+          <div className="mb-8 animate-in fade-in slide-in-from-top-4">
+            <div className="bg-green-600 rounded-2xl p-4 sm:p-6 text-white flex items-center gap-4 shadow-lg shadow-green-100">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                <Scale className="w-6 h-6 sm:w-8 sm:h-8" />
+              </div>
+              <div>
+                <h3 className="font-black text-xs sm:text-xl uppercase tracking-tight">Save ₹{unitSaving} per unit</h3>
+                <p className="text-[8px] sm:text-sm font-bold text-white/80 uppercase tracking-widest">Switching to generic reduces your medical cost significantly.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* COMPARATIVE PRODUCT DETAILS - FORCED SIDE-BY-SIDE ON MOBILE */}
         <section className="space-y-8">
            {/* Section: Description Comparison */}
@@ -326,18 +342,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </div>
            </div>
         </section>
-
-        {/* Similar Products */}
-        {suggestedProducts && suggestedProducts.length > 1 && (
-          <section className="mt-12 pt-12 border-t">
-            <h3 className="text-xs sm:text-2xl font-black text-gray-900 uppercase tracking-tight mb-6">Similar Medicines in {product?.category}</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
-              {suggestedProducts.filter(p => p.id !== product?.id).map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          </section>
-        )}
       </main>
     </div>
   );
