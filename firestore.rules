@@ -22,8 +22,12 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Specifically allow admins to perform collection-group queries on orders
+    // Specifically allow admins to perform collection-group queries on orders and prescriptions
     match /{path=**}/orders/{orderId} {
+      allow read, list, update: if isAdmin();
+    }
+    
+    match /{path=**}/prescriptions/{prescriptionId} {
       allow read, list, update: if isAdmin();
     }
 
@@ -39,6 +43,11 @@ service cloud.firestore {
         allow read, list: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId);
         allow update: if isAdmin(); 
+      }
+
+      match /prescriptions/{prescriptionId} {
+        allow read, list, create: if isOwner(userId);
+        allow update: if isOwner(userId) || isAdmin();
       }
 
       match /addresses/{addressId} {
