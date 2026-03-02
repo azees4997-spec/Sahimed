@@ -114,7 +114,7 @@ export default function CheckoutPage() {
                 {addressStep === 'select' ? (
                   <RadioGroup value={selectedAddress} onValueChange={setSelectedAddress} className="space-y-4">
                     {[
-                      { id: '1', label: 'Default Hub', addr: 'Select an address after clinical review', phone: 'XXXXXXXXXX' }
+                      { id: '1', label: 'Default Hub', addr: 'Select an address after clinical review', phone: user?.phoneNumber || 'XXXXXXXXXX' }
                     ].map((addr) => (
                       <div key={addr.id} className={`p-6 rounded-[32px] border-2 transition-all cursor-pointer ${selectedAddress === addr.id ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10' : 'border-gray-50 hover:border-gray-200 bg-gray-50/50'}`} onClick={() => setSelectedAddress(addr.id)}>
                         <div className="flex items-start justify-between">

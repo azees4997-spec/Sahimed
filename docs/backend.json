@@ -477,7 +477,7 @@
   },
   "auth": {
     "providers": [
-      "password",
+      "phone",
       "anonymous"
     ]
   },

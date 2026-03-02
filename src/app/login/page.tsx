@@ -1,45 +1,95 @@
+
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ShieldCheck, ArrowLeft, Smartphone, ChevronRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { initiateAnonymousSignIn, useAuth } from '@/firebase';
+import { useAuth } from '@/firebase';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
   const [step, setStep] = useState(1); 
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const router = useRouter();
   const auth = useAuth();
+  const { toast } = useToast();
 
-  const handleSendOtp = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        callback: () => {
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
+        }
+      });
+    }
+  }, [auth]);
+
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phone.length !== 10) return alert("Please enter a valid 10-digit number");
+    if (phone.length !== 10) {
+      toast({ variant: 'destructive', title: 'Invalid Phone', description: 'Please enter a valid 10-digit number.' });
+      return;
+    }
+    
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const appVerifier = window.recaptchaVerifier;
+      const formatPhone = `+91${phone}`;
+      const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
+      setConfirmationResult(result);
       setStep(2);
+      toast({ title: 'OTP Sent', description: `Check your phone for the 6-digit code.` });
+    } catch (err: any) {
+      console.error(err);
+      toast({ variant: 'destructive', title: 'Error', description: err.message || 'Failed to send OTP.' });
+      // Reset reCAPTCHA if it fails
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible'
+        });
+      }
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (otp.length !== 6) {
+      toast({ variant: 'destructive', title: 'Invalid OTP', description: 'Please enter the 6-digit code.' });
+      return;
+    }
+
     setLoading(true);
-    // Simulation: Any OTP works for now, connects to Firebase Anonymous for session
-    initiateAnonymousSignIn(auth);
-    setTimeout(() => {
-      router.push('/');
+    try {
+      if (confirmationResult) {
+        await confirmationResult.confirm(otp);
+        toast({ title: 'Welcome!', description: 'Your session is now active.' });
+        router.push('/');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast({ variant: 'destructive', title: 'Invalid Code', description: 'The OTP entered is incorrect.' });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] flex items-center justify-center p-4">
+      {/* Invisible Recaptcha Container */}
+      <div id="recaptcha-container"></div>
+      
       <Card className="max-w-md w-full rounded-[40px] shadow-2xl border-none overflow-hidden bg-white">
         <CardHeader className="text-center p-12 bg-primary text-white relative">
           <Link href="/" className="absolute top-6 left-6 p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
@@ -81,7 +131,7 @@ export default function LoginPage() {
             <form onSubmit={handleVerifyOtp} className="space-y-6">
               <div className="text-center mb-4">
                 <p className="text-sm text-gray-500">OTP sent to <span className="font-bold text-gray-900">+91 {phone}</span></p>
-                <Button variant="link" onClick={() => setStep(1)} className="text-xs font-bold text-primary p-0 h-auto">Change Number</Button>
+                <Button variant="link" onClick={() => { setStep(1); setOtp(''); }} className="text-xs font-bold text-primary p-0 h-auto">Change Number</Button>
               </div>
               <div>
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 block text-center">Enter 6-digit OTP</label>
@@ -96,9 +146,9 @@ export default function LoginPage() {
                 />
               </div>
               <Button type="submit" disabled={loading} className="w-full h-16 rounded-full font-bold text-lg shadow-lg shadow-primary/20">
-                {loading ? <Loader2 className="animate-spin" /> : "Login to HealthLink"}
+                {loading ? <Loader2 className="animate-spin" /> : "Verify & Login"}
               </Button>
-              <p className="text-center text-xs text-gray-400">Didn't receive code? <Button variant="link" className="text-xs p-0 h-auto text-primary font-bold">Resend OTP</Button></p>
+              <p className="text-center text-xs text-gray-400">Didn't receive code? <Button variant="link" onClick={handleSendOtp} className="text-xs p-0 h-auto text-primary font-bold">Resend OTP</Button></p>
             </form>
           )}
 
