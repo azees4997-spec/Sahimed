@@ -39,7 +39,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { id } = use(params);
   const db = useFirestore();
   const { toast } = useToast();
-  const { addToCart, cart, updateQuantity } = useCart();
+  const { addToCart, cart } = useCart();
 
   const productRef = useMemoFirebase(() => {
     if (!db || !id) return null;
@@ -75,8 +75,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     addToCart(p);
     toast({ title: "Added to cart", description: `${p.name} added.` });
   };
-
-  const getQty = (pid: string) => cart.find(i => i.id === pid)?.quantity || 0;
 
   const getUnitCount = (packSize: string) => {
     const match = packSize?.match(/\d+/);
@@ -131,7 +129,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   <div className="mt-auto pt-4">
                     <div className="text-sm md:text-2xl font-black text-gray-900">₹{product?.price}</div>
                     <p className="text-[7px] md:text-[9px] font-bold text-gray-400">₹{(product?.price / getUnitCount(product?.packSize || '')).toFixed(1)} / Unit</p>
-                    <Button onClick={() => handleAdd(product)} variant="outline" className="w-full h-8 md:h-10 mt-3 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest border-2">Add To Cart</Button>
+                    <Button onClick={() => handleAdd(product)} variant="default" className="w-full h-8 md:h-10 mt-3 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20">Add To Cart</Button>
                   </div>
                 </div>
               </Card>
@@ -245,7 +243,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   { icon: Heart, label: "Liver", text: product?.safetyAdvice?.liver || "Consult Doctor" },
                   { icon: Activity, label: "Kidney", text: product?.safetyAdvice?.kidney || "Caution" }
                 ].map((item, i) => (
-                  <div key={i} className="bg-white p-3 rounded-2xl border border-gray-50 flex items-center gap-3">
+                  <div key={i} className="bg-white p-3 rounded-2xl border border-gray-100 flex items-center gap-3">
                     <div className="bg-gray-50 p-1.5 rounded-lg shrink-0">
                       <item.icon className="w-3 h-3 text-gray-400" />
                     </div>
