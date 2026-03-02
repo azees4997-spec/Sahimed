@@ -93,9 +93,9 @@ export default function Navbar() {
   const manualLocations = ["Mumbai, MH", "Delhi, DL", "Bangalore, KA"];
 
   const NavItem = ({ href, icon: Icon, label, active }: { href: string, icon: any, label: string, active: boolean }) => (
-    <Link href={href} className={`flex flex-col items-center justify-center gap-1 transition-all ${active ? 'text-primary' : 'text-gray-400'}`}>
+    <Link href={href} className={`flex flex-col items-center justify-center flex-1 gap-1 transition-all active:scale-90 ${active ? 'text-primary' : 'text-gray-400'}`}>
       <Icon className={`w-6 h-6 ${active ? 'fill-primary/10' : ''}`} />
-      <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
+      <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
     </Link>
   );
 
@@ -110,7 +110,7 @@ export default function Navbar() {
                 <div className="bg-primary p-1.5 rounded-xl shadow-lg shadow-primary/20">
                   <div className="text-white font-bold text-sm sm:text-xl tracking-tighter">HL</div>
                 </div>
-                <span className="hidden sm:block font-black text-xl text-primary font-headline tracking-tight">HealthLink</span>
+                <span className="hidden sm:block font-black text-xl text-primary font-headline tracking-tight text-nowrap">HealthLink</span>
               </Link>
 
               <Popover>
@@ -151,7 +151,7 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-1 sm:gap-3">
-              <Link href="/cart" className="relative p-2.5 hover:bg-gray-100 rounded-2xl">
+              <Link href="/cart" className="relative p-2.5 hover:bg-gray-100 rounded-2xl active:scale-95 transition-transform">
                 <ShoppingCart className="w-6 h-6 text-gray-700" />
                 {totalItems > 0 && (
                   <span className="absolute top-1.5 right-1.5 bg-accent text-white text-[9px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-white">
@@ -170,7 +170,7 @@ export default function Navbar() {
             <form onSubmit={handleSearch} className="relative group">
               <Input
                 type="text"
-                placeholder="Search medicines, salts, generic alternatives..."
+                placeholder="Search medicines, salts, generics..."
                 className="w-full pl-12 pr-4 py-2 rounded-full border-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all bg-gray-100 h-12 sm:h-14 font-bold text-sm shadow-inner"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -211,15 +211,20 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Navigation */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t safe-bottom z-50 shadow-2xl">
-        <div className="flex justify-around items-center h-16">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t safe-bottom z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.08)]">
+        <div className="flex justify-around items-center h-16 px-2">
           <NavItem href="/" icon={Home} label="Home" active={pathname === '/'} />
           <NavItem href="/search" icon={SearchIcon} label="Explore" active={pathname === '/search'} />
-          <Link href="/prescription" className="-mt-12">
-            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white shadow-2xl shadow-primary/40 border-4 border-white active:scale-90 transition-all">
-              <Upload className="w-7 h-7" />
-            </div>
-          </Link>
+          
+          <div className="relative flex justify-center flex-1 h-full">
+            <Link href="/prescription" className="absolute -top-10 flex items-center justify-center">
+              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white shadow-[0_10px_25px_rgba(30,58,138,0.4)] border-4 border-white active:scale-90 transition-all group">
+                <Upload className="w-7 h-7 group-hover:animate-bounce" />
+              </div>
+            </Link>
+            <span className="self-end pb-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Scan</span>
+          </div>
+
           <NavItem href="/orders" icon={Package} label="Orders" active={pathname === '/orders'} />
           <NavItem href="/profile" icon={User} label="Profile" active={pathname === '/profile'} />
         </div>
