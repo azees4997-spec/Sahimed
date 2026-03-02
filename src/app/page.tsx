@@ -49,58 +49,66 @@ export default function Home() {
       <Navbar />
 
       <main className="flex-1 pb-10">
-        {/* Banner Slider */}
-        <section className="bg-white py-1">
+        {/* Banner Slider - High Density */}
+        <section className="bg-white py-2">
           <div className="max-w-7xl mx-auto px-4">
-            <Carousel className="w-full" opts={{ loop: true }}>
+            <Carousel className="w-full" opts={{ loop: true, align: 'start' }}>
               <CarouselContent>
-                {heroBanners.map((banner, index) => (
+                {heroBanners.length > 0 ? heroBanners.map((banner, index) => (
                   <CarouselItem key={banner.id}>
                     <div className="relative rounded-2xl overflow-hidden aspect-[16/7] bg-primary shadow-sm">
                       <Image 
                         src={banner.imageUrl} 
                         alt={banner.description} 
                         fill 
-                        className="object-cover opacity-70"
+                        className="object-cover opacity-80"
                         data-ai-hint={banner.imageHint}
                         priority={index === 0}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/10 to-transparent flex items-center p-5">
-                        <div className="max-w-[180px] text-white">
-                          <span className="inline-block bg-accent text-white text-[6px] font-black px-1.5 py-0.5 rounded-full mb-1.5 uppercase tracking-widest">
-                            {index === 1 ? 'SWITCH & SAVE 80%' : 'TRUSTED PHARMACY'}
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/30 to-transparent flex items-center p-6">
+                        <div className="max-w-[200px] text-white">
+                          <span className="inline-block bg-accent text-white text-[7px] font-black px-2 py-0.5 rounded-full mb-2 uppercase tracking-widest">
+                            {index === 1 ? 'SWITCH & SAVE 80%' : 'CLINICAL GRADE'}
                           </span>
-                          <h1 className="text-xl font-black font-headline mb-2 uppercase tracking-tighter leading-tight">
-                            {index === 0 ? 'Professional Clinical Care.' : index === 1 ? 'Quality Generics Delivered.' : 'Pharmacist Verified Hub.'}
+                          <h1 className="text-xl font-black font-headline mb-3 uppercase tracking-tighter leading-tight">
+                            {banner.description}
                           </h1>
                           <Link href="/search">
-                            <Button size="sm" className="rounded-full bg-white text-primary h-8 px-5 text-[8px] font-black uppercase tracking-widest hover:bg-gray-50 active:scale-95 transition-all shadow-lg">Shop Now</Button>
+                            <Button size="sm" className="rounded-full bg-white text-primary h-9 px-6 text-[9px] font-black uppercase tracking-widest hover:bg-gray-50 active:scale-95 transition-all shadow-xl">Shop Now</Button>
                           </Link>
                         </div>
                       </div>
                     </div>
                   </CarouselItem>
-                ))}
+                )) : (
+                  <CarouselItem>
+                    <div className="w-full aspect-[16/7] bg-gray-100 rounded-2xl flex items-center justify-center">
+                      <Loader2 className="animate-spin text-primary" />
+                    </div>
+                  </CarouselItem>
+                )}
               </CarouselContent>
             </Carousel>
           </div>
         </section>
 
         {/* Scan Prescription Quick Action */}
-        <section className="py-1">
+        <section className="py-2">
           <div className="max-w-7xl mx-auto px-4">
              <Link href="/prescription">
-                <Button className="w-full h-14 rounded-xl bg-white border border-gray-100 text-primary hover:bg-primary/5 shadow-sm flex items-center justify-between px-5 group active:scale-[0.98] transition-all">
+                <Button className="w-full h-16 rounded-2xl bg-white border border-gray-100 text-primary hover:bg-primary/5 shadow-sm flex items-center justify-between px-5 group active:scale-[0.98] transition-all">
                   <div className="flex items-center gap-4">
-                    <div className="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                      <Camera className="w-4 h-4" />
+                    <div className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <Camera className="w-5 h-5" />
                     </div>
                     <div className="text-left">
-                      <p className="font-black text-[10px] uppercase tracking-tight text-gray-900">Scan Prescription</p>
-                      <p className="text-[7px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Verified Review in 30 Mins</p>
+                      <p className="font-black text-[11px] uppercase tracking-tight text-gray-900">Scan Prescription</p>
+                      <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Verified Review in 15 Mins</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-primary/30" />
+                  <div className="bg-primary/5 p-2 rounded-full">
+                    <ChevronRight className="w-4 h-4 text-primary" />
+                  </div>
                 </Button>
              </Link>
           </div>
@@ -109,19 +117,19 @@ export default function Home() {
         {/* Therapy Hub */}
         <section className="py-4">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="flex items-center justify-between mb-3 px-1">
-              <h2 className="text-[9px] font-black text-gray-900 uppercase tracking-widest">Therapeutic Specialities</h2>
+            <div className="flex items-center justify-between mb-4 px-1">
+              <h2 className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Therapeutic Specialities</h2>
             </div>
             {catsLoading ? (
               <div className="flex justify-center p-4"><Loader2 className="w-4 h-4 animate-spin text-primary" /></div>
             ) : (
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5">
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
                 {categories?.map((cat: any) => (
                   <Link key={cat.id} href={`/search?c=${cat.name}`} className="group flex flex-col items-center active:scale-90 transition-transform">
-                    <div className="w-full aspect-square bg-white rounded-xl flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-50 p-2.5 group-hover:shadow-md transition-shadow">
+                    <div className="w-full aspect-square bg-white rounded-2xl flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-50 p-3 group-hover:shadow-lg transition-all">
                       {getIcon(cat.name)}
                     </div>
-                    <h3 className="font-bold text-[7px] text-gray-400 uppercase tracking-tighter truncate w-full text-center px-0.5">{cat.name}</h3>
+                    <h3 className="font-black text-[8px] text-gray-400 uppercase tracking-tighter truncate w-full text-center px-0.5">{cat.name}</h3>
                   </Link>
                 ))}
               </div>
@@ -130,16 +138,16 @@ export default function Home() {
         </section>
 
         {/* Clinical Top Deals */}
-        <section className="py-6 bg-white border-t border-gray-100 mt-2 rounded-t-[40px] shadow-2xl">
+        <section className="py-8 bg-white border-t border-gray-100 mt-4 rounded-t-[40px] shadow-2xl">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="flex items-center justify-between mb-5 px-1">
-              <h2 className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Clinical Top Deals</h2>
-              <Link href="/search" className="text-[8px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5">View All <ChevronRight className="w-2.5 h-2.5" /></Link>
+            <div className="flex items-center justify-between mb-6 px-1">
+              <h2 className="text-[11px] font-black text-gray-900 uppercase tracking-widest">Clinical Top Deals</h2>
+              <Link href="/search" className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5">View All <ChevronRight className="w-3 h-3" /></Link>
             </div>
             {medsLoading ? (
               <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {medicines?.map((p: any) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
@@ -149,13 +157,13 @@ export default function Home() {
         </section>
 
         {/* Clinical Trust Banner */}
-        <section className="py-8 pb-24">
+        <section className="py-12 pb-32">
           <div className="max-w-7xl mx-auto px-4 text-center">
-            <div className="inline-flex items-center gap-2 bg-green-50 text-green-600 px-4 py-1.5 rounded-full mb-2">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span className="text-[7px] font-black uppercase tracking-widest">Pharmacist Verified Distribution</span>
+            <div className="inline-flex items-center gap-2 bg-green-50 text-green-600 px-5 py-2 rounded-full mb-3 shadow-sm">
+              <ShieldCheck className="w-4 h-4" />
+              <span className="text-[8px] font-black uppercase tracking-widest">Pharmacist Verified Distribution</span>
             </div>
-            <p className="text-[7px] text-gray-400 font-bold uppercase tracking-widest opacity-60">High-Purity Supply Chain Management</p>
+            <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest opacity-60">High-Purity Supply Chain Management • sahimed.com</p>
           </div>
         </section>
       </main>

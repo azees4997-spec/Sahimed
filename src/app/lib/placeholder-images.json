@@ -3,57 +3,27 @@
   "placeholderImages": [
     {
       "id": "hero-1",
-      "description": "Healthcare banner showing professional pharmacy services",
-      "imageUrl": "https://picsum.photos/seed/health1/1200/400",
-      "imageHint": "pharmacy healthcare"
+      "description": "Professional Clinical Pharmacy Services",
+      "imageUrl": "https://picsum.photos/seed/pharm1/1200/500",
+      "imageHint": "pharmacy medical"
     },
     {
       "id": "hero-2",
-      "description": "Switch to generic and save big",
-      "imageUrl": "https://picsum.photos/seed/save80/1200/400",
+      "description": "Switch to Generic & Save up to 80%",
+      "imageUrl": "https://picsum.photos/seed/save80/1200/500",
       "imageHint": "medicine savings"
     },
     {
       "id": "hero-3",
-      "description": "Fast home delivery of clinical supplies",
-      "imageUrl": "https://picsum.photos/seed/delivery/1200/400",
-      "imageHint": "delivery van"
+      "description": "Reliable Home Delivery of Clinical Supplies",
+      "imageUrl": "https://picsum.photos/seed/delivery1/1200/500",
+      "imageHint": "delivery truck"
     },
     {
-      "id": "cat-chronic",
-      "description": "Medicine for chronic conditions",
-      "imageUrl": "https://picsum.photos/seed/chronic/400/400",
-      "imageHint": "pills medicine"
-    },
-    {
-      "id": "cat-wellness",
-      "description": "Wellness and vitamins",
-      "imageUrl": "https://picsum.photos/seed/wellness/400/400",
-      "imageHint": "vitamins supplements"
-    },
-    {
-      "id": "cat-baby",
-      "description": "Baby care products",
-      "imageUrl": "https://picsum.photos/seed/baby/400/400",
-      "imageHint": "baby care"
-    },
-    {
-      "id": "med-1",
-      "description": "Aspirin pack",
-      "imageUrl": "https://picsum.photos/seed/med1/300/300",
-      "imageHint": "aspirin box"
-    },
-    {
-      "id": "med-2",
-      "description": "Generic Paracetamol",
-      "imageUrl": "https://picsum.photos/seed/med2/300/300",
-      "imageHint": "paracetamol tablets"
-    },
-    {
-      "id": "med-3",
-      "description": "Premium Painkiller",
-      "imageUrl": "https://picsum.photos/seed/med3/300/300",
-      "imageHint": "medicine bottle"
+      "id": "hero-4",
+      "description": "Pharmacist Verified Hub for Chronic Care",
+      "imageUrl": "https://picsum.photos/seed/trust1/1200/500",
+      "imageHint": "pharmacist verified"
     }
   ]
 }
