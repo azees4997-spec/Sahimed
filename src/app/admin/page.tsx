@@ -58,23 +58,25 @@ export default function SupervisorConsole() {
   const [password, setPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
+  // Strictly gate permission check to prevent crash on load
   const performVerification = async () => {
     if (!db || !user) return;
     setIsVerifying(true);
     try {
       const snap = await getDoc(doc(db, 'roles_admin', user.uid));
       if (snap.exists()) {
-        // Add a small buffer for security rules propagation
+        // Add a small buffer for security rules propagation to prevent race conditions
         setTimeout(() => {
           setIsVerified(true);
           setIsVerifying(false);
-          toast({ title: "Verification Successful", description: "Operational context established." });
-        }, 1000);
+          toast({ title: "Identity Verified", description: "Operational console unlocked." });
+        }, 1500);
       } else {
         setIsVerified(false);
         setIsVerifying(false);
       }
     } catch (err) {
+      console.error("Verification error:", err);
       setIsVerified(false);
       setIsVerifying(false);
     }
@@ -92,7 +94,7 @@ export default function SupervisorConsole() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Access Denied', description: 'Invalid supervisor credentials.' });
+      toast({ variant: 'destructive', title: 'Login Failed', description: 'Invalid clinical credentials.' });
     } finally {
       setAuthLoading(false);
     }
@@ -110,15 +112,15 @@ export default function SupervisorConsole() {
       role: 'admin',
       activatedAt: new Date().toISOString()
     }, { merge: true });
-    toast({ title: 'Role Requested', description: 'Syncing with secure server... please wait 2 seconds.' });
-    setTimeout(performVerification, 2000);
+    toast({ title: 'Elevating Account', description: 'Registering supervisor role... please wait 3 seconds.' });
+    setTimeout(performVerification, 3000);
   };
 
   if (isUserLoading || isVerifying) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F7F6] gap-4">
         <Loader2 className="w-12 h-12 animate-spin text-primary" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Verifying Operational Context...</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Synchronizing Clinical Permissions...</p>
       </div>
     );
   }
@@ -131,21 +133,21 @@ export default function SupervisorConsole() {
             <div className="w-20 h-20 bg-white/20 rounded-[32px] flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
               <Lock className="w-10 h-10" />
             </div>
-            <CardTitle className="text-3xl font-black uppercase tracking-tight text-white">Supervisor Login</CardTitle>
-            <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Secure Gateway</CardDescription>
+            <CardTitle className="text-3xl font-black uppercase tracking-tight text-white">Clinical Gateway</CardTitle>
+            <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Verified Personnel Only</CardDescription>
           </CardHeader>
           <CardContent className="p-10">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Email</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Username</Label>
                 <Input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Secret Key</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Access Key</Label>
                 <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
               </div>
               <Button type="submit" disabled={authLoading} className="w-full h-16 rounded-full font-black uppercase tracking-widest shadow-2xl shadow-primary/20 mt-4">
-                {authLoading ? <Loader2 className="animate-spin" /> : "Verify Identity"}
+                {authLoading ? <Loader2 className="animate-spin" /> : "Initiate Verification"}
               </Button>
             </form>
           </CardContent>
@@ -162,8 +164,8 @@ export default function SupervisorConsole() {
             <ShieldAlert className="w-12 h-12 text-orange-500" />
           </div>
           <div>
-            <h2 className="text-2xl font-black uppercase tracking-tight mb-2 text-gray-900">Privileges Required</h2>
-            <p className="text-gray-400 text-sm font-bold uppercase tracking-widest">Account ID: {user.uid.substring(0,8)}</p>
+            <h2 className="text-2xl font-black uppercase tracking-tight mb-2 text-gray-900">Access Restricted</h2>
+            <p className="text-gray-400 text-sm font-bold uppercase tracking-widest leading-relaxed">This terminal requires Supervisor Privileges. Would you like to initialize this account as an Administrator?</p>
           </div>
           <div className="space-y-4 pt-8 border-t">
             <Button onClick={bootstrapAdmin} className="w-full gap-3 rounded-full h-16 bg-orange-600 hover:bg-orange-700 shadow-xl shadow-orange-100 uppercase font-black text-xs tracking-widest">
@@ -242,17 +244,17 @@ function SeedDataButton({ db }: { db: any }) {
       }
 
       const medicines = [
-        { name: 'Janumet 50/500', price: 1250, saltComposition: 'Sitagliptin + Metformin', manufacturer: 'MSD', isGeneric: false, category: 'Diabetes', imageUrl: 'https://picsum.photos/seed/dia1/300/300', availableQuantity: 100, description: 'Premium glycemic control.' },
-        { name: 'Sitagliptin Generic', price: 240, saltComposition: 'Sitagliptin + Metformin', manufacturer: 'HealthLink', isGeneric: true, category: 'Diabetes', imageUrl: 'https://picsum.photos/seed/dia2/300/300', availableQuantity: 500, description: 'Affordable glycemic control.' },
-        { name: 'Atorva 20mg', price: 450, saltComposition: 'Atorvastatin', manufacturer: 'Zydus', isGeneric: false, category: 'Heart Care', imageUrl: 'https://picsum.photos/seed/hrt1/300/300', availableQuantity: 80, description: 'Lipid regulator.' },
-        { name: 'Atorvastatin Gen', price: 85, saltComposition: 'Atorvastatin', manufacturer: 'PureLabs', isGeneric: true, category: 'Heart Care', imageUrl: 'https://picsum.photos/seed/hrt2/300/300', availableQuantity: 1000, description: 'Generic lipid regulator.' }
+        { name: 'Janumet 50/500', price: 1250, saltComposition: 'Sitagliptin + Metformin', manufacturer: 'MSD', isGeneric: false, category: 'Diabetes', imageUrl: 'https://picsum.photos/seed/dia1/300/300', availableQuantity: 100, description: 'Premium glycemic control used for T2 Diabetes.' },
+        { name: 'Sitagliptin Generic', price: 240, saltComposition: 'Sitagliptin + Metformin', manufacturer: 'HealthLink', isGeneric: true, category: 'Diabetes', imageUrl: 'https://picsum.photos/seed/dia2/300/300', availableQuantity: 500, description: 'Affordable bio-equivalent for blood sugar control.' },
+        { name: 'Atorva 20mg', price: 450, saltComposition: 'Atorvastatin', manufacturer: 'Zydus', isGeneric: false, category: 'Heart Care', imageUrl: 'https://picsum.photos/seed/hrt1/300/300', availableQuantity: 80, description: 'High-quality lipid regulator.' },
+        { name: 'Atorvastatin Generic', price: 85, saltComposition: 'Atorvastatin', manufacturer: 'PureLabs', isGeneric: true, category: 'Heart Care', imageUrl: 'https://picsum.photos/seed/hrt2/300/300', availableQuantity: 1000, description: 'Verified generic cholesterol management.' }
       ];
 
       for (const med of medicines) {
         await addDocumentNonBlocking(collection(db, 'medicines'), med);
       }
 
-      toast({ title: "Database Seeded", description: "Sample catalog and categories established." });
+      toast({ title: "Database Seeded", description: "Clinical catalog and categories initialized." });
     } catch (e) {
       toast({ variant: 'destructive', title: "Seeding Failed" });
     } finally {
@@ -270,7 +272,7 @@ function SeedDataButton({ db }: { db: any }) {
 
 function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab) => void, isVerified: boolean }) {
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
-  // Strictly gate collectionGroup queries
+  // Gated queries
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
 
@@ -280,11 +282,11 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
 
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
-      <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase">Operational Status</h1>
+      <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase">Clinical Status</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {[
-          { label: 'Clinical SKUs', icon: Package, count: meds?.length || 0, tab: 'inventory' as AdminTab },
-          { label: 'Patient Enquiries', icon: FileText, count: pres?.length || 0, tab: 'enquiries' as AdminTab },
+          { label: 'Medicine SKUs', icon: Package, count: meds?.length || 0, tab: 'inventory' as AdminTab },
+          { label: 'User Enquiries', icon: FileText, count: pres?.length || 0, tab: 'enquiries' as AdminTab },
           { label: 'Active Orders', icon: ShoppingBag, count: orders?.filter(o => o.status !== 'Delivered').length || 0, tab: 'fulfillment' as AdminTab },
         ].map(card => (
           <Card key={card.label} className="rounded-[40px] p-10 border-none shadow-sm hover:shadow-2xl transition-all cursor-pointer bg-white group" onClick={() => setTab(card.tab)}>
@@ -312,10 +314,10 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-black uppercase text-gray-900">Clinical Inventory</h2>
+        <h2 className="text-3xl font-black uppercase text-gray-900">Medical Inventory</h2>
         <div className="relative w-72">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input placeholder="Filter catalog..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-12 rounded-full border-none shadow-inner bg-white font-bold" />
+          <Input placeholder="Filter medicines..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-12 rounded-full border-none shadow-inner bg-white font-bold" />
         </div>
       </div>
 
@@ -324,8 +326,8 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
               <tr>
-                <th className="px-10 py-8">Medication Identity</th>
-                <th className="px-10 py-8">Salt</th>
+                <th className="px-10 py-8">Product Identity</th>
+                <th className="px-10 py-8">Composition</th>
                 <th className="px-10 py-8 text-center">Unit Price</th>
                 <th className="px-10 py-8 text-center">Stock</th>
                 <th className="px-10 py-8 text-right">Actions</th>
@@ -338,12 +340,12 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                 <tr key={med.id} className="hover:bg-gray-50/50 group transition-colors">
                   <td className="px-10 py-10">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gray-50 p-2 flex items-center justify-center shrink-0">
+                      <div className="w-12 h-12 rounded-xl bg-gray-50 p-2 flex items-center justify-center shrink-0 overflow-hidden">
                         <img src={med.imageUrl} alt="" className="max-w-full max-h-full object-contain" />
                       </div>
                       <div className="flex flex-col">
                         <span className="font-black text-gray-900">{med.name}</span>
-                        <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{med.manufacturer}</span>
+                        <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{med.manufacturer} {med.isGeneric ? '(Generic)' : '(Branded)'}</span>
                       </div>
                     </div>
                   </td>
@@ -359,7 +361,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                   <td className="px-10 py-10 text-right">
                     <Button variant="ghost" size="icon" className="text-gray-300 hover:text-red-500 rounded-full" onClick={() => {
                       deleteDocumentNonBlocking(doc(db, 'medicines', med.id));
-                      toast({ title: "SKU Removed", description: "Item purged from inventory." });
+                      toast({ title: "Product Removed", description: "SKU purged from database." });
                     }}>
                       <Trash2 className="w-5 h-5" />
                     </Button>
@@ -382,12 +384,12 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   const updateStatus = (enquiry: any, status: string) => {
     const ref = doc(db, 'userProfiles', enquiry.userId, 'prescriptions', enquiry.id);
     updateDocumentNonBlocking(ref, { status });
-    toast({ title: "Status Updated", description: `Enquiry marked as ${status}.` });
+    toast({ title: "Enquiry Updated", description: `Marked as ${status}.` });
   };
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4">
-      <h2 className="text-3xl font-black uppercase text-gray-900">Clinical Enquiries</h2>
+      <h2 className="text-3xl font-black uppercase text-gray-900">User Prescription Enquiries</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {isLoading ? (
           <div className="col-span-full py-24 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
@@ -401,24 +403,24 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
              </div>
              <CardContent className="p-8 flex-1 flex flex-col justify-between">
                 <div className="mb-6">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Patient Identity</p>
-                  <p className="text-sm font-black text-gray-900 truncate">USR_{enq.userId.substring(0,8).toUpperCase()}</p>
-                  <p className="text-[10px] text-gray-400 mt-1 font-bold">{enq.uploadDate?.toDate ? enq.uploadDate.toDate().toLocaleString() : 'Processing...'}</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">User Reference</p>
+                  <p className="text-sm font-black text-gray-900 truncate">PATIENT_{enq.userId.substring(0,8).toUpperCase()}</p>
+                  <p className="text-[10px] text-gray-400 mt-1 font-bold">{enq.uploadDate?.toDate ? enq.uploadDate.toDate().toLocaleString() : 'Just now'}</p>
                 </div>
                 <div className="flex gap-3">
                   {enq.status === 'Pending Review' ? (
-                    <Button onClick={() => updateStatus(enq, 'Processing')} className="flex-1 rounded-full h-12 font-black uppercase text-[10px] tracking-widest">Acknowledge</Button>
+                    <Button onClick={() => updateStatus(enq, 'Acknowledged')} className="flex-1 rounded-full h-12 font-black uppercase text-[10px] tracking-widest">Acknowledge</Button>
                   ) : (
-                    <Button disabled className="flex-1 rounded-full h-12 font-black uppercase text-[10px] tracking-widest opacity-50">Verified</Button>
+                    <Button disabled className="flex-1 rounded-full h-12 font-black uppercase text-[10px] tracking-widest opacity-50">Processed</Button>
                   )}
-                  <Button variant="outline" className="flex-1 rounded-full h-12 font-black uppercase text-[10px] tracking-widest border-2">Full Scan</Button>
+                  <Button variant="outline" className="flex-1 rounded-full h-12 font-black uppercase text-[10px] tracking-widest border-2">Detail View</Button>
                 </div>
              </CardContent>
           </Card>
         )) : (
           <div className="col-span-full py-24 text-center bg-white rounded-[40px] border border-dashed">
             <FileText className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-            <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">No pending enquiries</p>
+            <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Queue Clear</p>
           </div>
         )}
       </div>
@@ -444,10 +446,10 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
             <tr>
-              <th className="px-10 py-8">Tracking Reference</th>
-              <th className="px-10 py-8">Payload Summary</th>
-              <th className="px-10 py-8 text-center">Revenue</th>
-              <th className="px-10 py-8 text-right">Logistics Action</th>
+              <th className="px-10 py-8">Order ID</th>
+              <th className="px-10 py-8">Content Summary</th>
+              <th className="px-10 py-8 text-center">Total</th>
+              <th className="px-10 py-8 text-right">Logistics</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -459,7 +461,7 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                 <td className="px-10 py-10">
                   <div className="flex flex-col gap-1">
                     <Badge variant="outline" className="rounded-full px-4 border-primary/20 text-primary w-fit font-bold text-[10px]">
-                      {order.items?.length || 0} Clinical SKUs
+                      {order.items?.length || 0} Medicine Items
                     </Badge>
                     <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest">{order.status}</span>
                   </div>
@@ -485,7 +487,7 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                 </td>
               </tr>
             )) : (
-              <tr><td colSpan={4} className="p-24 text-center text-gray-400 font-bold uppercase text-[10px] tracking-widest">No orders in pipeline</td></tr>
+              <tr><td colSpan={4} className="p-24 text-center text-gray-400 font-bold uppercase text-[10px] tracking-widest">Pipeline Empty</td></tr>
             )}
           </tbody>
         </table>

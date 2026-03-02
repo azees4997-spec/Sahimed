@@ -1,3 +1,4 @@
+
 "use client"
 
 import { use, useState, useEffect } from 'react';
@@ -41,6 +42,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { data: product, isLoading: productLoading } = useDoc(productRef);
 
   // Fetch Generic Alternative (Bio-equivalent)
+  // We search for products with the same salt composition but flagged as generic
   const genericQuery = useMemoFirebase(() => {
     if (!db || !product || product.isGeneric) return null;
     return query(
@@ -59,7 +61,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     if (!db || !product) return null;
     return query(
       collection(db, 'medicines'),
-      where('categoryId', '==', product.categoryId),
+      where('category', '==', product.category),
       limit(5)
     );
   }, [db, product]);
@@ -77,24 +79,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     );
   }
 
-  // Final check for notFound after loading completes
   if (!product && !productLoading) {
     return notFound();
   }
 
   const handleAdd = (p: any) => {
     addToCart(p);
-    toast({ title: "Prescription Added", description: `${p.name} added to your cart.` });
+    toast({ title: "Item Added", description: `${p.name} added to your cart.` });
   };
 
   const getQty = (pid: string) => cart.find(i => i.id === pid)?.quantity || 0;
-
-  const getUnitPrice = (p: any) => {
-    const packSize = p.packSize || "10 units";
-    const match = packSize.match(/(\d+)/);
-    const count = match ? parseInt(match[0]) : 10;
-    return (p.price / count).toFixed(2);
-  };
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] pb-24 sm:pb-12">
@@ -104,7 +98,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <div className="flex items-center justify-between mb-6">
           <Link href="/" className="flex items-center gap-1 text-primary hover:opacity-80 transition-all">
             <ChevronLeft className="w-5 h-5" />
-            <span className="text-[10px] font-black uppercase tracking-widest">Storefront</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">Back to Hub</span>
           </Link>
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
             <span>{product?.category}</span>
@@ -119,7 +113,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <Activity className="w-6 h-6 text-accent" />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/60">Molecular Salt</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/60">Active Composition</p>
               <h2 className="font-black text-lg sm:text-xl">{product?.saltComposition}</h2>
             </div>
           </div>
@@ -128,134 +122,138 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </Badge>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-8">
-          {/* Main Item */}
-          <div className="space-y-4 sm:space-y-6">
-            <div className="bg-white rounded-[32px] sm:rounded-[48px] p-4 sm:p-10 shadow-sm border border-gray-100 flex flex-col h-full relative group">
-               <div className="mb-4">
-                  <Badge variant="outline" className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest bg-gray-50 border-gray-100 px-3 py-1 rounded-full text-gray-400">
-                    {product?.isGeneric ? "Generic Version" : "Selected Brand"}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Main Item Detail */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100 flex flex-col group h-full">
+               <div className="mb-6">
+                  <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-gray-50 border-gray-100 px-4 py-1 rounded-full text-gray-400">
+                    {product?.isGeneric ? "Generic Clinical Version" : "Prescribed Brand"}
                   </Badge>
                </div>
-               <div className="flex flex-col items-center text-center gap-4 flex-1">
-                  <div className="w-full aspect-square relative bg-gray-50 rounded-[24px] sm:rounded-[40px] overflow-hidden p-4 sm:p-8">
+               <div className="flex flex-col items-center text-center gap-6 flex-1">
+                  <div className="w-full aspect-square relative bg-gray-50 rounded-[32px] overflow-hidden p-8">
                     <img src={product?.imageUrl} alt={product?.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <div className="w-full">
-                    <h1 className="text-sm sm:text-2xl font-black text-gray-900 mb-1 leading-tight">{product?.name}</h1>
-                    <p className="text-[8px] sm:text-xs font-bold text-gray-400 mb-3 uppercase tracking-widest">{product?.manufacturer}</p>
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <span className="text-lg sm:text-3xl font-black text-gray-900">₹{product?.price}</span>
-                    </div>
-                    <div className="text-[9px] sm:text-xs font-black text-primary uppercase tracking-widest bg-primary/5 py-1.5 px-4 rounded-full inline-block">
-                      ₹{getUnitPrice(product)} / unit
-                    </div>
+                    <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2 leading-tight">{product?.name}</h1>
+                    <p className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest">Manufacturer: {product?.manufacturer}</p>
+                    <div className="text-4xl font-black text-primary mb-6">₹{product?.price}</div>
                   </div>
                </div>
                <div className="mt-6 pt-6 border-t border-gray-50">
                   {getQty(product?.id!) > 0 ? (
-                    <div className="flex items-center justify-between border-2 border-primary rounded-full h-12 sm:h-16 px-2 bg-primary/5">
-                      <Button variant="ghost" size="icon" className="w-8 h-8 sm:w-12 sm:h-12 rounded-full hover:bg-primary hover:text-white" onClick={() => updateQuantity(product?.id!, -1)}>
-                        <Minus className="w-4 h-4" />
+                    <div className="flex items-center justify-between border-2 border-primary rounded-full h-16 px-4 bg-primary/5">
+                      <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full hover:bg-primary hover:text-white" onClick={() => updateQuantity(product?.id!, -1)}>
+                        <Minus className="w-5 h-5" />
                       </Button>
-                      <span className="font-black text-sm sm:text-xl text-primary">{getQty(product?.id!)}</span>
-                      <Button variant="ghost" size="icon" className="w-8 h-8 sm:w-12 sm:h-12 rounded-full hover:bg-primary hover:text-white" onClick={() => updateQuantity(product?.id!, 1)}>
-                        <Plus className="w-4 h-4" />
+                      <span className="font-black text-xl text-primary">{getQty(product?.id!)}</span>
+                      <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full hover:bg-primary hover:text-white" onClick={() => updateQuantity(product?.id!, 1)}>
+                        <Plus className="w-5 h-5" />
                       </Button>
                     </div>
                   ) : (
-                    <Button onClick={() => handleAdd(product)} className="w-full h-12 sm:h-16 rounded-full font-black text-[10px] sm:text-lg shadow-xl shadow-primary/20 active:scale-95 transition-all">
-                      Add to Cart
+                    <Button onClick={() => handleAdd(product)} className="w-full h-16 rounded-full font-black text-lg shadow-xl shadow-primary/20 active:scale-95 transition-all">
+                      Add to Pharmacy Cart
                     </Button>
                   )}
                </div>
             </div>
-
-            <div className="bg-white p-6 sm:p-10 rounded-[32px] sm:rounded-[48px] border border-gray-100 space-y-8">
-               <section>
-                 <h4 className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3 border-l-4 border-primary pl-3">Clinical Indication</h4>
-                 <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium mb-4">{product?.description}</p>
-                 <ul className="space-y-3">
-                   {(product?.uses || ["Managed for " + product?.category]).map((use: string, i: number) => (
-                     <li key={i} className="flex items-start gap-2 text-xs sm:text-sm font-bold text-gray-700">
-                       <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                       {use}
-                     </li>
-                   ))}
-                 </ul>
-               </section>
-            </div>
           </div>
 
-          {/* Savings / Alternative */}
-          <div className="space-y-4 sm:space-y-6">
+          {/* Savings / Alternative Section */}
+          <div className="space-y-6">
             {genericSubstitute ? (
-              <>
-                <div className="bg-gradient-to-br from-green-50 to-white rounded-[32px] sm:rounded-[48px] p-4 sm:p-10 shadow-2xl border-2 border-green-200 flex flex-col h-full relative group overflow-hidden">
-                   <div className="absolute top-0 right-0">
-                      <div className="bg-green-600 text-white font-black text-[8px] sm:text-[11px] uppercase px-4 sm:px-8 py-2 sm:py-3 rounded-bl-[24px] shadow-lg flex items-center gap-2">
-                        <TrendingDown className="w-4 h-4" /> Save ₹{product!.price - genericSubstitute.price}
-                      </div>
-                   </div>
-                   <div className="mb-4">
-                    <Badge className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest bg-green-100 text-green-700 border-none px-3 py-1 rounded-full">
-                      Generic Alternative
-                    </Badge>
-                   </div>
-                   <div className="flex flex-col items-center text-center gap-4 flex-1">
-                      <div className="w-full aspect-square relative bg-white rounded-[24px] sm:rounded-[40px] overflow-hidden p-4 sm:p-8 shadow-inner border border-green-50">
-                        <img src={genericSubstitute.imageUrl} alt={genericSubstitute.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
-                      </div>
-                      <div className="w-full">
-                        <h2 className="text-sm sm:text-2xl font-black text-green-900 mb-1 leading-tight">{genericSubstitute.name}</h2>
-                        <p className="text-[8px] sm:text-xs font-bold text-green-600/60 mb-3 uppercase tracking-widest">{genericSubstitute.manufacturer}</p>
-                        <div className="flex items-baseline justify-center gap-2 mb-2">
-                          <span className="text-lg sm:text-4xl font-black text-green-600">₹{genericSubstitute.price}</span>
-                          <span className="text-gray-300 line-through text-[10px] sm:text-sm font-bold">₹{product?.price}</span>
-                        </div>
-                        <div className="text-[9px] sm:text-xs font-black text-green-600 uppercase tracking-widest bg-green-100/50 py-1.5 px-4 rounded-full inline-block">
-                          ₹{getUnitPrice(genericSubstitute)} / unit
-                        </div>
-                      </div>
-                   </div>
-                   <div className="mt-6 pt-6 border-t border-green-100">
-                      {getQty(genericSubstitute.id) > 0 ? (
-                        <div className="flex items-center justify-between border-2 border-green-600 rounded-full h-12 sm:h-16 px-2 bg-green-50">
-                          <Button variant="ghost" size="icon" className="w-8 h-8 sm:w-12 sm:h-12 rounded-full hover:bg-green-600 hover:text-white" onClick={() => updateQuantity(genericSubstitute.id, -1)}>
-                            <Minus className="w-4 h-4" />
-                          </Button>
-                          <span className="font-black text-sm sm:text-xl text-green-900">{getQty(genericSubstitute.id)}</span>
-                          <Button variant="ghost" size="icon" className="w-8 h-8 sm:w-12 sm:h-12 rounded-full hover:bg-green-600 hover:text-white" onClick={() => updateQuantity(genericSubstitute.id, 1)}>
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button onClick={() => handleAdd(genericSubstitute)} className="w-full h-12 sm:h-16 rounded-full bg-green-600 hover:bg-green-700 text-white font-black text-[10px] sm:text-lg shadow-2xl shadow-green-200 active:scale-95 transition-all gap-2">
-                          <Zap className="w-4 h-4 sm:w-6 sm:h-6" /> Switch & Save
-                        </Button>
-                      )}
-                   </div>
-                </div>
-              </>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center p-12 text-center bg-gray-50 rounded-[48px] border-2 border-dashed border-gray-200">
-                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
-                    <Info className="w-8 h-8 text-gray-300" />
+              <div className="bg-gradient-to-br from-green-50 to-white rounded-[40px] p-8 shadow-2xl border-2 border-green-200 flex flex-col h-full relative group overflow-hidden">
+                 <div className="absolute top-0 right-0">
+                    <div className="bg-green-600 text-white font-black text-xs uppercase px-6 py-3 rounded-bl-[24px] shadow-lg flex items-center gap-2">
+                      <TrendingDown className="w-4 h-4" /> Save ₹{product!.price - genericSubstitute.price}
+                    </div>
                  </div>
-                 <h3 className="font-black text-gray-900 mb-2">No Verified Generic</h3>
-                 <p className="text-xs text-gray-400 font-bold max-w-[180px]">Our pharmacological lab is sourcing a bio-equivalent alternative for this salt.</p>
+                 <div className="mb-6">
+                  <Badge className="text-[10px] font-black uppercase tracking-widest bg-green-100 text-green-700 border-none px-4 py-1 rounded-full">
+                    Recommended Alternative
+                  </Badge>
+                 </div>
+                 <div className="flex flex-col items-center text-center gap-6 flex-1">
+                    <div className="w-full aspect-square relative bg-white rounded-[32px] overflow-hidden p-8 shadow-inner border border-green-50">
+                      <img src={genericSubstitute.imageUrl} alt={genericSubstitute.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                    </div>
+                    <div className="w-full">
+                      <h2 className="text-2xl font-black text-green-900 mb-2 leading-tight">{genericSubstitute.name}</h2>
+                      <p className="text-xs font-bold text-green-600/60 mb-4 uppercase tracking-widest">{genericSubstitute.manufacturer} Clinical</p>
+                      <div className="flex items-baseline justify-center gap-3 mb-6">
+                        <span className="text-4xl font-black text-green-600">₹{genericSubstitute.price}</span>
+                        <span className="text-gray-300 line-through text-lg font-bold">₹{product?.price}</span>
+                      </div>
+                    </div>
+                 </div>
+                 <div className="mt-6 pt-6 border-t border-green-100">
+                    {getQty(genericSubstitute.id) > 0 ? (
+                      <div className="flex items-center justify-between border-2 border-green-600 rounded-full h-16 px-4 bg-green-50">
+                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full hover:bg-green-600 hover:text-white" onClick={() => updateQuantity(genericSubstitute.id, -1)}>
+                          <Minus className="w-5 h-5" />
+                        </Button>
+                        <span className="font-black text-xl text-green-900">{getQty(genericSubstitute.id)}</span>
+                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full hover:bg-green-600 hover:text-white" onClick={() => updateQuantity(genericSubstitute.id, 1)}>
+                          <Plus className="w-5 h-5" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button onClick={() => handleAdd(genericSubstitute)} className="w-full h-16 rounded-full bg-green-600 hover:bg-green-700 text-white font-black text-lg shadow-2xl shadow-green-200 active:scale-95 transition-all gap-2">
+                        <Zap className="w-5 h-5" /> Switch & Save
+                      </Button>
+                    )}
+                 </div>
+              </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center p-12 text-center bg-gray-50 rounded-[40px] border-2 border-dashed border-gray-200">
+                 <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm mb-6">
+                    <Info className="w-10 h-10 text-gray-300" />
+                 </div>
+                 <h3 className="font-black text-gray-900 mb-2 uppercase text-lg">Bio-Equivalent Sourcing</h3>
+                 <p className="text-sm text-gray-400 font-bold max-w-xs">Our pharmacological team is currently validating a high-savings generic bio-equivalent for this salt composition.</p>
               </div>
             )}
           </div>
         </div>
 
+        {/* Clinical Info */}
+        <section className="mt-12 bg-white p-10 rounded-[40px] border border-gray-100">
+           <h4 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400 mb-6 flex items-center gap-2">
+             <Info className="w-5 h-5 text-primary" /> Clinical Indication & Guidance
+           </h4>
+           <p className="text-gray-600 leading-relaxed font-medium text-lg mb-8">{product?.description}</p>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10">
+                 <h5 className="font-black text-primary text-xs uppercase tracking-widest mb-4">Therapeutic Uses</h5>
+                 <ul className="space-y-3">
+                   {['Clinically indicated for ' + product?.category, 'Salt: ' + product?.saltComposition].map((use, i) => (
+                     <li key={i} className="flex items-start gap-3 text-sm font-bold text-gray-700">
+                       <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+                       {use}
+                     </li>
+                   ))}
+                 </ul>
+              </div>
+              <div className="bg-orange-50 p-6 rounded-3xl border border-orange-100">
+                 <h5 className="font-black text-orange-600 text-xs uppercase tracking-widest mb-4">Clinical Quality</h5>
+                 <div className="flex items-center gap-4 text-sm font-bold text-gray-700">
+                    <ShieldCheck className="w-8 h-8 text-orange-500" />
+                    <span>This product is sourced from WHO-GMP certified facilities.</span>
+                 </div>
+              </div>
+           </div>
+        </section>
+
+        {/* Suggested Section */}
         {suggestedProducts && suggestedProducts.length > 1 && (
-          <section className="mt-16 sm:mt-24 pt-16 border-t">
+          <section className="mt-16 pt-16 border-t">
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-xl sm:text-2xl font-black font-headline text-gray-900 uppercase tracking-tight">Therapeutic Suggestions</h3>
-              <Link href="/search" className="text-[10px] font-black text-primary uppercase tracking-widest">Explore All</Link>
+              <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Therapeutic Suggestions</h3>
+              <Link href="/search" className="text-[10px] font-black text-primary uppercase tracking-widest">See Full Catalog</Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
               {suggestedProducts.filter(p => p.id !== product?.id).map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
