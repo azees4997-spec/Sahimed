@@ -183,6 +183,22 @@
         "packSize": {
           "type": "string",
           "description": "The size of the pack (e.g. 'Strip of 15 tablets')."
+        },
+        "howItWorks": {
+          "type": "string",
+          "description": "Detailed explanation of the pharmacological action."
+        },
+        "safetyAdvice": {
+          "type": "object",
+          "description": "Clinical safety warnings for common scenarios.",
+          "properties": {
+            "alcohol": { "type": "string" },
+            "pregnancy": { "type": "string" },
+            "breastfeeding": { "type": "string" },
+            "driving": { "type": "string" },
+            "kidney": { "type": "string" },
+            "liver": { "type": "string" }
+          }
         }
       },
       "required": [
@@ -668,6 +684,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed following the core principles of Authorization Independence, Structural Segregation, and Access Modeling, ensuring a secure, scalable, and debuggable backend for HealthLink Pharmacy. \n\n**Authorization Independence via Denormalization:**\n\n1.  **Path-Based Ownership:** For all user-specific data such as `addresses`, `prescriptions`, `cartItems`, `orders`, and `orderItems`, the `userId` is embedded directly in the path (e.g., `/userProfiles/{userId}/addresses/{addressId}`). This denormalizes the ownership context into the document path itself. Security rules can then simply compare `request.auth.uid` with the `userId` wildcard from the path (`match /userProfiles/{userId}/... { allow read, write: if request.auth.uid == userId; }`), completely eliminating the need for expensive and complex `get()` calls to parent documents or other collections for authorization. This ensures atomic operations (transactions/batches) are not broken and rules are easy to write and debug.\n2.  **Global Roles (DBAC):** Instead of an `isAdmin` field within the `UserProfile` document, a dedicated collection `/roles_admin/{userId}` is used. An admin user's UID will exist as a document ID in this collection. Authorization rules for admin-only actions (e.g., managing categories, manufacturers, medicines) can check for the *existence* of `request.auth.uid` in this collection (`exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))`). This adheres to 'Existence over Content' and avoids `get()` on the `UserProfile` for admin checks, maintaining authorization independence and simplifying rule logic.\n\n**QAPs (Queries are not Filters):**\n\n1.  **Public Collections (`/categories`, `/manufacturers`, `/medicines`):** These collections hold globally accessible data that is read-only for all users and write-only for administrators. Since all documents within these collections share the same security posture (publicly readable), any `list` operation performed by a regular user will securely retrieve all relevant documents without requiring any client-side filtering or complex server-side rules to 'filter' out unauthorized documents. This perfectly satisfies the QAP principle.\n2.  **User-Owned Subcollections:** Collections like `/userProfiles/{userId}/addresses` or `/userProfiles/{userId}/orders` are structurally segregated by user. When a user queries `/userProfiles/myUid/addresses`, the `list` operation is implicitly filtered by `myUid` in the path. Firestore's security rules will only grant access if `myUid` matches `request.auth.uid`, ensuring that users can only `list` their own data. This design naturally supports secure and efficient `list` operations without relying on rules as filters, as the path itself acts as the primary access control mechanism.\n3.  **UserProfile:** Users can only access their own profile document (`/userProfiles/{request.auth.uid}`). Listing all user profiles is restricted to administrators only, thus preventing unauthorized data exposure via list queries.\n\n**Structural Segregation:**\n\n*   Data with different security requirements is strictly separated into distinct collections or subcollections. For instance, public product information is in `/medicines`, while private user addresses are in `/userProfiles/{userId}/addresses`. This minimizes rule complexity by ensuring that all documents within a given collection or subcollection share a uniform security posture.\n\n**Access Modeling:**\n\n*   **Private Data & Hierarchical Paths:** User-specific data (`UserProfile`, `Address`, `Prescription`, `UserCart`, `CartItem`, `Order`, `OrderItem`) consistently uses hierarchical paths `/userProfiles/{userId}/...` or `userCarts/{userId}/...`. This pattern is highly secure and makes ownership-based security rules extremely straightforward (`request.auth.uid == userId`).\n*   **Global Roles (DBAC):** The `/roles_admin/{userId}` collection is used for global administrator access, implementing the 'Existence over Content' pattern.\n\n**Data Clarity and Predictability:**\n\n*   **Explicit State Modeling:** The `status` field in `Prescription` and `Order` entities uses a finite set of string values (e.g., 'Pending Review', 'Reviewed'; 'Pending', 'Processing') to clearly define the state, avoiding ambiguity from multiple boolean flags. \n*   **Predictable Schema:** Fields like `priceAtAddition` in `CartItem` and `unitPrice` in `OrderItem` are used to capture the price at the time of transaction, ensuring data integrity even if product prices change later. The `UserProfile` entity no longer contains `isAdmin` to avoid authorization logic being tied to general user data, promoting a clearer separation of concerns.\n\nThis structure ensures high security, simplified rules, and efficient query performance, adhering to all mandated design principles."
+    "reasoning": "The Firestore structure is designed following the core principles of Authorization Independence, Structural Segregation, and Access Modeling."
   }
 }

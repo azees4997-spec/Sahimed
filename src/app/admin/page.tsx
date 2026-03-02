@@ -63,7 +63,6 @@ export default function SupervisorConsole() {
     try {
       const snap = await getDoc(doc(db, 'roles_admin', user.uid));
       if (snap.exists()) {
-        // Latency buffer for Security Rules propagation to ensure global queries work
         setTimeout(() => {
           setIsVerified(true);
           setIsVerifying(false);
@@ -132,9 +131,15 @@ export default function SupervisorConsole() {
           </CardHeader>
           <CardContent className="p-8">
             <form onSubmit={handleLogin} className="space-y-4">
-              <Input type="email" placeholder="Email ID" value={email} onChange={e => setEmail(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
-              <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
-              <Button type="submit" disabled={authLoading} className="w-full h-14 rounded-full font-black uppercase tracking-widest mt-2">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email ID</Label>
+                <Input type="email" placeholder="admin@healthlink.com" value={email} onChange={e => setEmail(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Password</Label>
+                <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
+              </div>
+              <Button type="submit" disabled={authLoading} className="w-full h-14 rounded-full font-black uppercase tracking-widest mt-4">
                 {authLoading ? <Loader2 className="animate-spin" /> : "Access Terminal"}
               </Button>
             </form>
@@ -231,62 +236,52 @@ function SeedDataButton({ db }: { db: any }) {
         { 
           name: 'Janumet 50/500', 
           price: 1250, 
+          mrp: 1450,
           saltComposition: 'Sitagliptin + Metformin', 
           manufacturer: 'MSD Pharmaceuticals', 
           isGeneric: false, 
           category: 'Diabetes', 
           imageUrl: 'https://picsum.photos/seed/dia1/300/300', 
           availableQuantity: 100, 
-          description: 'Premium glycemic control used for T2 Diabetes management. Helps maintain steady blood sugar levels throughout the day.',
-          uses: ['Management of Type 2 Diabetes', 'Glycemic control improvement'],
-          sideEffects: ['Nausea', 'Upper respiratory tract infection', 'Hypoglycemia'],
+          description: 'Janumet is a combination of two anti-diabetic medicines: Sitagliptin and Metformin. It is used to lower high blood sugar levels in patients with Type 2 Diabetes.',
+          uses: ['Management of Type 2 Diabetes', 'Improving Glycemic control'],
+          sideEffects: ['Nausea', 'Vomiting', 'Stomach upset', 'Headache'],
+          howItWorks: 'Sitagliptin works by increasing insulin release from the pancreas and reducing hormones that raise blood sugar. Metformin decreases sugar production in the liver and improves body response to insulin.',
           packSize: 'Strip of 15 tablets',
-          strength: '50mg/500mg'
+          strength: '50mg/500mg',
+          safetyAdvice: {
+            alcohol: "Unsafe. May cause lactic acidosis.",
+            pregnancy: "Consult doctor. Generally considered safe if prescribed.",
+            breastfeeding: "Consult doctor. Safe if clinical benefits outweigh risks.",
+            driving: "Safe. Does not affect alertness.",
+            kidney: "Caution required. Adjust dose if creatinine levels are high.",
+            liver: "Consult doctor. Not recommended in severe liver disease."
+          }
         },
         { 
-          name: 'Sitagliptin Generic', 
+          name: 'Sitagliptin M 50/500', 
           price: 240, 
+          mrp: 1200,
           saltComposition: 'Sitagliptin + Metformin', 
-          manufacturer: 'HealthLink Clinical', 
+          manufacturer: 'HealthLink Generic', 
           isGeneric: true, 
           category: 'Diabetes', 
           imageUrl: 'https://picsum.photos/seed/dia2/300/300', 
           availableQuantity: 500, 
-          description: 'High-quality bio-equivalent alternative for Sitagliptin + Metformin. Sourced from WHO-GMP certified facilities.',
+          description: 'Bio-equivalent generic version of Sitagliptin + Metformin. Clinically identical to branded alternatives but more affordable.',
           uses: ['Management of Type 2 Diabetes', 'Affordable glucose control'],
           sideEffects: ['Nausea', 'Mild digestive upset'],
+          howItWorks: 'Same clinical pathway as Janumet. Sourced from WHO-GMP certified facilities.',
           packSize: 'Strip of 15 tablets',
-          strength: '50mg/500mg'
-        },
-        { 
-          name: 'Atorva 20mg', 
-          price: 450, 
-          saltComposition: 'Atorvastatin', 
-          manufacturer: 'Zydus Cadila', 
-          isGeneric: false, 
-          category: 'Heart Care', 
-          imageUrl: 'https://picsum.photos/seed/hrt1/300/300', 
-          availableQuantity: 80, 
-          description: 'Branded statin used to lower clinical cholesterol levels and reduce risk of cardiac events.',
-          uses: ['Lowering high cholesterol', 'Prevention of heart attack'],
-          sideEffects: ['Muscle pain', 'Weakness'],
-          packSize: 'Strip of 10 tablets',
-          strength: '20mg'
-        },
-        { 
-          name: 'Atorvastatin Pure', 
-          price: 85, 
-          saltComposition: 'Atorvastatin', 
-          manufacturer: 'HealthLink Generic', 
-          isGeneric: true, 
-          category: 'Heart Care', 
-          imageUrl: 'https://picsum.photos/seed/hrt2/300/300', 
-          availableQuantity: 1000, 
-          description: 'WHO-GMP certified generic Atorvastatin for heart health. Offers clinical equivalence.',
-          uses: ['Lowering LDL cholesterol', 'Heart health maintenance'],
-          sideEffects: ['Muscle pain (rare)', 'Headache'],
-          packSize: 'Strip of 10 tablets',
-          strength: '20mg'
+          strength: '50mg/500mg',
+          safetyAdvice: {
+            alcohol: "Unsafe. Risk of metabolic complications.",
+            pregnancy: "Consult doctor.",
+            breastfeeding: "Consult doctor.",
+            driving: "Safe.",
+            kidney: "Dose adjustment needed.",
+            liver: "Consult doctor."
+          }
         }
       ];
 
