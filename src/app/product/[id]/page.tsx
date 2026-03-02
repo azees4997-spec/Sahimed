@@ -218,81 +218,73 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        {/* COMPARATIVE PRODUCT DETAILS */}
+        {/* COMPARATIVE PRODUCT DETAILS - FORCED SIDE-BY-SIDE ON MOBILE */}
         <section className="space-y-8">
            {/* Section: Description Comparison */}
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="rounded-[32px] border-none shadow-sm overflow-hidden bg-white">
-                 <CardHeader className="bg-gray-50/50 p-6 border-b">
-                    <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                       <FlaskConical className="w-4 h-4" /> Branded Overview
+           <div className="grid grid-cols-2 gap-3 sm:gap-6">
+              <Card className="rounded-[24px] sm:rounded-[32px] border-none shadow-sm overflow-hidden bg-white">
+                 <CardHeader className="bg-gray-50/50 p-3 sm:p-6 border-b">
+                    <CardTitle className="text-[8px] sm:text-sm font-black uppercase tracking-widest text-primary flex items-center gap-1 sm:gap-2">
+                       <FlaskConical className="w-3 h-3 sm:w-4 sm:h-4" /> Branded
                     </CardTitle>
                  </CardHeader>
-                 <CardContent className="p-6 space-y-4">
-                    <p className="text-gray-600 text-sm leading-relaxed">{product?.description}</p>
-                    <div className="pt-4 grid grid-cols-2 gap-4">
+                 <CardContent className="p-3 sm:p-6 space-y-2 sm:space-y-4">
+                    <p className="text-gray-600 text-[8px] sm:text-sm leading-relaxed line-clamp-6">{product?.description}</p>
+                    <div className="pt-2 sm:pt-4 grid grid-cols-1 gap-2">
                        <div>
-                          <p className="text-[8px] font-black uppercase text-gray-400">Pack Size</p>
-                          <p className="text-xs font-bold text-gray-900">{product?.packSize || 'Standard Pack'}</p>
-                       </div>
-                       <div>
-                          <p className="text-[8px] font-black uppercase text-gray-400">Dosage Form</p>
-                          <p className="text-xs font-bold text-gray-900">{product?.dosageForm || 'Oral'}</p>
+                          <p className="text-[6px] sm:text-[8px] font-black uppercase text-gray-400">Pack Size</p>
+                          <p className="text-[8px] sm:text-xs font-bold text-gray-900">{product?.packSize || 'Standard'}</p>
                        </div>
                     </div>
                  </CardContent>
               </Card>
 
-              <Card className="rounded-[32px] border-none shadow-sm overflow-hidden bg-white">
-                 <CardHeader className="bg-green-50/50 p-6 border-b">
-                    <CardTitle className="text-sm font-black uppercase tracking-widest text-green-700 flex items-center gap-2">
-                       <Dna className="w-4 h-4" /> Generic Overview
+              <Card className="rounded-[24px] sm:rounded-[32px] border-none shadow-sm overflow-hidden bg-white">
+                 <CardHeader className="bg-green-50/50 p-3 sm:p-6 border-b">
+                    <CardTitle className="text-[8px] sm:text-sm font-black uppercase tracking-widest text-green-700 flex items-center gap-1 sm:gap-2">
+                       <Dna className="w-3 h-3 sm:w-4 sm:h-4" /> Generic
                     </CardTitle>
                  </CardHeader>
-                 <CardContent className="p-6 space-y-4">
-                    <p className="text-gray-600 text-sm leading-relaxed">{genericSubstitute?.description || 'This bio-equivalent generic matches the branded version in therapeutic effect and quality, offering significant cost savings.'}</p>
-                    <div className="pt-4 grid grid-cols-2 gap-4">
+                 <CardContent className="p-3 sm:p-6 space-y-2 sm:space-y-4">
+                    <p className="text-gray-600 text-[8px] sm:text-sm leading-relaxed line-clamp-6">{genericSubstitute?.description || 'Bio-equivalent generic matching branded version in quality and therapeutic effect.'}</p>
+                    <div className="pt-2 sm:pt-4 grid grid-cols-1 gap-2">
                        <div>
-                          <p className="text-[8px] font-black uppercase text-green-600/60">Savings</p>
-                          <p className="text-xs font-black text-green-700">Approx. {product && genericSubstitute ? Math.round(((product.price - genericSubstitute.price) / product.price) * 100) : 0}% less</p>
-                       </div>
-                       <div>
-                          <p className="text-[8px] font-black uppercase text-green-600/60">Availability</p>
-                          <p className="text-xs font-bold text-gray-900">In Stock</p>
+                          <p className="text-[6px] sm:text-[8px] font-black uppercase text-green-600/60">Savings</p>
+                          <p className="text-[8px] sm:text-xs font-black text-green-700">~{product && genericSubstitute ? Math.round(((product.price - genericSubstitute.price) / product.price) * 100) : 0}% less</p>
                        </div>
                     </div>
                  </CardContent>
               </Card>
            </div>
 
-           {/* Section: Clinical Uses & Benefits */}
-           <div className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100">
-              <h3 className="text-xl font-black text-gray-900 uppercase tracking-tighter mb-8 flex items-center gap-3">
-                 <CheckCircle2 className="w-6 h-6 text-primary" /> Therapeutic Indication (Uses)
+           {/* Section: Clinical Uses & Benefits - FORCED SIDE-BY-SIDE ON MOBILE */}
+           <div className="bg-white p-4 sm:p-8 rounded-[32px] sm:rounded-[40px] shadow-sm border border-gray-100">
+              <h3 className="text-[10px] sm:text-xl font-black text-gray-900 uppercase tracking-tighter mb-4 sm:mb-8 flex items-center gap-2 sm:gap-3">
+                 <CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6 text-primary" /> Therapeutic Uses
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div className="grid grid-cols-2 gap-4 sm:gap-12">
                  <div>
-                    <p className="text-[10px] font-black uppercase text-primary mb-4">{product?.name} (Branded)</p>
-                    <ul className="space-y-3">
+                    <p className="text-[7px] sm:text-[10px] font-black uppercase text-primary mb-2 sm:mb-4">{product?.name}</p>
+                    <ul className="space-y-2 sm:space-y-3">
                        {(product?.uses || [product?.category]).map((use: string, i: number) => (
-                         <li key={i} className="flex items-start gap-3">
-                            <div className="w-5 h-5 rounded-full bg-primary/5 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                               <span className="text-[8px] font-bold">{i+1}</span>
+                         <li key={i} className="flex items-start gap-1.5 sm:gap-3">
+                            <div className="w-3 h-3 sm:w-5 sm:h-5 rounded-full bg-primary/5 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                               <span className="text-[6px] sm:text-[8px] font-bold">{i+1}</span>
                             </div>
-                            <span className="text-sm font-medium text-gray-700">{use}</span>
+                            <span className="text-[8px] sm:text-sm font-medium text-gray-700 leading-tight">{use}</span>
                          </li>
                        ))}
                     </ul>
                  </div>
-                 <div className="md:border-l md:pl-12">
-                    <p className="text-[10px] font-black uppercase text-green-600 mb-4">{genericSubstitute?.name || 'Generic Alternative'}</p>
-                    <ul className="space-y-3">
+                 <div className="border-l pl-4 sm:pl-12">
+                    <p className="text-[7px] sm:text-[10px] font-black uppercase text-green-600 mb-2 sm:mb-4">Generic</p>
+                    <ul className="space-y-2 sm:space-y-3">
                        {(genericSubstitute?.uses || product?.uses || [product?.category]).map((use: string, i: number) => (
-                         <li key={i} className="flex items-start gap-3">
-                            <div className="w-5 h-5 rounded-full bg-green-50 text-green-600 flex items-center justify-center shrink-0 mt-0.5">
-                               <span className="text-[8px] font-bold">{i+1}</span>
+                         <li key={i} className="flex items-start gap-1.5 sm:gap-3">
+                            <div className="w-3 h-3 sm:w-5 sm:h-5 rounded-full bg-green-50 text-green-600 flex items-center justify-center shrink-0 mt-0.5">
+                               <span className="text-[6px] sm:text-[8px] font-bold">{i+1}</span>
                             </div>
-                            <span className="text-sm font-medium text-gray-700">{use}</span>
+                            <span className="text-[8px] sm:text-sm font-medium text-gray-700 leading-tight">{use}</span>
                          </li>
                        ))}
                     </ul>
@@ -300,36 +292,36 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </div>
            </div>
 
-           {/* Section: Side Effects & Warnings */}
-           <div className="bg-orange-50/30 p-8 rounded-[40px] border border-orange-100">
-              <h3 className="text-xl font-black text-orange-900 uppercase tracking-tighter mb-8 flex items-center gap-3">
-                 <AlertCircle className="w-6 h-6 text-orange-600" /> Clinical Side Effects
+           {/* Section: Side Effects - FORCED SIDE-BY-SIDE ON MOBILE */}
+           <div className="bg-orange-50/30 p-4 sm:p-8 rounded-[32px] sm:rounded-[40px] border border-orange-100">
+              <h3 className="text-[10px] sm:text-xl font-black text-orange-900 uppercase tracking-tighter mb-4 sm:mb-8 flex items-center gap-2 sm:gap-3">
+                 <AlertCircle className="w-4 h-4 sm:w-6 sm:h-6 text-orange-600" /> Side Effects
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                 <div className="space-y-4">
-                    <p className="text-[10px] font-black uppercase text-orange-600">{product?.name}</p>
-                    <div className="flex flex-wrap gap-2">
-                       {(product?.sideEffects || ['Mild Nausea', 'Headache']).map((effect: string, i: number) => (
-                         <Badge key={i} variant="outline" className="bg-white border-orange-200 text-orange-700 font-bold px-3 py-1 text-[10px]">
+              <div className="grid grid-cols-2 gap-4 sm:gap-12">
+                 <div className="space-y-2 sm:space-y-4">
+                    <p className="text-[7px] sm:text-[10px] font-black uppercase text-orange-600">Branded</p>
+                    <div className="flex flex-wrap gap-1 sm:gap-2">
+                       {(product?.sideEffects || ['Nausea']).map((effect: string, i: number) => (
+                         <Badge key={i} variant="outline" className="bg-white border-orange-200 text-orange-700 font-bold px-1.5 py-0.5 sm:px-3 sm:py-1 text-[6px] sm:text-[10px]">
                             {effect}
                          </Badge>
                        ))}
                     </div>
                  </div>
-                 <div className="space-y-4 md:border-l md:border-orange-100 md:pl-12">
-                    <p className="text-[10px] font-black uppercase text-orange-600">Bio-Equivalent Generic</p>
-                    <div className="flex flex-wrap gap-2">
-                       {(genericSubstitute?.sideEffects || product?.sideEffects || ['Mild Nausea', 'Headache']).map((effect: string, i: number) => (
-                         <Badge key={i} variant="outline" className="bg-white border-orange-200 text-orange-700 font-bold px-3 py-1 text-[10px]">
+                 <div className="space-y-2 sm:space-y-4 border-l border-orange-100 pl-4 sm:pl-12">
+                    <p className="text-[7px] sm:text-[10px] font-black uppercase text-orange-600">Generic</p>
+                    <div className="flex flex-wrap gap-1 sm:gap-2">
+                       {(genericSubstitute?.sideEffects || product?.sideEffects || ['Nausea']).map((effect: string, i: number) => (
+                         <Badge key={i} variant="outline" className="bg-white border-orange-200 text-orange-700 font-bold px-1.5 py-0.5 sm:px-3 sm:py-1 text-[6px] sm:text-[10px]">
                             {effect}
                          </Badge>
                        ))}
                     </div>
                  </div>
               </div>
-              <div className="mt-8 pt-8 border-t border-orange-100">
-                 <p className="text-[10px] text-orange-800/60 font-black uppercase text-center">
-                    Note: Side effects are generally identical between bio-equivalent medicines. Consult your doctor for specific advice.
+              <div className="mt-4 sm:mt-8 pt-4 sm:pt-8 border-t border-orange-100">
+                 <p className="text-[6px] sm:text-[10px] text-orange-800/60 font-black uppercase text-center">
+                    Note: Clinical effects are identical. Consult a doctor.
                  </p>
               </div>
            </div>
@@ -338,7 +330,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         {/* Similar Products */}
         {suggestedProducts && suggestedProducts.length > 1 && (
           <section className="mt-12 pt-12 border-t">
-            <h3 className="text-sm sm:text-2xl font-black text-gray-900 uppercase tracking-tight mb-6">Similar Medicines in {product?.category}</h3>
+            <h3 className="text-xs sm:text-2xl font-black text-gray-900 uppercase tracking-tight mb-6">Similar Medicines in {product?.category}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
               {suggestedProducts.filter(p => p.id !== product?.id).map((p) => (
                 <ProductCard key={p.id} product={p} />
