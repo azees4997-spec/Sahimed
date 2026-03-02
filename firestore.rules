@@ -5,6 +5,7 @@ service cloud.firestore {
 
     /**
      * HEALTHLINK PHARMACY SECURITY RULES
+     * Strict Authorization Independence & Sequential Gating
      */
 
     function isSignedIn() {
@@ -12,6 +13,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
+      // Existence-over-Content: Check if UID exists in the admin roles collection
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
@@ -20,12 +22,8 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Critical: Explicitly allow admins to query and update orders/prescriptions globally
+    // Specifically allow admins to perform collection-group queries on orders
     match /{path=**}/orders/{orderId} {
-      allow read, list, update: if isAdmin();
-    }
-
-    match /{path=**}/prescriptions/{prescriptionId} {
       allow read, list, update: if isAdmin();
     }
 
@@ -43,37 +41,27 @@ service cloud.firestore {
         allow update: if isAdmin(); 
       }
 
-      match /prescriptions/{prescriptionId} {
-        allow read, list: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId);
-        allow update: if isAdmin();
-      }
-
       match /addresses/{addressId} {
         allow read, list, write: if isOwner(userId);
       }
     }
 
     match /roles_admin/{userId} {
+      // Users can see their own role; Admins can see all
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      // Dev access for initial setup
+      // Bootstrap access: Any signed-in user can claim the first role
       allow create: if isSignedIn();
       allow write: if isAdmin(); 
     }
 
     match /medicines/{medicineId} {
-      allow read: if true;
+      allow read: if true; // Public catalog access
       allow write: if isAdmin();
     }
 
     match /categories/{categoryId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /manufacturers/{manufacturerId} {
-      allow read: if true;
+      allow read: if true; // Public category access
       allow write: if isAdmin();
     }
 

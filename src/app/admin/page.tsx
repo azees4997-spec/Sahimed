@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   ShieldCheck, 
   LogOut, 
@@ -18,7 +18,9 @@ import {
   ShieldAlert,
   UserPlus,
   RefreshCw,
-  ChevronRight
+  ChevronRight,
+  AlertTriangle,
+  Lock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +31,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { 
   useUser, 
   useFirestore, 
@@ -36,12 +39,11 @@ import {
   useAuth, 
   useMemoFirebase, 
   useCollection,
-  addDocumentNonBlocking,
   updateDocumentNonBlocking,
   deleteDocumentNonBlocking,
   setDocumentNonBlocking
 } from '@/firebase';
-import { doc, collection, query, orderBy, collectionGroup } from 'firebase/firestore';
+import { doc, collection, query, orderBy, collectionGroup, getDoc } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 type AdminTab = 'dashboard' | 'medicines' | 'categories' | 'orders';
@@ -56,38 +58,48 @@ export default function SupervisorConsole() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isServerConfirmed, setIsServerConfirmed] = useState(false);
 
-  // 1. THE GATE: Role Verification
-  // We use useDoc to check if the current user's UID exists in the roles_admin collection.
+  // 1. Role Check: Watch the roles_admin collection for the current UID
   const adminRoleRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, 'roles_admin', user.uid);
   }, [db, user]);
 
-  const { data: adminRole, isLoading: isAdminRoleLoading } = useDoc(adminRoleRef);
-  
-  // This is the critical boolean that prevents premature queries
-  const isVerifiedAdmin = !!adminRole;
+  const { data: adminRole, isLoading: isAdminRoleLoading, error: roleError } = useDoc(adminRoleRef);
 
-  // 2. PROTECTED DATA STREAMS: Only initiated if isVerifiedAdmin is true
+  // 2. Server Confirmation: Explicitly verify the role exists on the server to prevent optimistic race conditions
+  useEffect(() => {
+    if (adminRole && !isServerConfirmed) {
+      setIsVerifying(true);
+      // Double check with a fresh fetch to ensure server-side consistency
+      getDoc(doc(db, 'roles_admin', user!.uid)).then((snap) => {
+        if (snap.exists()) {
+          setIsServerConfirmed(true);
+        }
+      }).finally(() => setIsVerifying(false));
+    }
+  }, [adminRole, db, user, isServerConfirmed]);
+
+  // 3. Protected Data Streams: ONLY initiated if the server has confirmed admin status
   const medsQuery = useMemoFirebase(() => {
-    if (!db || !isVerifiedAdmin) return null;
+    if (!db || !isServerConfirmed) return null;
     return query(collection(db, 'medicines'), orderBy('name', 'asc'));
-  }, [db, isVerifiedAdmin]);
+  }, [db, isServerConfirmed]);
   const { data: medicines, isLoading: isMedsLoading } = useCollection(medsQuery);
 
   const catsQuery = useMemoFirebase(() => {
-    if (!db || !isVerifiedAdmin) return null;
+    if (!db || !isServerConfirmed) return null;
     return query(collection(db, 'categories'), orderBy('name', 'asc'));
-  }, [db, isVerifiedAdmin]);
+  }, [db, isServerConfirmed]);
   const { data: categories, isLoading: isCatsLoading } = useCollection(catsQuery);
 
   const ordersQuery = useMemoFirebase(() => {
-    if (!db || !isVerifiedAdmin) return null;
-    // Collection Group Query for global order visibility
+    if (!db || !isServerConfirmed) return null;
     return query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc'));
-  }, [db, isVerifiedAdmin]);
-  const { data: orders, isLoading: isOrdersLoading } = useCollection(ordersQuery);
+  }, [db, isServerConfirmed]);
+  const { data: orders, isLoading: isOrdersLoading, error: ordersFetchError } = useCollection(ordersQuery);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +113,10 @@ export default function SupervisorConsole() {
     }
   };
 
-  const handleLogout = () => signOut(auth);
+  const handleLogout = () => {
+    setIsServerConfirmed(false);
+    signOut(auth);
+  };
 
   const claimAdminRole = () => {
     if (!db || !user) return;
@@ -110,16 +125,16 @@ export default function SupervisorConsole() {
       role: 'admin',
       activatedAt: new Date().toISOString()
     }, { merge: true });
-    toast({ title: 'Authorization Requested', description: 'Registering administrative credentials...' });
+    toast({ title: 'Authorization Requested', description: 'Registering administrative credentials on the server...' });
   };
 
-  const seedMasterData = () => {
-    if (!db || !isVerifiedAdmin) return;
+  const seedMasterData = useCallback(() => {
+    if (!db || !isServerConfirmed) return;
     
     const initialCats = [
-      { id: 'cat_chronic', name: 'Chronic Care', description: 'Long-term medication for metabolic and cardiac health.' },
-      { id: 'cat_wellness', name: 'Wellness', description: 'Vitamins, supplements, and preventive health.' },
-      { id: 'cat_baby', name: 'Baby Care', description: 'Pediatric essentials and nutrition.' }
+      { id: 'cat_diabetes', name: 'Diabetes', description: 'Blood sugar management and monitoring.' },
+      { id: 'cat_heart', name: 'Heart Care', description: 'Cardiovascular support and cholesterol management.' },
+      { id: 'cat_wellness', name: 'Wellness', description: 'Vitamins, supplements, and preventive health.' }
     ];
 
     const initialMeds = [
@@ -128,10 +143,10 @@ export default function SupervisorConsole() {
         name: "Janumet 50/500",
         price: 1250,
         saltComposition: "Sitagliptin + Metformin",
-        manufacturer: "MSD",
-        categoryId: "cat_chronic",
-        category: "Chronic Care",
-        description: "Standard branded diabetic management.",
+        manufacturer: "MSD Pharmaceuticals",
+        categoryId: "cat_diabetes",
+        category: "Diabetes",
+        description: "Branded combination therapy for blood sugar control.",
         isGeneric: false,
         dosageForm: "Tablet",
         strength: "50/500mg",
@@ -144,9 +159,9 @@ export default function SupervisorConsole() {
         price: 240,
         saltComposition: "Sitagliptin + Metformin",
         manufacturer: "HealthLink Labs",
-        categoryId: "cat_chronic",
-        category: "Chronic Care",
-        description: "Affordable bio-equivalent alternative.",
+        categoryId: "cat_diabetes",
+        category: "Diabetes",
+        description: "Affordable bio-equivalent alternative with same potency.",
         isGeneric: true,
         dosageForm: "Tablet",
         strength: "50/500mg",
@@ -158,26 +173,25 @@ export default function SupervisorConsole() {
     initialCats.forEach(cat => setDocumentNonBlocking(doc(db, 'categories', cat.id), cat, { merge: true }));
     initialMeds.forEach(med => setDocumentNonBlocking(doc(db, 'medicines', med.id), med, { merge: true }));
     
-    toast({ title: 'Seed Success', description: 'Clinical master data has been initialized.' });
-  };
+    toast({ title: 'Seed Executed', description: 'Medicinal records and therapeutic hubs have been initialized.' });
+  }, [db, isServerConfirmed, toast]);
 
-  if (isUserLoading || (user && isAdminRoleLoading)) {
+  if (isUserLoading || (user && isAdminRoleLoading) || isVerifying) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F7F6] gap-4">
         <Loader2 className="w-12 h-12 animate-spin text-primary" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Syncing Credentials...</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Verifying Security Context...</p>
       </div>
     );
   }
 
-  // Not Logged In
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F4F7F6] p-4">
         <Card className="max-w-md w-full rounded-[48px] shadow-2xl border-none overflow-hidden">
           <CardHeader className="text-center p-12 bg-primary text-white">
             <div className="w-20 h-20 bg-white/20 rounded-[32px] flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
-              <ShieldCheck className="w-10 h-10" />
+              <Lock className="w-10 h-10" />
             </div>
             <CardTitle className="text-3xl font-black uppercase tracking-tight">Supervisor Hub</CardTitle>
             <CardDescription className="text-white/70">Secure Operational Command Center</CardDescription>
@@ -185,7 +199,7 @@ export default function SupervisorConsole() {
           <CardContent className="p-10 bg-white">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Operational Email</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Admin Email</Label>
                 <Input type="email" placeholder="admin@healthlink.com" value={email} onChange={e => setEmail(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
               </div>
               <div className="space-y-2">
@@ -202,8 +216,7 @@ export default function SupervisorConsole() {
     );
   }
 
-  // Logged in but not Authorized as Supervisor
-  if (!isVerifiedAdmin) {
+  if (!isServerConfirmed) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F4F7F6] p-4">
         <Card className="max-w-md w-full rounded-[48px] shadow-2xl border-none p-12 text-center space-y-8 bg-white">
@@ -212,12 +225,11 @@ export default function SupervisorConsole() {
           </div>
           <div>
             <h2 className="text-2xl font-black uppercase tracking-tight mb-2">Access Restricted</h2>
-            <p className="text-gray-400 text-sm leading-relaxed">Your account (<code className="bg-gray-100 px-2 py-0.5 rounded text-xs text-primary">{user.uid}</code>) is not yet verified in the supervisor master.</p>
+            <p className="text-gray-400 text-sm leading-relaxed">Account <code>{user.uid.substring(0,8)}...</code> is not yet a verified supervisor.</p>
           </div>
           <div className="space-y-4 pt-8 border-t">
-            <p className="text-[10px] text-gray-300 font-black uppercase tracking-widest">Bootstrap Control</p>
             <Button onClick={claimAdminRole} className="w-full gap-3 rounded-full h-16 bg-orange-600 hover:bg-orange-700 shadow-xl shadow-orange-100 uppercase font-black text-xs tracking-widest">
-              <UserPlus className="w-6 h-6" /> Claim Supervisor Role
+              <UserPlus className="w-6 h-6" /> Initialize Admin Role
             </Button>
             <Button onClick={handleLogout} variant="ghost" className="w-full text-gray-400 font-bold hover:bg-gray-50">Sign Out</Button>
           </div>
@@ -226,10 +238,8 @@ export default function SupervisorConsole() {
     );
   }
 
-  // MAIN DASHBOARD (Authorized)
   return (
     <div className="min-h-screen bg-[#F4F7F6]">
-      {/* Top Navigation */}
       <header className="bg-white border-b sticky top-0 z-50 h-24">
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-12">
@@ -240,8 +250,8 @@ export default function SupervisorConsole() {
             <nav className="hidden lg:flex gap-2">
               {[
                 { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
-                { id: 'medicines', label: 'Clinical Master', icon: Package },
-                { id: 'categories', label: 'Therapeutic Hubs', icon: Tags },
+                { id: 'medicines', label: 'Inventory', icon: Package },
+                { id: 'categories', label: 'Categories', icon: Tags },
                 { id: 'orders', label: 'Fulfillment', icon: ShoppingBag }
               ].map(tab => (
                 <Button 
@@ -257,35 +267,41 @@ export default function SupervisorConsole() {
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex flex-col items-end">
-              <p className="text-[10px] font-black uppercase text-gray-400">Authenticated as</p>
-              <p className="text-xs font-bold text-gray-900">{user.email}</p>
-            </div>
-            <Button variant="ghost" onClick={handleLogout} size="icon" className="w-12 h-12 rounded-2xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"><LogOut className="w-6 h-6" /></Button>
+            <Button variant="ghost" onClick={handleLogout} size="icon" className="w-12 h-12 rounded-2xl text-gray-400 hover:text-red-500"><LogOut className="w-6 h-6" /></Button>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-12">
+        {ordersFetchError && (
+          <Alert variant="destructive" className="mb-8 rounded-[32px]">
+            <AlertTriangle className="h-5 w-5" />
+            <AlertTitle>Security Policy Conflict</AlertTitle>
+            <AlertDescription>
+              A permission conflict occurred while fetching the global order stream. Please ensure you have "Claimed Admin Role" and wait 10 seconds for the server to sync.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {activeTab === 'dashboard' && (
           <div className="space-y-12 animate-in fade-in duration-700">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
               <div>
                 <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase">Operations</h1>
-                <p className="text-gray-400 text-xs font-black uppercase tracking-[0.4em] mt-3">Platform Health & Inventory Monitor</p>
+                <p className="text-gray-400 text-xs font-black uppercase tracking-[0.4em] mt-3">Verified Administrative Command</p>
               </div>
               <div className="bg-white p-6 rounded-[32px] shadow-sm border flex items-center gap-5">
-                <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center shadow-inner"><RefreshCw className="w-7 h-7 text-green-600" /></div>
+                <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center"><RefreshCw className="w-7 h-7 text-green-600" /></div>
                 <div>
                   <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Status</p>
-                  <p className="text-sm font-bold text-gray-900">Live Database Synced</p>
+                  <p className="text-sm font-bold text-gray-900">Secure Cloud Link Active</p>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               {[
-                { label: 'Medicine Master', icon: Package, color: 'text-blue-600', tab: 'medicines', count: medicines?.length || 0 },
+                { label: 'Medicines', icon: Package, color: 'text-blue-600', tab: 'medicines', count: medicines?.length || 0 },
                 { label: 'Active Orders', icon: ShoppingBag, color: 'text-emerald-600', tab: 'orders', count: orders?.length || 0 },
                 { label: 'Therapy Hubs', icon: Tags, color: 'text-orange-500', tab: 'categories', count: categories?.length || 0 },
               ].map(card => (
@@ -299,22 +315,19 @@ export default function SupervisorConsole() {
                   </div>
                   <CardTitle className="text-2xl font-black text-gray-900 uppercase tracking-tight">{card.label}</CardTitle>
                   <p className="text-4xl font-black text-primary mt-3">{card.count}</p>
-                  <div className="mt-6 flex items-center gap-2 text-[10px] font-black uppercase text-gray-300 group-hover:text-primary transition-colors">
+                  <div className="mt-6 flex items-center gap-2 text-[10px] font-black uppercase text-gray-300 group-hover:text-primary">
                     Manage Records <ChevronRight className="w-3 h-3" />
                   </div>
                 </Card>
               ))}
               
               <Card className="rounded-[56px] p-10 border-none shadow-sm bg-primary text-white flex flex-col justify-between overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-8 opacity-10">
-                   <Database className="w-32 h-32 rotate-12" />
-                </div>
                 <div className="relative z-10">
                   <Database className="w-10 h-10 mb-8" />
                   <CardTitle className="text-2xl font-black uppercase mb-2">Master Seed</CardTitle>
-                  <p className="text-xs text-white/70 font-bold leading-relaxed">Initialize core pharmacological catalogs and therapeutic hubs instantly.</p>
+                  <p className="text-xs text-white/70 font-bold leading-relaxed">Initialize catalogs and hubs to standardize the pharmacological master.</p>
                 </div>
-                <Button onClick={seedMasterData} className="relative z-10 w-full rounded-full h-14 bg-white text-primary hover:bg-gray-50 font-black text-xs uppercase tracking-widest mt-8 shadow-2xl">Execute Seed</Button>
+                <Button onClick={seedMasterData} className="relative z-10 w-full rounded-full h-14 bg-white text-primary hover:bg-gray-50 font-black text-xs uppercase tracking-widest mt-8">Execute Seed</Button>
               </Card>
             </div>
           </div>
@@ -323,13 +336,10 @@ export default function SupervisorConsole() {
         {activeTab === 'medicines' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6">
             <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-3xl font-black text-gray-900 uppercase">Clinical Master</h2>
-                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Inventory Control & Pharmacology Management</p>
-              </div>
+              <h2 className="text-3xl font-black text-gray-900 uppercase">Medicine Master</h2>
               <Dialog>
                 <DialogTrigger asChild><Button className="rounded-full gap-3 px-10 h-16 font-black uppercase text-xs tracking-widest shadow-2xl shadow-primary/30"><Plus className="w-6 h-6" /> New Product</Button></DialogTrigger>
-                <MedicineForm categories={categories || []} onSave={data => addDocumentNonBlocking(collection(db, 'medicines'), data)} />
+                <MedicineForm categories={categories || []} onSave={data => setDocumentNonBlocking(doc(db, 'medicines', `med_${Date.now()}`), data, { merge: true })} />
               </Dialog>
             </div>
             
@@ -350,8 +360,8 @@ export default function SupervisorConsole() {
                     <tr key={med.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-10 py-10">
                         <div className="flex items-center gap-6">
-                          <div className="w-16 h-16 bg-gray-100 rounded-2xl overflow-hidden shrink-0 shadow-inner">
-                            <img src={med.imageUrl} className="w-full h-full object-contain p-3" alt={med.name} />
+                          <div className="w-16 h-16 bg-gray-100 rounded-2xl overflow-hidden shrink-0">
+                            <img src={med.imageUrl} className="w-full h-full object-contain p-2" alt={med.name} />
                           </div>
                           <div>
                             <div className="font-black text-gray-900 text-xl tracking-tight">{med.name}</div>
@@ -361,7 +371,7 @@ export default function SupervisorConsole() {
                       </td>
                       <td className="px-10 py-10">
                         <div className="font-black text-gray-900 text-2xl">₹{med.price}</div>
-                        {med.isGeneric && <Badge className="bg-emerald-50 text-emerald-700 text-[8px] font-black uppercase px-3 h-6 mt-2 border-none">Verified Generic</Badge>}
+                        {med.isGeneric && <Badge className="bg-emerald-50 text-emerald-700 text-[8px] font-black uppercase px-2 h-6 mt-2 border-none">Generic</Badge>}
                       </td>
                       <td className="px-10 py-10">
                         <Badge variant={med.availableQuantity < 50 ? 'destructive' : 'secondary'} className="px-5 py-2 rounded-full font-black text-[10px] uppercase">
@@ -371,16 +381,16 @@ export default function SupervisorConsole() {
                       <td className="px-10 py-10 text-right">
                         <div className="flex justify-end gap-3">
                           <Dialog>
-                            <DialogTrigger asChild><Button variant="ghost" size="icon" className="w-12 h-12 rounded-2xl hover:bg-primary/5 text-gray-400 hover:text-primary transition-all"><Edit className="w-6 h-6" /></Button></DialogTrigger>
+                            <DialogTrigger asChild><Button variant="ghost" size="icon" className="w-12 h-12 rounded-2xl text-gray-400 hover:text-primary transition-all"><Edit className="w-6 h-6" /></Button></DialogTrigger>
                             <MedicineForm initialData={med} categories={categories || []} onSave={data => updateDocumentNonBlocking(doc(db, 'medicines', med.id), data)} />
                           </Dialog>
-                          <Button variant="ghost" size="icon" className="w-12 h-12 rounded-2xl hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all" onClick={() => deleteDocumentNonBlocking(doc(db, 'medicines', med.id))}><Trash2 className="w-6 h-6" /></Button>
+                          <Button variant="ghost" size="icon" className="w-12 h-12 rounded-2xl text-gray-400 hover:text-red-500" onClick={() => deleteDocumentNonBlocking(doc(db, 'medicines', med.id))}><Trash2 className="w-6 h-6" /></Button>
                         </div>
                       </td>
                     </tr>
                   ))}
                   {!isMedsLoading && medicines?.length === 0 && (
-                    <tr><td colSpan={4} className="p-40 text-center text-gray-400 font-black uppercase tracking-[0.2em]">Catalog Empty. Execute master seed.</td></tr>
+                    <tr><td colSpan={4} className="p-40 text-center text-gray-400 font-black uppercase">Catalog Empty. Seed clinical data.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -390,19 +400,16 @@ export default function SupervisorConsole() {
 
         {activeTab === 'orders' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6">
-            <div>
-              <h2 className="text-3xl font-black text-gray-900 uppercase">Fulfillment command</h2>
-              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Global Logistics Lifecycle Monitor</p>
-            </div>
+            <h2 className="text-3xl font-black text-gray-900 uppercase">Fulfillment Command</h2>
             
             <Card className="rounded-[48px] overflow-hidden border-none shadow-sm bg-white">
               <table className="w-full text-left">
                 <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
                   <tr>
-                    <th className="px-10 py-8 tracking-widest">Batch Reference</th>
+                    <th className="px-10 py-8 tracking-widest">Reference</th>
                     <th className="px-10 py-8 tracking-widest">Status</th>
-                    <th className="px-10 py-8 tracking-widest">Commercials</th>
-                    <th className="px-10 py-8 text-right tracking-widest">Review</th>
+                    <th className="px-10 py-8 tracking-widest">Total</th>
+                    <th className="px-10 py-8 text-right tracking-widest">Detail</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -413,7 +420,7 @@ export default function SupervisorConsole() {
                       <td className="px-10 py-10">
                         <div className="font-black text-gray-900 text-xl uppercase tracking-tighter">#{order.id.substring(0,8)}</div>
                         <div className="text-[10px] text-gray-400 font-bold mt-1">
-                          {order.orderDate?.toDate ? order.orderDate.toDate().toLocaleString() : 'Syncing...'}
+                           {order.orderDate?.toDate ? order.orderDate.toDate().toLocaleString() : 'Recent'}
                         </div>
                       </td>
                       <td className="px-10 py-10">
@@ -426,18 +433,17 @@ export default function SupervisorConsole() {
                       </td>
                       <td className="px-10 py-10">
                         <div className="font-black text-gray-900 text-2xl">₹{order.totalAmount}</div>
-                        <div className="text-[10px] text-gray-400 font-black uppercase mt-1">{order.paymentStatus}</div>
                       </td>
                       <td className="px-10 py-10 text-right">
                         <Dialog>
-                          <DialogTrigger asChild><Button variant="ghost" size="icon" className="w-14 h-14 rounded-2xl hover:bg-primary/5 text-primary transition-all"><Eye className="w-7 h-7" /></Button></DialogTrigger>
+                          <DialogTrigger asChild><Button variant="ghost" size="icon" className="w-14 h-14 rounded-2xl text-primary"><Eye className="w-7 h-7" /></Button></DialogTrigger>
                           <FulfillmentDetail order={order} db={db} />
                         </Dialog>
                       </td>
                     </tr>
                   ))}
                   {!isOrdersLoading && orders?.length === 0 && (
-                    <tr><td colSpan={4} className="p-40 text-center text-gray-400 font-black uppercase tracking-[0.2em]">Waiting for clinical orders...</td></tr>
+                    <tr><td colSpan={4} className="p-40 text-center text-gray-400 font-black uppercase">No orders awaiting fulfillment.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -448,27 +454,24 @@ export default function SupervisorConsole() {
         {activeTab === 'categories' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6">
             <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-3xl font-black text-gray-900 uppercase">Therapeutic Hubs</h2>
-                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Medical Classification Management</p>
-              </div>
+              <h2 className="text-3xl font-black text-gray-900 uppercase">Therapeutic Hubs</h2>
               <Dialog>
                 <DialogTrigger asChild><Button className="rounded-full gap-3 px-10 h-16 font-black uppercase text-xs tracking-widest shadow-2xl shadow-primary/30"><Plus className="w-6 h-6" /> New Hub</Button></DialogTrigger>
-                <CategoryForm onSave={data => addDocumentNonBlocking(collection(db, 'categories'), data)} />
+                <CategoryForm onSave={data => setDocumentNonBlocking(doc(db, 'categories', `cat_${Date.now()}`), data, { merge: true })} />
               </Dialog>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {categories?.map(cat => (
-                <Card key={cat.id} className="rounded-[48px] p-12 border-none shadow-sm hover:shadow-2xl transition-all bg-white relative group">
+                <Card key={cat.id} className="rounded-[48px] p-12 border-none shadow-sm bg-white relative group">
                   <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight mb-3">{cat.name}</h3>
                   <p className="text-xs text-gray-400 font-bold leading-relaxed mb-10">{cat.description}</p>
                   <div className="flex gap-3">
                     <Dialog>
-                      <DialogTrigger asChild><Button variant="outline" size="sm" className="rounded-full px-8 h-12 font-black text-[10px] uppercase tracking-widest border-2">Edit Hub</Button></DialogTrigger>
+                      <DialogTrigger asChild><Button variant="outline" size="sm" className="rounded-full px-8 h-12 font-black text-[10px] uppercase border-2">Edit</Button></DialogTrigger>
                       <CategoryForm initialData={cat} onSave={data => updateDocumentNonBlocking(doc(db, 'categories', cat.id), data)} />
                     </Dialog>
-                    <Button variant="ghost" size="sm" className="rounded-full text-red-500 hover:bg-red-50 h-12 px-6 font-black text-[10px] uppercase tracking-widest" onClick={() => deleteDocumentNonBlocking(doc(db, 'categories', cat.id))}>Delete</Button>
+                    <Button variant="ghost" size="sm" className="rounded-full text-red-500 h-12 px-6 font-black text-[10px] uppercase" onClick={() => deleteDocumentNonBlocking(doc(db, 'categories', cat.id))}>Delete</Button>
                   </div>
                 </Card>
               ))}
@@ -483,7 +486,6 @@ export default function SupervisorConsole() {
   );
 }
 
-// Sub-components
 function MedicineForm({ initialData, categories, onSave }: { initialData?: any, categories: any[], onSave: (data: any) => void }) {
   const [formData, setFormData] = useState(initialData || { name: '', price: 0, saltComposition: '', manufacturer: '', categoryId: '', availableQuantity: 100, isGeneric: false, imageUrl: 'https://picsum.photos/seed/med/300/300', dosageForm: 'Tablet', strength: '500mg', description: '' });
   
@@ -491,32 +493,30 @@ function MedicineForm({ initialData, categories, onSave }: { initialData?: any, 
     <DialogContent className="max-w-3xl rounded-[56px] p-0 overflow-hidden border-none shadow-2xl">
       <CardHeader className="bg-primary text-white p-12">
         <CardTitle className="text-3xl font-black uppercase tracking-tight">Medicine Record</CardTitle>
-        <CardDescription className="text-white/70">Define pharmacological master details</CardDescription>
+        <CardDescription className="text-white/70">Define clinical master details</CardDescription>
       </CardHeader>
       <div className="p-12 bg-white grid grid-cols-2 gap-8">
-        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Brand Identity</Label><Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" /></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Brand Name</Label><Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" /></div>
         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Manufacturer</Label><Input value={formData.manufacturer} onChange={e => setFormData({...formData, manufacturer: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" /></div>
-        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Clinical Valuation (INR)</Label><Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" /></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Price (INR)</Label><Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" /></div>
         <div className="space-y-2">
           <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Therapeutic Hub</Label>
-          <select value={formData.categoryId} onChange={e => setFormData({...formData, categoryId: e.target.value})} className="w-full h-14 border-none rounded-2xl px-5 text-sm font-bold bg-gray-50 focus:ring-2 focus:ring-primary outline-none">
+          <select value={formData.categoryId} onChange={e => setFormData({...formData, categoryId: e.target.value})} className="w-full h-14 border-none rounded-2xl px-5 text-sm font-bold bg-gray-50 outline-none">
             <option value="">Select Category</option>
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
-        <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Active Salt Composition</Label><Input value={formData.saltComposition} onChange={e => setFormData({...formData, saltComposition: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" /></div>
-        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Dosage Form</Label><Input value={formData.dosageForm} onChange={e => setFormData({...formData, dosageForm: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" /></div>
-        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Inventory Units</Label><Input type="number" value={formData.availableQuantity} onChange={e => setFormData({...formData, availableQuantity: Number(e.target.value)})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" /></div>
-        <div className="col-span-2 flex items-center justify-between bg-emerald-50 p-8 rounded-3xl border border-dashed border-emerald-100">
+        <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Salt Composition</Label><Input value={formData.saltComposition} onChange={e => setFormData({...formData, saltComposition: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" /></div>
+        <div className="col-span-2 flex items-center justify-between bg-emerald-50 p-6 rounded-3xl border border-dashed border-emerald-100">
           <div>
             <Label className="text-base font-black text-emerald-900 uppercase">Bio-Equivalent Generic</Label>
-            <p className="text-[10px] text-emerald-600/70 font-bold uppercase tracking-tight mt-1">Flag as high-savings alternative</p>
+            <p className="text-[10px] text-emerald-600/70 font-bold uppercase tracking-tight">Flag as affordable alternative</p>
           </div>
           <Switch checked={formData.isGeneric} onCheckedChange={v => setFormData({...formData, isGeneric: v})} />
         </div>
       </div>
-      <DialogFooter className="p-12 bg-gray-50 flex gap-4">
-        <Button onClick={() => onSave(formData)} className="w-full rounded-full h-16 font-black uppercase text-sm tracking-widest shadow-2xl shadow-primary/20">Authorize & Save Record</Button>
+      <DialogFooter className="p-12 bg-gray-50">
+        <Button onClick={() => { onSave(formData); toast({ title: 'Medicine Saved' }); }} className="w-full rounded-full h-16 font-black uppercase tracking-widest">Authorize Record</Button>
       </DialogFooter>
     </DialogContent>
   );
@@ -528,71 +528,62 @@ function CategoryForm({ initialData, onSave }: { initialData?: any, onSave: (dat
     <DialogContent className="max-w-xl rounded-[56px] p-0 overflow-hidden border-none shadow-2xl">
       <CardHeader className="bg-primary text-white p-12">
         <CardTitle className="text-3xl font-black uppercase tracking-tight">Therapeutic Hub</CardTitle>
-        <CardDescription className="text-white/70">Clinical Categorization Management</CardDescription>
       </CardHeader>
       <div className="p-12 bg-white space-y-8">
-        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Hub Identity</Label><Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" /></div>
-        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Medical Description</Label><Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="rounded-2xl min-h-[160px] bg-gray-50 border-none font-bold p-5" /></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Hub Name</Label><Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" /></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Clinical Description</Label><Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="rounded-2xl min-h-[160px] bg-gray-50 border-none font-bold p-5" /></div>
       </div>
       <DialogFooter className="p-12 bg-gray-50">
-        <Button onClick={() => onSave(formData)} className="w-full rounded-full h-16 font-black uppercase text-sm tracking-widest shadow-2xl shadow-primary/20">Authorize Hub</Button>
+        <Button onClick={() => onSave(formData)} className="w-full rounded-full h-16 font-black uppercase tracking-widest">Authorize Hub</Button>
       </DialogFooter>
     </DialogContent>
   );
 }
 
 function FulfillmentDetail({ order, db }: { order: any, db: any }) {
-  const { toast } = useToast();
   const updateStatus = (s: string) => {
     if (order.userId) {
-      // Direct path update to ensure customer dashboard reflects change instantly
       const ref = doc(db, 'userProfiles', order.userId, 'orders', order.id);
       updateDocumentNonBlocking(ref, { status: s });
-      toast({ title: 'Lifecycle Updated', description: `Order status changed to ${s}.` });
+      toast({ title: 'Status Updated', description: `Order is now ${s}` });
     }
   };
   return (
-    <DialogContent className="max-w-3xl rounded-[56px] p-0 overflow-hidden border-none shadow-2xl">
+    <DialogContent className="max-w-2xl rounded-[56px] p-0 overflow-hidden border-none shadow-2xl">
       <CardHeader className="bg-primary text-white p-12">
-        <CardTitle className="text-3xl font-black uppercase tracking-tight">Fulfillment Console</CardTitle>
-        <CardDescription className="text-white/70">Order Batch Lifecycle Control</CardDescription>
+        <CardTitle className="text-3xl font-black uppercase tracking-tight">Order Console</CardTitle>
       </CardHeader>
       <div className="p-12 bg-white space-y-10">
         <div className="grid grid-cols-2 gap-6">
-          <div className="bg-gray-50 p-8 rounded-[32px]">
+          <div className="bg-gray-50 p-6 rounded-[32px]">
              <p className="text-[10px] font-black uppercase text-gray-400 mb-2">Patient ID</p>
-             <p className="font-bold text-gray-900 break-all">{order.userId}</p>
+             <p className="font-bold text-gray-900 break-all">{order.userId.substring(0, 16)}...</p>
           </div>
-          <div className="bg-emerald-50 p-8 rounded-[32px]">
-             <p className="text-[10px] font-black uppercase text-emerald-600 mb-2">Transaction Value</p>
-             <p className="font-black text-3xl text-emerald-600 tracking-tight">₹{order.totalAmount}</p>
+          <div className="bg-emerald-50 p-6 rounded-[32px]">
+             <p className="text-[10px] font-black uppercase text-emerald-600 mb-2">Total Value</p>
+             <p className="font-black text-3xl text-emerald-600">₹{order.totalAmount}</p>
           </div>
         </div>
 
         <div className="space-y-4">
-          <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Batch Items</p>
-          <div className="max-h-60 overflow-y-auto space-y-3 pr-2 scrollbar-hide">
-            {order.items?.map((item: any, i: number) => (
-              <div key={i} className="flex justify-between items-center p-6 bg-gray-50 rounded-3xl border border-gray-100">
-                <div className="flex flex-col">
-                   <span className="font-black text-gray-900 text-lg">{item.name}</span>
-                   <span className="text-[10px] text-gray-400 font-bold uppercase mt-1">Qty: {item.quantity} • Unit: ₹{item.unitPrice}</span>
-                </div>
-                <span className="font-black text-gray-900 text-xl">₹{item.unitPrice * item.quantity}</span>
-              </div>
-            ))}
-          </div>
+          <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Item Batch</p>
+          {order.items?.map((item: any, i: number) => (
+            <div key={i} className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
+               <span className="font-black text-gray-900">{item.name}</span>
+               <span className="text-sm font-bold">Qty: {item.quantity}</span>
+            </div>
+          ))}
         </div>
 
         <div className="space-y-6">
           <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">Lifecycle Command</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             {['Pending', 'Processing', 'Shipped', 'Delivered'].map(s => (
               <Button 
                 key={s} 
                 variant={order.status === s ? 'default' : 'outline'} 
                 onClick={() => updateStatus(s)} 
-                className={`rounded-full h-14 font-black uppercase text-[10px] tracking-widest transition-all ${order.status === s ? 'shadow-xl shadow-primary/20 scale-105' : 'border-2'}`}
+                className={`rounded-full h-14 font-black uppercase text-[10px] tracking-widest ${order.status === s ? 'shadow-xl' : 'border-2'}`}
               >
                 {s}
               </Button>
