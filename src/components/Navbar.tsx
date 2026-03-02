@@ -106,21 +106,21 @@ export default function Navbar() {
     <>
       <nav className="sticky top-0 z-50 bg-white border-b safe-top">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-12 md:h-16">
+          <div className="flex justify-between items-center h-12 md:h-14">
             <div className="flex items-center gap-2">
               <Link href="/" className="flex items-center gap-1.5">
-                <div className="bg-primary p-1 rounded-lg shadow-md shadow-primary/10">
-                  <div className="text-white font-bold text-xs sm:text-base tracking-tighter">HL</div>
+                <div className="bg-primary p-0.5 rounded shadow-sm">
+                  <div className="text-white font-bold text-[10px] tracking-tighter">HL</div>
                 </div>
-                <span className="hidden sm:block font-black text-base text-primary font-headline tracking-tight text-nowrap">HealthLink</span>
+                <span className="hidden sm:block font-black text-xs text-primary font-headline tracking-tight text-nowrap">HealthLink</span>
               </Link>
 
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-1 text-[8px] font-black text-gray-500 hover:text-primary p-1 h-auto rounded-lg bg-gray-50 border border-gray-100 uppercase tracking-widest max-w-[90px] sm:max-w-none transition-all active:scale-95">
-                    <MapPin className="w-2.5 h-2.5 text-primary shrink-0" />
+                  <Button variant="ghost" className="flex items-center gap-1 text-[7px] font-black text-gray-500 hover:text-primary p-1 h-auto rounded-lg bg-gray-50 border border-gray-100 uppercase tracking-widest max-w-[80px] sm:max-w-none transition-all active:scale-95">
+                    <MapPin className="w-2 h-2 text-primary shrink-0" />
                     <span className="truncate">{location}</span>
-                    <ChevronDown className="w-2 h-2 shrink-0 opacity-40" />
+                    <ChevronDown className="w-1.5 h-1.5 shrink-0 opacity-40" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-64 p-3 rounded-2xl shadow-2xl border-none">
@@ -128,24 +128,24 @@ export default function Navbar() {
                     <Button 
                       onClick={handleGeoLocation} 
                       disabled={isLocating}
-                      className="w-full justify-start gap-2 h-11 rounded-xl bg-primary/5 text-primary hover:bg-primary/10 font-black text-[9px] uppercase tracking-widest"
+                      className="w-full justify-start gap-2 h-10 rounded-xl bg-primary/5 text-primary hover:bg-primary/10 font-black text-[8px] uppercase tracking-widest"
                     >
-                      {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <LocateFixed className="w-4 h-4" />}
+                      {isLocating ? <Loader2 className="w-3 h-3 animate-spin" /> : <LocateFixed className="w-3 h-3" />}
                       Use GPS Location
                     </Button>
                     <div className="pt-1">
-                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest px-1.5 mb-2">Saved Hubs</p>
+                      <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest px-1.5 mb-2">Saved Hubs</p>
                       {manualLocations.map((loc) => (
                         <Button 
                           key={loc} 
                           variant="ghost" 
-                          className="w-full justify-start text-[11px] h-9 rounded-lg hover:bg-gray-50 font-bold" 
+                          className="w-full justify-start text-[10px] h-8 rounded-lg hover:bg-gray-50 font-bold" 
                           onClick={() => {
                             setLocation(loc);
                             setIsPopoverOpen(false);
                           }}
                         >
-                          <MapPin className="w-3 h-3 mr-2 text-gray-300" />
+                          <MapPin className="w-2.5 h-2.5 mr-2 text-gray-300" />
                           {loc}
                         </Button>
                       ))}
@@ -155,61 +155,32 @@ export default function Navbar() {
               </Popover>
             </div>
 
-            <div className="flex items-center gap-0.5 sm:gap-1">
-              <Link href="/cart" className="relative p-1.5 hover:bg-gray-50 rounded-xl active:scale-90 transition-transform">
-                <ShoppingCart className="w-4 h-4 text-gray-700" />
+            <div className="flex items-center gap-0.5">
+              <Link href="/cart" className="relative p-1 hover:bg-gray-50 rounded-lg active:scale-90 transition-transform">
+                <ShoppingCart className="w-3.5 h-3.5 text-gray-700" />
                 {totalItems > 0 && (
-                  <span className="absolute top-0.5 right-0.5 bg-accent text-white text-[7px] font-black px-1 py-0.5 rounded-full ring-2 ring-white">
+                  <span className="absolute top-0 right-0 bg-accent text-white text-[6px] font-black px-1 py-0 rounded-full ring-1 ring-white">
                     {totalItems}
                   </span>
                 )}
               </Link>
-              <Link href="/profile" className="p-1.5 hover:bg-gray-50 rounded-xl active:scale-90 transition-transform">
-                <User className="w-4 h-4 text-gray-700" />
+              <Link href="/profile" className="p-1 hover:bg-gray-50 rounded-lg active:scale-90 transition-transform">
+                <User className="w-3.5 h-3.5 text-gray-700" />
               </Link>
             </div>
           </div>
 
-          <div className="pb-2 md:pb-3 relative" ref={suggestionRef}>
+          <div className="pb-2 relative" ref={suggestionRef}>
             <form onSubmit={handleSearch} className="relative group">
               <Input
                 type="text"
                 placeholder="Search medicines, salts..."
-                className="w-full pl-8 pr-3 py-1.5 rounded-full border-none focus-visible:ring-2 focus-visible:ring-primary/10 transition-all bg-gray-50 h-9 sm:h-12 font-bold text-[10px] sm:text-xs shadow-inner"
+                className="w-full pl-7 pr-3 py-1 rounded-full border-none focus-visible:ring-2 focus-visible:ring-primary/10 transition-all bg-gray-50 h-8 sm:h-10 font-bold text-[9px] sm:text-xs shadow-inner"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-300 w-3.5 h-3.5 group-focus-within:text-primary transition-colors" />
+              <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-300 w-3 h-3 group-focus-within:text-primary transition-colors" />
             </form>
-
-            {suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
-                {suggestions.map((p) => (
-                  <Link 
-                    key={p.id} 
-                    href={`/product/${p.id}`}
-                    onClick={() => {
-                      setSuggestions([]);
-                      setSearch('');
-                    }}
-                    className="flex items-center gap-3 p-3 hover:bg-gray-50 border-b border-gray-50 last:border-none"
-                  >
-                    <div className="w-8 h-8 relative bg-gray-50 rounded-lg overflow-hidden shrink-0">
-                      <img src={p.imageUrl} alt={p.name} className="object-contain p-1.5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-black text-[9px] text-gray-900 truncate">{p.name}</p>
-                      <p className="text-[7px] text-gray-400 font-bold uppercase tracking-tight truncate">{p.saltComposition}</p>
-                    </div>
-                    {p.isGeneric ? (
-                      <Badge className="ml-auto bg-green-50 text-green-700 border-none text-[6px] font-black uppercase px-1 h-4">GENERIC</Badge>
-                    ) : (
-                      <Badge variant="outline" className="ml-auto text-[6px] font-black uppercase px-1 h-4 text-gray-300">BRANDED</Badge>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </nav>
