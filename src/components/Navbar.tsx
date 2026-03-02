@@ -16,6 +16,7 @@ export default function Navbar() {
   const { totalItems, location, setLocation } = useCart();
   const [search, setSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const router = useRouter();
   const suggestionRef = useRef<HTMLDivElement>(null);
   
@@ -78,11 +79,14 @@ export default function Navbar() {
               const city = data.address.city || data.address.town || data.address.village || '';
               setLocation(`${neighborhood}${city ? ', ' + city : ''}`);
             } else {
-              setLocation(`Location (${lat.toFixed(2)}, ${lng.toFixed(2)})`);
+              setLocation(`Area (${lat.toFixed(2)}, ${lng.toFixed(2)})`);
             }
+            // Automatically close the popover after capturing location
+            setIsPopoverOpen(false);
           } catch (e) {
             console.error("Geocoding failed:", e);
             setLocation("Unknown Location");
+            setIsPopoverOpen(false);
           } finally {
             setIsLocating(false);
           }
@@ -116,7 +120,7 @@ export default function Navbar() {
                 <span className="hidden sm:block font-black text-xl text-primary font-headline tracking-tight text-nowrap">HealthLink</span>
               </Link>
 
-              <Popover>
+              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-1 text-[10px] font-black text-gray-500 hover:text-primary p-2 h-auto rounded-xl bg-gray-50 border border-gray-100 uppercase tracking-widest max-w-[120px] sm:max-w-none">
                     <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
@@ -141,7 +145,10 @@ export default function Navbar() {
                           key={loc} 
                           variant="ghost" 
                           className="w-full justify-start text-sm h-12 rounded-xl hover:bg-gray-50 font-bold" 
-                          onClick={() => setLocation(loc)}
+                          onClick={() => {
+                            setLocation(loc);
+                            setIsPopoverOpen(false);
+                          }}
                         >
                           <MapPin className="w-4 h-4 mr-2 text-gray-300" />
                           {loc}
