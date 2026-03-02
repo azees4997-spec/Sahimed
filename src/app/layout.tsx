@@ -5,10 +5,12 @@ import { CartProvider } from '@/context/CartContext';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import MobileCartBar from '@/components/MobileCartBar';
+import BottomNav from '@/components/BottomNav';
 
 export const metadata: Metadata = {
   title: 'HealthLink Pharmacy | Professional Healthcare Solutions',
   description: 'High-end pharmacy e-commerce for all your medicine needs.',
+  manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -42,8 +44,13 @@ export default function RootLayout({
       <body className="font-body antialiased bg-[#F8F8F8]">
         <FirebaseClientProvider>
           <CartProvider>
-            {children}
-            <MobileCartBar />
+            <div className="flex flex-col min-h-screen">
+              <div className="flex-1 pb-16 sm:pb-0">
+                {children}
+              </div>
+              <BottomNav />
+              <MobileCartBar />
+            </div>
             <Toaster />
           </CartProvider>
         </FirebaseClientProvider>
