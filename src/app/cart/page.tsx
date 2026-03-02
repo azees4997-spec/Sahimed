@@ -1,27 +1,28 @@
+
 "use client"
 
 import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
+  const { cart, removeFromCart, totalPrice, totalItems } = useCart();
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-[#F8F8F8]">
+      <div className="min-h-screen bg-[#F8F8F8] page-transition-wrapper">
         <Navbar />
         <main className="max-w-4xl mx-auto px-4 py-12 text-center">
-          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-            <ShoppingBag className="w-8 h-8 text-gray-200" />
+          <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+            <ShoppingBag className="w-6 h-6 text-gray-200" />
           </div>
-          <h1 className="text-2xl font-bold mb-3 font-headline">Your cart is empty</h1>
-          <p className="text-muted-foreground mb-6 text-sm">Looks like you haven't added anything to your cart yet.</p>
+          <h1 className="text-xl font-black mb-2 uppercase tracking-tight">Your cart is empty</h1>
+          <p className="text-gray-400 mb-6 text-[10px] font-bold uppercase tracking-widest">Build your health journey today.</p>
           <Link href="/">
-            <Button size="lg" className="rounded-full px-10 h-12 font-bold shadow-lg shadow-primary/20">
+            <Button size="lg" className="rounded-full px-10 h-14 font-black uppercase tracking-widest shadow-xl shadow-primary/20">
               Start Shopping
             </Button>
           </Link>
@@ -31,44 +32,36 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8]">
+    <div className="min-h-screen bg-[#F8F8F8] page-transition-wrapper">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12">
-        <h1 className="text-2xl font-bold font-headline mb-6 text-gray-900">Your Shopping Cart</h1>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <h1 className="text-xl font-black mb-6 text-gray-900 uppercase tracking-tight">Shopping Bag</h1>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-3">
+          <div className="lg:col-span-2 space-y-2">
             {cart.map((item) => (
-              <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:border-primary/20 transition-all">
-                <div className="relative w-16 h-16 bg-gray-50 rounded-lg overflow-hidden shrink-0">
-                  <Image src={item.imageUrl} alt={item.name} fill className="object-contain p-2" />
+              <div key={item.id} className="bg-white p-3 rounded-2xl shadow-sm border border-gray-50 flex items-center gap-3 group hover:shadow-md transition-all">
+                <div className="relative w-14 h-14 bg-gray-50 rounded-xl overflow-hidden shrink-0">
+                  <Image src={item.imageUrl} alt={item.name} fill className="object-contain p-1.5" />
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <Link href={`/product/${item.id}`}>
-                    <h3 className="font-bold text-gray-900 truncate hover:text-primary transition-colors text-sm">{item.name}</h3>
+                    <h3 className="font-black text-gray-900 truncate hover:text-primary transition-colors text-[10px] uppercase tracking-tight">{item.name}</h3>
                   </Link>
-                  <p className="text-[10px] text-muted-foreground line-clamp-1 italic">{item.saltComposition}</p>
-                  <div className="mt-2 flex items-center gap-4">
-                    <div className="flex items-center border rounded-full bg-gray-50 h-8 px-1">
-                      <Button variant="ghost" size="icon" className="w-6 h-6 rounded-full" onClick={() => updateQuantity(item.id, -1)}>
-                        <Minus className="w-2.5 h-2.5" />
-                      </Button>
-                      <span className="w-6 text-center font-bold text-[11px]">{item.quantity}</span>
-                      <Button variant="ghost" size="icon" className="w-6 h-6 rounded-full" onClick={() => updateQuantity(item.id, 1)}>
-                        <Plus className="w-2.5 h-2.5" />
-                      </Button>
-                    </div>
-                    <Button variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 p-1.5 h-auto" onClick={() => removeFromCart(item.id)}>
+                  <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest truncate">{item.saltComposition}</p>
+                  <div className="mt-1.5 flex items-center gap-4">
+                    <span className="text-[9px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded-full uppercase">Qty: {item.quantity}</span>
+                    <Button variant="ghost" className="text-red-400 hover:text-red-500 p-1 h-auto" onClick={() => removeFromCart(item.id)}>
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
-                  <p className="text-base font-black text-gray-900">₹{item.price * item.quantity}</p>
-                  <p className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold">₹{item.price} each</p>
+                  <p className="text-sm font-black text-gray-900">₹{item.price * item.quantity}</p>
+                  <p className="text-[7px] text-gray-400 uppercase tracking-widest font-black">₹{item.price} EA</p>
                 </div>
               </div>
             ))}
@@ -76,35 +69,35 @@ export default function CartPage() {
 
           {/* Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white p-6 rounded-2xl shadow-xl border sticky top-20">
-              <h2 className="text-lg font-bold mb-4">Order Summary</h2>
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between text-xs text-muted-foreground">
+            <div className="bg-white p-6 rounded-[32px] shadow-xl border border-gray-50 sticky top-20">
+              <h2 className="text-xs font-black mb-6 uppercase tracking-widest text-gray-400">Order Summary</h2>
+              <div className="space-y-4 mb-8">
+                <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                   <span>Subtotal ({totalItems} items)</span>
-                  <span>₹{totalPrice}</span>
+                  <span className="text-gray-900">₹{totalPrice}</span>
                 </div>
-                <div className="flex justify-between text-xs text-muted-foreground">
+                <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                   <span>Shipping</span>
-                  <span className="text-green-600 font-bold uppercase text-[10px]">FREE</span>
+                  <span className="text-green-600 font-black">FREE</span>
                 </div>
-                <div className="pt-3 border-t flex justify-between">
-                  <span className="text-base font-bold">Grand Total</span>
-                  <span className="text-xl font-black text-primary">₹{totalPrice}</span>
+                <div className="pt-4 border-t flex justify-between items-baseline">
+                  <span className="text-sm font-black uppercase tracking-tight">Total</span>
+                  <span className="text-2xl font-black text-primary">₹{totalPrice}</span>
                 </div>
               </div>
               
               <Link href="/checkout">
-                 <Button className="w-full rounded-full h-12 text-base font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform gap-2">
-                   Proceed to Checkout
-                   <ArrowRight className="w-3.5 h-3.5" />
+                 <Button className="w-full rounded-full h-14 text-sm font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform gap-2">
+                   Checkout Now
+                   <ArrowRight className="w-4 h-4" />
                  </Button>
               </Link>
               
-              <div className="mt-6 pt-6 border-t">
-                 <div className="flex items-center gap-3 text-[10px] text-muted-foreground bg-gray-50 p-2.5 rounded-lg">
-                   <ShieldCheck className="w-3.5 h-3.5 text-green-500 shrink-0" />
-                   Safe & secure payments. 100% authentic medicines.
-                 </div>
+              <div className="mt-8 pt-6 border-t flex items-center gap-3">
+                 <ShieldCheck className="w-4 h-4 text-green-500 shrink-0" />
+                 <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest leading-relaxed">
+                   Pharmacist Verified • Secure Checkout
+                 </p>
               </div>
             </div>
           </div>
