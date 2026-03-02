@@ -7,28 +7,21 @@ import {
   LogOut, 
   Loader2, 
   Package, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  LayoutDashboard, 
   Database, 
   Tags, 
   ShoppingBag, 
-  Eye, 
   ShieldAlert,
   UserPlus,
-  ChevronRight,
   AlertTriangle,
-  Lock
+  Lock,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { 
@@ -38,8 +31,6 @@ import {
   useAuth, 
   useMemoFirebase, 
   useCollection,
-  updateDocumentNonBlocking,
-  deleteDocumentNonBlocking,
   setDocumentNonBlocking
 } from '@/firebase';
 import { doc, collection, query, orderBy, collectionGroup, getDoc } from 'firebase/firestore';
@@ -68,7 +59,7 @@ export default function SupervisorConsole() {
 
   const { data: adminRole, isLoading: isAdminRoleLoading } = useDoc(adminRoleRef);
 
-  // 2. Explicit Verification: Ensure the role is synchronized with the server
+  // 2. Explicit Verification: Ensure the role is synchronized with the server before unlocking
   useEffect(() => {
     if (adminRole && !isServerConfirmed) {
       setIsVerifying(true);
@@ -76,6 +67,8 @@ export default function SupervisorConsole() {
         if (snap.exists()) {
           setIsServerConfirmed(true);
         }
+      }).catch(() => {
+        setIsServerConfirmed(false);
       }).finally(() => setIsVerifying(false));
     }
   }, [adminRole, db, user, isServerConfirmed]);
@@ -104,7 +97,7 @@ export default function SupervisorConsole() {
       role: 'admin',
       activatedAt: new Date().toISOString()
     }, { merge: true });
-    toast({ title: 'Authorization Requested', description: 'Syncing administrative role with the server...' });
+    toast({ title: 'Authorization Requested', description: 'Granting supervisor access to your account...' });
   };
 
   if (isUserLoading || (user && isAdminRoleLoading) || isVerifying) {
@@ -180,7 +173,7 @@ export default function SupervisorConsole() {
             </div>
             <nav className="hidden lg:flex gap-2">
               {[
-                { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+                { id: 'dashboard', label: 'Overview', icon: ShieldCheck },
                 { id: 'medicines', label: 'Inventory', icon: Package },
                 { id: 'categories', label: 'Categories', icon: Tags },
                 { id: 'orders', label: 'Fulfillment', icon: ShoppingBag }
@@ -204,6 +197,7 @@ export default function SupervisorConsole() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-12">
+        {/* CRITICAL: We pass isServerConfirmed to children to gate their internal queries */}
         {activeTab === 'dashboard' && <DashboardOverview onSwitchTab={setActiveTab} db={db} isVerified={isServerConfirmed} />}
         {activeTab === 'medicines' && <MedicinesMaster db={db} isVerified={isServerConfirmed} />}
         {activeTab === 'categories' && <CategoriesMaster db={db} isVerified={isServerConfirmed} />}
@@ -213,21 +207,64 @@ export default function SupervisorConsole() {
   );
 }
 
-// --- SUB-COMPONENTS TO PREVENT GLOBAL STATE LEAKS ---
-
 function DashboardOverview({ onSwitchTab, db, isVerified }: { onSwitchTab: (t: AdminTab) => void, db: any, isVerified: boolean }) {
-  const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
-  const catsQuery = useMemoFirebase(() => query(collection(db, 'categories')), [db]);
+  // Public collections are safe to query even before verification, but we wait for consistency
+  const medsQuery = useMemoFirebase(() => {
+    if (!isVerified) return null;
+    return query(collection(db, 'medicines'), orderBy('name', 'asc'));
+  }, [db, isVerified]);
+
+  const catsQuery = useMemoFirebase(() => {
+    if (!isVerified) return null;
+    return query(collection(db, 'categories'), orderBy('name', 'asc'));
+  }, [db, isVerified]);
+
   const { data: medicines } = useCollection(medsQuery);
   const { data: categories } = useCollection(catsQuery);
 
   const seedData = () => {
     const initialCats = [
       { id: 'cat_diabetes', name: 'Diabetes', description: 'Blood sugar management.' },
-      { id: 'cat_heart', name: 'Heart Care', description: 'Cardiovascular support.' }
+      { id: 'cat_heart', name: 'Heart Care', description: 'Cardiovascular support.' },
+      { id: 'cat_stomach', name: 'Stomach Care', description: 'Digestive health.' }
     ];
     initialCats.forEach(cat => setDocumentNonBlocking(doc(db, 'categories', cat.id), cat, { merge: true }));
-    toast({ title: 'Seeding Clinical Records...' });
+
+    const initialMeds = [
+      { 
+        id: 'med_j_1', 
+        name: 'Janumet 50/500', 
+        price: 1250, 
+        saltComposition: 'Sitagliptin 50mg + Metformin 500mg', 
+        manufacturerId: 'msd', 
+        categoryId: 'cat_diabetes', 
+        isGeneric: false, 
+        isTopDeal: true, 
+        imageUrl: 'https://picsum.photos/seed/med1/300/300', 
+        dosageForm: 'Tablet', 
+        strength: '50/500mg', 
+        availableQuantity: 100,
+        description: 'Advanced glycemic control.'
+      },
+      { 
+        id: 'med_sg_1', 
+        name: 'Sitagliptin Generic', 
+        price: 240, 
+        saltComposition: 'Sitagliptin 50mg + Metformin 500mg', 
+        manufacturerId: 'hl_labs', 
+        categoryId: 'cat_diabetes', 
+        isGeneric: true, 
+        isTopDeal: false, 
+        imageUrl: 'https://picsum.photos/seed/med2/300/300', 
+        dosageForm: 'Tablet', 
+        strength: '50/500mg', 
+        availableQuantity: 500,
+        description: 'Bio-equivalent alternative.'
+      }
+    ];
+    initialMeds.forEach(med => setDocumentNonBlocking(doc(db, 'medicines', med.id), med, { merge: true }));
+    
+    toast({ title: 'Master Catalog Seeded', description: 'Inventory updated with clinical records.' });
   };
 
   return (
@@ -235,7 +272,7 @@ function DashboardOverview({ onSwitchTab, db, isVerified }: { onSwitchTab: (t: A
       <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase">Operations</h1>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         {[
-          { label: 'Medicines', icon: Package, count: medicines?.length || 0, tab: 'medicines' },
+          { label: 'Inventory', icon: Package, count: medicines?.length || 0, tab: 'medicines' },
           { label: 'Therapy Hubs', icon: Tags, count: categories?.length || 0, tab: 'categories' },
         ].map(card => (
           <Card key={card.label} className="rounded-[56px] p-10 border-none shadow-sm hover:shadow-2xl transition-all cursor-pointer bg-white" onClick={() => onSwitchTab(card.tab as AdminTab)}>
@@ -247,7 +284,7 @@ function DashboardOverview({ onSwitchTab, db, isVerified }: { onSwitchTab: (t: A
         <Card className="rounded-[56px] p-10 border-none shadow-sm bg-primary text-white flex flex-col justify-between">
           <Database className="w-10 h-10 mb-8" />
           <h3 className="text-2xl font-black uppercase">Master Seed</h3>
-          <Button onClick={seedData} className="w-full rounded-full h-14 bg-white text-primary font-black uppercase mt-8">Execute Seed</Button>
+          <Button onClick={seedData} className="w-full rounded-full h-14 bg-white text-primary font-black uppercase mt-8 shadow-xl">Execute Seed</Button>
         </Card>
       </div>
     </div>
@@ -255,7 +292,11 @@ function DashboardOverview({ onSwitchTab, db, isVerified }: { onSwitchTab: (t: A
 }
 
 function MedicinesMaster({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines'), orderBy('name', 'asc')), [db]);
+  const medsQuery = useMemoFirebase(() => {
+    if (!isVerified) return null;
+    return query(collection(db, 'medicines'), orderBy('name', 'asc'));
+  }, [db, isVerified]);
+
   const { data: medicines, isLoading } = useCollection(medsQuery);
 
   return (
@@ -266,18 +307,29 @@ function MedicinesMaster({ db, isVerified }: { db: any, isVerified: boolean }) {
           <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
             <tr>
               <th className="px-10 py-8">Clinical Identity</th>
+              <th className="px-10 py-8">Composition</th>
               <th className="px-10 py-8">Price</th>
               <th className="px-10 py-8">Stock</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {isLoading ? (
-              <tr><td colSpan={3} className="p-32 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
+              <tr><td colSpan={4} className="p-32 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
             ) : medicines?.map(med => (
               <tr key={med.id} className="hover:bg-gray-50/50">
-                <td className="px-10 py-10 font-black">{med.name}</td>
-                <td className="px-10 py-10">₹{med.price}</td>
-                <td className="px-10 py-10"><Badge variant="secondary">{med.availableQuantity} Units</Badge></td>
+                <td className="px-10 py-10">
+                  <div className="flex flex-col">
+                    <span className="font-black text-gray-900">{med.name}</span>
+                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{med.dosageForm}</span>
+                  </div>
+                </td>
+                <td className="px-10 py-10 text-xs font-bold text-gray-400 italic">{med.saltComposition}</td>
+                <td className="px-10 py-10 font-black">₹{med.price}</td>
+                <td className="px-10 py-10">
+                  <Badge variant={med.availableQuantity < 50 ? 'destructive' : 'secondary'} className="px-4 py-1.5 rounded-full">
+                    {med.availableQuantity} Units
+                  </Badge>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -288,7 +340,11 @@ function MedicinesMaster({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function CategoriesMaster({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const catsQuery = useMemoFirebase(() => query(collection(db, 'categories'), orderBy('name', 'asc')), [db]);
+  const catsQuery = useMemoFirebase(() => {
+    if (!isVerified) return null;
+    return query(collection(db, 'categories'), orderBy('name', 'asc'));
+  }, [db, isVerified]);
+
   const { data: categories, isLoading } = useCollection(catsQuery);
 
   return (
@@ -296,8 +352,8 @@ function CategoriesMaster({ db, isVerified }: { db: any, isVerified: boolean }) 
       <h2 className="text-3xl font-black uppercase text-gray-900">Therapeutic Hubs</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {categories?.map(cat => (
-          <Card key={cat.id} className="rounded-[48px] p-12 border-none shadow-sm bg-white">
-            <h3 className="text-2xl font-black uppercase tracking-tight mb-3">{cat.name}</h3>
+          <Card key={cat.id} className="rounded-[48px] p-12 border-none shadow-sm bg-white hover:shadow-xl transition-all">
+            <h3 className="text-2xl font-black uppercase tracking-tight mb-3 text-primary">{cat.name}</h3>
             <p className="text-xs text-gray-400 font-bold leading-relaxed">{cat.description}</p>
           </Card>
         ))}
@@ -307,8 +363,7 @@ function CategoriesMaster({ db, isVerified }: { db: any, isVerified: boolean }) 
 }
 
 function OrdersFulfillment({ db, isVerified }: { db: any, isVerified: boolean }) {
-  // CRITICAL: This query is ONLY defined when the component mounts AND isVerified is true.
-  // This prevents premature global collectionGroup requests.
+  // CRITICAL: This global Collection Group query is ONLY initiated after isVerified is true.
   const ordersQuery = useMemoFirebase(() => {
     if (!isVerified) return null;
     return query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc'));
@@ -321,9 +376,9 @@ function OrdersFulfillment({ db, isVerified }: { db: any, isVerified: boolean })
       <Alert variant="destructive" className="rounded-[32px] p-8">
         <AlertTriangle className="h-6 w-6" />
         <AlertTitle className="text-xl font-black uppercase">Security Sync Error</AlertTitle>
-        <AlertDescription className="mt-4 font-bold">
+        <AlertDescription className="mt-4 font-bold leading-relaxed">
           The global fulfillment stream is waiting for final server confirmation. 
-          Please click "Initialize Admin Role" again if this persists for more than 30 seconds.
+          If you just claimed your role, please wait 15 seconds and refresh the page to allow the security rules to synchronize.
         </AlertDescription>
       </Alert>
     );
@@ -338,17 +393,23 @@ function OrdersFulfillment({ db, isVerified }: { db: any, isVerified: boolean })
             <tr>
               <th className="px-10 py-8">Order ID</th>
               <th className="px-10 py-8">Status</th>
+              <th className="px-10 py-8">Items</th>
               <th className="px-10 py-8">Amount</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {isLoading ? (
-              <tr><td colSpan={3} className="p-32 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
+              <tr><td colSpan={4} className="p-32 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
             ) : orders?.map(order => (
               <tr key={order.id} className="hover:bg-gray-50/50">
                 <td className="px-10 py-10 font-black">#{order.id.substring(0,8).toUpperCase()}</td>
-                <td className="px-10 py-10"><Badge>{order.status}</Badge></td>
-                <td className="px-10 py-10 font-black text-primary">₹{order.totalAmount}</td>
+                <td className="px-10 py-10">
+                  <Badge className="rounded-full px-4">{order.status}</Badge>
+                </td>
+                <td className="px-10 py-10 text-xs font-bold text-gray-400">
+                  {order.items?.length || 0} Clinical SKUs
+                </td>
+                <td className="px-10 py-10 font-black text-primary text-lg">₹{order.totalAmount}</td>
               </tr>
             ))}
           </tbody>
