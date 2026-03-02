@@ -1,5 +1,7 @@
+
 "use client"
 
+import * as React from 'react';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
 import { Activity, HeartPulse, Zap, Sparkles, Loader2, ShieldCheck, Camera, ChevronRight } from 'lucide-react';
@@ -13,10 +15,14 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function Home() {
   const db = useFirestore();
+  const autoplayRef = React.useRef(
+    Autoplay({ delay: 4000, stopOnInteraction: false })
+  );
 
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -31,7 +37,8 @@ export default function Home() {
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
 
-  const heroBanners = PlaceHolderImages.filter(img => img.id.startsWith('hero-'));
+  // Take only the first 3 banners as requested
+  const heroBanners = PlaceHolderImages.filter(img => img.id.startsWith('hero-')).slice(0, 3);
 
   const getIcon = (name: string) => {
     const n = name.toLowerCase();
@@ -48,10 +55,16 @@ export default function Home() {
       <Navbar />
 
       <main className="flex-1 pb-10">
-        {/* Banner Slider - Professional & Mobile Optimized */}
+        {/* Banner Slider - Auto-sliding & Professional Mobile Layout */}
         <section className="bg-white py-2">
           <div className="max-w-7xl mx-auto px-4">
-            <Carousel className="w-full" opts={{ loop: true, align: 'start' }}>
+            <Carousel 
+              className="w-full" 
+              opts={{ loop: true, align: 'start' }}
+              plugins={[autoplayRef.current]}
+              onMouseEnter={autoplayRef.current.stop}
+              onMouseLeave={autoplayRef.current.reset}
+            >
               <CarouselContent>
                 {heroBanners.length > 0 ? heroBanners.map((banner, index) => (
                   <CarouselItem key={banner.id}>
@@ -64,19 +77,21 @@ export default function Home() {
                         data-ai-hint={banner.imageHint}
                         priority={index === 0}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/40 to-transparent flex items-center p-4 sm:p-10">
-                        <div className="max-w-[85%] sm:max-w-[450px] text-white">
-                          <span className="inline-block bg-accent text-white text-[8px] sm:text-[10px] font-black px-2.5 py-0.5 rounded-full mb-2 uppercase tracking-[0.2em]">
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/60 to-transparent flex items-center p-6 sm:p-12">
+                        <div className="max-w-[90%] sm:max-w-[500px] text-white space-y-3">
+                          <span className="inline-block bg-accent text-white text-[8px] sm:text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-[0.2em] shadow-lg">
                             {index === 1 ? 'Switch & Save' : 'Clinical Grade'}
                           </span>
-                          <h1 className="text-lg sm:text-3xl font-black font-headline mb-3 uppercase tracking-tighter leading-tight">
+                          <h1 className="text-xl sm:text-4xl font-black font-headline uppercase tracking-tighter leading-[1.1] text-balance">
                             {banner.description}
                           </h1>
-                          <Link href="/search">
-                            <Button size="sm" className="rounded-full bg-white text-primary h-8 sm:h-12 px-6 sm:px-10 text-[9px] sm:text-[11px] font-black uppercase tracking-widest hover:bg-gray-50 active:scale-95 transition-all shadow-xl shadow-black/10">
-                              Shop Now
-                            </Button>
-                          </Link>
+                          <div className="pt-2">
+                            <Link href="/search">
+                              <Button size="sm" className="rounded-full bg-white text-primary h-9 sm:h-12 px-7 sm:px-10 text-[10px] sm:text-[11px] font-black uppercase tracking-widest hover:bg-gray-50 active:scale-95 transition-all shadow-2xl shadow-black/20">
+                                Shop Now
+                              </Button>
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     </div>

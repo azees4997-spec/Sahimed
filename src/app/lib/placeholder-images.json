@@ -18,12 +18,6 @@
       "description": "Reliable Home Delivery of Clinical Supplies",
       "imageUrl": "https://picsum.photos/seed/delivery1/1200/500",
       "imageHint": "delivery truck"
-    },
-    {
-      "id": "hero-4",
-      "description": "Pharmacist Verified Hub for Chronic Care",
-      "imageUrl": "https://picsum.photos/seed/trust1/1200/500",
-      "imageHint": "pharmacist verified"
     }
   ]
 }
