@@ -3,12 +3,13 @@
 
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
-import { Activity, HeartPulse, Zap, ShieldPlus, Sparkles, Wind, Loader2, ShieldCheck } from 'lucide-react';
+import { Activity, HeartPulse, Zap, ShieldPlus, Sparkles, Wind, Loader2, ShieldCheck, Upload, ChevronRight, Camera } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { collection, query, limit, orderBy } from 'firebase/firestore';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function Home() {
   const db = useFirestore();
@@ -38,7 +39,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col pb-24 sm:pb-0">
+    <div className="min-h-screen flex flex-col pb-32 sm:pb-0">
       <Navbar />
 
       <main className="flex-1">
@@ -56,11 +57,39 @@ export default function Home() {
                 <div className="max-w-md text-white">
                   <span className="inline-block bg-accent text-white text-[10px] font-black px-3 py-1 rounded-full mb-3 uppercase tracking-widest shadow-lg">Save up to 80%</span>
                   <h1 className="text-2xl sm:text-4xl font-bold font-headline mb-2 leading-tight">Your Health,<br/>Delivered Home.</h1>
-                  <p className="text-white/80 mb-6 text-sm hidden sm:block">Switch to verified generic alternatives and save big on chronic care.</p>
-                  <Button size="lg" className="rounded-full bg-white text-primary hover:bg-gray-100 font-bold px-6 h-12 text-sm sm:h-14 sm:text-lg shadow-xl shadow-black/10">Shop Medicines</Button>
+                  <p className="text-white/80 mb-6 text-sm hidden sm:block">Verified generic alternatives with exact same clinical benefits at lower costs.</p>
+                  <div className="flex flex-wrap gap-4">
+                    <Link href="/search">
+                      <Button size="lg" className="rounded-full bg-white text-primary hover:bg-gray-100 font-bold px-8 h-12 text-sm sm:h-14 sm:text-lg shadow-xl shadow-black/10">Shop Now</Button>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Prescription Quick Access */}
+        <section className="py-6 sm:py-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+             <Link href="/prescription">
+                <Card className="rounded-[40px] border-none shadow-2xl shadow-primary/5 bg-gradient-to-br from-primary/5 to-white border border-primary/10 hover:border-primary/30 transition-all group active:scale-95">
+                  <CardContent className="p-8 flex flex-col sm:flex-row items-center justify-between gap-8">
+                    <div className="flex items-center gap-6">
+                      <div className="w-20 h-20 bg-primary text-white rounded-[28px] flex items-center justify-center shadow-xl shadow-primary/20 group-hover:rotate-6 transition-transform">
+                        <Camera className="w-10 h-10" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight mb-1">Prescription Portal</h2>
+                        <p className="text-sm text-gray-400 font-bold">Upload prescription & let AI handle your clinical needs.</p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" className="text-primary font-black uppercase tracking-widest gap-3 hover:bg-primary/5 rounded-full px-8 h-14 border-2 border-primary/10">
+                      Start Analysis <ChevronRight className="w-5 h-5" />
+                    </Button>
+                  </CardContent>
+                </Card>
+             </Link>
           </div>
         </section>
 
@@ -68,7 +97,7 @@ export default function Home() {
         <section className="py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-black font-headline text-gray-900 uppercase tracking-tight">Shop by Categories</h2>
+              <h2 className="text-xl font-black font-headline text-gray-900 uppercase tracking-tight">Therapeutic Hubs</h2>
               <Link href="/search" className="text-[10px] font-black text-primary uppercase tracking-widest">See All</Link>
             </div>
             {catsLoading ? (
@@ -83,11 +112,6 @@ export default function Home() {
                     <h3 className="font-bold text-[10px] sm:text-xs text-gray-700 truncate w-full px-1">{cat.name}</h3>
                   </Link>
                 ))}
-                {!catsLoading && categories?.length === 0 && (
-                  <div className="col-span-full py-12 text-center text-gray-400 font-bold italic">
-                    Initialize categories in Supervisor Console.
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -125,7 +149,7 @@ export default function Home() {
         </section>
 
         {/* Trust Banner */}
-        <section className="py-12 bg-gray-50">
+        <section className="py-12 bg-gray-50 mb-16 sm:mb-0">
           <div className="max-w-7xl mx-auto px-4 text-center">
             <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full mb-4">
               <ShieldCheck className="w-4 h-4" />

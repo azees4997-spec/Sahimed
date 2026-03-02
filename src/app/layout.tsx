@@ -1,8 +1,10 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import MobileCartBar from '@/components/MobileCartBar';
 
 export const metadata: Metadata = {
   title: 'HealthLink Pharmacy | Professional Healthcare Solutions',
@@ -41,6 +43,7 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <CartProvider>
             {children}
+            <MobileCartBar />
             <Toaster />
           </CartProvider>
         </FirebaseClientProvider>
