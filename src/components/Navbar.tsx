@@ -66,11 +66,23 @@ export default function Navbar() {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           try {
-            const lat = position.coords.latitude.toFixed(4);
-            const lng = position.coords.longitude.toFixed(4);
-            setLocation(`My Location (${lat}, ${lng})`);
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            
+            // Perform reverse geocoding to get a readable name
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+            const data = await response.json();
+            
+            if (data && data.address) {
+              const neighborhood = data.address.suburb || data.address.neighbourhood || data.address.road || 'Current Location';
+              const city = data.address.city || data.address.town || data.address.village || '';
+              setLocation(`${neighborhood}${city ? ', ' + city : ''}`);
+            } else {
+              setLocation(`Location (${lat.toFixed(2)}, ${lng.toFixed(2)})`);
+            }
           } catch (e) {
-            console.error(e);
+            console.error("Geocoding failed:", e);
+            setLocation("Unknown Location");
           } finally {
             setIsLocating(false);
           }
