@@ -23,11 +23,11 @@ export default function LoginPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+    if (typeof window !== 'undefined' && !(window as any).recaptchaVerifier) {
+      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         size: 'invisible',
         callback: () => {
-          // reCAPTCHA solved, allow signInWithPhoneNumber.
+          // reCAPTCHA solved
         }
       });
     }
@@ -42,19 +42,18 @@ export default function LoginPage() {
     
     setLoading(true);
     try {
-      const appVerifier = window.recaptchaVerifier;
+      const appVerifier = (window as any).recaptchaVerifier;
       const formatPhone = `+91${phone}`;
       const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
       setConfirmationResult(result);
       setStep(2);
-      toast({ title: 'OTP Sent', description: `Check your phone for the 6-digit code.` });
+      toast({ title: 'OTP Sent', description: `Check your phone for the code.` });
     } catch (err: any) {
       console.error(err);
       toast({ variant: 'destructive', title: 'Error', description: err.message || 'Failed to send OTP.' });
-      // Reset reCAPTCHA if it fails
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      if ((window as any).recaptchaVerifier) {
+        (window as any).recaptchaVerifier.clear();
+        (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
           size: 'invisible'
         });
       }
@@ -74,7 +73,7 @@ export default function LoginPage() {
     try {
       if (confirmationResult) {
         await confirmationResult.confirm(otp);
-        toast({ title: 'Welcome!', description: 'Your session is now active.' });
+        toast({ title: 'Welcome!', description: 'Your clinical session is now active.' });
         router.push('/');
       }
     } catch (err: any) {
@@ -87,7 +86,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] flex items-center justify-center p-4">
-      {/* Invisible Recaptcha Container */}
       <div id="recaptcha-container"></div>
       
       <Card className="max-w-md w-full rounded-[40px] shadow-2xl border-none overflow-hidden bg-white">
@@ -98,15 +96,15 @@ export default function LoginPage() {
           <div className="w-20 h-20 bg-white/20 rounded-[32px] flex items-center justify-center mx-auto mb-6 backdrop-blur">
             <Smartphone className="w-10 h-10 text-white" />
           </div>
-          <CardTitle className="text-3xl font-bold font-headline mb-2">Secure Login</CardTitle>
-          <CardDescription className="text-white/70">OTP based login for HealthLink Pharmacy</CardDescription>
+          <CardTitle className="text-3xl font-bold font-headline mb-2">Patient Login</CardTitle>
+          <CardDescription className="text-white/70 uppercase text-[9px] font-black tracking-widest">Secure clinical access</CardDescription>
         </CardHeader>
         
         <CardContent className="p-10">
           {step === 1 ? (
             <form onSubmit={handleSendOtp} className="space-y-6">
               <div>
-                <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 block">Indian Mobile Number</label>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block">Indian Mobile Number</label>
                 <div className="relative">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 border-r pr-3 border-gray-100">
                     <span className="text-sm font-bold text-gray-400">+91</span>
@@ -122,7 +120,7 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
-              <Button type="submit" disabled={loading} className="w-full h-16 rounded-full font-bold text-lg gap-2 shadow-lg shadow-primary/20">
+              <Button type="submit" disabled={loading} className="w-full h-16 rounded-full font-black uppercase text-sm tracking-widest gap-2 shadow-lg shadow-primary/20">
                 {loading ? <Loader2 className="animate-spin" /> : "Get OTP"}
                 <ChevronRight className="w-5 h-5" />
               </Button>
@@ -130,11 +128,11 @@ export default function LoginPage() {
           ) : (
             <form onSubmit={handleVerifyOtp} className="space-y-6">
               <div className="text-center mb-4">
-                <p className="text-sm text-gray-500">OTP sent to <span className="font-bold text-gray-900">+91 {phone}</span></p>
-                <Button variant="link" onClick={() => { setStep(1); setOtp(''); }} className="text-xs font-bold text-primary p-0 h-auto">Change Number</Button>
+                <p className="text-sm text-gray-500 uppercase font-bold text-[10px]">OTP sent to <span className="font-black text-gray-900">+91 {phone}</span></p>
+                <Button variant="link" onClick={() => { setStep(1); setOtp(''); }} className="text-[10px] font-black text-primary p-0 h-auto uppercase tracking-widest">Change Number</Button>
               </div>
               <div>
-                <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 block text-center">Enter 6-digit OTP</label>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block text-center">Enter 6-digit OTP</label>
                 <Input 
                   type="text"
                   placeholder="0 0 0 0 0 0"
@@ -145,16 +143,16 @@ export default function LoginPage() {
                   required
                 />
               </div>
-              <Button type="submit" disabled={loading} className="w-full h-16 rounded-full font-bold text-lg shadow-lg shadow-primary/20">
+              <Button type="submit" disabled={loading} className="w-full h-16 rounded-full font-black uppercase tracking-widest text-sm shadow-lg shadow-primary/20">
                 {loading ? <Loader2 className="animate-spin" /> : "Verify & Login"}
               </Button>
-              <p className="text-center text-xs text-gray-400">Didn't receive code? <Button variant="link" onClick={handleSendOtp} className="text-xs p-0 h-auto text-primary font-bold">Resend OTP</Button></p>
+              <p className="text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Didn't receive code? <Button variant="link" onClick={handleSendOtp} className="text-[10px] p-0 h-auto text-primary font-black uppercase tracking-widest">Resend</Button></p>
             </form>
           )}
 
           <div className="mt-8 pt-8 border-t flex items-center justify-center gap-3">
              <ShieldCheck className="w-5 h-5 text-green-500" />
-             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Secured by industry-standard encryption</p>
+             <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest">Pharmacist Verified Hub</p>
           </div>
         </CardContent>
       </Card>

@@ -13,6 +13,15 @@ export interface Product {
   imageUrl: string;
   isGeneric?: boolean;
   packSize?: string;
+  uses?: string[];
+  sideEffects?: string[];
+  safetyAdvice?: {
+    alcohol?: string;
+    pregnancy?: string;
+    driving?: string;
+    kidney?: string;
+    liver?: string;
+  };
 }
 
 interface CartItem extends Product {

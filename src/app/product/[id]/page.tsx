@@ -88,19 +88,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <span className="text-primary truncate">{product?.name}</span>
         </div>
 
-        <div className="mb-3 bg-white border border-primary/5 rounded-xl py-3 px-4 shadow-sm border-l-4 border-l-primary">
-          <div className="flex items-center justify-between">
-             <div className="flex items-center gap-3">
-                <div className="bg-primary/5 p-2 rounded-lg"><Dna className="w-4 h-4 text-primary" /></div>
-                <div>
-                  <p className="text-[7px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Bio-Equivalent Formula</p>
-                  <h2 className="text-[10px] font-black text-gray-900 uppercase tracking-tight">{product?.saltComposition}</h2>
-                </div>
-             </div>
-             <BriefcaseMedical className="w-4 h-4 text-gray-200" />
-          </div>
-        </div>
-
+        {/* Side-by-Side Comparison Container */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           {/* Branded Product Card */}
           <Card className="rounded-[24px] border-none bg-white overflow-hidden flex flex-col p-4 shadow-sm border border-gray-100">
@@ -133,7 +121,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
           {/* Recommended Generic Card */}
           {genericSubstitute ? (
-            <Card className="rounded-[24px] border-2 border-green-500 bg-white overflow-hidden flex flex-col p-4 shadow-2xl shadow-green-100">
+            <Card className="rounded-[24px] border-2 border-green-500 bg-white overflow-hidden flex flex-col p-4 shadow-2xl shadow-green-100 relative">
               <div className="absolute top-0 right-0 z-10">
                 <div className="bg-green-500 text-white font-black text-[7px] uppercase px-3 py-1 rounded-bl-xl shadow-lg">Save {percentageSaved}%</div>
               </div>
@@ -188,22 +176,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               ))}
             </div>
           </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { icon: Wine, label: "Alcohol", text: product?.safetyAdvice?.alcohol || "Consult Doctor" },
-            { icon: Baby, label: "Pregnancy", text: product?.safetyAdvice?.pregnancy || "Consult Doctor" },
-            { icon: Car, label: "Driving", text: product?.safetyAdvice?.driving || "Generally Safe" }
-          ].map((item, i) => (
-            <div key={i} className="bg-white p-3 rounded-2xl border border-gray-50 flex items-center gap-3 shadow-sm">
-              <div className="w-8 h-8 bg-gray-50 rounded-xl flex items-center justify-center shrink-0 border border-gray-100"><item.icon className="w-4 h-4 text-gray-400" /></div>
-              <div className="min-w-0">
-                <p className="text-[7px] font-black text-gray-400 uppercase leading-none mb-1">{item.label}</p>
-                <p className="text-[8px] font-black text-gray-700 truncate">{item.text}</p>
-              </div>
-            </div>
-          ))}
         </div>
       </main>
     </div>

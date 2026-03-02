@@ -64,17 +64,17 @@ export default function ProductCard({ product }: { product: Product }) {
           <span className="text-[9px] sm:text-[10px] font-black text-gray-900 tracking-tighter">₹{product.price}</span>
           
           {quantity > 0 ? (
-            <div className="flex items-center gap-1 bg-primary/5 rounded-lg p-0.5 border border-primary/10 w-full">
+            <div className="flex items-center gap-1 bg-primary rounded-lg p-0.5 shadow-lg w-full">
               <Button 
                 onClick={handleDecrement} 
-                className="h-7 w-7 p-0 rounded-md bg-white text-primary hover:bg-primary hover:text-white shadow-sm border border-primary/10"
+                className="h-7 w-7 p-0 rounded-md bg-white/20 text-white hover:bg-white/30 border-none shadow-none"
               >
                 <Minus className="w-3 h-3" />
               </Button>
-              <span className="text-[10px] font-black text-primary flex-1 text-center">{quantity}</span>
+              <span className="text-[10px] font-black text-white flex-1 text-center">{quantity}</span>
               <Button 
                 onClick={handleIncrement} 
-                className="h-7 w-7 p-0 rounded-md bg-white text-primary hover:bg-primary hover:text-white shadow-sm border border-primary/10"
+                className="h-7 w-7 p-0 rounded-md bg-white/20 text-white hover:bg-white/30 border-none shadow-none"
               >
                 <Plus className="w-3 h-3" />
               </Button>
