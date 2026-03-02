@@ -23,6 +23,7 @@ import {
   Dna
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
 import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
@@ -42,7 +43,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   
   const { data: product, isLoading: productLoading } = useDoc(productRef);
 
-  // Fetch Generic Alternative (Bio-equivalent)
+  // Fetch Generic Alternative (Bio-equivalent based on salt composition)
   const genericQuery = useMemoFirebase(() => {
     if (!db || !product || product.isGeneric) return null;
     return query(
