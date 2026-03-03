@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { use, useState, useEffect } from 'react';
+import React, { use, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -13,12 +13,10 @@ import {
   Loader2,
   ChevronRight,
   Info,
-  AlertCircle,
   Plus,
   Minus,
   BellRing,
   Sparkles,
-  Zap,
   ShieldCheck,
   Maximize2
 } from 'lucide-react';
@@ -101,6 +99,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const brandedQty = getItemQuantity(product?.id || '');
   const genericQty = genericSubstitute ? getItemQuantity(genericSubstitute.id) : 0;
 
+  const savingsAmount = product && genericSubstitute ? Math.round(product.price - genericSubstitute.price) : 0;
   const percentageSaved = product && genericSubstitute 
     ? Math.round(((product.price - genericSubstitute.price) / product.price) * 100) 
     : 0;
@@ -148,7 +147,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
         {!product.isGeneric && genericSubstitute ? (
           <div className="space-y-6">
-            {/* Molecule Bridge */}
             <div className="text-center py-2">
                <div className="inline-flex items-center gap-2 bg-primary/5 px-6 py-2.5 rounded-full border border-primary/10 shadow-sm animate-in fade-in slide-in-from-top-4">
                   <Activity className="w-3.5 h-3.5 text-primary" />
@@ -156,17 +154,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                </div>
             </div>
 
-            {/* Side-by-Side Comparison Grid */}
             <div className="grid grid-cols-2 gap-3 sm:gap-6 items-stretch">
               {/* Branded Card */}
               <Card className={cn(
-                "rounded-[32px] sm:rounded-[40px] border-none bg-white p-4 sm:p-10 shadow-sm transition-all relative overflow-hidden flex flex-col h-full",
+                "rounded-[32px] sm:rounded-[40px] border-none bg-white p-4 sm:p-10 shadow-sm flex flex-col h-full",
                 brandedOutOfStock && "opacity-80"
               )}>
                 <div className="flex items-center justify-between mb-4 sm:mb-8">
                   <div className="space-y-0.5">
-                    <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">BRANDED SKU</p>
-                    <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase truncate max-w-[60px] sm:max-w-none">{product.name.split(' ')[0]}</p>
+                    <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">PRODUCT</p>
+                    <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase truncate max-w-[60px] sm:max-w-none">{product.manufacturer}</p>
                   </div>
                   <Badge className="bg-primary/10 text-primary border-none text-[6px] sm:text-[8px] font-black uppercase px-2 py-0.5 sm:px-3 sm:py-1 rounded-full whitespace-nowrap">Your Item</Badge>
                 </div>
@@ -218,14 +215,14 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               {/* Generic Card */}
               <Card className={cn(
-                "rounded-[32px] sm:rounded-[40px] border-[1.5px] sm:border-[2.5px] border-accent bg-white p-4 sm:p-10 shadow-2xl shadow-accent/10 transition-all relative overflow-hidden flex flex-col h-full",
+                "rounded-[32px] sm:rounded-[40px] border-[1.5px] sm:border-[2.5px] border-accent bg-white p-4 sm:p-10 shadow-2xl shadow-accent/10 transition-all flex flex-col h-full",
                 genericOutOfStock && "opacity-80"
               )}>
-                <div className="absolute top-0 right-0 bg-accent text-white px-2 py-1 sm:px-5 sm:py-2 rounded-bl-[12px] sm:rounded-bl-[20px] text-[6px] sm:text-[10px] font-black uppercase tracking-widest shadow-lg">SAVE {percentageSaved}%</div>
+                <div className="absolute top-0 right-0 bg-accent text-white px-2 py-1 sm:px-5 sm:py-2 rounded-bl-[12px] sm:rounded-bl-[20px] text-[6px] sm:text-[10px] font-black uppercase tracking-widest shadow-lg">OFFER</div>
                 
                 <div className="flex items-center justify-between mb-4 sm:mb-8">
                   <div className="space-y-0.5">
-                    <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">GENERIC SKU</p>
+                    <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">ALTERNATIVE</p>
                     <p className="text-[8px] sm:text-[10px] font-black text-accent uppercase">BIO-EQUIVALENT</p>
                   </div>
                   <Badge className="bg-accent/10 text-accent border-none text-[6px] sm:text-[8px] font-black uppercase px-2 py-0.5 sm:px-3 sm:py-1 rounded-full whitespace-nowrap">Our Recommendation</Badge>
@@ -261,7 +258,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                          <span className="text-[9px] sm:text-[10px] text-gray-400 line-through">₹{genericSubstitute.mrp || genericSubstitute.price + 50}</span>
                       </div>
                       <div className="text-xl sm:text-[32px] font-black text-accent leading-none">₹{genericSubstitute.price}</div>
-                      <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase mt-1">₹{getUnitPrice(genericSubstitute.price, genericSubstitute.packSize)} / Unit</p>
+                      <p className="text-[8px] sm:text-[9px] font-black text-accent uppercase mt-1">SAVE ₹{savingsAmount} ({percentageSaved}%)</p>
                     </div>
                     
                     {genericOutOfStock ? (
@@ -342,7 +339,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         )}
 
-        {/* Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-12">
           <Card className="rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 border-none bg-white shadow-sm hover:shadow-xl transition-all">
             <h3 className="text-[10px] sm:text-sm font-black text-gray-900 uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
