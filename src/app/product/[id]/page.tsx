@@ -26,16 +26,18 @@ import {
   CheckCircle2,
   XCircle,
   Fingerprint,
-  AlertTriangle
+  AlertTriangle,
+  BellRing
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
-import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where, limit } from 'firebase/firestore';
+import { useFirestore, useDoc, useCollection, useMemoFirebase, useUser, addDocumentNonBlocking } from '@/firebase';
+import { doc, collection, query, where, limit, serverTimestamp } from 'firebase/firestore';
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
 
@@ -71,6 +73,21 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const brandedQty = getItemQuantity(product?.id || '');
   const genericQty = getItemQuantity(genericSubstitute?.id || '');
+
+  const handleNotify = (p: any) => {
+    if (!user) {
+      toast({ title: "Login Required", description: "Sign in to receive stock notifications." });
+      return;
+    }
+    const enquiryData = {
+      medicineId: p.id,
+      medicineName: p.name,
+      userId: user.uid,
+      timestamp: serverTimestamp()
+    };
+    addDocumentNonBlocking(collection(db, 'stockEnquiries'), enquiryData);
+    toast({ title: "Notification Set", description: "We will notify you when stock returns." });
+  };
 
   if (productLoading) {
     return (
@@ -108,7 +125,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <Card className={`rounded-[24px] border-none bg-white overflow-hidden flex flex-col p-4 shadow-sm border border-gray-100 ${brandedOutOfStock ? 'opacity-70 grayscale' : ''}`}>
+          <Card className={`rounded-[24px] border-none bg-white overflow-hidden flex flex-col p-4 shadow-sm border border-gray-100 ${brandedOutOfStock ? 'opacity-80' : ''}`}>
             <div className="flex items-center justify-between mb-3">
               <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest">Branded SKU: {product?.sku || 'N/A'}</p>
               <div className="bg-blue-50 px-2 py-0.5 rounded-full">
@@ -117,10 +134,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
             
             <div className="aspect-square w-full max-w-[100px] bg-gray-50 rounded-2xl mx-auto mb-4 p-2 relative">
-              <img src={product?.imageUrl} alt={product?.name} className="w-full h-full object-contain" />
+              <img src={product?.imageUrl} alt={product?.name} className={`w-full h-full object-contain ${brandedOutOfStock ? 'grayscale opacity-40' : ''}`} />
               {brandedOutOfStock && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/20">
-                   <div className="bg-red-600 text-white font-black text-[7px] uppercase px-3 py-1 rounded-full shadow-lg">Stock Out</div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                   <div className="bg-gray-600 text-white font-black text-[7px] uppercase px-3 py-1 rounded-full shadow-lg">Stock Pending</div>
                 </div>
               )}
             </div>
@@ -145,14 +162,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest shrink-0">Molecule ID</p>
                   <code className="text-[7px] font-black text-gray-500">{product?.moleculeId || 'N/A'}</code>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest shrink-0">RX Required</p>
-                  {product?.prescriptionRequired ? (
-                    <CheckCircle2 className="w-2.5 h-2.5 text-green-500" />
-                  ) : (
-                    <XCircle className="w-2.5 h-2.5 text-gray-300" />
-                  )}
-                </div>
               </div>
               
               <div className="mt-auto pt-4 border-t border-gray-50">
@@ -165,7 +174,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 
                 <div className="mt-4">
                   {brandedOutOfStock ? (
-                    <Button disabled className="w-full h-10 rounded-xl text-[9px] font-black uppercase tracking-widest bg-gray-100 text-gray-400">Out of Stock</Button>
+                    <Button onClick={() => handleNotify(product)} className="w-full h-10 rounded-xl text-[9px] font-black uppercase tracking-widest bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 gap-2">
+                      <BellRing className="w-3.5 h-3.5" /> Notify Me
+                    </Button>
                   ) : brandedQty > 0 ? (
                     <div className="flex items-center justify-between bg-primary rounded-xl h-10 px-2 shadow-lg">
                       <button onClick={() => updateQuantity(product.id, -1)} className="p-1.5 text-white"><Minus className="w-3.5 h-3.5" /></button>
@@ -181,7 +192,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </Card>
 
           {genericSubstitute ? (
-            <Card className={`rounded-[24px] border-2 border-green-500 bg-white overflow-hidden flex flex-col p-4 shadow-2xl shadow-green-100 relative ${genericOutOfStock ? 'opacity-70 grayscale' : ''}`}>
+            <Card className={`rounded-[24px] border-2 border-green-500 bg-white overflow-hidden flex flex-col p-4 shadow-2xl shadow-green-100 relative ${genericOutOfStock ? 'opacity-80' : ''}`}>
               {!genericOutOfStock && (
                 <div className="absolute top-0 right-0 z-10">
                   <div className="bg-green-500 text-white font-black text-[7px] uppercase px-3 py-1 rounded-bl-xl shadow-lg">Save {percentageSaved}%</div>
@@ -195,10 +206,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </div>
 
               <div className="aspect-square w-full max-w-[100px] bg-green-50/50 rounded-2xl mx-auto mb-4 p-2 relative">
-                <img src={genericSubstitute.imageUrl} alt={genericSubstitute.name} className="w-full h-full object-contain" />
+                <img src={genericSubstitute.imageUrl} alt={genericSubstitute.name} className={`w-full h-full object-contain ${genericOutOfStock ? 'grayscale opacity-40' : ''}`} />
                 {genericOutOfStock && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/20">
-                     <div className="bg-red-600 text-white font-black text-[7px] uppercase px-3 py-1 rounded-full shadow-lg">Stock Out</div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                     <div className="bg-gray-600 text-white font-black text-[7px] uppercase px-3 py-1 rounded-full shadow-lg">Stock Pending</div>
                   </div>
                 )}
               </div>
@@ -219,14 +230,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest">Marketer</p>
                     <p className="text-[8px] font-bold text-gray-700 uppercase">{genericSubstitute.manufacturer}</p>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest shrink-0">RX Required</p>
-                    {genericSubstitute.prescriptionRequired ? (
-                      <CheckCircle2 className="w-2.5 h-2.5 text-green-500" />
-                    ) : (
-                      <XCircle className="w-2.5 h-2.5 text-gray-300" />
-                    )}
-                  </div>
                 </div>
 
                 <div className="mt-auto pt-4 border-t border-gray-50">
@@ -239,7 +242,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   
                   <div className="mt-4">
                     {genericOutOfStock ? (
-                      <Button disabled className="w-full h-10 rounded-xl text-[9px] font-black uppercase tracking-widest bg-gray-100 text-gray-400">Out of Stock</Button>
+                      <Button onClick={() => handleNotify(genericSubstitute)} className="w-full h-10 rounded-xl text-[9px] font-black uppercase tracking-widest bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 gap-2">
+                        <BellRing className="w-3.5 h-3.5" /> Notify Me
+                      </Button>
                     ) : genericQty > 0 ? (
                       <div className="flex items-center justify-between bg-green-600 rounded-xl h-10 px-2 shadow-xl">
                         <button onClick={() => updateQuantity(genericSubstitute.id, -1)} className="p-1.5 text-white"><Minus className="w-3.5 h-3.5" /></button>

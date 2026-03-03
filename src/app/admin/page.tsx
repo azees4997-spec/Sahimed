@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
@@ -35,7 +36,9 @@ import {
   Clock,
   ClipboardList,
   FileDown,
-  FileUp
+  FileUp,
+  BellRing,
+  Calendar
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -66,7 +69,7 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import Link from 'next/link';
 import Image from 'next/image';
 
-type AdminTab = 'overview' | 'inventory' | 'molecules' | 'enquiries' | 'fulfillment' | 'customers';
+type AdminTab = 'overview' | 'inventory' | 'molecules' | 'enquiries' | 'fulfillment' | 'customers' | 'stockAlerts';
 
 export default function SupervisorConsole() {
   const { user, isUserLoading } = useUser();
@@ -239,6 +242,7 @@ export default function SupervisorConsole() {
               {[
                 { id: 'overview', label: 'Dashboard', icon: Home },
                 { id: 'enquiries', label: 'Enquiries', icon: FileText },
+                { id: 'stockAlerts', label: 'Stock Alerts', icon: BellRing },
                 { id: 'fulfillment', label: 'Orders', icon: ShoppingBag },
                 { id: 'customers', label: 'Customers', icon: Users },
                 { id: 'inventory', label: 'SKU Master', icon: Package },
@@ -272,6 +276,7 @@ export default function SupervisorConsole() {
       <main className="max-w-7xl mx-auto px-6 py-10">
         {activeTab === 'overview' && <OverviewTab db={db} setTab={setActiveTab} isVerified={isVerified} />}
         {activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} />}
+        {activeTab === 'stockAlerts' && <StockEnquiryTab db={db} isVerified={isVerified} />}
         {activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} />}
         {activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} />}
         {activeTab === 'inventory' && <InventoryTab db={db} isVerified={isVerified} />}
@@ -285,6 +290,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
   const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster')), [db]);
   const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles')), [db]);
+  const stockAlertsQuery = useMemoFirebase(() => query(collection(db, 'stockEnquiries')), [db]);
   
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
@@ -294,6 +300,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const { data: pres } = useCollection(presQuery);
   const { data: orders } = useCollection(ordersQuery);
   const { data: users } = useCollection(usersQuery);
+  const { data: alerts } = useCollection(stockAlertsQuery);
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
@@ -301,9 +308,9 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
         {[
           { label: 'Enquiries', icon: FileText, count: pres?.filter(p => p.status === 'Pending Review').length || 0, tab: 'enquiries' as AdminTab },
+          { label: 'Stock Alerts', icon: BellRing, count: alerts?.length || 0, tab: 'stockAlerts' as AdminTab },
           { label: 'Active Orders', icon: ShoppingBag, count: orders?.filter(o => o.status !== 'Delivered').length || 0, tab: 'fulfillment' as AdminTab },
           { label: 'Customers', icon: Users, count: users?.length || 0, tab: 'customers' as AdminTab },
-          { label: 'SKU Master', icon: Package, count: meds?.length || 0, tab: 'inventory' as AdminTab },
           { label: 'Molecules', icon: Dna, count: mols?.length || 0, tab: 'molecules' as AdminTab },
         ].map(card => (
           <Card key={card.label} className="rounded-[32px] p-8 border-none shadow-sm hover:shadow-xl transition-all cursor-pointer bg-white group" onClick={() => setTab(card.tab)}>
@@ -313,6 +320,52 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
           </Card>
         ))}
       </div>
+    </div>
+  );
+}
+
+function StockEnquiryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+  const alertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'stockEnquiries'), orderBy('timestamp', 'desc')) : null, [db, isVerified]);
+  const { data: alerts, isLoading } = useCollection(alertsQuery);
+
+  return (
+    <div className="space-y-6 animate-in slide-in-from-bottom-2">
+      <h2 className="text-2xl font-black uppercase text-gray-900">Stock Enquiries (Missed Items)</h2>
+      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
+        <table className="w-full text-left">
+          <thead className="bg-gray-50 text-[9px] font-black uppercase text-gray-400 border-b">
+            <tr>
+              <th className="px-8 py-6">Timestamp</th>
+              <th className="px-8 py-6">Patient UID</th>
+              <th className="px-8 py-6">Requested Item</th>
+              <th className="px-8 py-6 text-right">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {isLoading ? (
+              <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
+            ) : alerts?.length ? alerts.map(alert => (
+              <tr key={alert.id} className="hover:bg-gray-50/50 transition-colors">
+                <td className="px-8 py-6 text-[10px] font-bold text-gray-400 flex items-center gap-2">
+                  <Calendar className="w-3 h-3" />
+                  {alert.timestamp?.toDate ? alert.timestamp.toDate().toLocaleString() : 'Recent'}
+                </td>
+                <td className="px-8 py-6">
+                  <code className="text-[10px] font-black text-primary bg-primary/5 px-2 py-1 rounded">{alert.userId?.substring(0,10).toUpperCase()}</code>
+                </td>
+                <td className="px-8 py-6 font-black text-xs text-gray-900 uppercase">
+                  {alert.medicineName}
+                </td>
+                <td className="px-8 py-6 text-right">
+                  <Badge className="bg-orange-500 text-white text-[8px] font-black uppercase">Unfulfilled</Badge>
+                </td>
+              </tr>
+            )) : (
+              <tr><td colSpan={4} className="p-20 text-center text-gray-400 font-bold uppercase text-[10px]">No missed item alerts recorded.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </Card>
     </div>
   );
 }
@@ -1157,8 +1210,8 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                     </td>
                     <td className="px-8 py-6 font-black text-center text-sm">₹{med.price}</td>
                     <td className="px-8 py-6 text-center">
-                      <Badge variant={med.availableQuantity < 50 ? 'destructive' : 'secondary'} className="px-3 py-1 rounded-full font-black text-[8px] uppercase">
-                        {med.availableQuantity || 0} Units
+                      <Badge variant={med.availableQuantity <= 0 ? 'destructive' : med.availableQuantity < 50 ? 'outline' : 'secondary'} className="px-3 py-1 rounded-full font-black text-[8px] uppercase">
+                        {med.availableQuantity <= 0 ? 'Zero Stock' : `${med.availableQuantity} Units`}
                       </Badge>
                     </td>
                     <td className="px-8 py-6 text-right">

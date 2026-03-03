@@ -104,12 +104,28 @@
         "mrp": {
           "type": "number"
         },
+        "availableQuantity": {
+          "type": "number"
+        },
         "isGeneric": {
           "type": "boolean"
         },
         "saltComposition": {
           "type": "string"
         }
+      }
+    },
+    "StockEnquiry": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "StockEnquiry",
+      "type": "object",
+      "description": "Logged notification request for out-of-stock items.",
+      "properties": {
+        "id": { "type": "string" },
+        "medicineId": { "type": "string" },
+        "medicineName": { "type": "string" },
+        "userId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
       }
     }
   },
@@ -144,6 +160,12 @@
         "$ref": "#/backend/entities/Medicine"
       },
       "description": "Public catalog of medicines."
+    },
+    "/stockEnquiries/{enquiryId}": {
+      "schema": {
+        "$ref": "#/backend/entities/StockEnquiry"
+      },
+      "description": "Requests for notification on stock replenishment."
     }
   }
 }

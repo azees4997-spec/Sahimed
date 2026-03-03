@@ -3,14 +3,18 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Plus, Minus, AlertTriangle } from 'lucide-react';
+import { Plus, Minus, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product, useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp } from 'firebase/firestore';
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
+  const { user } = useUser();
+  const db = useFirestore();
   const { toast } = useToast();
   const quantity = getItemQuantity(product.id);
   const isOutOfStock = (product.availableQuantity || 0) <= 0;
@@ -27,6 +31,25 @@ export default function ProductCard({ product }: { product: Product }) {
     });
   };
 
+  const handleNotify = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      toast({ title: "Login Required", description: "Sign in to receive stock notifications." });
+      return;
+    }
+
+    const enquiryData = {
+      medicineId: product.id,
+      medicineName: product.name,
+      userId: user.uid,
+      timestamp: serverTimestamp()
+    };
+
+    addDocumentNonBlocking(collection(db, 'stockEnquiries'), enquiryData);
+    toast({ title: "Notification Set", description: "We will notify you when stock returns." });
+  };
+
   const handleIncrement = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -41,21 +64,21 @@ export default function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <div className={`group bg-white rounded-2xl border border-gray-50 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col active:scale-[0.98] h-full ${isOutOfStock ? 'opacity-60 grayscale' : ''}`}>
+    <div className={`group bg-white rounded-2xl border border-gray-50 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col active:scale-[0.98] h-full ${isOutOfStock ? 'opacity-80' : ''}`}>
       <Link href={`/product/${product.id}`} className="relative aspect-square w-full overflow-hidden bg-gray-50/20">
         <Image
           src={product.imageUrl}
           alt={product.name}
           fill
-          className="object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+          className={`object-contain p-2 group-hover:scale-105 transition-transform duration-500 ${isOutOfStock ? 'grayscale opacity-50' : ''}`}
           data-ai-hint="medicine box"
         />
         {product.isGeneric && (
           <Badge className="absolute top-1.5 left-1.5 bg-green-600 text-[6px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border-none shadow-sm">Save</Badge>
         )}
         {isOutOfStock && (
-          <div className="absolute inset-0 bg-white/40 flex items-center justify-center p-4">
-            <Badge variant="destructive" className="font-black text-[8px] uppercase tracking-widest rounded-full px-3 py-1">Out of Stock</Badge>
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <Badge variant="destructive" className="font-black text-[8px] uppercase tracking-widest rounded-full px-3 py-1 bg-gray-600">Stock Pending</Badge>
           </div>
         )}
       </Link>
@@ -74,10 +97,10 @@ export default function ProductCard({ product }: { product: Product }) {
           
           {isOutOfStock ? (
             <Button 
-              disabled 
-              className="rounded-lg h-7 w-full p-0 bg-gray-100 text-gray-400 border border-gray-200 font-black text-[8px] uppercase tracking-widest"
+              onClick={handleNotify}
+              className="rounded-lg h-7 w-full p-0 bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 font-black text-[8px] uppercase tracking-widest gap-1"
             >
-              Unavailable
+              <BellRing className="w-3 h-3" /> Notify
             </Button>
           ) : quantity > 0 ? (
             <div className="flex items-center gap-1 bg-primary rounded-lg p-0.5 shadow-lg w-full">

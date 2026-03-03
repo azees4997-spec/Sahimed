@@ -49,8 +49,8 @@ export default function Home() {
     return <Activity {...props} />;
   };
 
-  // Filter out products with zero stock for storefront display
-  const availableMedicines = medicines?.filter(p => (p.availableQuantity || 0) > 0).slice(0, 12);
+  // Show all medicines (including out of stock) as requested
+  const displayMedicines = medicines?.slice(0, 12);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F8F8] page-transition-wrapper">
@@ -154,7 +154,7 @@ export default function Home() {
               <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {availableMedicines?.map((p: any) => (
+                {displayMedicines?.map((p: any) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
               </div>

@@ -35,8 +35,8 @@ function SearchResults() {
     const saltMatch = p.saltComposition?.toLowerCase().includes(q);
     const matchesQuery = !q || nameMatch || saltMatch;
     const matchesCategory = !c || p.category === c;
-    const hasStock = (p.availableQuantity || 0) > 0; // Filter out zero stock
-    return matchesQuery && matchesCategory && hasStock;
+    // Show all items (even out of stock) as requested
+    return matchesQuery && matchesCategory;
   });
 
   return (

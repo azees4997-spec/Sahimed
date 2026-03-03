@@ -82,5 +82,10 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
     }
+
+    match /stockEnquiries/{enquiryId} {
+      allow create: if isSignedIn();
+      allow read, list: if isAdmin();
+    }
   }
 }
