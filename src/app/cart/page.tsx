@@ -1,9 +1,10 @@
+
 "use client"
 
 import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Plus, Minus, Tag, Check, X, Sparkles } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Plus, Minus, Ticket, Check, X, Sparkles, PartyPopper } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -16,7 +17,6 @@ export default function CartPage() {
 
   // Billing Calculations
   const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
-  const baseDiscount = totalMrp - totalPrice;
   
   // Calculate dynamic fees
   const feeTotal = activeFees.reduce((acc, fee) => {
@@ -35,6 +35,7 @@ export default function CartPage() {
   }
 
   const finalPayable = Math.max(0, totalPrice + feeTotal - promoDiscount);
+  const totalSavings = (totalMrp - totalPrice) + promoDiscount;
 
   if (cart.length === 0) {
     return (
@@ -62,7 +63,7 @@ export default function CartPage() {
       return;
     }
     applyPromo(promo);
-    toast({ title: 'Promo Applied', description: `Discount of ${promo.discountValue}${promo.discountType === 'percentage' ? '%' : '₹'} applied.` });
+    toast({ title: 'Offer Applied!', description: `You just saved ₹${promoDiscount.toFixed(0)} more!` });
   };
 
   return (
@@ -73,14 +74,25 @@ export default function CartPage() {
           <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Shopping Bag</h1>
           <div className="bg-primary/5 px-4 py-1 rounded-full border border-primary/10">
              <span className="text-[10px] font-black text-primary uppercase tracking-widest">
-                {totalItems} Clinical Items
+                {totalItems} Items
              </span>
           </div>
         </div>
+
+        {appliedPromo && (
+          <div className="bg-green-50 border-2 border-green-100 p-6 rounded-[40px] mb-8 flex items-center justify-center gap-4 animate-in zoom-in duration-500 shadow-xl shadow-green-100/50">
+            <PartyPopper className="w-8 h-8 text-green-600" />
+            <div className="text-center">
+              <p className="text-green-800 font-black text-sm uppercase tracking-tight">
+                Congratulations! 🎉 You saved ₹{promoDiscount.toFixed(0)} with code <span className="text-green-600">{appliedPromo.code}</span>
+              </p>
+              <p className="text-[9px] font-black text-green-600/70 uppercase tracking-widest mt-1">Extra discount applied to your order</p>
+            </div>
+          </div>
+        )}
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-6">
-            {/* Cart Items List */}
             <div className="space-y-4">
               {cart.map((item) => (
                 <div key={item.id} className="bg-white p-6 rounded-[40px] shadow-sm border border-gray-100 flex items-center gap-6 group hover:shadow-2xl hover:border-primary/5 transition-all duration-500">
@@ -95,17 +107,17 @@ export default function CartPage() {
                     <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate mb-4">{item.saltComposition}</p>
                     
                     <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-2 bg-gray-50 rounded-full p-1.5 border border-gray-100 shadow-inner">
+                      <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1.5 border border-gray-200">
                         <button 
                           onClick={() => updateQuantity(item.id, -1)}
-                          className="w-10 h-10 rounded-full flex items-center justify-center bg-white text-gray-400 hover:text-primary transition-all shadow-md active:scale-90 border border-gray-100"
+                          className="w-10 h-10 rounded-full flex items-center justify-center bg-primary text-white hover:bg-primary/90 transition-all shadow-lg active:scale-90"
                         >
                           <Minus className="w-4 h-4" />
                         </button>
                         <span className="text-sm font-black text-gray-900 w-8 text-center">{item.quantity}</span>
                         <button 
                           onClick={() => updateQuantity(item.id, 1)}
-                          className="w-10 h-10 rounded-full flex items-center justify-center bg-white text-gray-400 hover:text-primary transition-all shadow-md active:scale-90 border border-gray-100"
+                          className="w-10 h-10 rounded-full flex items-center justify-center bg-primary text-white hover:bg-primary/90 transition-all shadow-lg active:scale-90"
                         >
                           <Plus className="w-4 h-4" />
                         </button>
@@ -113,7 +125,7 @@ export default function CartPage() {
 
                       <button 
                         onClick={() => removeFromCart(item.id)}
-                        className="w-10 h-10 rounded-full bg-red-50 text-red-300 hover:text-red-500 hover:bg-red-100 transition-all flex items-center justify-center active:scale-90 shadow-sm border border-red-100/20"
+                        className="w-10 h-10 rounded-full bg-red-50 text-red-400 hover:text-red-600 hover:bg-red-100 transition-all flex items-center justify-center active:scale-90 shadow-sm"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -128,17 +140,16 @@ export default function CartPage() {
               ))}
             </div>
 
-            {/* "Beautiful" Promo Codes Section */}
             <div className="mt-12 space-y-6">
               <div className="flex items-center gap-3 ml-4">
-                <Sparkles className="w-5 h-5 text-primary" />
-                <h2 className="text-[11px] font-black uppercase tracking-[0.25em] text-gray-900">Patient Rewards</h2>
+                <Ticket className="w-5 h-5 text-primary" />
+                <h2 className="text-[11px] font-black uppercase tracking-[0.25em] text-gray-900">Available Offers</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {availablePromos.length === 0 ? (
                   <div className="col-span-full bg-white p-8 rounded-[40px] border border-dashed text-center">
-                    <Tag className="w-8 h-8 text-gray-100 mx-auto mb-3" />
-                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No active promotions available</p>
+                    <Ticket className="w-8 h-8 text-gray-100 mx-auto mb-3" />
+                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No active offers available</p>
                   </div>
                 ) : availablePromos.map(promo => {
                   const isEligible = totalPrice >= promo.minOrderValue;
@@ -146,8 +157,9 @@ export default function CartPage() {
                   return (
                     <div 
                       key={promo.id} 
+                      onClick={() => isEligible && !isApplied && handleApplyPromo(promo)}
                       className={cn(
-                        "relative p-6 rounded-[32px] border-2 transition-all duration-500 overflow-hidden group",
+                        "relative p-6 rounded-[32px] border-2 transition-all duration-500 overflow-hidden cursor-pointer group",
                         isApplied 
                           ? "bg-primary text-white border-primary shadow-2xl shadow-primary/30" 
                           : isEligible 
@@ -161,15 +173,18 @@ export default function CartPage() {
                             "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-colors",
                             isApplied ? "bg-white/20 text-white" : "bg-primary/5 text-primary"
                           )}>
-                            <Tag className="w-5 h-5" />
+                            <Ticket className="w-5 h-5" />
                           </div>
                           <div>
-                            <p className={cn(
-                              "text-sm uppercase tracking-[0.15em] font-black mb-0.5",
-                              isApplied ? "text-white" : "text-gray-900"
-                            )}>
-                              {promo.code}
-                            </p>
+                            <div className="flex items-center gap-2">
+                               <p className={cn(
+                                "text-sm uppercase tracking-[0.15em] font-black mb-0.5",
+                                isApplied ? "text-white" : "text-gray-900"
+                              )}>
+                                {promo.code}
+                              </p>
+                              {isApplied && <Check className="w-3 h-3 text-white" />}
+                            </div>
                             <p className={cn(
                               "text-[9px] font-bold uppercase tracking-widest max-w-[140px] leading-tight",
                               isApplied ? "text-white/70" : "text-gray-400"
@@ -179,40 +194,38 @@ export default function CartPage() {
                           </div>
                         </div>
                         
-                        {isApplied ? (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => applyPromo(null)} 
-                            className="h-10 w-10 rounded-full p-0 bg-white/10 hover:bg-white/20 text-white"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        ) : (
-                          <div className="flex flex-col items-end gap-2">
+                        <div className="flex flex-col items-end gap-2">
+                           {isApplied ? (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={(e) => { e.stopPropagation(); applyPromo(null); }} 
+                                className="h-8 rounded-full px-4 bg-white/10 hover:bg-white/20 text-white font-black uppercase text-[8px]"
+                              >
+                                Remove
+                              </Button>
+                           ) : (
                              <Button 
                                 size="sm" 
                                 disabled={!isEligible}
-                                onClick={() => handleApplyPromo(promo)}
                                 className={cn(
                                   "rounded-full h-10 px-6 font-black uppercase text-[9px] tracking-widest transition-all",
                                   isEligible 
-                                    ? "bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105" 
+                                    ? "bg-primary text-white shadow-lg shadow-primary/20 group-hover:scale-105" 
                                     : "bg-gray-200 text-gray-400"
                                 )}
                               >
                                 {isEligible ? 'Apply' : 'Locked'}
                               </Button>
-                              {!isEligible && (
-                                <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">
-                                  Need ₹{promo.minOrderValue - totalPrice} more
-                                </span>
-                              )}
-                          </div>
-                        )}
+                           )}
+                           {!isEligible && !isApplied && (
+                              <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">
+                                Need ₹{promo.minOrderValue - totalPrice} more
+                              </span>
+                           )}
+                        </div>
                       </div>
                       
-                      {/* Decorative Dash Border for Coupon Feel */}
                       <div className={cn(
                         "absolute -bottom-1 left-4 right-4 h-[1px] border-b-2 border-dashed opacity-20",
                         isApplied ? "border-white" : "border-primary"
@@ -224,21 +237,21 @@ export default function CartPage() {
             </div>
           </div>
 
-          {/* Clinical Bill Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white p-10 rounded-[50px] shadow-2xl border border-gray-50 sticky top-24 overflow-hidden relative">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16" />
               
-              <h2 className="text-[11px] font-black mb-10 uppercase tracking-[0.3em] text-gray-400 relative z-10">Clinical Bill Summary</h2>
+              <h2 className="text-[11px] font-black mb-10 uppercase tracking-[0.3em] text-gray-400 relative z-10">Order Summary</h2>
               
               <div className="space-y-6 mb-10 relative z-10">
                 <div className="flex justify-between text-[11px] font-black text-gray-500 uppercase tracking-widest">
                   <span>Gross Value (MRP)</span>
                   <span>₹{totalMrp}</span>
                 </div>
+                
                 <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
-                  <span className="text-gray-500">Clinical Savings</span>
-                  <span className="text-accent">- ₹{baseDiscount}</span>
+                  <span className="text-gray-500">Savings</span>
+                  <span className="text-accent">- ₹{totalSavings.toFixed(0)}</span>
                 </div>
                 
                 {activeFees.map(fee => (
@@ -250,20 +263,20 @@ export default function CartPage() {
 
                 {appliedPromo && (
                   <div className="flex justify-between text-[11px] font-black uppercase tracking-widest animate-in slide-in-from-right-4">
-                    <span className="text-primary flex items-center gap-2"><Tag className="w-4 h-4" /> PROMO_REWARD</span>
+                    <span className="text-primary flex items-center gap-2 font-black"><Ticket className="w-4 h-4" /> OFFER_DISCOUNT</span>
                     <span className="text-accent font-black">- ₹{promoDiscount.toFixed(0)}</span>
                   </div>
                 )}
                 
                 <div className="pt-10 border-t border-dashed border-gray-200 flex justify-between items-baseline">
-                  <span className="text-sm font-black uppercase tracking-[0.2em] text-gray-900">Net Payable</span>
+                  <span className="text-sm font-black uppercase tracking-[0.2em] text-gray-900">Total Payable</span>
                   <span className="text-4xl font-black text-primary tracking-tighter">₹{finalPayable.toFixed(0)}</span>
                 </div>
               </div>
               
               <Link href="/checkout">
                  <Button className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-[1.02] transition-all gap-4 bg-primary text-white">
-                   Secure Checkout
+                   Proceed to Checkout
                    <ArrowRight className="w-5 h-5" />
                  </Button>
               </Link>
@@ -273,7 +286,7 @@ export default function CartPage() {
                     <ShieldCheck className="w-6 h-6 text-accent" />
                  </div>
                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest leading-relaxed">
-                   Pharmacist Verified • Mumbai Clinical Gateway • Secure Logistics
+                   Quality Verified • Secure Transactions • Fast Delivery
                  </p>
               </div>
             </div>
