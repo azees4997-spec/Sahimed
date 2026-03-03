@@ -99,6 +99,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const brandedQty = getItemQuantity(product?.id || '');
   const genericQty = genericSubstitute ? getItemQuantity(genericSubstitute.id) : 0;
 
+  const brandedSavings = Math.max(0, Math.round((product.mrp || product.price + 50) - product.price));
   const savingsAmount = product && genericSubstitute ? Math.round(product.price - genericSubstitute.price) : 0;
   const percentageSaved = product && genericSubstitute 
     ? Math.round(((product.price - genericSubstitute.price) / product.price) * 100) 
@@ -140,7 +141,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <div className="flex items-center gap-1.5 mb-6 text-[8px] font-black text-gray-400 uppercase tracking-widest px-1">
           <Link href="/" className="hover:text-primary">Home</Link>
           <ChevronRight className="w-2 h-2" />
-          <Link href="/search" className="hover:text-primary">Medicines</Link>
+          <Link href="/search" className="hover:text-primary">Search</Link>
           <ChevronRight className="w-2 h-2" />
           <span className="text-primary truncate">{product.name}</span>
         </div>
@@ -157,15 +158,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="grid grid-cols-2 gap-3 sm:gap-6 items-stretch">
               {/* Branded Card */}
               <Card className={cn(
-                "rounded-[32px] sm:rounded-[40px] border-none bg-white p-4 sm:p-10 shadow-sm flex flex-col h-full",
+                "rounded-[32px] sm:rounded-[40px] border-none bg-white p-4 sm:p-10 shadow-sm flex flex-col h-full overflow-hidden relative",
                 brandedOutOfStock && "opacity-80"
               )}>
                 <div className="flex items-center justify-between mb-4 sm:mb-8">
-                  <div className="space-y-0.5">
-                    <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">PRODUCT</p>
-                    <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase truncate max-w-[60px] sm:max-w-none">{product.manufacturer}</p>
-                  </div>
-                  <Badge className="bg-primary/10 text-primary border-none text-[6px] sm:text-[8px] font-black uppercase px-2 py-0.5 sm:px-3 sm:py-1 rounded-full whitespace-nowrap">Your Item</Badge>
+                  <Badge className="bg-gray-100 text-gray-500 border-none text-[8px] sm:text-[10px] font-black uppercase px-3 py-1.5 rounded-full">Your Item</Badge>
                 </div>
                 
                 <div className="mb-4 sm:mb-10">
@@ -191,8 +188,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                       <div className="flex items-center gap-2">
                          <span className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">MRP</span>
                          <span className="text-[9px] sm:text-[10px] text-gray-400 line-through">₹{product.mrp || product.price + 100}</span>
+                         <span className="text-[8px] sm:text-[9px] font-black text-accent uppercase">Save ₹{brandedSavings}</span>
                       </div>
-                      <div className="text-xl sm:text-[32px] font-black text-gray-900 leading-none">₹{product.price}</div>
+                      <div className="text-xl sm:text-[32px] font-black text-primary leading-none">₹{product.price}</div>
                       <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase mt-1">₹{getUnitPrice(product.price, product.packSize)} / Unit</p>
                     </div>
                     
@@ -215,17 +213,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               {/* Generic Card */}
               <Card className={cn(
-                "rounded-[32px] sm:rounded-[40px] border-[1.5px] sm:border-[2.5px] border-accent bg-white p-4 sm:p-10 shadow-2xl shadow-accent/10 transition-all flex flex-col h-full",
+                "rounded-[32px] sm:rounded-[40px] border-[1.5px] sm:border-[2.5px] border-accent bg-white p-4 sm:p-10 shadow-2xl shadow-accent/10 transition-all flex flex-col h-full relative",
                 genericOutOfStock && "opacity-80"
               )}>
-                <div className="absolute top-0 right-0 bg-accent text-white px-2 py-1 sm:px-5 sm:py-2 rounded-bl-[12px] sm:rounded-bl-[20px] text-[6px] sm:text-[10px] font-black uppercase tracking-widest shadow-lg">OFFER</div>
-                
                 <div className="flex items-center justify-between mb-4 sm:mb-8">
-                  <div className="space-y-0.5">
-                    <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">ALTERNATIVE</p>
-                    <p className="text-[8px] sm:text-[10px] font-black text-accent uppercase">BIO-EQUIVALENT</p>
-                  </div>
-                  <Badge className="bg-accent/10 text-accent border-none text-[6px] sm:text-[8px] font-black uppercase px-2 py-0.5 sm:px-3 sm:py-1 rounded-full whitespace-nowrap">Our Recommendation</Badge>
+                  <Badge className="bg-accent text-white border-none text-[8px] sm:text-[10px] font-black uppercase px-3 py-1.5 rounded-full">Our Recommendation</Badge>
                 </div>
                 
                 <div className="mb-4 sm:mb-10 relative">
@@ -256,9 +248,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                       <div className="flex items-center gap-2">
                          <span className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">MRP</span>
                          <span className="text-[9px] sm:text-[10px] text-gray-400 line-through">₹{genericSubstitute.mrp || genericSubstitute.price + 50}</span>
+                         <div className="bg-accent text-white px-2 py-0.5 rounded-md text-[8px] font-black">
+                           SAVE ₹{savingsAmount} ({percentageSaved}%)
+                         </div>
                       </div>
                       <div className="text-xl sm:text-[32px] font-black text-accent leading-none">₹{genericSubstitute.price}</div>
-                      <p className="text-[8px] sm:text-[9px] font-black text-accent uppercase mt-1">SAVE ₹{savingsAmount} ({percentageSaved}%)</p>
+                      <p className="text-[8px] sm:text-[9px] font-black text-accent uppercase mt-1">₹{getUnitPrice(genericSubstitute.price, genericSubstitute.packSize)} / Unit</p>
                     </div>
                     
                     {genericOutOfStock ? (
@@ -282,8 +277,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         ) : (
           <div className="space-y-8 animate-in fade-in duration-700">
              <div className="bg-white rounded-[32px] sm:rounded-[50px] p-6 sm:p-12 shadow-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-center overflow-hidden relative">
-                <div className="absolute top-4 right-4 sm:top-8 sm:right-8 bg-accent/5 text-accent px-3 py-1 sm:px-5 sm:py-2 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest border border-accent/10">
-                   Our Recommendation
+                <div className="absolute top-4 right-4 sm:top-8 sm:right-8">
+                   <Badge className="bg-accent text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">Our Recommendation</Badge>
                 </div>
                 
                 <div className="relative">
@@ -295,7 +290,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                    <div className="space-y-4">
                       <div className="flex items-center gap-2">
                          <div className="h-1 w-8 sm:h-1.5 sm:w-12 bg-accent rounded-full" />
-                         <span className="text-[8px] sm:text-[10px] font-black text-accent uppercase tracking-[0.3em]">Excellence Quality</span>
+                         <span className="text-[8px] sm:text-[10px] font-black text-accent uppercase tracking-[0.3em]">Premium Quality</span>
                       </div>
                       <h1 className="text-2xl sm:text-4xl font-black text-gray-900 uppercase tracking-tighter leading-none">{product.name}</h1>
                       <div className="space-y-1 sm:space-y-2">
@@ -305,9 +300,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                    </div>
 
                    <div className="grid grid-cols-2 gap-4 sm:gap-6 bg-gray-50 p-4 sm:p-6 rounded-[24px] sm:rounded-[32px] border">
-                      <div className="space-y-0.5">
-                        <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">Unit Price</p>
-                        <p className="text-2xl sm:text-3xl font-black text-accent">₹{product.price}</p>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] text-gray-400 line-through">₹{product.mrp || product.price + 50}</span>
+                          <span className="text-[9px] font-black text-accent uppercase">Save ₹{brandedSavings}</span>
+                        </div>
+                        <p className="text-2xl sm:text-3xl font-black text-primary">₹{product.price}</p>
                         <p className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase">₹{getUnitPrice(product.price, product.packSize)} / UNIT</p>
                       </div>
                       <div className="space-y-0.5">
@@ -322,13 +320,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                       ) : (
                         <div className="flex-1 flex gap-2 sm:gap-3">
                            {brandedQty > 0 ? (
-                              <div className="flex items-center justify-between bg-accent rounded-full h-12 sm:h-16 flex-1 px-4 sm:px-8 shadow-2xl shadow-accent/20">
+                              <div className="flex items-center justify-between bg-primary rounded-full h-12 sm:h-16 flex-1 px-4 sm:px-8 shadow-2xl shadow-primary/20">
                                  <button onClick={() => updateQuantity(product.id, -1)} className="p-1 sm:p-2 text-white"><Minus className="w-4 h-4 sm:w-6 sm:h-6" /></button>
                                  <span className="text-sm sm:text-xl font-black text-white">{brandedQty}</span>
                                  <button onClick={() => updateQuantity(product.id, 1)} className="p-1 sm:p-2 text-white"><Plus className="w-4 h-4 sm:w-6 sm:h-6" /></button>
                               </div>
                            ) : (
-                             <Button onClick={() => addToCart(product, 1)} className="flex-1 h-12 sm:h-16 rounded-full text-xs sm:text-sm font-black uppercase tracking-widest bg-accent shadow-2xl shadow-accent/30 text-white">Add To Cart</Button>
+                             <Button onClick={() => addToCart(product, 1)} className="flex-1 h-12 sm:h-16 rounded-full text-xs sm:text-sm font-black uppercase tracking-widest bg-primary shadow-2xl shadow-primary/30 text-white">Add To Cart</Button>
                            )}
                         </div>
                       )}
@@ -342,10 +340,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-12">
           <Card className="rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 border-none bg-white shadow-sm hover:shadow-xl transition-all">
             <h3 className="text-[10px] sm:text-sm font-black text-gray-900 uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-               <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /> Common Uses
+               <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /> Uses & Benefits
             </h3>
             <div className="flex flex-wrap gap-2">
-               {(product.uses || ["Quality Management", "Professional Verified"]).map((use: string, i: number) => (
+               {(product.uses || ["Quality Assured", "Customer Approved"]).map((use: string, i: number) => (
                  <span key={i} className="bg-gray-50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl text-[8px] sm:text-[10px] font-bold text-gray-600 uppercase border border-dashed">{use}</span>
                ))}
             </div>
@@ -353,10 +351,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
           <Card className="rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 border-none bg-white shadow-sm hover:shadow-xl transition-all">
             <h3 className="text-[10px] sm:text-sm font-black text-gray-900 uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-               <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-accent" /> Expert Notes
+               <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-accent" /> Quality Guarantee
             </h3>
             <p className="text-[9px] sm:text-[11px] font-bold text-gray-500 uppercase leading-relaxed tracking-widest">
-              This product is quality-tested and sourced directly from professional channels. Always follow the guidelines.
+              Sourced directly from verified manufacturers. Every product undergoes rigorous quality checks before reaching our customers.
             </p>
           </Card>
         </div>

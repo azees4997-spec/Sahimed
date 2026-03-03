@@ -72,19 +72,25 @@ export default function ProductCard({ product }: { product: Product }) {
   const packSizeDisplay = product.packSize?.match(/\d+/)?.[0] || product.packSize;
 
   return (
-    <div className={`group bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col active:scale-[0.98] h-full ${isOutOfStock ? 'opacity-90' : ''}`}>
+    <div className={cn(
+      "group bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col active:scale-[0.98] h-full",
+      isOutOfStock && "opacity-90"
+    )}>
       <Link href={`/product/${product.id}`} className="relative aspect-square w-full overflow-hidden bg-white">
         <Image
           src={product.imageUrl}
           alt={product.name}
           fill
-          className={`object-contain p-4 group-hover:scale-105 transition-transform duration-500 ${isOutOfStock ? 'grayscale opacity-40' : ''}`}
+          className={cn(
+            "object-contain p-4 group-hover:scale-105 transition-transform duration-500",
+            isOutOfStock && "grayscale opacity-40"
+          )}
           data-ai-hint="medicine product"
         />
         
         {savingsPercent > 0 && !isOutOfStock && (
           <div className="absolute top-3 left-3 z-10">
-            <div className="bg-[#10B981] text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-md">
+            <div className="bg-accent text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-md">
               {savingsPercent}% OFF
             </div>
           </div>
@@ -99,7 +105,6 @@ export default function ProductCard({ product }: { product: Product }) {
       
       <div className="p-4 flex flex-col flex-1">
         <div className="space-y-1 mb-4">
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">{product.manufacturer}</p>
           <Link href={`/product/${product.id}`}>
             <h3 className="font-black text-gray-900 line-clamp-2 text-sm uppercase tracking-tight group-hover:text-primary transition-colors">
               {product.name}
@@ -108,22 +113,29 @@ export default function ProductCard({ product }: { product: Product }) {
           <p className="text-[10px] font-bold text-gray-400 uppercase truncate">
             {product.saltComposition}
           </p>
-          <p className="text-[11px] font-black text-primary uppercase">
-            {packSizeDisplay}
-          </p>
+          <div className="flex items-center justify-between mt-2">
+            <span className="text-[11px] font-black text-primary uppercase">
+              {packSizeDisplay} Units
+            </span>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">{product.manufacturer}</p>
+          </div>
         </div>
         
         <div className="mt-auto space-y-4">
           <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-black text-primary">₹{product.price}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-black text-primary">₹{product.price}</span>
+                {savingsAmount > 0 && (
+                  <span className="text-xs text-gray-400 line-through font-bold">₹{Math.round(mrp)}</span>
+                )}
+              </div>
               {savingsAmount > 0 && (
-                <span className="text-xs text-gray-400 line-through font-bold">₹{Math.round(mrp)}</span>
+                <div className="bg-accent/10 px-2 py-0.5 rounded-md">
+                   <p className="text-[10px] font-black text-accent uppercase">SAVE ₹{savingsAmount}</p>
+                </div>
               )}
             </div>
-            {savingsAmount > 0 && (
-              <p className="text-[11px] font-black text-[#10B981] uppercase">SAVE ₹{savingsAmount}</p>
-            )}
           </div>
           
           <div className="flex items-center justify-between gap-2">
