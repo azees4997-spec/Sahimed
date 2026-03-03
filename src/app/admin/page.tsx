@@ -25,7 +25,10 @@ import {
   Plus,
   ArrowRight,
   ExternalLink,
-  Home
+  Home,
+  Camera,
+  Image as ImageIcon,
+  Upload
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,6 +58,7 @@ import {
 import { doc, collection, query, orderBy, collectionGroup, getDoc, serverTimestamp } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import Link from 'next/link';
+import Image from 'next/image';
 
 type AdminTab = 'overview' | 'inventory' | 'enquiries' | 'fulfillment';
 
@@ -163,11 +167,11 @@ export default function SupervisorConsole() {
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Admin Email</Label>
-                <Input type="email" placeholder="admin@sahimed.com" value={email} onChange={e => setEmail(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
+                <input type="email" placeholder="admin@sahimed.com" value={email} onChange={e => setEmail(e.target.value)} required className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none focus:ring-2 focus:ring-primary/20" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Password</Label>
-                <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
+                <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none focus:ring-2 focus:ring-primary/20" />
               </div>
               <Button type="submit" disabled={authLoading} className="w-full h-14 rounded-full font-black uppercase tracking-widest mt-4 shadow-xl shadow-primary/20">
                 {authLoading ? <Loader2 className="animate-spin" /> : "Authorize Access"}
@@ -435,6 +439,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                     <div className="flex flex-col">
                       <span className="font-black text-gray-900 text-xs">{med.name}</span>
                       <span className="text-[8px] text-gray-400 uppercase font-bold tracking-widest">{med.manufacturer}</span>
+                      <span className="text-[7px] text-primary font-black uppercase mt-0.5">{med.packSize}</span>
                     </div>
                   </td>
                   <td className="px-8 py-6">
@@ -473,14 +478,35 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
     price: '',
     mrp: '',
     availableQuantity: '',
+    packSize: '',
     category: 'Diabetes',
     isGeneric: false,
     prescriptionRequired: false,
-    imageUrl: 'https://picsum.photos/seed/med/300/300'
+    imageUrl: ''
   });
+
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploading(true);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm(prev => ({ ...prev, imageUrl: reader.result as string }));
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.imageUrl) {
+      toast({ variant: 'destructive', title: "Image Required", description: "Please upload a product image." });
+      return;
+    }
+
     addDocumentNonBlocking(collection(db, 'medicines'), {
       ...form,
       price: Number(form.price),
@@ -493,7 +519,29 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 py-4">
+    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 py-4 max-h-[70vh] overflow-y-auto px-1 scrollbar-hide">
+      <div className="col-span-2 flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-[32px] bg-gray-50 group hover:bg-gray-100 transition-all cursor-pointer relative overflow-hidden" onClick={() => document.getElementById('sku-image-upload')?.click()}>
+        {form.imageUrl ? (
+           <div className="relative w-full aspect-video">
+             <Image src={form.imageUrl} alt="Preview" fill className="object-contain" />
+             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                <p className="text-white text-[10px] font-black uppercase">Change Image</p>
+             </div>
+           </div>
+        ) : (
+          <>
+            {uploading ? <Loader2 className="w-8 h-8 animate-spin text-primary" /> : <Upload className="w-8 h-8 text-gray-300 group-hover:text-primary transition-colors" />}
+            <p className="mt-2 text-[10px] font-black uppercase text-gray-400">Product Image (File or URL)</p>
+          </>
+        )}
+        <input id="sku-image-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+      </div>
+
+      <div className="col-span-2 space-y-2">
+        <Label className="text-[9px] font-black uppercase">Or Paste Image URL</Label>
+        <Input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} placeholder="https://..." className="rounded-xl h-10 bg-gray-50 border-none font-bold text-xs" />
+      </div>
+
       <div className="space-y-2">
         <Label className="text-[9px] font-black uppercase">Medicine Name</Label>
         <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
@@ -507,6 +555,14 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
         <Input value={form.saltComposition} onChange={e => setForm({...form, saltComposition: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
       </div>
       <div className="space-y-2">
+        <Label className="text-[9px] font-black uppercase">Packaging (e.g. Strip of 15)</Label>
+        <Input value={form.packSize} onChange={e => setForm({...form, packSize: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-[9px] font-black uppercase">Initial Stock</Label>
+        <Input type="number" value={form.availableQuantity} onChange={e => setForm({...form, availableQuantity: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="space-y-2">
         <Label className="text-[9px] font-black uppercase">Price (₹)</Label>
         <Input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
       </div>
@@ -514,21 +570,34 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
         <Label className="text-[9px] font-black uppercase">MRP (₹)</Label>
         <Input type="number" value={form.mrp} onChange={e => setForm({...form, mrp: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
       </div>
-      <div className="space-y-2">
-        <Label className="text-[9px] font-black uppercase">Initial Stock</Label>
-        <Input type="number" value={form.availableQuantity} onChange={e => setForm({...form, availableQuantity: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+
+      <div className="flex items-center gap-6 pt-4 col-span-2">
+        <div className="flex items-center space-x-2">
+          <input 
+            type="checkbox" 
+            id="is-gen" 
+            checked={form.isGeneric} 
+            onChange={e => setForm({...form, isGeneric: e.target.checked})} 
+            className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <Label htmlFor="is-gen" className="text-[9px] font-black uppercase">Generic Alternative</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <input 
+            type="checkbox" 
+            id="rx-req" 
+            checked={form.prescriptionRequired} 
+            onChange={e => setForm({...form, prescriptionRequired: e.target.checked})} 
+            className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <Label htmlFor="rx-req" className="text-[9px] font-black uppercase">RX Required</Label>
+        </div>
       </div>
-      <div className="flex items-center space-x-2 pt-4">
-        <input 
-          type="checkbox" 
-          id="rx-req" 
-          checked={form.prescriptionRequired} 
-          onChange={e => setForm({...form, prescriptionRequired: e.target.checked})} 
-        />
-        <Label htmlFor="rx-req" className="text-[9px] font-black uppercase">Prescription Required</Label>
-      </div>
-      <div className="col-span-2 flex items-center gap-3 pt-4 border-t">
-        <Button type="submit" className="flex-1 rounded-full h-14 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">Create SKU</Button>
+
+      <div className="col-span-2 flex items-center gap-3 pt-6 border-t mt-4">
+        <Button type="submit" disabled={uploading} className="flex-1 rounded-full h-14 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">
+          {uploading ? <Loader2 className="animate-spin" /> : "Create SKU"}
+        </Button>
         <Button type="button" variant="ghost" onClick={onSuccess} className="rounded-full h-14 font-black uppercase text-[10px] tracking-widest text-gray-400">Cancel</Button>
       </div>
     </form>
