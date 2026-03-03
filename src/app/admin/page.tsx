@@ -414,9 +414,42 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     setIsFormOpen(true);
   };
 
+  const downloadCatalog = () => {
+    if (!medicines || medicines.length === 0) return;
+    
+    const headers = ["sku", "moleculeId", "name", "manufacturer", "saltComposition", "dosageForm", "price", "mrp", "availableQuantity", "packSize", "category", "isGeneric", "prescriptionRequired", "imageUrl", "description"].join(",");
+    
+    const rows = medicines.map(m => [
+      `"${m.sku || ''}"`,
+      `"${m.moleculeId || ''}"`,
+      `"${m.name || ''}"`,
+      `"${m.manufacturer || ''}"`,
+      `"${m.saltComposition || ''}"`,
+      `"${m.dosageForm || ''}"`,
+      m.price || 0,
+      m.mrp || 0,
+      m.availableQuantity || 0,
+      `"${m.packSize || ''}"`,
+      `"${m.category || ''}"`,
+      m.isGeneric || false,
+      m.prescriptionRequired || false,
+      `"${m.imageUrl || ''}"`,
+      `"${(m.description || '').replace(/"/g, '""')}"`
+    ].join(","));
+    
+    const csvContent = [headers, ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `healthlink_sku_master_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const downloadCSVTemplate = () => {
     const headers = "sku,moleculeId,name,manufacturer,saltComposition,dosageForm,price,mrp,availableQuantity,packSize,category,isGeneric,prescriptionRequired,imageUrl,description\n";
-    const sample = "JAN-50-500-15,sitagliptin-metformin-50-500,Janumet 50/500,MSD,Sitagliptin+Metformin,Tablet,1250,1450,100,Strip of 15,Diabetes,false,true,https://picsum.photos/seed/1/300/300,Sample description\n";
+    const sample = "SKU-ID-001,MOL-ID-001,Product Name,Manufacturer,Salt 500mg,Tablet,100,120,500,Strip of 10,Diabetes,false,true,https://picsum.photos/seed/1/300/300,Product description\n";
     const blob = new Blob([headers + sample], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -439,12 +472,15 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 
       for (let i = 1; i < lines.length; i++) {
         if (!lines[i].trim()) continue;
-        const values = lines[i].split(',');
-        const medData: any = {};
         
+        // Handle quoted fields
+        const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+        if (!values) continue;
+
+        const medData: any = {};
         headers.forEach((header, index) => {
           const key = header.trim();
-          let value: any = values[index]?.trim();
+          let value: any = (values[index] || '').trim().replace(/^"|"$/g, '');
           
           if (['price', 'mrp', 'availableQuantity'].includes(key)) value = Number(value) || 0;
           if (['isGeneric', 'prescriptionRequired'].includes(key)) value = value?.toLowerCase() === 'true';
@@ -476,8 +512,12 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
             <Input placeholder="Search SKU or Molecule..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-full border-none bg-white font-bold text-xs" />
           </div>
           
+          <Button variant="outline" onClick={downloadCatalog} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2">
+            <Download className="w-3.5 h-3.5" /> Export Catalog
+          </Button>
+
           <Button variant="outline" onClick={downloadCSVTemplate} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2">
-            <Download className="w-3.5 h-3.5" /> Template
+            <FileText className="w-3.5 h-3.5" /> Template
           </Button>
 
           <div className="relative">
@@ -687,8 +727,8 @@ function MedicineForm({ db, initialData, onSuccess }: { db: any, initialData?: a
       </div>
 
       <div className="space-y-2">
-        <Label className="text-[9px] font-black uppercase">Unique SKU Name</Label>
-        <Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} required placeholder="e.g. JAN-50-500-15" className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+        <Label className="text-[9px] font-black uppercase">Unique SKU</Label>
+        <Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} required placeholder="e.g. SKU-123" className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
       </div>
       <div className="space-y-2">
         <Label className="text-[9px] font-black uppercase">Unique Molecule ID</Label>
