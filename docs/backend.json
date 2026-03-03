@@ -60,6 +60,27 @@
         "activatedAt"
       ]
     },
+    "MoleculeMaster": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MoleculeMaster",
+      "type": "object",
+      "description": "Unique Molecule ID Registry for linking bio-equivalents.",
+      "properties": {
+        "masterId": {
+          "type": "string",
+          "description": "Unique ID for the salt/molecule composition."
+        },
+        "molecule": {
+          "type": "string",
+          "description": "Full salt combination name."
+        },
+        "form": {
+          "type": "string",
+          "description": "Standard dosage form (e.g. Tablet, Syrup)."
+        }
+      },
+      "required": ["masterId", "molecule", "form"]
+    },
     "Medicine": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Medicine",
@@ -72,7 +93,7 @@
         },
         "moleculeId": {
           "type": "string",
-          "description": "Unique ID for the salt/molecule composition to link bio-equivalents."
+          "description": "Reference to MoleculeMaster.masterId."
         },
         "name": {
           "type": "string"
@@ -111,6 +132,12 @@
         "$ref": "#/backend/entities/AdminProfile"
       },
       "description": "Stores clinical supervisor roles."
+    },
+    "/moleculeMaster/{moleculeId}": {
+      "schema": {
+        "$ref": "#/backend/entities/MoleculeMaster"
+      },
+      "description": "Global registry of clinical molecules."
     },
     "/medicines/{medicineId}": {
       "schema": {
