@@ -13,7 +13,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // Existence-over-Content check for admin role in the new adminProfiles collection
+      // Existence check for admin role in the dedicated adminProfiles collection
       return isSignedIn() && exists(/databases/$(database)/documents/adminProfiles/$(request.auth.uid));
     }
 
@@ -22,7 +22,7 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Specifically allow admins to perform collection-group queries for global monitoring
+    // Explicitly allow supervisors to perform collection-group queries for global monitoring
     match /{path=**}/orders/{orderId} {
       allow read, list, update: if isAdmin();
     }
@@ -56,21 +56,20 @@ service cloud.firestore {
     }
 
     match /adminProfiles/{userId} {
-      // Allow self-read for verification; list for existing admins
+      // Allow self-read and creation for bootstrapping; full management for existing supervisors
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      // Bootstrap: Allow initial creation by any authenticated user for clinical setup
       allow create: if isSignedIn();
       allow update, delete: if isAdmin();
     }
 
     match /medicines/{medicineId} {
-      allow read: if true; // Public catalog access
+      allow read: if true; // Public catalog access for guests
       allow write: if isAdmin();
     }
 
     match /categories/{categoryId} {
-      allow read: if true; // Public category access
+      allow read: if true; // Public category access for guests
       allow write: if isAdmin();
     }
 

@@ -64,6 +64,7 @@ export default function SupervisorConsole() {
     if (!db || !user) return;
     setIsVerifying(true);
     try {
+      // Check specific adminProfiles collection for clinical supervisor authority
       const snap = await getDoc(doc(db, 'adminProfiles', user.uid));
       if (snap.exists()) {
         // Clinical safety delay to ensure Firestore rules are propagated
@@ -77,6 +78,7 @@ export default function SupervisorConsole() {
         setIsVerifying(false);
       }
     } catch (err) {
+      console.error("Verification failed", err);
       setIsVerified(false);
       setIsVerifying(false);
     }
@@ -118,6 +120,7 @@ export default function SupervisorConsole() {
 
   const bootstrapAdmin = () => {
     if (!db || !user) return;
+    // Create authority record in adminProfiles
     setDocumentNonBlocking(doc(db, 'adminProfiles', user.uid), {
       id: user.uid,
       role: 'admin',
@@ -175,7 +178,7 @@ export default function SupervisorConsole() {
           <ShieldAlert className="w-12 h-12 text-orange-500 mx-auto" />
           <div className="space-y-2">
             <h2 className="text-xl font-black uppercase">Restricted Area</h2>
-            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Logged in as {user.email}, but clinical supervisor role is not detected.</p>
+            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Logged in as {user.email || 'Phone User'}, but clinical supervisor role is not detected.</p>
           </div>
           
           <div className="bg-gray-50 p-4 rounded-2xl space-y-2">
@@ -255,10 +258,10 @@ function SeedDataButton({ db }: { db: any }) {
       const categories = [
         { name: 'Diabetes', description: 'Glucose Management' },
         { name: 'Heart care', description: 'Cardiac Wellness' },
-        { name: 'Stomach care', icon: 'Zap', description: 'Digestive & gut health' },
-        { name: 'Liver care', icon: 'ShieldPlus', description: 'Hepatic support' },
-        { name: 'Derma care', icon: 'Sparkles', description: 'Skin & dermatological solutions' },
-        { name: 'Respicare', icon: 'Wind', description: 'Respiratory & lung health' }
+        { name: 'Stomach care', description: 'Digestive & gut health' },
+        { name: 'Liver care', description: 'Hepatic support' },
+        { name: 'Derma care', description: 'Skin & dermatological solutions' },
+        { name: 'Respicare', description: 'Respiratory & lung health' }
       ];
 
       for (const cat of categories) {
@@ -322,6 +325,7 @@ function SeedDataButton({ db }: { db: any }) {
 
 function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab) => void, isVerified: boolean }) {
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
+  // Use simple collection group queries without ordering for initial reliability
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
 
@@ -421,9 +425,8 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  // Gated collectionGroup query
   const presQuery = useMemoFirebase(() => 
-    isVerified ? query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, 
+    isVerified ? query(collectionGroup(db, 'prescriptions')) : null, 
     [db, isVerified]
   );
   const { data: enquiries, isLoading } = useCollection(presQuery);
@@ -467,9 +470,8 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  // Gated collectionGroup query
   const ordersQuery = useMemoFirebase(() => 
-    isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, 
+    isVerified ? query(collectionGroup(db, 'orders')) : null, 
     [db, isVerified]
   );
   const { data: orders, isLoading } = useCollection(ordersQuery);
