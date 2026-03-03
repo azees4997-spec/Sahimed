@@ -21,13 +21,25 @@ import {
   Zap,
   RefreshCw,
   Copy,
-  Check
+  Check,
+  Plus,
+  ArrowRight,
+  Stethoscope,
+  Pill
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger,
+  DialogFooter
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { 
   useUser, 
@@ -40,7 +52,7 @@ import {
   deleteDocumentNonBlocking,
   addDocumentNonBlocking
 } from '@/firebase';
-import { doc, collection, query, orderBy, collectionGroup, getDoc } from 'firebase/firestore';
+import { doc, collection, query, orderBy, collectionGroup, getDoc, serverTimestamp } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 type AdminTab = 'overview' | 'inventory' | 'enquiries' | 'fulfillment';
@@ -64,10 +76,8 @@ export default function SupervisorConsole() {
     if (!db || !user) return;
     setIsVerifying(true);
     try {
-      // Check specific adminProfiles collection for clinical supervisor authority
       const snap = await getDoc(doc(db, 'adminProfiles', user.uid));
       if (snap.exists()) {
-        // Clinical safety delay to ensure Firestore rules are propagated
         setTimeout(() => {
           setIsVerified(true);
           setIsVerifying(false);
@@ -120,7 +130,6 @@ export default function SupervisorConsole() {
 
   const bootstrapAdmin = () => {
     if (!db || !user) return;
-    // Create authority record in adminProfiles
     setDocumentNonBlocking(doc(db, 'adminProfiles', user.uid), {
       id: user.uid,
       role: 'admin',
@@ -129,8 +138,6 @@ export default function SupervisorConsole() {
     
     setIsVerifying(true);
     toast({ title: 'Requesting Authority', description: 'Provisioning admin role... please wait.' });
-    
-    // Longer timeout for first-time setup to allow Security Rules to sync
     setTimeout(performVerification, 6000);
   };
 
@@ -325,7 +332,6 @@ function SeedDataButton({ db }: { db: any }) {
 
 function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab) => void, isVerified: boolean }) {
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
-  // Use simple collection group queries without ordering for initial reliability
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
 
@@ -358,6 +364,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   const { data: medicines, isLoading } = useCollection(medsQuery);
   const { toast } = useToast();
   const [search, setSearch] = useState('');
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
   const filtered = medicines?.filter(m => 
     m.name?.toLowerCase().includes(search.toLowerCase()) || 
@@ -368,9 +375,25 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     <div className="space-y-6 animate-in slide-in-from-bottom-2">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-black uppercase text-gray-900">Inventory Control</h2>
-        <div className="relative w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-          <Input placeholder="Filter medicines..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-full border-none bg-white font-bold text-xs" />
+        <div className="flex items-center gap-4">
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <Input placeholder="Filter medicines..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-full border-none bg-white font-bold text-xs" />
+          </div>
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogTrigger asChild>
+              <Button className="rounded-full h-10 px-6 font-black text-[9px] uppercase tracking-widest gap-2 shadow-lg shadow-primary/20">
+                <Plus className="w-3.5 h-3.5" /> Add SKU
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="rounded-[40px] max-w-2xl border-none">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">Add New Medicine</DialogTitle>
+                <CardDescription className="uppercase text-[8px] font-black tracking-widest">Register clinical product to catalog</CardDescription>
+              </DialogHeader>
+              <AddMedicineForm db={db} onSuccess={() => setIsAddOpen(false)} />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -424,18 +447,71 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   );
 }
 
-function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const presQuery = useMemoFirebase(() => 
-    isVerified ? query(collectionGroup(db, 'prescriptions')) : null, 
-    [db, isVerified]
+function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) {
+  const { toast } = useToast();
+  const [form, setForm] = useState({
+    name: '',
+    manufacturer: '',
+    saltComposition: '',
+    price: '',
+    availableQuantity: '',
+    category: 'Diabetes',
+    isGeneric: false,
+    imageUrl: 'https://picsum.photos/seed/med/300/300'
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    addDocumentNonBlocking(collection(db, 'medicines'), {
+      ...form,
+      price: Number(form.price),
+      availableQuantity: Number(form.availableQuantity),
+      createdAt: serverTimestamp()
+    });
+    toast({ title: "SKU Added", description: `${form.name} is now live in catalog.` });
+    onSuccess();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 py-4">
+      <div className="space-y-2">
+        <Label className="text-[9px] font-black uppercase">Medicine Name</Label>
+        <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-[9px] font-black uppercase">Manufacturer</Label>
+        <Input value={form.manufacturer} onChange={e => setForm({...form, manufacturer: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="space-y-2 col-span-2">
+        <Label className="text-[9px] font-black uppercase">Salt Composition</Label>
+        <Input value={form.saltComposition} onChange={e => setForm({...form, saltComposition: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-[9px] font-black uppercase">Price (₹)</Label>
+        <Input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-[9px] font-black uppercase">Initial Stock</Label>
+        <Input type="number" value={form.availableQuantity} onChange={e => setForm({...form, availableQuantity: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="col-span-2 flex items-center gap-3 pt-4 border-t">
+        <Button type="submit" className="flex-1 rounded-full h-14 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">Create SKU</Button>
+        <Button type="button" variant="ghost" onClick={onSuccess} className="rounded-full h-14 font-black uppercase text-[10px] tracking-widest text-gray-400">Cancel</Button>
+      </div>
+    </form>
   );
+}
+
+function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
   const { toast } = useToast();
 
   const updateStatus = (enquiry: any, status: string) => {
+    if (!enquiry.userId) return;
     const ref = doc(db, 'userProfiles', enquiry.userId, 'prescriptions', enquiry.id);
     updateDocumentNonBlocking(ref, { status });
-    toast({ title: "Status Updated", description: `Enquiry set to ${status}` });
+    toast({ title: "Clinical Update", description: `Enquiry for P_${enquiry.userId.substring(0,8)} is now ${status}` });
   };
 
   return (
@@ -448,14 +524,52 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
           <Card key={enq.id} className="rounded-[32px] overflow-hidden border-none shadow-sm bg-white hover:shadow-lg transition-all flex flex-col">
              <div className="aspect-[4/5] relative bg-gray-100">
                 <img src={enq.imageUrl} alt="Prescription" className="w-full h-full object-cover" />
-                <Badge className="absolute top-3 right-3 bg-primary text-white text-[8px] font-black uppercase">{enq.status}</Badge>
+                <Badge className={`absolute top-3 right-3 text-white text-[8px] font-black uppercase border-none ${enq.status === 'Pending Review' ? 'bg-orange-500' : 'bg-green-600'}`}>
+                  {enq.status}
+                </Badge>
              </div>
              <CardContent className="p-5 flex-1 flex flex-col">
                 <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Patient Ref</p>
-                <p className="text-[10px] font-black text-gray-900 truncate mb-4">P_{enq.userId.substring(0,8).toUpperCase()}</p>
-                <div className="mt-auto flex gap-2">
-                  <Button onClick={() => updateStatus(enq, 'Acknowledged')} size="sm" className="flex-1 rounded-full h-8 font-black uppercase text-[8px] tracking-widest">Approve</Button>
-                  <Button variant="outline" size="sm" className="flex-1 rounded-full h-8 font-black uppercase text-[8px] tracking-widest">Detail</Button>
+                <p className="text-[10px] font-black text-gray-900 truncate mb-4 uppercase tracking-tighter">P_{enq.userId?.substring(0,8).toUpperCase() || 'ANONYMOUS'}</p>
+                <div className="mt-auto flex flex-col gap-2">
+                  <Button 
+                    onClick={() => updateStatus(enq, 'Acknowledged')} 
+                    disabled={enq.status === 'Acknowledged'}
+                    size="sm" 
+                    className="w-full rounded-full h-8 font-black uppercase text-[8px] tracking-widest gap-2"
+                  >
+                    <CheckCircle2 className="w-3 h-3" /> Approve Enquiry
+                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full rounded-full h-8 font-black uppercase text-[8px] tracking-widest">Detail View</Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl p-0 overflow-hidden border-none rounded-[40px]">
+                      <div className="grid md:grid-cols-2">
+                        <div className="bg-black flex items-center justify-center p-4">
+                          <img src={enq.imageUrl} alt="Prescription" className="max-h-[80vh] w-auto object-contain" />
+                        </div>
+                        <div className="p-10 space-y-6 bg-white">
+                          <Badge className="bg-primary/5 text-primary border-none text-[10px] uppercase font-black tracking-widest mb-4">Clinical Review</Badge>
+                          <h2 className="text-2xl font-black uppercase tracking-tight">Prescription Review</h2>
+                          <div className="space-y-4">
+                            <div className="bg-gray-50 p-4 rounded-2xl">
+                              <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Upload Source</p>
+                              <p className="font-bold text-gray-900 text-sm">Patient Portal (ID: {enq.userId})</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-2xl">
+                              <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Clinical Note</p>
+                              <p className="font-bold text-gray-900 text-sm">{enq.analysisSummary || 'No clinical analysis available.'}</p>
+                            </div>
+                          </div>
+                          <div className="pt-6 border-t space-y-3">
+                            <Button onClick={() => updateStatus(enq, 'Acknowledged')} className="w-full h-14 rounded-full font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">Verify Prescription</Button>
+                            <Button variant="ghost" className="w-full text-red-500 font-black uppercase text-[9px] tracking-widest">Reject Enquiry</Button>
+                          </div>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
              </CardContent>
           </Card>
@@ -470,14 +584,12 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const ordersQuery = useMemoFirebase(() => 
-    isVerified ? query(collectionGroup(db, 'orders')) : null, 
-    [db, isVerified]
-  );
+  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
   const { toast } = useToast();
 
   const updateStatus = (order: any, status: string) => {
+    if (!order.userId) return;
     const ref = doc(db, 'userProfiles', order.userId, 'orders', order.id);
     updateDocumentNonBlocking(ref, { status });
     toast({ title: "Logistics Updated", description: `Order ${order.id.substring(0,6)} is now ${status}` });
@@ -502,17 +614,43 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
               <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
             ) : orders?.length ? orders.map(order => (
               <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="px-8 py-6 font-black text-gray-900 text-xs">#{order.id.substring(0,8).toUpperCase()}</td>
+                <td className="px-8 py-6">
+                   <div className="flex flex-col">
+                      <span className="font-black text-gray-900 text-xs">#{order.id.substring(0,8).toUpperCase()}</span>
+                      <span className="text-[8px] text-gray-400 uppercase font-black tracking-widest">P_{order.userId?.substring(0,6)}</span>
+                   </div>
+                </td>
                 <td className="px-8 py-6">
                   <span className="text-[10px] font-bold text-gray-500 uppercase">{order.items?.length || 0} Clinical SKUs</span>
                 </td>
                 <td className="px-8 py-6 font-black text-primary text-sm">₹{order.totalAmount}</td>
                 <td className="px-8 py-6">
-                  <Badge variant="outline" className="text-[8px] uppercase font-bold">{order.status}</Badge>
+                  <Badge variant="outline" className={`text-[8px] uppercase font-black border-none px-3 py-1 rounded-full ${
+                    order.status === 'Pending' ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'
+                  }`}>
+                    {order.status}
+                  </Badge>
                 </td>
                 <td className="px-8 py-6 text-right">
                   {order.status !== 'Delivered' && (
-                    <Button onClick={() => updateStatus(order, 'Shipped')} size="sm" className="rounded-full h-8 px-4 font-black uppercase text-[8px] tracking-widest shadow-md">Dispatch</Button>
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        onClick={() => updateStatus(order, 'Shipped')} 
+                        disabled={order.status === 'Shipped'}
+                        size="sm" 
+                        className="rounded-full h-9 px-5 font-black uppercase text-[8px] tracking-widest shadow-md shadow-primary/20"
+                      >
+                        Dispatch
+                      </Button>
+                      <Button 
+                        onClick={() => updateStatus(order, 'Delivered')} 
+                        variant="outline"
+                        size="sm" 
+                        className="rounded-full h-9 px-5 font-black uppercase text-[8px] tracking-widest border-2"
+                      >
+                        Mark Delivered
+                      </Button>
+                    </div>
                   )}
                 </td>
               </tr>
