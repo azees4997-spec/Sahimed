@@ -62,7 +62,7 @@ export default function PrescriptionPage() {
         patientName: patientName || 'Self',
         notes: notes,
         uploadDate: serverTimestamp(),
-        status: 'Pending Review',
+        status: 'Pending Review', // Essential for collectionGroup filtering in admin panel
         analysisSummary: 'Manual Prescription Enquiry',
         phoneNumber: user.phoneNumber || ''
       };

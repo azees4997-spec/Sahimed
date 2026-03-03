@@ -1,5 +1,5 @@
 
-"use client"
+'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
@@ -52,7 +52,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
-  // Defaulting to Mumbai, MH as requested
+  // Defaulting to Mumbai, MH as requested for the clinical hub
   const [location, setLocation] = useState('Mumbai, MH');
 
   useEffect(() => {
@@ -65,7 +65,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
     }
     const savedLoc = localStorage.getItem('hl_location');
-    if (savedLoc) setLocation(savedLoc);
+    if (savedLoc) {
+      setLocation(savedLoc);
+    } else {
+      localStorage.setItem('hl_location', 'Mumbai, MH');
+    }
   }, []);
 
   useEffect(() => {
