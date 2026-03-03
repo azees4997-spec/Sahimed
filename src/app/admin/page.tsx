@@ -24,8 +24,8 @@ import {
   Check,
   Plus,
   ArrowRight,
-  Stethoscope,
-  Pill
+  ExternalLink,
+  Home
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,6 +54,7 @@ import {
 } from '@/firebase';
 import { doc, collection, query, orderBy, collectionGroup, getDoc, serverTimestamp } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import Link from 'next/link';
 
 type AdminTab = 'overview' | 'inventory' | 'enquiries' | 'fulfillment';
 
@@ -214,13 +215,21 @@ export default function SupervisorConsole() {
       <header className="bg-white border-b sticky top-0 z-50 h-20">
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2">
-              <div className="bg-primary p-1.5 rounded-lg"><ShieldCheck className="text-white w-4 h-4" /></div>
-              <span className="font-black text-lg tracking-tighter text-gray-900 uppercase">Supervisor Terminal</span>
-            </div>
+            <button 
+              onClick={() => setActiveTab('overview')}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity outline-none group"
+            >
+              <div className="bg-primary p-1.5 rounded-lg group-active:scale-95 transition-transform">
+                <ShieldCheck className="text-white w-4 h-4" />
+              </div>
+              <div className="flex flex-col items-start leading-none">
+                <span className="font-black text-lg tracking-tighter text-gray-900 uppercase">Supervisor Terminal</span>
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.3em]">Home Dashboard</span>
+              </div>
+            </button>
             <nav className="hidden lg:flex gap-1">
               {[
-                { id: 'overview', label: 'Dashboard', icon: LayoutGrid },
+                { id: 'overview', label: 'Dashboard', icon: Home },
                 { id: 'inventory', label: 'SKU Master', icon: Package },
                 { id: 'enquiries', label: 'Prescriptions', icon: FileText },
                 { id: 'fulfillment', label: 'Orders', icon: ShoppingBag }
@@ -238,6 +247,12 @@ export default function SupervisorConsole() {
             </nav>
           </div>
           <div className="flex items-center gap-3">
+            <Link href="/" target="_blank">
+              <Button variant="outline" className="rounded-xl border-2 font-black text-[9px] uppercase gap-1.5 h-10 px-4 hidden sm:flex">
+                <ExternalLink className="w-3.5 h-3.5" />
+                Live Store
+              </Button>
+            </Link>
             <SeedDataButton db={db} />
             <Button variant="ghost" onClick={performVerification} size="icon" className="w-10 h-10 rounded-xl text-gray-400"><RefreshCw className="w-4 h-4" /></Button>
             <Button variant="ghost" onClick={handleLogout} size="icon" className="w-10 h-10 rounded-xl text-gray-400 hover:text-red-500"><LogOut className="w-4 h-4" /></Button>
