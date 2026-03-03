@@ -85,7 +85,7 @@ export default function ProductCard({ product }: { product: Product }) {
         )}
         {isOutOfStock && (
           <div className="absolute inset-0 flex items-center justify-center p-2 bg-white/30 backdrop-blur-[1px]">
-            <Badge variant="destructive" className="font-black text-[8px] uppercase tracking-widest rounded-full px-2 py-0.5 bg-gray-900/90 shadow-xl border-none">Missed</Badge>
+            <Badge variant="destructive" className="font-black text-[8px] uppercase tracking-widest rounded-full px-2 py-0.5 bg-gray-900/90 shadow-xl border-none">Out of Stock</Badge>
           </div>
         )}
       </Link>
@@ -107,9 +107,9 @@ export default function ProductCard({ product }: { product: Product }) {
         <div className="mt-auto pt-1.5 border-t border-gray-50 flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
              <div className="flex flex-col leading-none">
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   <span className="text-[13px] font-black text-primary tracking-tighter">₹{product.price}</span>
-                  <span className="text-[8px] text-gray-400 line-through font-bold decoration-red-400/50 decoration-1">₹{Math.round(mrp)}</span>
+                  <span className="text-[9px] text-red-500/80 line-through font-bold decoration-red-500/50 decoration-1">₹{Math.round(mrp)}</span>
                 </div>
                 {savingsPercent > 0 && (
                    <span className="text-[7px] font-black text-accent uppercase tracking-widest mt-0.5">Save ₹{Math.round(mrp - product.price)}</span>
