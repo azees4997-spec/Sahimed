@@ -57,7 +57,7 @@
 }
 
 @keyframes slideUp {
-  from { transform: translateY(10px); opacity: 0; }
+  from { transform: translateY(15px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
@@ -66,15 +66,29 @@
   to { opacity: 1; }
 }
 
+@keyframes spring {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
 .animate-slide-up {
-  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.2s ease-out;
 }
 
-/* Flutter-like page transitions */
+.animate-spring {
+  animation: spring 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Page transitions */
 .page-transition-wrapper {
   @apply animate-slide-up;
+}
+
+.tap-highlight {
+  @apply active:scale-95 transition-transform duration-200;
 }

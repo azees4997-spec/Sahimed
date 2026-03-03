@@ -111,11 +111,11 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-[60] bg-white border-b safe-top pb-2 shadow-sm transition-all duration-300">
+      <nav className="sticky top-0 z-[60] bg-white/80 backdrop-blur-md border-b safe-top pb-2 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 md:h-16">
             <div className="flex items-center gap-3">
-              <Link href="/" className="flex items-center gap-2">
+              <Link href="/" className="flex items-center gap-2 active:scale-95 transition-transform">
                 <div className="bg-primary p-1.5 rounded-lg shadow-md">
                   <div className="text-white font-black text-xs tracking-tighter">HL</div>
                 </div>
@@ -130,12 +130,12 @@ export default function Navbar() {
                     <ChevronDown className="w-2 h-2 shrink-0 opacity-40" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-64 p-4 rounded-3xl shadow-2xl border-none">
+                <PopoverContent className="w-64 p-4 rounded-3xl shadow-2xl border-none animate-in slide-in-from-top-4 duration-300">
                   <div className="space-y-4">
                     <Button 
                       onClick={handleGeoLocation} 
                       disabled={isLocating}
-                      className="w-full justify-start gap-3 h-12 rounded-2xl bg-primary/5 text-primary hover:bg-primary/10 font-black text-[9px] uppercase tracking-widest"
+                      className="w-full justify-start gap-3 h-12 rounded-2xl bg-primary/5 text-primary hover:bg-primary/10 font-black text-[9px] uppercase tracking-widest active:scale-95 transition-transform"
                     >
                       {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <LocateFixed className="w-4 h-4" />}
                       Use GPS Location
@@ -146,7 +146,7 @@ export default function Navbar() {
                         <Button 
                           key={loc} 
                           variant="ghost" 
-                          className="w-full justify-start text-xs h-10 rounded-xl hover:bg-gray-50 font-bold" 
+                          className="w-full justify-start text-xs h-10 rounded-xl hover:bg-gray-50 font-bold active:scale-95 transition-transform" 
                           onClick={() => {
                             setLocation(loc);
                             setIsPopoverOpen(false);
@@ -163,7 +163,6 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-1">
-              {/* Dynamic Search Toggle for non-home pages */}
               {!isHomePage && (
                 <button 
                   onClick={() => setIsSearchExpanded(!isSearchExpanded)}
@@ -179,7 +178,7 @@ export default function Navbar() {
               <Link href="/cart" className="relative p-2 hover:bg-gray-50 rounded-full active:scale-90 transition-transform">
                 <ShoppingCart className="w-5 h-5 text-gray-700" />
                 {totalItems > 0 && (
-                  <span className="absolute top-0 right-0 bg-accent text-white text-[8px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-white shadow-md">
+                  <span className="absolute top-0 right-0 bg-accent text-white text-[8px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-white shadow-md animate-in zoom-in duration-300">
                     {totalItems}
                   </span>
                 )}
@@ -190,7 +189,6 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Special Search Bar - Visible on Home or when Expanded */}
           <div className={cn(
             "pb-3 px-1 transition-all duration-300 overflow-hidden",
             (isHomePage || isSearchExpanded) ? "max-h-24 opacity-100 mt-2" : "max-h-0 opacity-0 pointer-events-none"
@@ -206,7 +204,7 @@ export default function Navbar() {
               />
               <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-primary w-5 h-5 group-focus-within:scale-110 transition-transform" />
               {suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-3xl shadow-2xl border-none overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2">
+                <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-3xl shadow-2xl border-none overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2 duration-300">
                   {suggestions.map((p) => (
                     <button
                       key={p.id}
@@ -216,7 +214,7 @@ export default function Navbar() {
                         setIsSearchExpanded(false);
                         router.push(`/product/${p.id}`);
                       }}
-                      className="w-full p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors border-b last:border-none text-left"
+                      className="w-full p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors border-b last:border-none text-left active:bg-primary/5"
                     >
                       <div className="w-10 h-10 bg-gray-50 rounded-xl flex-shrink-0">
                         <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain p-1" />

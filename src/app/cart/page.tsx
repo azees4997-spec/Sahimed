@@ -1,4 +1,3 @@
-
 "use client"
 
 import Navbar from '@/components/Navbar';
@@ -24,16 +23,13 @@ export default function CartPage() {
   const { toast } = useToast();
   const [isPromoDialogOpen, setIsPromoDialogOpen] = useState(false);
 
-  // Billing Calculations
   const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
   
-  // Calculate dynamic fees
   const feeTotal = activeFees.reduce((acc, fee) => {
     if (fee.type === 'fixed') return acc + fee.amount;
     return acc + (totalPrice * (fee.amount / 100));
   }, 0);
 
-  // Calculate promo discount
   let promoDiscount = 0;
   if (appliedPromo) {
     if (appliedPromo.discountType === 'fixed') {
@@ -51,13 +47,13 @@ export default function CartPage() {
       <div className="min-h-screen bg-[#F8F8F8] page-transition-wrapper">
         <Navbar />
         <main className="max-w-4xl mx-auto px-4 py-12 text-center">
-          <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-xl border border-gray-50">
+          <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-xl border border-gray-50 animate-in zoom-in duration-500">
             <ShoppingBag className="w-8 h-8 text-gray-200" />
           </div>
           <h1 className="text-2xl font-black mb-2 uppercase tracking-tight text-gray-900">Your bag is empty</h1>
           <p className="text-gray-400 mb-10 text-[10px] font-bold uppercase tracking-[0.3em]">Build your health journey today.</p>
           <Link href="/">
-            <Button size="lg" className="rounded-full px-12 h-16 font-black uppercase tracking-widest shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 text-xs">
+            <Button size="lg" className="rounded-full px-12 h-16 font-black uppercase tracking-widest shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 text-xs active:scale-95 transition-transform">
               Start Shopping
             </Button>
           </Link>
@@ -91,7 +87,7 @@ export default function CartPage() {
 
         {appliedPromo && (
           <div className="bg-green-50 border-2 border-green-100 p-6 rounded-[40px] mb-8 flex items-center justify-center gap-4 animate-in zoom-in duration-500 shadow-xl shadow-green-100/50">
-            <PartyPopper className="w-8 h-8 text-green-600" />
+            <PartyPopper className="w-8 h-8 text-green-600 animate-bounce" />
             <div className="text-center">
               <p className="text-green-800 font-black text-sm uppercase tracking-tight">
                 Congratulations! 🎉 You saved ₹{promoDiscount.toFixed(0)} with code <span className="text-green-600 font-black">{appliedPromo.code}</span>
@@ -105,7 +101,7 @@ export default function CartPage() {
           <div className="lg:col-span-2 space-y-6">
             <div className="space-y-4">
               {cart.map((item) => (
-                <div key={item.id} className="bg-white p-6 rounded-[40px] shadow-sm border border-gray-100 flex items-center gap-6 group hover:shadow-2xl hover:border-primary/5 transition-all duration-500">
+                <div key={item.id} className="bg-white p-6 rounded-[40px] shadow-sm border border-gray-100 flex items-center gap-6 group hover:shadow-2xl hover:border-primary/5 transition-all duration-500 animate-in slide-in-from-bottom-4">
                   <Link href={`/product/${item.id}`} className="relative w-24 h-24 bg-gray-50 rounded-[32px] overflow-hidden shrink-0 active:scale-95 transition-transform border border-gray-100/50">
                     <Image src={item.imageUrl} alt={item.name} fill className="object-contain p-3 group-hover:scale-110 transition-transform duration-500" />
                   </Link>
@@ -144,17 +140,16 @@ export default function CartPage() {
 
                   <div className="text-right shrink-0 px-4">
                     <p className="text-xl font-black text-gray-900">₹{item.price * item.quantity}</p>
-                    <p className="text-[9px] text-red-600 uppercase tracking-widest font-black line-through">₹{(item.mrp || item.price + 50) * item.quantity}</p>
+                    <p className="text-[9px] text-[#E11D48] uppercase tracking-widest font-black line-through">₹{(item.mrp || item.price + 50) * item.quantity}</p>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Hidden Promocode Banner Component */}
             <div className="mt-8">
               <Dialog open={isPromoDialogOpen} onOpenChange={setIsPromoDialogOpen}>
                 <DialogTrigger asChild>
-                  <button className="w-full bg-white p-6 rounded-[32px] border-2 border-dashed border-primary/20 hover:border-primary transition-all flex items-center justify-between group">
+                  <button className="w-full bg-white p-6 rounded-[32px] border-2 border-dashed border-primary/20 hover:border-primary transition-all flex items-center justify-between group active:scale-[0.98]">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
                         <Ticket className="w-6 h-6" />
@@ -171,7 +166,7 @@ export default function CartPage() {
                     <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-primary transition-colors" />
                   </button>
                 </DialogTrigger>
-                <DialogContent className="rounded-[40px] border-none shadow-3xl p-0 overflow-hidden max-w-xl">
+                <DialogContent className="rounded-[40px] border-none shadow-3xl p-0 overflow-hidden max-w-xl animate-in fade-in zoom-in duration-300">
                   <div className="bg-primary p-8 text-white">
                     <DialogTitle className="text-2xl font-black uppercase tracking-tight">Available Offers</DialogTitle>
                     <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mt-1">Select a voucher to apply</p>
@@ -190,7 +185,7 @@ export default function CartPage() {
                           key={promo.id} 
                           onClick={() => isEligible && !isApplied && handleApplyPromo(promo)}
                           className={cn(
-                            "relative p-6 rounded-[32px] border-2 transition-all duration-500 overflow-hidden cursor-pointer group",
+                            "relative p-6 rounded-[32px] border-2 transition-all duration-300 overflow-hidden cursor-pointer group active:scale-[0.98]",
                             isApplied 
                               ? "bg-primary text-white border-primary shadow-xl" 
                               : isEligible 
@@ -231,7 +226,7 @@ export default function CartPage() {
                                     variant="ghost" 
                                     size="sm" 
                                     onClick={(e) => { e.stopPropagation(); applyPromo(null); setIsPromoDialogOpen(false); }} 
-                                    className="h-8 rounded-full px-4 bg-white/10 hover:bg-white/20 text-white font-black uppercase text-[8px]"
+                                    className="h-8 rounded-full px-4 bg-white/10 hover:bg-white/20 text-white font-black uppercase text-[8px] active:scale-90"
                                   >
                                     Remove
                                   </Button>
@@ -240,7 +235,7 @@ export default function CartPage() {
                                     size="sm" 
                                     disabled={!isEligible}
                                     className={cn(
-                                      "rounded-full h-10 px-6 font-black uppercase text-[9px] tracking-widest transition-all",
+                                      "rounded-full h-10 px-6 font-black uppercase text-[9px] tracking-widest transition-all active:scale-95",
                                       isEligible 
                                         ? "bg-primary text-white shadow-lg" 
                                         : "bg-gray-200 text-gray-400"
@@ -261,7 +256,7 @@ export default function CartPage() {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white p-10 rounded-[50px] shadow-2xl border border-gray-50 sticky top-24 overflow-hidden relative">
+            <div className="bg-white p-10 rounded-[50px] shadow-2xl border border-gray-50 sticky top-24 overflow-hidden relative animate-in fade-in slide-in-from-right-8 duration-500">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16" />
               
               <h2 className="text-[11px] font-black mb-10 uppercase tracking-[0.3em] text-gray-400 relative z-10">Order Summary</h2>
@@ -269,7 +264,7 @@ export default function CartPage() {
               <div className="space-y-6 mb-10 relative z-10">
                 <div className="flex justify-between text-[11px] font-black text-gray-500 uppercase tracking-widest">
                   <span>Cart Gross (MRP)</span>
-                  <span className="text-red-600">₹{totalMrp}</span>
+                  <span className="text-[#E11D48]">₹{totalMrp}</span>
                 </div>
                 
                 <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
@@ -298,7 +293,7 @@ export default function CartPage() {
               </div>
               
               <Link href="/checkout">
-                 <Button className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-[1.02] transition-all gap-4 bg-primary text-white">
+                 <Button className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all gap-4 bg-primary text-white">
                    Checkout Now
                    <ArrowRight className="w-5 h-5" />
                  </Button>

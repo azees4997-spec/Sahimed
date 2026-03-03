@@ -1,4 +1,3 @@
-
 "use client"
 
 import Image from 'next/image';
@@ -68,12 +67,11 @@ export default function ProductCard({ product }: { product: Product }) {
   const savingsAmount = Math.max(0, Math.round(mrp - product.price));
   const savingsPercent = Math.round(((mrp - product.price) / mrp) * 100);
 
-  // Extract numeric pack size for display (e.g., "Strip of 15" -> "15")
   const packSizeDisplay = product.packSize?.match(/\d+/)?.[0] || product.packSize;
 
   return (
     <div className={cn(
-      "group bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col active:scale-[0.98] h-full",
+      "group bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col active:scale-[0.98] h-full",
       isOutOfStock && "opacity-90"
     )}>
       <Link href={`/product/${product.id}`} className="relative aspect-square w-full overflow-hidden bg-white">
@@ -90,7 +88,7 @@ export default function ProductCard({ product }: { product: Product }) {
         
         {savingsPercent > 0 && !isOutOfStock && (
           <div className="absolute top-3 left-3 z-10">
-            <div className="bg-accent text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-md">
+            <div className="bg-accent text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-md animate-in fade-in zoom-in duration-500">
               {savingsPercent}% OFF
             </div>
           </div>
@@ -117,7 +115,6 @@ export default function ProductCard({ product }: { product: Product }) {
             <span className="text-[11px] font-black text-primary uppercase">
               {packSizeDisplay} Units
             </span>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">{product.manufacturer}</p>
           </div>
         </div>
         
@@ -127,7 +124,7 @@ export default function ProductCard({ product }: { product: Product }) {
               <div className="flex items-center gap-2">
                 <span className="text-lg font-black text-primary">₹{product.price}</span>
                 {savingsAmount > 0 && (
-                  <span className="text-xs text-red-600 line-through font-bold">₹{Math.round(mrp)}</span>
+                  <span className="text-xs text-[#E11D48] line-through font-bold">₹{Math.round(mrp)}</span>
                 )}
               </div>
               {savingsAmount > 0 && (
@@ -143,22 +140,22 @@ export default function ProductCard({ product }: { product: Product }) {
               <Button 
                 onClick={handleNotify}
                 variant="outline"
-                className="rounded-full h-11 w-full border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-600 font-black text-[10px] uppercase tracking-widest gap-2 shadow-sm"
+                className="rounded-full h-11 w-full border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-600 font-black text-[10px] uppercase tracking-widest gap-2 shadow-sm active:scale-95 transition-transform"
               >
                 <BellRing className="w-3.5 h-3.5" /> Notify Me
               </Button>
             ) : quantity > 0 ? (
-              <div className="flex items-center gap-1 rounded-full p-1 bg-primary shadow-lg shadow-primary/20 w-full overflow-hidden">
+              <div className="flex items-center gap-1 rounded-full p-1 bg-primary shadow-lg shadow-primary/20 w-full overflow-hidden animate-in zoom-in duration-200">
                 <Button 
                   onClick={handleDecrement} 
-                  className="h-9 w-9 p-0 rounded-full bg-white/10 text-white hover:bg-white/20 border-none shadow-none shrink-0"
+                  className="h-9 w-9 p-0 rounded-full bg-white/10 text-white hover:bg-white/20 border-none shadow-none shrink-0 active:scale-90 transition-transform"
                 >
                   <Minus className="w-4 h-4" />
                 </Button>
                 <span className="text-xs font-black text-white flex-1 text-center">{quantity}</span>
                 <Button 
                   onClick={handleIncrement} 
-                  className="h-9 w-9 p-0 rounded-full bg-white/10 text-white hover:bg-white/20 border-none shadow-none shrink-0"
+                  className="h-9 w-9 p-0 rounded-full bg-white/10 text-white hover:bg-white/20 border-none shadow-none shrink-0 active:scale-90 transition-transform"
                 >
                   <Plus className="w-4 h-4" />
                 </Button>
