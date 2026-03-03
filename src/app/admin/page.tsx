@@ -245,7 +245,7 @@ export default function SupervisorConsole() {
                 { id: 'stockAlerts', label: 'Stock Alerts', icon: BellRing },
                 { id: 'fulfillment', label: 'Orders', icon: ShoppingBag },
                 { id: 'customers', label: 'Customers', icon: Users },
-                { id: 'inventory', label: 'SKU Master', icon: Package },
+                { id: 'inventory', label: 'Item Master', icon: Package },
                 { id: 'molecules', label: 'Molecule Master', icon: Dna },
               ].map(tab => (
                 <Button 
@@ -1062,7 +1062,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `inventory_master_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `item_master_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -1075,7 +1075,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'inventory_sku_template.csv';
+    a.download = 'item_master_template.csv';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -1122,11 +1122,11 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-2">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h2 className="text-2xl font-black uppercase text-gray-900">Inventory Control</h2>
+        <h2 className="text-2xl font-black uppercase text-gray-900">Item Master</h2>
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-            <Input placeholder="Search SKU or Molecule..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-full border-none bg-white font-bold text-xs" />
+            <Input placeholder="Search Item or Molecule..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-full border-none bg-white font-bold text-xs" />
           </div>
 
           <div className="flex items-center gap-2">
@@ -1151,7 +1151,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
             <DialogContent className="rounded-[40px] max-w-2xl border-none">
               <DialogHeader>
                 <DialogTitle className="text-xl font-black uppercase tracking-tight">
-                  {editingMedicine ? 'Edit Clinical SKU' : 'Add New Medicine'}
+                  {editingMedicine ? 'Edit Item SKU' : 'Add New Medicine'}
                 </DialogTitle>
                 <CardDescription className="uppercase text-[8px] font-black tracking-widest">
                   Linking to Molecule Master
@@ -1292,7 +1292,7 @@ function MedicineForm({ db, initialData, molecules, onSuccess }: { db: any, init
     } else {
       addDocumentNonBlocking(collection(db, 'medicines'), { ...payload, createdAt: serverTimestamp() });
     }
-    toast({ title: "SKU Master Updated" });
+    toast({ title: "Item Master Updated" });
     onSuccess();
   };
 
