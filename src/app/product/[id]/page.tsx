@@ -5,6 +5,7 @@ import React, { use, useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -114,7 +115,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <span className="text-primary truncate">{product.name}</span>
         </div>
 
-        {/* Branded Case: Comparison Mode */}
         {!product.isGeneric && genericSubstitute ? (
           <div className="space-y-6">
             <div className="text-center py-2">
@@ -262,7 +262,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
           </div>
         ) : (
-          /* Generic Case: Beautiful Hero View */
           <div className="space-y-8 animate-in fade-in duration-700">
              <div className="bg-white rounded-[50px] p-8 sm:p-12 shadow-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-12 items-center overflow-hidden relative">
                 <div className="absolute top-8 right-8 bg-accent/5 text-accent px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-accent/10">
