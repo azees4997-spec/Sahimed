@@ -4,16 +4,25 @@
 import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Plus, Minus, Ticket, Check, X, Sparkles, PartyPopper } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Plus, Minus, Ticket, Check, X, Sparkles, PartyPopper, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useState } from 'react';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, totalPrice, totalItems, activeFees, availablePromos, appliedPromo, applyPromo } = useCart();
   const { toast } = useToast();
+  const [isPromoDialogOpen, setIsPromoDialogOpen] = useState(false);
 
   // Billing Calculations
   const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
@@ -63,11 +72,12 @@ export default function CartPage() {
       return;
     }
     applyPromo(promo);
-    toast({ title: 'Offer Applied!', description: `You just saved ₹${promoDiscount.toFixed(0)} more!` });
+    setIsPromoDialogOpen(false);
+    toast({ title: 'Success!', description: `Voucher applied successfully.` });
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] page-transition-wrapper">
+    <div className="min-h-screen bg-[#F8F8F8] page-transition-wrapper pb-20">
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex items-center gap-4 mb-10">
@@ -84,9 +94,9 @@ export default function CartPage() {
             <PartyPopper className="w-8 h-8 text-green-600" />
             <div className="text-center">
               <p className="text-green-800 font-black text-sm uppercase tracking-tight">
-                Congratulations! 🎉 You saved ₹{promoDiscount.toFixed(0)} with code <span className="text-green-600">{appliedPromo.code}</span>
+                Congratulations! 🎉 You saved ₹{promoDiscount.toFixed(0)} with code <span className="text-green-600 font-black">{appliedPromo.code}</span>
               </p>
-              <p className="text-[9px] font-black text-green-600/70 uppercase tracking-widest mt-1">Extra discount applied to your order</p>
+              <p className="text-[9px] font-black text-green-600/70 uppercase tracking-widest mt-1">Voucher extra discount applied</p>
             </div>
           </div>
         )}
@@ -140,100 +150,113 @@ export default function CartPage() {
               ))}
             </div>
 
-            <div className="mt-12 space-y-6">
-              <div className="flex items-center gap-3 ml-4">
-                <Ticket className="w-5 h-5 text-primary" />
-                <h2 className="text-[11px] font-black uppercase tracking-[0.25em] text-gray-900">Available Offers</h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {availablePromos.length === 0 ? (
-                  <div className="col-span-full bg-white p-8 rounded-[40px] border border-dashed text-center">
-                    <Ticket className="w-8 h-8 text-gray-100 mx-auto mb-3" />
-                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No active offers available</p>
-                  </div>
-                ) : availablePromos.map(promo => {
-                  const isEligible = totalPrice >= promo.minOrderValue;
-                  const isApplied = appliedPromo?.id === promo.id;
-                  return (
-                    <div 
-                      key={promo.id} 
-                      onClick={() => isEligible && !isApplied && handleApplyPromo(promo)}
-                      className={cn(
-                        "relative p-6 rounded-[32px] border-2 transition-all duration-500 overflow-hidden cursor-pointer group",
-                        isApplied 
-                          ? "bg-primary text-white border-primary shadow-2xl shadow-primary/30" 
-                          : isEligible 
-                            ? "bg-white border-primary/20 hover:border-primary shadow-sm hover:shadow-xl" 
-                            : "bg-gray-50 border-gray-200 opacity-60 grayscale cursor-not-allowed"
-                      )}
-                    >
-                      <div className="flex items-start justify-between relative z-10">
-                        <div className="flex items-start gap-4">
-                          <div className={cn(
-                            "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-colors",
-                            isApplied ? "bg-white/20 text-white" : "bg-primary/5 text-primary"
-                          )}>
-                            <Ticket className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                               <p className={cn(
-                                "text-sm uppercase tracking-[0.15em] font-black mb-0.5",
-                                isApplied ? "text-white" : "text-gray-900"
-                              )}>
-                                {promo.code}
-                              </p>
-                              {isApplied && <Check className="w-3 h-3 text-white" />}
-                            </div>
-                            <p className={cn(
-                              "text-[9px] font-bold uppercase tracking-widest max-w-[140px] leading-tight",
-                              isApplied ? "text-white/70" : "text-gray-400"
-                            )}>
-                              {promo.description}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-col items-end gap-2">
-                           {isApplied ? (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={(e) => { e.stopPropagation(); applyPromo(null); }} 
-                                className="h-8 rounded-full px-4 bg-white/10 hover:bg-white/20 text-white font-black uppercase text-[8px]"
-                              >
-                                Remove
-                              </Button>
-                           ) : (
-                             <Button 
-                                size="sm" 
-                                disabled={!isEligible}
-                                className={cn(
-                                  "rounded-full h-10 px-6 font-black uppercase text-[9px] tracking-widest transition-all",
-                                  isEligible 
-                                    ? "bg-primary text-white shadow-lg shadow-primary/20 group-hover:scale-105" 
-                                    : "bg-gray-200 text-gray-400"
-                                )}
-                              >
-                                {isEligible ? 'Apply' : 'Locked'}
-                              </Button>
-                           )}
-                           {!isEligible && !isApplied && (
-                              <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">
-                                Need ₹{promo.minOrderValue - totalPrice} more
-                              </span>
-                           )}
-                        </div>
+            {/* Hidden Promocode Banner Component */}
+            <div className="mt-8">
+              <Dialog open={isPromoDialogOpen} onOpenChange={setIsPromoDialogOpen}>
+                <DialogTrigger asChild>
+                  <button className="w-full bg-white p-6 rounded-[32px] border-2 border-dashed border-primary/20 hover:border-primary transition-all flex items-center justify-between group">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                        <Ticket className="w-6 h-6" />
                       </div>
-                      
-                      <div className={cn(
-                        "absolute -bottom-1 left-4 right-4 h-[1px] border-b-2 border-dashed opacity-20",
-                        isApplied ? "border-white" : "border-primary"
-                      )} />
+                      <div className="text-left">
+                        <p className="text-sm font-black text-gray-900 uppercase tracking-tight">
+                          {appliedPromo ? `Applied: ${appliedPromo.code}` : "Apply Coupons & Offers"}
+                        </p>
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
+                          {appliedPromo ? `Savings: ₹${promoDiscount.toFixed(0)}` : "View available vouchers"}
+                        </p>
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
+                    <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-primary transition-colors" />
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="rounded-[40px] border-none shadow-3xl p-0 overflow-hidden max-w-xl">
+                  <div className="bg-primary p-8 text-white">
+                    <DialogTitle className="text-2xl font-black uppercase tracking-tight">Available Offers</DialogTitle>
+                    <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mt-1">Select a voucher to apply</p>
+                  </div>
+                  <div className="p-8 space-y-4 max-h-[60vh] overflow-y-auto scrollbar-hide">
+                    {availablePromos.length === 0 ? (
+                      <div className="text-center py-10">
+                        <Ticket className="w-12 h-12 text-gray-100 mx-auto mb-4" />
+                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No active offers available</p>
+                      </div>
+                    ) : availablePromos.map(promo => {
+                      const isEligible = totalPrice >= promo.minOrderValue;
+                      const isApplied = appliedPromo?.id === promo.id;
+                      return (
+                        <div 
+                          key={promo.id} 
+                          onClick={() => isEligible && !isApplied && handleApplyPromo(promo)}
+                          className={cn(
+                            "relative p-6 rounded-[32px] border-2 transition-all duration-500 overflow-hidden cursor-pointer group",
+                            isApplied 
+                              ? "bg-primary text-white border-primary shadow-xl" 
+                              : isEligible 
+                                ? "bg-white border-primary/20 hover:border-primary shadow-sm" 
+                                : "bg-gray-50 border-gray-200 opacity-60 grayscale cursor-not-allowed"
+                          )}
+                        >
+                          <div className="flex items-start justify-between relative z-10">
+                            <div className="flex items-start gap-4">
+                              <div className={cn(
+                                "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg",
+                                isApplied ? "bg-white/20 text-white" : "bg-primary/5 text-primary"
+                              )}>
+                                <Ticket className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <p className={cn(
+                                    "text-sm uppercase tracking-[0.15em] font-black mb-0.5",
+                                    isApplied ? "text-white" : "text-gray-900"
+                                  )}>
+                                    {promo.code}
+                                  </p>
+                                  {isApplied && <Check className="w-3 h-3 text-white" />}
+                                </div>
+                                <p className={cn(
+                                  "text-[9px] font-bold uppercase tracking-widest max-w-[140px] leading-tight",
+                                  isApplied ? "text-white/70" : "text-gray-400"
+                                )}>
+                                  {promo.description}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-col items-end gap-2">
+                               {isApplied ? (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={(e) => { e.stopPropagation(); applyPromo(null); setIsPromoDialogOpen(false); }} 
+                                    className="h-8 rounded-full px-4 bg-white/10 hover:bg-white/20 text-white font-black uppercase text-[8px]"
+                                  >
+                                    Remove
+                                  </Button>
+                               ) : (
+                                 <Button 
+                                    size="sm" 
+                                    disabled={!isEligible}
+                                    className={cn(
+                                      "rounded-full h-10 px-6 font-black uppercase text-[9px] tracking-widest transition-all",
+                                      isEligible 
+                                        ? "bg-primary text-white shadow-lg" 
+                                        : "bg-gray-200 text-gray-400"
+                                    )}
+                                  >
+                                    {isEligible ? 'Apply' : 'Locked'}
+                                  </Button>
+                               )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
@@ -245,7 +268,7 @@ export default function CartPage() {
               
               <div className="space-y-6 mb-10 relative z-10">
                 <div className="flex justify-between text-[11px] font-black text-gray-500 uppercase tracking-widest">
-                  <span>Gross Value (MRP)</span>
+                  <span>Cart Gross (MRP)</span>
                   <span>₹{totalMrp}</span>
                 </div>
                 
@@ -263,7 +286,7 @@ export default function CartPage() {
 
                 {appliedPromo && (
                   <div className="flex justify-between text-[11px] font-black uppercase tracking-widest animate-in slide-in-from-right-4">
-                    <span className="text-primary flex items-center gap-2 font-black"><Ticket className="w-4 h-4" /> OFFER_DISCOUNT</span>
+                    <span className="text-primary flex items-center gap-2 font-black"><Ticket className="w-4 h-4" /> VOUCHER_APPLIED</span>
                     <span className="text-accent font-black">- ₹{promoDiscount.toFixed(0)}</span>
                   </div>
                 )}
@@ -276,7 +299,7 @@ export default function CartPage() {
               
               <Link href="/checkout">
                  <Button className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-[1.02] transition-all gap-4 bg-primary text-white">
-                   Proceed to Checkout
+                   Checkout Now
                    <ArrowRight className="w-5 h-5" />
                  </Button>
               </Link>
@@ -286,7 +309,7 @@ export default function CartPage() {
                     <ShieldCheck className="w-6 h-6 text-accent" />
                  </div>
                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest leading-relaxed">
-                   Quality Verified • Secure Transactions • Fast Delivery
+                   Secure Gateway • Quality Products • Fast Delivery
                  </p>
               </div>
             </div>

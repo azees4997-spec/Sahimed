@@ -230,12 +230,12 @@ export default function AdminConsole() {
             <nav className="hidden xl:flex gap-1 overflow-x-auto scrollbar-hide">
               {[
                 { id: 'overview', label: 'Home', icon: Home },
-                { id: 'enquiries', label: 'Prescriptions', icon: FileText },
+                { id: 'enquiries', label: 'Inquiries', icon: FileText },
                 { id: 'fulfillment', label: 'Orders', icon: ShoppingBag },
-                { id: 'promocodes', label: 'Offers', icon: Ticket },
+                { id: 'promocodes', label: 'Coupons', icon: Ticket },
                 { id: 'fees', label: 'Service Fees', icon: Receipt },
                 { id: 'customers', label: 'Customers', icon: Users },
-                { id: 'itemMaster', label: 'Products', icon: Package },
+                { id: 'itemMaster', label: 'Catalog', icon: Package },
                 { id: 'moleculeMaster', label: 'Formulas', icon: Dna },
               ].map(tab => (
                 <Button 
@@ -287,7 +287,7 @@ function FeesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Service Fees</h2>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Manage checkout-level service and delivery charges</p>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Manage cart-level service and delivery charges</p>
         </div>
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
@@ -371,7 +371,7 @@ function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, o
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Fee Label (e.g. Service Fee)</Label>
+        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Fee Label (e.g. Handling Fee)</Label>
         <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold text-sm px-6" />
       </div>
       <div className="grid grid-cols-2 gap-6">
@@ -409,18 +409,18 @@ function PromoCodesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Offers & Promos</h2>
+          <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Coupons & Offers</h2>
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Create rewards and discounts for customers</p>
         </div>
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => setEditingPromo(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary shadow-xl shadow-primary/20">
-              <Plus className="w-4 h-4" /> Create Offer
+              <Plus className="w-4 h-4" /> Create Coupon
             </Button>
           </DialogTrigger>
           <DialogContent className="rounded-[40px] border-none shadow-2xl p-0 overflow-hidden max-w-2xl">
             <div className="bg-primary p-8 text-white">
-              <DialogTitle className="text-2xl font-black uppercase tracking-tight">Offer Builder</DialogTitle>
+              <DialogTitle className="text-2xl font-black uppercase tracking-tight">Coupon Builder</DialogTitle>
               <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mt-1">Configure targeted customer rewards</p>
             </div>
             <div className="p-8">
@@ -436,7 +436,7 @@ function PromoCodesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
         ) : promos?.length === 0 ? (
           <div className="col-span-full py-20 text-center bg-white rounded-[40px] border-2 border-dashed">
             <Ticket className="w-12 h-12 text-gray-100 mx-auto mb-4" />
-            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No active offers currently</p>
+            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No active coupons currently</p>
           </div>
         ) : promos?.map(promo => (
           <Card key={promo.id} className="rounded-[32px] overflow-hidden border-none shadow-sm bg-white hover:shadow-2xl transition-all duration-500 relative">
@@ -463,13 +463,13 @@ function PromoCodesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                  </div>
                  <div>
                     <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Criteria</p>
-                    <p className="text-[11px] font-black text-gray-700">Min. ₹{promo.minOrderValue || 0}</p>
+                    <p className="text-[11px] font-black text-gray-700">Min. Spend ₹{promo.minOrderValue || 0}</p>
                  </div>
                  <div className="flex justify-end items-end gap-2">
                     <Button variant="ghost" size="icon" onClick={() => { setEditingPromo(promo); setIsFormOpen(true); }} className="rounded-xl h-10 w-10 hover:bg-primary/5">
                       <Edit2 className="w-4 h-4 text-gray-400" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => { deleteDocumentNonBlocking(doc(db, 'promocodes', promo.id)); toast({ title: "Promo Removed" }); }} className="rounded-xl h-10 w-10 hover:bg-red-50">
+                    <Button variant="ghost" size="icon" onClick={() => { deleteDocumentNonBlocking(doc(db, 'promocodes', promo.id)); toast({ title: "Coupon Removed" }); }} className="rounded-xl h-10 w-10 hover:bg-red-50">
                       <Trash2 className="w-4 h-4 text-red-300" />
                     </Button>
                  </div>
@@ -513,12 +513,12 @@ function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6 py-2 max-h-[70vh] overflow-y-auto pr-4 scrollbar-hide">
       <div className="col-span-2 space-y-2">
-        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Offer Code</Label>
+        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Coupon Code</Label>
         <Input value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase()})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold text-lg px-6 tracking-widest" placeholder="SAVE50" />
       </div>
       <div className="col-span-2 space-y-2">
-        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Customer-Facing Description</Label>
-        <Input value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold text-sm px-6" placeholder="Save 50% on all items" />
+        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Display Description</Label>
+        <Input value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold text-sm px-6" placeholder="Save 50% on all orders" />
       </div>
       <div className="space-y-2">
         <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Discount Type</Label>
@@ -536,7 +536,7 @@ function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
         <Input type="number" value={form.minOrderValue} onChange={e => setForm({...form, minOrderValue: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold text-sm px-6" />
       </div>
       <div className="space-y-2">
-        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Target Category</Label>
+        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Target Strategy</Label>
         <select value={form.applyTo} onChange={e => setForm({...form, applyTo: e.target.value as any})} className="w-full h-14 rounded-2xl bg-gray-50 border-none px-6 font-bold outline-none text-sm appearance-none">
           <option value="cart">Global Cart</option>
           <option value="product">Specific Product</option>
@@ -546,8 +546,8 @@ function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
       </div>
       {form.applyTo !== 'cart' && (
         <div className="col-span-2 space-y-2">
-          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Target Identifier (SKU ID or Customer UID)</Label>
-          <Input value={form.targetId} onChange={e => setForm({...form, targetId: e.target.value})} placeholder="Paste Identifier here..." className="rounded-2xl h-14 bg-gray-50 border-none font-bold text-[10px] px-6" />
+          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Target ID (SKU or Customer UID)</Label>
+          <Input value={form.targetId} onChange={e => setForm({...form, targetId: e.target.value})} placeholder="Paste ID here..." className="rounded-2xl h-14 bg-gray-50 border-none font-bold text-[10px] px-6" />
         </div>
       )}
       <div className="col-span-2 flex items-center gap-3 bg-gray-50 p-4 rounded-2xl mt-4">
@@ -556,7 +556,7 @@ function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
       </div>
       <div className="col-span-2 pt-6">
         <Button type="submit" className="w-full h-16 rounded-full font-black uppercase text-[11px] tracking-[0.2em] bg-primary shadow-2xl shadow-primary/30">
-          Save Strategy
+          Save Campaign
         </Button>
       </div>
     </form>
@@ -586,8 +586,8 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
            <Card className="rounded-2xl px-6 py-2 bg-white border-none shadow-sm flex items-center gap-3">
               <TrendingUp className="w-4 h-4 text-accent" />
               <div className="flex flex-col">
-                <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Revenue Status</span>
-                <span className="text-xs font-black text-gray-900">HEALTHY</span>
+                <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Business Status</span>
+                <span className="text-xs font-black text-gray-900">ACTIVE</span>
               </div>
            </Card>
         </div>
@@ -595,13 +595,13 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-4">
         {[
-          { label: 'Prescriptions', icon: FileText, count: pres?.filter(p => p.status === 'Pending Review').length || 0, tab: 'enquiries' as AdminTab, color: 'text-blue-500' },
+          { label: 'Inquiries', icon: FileText, count: pres?.filter(p => p.status === 'Pending Review').length || 0, tab: 'enquiries' as AdminTab, color: 'text-blue-500' },
           { label: 'Orders', icon: ShoppingBag, count: orders?.filter(o => o.status !== 'Delivered').length || 0, tab: 'fulfillment' as AdminTab, color: 'text-primary' },
-          { label: 'Offers', icon: Ticket, count: 0, tab: 'promocodes' as AdminTab, color: 'text-purple-500' },
+          { label: 'Coupons', icon: Ticket, count: 0, tab: 'promocodes' as AdminTab, color: 'text-purple-500' },
           { label: 'Fees', icon: Receipt, count: 0, tab: 'fees' as AdminTab, color: 'text-orange-500' },
           { label: 'Customers', icon: Users, count: users?.length || 0, tab: 'customers' as AdminTab, color: 'text-indigo-500' },
           { label: 'Alerts', icon: BellRing, count: alerts?.length || 0, tab: 'stockAlerts' as AdminTab, color: 'text-red-500' },
-          { label: 'Products', icon: Package, count: meds?.length || 0, tab: 'itemMaster' as AdminTab, color: 'text-accent' },
+          { label: 'Catalog', icon: Package, count: meds?.length || 0, tab: 'itemMaster' as AdminTab, color: 'text-accent' },
           { label: 'Formulas', icon: Dna, count: mols?.length || 0, tab: 'moleculeMaster' as AdminTab, color: 'text-emerald-500' },
         ].map(card => (
           <Card key={card.label} className="rounded-[32px] p-5 border-none shadow-sm hover:shadow-2xl transition-all cursor-pointer bg-white group text-center" onClick={() => setTab(card.tab)}>
@@ -638,13 +638,13 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     if (!enquiry.userId) return;
     const ref = doc(db, 'userProfiles', enquiry.userId, 'prescriptions', enquiry.id);
     updateDocumentNonBlocking(ref, { status });
-    toast({ title: "Update Saved", description: `Prescription status changed to ${status}` });
+    toast({ title: "Status Updated", description: `Inquiry status changed to ${status}` });
   };
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Prescription Queue</h2>
+        <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Inquiry Queue</h2>
         <div className="flex bg-white p-1.5 rounded-full border shadow-sm">
           {(['Pending', 'Open', 'Completed'] as const).map(f => (
             <Button 
@@ -666,12 +666,12 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
         ) : filteredEnquiries?.length === 0 ? (
           <div className="col-span-full py-20 text-center bg-white rounded-[40px] border-2 border-dashed">
             <Activity className="w-12 h-12 text-gray-100 mx-auto mb-4" />
-            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No orders in this queue</p>
+            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No inquiries in this queue</p>
           </div>
         ) : filteredEnquiries?.map(enq => (
           <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white hover:shadow-2xl transition-all duration-500 flex flex-col group">
              <div className="aspect-[4/5] relative bg-gray-100 overflow-hidden">
-                <img src={enq.imageUrl} alt="Prescription" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <img src={enq.imageUrl} alt="Inquiry Source" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <Badge className="absolute top-6 right-6 text-white text-[9px] font-black uppercase bg-primary border-none shadow-xl px-4 py-1.5 rounded-full">{enq.status}</Badge>
              </div>
@@ -683,13 +683,13 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                   <Dialog open={digitizingEnquiry?.id === enq.id} onOpenChange={(open) => !open && setDigitizingEnquiry(null)}>
                     <DialogTrigger asChild>
                       <Button onClick={() => setDigitizingEnquiry(enq)} className="w-full rounded-full h-14 font-black uppercase text-[10px] tracking-[0.2em] gap-3 bg-primary shadow-xl shadow-primary/20">
-                        <ClipboardList className="w-5 h-5" /> Digitize & Order
+                        <ClipboardList className="w-5 h-5" /> Fulfill Inquiry
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="rounded-[40px] max-w-5xl border-none shadow-3xl p-0 overflow-hidden">
                       <div className="bg-primary p-8 text-white">
-                        <DialogTitle className="text-2xl font-black uppercase tracking-tight">Digitization Flow</DialogTitle>
-                        <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mt-1">Converting prescription to digital order</p>
+                        <DialogTitle className="text-2xl font-black uppercase tracking-tight">Fulfillment Flow</DialogTitle>
+                        <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mt-1">Converting customer request to order</p>
                       </div>
                       <div className="p-8">
                         {digitizingEnquiry && (
@@ -736,7 +736,7 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
             <tr>
               <th className="px-10 py-8">Order ID</th>
               <th className="px-10 py-8">Customer ID</th>
-              <th className="px-10 py-8">Order Total</th>
+              <th className="px-10 py-8">Amount</th>
               <th className="px-10 py-8">Status</th>
               <th className="px-10 py-8 text-right">Action</th>
             </tr>
@@ -782,8 +782,8 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
             <tr>
-              <th className="px-10 py-8">ID</th>
-              <th className="px-10 py-8">Customer Name</th>
+              <th className="px-10 py-8">Customer ID</th>
+              <th className="px-10 py-8">Name</th>
               <th className="px-10 py-8">Contact</th>
               <th className="px-10 py-8">Primary Hub</th>
             </tr>
@@ -799,7 +799,7 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                       <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400">
                          <User className="w-5 h-5" />
                       </div>
-                      <span className="font-black text-sm uppercase">{u.name || 'Anonymous User'}</span>
+                      <span className="font-black text-sm uppercase">{u.name || 'Customer'}</span>
                    </div>
                 </td>
                 <td className="px-10 py-8 text-[11px] font-bold text-gray-500">{u.phoneNumber || 'N/A'}</td>
@@ -871,13 +871,13 @@ function MoleculeMasterTab({ db }: { db: any }) {
 
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Formulas & Salts</h2>
+      <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Formulas & Formulas</h2>
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
             <tr>
               <th className="px-10 py-8">Master ID</th>
-              <th className="px-10 py-8">Salt Composition</th>
+              <th className="px-10 py-8">Composition</th>
               <th className="px-10 py-8">Form</th>
             </tr>
           </thead>
@@ -953,11 +953,11 @@ function DigitizationWorkflow({ db, enquiry, medicines, onSuccess }: { db: any, 
     <div className="grid grid-cols-2 gap-12 py-6 h-[70vh]">
       <div className="rounded-[48px] overflow-hidden border-2 border-gray-100 bg-gray-50 flex items-center justify-center shadow-inner relative">
         <img src={enquiry.imageUrl} alt="Source" className="w-full h-full object-contain p-4" />
-        <div className="absolute top-8 right-8 bg-black/80 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] backdrop-blur-md">Source Scan</div>
+        <div className="absolute top-8 right-8 bg-black/80 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] backdrop-blur-md">Customer Inquiry</div>
       </div>
       <div className="flex flex-col gap-8 overflow-y-auto scrollbar-hide pr-4">
         <div className="space-y-4">
-          <Label className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400 ml-1">Search Product SKU</Label>
+          <Label className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400 ml-1">Search Catalog</Label>
           <div className="relative">
             <Input placeholder="Type Product Name..." value={search} onChange={e => setSearch(e.target.value)} className="h-16 rounded-[24px] bg-gray-50 border-none font-black text-sm px-8 shadow-inner" />
             {search.length > 0 && (
@@ -981,11 +981,11 @@ function DigitizationWorkflow({ db, enquiry, medicines, onSuccess }: { db: any, 
           </div>
         </div>
         <div className="flex-1 space-y-4">
-          <Label className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400 ml-1">Order Items</Label>
+          <Label className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400 ml-1">Order Summary</Label>
           {selectedItems.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-[32px] text-gray-300">
                <Package className="w-12 h-12 mb-3" />
-               <p className="text-[10px] font-black uppercase tracking-widest">No items mapped yet</p>
+               <p className="text-[10px] font-black uppercase tracking-widest">No products mapped</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -1013,7 +1013,7 @@ function DigitizationWorkflow({ db, enquiry, medicines, onSuccess }: { db: any, 
               <span className="text-4xl font-black text-primary tracking-tighter">₹{calculateTotal()}</span>
            </div>
            <Button onClick={handleCreateOrder} disabled={isProcessing || selectedItems.length === 0} className="w-full h-20 rounded-full font-black uppercase tracking-[0.2em] text-[12px] bg-primary shadow-2xl shadow-primary/30 active:scale-95 transition-all">
-             {isProcessing ? <Loader2 className="animate-spin" /> : "Fulfill Digitized Order"}
+             {isProcessing ? <Loader2 className="animate-spin" /> : "Fulfill Order"}
            </Button>
         </div>
       </div>
@@ -1029,7 +1029,7 @@ function CustomerAddressCell({ db, userId }: { db: any, userId: string }) {
   return (
     <div className="flex flex-col">
        <span className="text-[11px] font-black text-gray-900 uppercase tracking-tight leading-none">{defaultAddress ? `${defaultAddress.city}, ${defaultAddress.state}` : 'N/A'}</span>
-       <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-1 truncate max-w-[150px]">{defaultAddress ? defaultAddress.street : 'No Address Linked'}</span>
+       <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-1 truncate max-w-[150px]">{defaultAddress ? defaultAddress.street : 'No Address'}</span>
     </div>
   );
 }
