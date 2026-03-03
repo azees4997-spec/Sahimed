@@ -28,7 +28,13 @@ import {
   Download,
   Fingerprint,
   Dna,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Users,
+  BriefcaseMedical,
+  Phone,
+  MessageSquare,
+  Clock,
+  ClipboardList
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,7 +65,7 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import Link from 'next/link';
 import Image from 'next/image';
 
-type AdminTab = 'overview' | 'inventory' | 'molecules' | 'enquiries' | 'fulfillment';
+type AdminTab = 'overview' | 'inventory' | 'molecules' | 'enquiries' | 'fulfillment' | 'customers';
 
 export default function SupervisorConsole() {
   const { user, isUserLoading } = useUser();
@@ -82,7 +88,6 @@ export default function SupervisorConsole() {
     try {
       const snap = await getDoc(doc(db, 'adminProfiles', user.uid));
       if (snap.exists()) {
-        // Explicit delay to ensure Firestore rules propagation
         setTimeout(() => {
           setIsVerified(true);
           setIsVerifying(false);
@@ -234,10 +239,11 @@ export default function SupervisorConsole() {
             <nav className="hidden lg:flex gap-1">
               {[
                 { id: 'overview', label: 'Dashboard', icon: Home },
-                { id: 'molecules', label: 'Molecule Master', icon: Dna },
+                { id: 'enquiries', label: 'Enquiries', icon: FileText },
+                { id: 'fulfillment', label: 'Orders', icon: ShoppingBag },
+                { id: 'customers', label: 'Customers', icon: Users },
                 { id: 'inventory', label: 'SKU Master', icon: Package },
-                { id: 'enquiries', label: 'Prescriptions', icon: FileText },
-                { id: 'fulfillment', label: 'Orders', icon: ShoppingBag }
+                { id: 'molecules', label: 'Molecule Master', icon: Dna },
               ].map(tab => (
                 <Button 
                   key={tab.id} 
@@ -267,10 +273,11 @@ export default function SupervisorConsole() {
 
       <main className="max-w-7xl mx-auto px-6 py-10">
         {activeTab === 'overview' && <OverviewTab db={db} setTab={setActiveTab} isVerified={isVerified} />}
-        {activeTab === 'molecules' && <MoleculeMasterTab db={db} isVerified={isVerified} />}
-        {activeTab === 'inventory' && <InventoryTab db={db} isVerified={isVerified} />}
         {activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} />}
         {activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} />}
+        {activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} />}
+        {activeTab === 'inventory' && <InventoryTab db={db} isVerified={isVerified} />}
+        {activeTab === 'molecules' && <MoleculeMasterTab db={db} isVerified={isVerified} />}
       </main>
     </div>
   );
@@ -354,7 +361,7 @@ function SeedDataButton({ db }: { db: any }) {
 function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab) => void, isVerified: boolean }) {
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
   const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster')), [db]);
-  // Gated collection group queries to prevent permission denial
+  const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles')), [db]);
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
 
@@ -362,16 +369,18 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const { data: mols } = useCollection(molsQuery);
   const { data: pres } = useCollection(presQuery);
   const { data: orders } = useCollection(ordersQuery);
+  const { data: users } = useCollection(usersQuery);
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
       <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase">Clinical Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
         {[
-          { label: 'Molecule Master', icon: Dna, count: mols?.length || 0, tab: 'molecules' as AdminTab },
-          { label: 'Active Catalog', icon: Package, count: meds?.length || 0, tab: 'inventory' as AdminTab },
-          { label: 'Unchecked Enquiries', icon: FileText, count: pres?.filter(p => p.status === 'Pending Review').length || 0, tab: 'enquiries' as AdminTab },
-          { label: 'Open Orders', icon: ShoppingBag, count: orders?.filter(o => o.status !== 'Delivered').length || 0, tab: 'fulfillment' as AdminTab },
+          { label: 'Enquiries', icon: FileText, count: pres?.filter(p => p.status === 'Pending Review').length || 0, tab: 'enquiries' as AdminTab },
+          { label: 'Active Orders', icon: ShoppingBag, count: orders?.filter(o => o.status !== 'Delivered').length || 0, tab: 'fulfillment' as AdminTab },
+          { label: 'Customers', icon: Users, count: users?.length || 0, tab: 'customers' as AdminTab },
+          { label: 'SKU Master', icon: Package, count: meds?.length || 0, tab: 'inventory' as AdminTab },
+          { label: 'Molecules', icon: Dna, count: mols?.length || 0, tab: 'molecules' as AdminTab },
         ].map(card => (
           <Card key={card.label} className="rounded-[32px] p-8 border-none shadow-sm hover:shadow-xl transition-all cursor-pointer bg-white group" onClick={() => setTab(card.tab)}>
             <card.icon className="w-10 h-10 text-primary mb-6 group-hover:scale-110 transition-transform" />
@@ -380,6 +389,391 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
           </Card>
         ))}
       </div>
+    </div>
+  );
+}
+
+function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, [db, isVerified]);
+  const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
+  const { data: enquiries, isLoading } = useCollection(presQuery);
+  const { data: medicines } = useCollection(medsQuery);
+  const { toast } = useToast();
+
+  const [filter, setFilter] = useState<'Pending' | 'Open' | 'Completed'>('Pending');
+  const [digitizingEnquiry, setDigitizingEnquiry] = useState<any>(null);
+
+  const filteredEnquiries = enquiries?.filter(enq => {
+    if (filter === 'Pending') return enq.status === 'Pending Review';
+    if (filter === 'Open') return enq.status === 'Acknowledged' || enq.status === 'Processing';
+    if (filter === 'Completed') return enq.status === 'Completed' || enq.status === 'Ordered';
+    return true;
+  });
+
+  const updateStatus = (enquiry: any, status: string) => {
+    if (!enquiry.userId) return;
+    const ref = doc(db, 'userProfiles', enquiry.userId, 'prescriptions', enquiry.id);
+    updateDocumentNonBlocking(ref, { status });
+    toast({ title: "Clinical Update", description: `Enquiry status changed to ${status}` });
+  };
+
+  return (
+    <div className="space-y-6 animate-in slide-in-from-bottom-2">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-black uppercase text-gray-900">Clinical Enquiries</h2>
+        <div className="flex bg-white p-1 rounded-full border">
+          {(['Pending', 'Open', 'Completed'] as const).map(f => (
+            <Button 
+              key={f} 
+              variant={filter === f ? 'secondary' : 'ghost'} 
+              size="sm" 
+              onClick={() => setFilter(f)}
+              className={`rounded-full px-6 font-black text-[9px] uppercase tracking-widest ${filter === f ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-400'}`}
+            >
+              {f}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {isLoading ? (
+          <div className="col-span-full py-20 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+        ) : filteredEnquiries?.length ? filteredEnquiries.map(enq => (
+          <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white hover:shadow-xl transition-all flex flex-col group">
+             <div className="aspect-[4/5] relative bg-gray-100 overflow-hidden">
+                <img src={enq.imageUrl} alt="Prescription" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <Badge className={`absolute top-4 right-4 text-white text-[8px] font-black uppercase border-none px-4 py-1.5 rounded-full shadow-lg ${
+                  enq.status === 'Pending Review' ? 'bg-orange-500' : enq.status === 'Completed' ? 'bg-green-600' : 'bg-blue-600'
+                }`}>
+                  {enq.status}
+                </Badge>
+             </div>
+             <CardContent className="p-6 flex-1 flex flex-col">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Patient Name</p>
+                    <p className="text-[12px] font-black text-gray-900 uppercase">{enq.patientName || 'Not Specified'}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Contact</p>
+                    <p className="text-[10px] font-bold text-gray-900 flex items-center gap-1 justify-end"><Phone className="w-2.5 h-2.5" /> {enq.phoneNumber || 'N/A'}</p>
+                  </div>
+                </div>
+
+                {enq.notes && (
+                  <div className="bg-gray-50 p-3 rounded-2xl mb-4 border border-dashed">
+                     <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1"><MessageSquare className="w-2.5 h-2.5" /> Patient Note</p>
+                     <p className="text-[10px] font-bold text-gray-700 leading-tight line-clamp-2">{enq.notes}</p>
+                  </div>
+                )}
+
+                <div className="mt-auto flex flex-col gap-2">
+                  <Dialog open={digitizingEnquiry?.id === enq.id} onOpenChange={(open) => !open && setDigitizingEnquiry(null)}>
+                    <DialogTrigger asChild>
+                      <Button onClick={() => setDigitizingEnquiry(enq)} size="sm" className="w-full rounded-full h-10 font-black uppercase text-[9px] tracking-widest gap-2 bg-primary shadow-lg shadow-primary/20">
+                        <ClipboardList className="w-3.5 h-3.5" /> Digitize & Order
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="rounded-[40px] max-w-4xl border-none">
+                      <DialogHeader>
+                        <DialogTitle className="text-xl font-black uppercase tracking-tight">Prescription Digitization</DialogTitle>
+                        <CardDescription className="text-[9px] font-black uppercase tracking-widest">Converting manual enquiry into a clinical order</CardDescription>
+                      </DialogHeader>
+                      {digitizingEnquiry && (
+                        <DigitizationWorkflow 
+                          db={db} 
+                          enquiry={digitizingEnquiry} 
+                          medicines={medicines || []} 
+                          onSuccess={() => {
+                            updateStatus(digitizingEnquiry, 'Completed');
+                            setDigitizingEnquiry(null);
+                          }} 
+                        />
+                      )}
+                    </DialogContent>
+                  </Dialog>
+                  
+                  {enq.status === 'Pending Review' && (
+                    <Button onClick={() => updateStatus(enq, 'Acknowledged')} variant="outline" size="sm" className="w-full rounded-full h-10 font-black uppercase text-[9px] tracking-widest border-2">
+                      Mark as In Progress
+                    </Button>
+                  )}
+                </div>
+             </CardContent>
+          </Card>
+        )) : (
+          <div className="col-span-full py-24 text-center bg-white rounded-[40px] border border-dashed">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FileText className="w-6 h-6 text-gray-200" />
+            </div>
+            <h3 className="text-xl font-black uppercase tracking-tight text-gray-900">No Enquiries Found</h3>
+            <p className="text-gray-400 font-bold uppercase text-[9px] tracking-widest mt-2">Check other status buckets</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DigitizationWorkflow({ db, enquiry, medicines, onSuccess }: { db: any, enquiry: any, medicines: any[], onSuccess: () => void }) {
+  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
+
+  const filteredMeds = medicines.filter(m => 
+    m.name.toLowerCase().includes(search.toLowerCase()) || 
+    m.sku?.toLowerCase().includes(search.toLowerCase())
+  ).slice(0, 5);
+
+  const addItem = (med: any) => {
+    setSelectedItems(prev => {
+      const existing = prev.find(i => i.id === med.id);
+      if (existing) return prev.map(i => i.id === med.id ? {...i, quantity: i.quantity + 1} : i);
+      return [...prev, { ...med, quantity: 1 }];
+    });
+    setSearch('');
+  };
+
+  const removeItem = (id: string) => {
+    setSelectedItems(prev => prev.filter(i => i.id !== id));
+  };
+
+  const calculateTotal = () => selectedItems.reduce((acc, i) => acc + (i.price * i.quantity), 0);
+
+  const handleCreateOrder = async () => {
+    if (selectedItems.length === 0) {
+      toast({ variant: 'destructive', title: 'Cart Empty', description: 'Add clinical SKUs before ordering.' });
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const orderData = {
+        userId: enquiry.userId,
+        orderDate: serverTimestamp(),
+        totalAmount: calculateTotal(),
+        status: 'Confirmed',
+        paymentStatus: 'Post-paid (Clinical)',
+        prescriptionId: enquiry.id,
+        items: selectedItems.map(i => ({
+          medicineId: i.id,
+          quantity: i.quantity,
+          unitPrice: i.price,
+          name: i.name,
+          imageUrl: i.imageUrl
+        }))
+      };
+
+      const orderRef = collection(db, 'userProfiles', enquiry.userId, 'orders');
+      addDocumentNonBlocking(orderRef, orderData);
+      
+      toast({ title: "Order Digitized", description: "Clinical record created in patient history." });
+      onSuccess();
+    } catch (e) {
+      toast({ variant: 'destructive', title: "Order Failed" });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-2 gap-8 py-6 h-[70vh]">
+      <div className="relative rounded-[32px] overflow-hidden border bg-gray-50 flex items-center justify-center">
+        <img src={enquiry.imageUrl} alt="Source" className="w-full h-full object-contain" />
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+           <Badge className="bg-white/90 text-primary font-black uppercase text-[8px] tracking-widest backdrop-blur border-none px-3">Reference Image</Badge>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-6 overflow-y-auto pr-2 scrollbar-hide">
+        <div className="space-y-4">
+          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Search Clinical SKU</Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+            <Input 
+              placeholder="Start typing SKU or Medicine name..." 
+              value={search} 
+              onChange={e => setSearch(e.target.value)}
+              className="pl-10 h-12 rounded-xl bg-gray-50 border-none font-bold"
+            />
+            {search.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border z-10 overflow-hidden">
+                {filteredMeds.map(med => (
+                  <button key={med.id} onClick={() => addItem(med)} className="w-full p-4 hover:bg-gray-50 flex items-center justify-between transition-colors border-b last:border-none">
+                    <div className="flex items-center gap-3">
+                      <img src={med.imageUrl} className="w-8 h-8 object-contain bg-gray-50 rounded" />
+                      <div className="text-left">
+                        <p className="text-[10px] font-black text-gray-900 uppercase">{med.name}</p>
+                        <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">{med.sku}</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-black text-primary">₹{med.price}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 space-y-3">
+          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Order Items</Label>
+          {selectedItems.length > 0 ? (
+            <div className="space-y-2">
+              {selectedItems.map(item => (
+                <div key={item.id} className="bg-gray-50 p-3 rounded-2xl flex items-center justify-between border">
+                   <div className="flex items-center gap-3">
+                      <p className="text-[10px] font-black text-gray-900 uppercase">{item.name}</p>
+                      <Badge variant="secondary" className="text-[8px] font-black">x{item.quantity}</Badge>
+                   </div>
+                   <div className="flex items-center gap-3">
+                      <span className="text-[10px] font-black text-gray-900">₹{item.price * item.quantity}</span>
+                      <Button variant="ghost" size="icon" onClick={() => removeItem(item.id)} className="h-6 w-6 text-red-300 hover:text-red-500 rounded-lg">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                   </div>
+                </div>
+              ))}
+              <div className="pt-4 mt-4 border-t border-dashed flex justify-between items-baseline">
+                <span className="text-xs font-black uppercase tracking-widest text-gray-400">Order Total</span>
+                <span className="text-2xl font-black text-primary">₹{calculateTotal()}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="py-12 text-center border-2 border-dashed rounded-[32px] bg-gray-50/50">
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Add items to begin digitization</p>
+            </div>
+          )}
+        </div>
+
+        <div className="pt-6 border-t mt-auto flex items-center gap-3">
+           <Button 
+            onClick={handleCreateOrder} 
+            disabled={isProcessing || selectedItems.length === 0} 
+            className="flex-1 h-14 rounded-full font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20"
+           >
+             {isProcessing ? <Loader2 className="animate-spin w-4 h-4" /> : "Confirm Digitized Order"}
+           </Button>
+           <Button onClick={onSuccess} variant="ghost" className="h-14 px-8 rounded-full font-black uppercase text-[9px] tracking-widest text-gray-400">Cancel</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, [db, isVerified]);
+  const { data: orders, isLoading } = useCollection(ordersQuery);
+  const { toast } = useToast();
+
+  const updateStatus = (order: any, status: string) => {
+    if (!order.userId) return;
+    const ref = doc(db, 'userProfiles', order.userId, 'orders', order.id);
+    updateDocumentNonBlocking(ref, { status });
+    toast({ title: "Order Updated", description: `Order ${order.id.substring(0,6)} is ${status}` });
+  };
+
+  return (
+    <div className="space-y-6 animate-in slide-in-from-bottom-2">
+      <h2 className="text-2xl font-black uppercase text-gray-900">Clinical Logistics</h2>
+      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
+        <table className="w-full text-left">
+          <thead className="bg-gray-50 text-[9px] font-black uppercase text-gray-400 border-b">
+            <tr>
+              <th className="px-8 py-6">Order Reference</th>
+              <th className="px-8 py-6">Patient Identifier</th>
+              <th className="px-8 py-6">SKUs</th>
+              <th className="px-8 py-6 text-center">Value</th>
+              <th className="px-8 py-6">Status</th>
+              <th className="px-8 py-6 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {isLoading ? (
+              <tr><td colSpan={6} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
+            ) : orders?.map(order => (
+              <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
+                <td className="px-8 py-6">
+                   <div className="flex flex-col">
+                      <span className="font-black text-gray-900 text-xs">#{order.id.substring(0,8).toUpperCase()}</span>
+                      <span className="text-[8px] text-gray-400 uppercase font-black tracking-widest flex items-center gap-1"><Clock className="w-2 h-2" /> {order.orderDate?.toDate().toLocaleDateString()}</span>
+                   </div>
+                </td>
+                <td className="px-8 py-6">
+                   <Badge variant="secondary" className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-md">P_{order.userId?.substring(0,8).toUpperCase()}</Badge>
+                </td>
+                <td className="px-8 py-6">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase">{order.items?.length || 0} ITEMS</span>
+                </td>
+                <td className="px-8 py-6 font-black text-primary text-sm text-center">₹{order.totalAmount}</td>
+                <td className="px-8 py-6">
+                  <Badge variant="outline" className={`text-[8px] uppercase font-black border-none px-4 py-1.5 rounded-full ${
+                    order.status === 'Pending' ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'
+                  }`}>
+                    {order.status}
+                  </Badge>
+                </td>
+                <td className="px-8 py-6 text-right">
+                  {order.status !== 'Delivered' && (
+                    <div className="flex justify-end gap-2">
+                      <Button onClick={() => updateStatus(order, 'Shipped')} disabled={order.status === 'Shipped'} size="sm" className="rounded-full h-10 px-6 font-black uppercase text-[8px] tracking-widest shadow-lg shadow-primary/20">Dispatch</Button>
+                      <Button onClick={() => updateStatus(order, 'Delivered')} variant="outline" size="sm" className="rounded-full h-10 px-6 font-black uppercase text-[8px] tracking-widest border-2">Mark Delivered</Button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+  const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles'), orderBy('createdAt', 'desc')), [db]);
+  const { data: users, isLoading } = useCollection(usersQuery);
+
+  return (
+    <div className="space-y-6 animate-in slide-in-from-bottom-2">
+      <h2 className="text-2xl font-black uppercase text-gray-900">Customer Master</h2>
+      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
+        <table className="w-full text-left">
+          <thead className="bg-gray-50 text-[9px] font-black uppercase text-gray-400 border-b">
+            <tr>
+              <th className="px-8 py-6">Customer ID</th>
+              <th className="px-8 py-6">Full Name</th>
+              <th className="px-8 py-6">Mobile Number</th>
+              <th className="px-8 py-6">Email Address</th>
+              <th className="px-8 py-6">Registration</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {isLoading ? (
+              <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
+            ) : users?.map(u => (
+              <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
+                <td className="px-8 py-6">
+                   <code className="text-[10px] font-black text-primary bg-primary/5 px-3 py-1 rounded-md">{u.id.substring(0,10)}</code>
+                </td>
+                <td className="px-8 py-6">
+                  <span className="font-black text-gray-900 text-xs uppercase">{u.firstName} {u.lastName}</span>
+                </td>
+                <td className="px-8 py-6">
+                  <span className="text-[10px] font-bold text-gray-600 font-code">{u.phoneNumber}</span>
+                </td>
+                <td className="px-8 py-6">
+                  <span className="text-[10px] font-bold text-gray-400">{u.email || 'N/A'}</span>
+                </td>
+                <td className="px-8 py-6">
+                   <span className="text-[10px] font-bold text-gray-400">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
     </div>
   );
 }
@@ -462,7 +856,7 @@ function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean })
         </div>
       </div>
 
-      <Card className="rounded-[24px] overflow-hidden border-none shadow-sm bg-white">
+      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[9px] font-black uppercase text-gray-400 border-b">
@@ -651,7 +1045,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
         </div>
       </div>
 
-      <Card className="rounded-[24px] overflow-hidden border-none shadow-sm bg-white">
+      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[9px] font-black uppercase text-gray-400 border-b">
@@ -836,116 +1230,5 @@ function MedicineForm({ db, initialData, molecules, onSuccess }: { db: any, init
         <Button type="button" variant="ghost" onClick={onSuccess} className="rounded-full h-14 font-black uppercase text-[10px] tracking-widest text-gray-400">Cancel</Button>
       </div>
     </form>
-  );
-}
-
-function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
-  const { data: enquiries, isLoading } = useCollection(presQuery);
-  const { toast } = useToast();
-
-  const updateStatus = (enquiry: any, status: string) => {
-    if (!enquiry.userId) return;
-    const ref = doc(db, 'userProfiles', enquiry.userId, 'prescriptions', enquiry.id);
-    updateDocumentNonBlocking(ref, { status });
-    toast({ title: "Clinical Update", description: `Enquiry for P_${enquiry.userId.substring(0,8)} is now ${status}` });
-  };
-
-  return (
-    <div className="space-y-6 animate-in slide-in-from-bottom-2">
-      <h2 className="text-2xl font-black uppercase text-gray-900">Patient Enquiries</h2>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {isLoading ? (
-          <div className="col-span-full py-20 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-        ) : enquiries?.length ? enquiries.map(enq => (
-          <Card key={enq.id} className="rounded-[32px] overflow-hidden border-none shadow-sm bg-white hover:shadow-lg transition-all flex flex-col">
-             <div className="aspect-[4/5] relative bg-gray-100">
-                <img src={enq.imageUrl} alt="Prescription" className="w-full h-full object-cover" />
-                <Badge className={`absolute top-3 right-3 text-white text-[8px] font-black uppercase border-none ${enq.status === 'Pending Review' ? 'bg-orange-500' : 'bg-green-600'}`}>
-                  {enq.status}
-                </Badge>
-             </div>
-             <CardContent className="p-5 flex-1 flex flex-col">
-                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Patient Ref</p>
-                <p className="text-[10px] font-black text-gray-900 truncate mb-4 uppercase tracking-tighter">P_{enq.userId?.substring(0,8).toUpperCase() || 'ANONYMOUS'}</p>
-                <div className="mt-auto flex flex-col gap-2">
-                  <Button onClick={() => updateStatus(enq, 'Acknowledged')} disabled={enq.status === 'Acknowledged'} size="sm" className="w-full rounded-full h-8 font-black uppercase text-[8px] tracking-widest gap-2">
-                    <CheckCircle2 className="w-3 h-3" /> Approve
-                  </Button>
-                </div>
-             </CardContent>
-          </Card>
-        )) : (
-          <div className="col-span-full py-20 text-center bg-white rounded-[32px] border border-dashed">
-            <p className="text-gray-400 font-bold uppercase text-[9px] tracking-widest">No enquiries found</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
-  const { data: orders, isLoading } = useCollection(ordersQuery);
-  const { toast } = useToast();
-
-  const updateStatus = (order: any, status: string) => {
-    if (!order.userId) return;
-    const ref = doc(db, 'userProfiles', order.userId, 'orders', order.id);
-    updateDocumentNonBlocking(ref, { status });
-    toast({ title: "Order Updated", description: `Order ${order.id.substring(0,6)} is ${status}` });
-  };
-
-  return (
-    <div className="space-y-6 animate-in slide-in-from-bottom-2">
-      <h2 className="text-2xl font-black uppercase text-gray-900">Fulfillment</h2>
-      <Card className="rounded-[24px] overflow-hidden border-none shadow-sm bg-white">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 text-[9px] font-black uppercase text-gray-400 border-b">
-            <tr>
-              <th className="px-8 py-6">Order ID</th>
-              <th className="px-8 py-6">Items</th>
-              <th className="px-8 py-6">Value</th>
-              <th className="px-8 py-6">Status</th>
-              <th className="px-8 py-6 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {isLoading ? (
-              <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
-            ) : orders?.map(order => (
-              <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="px-8 py-6">
-                   <div className="flex flex-col">
-                      <span className="font-black text-gray-900 text-xs">#{order.id.substring(0,8).toUpperCase()}</span>
-                      <span className="text-[8px] text-gray-400 uppercase font-black tracking-widest">P_{order.userId?.substring(0,6)}</span>
-                   </div>
-                </td>
-                <td className="px-8 py-6">
-                  <span className="text-[10px] font-bold text-gray-500 uppercase">{order.items?.length || 0} SKUs</span>
-                </td>
-                <td className="px-8 py-6 font-black text-primary text-sm">₹{order.totalAmount}</td>
-                <td className="px-8 py-6">
-                  <Badge variant="outline" className={`text-[8px] uppercase font-black border-none px-3 py-1 rounded-full ${
-                    order.status === 'Pending' ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'
-                  }`}>
-                    {order.status}
-                  </Badge>
-                </td>
-                <td className="px-8 py-6 text-right">
-                  {order.status !== 'Delivered' && (
-                    <div className="flex justify-end gap-2">
-                      <Button onClick={() => updateStatus(order, 'Shipped')} disabled={order.status === 'Shipped'} size="sm" className="rounded-full h-9 px-5 font-black uppercase text-[8px] tracking-widest shadow-md shadow-primary/20">Dispatch</Button>
-                      <Button onClick={() => updateStatus(order, 'Delivered')} variant="outline" size="sm" className="rounded-full h-9 px-5 font-black uppercase text-[8px] tracking-widest border-2">Mark Delivered</Button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
-    </div>
   );
 }

@@ -5,6 +5,9 @@ import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Camera, CheckCircle2, ArrowLeft, Home, ShoppingBag, Loader2, Send, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
@@ -15,6 +18,8 @@ import { useRouter } from 'next/navigation';
 
 export default function PrescriptionPage() {
   const [image, setImage] = useState<string | null>(null);
+  const [patientName, setPatientName] = useState('');
+  const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const { user } = useUser();
@@ -54,9 +59,12 @@ export default function PrescriptionPage() {
       const prescriptionData = {
         userId: user.uid,
         imageUrl: image,
+        patientName: patientName || 'Self',
+        notes: notes,
         uploadDate: serverTimestamp(),
         status: 'Pending Review',
-        analysisSummary: 'Manual Prescription Enquiry'
+        analysisSummary: 'Manual Prescription Enquiry',
+        phoneNumber: user.phoneNumber || ''
       };
 
       const ref = collection(db, 'userProfiles', user.uid, 'prescriptions');
@@ -141,7 +149,25 @@ export default function PrescriptionPage() {
           <input id="file-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
 
           {image && (
-            <div className="space-y-4">
+            <div className="bg-white p-8 rounded-[32px] shadow-sm border space-y-6 animate-in slide-in-from-bottom-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ordering For (Patient Name)</Label>
+                <Input 
+                  placeholder="e.g. John Doe" 
+                  value={patientName} 
+                  onChange={e => setPatientName(e.target.value)} 
+                  className="rounded-xl h-12 bg-gray-50 border-none font-bold"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Notes for Pharmacist</Label>
+                <Textarea 
+                  placeholder="Tell us about the medications or special requirements..." 
+                  value={notes} 
+                  onChange={e => setNotes(e.target.value)}
+                  className="rounded-xl bg-gray-50 border-none font-bold min-h-[100px]"
+                />
+              </div>
               <Button 
                 onClick={handleSubmitEnquiry} 
                 disabled={submitting}
