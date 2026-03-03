@@ -8,7 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
-import { collection, query, limit, orderBy } from 'firebase/firestore';
+import { collection, query, limit, orderBy, where } from 'firebase/firestore';
 import {
   Carousel,
   CarouselContent,
@@ -50,7 +50,7 @@ export default function Home() {
     return <Activity {...props} />;
   };
 
-  const displayMedicines = medicines?.slice(0, 12);
+  const displayMedicines = medicines?.slice(0, 24);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F8F8] page-transition-wrapper">
@@ -131,13 +131,13 @@ export default function Home() {
             {catsLoading ? (
               <div className="flex justify-center p-4"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 sm:gap-6">
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-6">
                 {categories?.map((cat: any) => (
                   <Link key={cat.id} href={`/search?c=${cat.name}`} className="group flex flex-col items-center active:scale-95 transition-transform">
-                    <div className="w-full aspect-square bg-white rounded-[32px] flex items-center justify-center text-primary mb-3 shadow-xl shadow-gray-200/50 border border-gray-100 p-4 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                    <div className="w-full aspect-square bg-white rounded-[28px] flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-100 p-4 group-hover:bg-primary group-hover:text-white transition-all duration-300">
                       {getIcon(cat.name)}
                     </div>
-                    <h3 className="font-black text-[9px] sm:text-[10px] text-gray-700 uppercase tracking-tighter truncate w-full text-center px-1 group-hover:text-primary transition-colors">{cat.name}</h3>
+                    <h3 className="font-black text-[8px] sm:text-[10px] text-gray-700 uppercase tracking-tighter truncate w-full text-center px-1 group-hover:text-primary transition-colors">{cat.name}</h3>
                   </Link>
                 ))}
               </div>
@@ -159,7 +159,7 @@ export default function Home() {
             {medsLoading ? (
               <div className="flex justify-center p-10"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-5">
                 {displayMedicines?.map((p: any) => (
                   <ProductCard key={p.id} product={p} />
                 ))}

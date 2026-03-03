@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useSearchParams } from 'next/navigation';
@@ -35,7 +34,6 @@ function SearchResults() {
     const saltMatch = p.saltComposition?.toLowerCase().includes(q);
     const matchesQuery = !q || nameMatch || saltMatch;
     const matchesCategory = !c || p.category === c;
-    // Show all items (even out of stock) as requested
     return matchesQuery && matchesCategory;
   });
 
@@ -91,7 +89,7 @@ function SearchResults() {
             {medsLoading ? (
               <div className="flex justify-center p-24"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>
             ) : filtered.length > 0 ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
                 {filtered.map(p => (
                    <ProductCard key={p.id} product={p} />
                 ))}

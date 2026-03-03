@@ -62,77 +62,90 @@ export default function ProductCard({ product }: { product: Product }) {
     updateQuantity(product.id, -1);
   };
 
+  // Calculate percentage saved
+  const mrp = product.mrp || product.price + (product.price * 0.2);
+  const savingsPercent = Math.round(((mrp - product.price) / mrp) * 100);
+
   return (
-    <div className={`group bg-white rounded-[28px] border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col active:scale-[0.97] h-full ${isOutOfStock ? 'opacity-80' : ''}`}>
-      <Link href={`/product/${product.id}`} className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50/30">
+    <div className={`group bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col active:scale-[0.98] h-full ${isOutOfStock ? 'opacity-90' : ''}`}>
+      <Link href={`/product/${product.id}`} className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50/40">
         <Image
           src={product.imageUrl}
           alt={product.name}
           fill
-          className={`object-contain p-4 group-hover:scale-110 transition-transform duration-700 ${isOutOfStock ? 'grayscale opacity-50' : ''}`}
-          data-ai-hint="medicine packaging"
+          className={`object-contain p-3 group-hover:scale-110 transition-transform duration-700 ${isOutOfStock ? 'grayscale opacity-40' : ''}`}
+          data-ai-hint="clinical product"
         />
-        {product.isGeneric && (
-          <div className="absolute top-3 left-3">
-            <Badge className="bg-green-600 text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border-none shadow-lg">Save 80%</Badge>
+        {savingsPercent > 0 && !isOutOfStock && (
+          <div className="absolute top-2 left-2">
+            <div className="bg-green-500 text-white text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md shadow-md">
+              {savingsPercent}% OFF
+            </div>
           </div>
         )}
         {isOutOfStock && (
           <div className="absolute inset-0 flex items-center justify-center p-2 bg-white/40 backdrop-blur-[1px]">
-            <Badge variant="destructive" className="font-black text-[9px] uppercase tracking-widest rounded-full px-4 py-1.5 bg-gray-900/90 shadow-xl">Stock Pending</Badge>
+            <Badge variant="destructive" className="font-black text-[8px] uppercase tracking-widest rounded-full px-3 py-1 bg-gray-900/90 shadow-xl border-none">Missed Item</Badge>
           </div>
         )}
       </Link>
       
-      <div className="p-4 flex flex-col flex-1 gap-2">
-        <div>
-          <p className="text-[7px] text-gray-400 font-black uppercase tracking-[0.2em] mb-1 truncate">{product.manufacturer}</p>
+      <div className="p-3 flex flex-col flex-1 gap-1">
+        <div className="space-y-0.5">
+          <p className="text-[7px] text-gray-400 font-black uppercase tracking-widest truncate">{product.manufacturer}</p>
           <Link href={`/product/${product.id}`}>
-            <h3 className="font-black text-gray-900 line-clamp-2 mb-1 group-hover:text-primary transition-colors text-[10px] sm:text-[11px] leading-tight uppercase tracking-tight">{product.name}</h3>
+            <h3 className="font-black text-gray-900 line-clamp-2 min-h-[2.4em] text-[10px] sm:text-[11px] leading-tight uppercase tracking-tight group-hover:text-primary transition-colors">
+              {product.name}
+            </h3>
           </Link>
-          <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest opacity-70 line-clamp-1">
+          <p className="text-[8px] text-gray-400 font-bold uppercase tracking-tight opacity-80 line-clamp-1 border-t pt-1">
             {product.saltComposition}
           </p>
+          <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest text-primary/60">
+            <span>{product.packSize}</span>
+          </div>
         </div>
         
-        <div className="mt-auto pt-2">
-          <div className="flex items-center justify-between mb-3">
+        <div className="mt-auto pt-2 border-t border-gray-50">
+          <div className="flex items-center justify-between mb-2">
              <div className="flex flex-col">
-                <span className="text-[12px] sm:text-[14px] font-black text-gray-900 tracking-tighter">₹{product.price}</span>
-                <span className="text-[8px] text-gray-400 line-through font-bold">₹{product.mrp || product.price + 100}</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[13px] font-black text-primary tracking-tighter">₹{product.price}</span>
+                  <span className="text-[8px] text-gray-400 line-through font-bold">₹{Math.round(mrp)}</span>
+                </div>
              </div>
-             {product.packSize && <span className="text-[8px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded-md uppercase">{product.packSize}</span>}
           </div>
           
           {isOutOfStock ? (
             <Button 
               onClick={handleNotify}
-              className="rounded-full h-10 w-full p-0 bg-orange-100 hover:bg-orange-200 text-orange-700 border-none font-black text-[9px] uppercase tracking-widest gap-2 shadow-lg shadow-orange-100"
+              variant="outline"
+              className="rounded-full h-9 w-full p-0 border-orange-200 bg-orange-50/50 hover:bg-orange-100 text-orange-600 font-black text-[9px] uppercase tracking-widest gap-1.5 shadow-sm"
             >
-              <BellRing className="w-4 h-4" /> Notify
+              <BellRing className="w-3.5 h-3.5" /> Notify
             </Button>
           ) : quantity > 0 ? (
-            <div className="flex items-center gap-1 bg-primary rounded-full p-1 shadow-xl shadow-primary/20 w-full animate-in zoom-in-95">
+            <div className="flex items-center gap-1 bg-primary rounded-full p-0.5 shadow-lg shadow-primary/20 w-full">
               <Button 
                 onClick={handleDecrement} 
-                className="h-9 w-9 p-0 rounded-full bg-white/20 text-white hover:bg-white/30 border-none shadow-none active:scale-90"
+                className="h-8 w-8 p-0 rounded-full bg-white/10 text-white hover:bg-white/20 border-none shadow-none"
               >
-                <Minus className="w-4 h-4" />
+                <Minus className="w-3.5 h-3.5" />
               </Button>
-              <span className="text-[12px] font-black text-white flex-1 text-center">{quantity}</span>
+              <span className="text-[11px] font-black text-white flex-1 text-center">{quantity}</span>
               <Button 
                 onClick={handleIncrement} 
-                className="h-9 w-9 p-0 rounded-full bg-white/20 text-white hover:bg-white/30 border-none shadow-none active:scale-90"
+                className="h-8 w-8 p-0 rounded-full bg-white/10 text-white hover:bg-white/20 border-none shadow-none"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5" />
               </Button>
             </div>
           ) : (
             <Button 
               onClick={handleAdd} 
-              className="rounded-full h-11 w-full p-0 shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-white border-none font-black text-[10px] uppercase tracking-widest gap-2 active:scale-95 transition-all"
+              className="rounded-full h-9 w-full p-0 shadow-md bg-primary hover:bg-primary/90 text-white border-none font-black text-[9px] uppercase tracking-widest gap-2 active:scale-95 transition-all"
             >
-              <ShoppingCart className="w-4 h-4" /> Add to Cart
+              Add <ShoppingCart className="w-3.5 h-3.5" />
             </Button>
           )}
         </div>

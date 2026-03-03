@@ -174,11 +174,11 @@ export default function Navbar() {
               <Input
                 type="text"
                 placeholder="Search medicines, salts or health needs..."
-                className="w-full pl-12 pr-4 py-6 rounded-3xl border-2 border-gray-100 focus:border-primary/20 focus-visible:ring-4 focus-visible:ring-primary/5 transition-all bg-white h-12 sm:h-14 font-bold text-xs sm:text-sm shadow-xl shadow-gray-200/50"
+                className="w-full pl-12 pr-4 py-6 rounded-3xl border-2 border-primary/20 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/5 transition-all bg-white h-12 sm:h-14 font-bold text-xs sm:text-sm shadow-xl shadow-gray-200/50"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-primary transition-colors" />
+              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-primary w-5 h-5 group-focus-within:text-primary transition-colors" />
               {suggestions.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-3xl shadow-2xl border-none overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2">
                   {suggestions.map((p) => (
