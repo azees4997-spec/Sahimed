@@ -5,6 +5,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface Product {
   id: string;
+  sku?: string; // Unique SKU Name
+  moleculeId?: string; // Unique Molecule ID
   name: string;
   price: number;
   mrp: number;

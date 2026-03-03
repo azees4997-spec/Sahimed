@@ -59,6 +59,37 @@
         "role",
         "activatedAt"
       ]
+    },
+    "Medicine": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Medicine",
+      "type": "object",
+      "description": "Clinical product in the catalog.",
+      "properties": {
+        "sku": {
+          "type": "string",
+          "description": "Unique SKU for the product."
+        },
+        "moleculeId": {
+          "type": "string",
+          "description": "Unique ID for the salt/molecule composition to link bio-equivalents."
+        },
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        },
+        "mrp": {
+          "type": "number"
+        },
+        "isGeneric": {
+          "type": "boolean"
+        },
+        "saltComposition": {
+          "type": "string"
+        }
+      }
     }
   },
   "auth": {
@@ -83,7 +114,7 @@
     },
     "/medicines/{medicineId}": {
       "schema": {
-        "type": "object"
+        "$ref": "#/backend/entities/Medicine"
       },
       "description": "Public catalog of medicines."
     }

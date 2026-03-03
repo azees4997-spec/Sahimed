@@ -24,7 +24,8 @@ import {
   FileText,
   Package,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Fingerprint
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
@@ -44,8 +45,21 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   
   const { data: product, isLoading: productLoading } = useDoc(productRef);
 
+  // Link bio-equivalents using Molecule ID
   const genericQuery = useMemoFirebase(() => {
     if (!db || !product || product.isGeneric) return null;
+    
+    // Priority 1: Match by Molecule ID
+    if (product.moleculeId) {
+      return query(
+        collection(db, 'medicines'),
+        where('moleculeId', '==', product.moleculeId),
+        where('isGeneric', '==', true),
+        limit(1)
+      );
+    }
+    
+    // Fallback: Match by Salt Composition
     return query(
       collection(db, 'medicines'),
       where('saltComposition', '==', product.saltComposition),
@@ -97,7 +111,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           {/* Branded Product Card */}
           <Card className="rounded-[24px] border-none bg-white overflow-hidden flex flex-col p-4 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest">Branded Reference</p>
+              <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest">Branded SKU: {product?.sku || 'N/A'}</p>
               <div className="bg-blue-50 px-2 py-0.5 rounded-full">
                 <span className="text-[6px] font-black text-blue-600 uppercase">Branded</span>
               </div>
@@ -123,6 +137,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <div>
                   <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest">Marketer</p>
                   <p className="text-[8px] font-bold text-gray-700 uppercase">{product?.manufacturer}</p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest shrink-0">Molecule ID</p>
+                  <code className="text-[7px] font-black text-gray-500">{product?.moleculeId || 'N/A'}</code>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest shrink-0">RX Required</p>
@@ -164,7 +182,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <div className="bg-green-500 text-white font-black text-[7px] uppercase px-3 py-1 rounded-bl-xl shadow-lg">Save {percentageSaved}%</div>
               </div>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[6px] font-black text-green-600 uppercase tracking-widest">Smart Choice</p>
+                <p className="text-[6px] font-black text-green-600 uppercase tracking-widest">Molecule Link: {genericSubstitute.moleculeId}</p>
                 <div className="bg-green-50 px-2 py-0.5 rounded-full">
                   <span className="text-[6px] font-black text-green-600 uppercase">Generic</span>
                 </div>
@@ -226,7 +244,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           ) : (
             <Card className="rounded-[24px] border border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center p-8 text-center">
               <Info className="w-8 h-8 text-gray-200 mb-3" />
-              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-relaxed">No alternative bio-equivalent available</p>
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-relaxed">No alternative bio-equivalent available for Molecule: {product?.moleculeId}</p>
             </Card>
           )}
         </div>

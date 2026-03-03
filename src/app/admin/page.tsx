@@ -26,7 +26,7 @@ import {
   Edit2,
   Upload,
   Download,
-  FileSpreadsheet
+  Fingerprint
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,8 +38,7 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogTrigger,
-  DialogFooter
+  DialogTrigger
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -292,8 +291,14 @@ function SeedDataButton({ db }: { db: any }) {
         await addDocumentNonBlocking(collection(db, 'categories'), cat);
       }
 
+      const molecules = {
+        SITA_MET: 'sitagliptin-metformin-50-500'
+      };
+
       const medicines = [
         { 
+          sku: 'JAN-50-500-15',
+          moleculeId: molecules.SITA_MET,
           name: 'Janumet 50/500', 
           price: 1250, 
           mrp: 1450,
@@ -313,12 +318,14 @@ function SeedDataButton({ db }: { db: any }) {
           strength: '50mg/500mg'
         },
         { 
-          name: 'Sitagliptin M 50/500', 
+          sku: 'TAL-50-500-15',
+          moleculeId: molecules.SITA_MET,
+          name: 'talumet 50/500', 
           price: 240, 
           mrp: 1200,
           prescriptionRequired: true,
           saltComposition: 'Sitagliptin + Metformin', 
-          manufacturer: 'HealthLink Generic', 
+          manufacturer: 'vsd generics', 
           isGeneric: true, 
           category: 'Diabetes', 
           imageUrl: 'https://picsum.photos/seed/dia2/300/300', 
@@ -392,7 +399,9 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 
   const filtered = medicines?.filter(m => 
     m.name?.toLowerCase().includes(search.toLowerCase()) || 
-    m.saltComposition?.toLowerCase().includes(search.toLowerCase())
+    m.saltComposition?.toLowerCase().includes(search.toLowerCase()) ||
+    m.sku?.toLowerCase().includes(search.toLowerCase()) ||
+    m.moleculeId?.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleEdit = (med: any) => {
@@ -406,13 +415,13 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   };
 
   const downloadCSVTemplate = () => {
-    const headers = "name,manufacturer,saltComposition,dosageForm,price,mrp,availableQuantity,packSize,category,isGeneric,prescriptionRequired,imageUrl,description\n";
-    const sample = "Janumet 50/500,MSD,Sitagliptin+Metformin,Tablet,1250,1450,100,Strip of 15,Diabetes,false,true,https://picsum.photos/seed/1/300/300,Sample description\n";
+    const headers = "sku,moleculeId,name,manufacturer,saltComposition,dosageForm,price,mrp,availableQuantity,packSize,category,isGeneric,prescriptionRequired,imageUrl,description\n";
+    const sample = "JAN-50-500-15,sitagliptin-metformin-50-500,Janumet 50/500,MSD,Sitagliptin+Metformin,Tablet,1250,1450,100,Strip of 15,Diabetes,false,true,https://picsum.photos/seed/1/300/300,Sample description\n";
     const blob = new Blob([headers + sample], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'clinical_sku_template.csv';
+    a.download = 'clinical_sku_master_template.csv';
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -443,7 +452,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
           medData[key] = value;
         });
 
-        if (medData.name) {
+        if (medData.sku && medData.name) {
           await addDocumentNonBlocking(collection(db, 'medicines'), {
             ...medData,
             imageUrls: medData.imageUrl ? [medData.imageUrl] : [],
@@ -452,7 +461,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
           importedCount++;
         }
       }
-      toast({ title: "Bulk Import Complete", description: `Successfully imported ${importedCount} clinical SKUs.` });
+      toast({ title: "Bulk SKU Import Complete", description: `Successfully imported ${importedCount} unique clinical items.` });
     };
     reader.readAsText(file);
   };
@@ -464,7 +473,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-            <Input placeholder="Filter medicines..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-full border-none bg-white font-bold text-xs" />
+            <Input placeholder="Search SKU or Molecule..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-full border-none bg-white font-bold text-xs" />
           </div>
           
           <Button variant="outline" onClick={downloadCSVTemplate} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2">
@@ -511,8 +520,9 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[9px] font-black uppercase text-gray-400 border-b">
               <tr>
+                <th className="px-8 py-6">Unique SKU</th>
                 <th className="px-8 py-6">Product & MFR</th>
-                <th className="px-8 py-6">Salt Composition</th>
+                <th className="px-8 py-6">Molecule ID</th>
                 <th className="px-8 py-6 text-center">Unit Price</th>
                 <th className="px-8 py-6 text-center">Stock Level</th>
                 <th className="px-8 py-6 text-right">Actions</th>
@@ -520,9 +530,12 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
-                <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
+                <tr><td colSpan={6} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
               ) : filtered?.map(med => (
                 <tr key={med.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-8 py-6">
+                    <code className="text-[10px] font-black text-primary bg-primary/5 px-2 py-1 rounded-md">{med.sku || 'N/A'}</code>
+                  </td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
                       <span className="font-black text-gray-900 text-xs">{med.name}</span>
@@ -531,7 +544,10 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <Badge variant="outline" className="text-[8px] uppercase font-bold border-primary/20 text-primary">{med.saltComposition}</Badge>
+                    <div className="flex items-center gap-1.5">
+                      <Fingerprint className="w-3 h-3 text-orange-400" />
+                      <span className="text-[9px] font-bold text-gray-500">{med.moleculeId || 'UNTAGGED'}</span>
+                    </div>
                   </td>
                   <td className="px-8 py-6 font-black text-center text-sm">₹{med.price}</td>
                   <td className="px-8 py-6 text-center">
@@ -565,6 +581,8 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 function MedicineForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
   const { toast } = useToast();
   const [form, setForm] = useState({
+    sku: initialData?.sku || '',
+    moleculeId: initialData?.moleculeId || '',
     name: initialData?.name || '',
     manufacturer: initialData?.manufacturer || '',
     saltComposition: initialData?.saltComposition || '',
@@ -666,6 +684,15 @@ function MedicineForm({ db, initialData, onSuccess }: { db: any, initialData?: a
           </button>
         </div>
         <input id="sku-multi-image-form" type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[9px] font-black uppercase">Unique SKU Name</Label>
+        <Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} required placeholder="e.g. JAN-50-500-15" className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-[9px] font-black uppercase">Unique Molecule ID</Label>
+        <Input value={form.moleculeId} onChange={e => setForm({...form, moleculeId: e.target.value})} required placeholder="e.g. sita-met-50-500" className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
       </div>
 
       <div className="space-y-2">
