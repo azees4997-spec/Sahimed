@@ -7,15 +7,7 @@ service cloud.firestore {
      * 
      * CORE PHILOSOPHY:
      * Enforces strict User-Ownership for sensitive patient data while allowing
-     * public access to the clinical catalog and therapeutic hubs.
-     * 
-     * PATH MAPPING:
-     * - /userProfiles/{userId}: Private patient profile and subcollections.
-     * - /medicines/{medicineId}: Public clinical SKU catalog.
-     * - /categories/{categoryId}: Public therapeutic hubs.
-     * - /moleculeMaster/{molId}: Public therapeutic salt registry.
-     * - /adminProfiles/{adminId}: Secure registry of clinical supervisors.
-     * - /stockEnquiries/{id}: Patient notifications for out-of-stock items.
+     * public access to the clinical catalog, promotional hubs, and fees.
      */
 
     // --- GLOBAL HELPER FUNCTIONS ---
@@ -34,10 +26,6 @@ service cloud.firestore {
              exists(/databases/$(database)/documents/adminProfiles/$(request.auth.uid)) &&
              (get(/databases/$(database)/documents/adminProfiles/$(request.auth.uid)).data.role == 'admin' || 
               get(/databases/$(database)/documents/adminProfiles/$(request.auth.uid)).data.role == 'pharmacist');
-    }
-
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
     }
 
     // --- COLLECTION RULES ---
@@ -80,7 +68,7 @@ service cloud.firestore {
     }
 
     /**
-     * @description Public clinical catalog and therapeutic data.
+     * @description Public clinical catalog, promotions, and fees.
      */
     match /medicines/{medicineId} {
       allow get, list: if true;
@@ -93,6 +81,16 @@ service cloud.firestore {
     }
 
     match /moleculeMaster/{molId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /promocodes/{promoId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /fees/{feeId} {
       allow get, list: if true;
       allow create, update, delete: if isAdmin();
     }
