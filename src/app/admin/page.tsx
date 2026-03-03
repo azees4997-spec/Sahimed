@@ -28,7 +28,8 @@ import {
   Home,
   Camera,
   Image as ImageIcon,
-  Upload
+  Upload,
+  X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -305,6 +306,7 @@ function SeedDataButton({ db }: { db: any }) {
           isGeneric: false, 
           category: 'Diabetes', 
           imageUrl: 'https://picsum.photos/seed/dia1/300/300', 
+          imageUrls: ['https://picsum.photos/seed/dia1/300/300'],
           availableQuantity: 100, 
           description: 'Janumet is a combination of two anti-diabetic medicines: Sitagliptin and Metformin.',
           uses: ['Management of Type 2 Diabetes'],
@@ -322,6 +324,7 @@ function SeedDataButton({ db }: { db: any }) {
           isGeneric: true, 
           category: 'Diabetes', 
           imageUrl: 'https://picsum.photos/seed/dia2/300/300', 
+          imageUrls: ['https://picsum.photos/seed/dia2/300/300'],
           availableQuantity: 500, 
           description: 'Bio-equivalent generic version of Sitagliptin + Metformin.',
           uses: ['Management of Type 2 Diabetes'],
@@ -482,33 +485,50 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
     category: 'Diabetes',
     isGeneric: false,
     prescriptionRequired: false,
-    imageUrl: ''
+    imageUrls: [] as string[]
   });
 
   const [uploading, setUploading] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
       setUploading(true);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setForm(prev => ({ ...prev, imageUrl: reader.result as string }));
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
+      const newImages: string[] = [];
+      let processed = 0;
+
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          newImages.push(reader.result as string);
+          processed++;
+          if (processed === files.length) {
+            setForm(prev => ({ ...prev, imageUrls: [...prev.imageUrls, ...newImages] }));
+            setUploading(false);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
+  };
+
+  const removeImage = (index: number) => {
+    setForm(prev => ({
+      ...prev,
+      imageUrls: prev.imageUrls.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.imageUrl) {
-      toast({ variant: 'destructive', title: "Image Required", description: "Please upload a product image." });
+    if (form.imageUrls.length === 0) {
+      toast({ variant: 'destructive', title: "Image Required", description: "Please upload at least one product image." });
       return;
     }
 
     addDocumentNonBlocking(collection(db, 'medicines'), {
       ...form,
+      imageUrl: form.imageUrls[0], // Primary image for compatibility
       price: Number(form.price),
       mrp: Number(form.mrp),
       availableQuantity: Number(form.availableQuantity),
@@ -520,26 +540,31 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
 
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 py-4 max-h-[70vh] overflow-y-auto px-1 scrollbar-hide">
-      <div className="col-span-2 flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-[32px] bg-gray-50 group hover:bg-gray-100 transition-all cursor-pointer relative overflow-hidden" onClick={() => document.getElementById('sku-image-upload')?.click()}>
-        {form.imageUrl ? (
-           <div className="relative w-full aspect-video">
-             <Image src={form.imageUrl} alt="Preview" fill className="object-contain" />
-             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
-                <p className="text-white text-[10px] font-black uppercase">Change Image</p>
-             </div>
-           </div>
-        ) : (
-          <>
-            {uploading ? <Loader2 className="w-8 h-8 animate-spin text-primary" /> : <Upload className="w-8 h-8 text-gray-300 group-hover:text-primary transition-colors" />}
-            <p className="mt-2 text-[10px] font-black uppercase text-gray-400">Product Image (File or URL)</p>
-          </>
-        )}
-        <input id="sku-image-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-      </div>
-
-      <div className="col-span-2 space-y-2">
-        <Label className="text-[9px] font-black uppercase">Or Paste Image URL</Label>
-        <Input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} placeholder="https://..." className="rounded-xl h-10 bg-gray-50 border-none font-bold text-xs" />
+      <div className="col-span-2 space-y-3">
+        <Label className="text-[9px] font-black uppercase">Product Images (Upload Multiple)</Label>
+        <div className="grid grid-cols-4 gap-3">
+          {form.imageUrls.map((url, idx) => (
+            <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border bg-gray-50 group">
+              <Image src={url} alt={`Preview ${idx}`} fill className="object-contain" />
+              <button 
+                type="button"
+                onClick={() => removeImage(idx)}
+                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+          <button 
+            type="button"
+            onClick={() => document.getElementById('sku-multi-image')?.click()}
+            className="aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-gray-400 hover:text-primary hover:border-primary transition-all bg-gray-50"
+          >
+            {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
+            <span className="text-[8px] font-black uppercase mt-1">Add Image</span>
+          </button>
+        </div>
+        <input id="sku-multi-image" type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
       </div>
 
       <div className="space-y-2">

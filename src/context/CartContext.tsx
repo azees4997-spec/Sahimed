@@ -13,6 +13,7 @@ export interface Product {
   manufacturer: string;
   category: string;
   imageUrl: string;
+  imageUrls?: string[];
   isGeneric?: boolean;
   packSize?: string;
   uses?: string[];
