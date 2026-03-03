@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Badge } from '@/components/ui/badge';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, limit } from 'firebase/firestore';
 
@@ -104,48 +103,48 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-white border-b safe-top">
+      <nav className="sticky top-0 z-50 bg-white border-b safe-top pb-2 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-12 md:h-14">
-            <div className="flex items-center gap-2">
-              <Link href="/" className="flex items-center gap-1.5">
-                <div className="bg-primary p-0.5 rounded shadow-sm">
-                  <div className="text-white font-bold text-[10px] tracking-tighter">HL</div>
+          <div className="flex justify-between items-center h-14 md:h-16">
+            <div className="flex items-center gap-3">
+              <Link href="/" className="flex items-center gap-2">
+                <div className="bg-primary p-1.5 rounded-lg shadow-md">
+                  <div className="text-white font-black text-xs tracking-tighter">HL</div>
                 </div>
-                <span className="hidden sm:block font-black text-xs text-primary font-headline tracking-tight text-nowrap">HealthLink</span>
+                <span className="hidden sm:block font-black text-lg text-primary font-headline tracking-tight text-nowrap">HealthLink</span>
               </Link>
 
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-1 text-[7px] font-black text-gray-500 hover:text-primary p-1 h-auto rounded-lg bg-gray-50 border border-gray-100 uppercase tracking-widest max-w-[80px] sm:max-w-none transition-all active:scale-95">
-                    <MapPin className="w-2 h-2 text-primary shrink-0" />
+                  <Button variant="ghost" className="flex items-center gap-1.5 text-[8px] sm:text-[10px] font-black text-gray-500 hover:text-primary p-2 h-auto rounded-xl bg-gray-50 border border-gray-100 uppercase tracking-widest max-w-[100px] sm:max-w-none transition-all active:scale-95">
+                    <MapPin className="w-3 h-3 text-primary shrink-0" />
                     <span className="truncate">{location}</span>
-                    <ChevronDown className="w-1.5 h-1.5 shrink-0 opacity-40" />
+                    <ChevronDown className="w-2 h-2 shrink-0 opacity-40" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-64 p-3 rounded-2xl shadow-2xl border-none">
-                  <div className="space-y-3">
+                <PopoverContent className="w-64 p-4 rounded-3xl shadow-2xl border-none">
+                  <div className="space-y-4">
                     <Button 
                       onClick={handleGeoLocation} 
                       disabled={isLocating}
-                      className="w-full justify-start gap-2 h-10 rounded-xl bg-primary/5 text-primary hover:bg-primary/10 font-black text-[8px] uppercase tracking-widest"
+                      className="w-full justify-start gap-3 h-12 rounded-2xl bg-primary/5 text-primary hover:bg-primary/10 font-black text-[9px] uppercase tracking-widest"
                     >
-                      {isLocating ? <Loader2 className="w-3 h-3 animate-spin" /> : <LocateFixed className="w-3 h-3" />}
+                      {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <LocateFixed className="w-4 h-4" />}
                       Use GPS Location
                     </Button>
-                    <div className="pt-1">
-                      <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest px-1.5 mb-2">Saved Hubs</p>
+                    <div className="pt-2">
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest px-2 mb-3">Saved Hubs</p>
                       {manualLocations.map((loc) => (
                         <Button 
                           key={loc} 
                           variant="ghost" 
-                          className="w-full justify-start text-[10px] h-8 rounded-lg hover:bg-gray-50 font-bold" 
+                          className="w-full justify-start text-xs h-10 rounded-xl hover:bg-gray-50 font-bold" 
                           onClick={() => {
                             setLocation(loc);
                             setIsPopoverOpen(false);
                           }}
                         >
-                          <MapPin className="w-2.5 h-2.5 mr-2 text-gray-300" />
+                          <MapPin className="w-3 h-3 mr-3 text-gray-300" />
                           {loc}
                         </Button>
                       ))}
@@ -155,31 +154,54 @@ export default function Navbar() {
               </Popover>
             </div>
 
-            <div className="flex items-center gap-0.5">
-              <Link href="/cart" className="relative p-1 hover:bg-gray-50 rounded-lg active:scale-90 transition-transform">
-                <ShoppingCart className="w-3.5 h-3.5 text-gray-700" />
+            <div className="flex items-center gap-1">
+              <Link href="/cart" className="relative p-2 hover:bg-gray-50 rounded-full active:scale-90 transition-transform">
+                <ShoppingCart className="w-5 h-5 text-gray-700" />
                 {totalItems > 0 && (
-                  <span className="absolute top-0 right-0 bg-accent text-white text-[6px] font-black px-1 py-0 rounded-full ring-1 ring-white">
+                  <span className="absolute top-0 right-0 bg-accent text-white text-[8px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-white shadow-md">
                     {totalItems}
                   </span>
                 )}
               </Link>
-              <Link href="/profile" className="p-1 hover:bg-gray-50 rounded-lg active:scale-90 transition-transform">
-                <User className="w-3.5 h-3.5 text-gray-700" />
+              <Link href="/profile" className="p-2 hover:bg-gray-50 rounded-full active:scale-90 transition-transform">
+                <User className="w-5 h-5 text-gray-700" />
               </Link>
             </div>
           </div>
 
-          <div className="pb-2 relative" ref={suggestionRef}>
+          <div className="pb-3 px-1" ref={suggestionRef}>
             <form onSubmit={handleSearch} className="relative group">
               <Input
                 type="text"
-                placeholder="Search medicines, salts..."
-                className="w-full pl-7 pr-3 py-1 rounded-full border-none focus-visible:ring-2 focus-visible:ring-primary/10 transition-all bg-gray-50 h-8 sm:h-10 font-bold text-[9px] sm:text-xs shadow-inner"
+                placeholder="Search medicines, salts or health needs..."
+                className="w-full pl-12 pr-4 py-6 rounded-3xl border-2 border-gray-100 focus:border-primary/20 focus-visible:ring-4 focus-visible:ring-primary/5 transition-all bg-white h-12 sm:h-14 font-bold text-xs sm:text-sm shadow-xl shadow-gray-200/50"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-300 w-3 h-3 group-focus-within:text-primary transition-colors" />
+              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-primary transition-colors" />
+              {suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-3xl shadow-2xl border-none overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2">
+                  {suggestions.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setSearch('');
+                        setSuggestions([]);
+                        router.push(`/product/${p.id}`);
+                      }}
+                      className="w-full p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors border-b last:border-none text-left"
+                    >
+                      <div className="w-10 h-10 bg-gray-50 rounded-xl flex-shrink-0">
+                        <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain p-1" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-[10px] uppercase text-gray-900 truncate">{p.name}</p>
+                        <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest truncate">{p.saltComposition}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </form>
           </div>
         </div>

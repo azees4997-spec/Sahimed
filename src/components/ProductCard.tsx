@@ -1,9 +1,8 @@
-
 "use client"
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Plus, Minus, BellRing } from 'lucide-react';
+import { Plus, Minus, BellRing, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product, useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
@@ -64,66 +63,76 @@ export default function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <div className={`group bg-white rounded-2xl border border-gray-50 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col active:scale-[0.98] h-full ${isOutOfStock ? 'opacity-80' : ''}`}>
-      <Link href={`/product/${product.id}`} className="relative aspect-square w-full overflow-hidden bg-gray-50/20">
+    <div className={`group bg-white rounded-[28px] border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col active:scale-[0.97] h-full ${isOutOfStock ? 'opacity-80' : ''}`}>
+      <Link href={`/product/${product.id}`} className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50/30">
         <Image
           src={product.imageUrl}
           alt={product.name}
           fill
-          className={`object-contain p-2 group-hover:scale-105 transition-transform duration-500 ${isOutOfStock ? 'grayscale opacity-50' : ''}`}
-          data-ai-hint="medicine box"
+          className={`object-contain p-4 group-hover:scale-110 transition-transform duration-700 ${isOutOfStock ? 'grayscale opacity-50' : ''}`}
+          data-ai-hint="medicine packaging"
         />
         {product.isGeneric && (
-          <Badge className="absolute top-1.5 left-1.5 bg-green-600 text-[6px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border-none shadow-sm">Save</Badge>
+          <div className="absolute top-3 left-3">
+            <Badge className="bg-green-600 text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border-none shadow-lg">Save 80%</Badge>
+          </div>
         )}
         {isOutOfStock && (
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <Badge variant="destructive" className="font-black text-[8px] uppercase tracking-widest rounded-full px-3 py-1 bg-gray-600">Stock Pending</Badge>
+          <div className="absolute inset-0 flex items-center justify-center p-2 bg-white/40 backdrop-blur-[1px]">
+            <Badge variant="destructive" className="font-black text-[9px] uppercase tracking-widest rounded-full px-4 py-1.5 bg-gray-900/90 shadow-xl">Stock Pending</Badge>
           </div>
         )}
       </Link>
       
-      <div className="p-2 flex flex-col flex-1">
-        <p className="text-[6px] text-gray-400 font-black uppercase tracking-widest mb-0.5 truncate">{product.manufacturer}</p>
-        <Link href={`/product/${product.id}`}>
-          <h3 className="font-black text-gray-900 line-clamp-1 mb-0.5 group-hover:text-primary transition-colors text-[9px] sm:text-[10px] leading-tight uppercase tracking-tight">{product.name}</h3>
-        </Link>
-        <p className="text-[6px] text-gray-400 line-clamp-1 mb-2 font-bold uppercase tracking-widest opacity-60">
-          {product.saltComposition}
-        </p>
+      <div className="p-4 flex flex-col flex-1 gap-2">
+        <div>
+          <p className="text-[7px] text-gray-400 font-black uppercase tracking-[0.2em] mb-1 truncate">{product.manufacturer}</p>
+          <Link href={`/product/${product.id}`}>
+            <h3 className="font-black text-gray-900 line-clamp-2 mb-1 group-hover:text-primary transition-colors text-[10px] sm:text-[11px] leading-tight uppercase tracking-tight">{product.name}</h3>
+          </Link>
+          <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest opacity-70 line-clamp-1">
+            {product.saltComposition}
+          </p>
+        </div>
         
-        <div className="mt-auto flex items-center justify-between gap-1">
-          <span className="text-[9px] sm:text-[10px] font-black text-gray-900 tracking-tighter">₹{product.price}</span>
+        <div className="mt-auto pt-2">
+          <div className="flex items-center justify-between mb-3">
+             <div className="flex flex-col">
+                <span className="text-[12px] sm:text-[14px] font-black text-gray-900 tracking-tighter">₹{product.price}</span>
+                <span className="text-[8px] text-gray-400 line-through font-bold">₹{product.mrp || product.price + 100}</span>
+             </div>
+             {product.packSize && <span className="text-[8px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded-md uppercase">{product.packSize}</span>}
+          </div>
           
           {isOutOfStock ? (
             <Button 
               onClick={handleNotify}
-              className="rounded-lg h-7 w-full p-0 bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 font-black text-[8px] uppercase tracking-widest gap-1"
+              className="rounded-full h-10 w-full p-0 bg-orange-100 hover:bg-orange-200 text-orange-700 border-none font-black text-[9px] uppercase tracking-widest gap-2 shadow-lg shadow-orange-100"
             >
-              <BellRing className="w-3 h-3" /> Notify
+              <BellRing className="w-4 h-4" /> Notify
             </Button>
           ) : quantity > 0 ? (
-            <div className="flex items-center gap-1 bg-primary rounded-lg p-0.5 shadow-lg w-full">
+            <div className="flex items-center gap-1 bg-primary rounded-full p-1 shadow-xl shadow-primary/20 w-full animate-in zoom-in-95">
               <Button 
                 onClick={handleDecrement} 
-                className="h-7 w-7 p-0 rounded-md bg-white/20 text-white hover:bg-white/30 border-none shadow-none"
+                className="h-9 w-9 p-0 rounded-full bg-white/20 text-white hover:bg-white/30 border-none shadow-none active:scale-90"
               >
-                <Minus className="w-3 h-3" />
+                <Minus className="w-4 h-4" />
               </Button>
-              <span className="text-[10px] font-black text-white flex-1 text-center">{quantity}</span>
+              <span className="text-[12px] font-black text-white flex-1 text-center">{quantity}</span>
               <Button 
                 onClick={handleIncrement} 
-                className="h-7 w-7 p-0 rounded-md bg-white/20 text-white hover:bg-white/30 border-none shadow-none"
+                className="h-9 w-9 p-0 rounded-full bg-white/20 text-white hover:bg-white/30 border-none shadow-none active:scale-90"
               >
-                <Plus className="w-3 h-3" />
+                <Plus className="w-4 h-4" />
               </Button>
             </div>
           ) : (
             <Button 
               onClick={handleAdd} 
-              className="rounded-lg h-7 w-full p-0 shadow-lg shadow-primary/10 bg-primary/5 hover:bg-primary text-primary hover:text-white border border-primary/20 font-black text-[8px] uppercase tracking-widest"
+              className="rounded-full h-11 w-full p-0 shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-white border-none font-black text-[10px] uppercase tracking-widest gap-2 active:scale-95 transition-all"
             >
-              Add To Cart
+              <ShoppingCart className="w-4 h-4" /> Add to Cart
             </Button>
           )}
         </div>
