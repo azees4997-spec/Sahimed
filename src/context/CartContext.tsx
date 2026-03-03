@@ -5,12 +5,12 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface Product {
   id: string;
-  sku?: string; // Unique SKU
-  moleculeId?: string; // Unique Molecule ID
+  sku?: string; 
+  moleculeId?: string; 
   name: string;
   price: number;
   mrp: number;
-  availableQuantity: number; // Added for inventory control
+  availableQuantity: number;
   prescriptionRequired: boolean;
   saltComposition: string;
   manufacturer: string;
@@ -19,7 +19,7 @@ export interface Product {
   imageUrls?: string[];
   isGeneric?: boolean;
   packSize?: string;
-  dosageForm?: string; // e.g., Tablet, Syrup, Injection
+  dosageForm?: string;
   uses?: string[];
   sideEffects?: string[];
   safetyAdvice?: {
@@ -52,7 +52,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
-  // Defaulting to Mumbai, MH as requested for the clinical hub
+  // Localized default to Mumbai, MH
   const [location, setLocation] = useState('Mumbai, MH');
 
   useEffect(() => {

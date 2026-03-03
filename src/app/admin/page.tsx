@@ -238,7 +238,7 @@ export default function SupervisorConsole() {
               </div>
               <div className="flex flex-col items-start leading-none">
                 <span className="font-black text-lg tracking-tighter text-gray-900 uppercase">Supervisor Terminal</span>
-                <span className="text-[8px] font-black text-primary uppercase tracking-[0.3em]">Home Dashboard</span>
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.3em]">Mumbai HQ</span>
               </div>
             </button>
             <nav className="hidden lg:flex gap-1">
@@ -295,6 +295,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles')) : null, [db, isVerified]);
   const stockAlertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'stockEnquiries')) : null, [db, isVerified]);
   
+  // Gated collection groups to prevent permission errors on dashboard load
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
 
@@ -375,6 +376,7 @@ function StockEnquiryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+  // Collection group query without orderBy to avoid needing composite indexes instantly
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
@@ -582,7 +584,7 @@ function DigitizationWorkflow({ db, enquiry, medicines, onSuccess }: { db: any, 
             {search.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border z-10 overflow-hidden">
                 {filteredMeds.map(med => (
-                  <button key={med.id} onClick={() => addItem(med)} className="w-full p-4 hover:bg-gray-50 flex items-center justify-between transition-colors border-b last:border-none">
+                  <button key={med.id} onClick={() => addItem(med)} className="w-full p-4 hover:bg-gray-50 flex items-center justify-between transition-colors border-b last:border-none text-left">
                     <div className="flex items-center gap-3">
                       <img src={med.imageUrl} className="w-8 h-8 object-contain bg-gray-50 rounded" />
                       <div className="text-left">
@@ -911,7 +913,7 @@ function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean })
                 <Plus className="w-3.5 h-3.5" /> Add Molecule
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[40px] max-w-lg border-none">
+            <DialogContent className="rounded-[40px] max-lg border-none">
               <DialogHeader>
                 <DialogTitle className="text-xl font-black uppercase tracking-tight">
                   {editingMolecule ? 'Edit Molecule' : 'Register Molecule'}
