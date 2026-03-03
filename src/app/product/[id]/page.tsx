@@ -19,9 +19,15 @@ import {
   BellRing,
   Sparkles,
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  Maximize2
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import Link from 'next/link';
 import { useFirestore, useDoc, useCollection, useMemoFirebase, useUser, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, query, where, limit, serverTimestamp } from 'firebase/firestore';
@@ -74,7 +80,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   };
 
   const getUnitPrice = (price: number, packSize: string = "") => {
-    const match = packSize.match(/\d+/);
+    const match = packSize?.match(/\d+/);
     if (match) {
       const units = parseInt(match[0]);
       if (units > 0) return (price / units).toFixed(1);
@@ -102,6 +108,31 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const brandedOutOfStock = (product.availableQuantity || 0) <= 0;
   const genericOutOfStock = genericSubstitute ? (genericSubstitute.availableQuantity || 0) <= 0 : false;
 
+  const ImageViewer = ({ src, alt }: { src: string, alt: string }) => (
+    <Dialog>
+      <DialogTrigger asChild>
+        <div className="relative cursor-zoom-in group">
+          <div className="aspect-square relative w-full max-w-[280px] mx-auto">
+            <Image 
+              src={src} 
+              alt={alt} 
+              fill 
+              className={cn("object-contain transition-transform duration-500 group-hover:scale-105", brandedOutOfStock && "grayscale")} 
+            />
+          </div>
+          <div className="absolute bottom-0 right-0 p-2 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+            <Maximize2 className="w-4 h-4 text-gray-400" />
+          </div>
+        </div>
+      </DialogTrigger>
+      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-transparent shadow-none">
+        <div className="relative w-full h-[80vh] flex items-center justify-center bg-white rounded-3xl overflow-hidden p-6">
+          <Image src={src} alt={alt} fill className="object-contain" />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
     <div className="min-h-screen bg-[#F8F8F8] pb-32 page-transition-wrapper">
       <Navbar />
@@ -117,6 +148,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
         {!product.isGeneric && genericSubstitute ? (
           <div className="space-y-6">
+            {/* Molecule Bridge */}
             <div className="text-center py-2">
                <div className="inline-flex items-center gap-2 bg-primary/5 px-6 py-2.5 rounded-full border border-primary/10 shadow-sm animate-in fade-in slide-in-from-top-4">
                   <Activity className="w-3.5 h-3.5 text-primary" />
@@ -124,10 +156,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Side-by-Side Comparison Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
               {/* Branded Card */}
               <Card className={cn(
-                "rounded-[40px] border-none bg-white p-6 sm:p-8 shadow-sm transition-all relative overflow-hidden flex flex-col group",
+                "rounded-[40px] border-none bg-white p-6 sm:p-10 shadow-sm transition-all relative overflow-hidden flex flex-col group h-full",
                 brandedOutOfStock && "opacity-80"
               )}>
                 <div className="flex items-center justify-between mb-8">
@@ -138,14 +171,14 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase px-3 py-1 rounded-full">Your Item</Badge>
                 </div>
                 
-                <div className="aspect-square relative w-full max-w-[160px] mx-auto mb-8">
-                  <Image src={product.imageUrl} alt={product.name} fill className={cn("object-contain group-hover:scale-105 transition-transform duration-500", brandedOutOfStock && "grayscale")} />
+                <div className="mb-10">
+                  <ImageViewer src={product.imageUrl} alt={product.name} />
                 </div>
 
                 <div className="flex-1 space-y-6">
-                  <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight leading-tight">{product.name}</h3>
+                  <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight leading-tight">{product.name}</h3>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     <div className="space-y-0.5">
                       <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Composition</p>
                       <p className="text-[11px] font-black text-gray-700 uppercase">{product.saltComposition}</p>
@@ -167,23 +200,23 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">MRP</span>
                            <span className="text-[10px] text-gray-400 line-through">₹{product.mrp || product.price + 100}</span>
                         </div>
-                        <div className="text-[28px] font-black text-gray-900 leading-none">₹{product.price}</div>
+                        <div className="text-[32px] font-black text-gray-900 leading-none">₹{product.price}</div>
                         <p className="text-[9px] font-bold text-gray-400 uppercase mt-1">₹{getUnitPrice(product.price, product.packSize)} / Unit</p>
                       </div>
                     </div>
                     
                     {brandedOutOfStock ? (
-                      <Button onClick={() => handleNotify(product)} className="w-full h-14 rounded-full text-[11px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 gap-2">
+                      <Button onClick={() => handleNotify(product)} className="w-full h-16 rounded-full text-[11px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 gap-2">
                         <BellRing className="w-4 h-4" /> Notify Stock
                       </Button>
                     ) : brandedQty > 0 ? (
-                      <div className="flex items-center justify-between bg-primary rounded-full h-14 px-4 shadow-xl shadow-primary/20">
+                      <div className="flex items-center justify-between bg-primary rounded-full h-16 px-6 shadow-xl shadow-primary/20">
                         <button onClick={() => updateQuantity(product.id, -1)} className="p-2 text-white"><Minus className="w-5 h-5" /></button>
-                        <span className="text-lg font-black text-white">{brandedQty}</span>
+                        <span className="text-xl font-black text-white">{brandedQty}</span>
                         <button onClick={() => updateQuantity(product.id, 1)} className="p-2 text-white"><Plus className="w-5 h-5" /></button>
                       </div>
                     ) : (
-                      <Button onClick={() => addToCart(product, 1)} className="w-full h-14 rounded-full text-[11px] font-black uppercase bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">Add To Cart</Button>
+                      <Button onClick={() => addToCart(product, 1)} className="w-full h-16 rounded-full text-[11px] font-black uppercase bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">Add To Cart</Button>
                     )}
                   </div>
                 </div>
@@ -191,7 +224,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               {/* Generic Card */}
               <Card className={cn(
-                "rounded-[40px] border-[2.5px] border-accent bg-white p-6 sm:p-8 shadow-2xl shadow-accent/10 transition-all relative overflow-hidden flex flex-col group",
+                "rounded-[40px] border-[2.5px] border-accent bg-white p-6 sm:p-10 shadow-2xl shadow-accent/10 transition-all relative overflow-hidden flex flex-col group h-full",
                 genericOutOfStock && "opacity-80"
               )}>
                 <div className="absolute top-0 right-0 bg-accent text-white px-5 py-2 rounded-bl-[20px] text-[10px] font-black uppercase tracking-widest shadow-lg">SAVE {percentageSaved}%</div>
@@ -199,24 +232,24 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <div className="flex items-center justify-between mb-8">
                   <div className="space-y-0.5">
                     <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">MOLECULE LINK</p>
-                    <p className="text-[10px] font-black text-accent uppercase">{genericSubstitute.id.substring(0,8).toUpperCase()}</p>
+                    <p className="text-[10px] font-black text-accent uppercase">BIO-EQUIVALENT</p>
                   </div>
                   <Badge className="bg-accent/10 text-accent border-none text-[8px] font-black uppercase px-3 py-1 rounded-full">Our Recommendation</Badge>
                 </div>
                 
-                <div className="aspect-square relative w-full max-w-[160px] mx-auto mb-8">
-                  <Image src={genericSubstitute.imageUrl} alt={genericSubstitute.name} fill className={cn("object-contain group-hover:scale-110 transition-transform duration-700", genericOutOfStock && "grayscale")} />
+                <div className="mb-10 relative">
+                  <ImageViewer src={genericSubstitute.imageUrl} alt={genericSubstitute.name} />
                   {!genericOutOfStock && (
-                    <div className="absolute -bottom-4 -right-4 bg-accent text-white rounded-full p-3 shadow-2xl animate-bounce">
+                    <div className="absolute -bottom-2 -right-2 bg-accent text-white rounded-full p-3 shadow-2xl animate-bounce">
                       <Sparkles className="w-5 h-5" />
                     </div>
                   )}
                 </div>
 
                 <div className="flex-1 space-y-6">
-                  <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight leading-tight">{genericSubstitute.name}</h3>
+                  <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight leading-tight">{genericSubstitute.name}</h3>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     <div className="space-y-0.5">
                       <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Composition</p>
                       <p className="text-[11px] font-black text-gray-700 uppercase">{genericSubstitute.saltComposition}</p>
@@ -238,23 +271,23 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">MRP</span>
                            <span className="text-[10px] text-gray-400 line-through">₹{genericSubstitute.mrp || genericSubstitute.price + 50}</span>
                         </div>
-                        <div className="text-[28px] font-black text-accent leading-none">₹{genericSubstitute.price}</div>
+                        <div className="text-[32px] font-black text-accent leading-none">₹{genericSubstitute.price}</div>
                         <p className="text-[9px] font-bold text-gray-400 uppercase mt-1">₹{getUnitPrice(genericSubstitute.price, genericSubstitute.packSize)} / Unit</p>
                       </div>
                     </div>
                     
                     {genericOutOfStock ? (
-                      <Button onClick={() => handleNotify(genericSubstitute)} className="w-full h-14 rounded-full text-[11px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 gap-2">
+                      <Button onClick={() => handleNotify(genericSubstitute)} className="w-full h-16 rounded-full text-[11px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 gap-2">
                         <BellRing className="w-4 h-4" /> Notify Stock
                       </Button>
                     ) : genericQty > 0 ? (
-                      <div className="flex items-center justify-between bg-accent rounded-full h-14 px-4 shadow-xl shadow-accent/20">
+                      <div className="flex items-center justify-between bg-accent rounded-full h-16 px-6 shadow-xl shadow-accent/20">
                         <button onClick={() => updateQuantity(genericSubstitute.id, -1)} className="p-2 text-white"><Minus className="w-5 h-5" /></button>
-                        <span className="text-lg font-black text-white">{genericQty}</span>
+                        <span className="text-xl font-black text-white">{genericQty}</span>
                         <button onClick={() => updateQuantity(genericSubstitute.id, 1)} className="p-2 text-white"><Plus className="w-5 h-5" /></button>
                       </div>
                     ) : (
-                      <Button onClick={() => addToCart(genericSubstitute, 1)} className="w-full h-14 rounded-full text-[11px] font-black uppercase bg-accent shadow-xl shadow-accent/30 hover:scale-[1.02] transition-transform text-white">Switch & Save</Button>
+                      <Button onClick={() => addToCart(genericSubstitute, 1)} className="w-full h-16 rounded-full text-[11px] font-black uppercase bg-accent shadow-xl shadow-accent/30 hover:scale-[1.02] transition-transform text-white">Switch & Save</Button>
                     )}
                   </div>
                 </div>
@@ -268,9 +301,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                    Our Recommendation
                 </div>
                 
-                <div className="relative aspect-square w-full max-w-[400px] mx-auto">
+                <div className="relative">
                    <div className="absolute inset-0 bg-accent/5 rounded-full blur-[100px] opacity-30" />
-                   <Image src={product.imageUrl} alt={product.name} fill className="object-contain relative z-10" />
+                   <ImageViewer src={product.imageUrl} alt={product.name} />
                 </div>
 
                 <div className="space-y-8">
@@ -289,7 +322,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                    <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-[32px] border">
                       <div className="space-y-1">
                         <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Unit Price</p>
-                        <p className="text-2xl font-black text-accent">₹{product.price}</p>
+                        <p className="text-3xl font-black text-accent">₹{product.price}</p>
                         <p className="text-[8px] font-bold text-gray-400 uppercase">₹{getUnitPrice(product.price, product.packSize)} / UNIT</p>
                       </div>
                       <div className="space-y-1">
@@ -321,6 +354,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         )}
 
+        {/* Clinical Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
           <Card className="rounded-[40px] p-8 border-none bg-white shadow-sm hover:shadow-xl transition-all">
             <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-6 flex items-center gap-3">
@@ -346,3 +380,4 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     </div>
   );
 }
+
