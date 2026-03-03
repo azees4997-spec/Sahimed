@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { use, useState } from 'react';
@@ -31,6 +30,7 @@ import { useFirestore, useDoc, useCollection, useMemoFirebase, useUser, addDocum
 import { doc, collection, query, where, limit, serverTimestamp } from 'firebase/firestore';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -88,8 +88,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   if (productLoading || !id) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-[#F8F8F8]">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 py-8 space-y-12">
+           <div className="flex justify-center"><Skeleton className="h-10 w-64 rounded-full shimmer" /></div>
+           <div className="grid grid-cols-2 gap-6">
+              <Skeleton className="h-[500px] rounded-[40px] shimmer" />
+              <Skeleton className="h-[500px] rounded-[40px] shimmer" />
+           </div>
+        </main>
       </div>
     );
   }
@@ -158,7 +165,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="grid grid-cols-2 gap-3 sm:gap-6 items-stretch">
               {/* Branded Card */}
               <Card className={cn(
-                "rounded-[32px] sm:rounded-[40px] border-none bg-white p-4 sm:p-10 shadow-sm flex flex-col h-full overflow-hidden relative",
+                "rounded-[32px] sm:rounded-[40px] border-none bg-white p-4 sm:p-10 shadow-sm flex flex-col h-full overflow-hidden relative tap-highlight",
                 brandedOutOfStock && "opacity-80"
               )}>
                 <div className="flex items-center justify-between mb-4 sm:mb-8">
@@ -187,7 +194,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     <div className="flex flex-col mb-4">
                       <div className="flex items-center gap-2">
                          <span className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">MRP</span>
-                         <span className="text-[9px] sm:text-[10px] text-red-600 line-through">₹{product.mrp || product.price + 100}</span>
+                         <span className="text-[9px] sm:text-[10px] text-red-600 line-through font-bold">₹{product.mrp || product.price + 100}</span>
                          <span className="text-[8px] sm:text-[9px] font-black text-accent uppercase">Save ₹{brandedSavings}</span>
                       </div>
                       <div className="text-xl sm:text-[32px] font-black text-primary leading-none">₹{product.price}</div>
@@ -195,17 +202,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     </div>
                     
                     {brandedOutOfStock ? (
-                      <Button onClick={() => handleNotify(product)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 gap-1 sm:gap-2">
+                      <Button onClick={() => handleNotify(product)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 gap-1 sm:gap-2 tap-highlight">
                         <BellRing className="w-3 h-3 sm:w-4 sm:h-4" /> Notify
                       </Button>
                     ) : brandedQty > 0 ? (
                       <div className="flex items-center justify-between bg-primary rounded-full h-10 sm:h-16 px-2 sm:px-6 shadow-xl shadow-primary/20">
-                        <button onClick={() => updateQuantity(product.id, -1)} className="p-1 sm:p-2 text-white"><Minus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
+                        <button onClick={() => updateQuantity(product.id, -1)} className="p-1 sm:p-2 text-white tap-highlight"><Minus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
                         <span className="text-xs sm:text-xl font-black text-white">{brandedQty}</span>
-                        <button onClick={() => updateQuantity(product.id, 1)} className="p-1 sm:p-2 text-white"><Plus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
+                        <button onClick={() => updateQuantity(product.id, 1)} className="p-1 sm:p-2 text-white tap-highlight"><Plus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
                       </div>
                     ) : (
-                      <Button onClick={() => addToCart(product, 1)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">Add To Cart</Button>
+                      <Button onClick={() => addToCart(product, 1)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform tap-highlight">Add To Cart</Button>
                     )}
                   </div>
                 </div>
@@ -213,7 +220,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               {/* Generic Card */}
               <Card className={cn(
-                "rounded-[32px] sm:rounded-[40px] border-[1.5px] sm:border-[2.5px] border-accent bg-white p-4 sm:p-10 shadow-2xl shadow-accent/10 transition-all flex flex-col h-full relative",
+                "rounded-[32px] sm:rounded-[40px] border-[1.5px] sm:border-[2.5px] border-accent bg-white p-4 sm:p-10 shadow-2xl shadow-accent/10 transition-all flex flex-col h-full relative tap-highlight",
                 genericOutOfStock && "opacity-80"
               )}>
                 <div className="flex items-center justify-between mb-4 sm:mb-8">
@@ -247,7 +254,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     <div className="flex flex-col mb-4">
                       <div className="flex items-center gap-2">
                          <span className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">MRP</span>
-                         <span className="text-[9px] sm:text-[10px] text-red-600 line-through">₹{genericSubstitute.mrp || genericSubstitute.price + 50}</span>
+                         <span className="text-[9px] sm:text-[10px] text-red-600 line-through font-bold">₹{genericSubstitute.mrp || genericSubstitute.price + 50}</span>
                          <div className="bg-accent text-white px-2 py-0.5 rounded-md text-[8px] font-black">
                            SAVE ₹{savingsAmount} ({percentageSaved}%)
                          </div>
@@ -257,17 +264,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     </div>
                     
                     {genericOutOfStock ? (
-                      <Button onClick={() => handleNotify(genericSubstitute)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 gap-1 sm:gap-2">
+                      <Button onClick={() => handleNotify(genericSubstitute)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 gap-1 sm:gap-2 tap-highlight">
                         <BellRing className="w-3 h-3 sm:w-4 sm:h-4" /> Notify
                       </Button>
                     ) : genericQty > 0 ? (
                       <div className="flex items-center justify-between bg-accent rounded-full h-10 sm:h-16 px-2 sm:px-6 shadow-xl shadow-accent/20">
-                        <button onClick={() => updateQuantity(genericSubstitute.id, -1)} className="p-1 sm:p-2 text-white"><Minus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
+                        <button onClick={() => updateQuantity(genericSubstitute.id, -1)} className="p-1 sm:p-2 text-white tap-highlight"><Minus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
                         <span className="text-xs sm:text-xl font-black text-white">{genericQty}</span>
-                        <button onClick={() => updateQuantity(genericSubstitute.id, 1)} className="p-1 sm:p-2 text-white"><Plus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
+                        <button onClick={() => updateQuantity(genericSubstitute.id, 1)} className="p-1 sm:p-2 text-white tap-highlight"><Plus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
                       </div>
                     ) : (
-                      <Button onClick={() => addToCart(genericSubstitute, 1)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-accent shadow-xl shadow-accent/30 hover:scale-[1.02] transition-transform text-white">Switch & Save</Button>
+                      <Button onClick={() => addToCart(genericSubstitute, 1)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-accent shadow-xl shadow-accent/30 hover:scale-[1.02] transition-transform text-white tap-highlight">Switch & Save</Button>
                     )}
                   </div>
                 </div>
@@ -302,7 +309,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                    <div className="grid grid-cols-2 gap-4 sm:gap-6 bg-gray-50 p-4 sm:p-6 rounded-[24px] sm:rounded-[32px] border">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-red-600 line-through">₹{product.mrp || product.price + 50}</span>
+                          <span className="text-[9px] text-red-600 line-through font-bold">₹{product.mrp || product.price + 50}</span>
                           <span className="text-[9px] font-black text-accent uppercase">Save ₹{brandedSavings}</span>
                         </div>
                         <p className="text-2xl sm:text-3xl font-black text-primary">₹{product.price}</p>
@@ -316,21 +323,21 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
                    <div className="flex gap-3 sm:gap-4">
                       {brandedOutOfStock ? (
-                         <Button onClick={() => handleNotify(product)} className="flex-1 h-12 sm:h-16 rounded-full text-xs sm:text-sm font-black uppercase tracking-widest bg-orange-600 shadow-xl shadow-orange-200">Notify Stock</Button>
+                         <Button onClick={() => handleNotify(product)} className="flex-1 h-12 sm:h-16 rounded-full text-xs sm:text-sm font-black uppercase tracking-widest bg-orange-600 shadow-xl shadow-orange-200 tap-highlight">Notify Stock</Button>
                       ) : (
                         <div className="flex-1 flex gap-2 sm:gap-3">
                            {brandedQty > 0 ? (
                               <div className="flex items-center justify-between bg-primary rounded-full h-12 sm:h-16 flex-1 px-4 sm:px-8 shadow-2xl shadow-primary/20">
-                                 <button onClick={() => updateQuantity(product.id, -1)} className="p-1 sm:p-2 text-white"><Minus className="w-4 h-4 sm:w-6 sm:h-6" /></button>
+                                 <button onClick={() => updateQuantity(product.id, -1)} className="p-1 sm:p-2 text-white tap-highlight"><Minus className="w-4 h-4 sm:w-6 sm:h-6" /></button>
                                  <span className="text-sm sm:text-xl font-black text-white">{brandedQty}</span>
-                                 <button onClick={() => updateQuantity(product.id, 1)} className="p-1 sm:p-2 text-white"><Plus className="w-4 h-4 sm:w-6 sm:h-6" /></button>
+                                 <button onClick={() => updateQuantity(product.id, 1)} className="p-1 sm:p-2 text-white tap-highlight"><Plus className="w-4 h-4 sm:w-6 sm:h-6" /></button>
                               </div>
                            ) : (
-                             <Button onClick={() => addToCart(product, 1)} className="flex-1 h-12 sm:h-16 rounded-full text-xs sm:text-sm font-black uppercase tracking-widest bg-primary shadow-2xl shadow-primary/30 text-white">Add To Cart</Button>
+                             <Button onClick={() => addToCart(product, 1)} className="flex-1 h-12 sm:h-16 rounded-full text-xs sm:text-sm font-black uppercase tracking-widest bg-primary shadow-2xl shadow-primary/30 text-white tap-highlight">Add To Cart</Button>
                            )}
                         </div>
                       )}
-                      <Button variant="outline" className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 p-0 flex items-center justify-center"><Info className="w-5 h-5 sm:w-6 sm:h-6" /></Button>
+                      <Button variant="outline" className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 p-0 flex items-center justify-center tap-highlight"><Info className="w-5 h-5 sm:w-6 sm:h-6" /></Button>
                    </div>
                 </div>
              </div>

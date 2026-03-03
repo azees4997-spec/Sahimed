@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from 'react';
@@ -17,6 +16,7 @@ import {
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const db = useFirestore();
@@ -130,7 +130,14 @@ export default function Home() {
               <Link href="/search" className="text-[10px] font-black text-primary uppercase tracking-widest">See All</Link>
             </div>
             {catsLoading ? (
-              <div className="flex justify-center p-4"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-6 sm:gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="flex flex-col items-center gap-2">
+                    <Skeleton className="w-full aspect-square rounded-[24px] shimmer" />
+                    <Skeleton className="h-2 w-12 rounded shimmer" />
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-6 sm:gap-6">
                 {categories?.map((cat: any) => (
@@ -158,7 +165,17 @@ export default function Home() {
               </Link>
             </div>
             {medsLoading ? (
-              <div className="flex justify-center p-10"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-5">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="aspect-square rounded-[24px] shimmer" />
+                    <div className="space-y-2">
+                       <Skeleton className="h-4 w-3/4 shimmer" />
+                       <Skeleton className="h-2 w-1/2 shimmer" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-5">
                 {displayMedicines?.map((p: any) => (

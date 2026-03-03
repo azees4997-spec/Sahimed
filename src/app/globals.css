@@ -54,10 +54,20 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  .shimmer {
+    @apply relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/60 before:to-transparent;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(15px); opacity: 0; }
+  from { transform: translateY(12px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
@@ -73,11 +83,11 @@
 }
 
 .animate-slide-up {
-  animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.25s ease-out;
 }
 
 .animate-spring {
@@ -90,5 +100,5 @@
 }
 
 .tap-highlight {
-  @apply active:scale-95 transition-transform duration-200;
+  @apply active:scale-95 transition-all duration-200;
 }

@@ -71,7 +71,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className={cn(
-      "group bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col active:scale-[0.98] h-full",
+      "group bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col active:scale-[0.98] tap-highlight h-full",
       isOutOfStock && "opacity-90"
     )}>
       <Link href={`/product/${product.id}`} className="relative aspect-square w-full overflow-hidden bg-white">
@@ -140,7 +140,7 @@ export default function ProductCard({ product }: { product: Product }) {
               <Button 
                 onClick={handleNotify}
                 variant="outline"
-                className="rounded-full h-11 w-full border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-600 font-black text-[10px] uppercase tracking-widest gap-2 shadow-sm active:scale-95 transition-transform"
+                className="rounded-full h-11 w-full border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-600 font-black text-[10px] uppercase tracking-widest gap-2 shadow-sm tap-highlight"
               >
                 <BellRing className="w-3.5 h-3.5" /> Notify Me
               </Button>
@@ -148,14 +148,14 @@ export default function ProductCard({ product }: { product: Product }) {
               <div className="flex items-center gap-1 rounded-full p-1 bg-primary shadow-lg shadow-primary/20 w-full overflow-hidden animate-in zoom-in duration-200">
                 <Button 
                   onClick={handleDecrement} 
-                  className="h-9 w-9 p-0 rounded-full bg-white/10 text-white hover:bg-white/20 border-none shadow-none shrink-0 active:scale-90 transition-transform"
+                  className="h-9 w-9 p-0 rounded-full bg-white/10 text-white hover:bg-white/20 border-none shadow-none shrink-0 tap-highlight"
                 >
                   <Minus className="w-4 h-4" />
                 </Button>
                 <span className="text-xs font-black text-white flex-1 text-center">{quantity}</span>
                 <Button 
                   onClick={handleIncrement} 
-                  className="h-9 w-9 p-0 rounded-full bg-white/10 text-white hover:bg-white/20 border-none shadow-none shrink-0 active:scale-90 transition-transform"
+                  className="h-9 w-9 p-0 rounded-full bg-white/10 text-white hover:bg-white/20 border-none shadow-none shrink-0 tap-highlight"
                 >
                   <Plus className="w-4 h-4" />
                 </Button>
@@ -163,7 +163,7 @@ export default function ProductCard({ product }: { product: Product }) {
             ) : (
               <Button 
                 onClick={handleAdd} 
-                className="rounded-full h-12 w-full bg-primary hover:bg-primary/90 text-white font-black text-[11px] uppercase tracking-[0.1em] gap-3 active:scale-95 transition-all shadow-md"
+                className="rounded-full h-12 w-full bg-primary hover:bg-primary/90 text-white font-black text-[11px] uppercase tracking-[0.1em] gap-3 tap-highlight shadow-md"
               >
                 ADD <ShoppingCart className="w-4 h-4" />
               </Button>
