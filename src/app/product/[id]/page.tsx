@@ -1,6 +1,7 @@
+
 "use client"
 
-import { use, useState, useEffect } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -15,8 +16,6 @@ import {
   Plus,
   Minus,
   BellRing,
-  ShieldCheck,
-  CheckCircle2,
   Sparkles,
   Zap
 } from 'lucide-react';
@@ -54,7 +53,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     );
   }, [db, product]);
   
-  const { data: genericAlternatives } = useCollection(genericQuery);
+  const { data: genericAlternatives, isLoading: genericLoading } = useCollection(genericQuery);
   const genericSubstitute = genericAlternatives?.[0];
 
   const brandedQty = getItemQuantity(product?.id || '');
@@ -75,7 +74,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     toast({ title: "Notification Set", description: "We will notify you when stock returns." });
   };
 
-  if (productLoading) {
+  if (productLoading || !id) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F8F8]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -83,12 +82,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     );
   }
 
-  if (!product) return notFound();
-
-  const getUnitCount = (packSize: string) => {
-    const match = packSize?.match(/\d+/);
-    return match ? parseInt(match[0]) : 1;
-  };
+  if (!product && !productLoading) return notFound();
 
   const percentageSaved = product && genericSubstitute 
     ? Math.round(((product.price - genericSubstitute.price) / product.price) * 100) 
@@ -102,7 +96,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 py-4">
-        {/* Breadcrumb */}
         <div className="flex items-center gap-1.5 mb-6 text-[8px] font-black text-gray-400 uppercase tracking-widest px-1">
           <Link href="/" className="hover:text-primary">Home</Link>
           <ChevronRight className="w-2 h-2" />
@@ -114,7 +107,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         {/* Branded Case: Comparison Mode */}
         {!product.isGeneric && genericSubstitute ? (
           <div className="space-y-4">
-            {/* Composition Header Bridge */}
             <div className="text-center py-4">
                <div className="inline-flex items-center gap-2 bg-primary/5 px-6 py-2 rounded-full border border-primary/10 shadow-sm">
                   <Activity className="w-3.5 h-3.5 text-primary" />
@@ -123,7 +115,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              {/* Branded Side (Your Item) */}
               <Card className={cn(
                 "rounded-[32px] border-none bg-white p-5 shadow-sm transition-all relative overflow-hidden flex flex-col",
                 brandedOutOfStock && "opacity-80"
@@ -163,7 +154,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 </div>
               </Card>
 
-              {/* Generic Side (Our Recommendation) */}
               <Card className={cn(
                 "rounded-[32px] border-2 border-primary bg-white p-5 shadow-2xl shadow-primary/10 transition-all relative overflow-hidden flex flex-col",
                 genericOutOfStock && "opacity-80"
@@ -210,11 +200,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
           </div>
         ) : (
-          /* Generic Case: Beautiful Hero View */
+          /* Generic Case: Hero View */
           <div className="space-y-8 animate-in fade-in duration-700">
              <div className="bg-white rounded-[50px] p-8 sm:p-12 shadow-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-12 items-center overflow-hidden relative">
                 <div className="absolute top-8 right-8 bg-primary/5 text-primary px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-primary/10">
-                   {product.isGeneric ? 'High Quality Generic' : 'Premium Branded SKU'}
+                   {product.isGeneric ? 'Our Recommendation' : 'Your Item'}
                 </div>
                 
                 <div className="relative aspect-square w-full max-w-[400px] mx-auto">
@@ -266,7 +256,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         )}
 
-        {/* Informational Sections */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           <Card className="rounded-[40px] p-8 border-none bg-white shadow-sm hover:shadow-xl transition-all">
             <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-6 flex items-center gap-3">

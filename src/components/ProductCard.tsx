@@ -1,3 +1,4 @@
+
 "use client"
 
 import Image from 'next/image';
@@ -77,7 +78,6 @@ export default function ProductCard({ product }: { product: Product }) {
           data-ai-hint="clinical product"
         />
         
-        {/* Personalized Labels */}
         <div className="absolute top-2 left-2 z-10 flex flex-col gap-1.5">
            {!product.isGeneric ? (
               <div className="bg-gray-200 text-gray-700 text-[7px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
