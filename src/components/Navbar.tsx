@@ -2,7 +2,7 @@
 "use client"
 
 import Link from 'next/link';
-import { ShoppingCart, User, MapPin, ChevronDown, LocateFixed, Loader2, Search as SearchIcon, X } from 'lucide-react';
+import { ShoppingCart, User, MapPin, ChevronDown, LocateFixed, Loader2, Search as SearchIcon, X, Info } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ export default function Navbar() {
   const [isLocating, setIsLocating] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const router = useRouter();
   const suggestionRef = useRef<HTMLDivElement>(null);
@@ -31,41 +32,47 @@ export default function Navbar() {
   // Fetch a larger set for client-side matching to ensure better "top match" accuracy
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'medicines'), limit(500));
+    return query(collection(db, 'medicines'), limit(1000));
   }, [db]);
   
-  const { data: allMedicines } = useCollection(medicinesQuery);
+  const { data: allMedicines, isLoading: medsLoading } = useCollection(medicinesQuery);
   const [suggestions, setSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
     if (search.trim().length > 0 && allMedicines) {
+      setIsProcessing(true);
       const searchLower = search.toLowerCase();
-      const filtered = allMedicines
-        .filter(p => 
-          (p.name?.toLowerCase().includes(searchLower)) || 
-          (p.saltComposition?.toLowerCase().includes(searchLower))
-        )
-        .sort((a, b) => {
-          // Prioritize results where the name STARTS with the search query
-          const aNameStart = a.name?.toLowerCase().startsWith(searchLower);
-          const bNameStart = b.name?.toLowerCase().startsWith(searchLower);
+      
+      // Artificial delay to show the "Beautiful Loader" as requested
+      const timer = setTimeout(() => {
+        const filtered = allMedicines
+          .filter(p => 
+            (p.name?.toLowerCase().includes(searchLower)) || 
+            (p.saltComposition?.toLowerCase().includes(searchLower))
+          )
+          .sort((a, b) => {
+            const aNameStart = a.name?.toLowerCase().startsWith(searchLower);
+            const bNameStart = b.name?.toLowerCase().startsWith(searchLower);
+            if (aNameStart && !bNameStart) return -1;
+            if (!aNameStart && bNameStart) return 1;
+
+            const aSaltStart = a.saltComposition?.toLowerCase().startsWith(searchLower);
+            const bSaltStart = b.saltComposition?.toLowerCase().startsWith(searchLower);
+            if (aSaltStart && !bSaltStart) return -1;
+            if (!aSaltStart && bSaltStart) return 1;
+
+            return 0;
+          })
+          .slice(0, 8); 
           
-          if (aNameStart && !bNameStart) return -1;
-          if (!aNameStart && bNameStart) return 1;
-          
-          // Secondary: Prioritize results where the salt composition starts with the query
-          const aSaltStart = a.saltComposition?.toLowerCase().startsWith(searchLower);
-          const bSaltStart = b.saltComposition?.toLowerCase().startsWith(searchLower);
-          
-          if (aSaltStart && !bSaltStart) return -1;
-          if (!aSaltStart && bSaltStart) return 1;
-          
-          return 0;
-        })
-        .slice(0, 6); // Show top 6 matches
-      setSuggestions(filtered);
+        setSuggestions(filtered);
+        setIsProcessing(false);
+      }, 300);
+
+      return () => clearTimeout(timer);
     } else {
       setSuggestions([]);
+      setIsProcessing(false);
     }
   }, [search, allMedicines]);
 
@@ -212,49 +219,66 @@ export default function Navbar() {
           </div>
 
           <div className={cn(
-            "pb-3 px-1 transition-all duration-300 overflow-hidden",
-            (isHomePage || isSearchExpanded) ? "max-h-24 opacity-100 mt-2" : "max-h-0 opacity-0 pointer-events-none"
+            "pb-3 px-1 transition-all duration-500 ease-in-out overflow-visible",
+            (isHomePage || isSearchExpanded) ? "max-h-[500px] opacity-100 mt-2" : "max-h-0 opacity-0 pointer-events-none"
           )} ref={suggestionRef}>
             <form onSubmit={handleSearch} className="relative group">
               <Input
                 type="text"
                 placeholder="Search products, brands or health needs..."
-                className="w-full pl-12 pr-4 py-6 rounded-3xl border-[2.5px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 transition-all bg-white h-12 sm:h-14 font-black text-xs sm:text-sm shadow-xl shadow-primary/10"
+                className="w-full pl-12 pr-12 py-6 rounded-3xl border-[2.5px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 transition-all bg-white h-12 sm:h-14 font-black text-xs sm:text-sm shadow-xl shadow-primary/10"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 autoFocus={isSearchExpanded}
               />
               <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-primary w-5 h-5 group-focus-within:scale-110 transition-transform" />
-              {suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-[32px] shadow-3xl border-none overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-300">
-                  {suggestions.map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => {
-                        setSearch('');
-                        setSuggestions([]);
-                        setIsSearchExpanded(false);
-                        router.push(`/product/${p.id}`);
-                      }}
-                      className="w-full p-5 flex items-center gap-4 hover:bg-primary/5 transition-all border-b last:border-none text-left active:scale-[0.98]"
-                    >
-                      <div className="w-12 h-12 bg-gray-50 rounded-xl flex-shrink-0 border border-gray-100 p-1">
-                        <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain" />
+              
+              {(isProcessing || medsLoading) && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                   <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                </div>
+              )}
+
+              {search.trim().length > 0 && !isProcessing && (
+                <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-[32px] shadow-3xl border-none overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-300">
+                  {suggestions.length > 0 ? (
+                    <>
+                      {suggestions.map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => {
+                            setSearch('');
+                            setSuggestions([]);
+                            setIsSearchExpanded(false);
+                            router.push(`/product/${p.id}`);
+                          }}
+                          className="w-full p-5 flex items-center gap-4 hover:bg-primary/5 transition-all border-b last:border-none text-left active:scale-[0.98]"
+                        >
+                          <div className="w-12 h-12 bg-gray-50 rounded-xl flex-shrink-0 border border-gray-100 p-1">
+                            <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-black text-[11px] uppercase text-gray-900 truncate tracking-tight">{p.name}</p>
+                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">{p.saltComposition}</p>
+                          </div>
+                          <div className="text-primary font-black text-[10px] bg-primary/5 px-3 py-1 rounded-full shrink-0">₹{p.price}</div>
+                        </button>
+                      ))}
+                      <div className="p-4 bg-gray-50 border-t">
+                         <button 
+                           onClick={handleSearch}
+                           className="w-full py-2 text-[9px] font-black text-primary uppercase tracking-[0.2em] hover:text-primary/70 transition-colors flex items-center justify-center gap-2"
+                         >
+                           <SearchIcon className="w-3 h-3" /> View All Results
+                         </button>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-black text-[11px] uppercase text-gray-900 truncate tracking-tight">{p.name}</p>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">{p.saltComposition}</p>
-                      </div>
-                    </button>
-                  ))}
-                  <div className="p-4 bg-gray-50 border-t">
-                     <button 
-                       onClick={handleSearch}
-                       className="w-full py-2 text-[9px] font-black text-primary uppercase tracking-[0.2em] hover:text-primary/70 transition-colors"
-                     >
-                       View All Results for "{search}"
-                     </button>
-                  </div>
+                    </>
+                  ) : (
+                    <div className="p-10 text-center space-y-2">
+                       <Info className="w-8 h-8 text-gray-200 mx-auto" />
+                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No exact matches found</p>
+                    </div>
+                  )}
                 </div>
               )}
             </form>
