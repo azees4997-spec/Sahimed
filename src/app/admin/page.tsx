@@ -69,7 +69,7 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import Link from 'next/link';
 import Image from 'next/image';
 
-type AdminTab = 'overview' | 'inventory' | 'molecules' | 'enquiries' | 'fulfillment' | 'customers' | 'stockAlerts';
+type AdminTab = 'overview' | 'itemMaster' | 'moleculeMaster' | 'enquiries' | 'fulfillment' | 'customers' | 'stockAlerts';
 
 export default function SupervisorConsole() {
   const { user, isUserLoading } = useUser();
@@ -245,8 +245,8 @@ export default function SupervisorConsole() {
                 { id: 'stockAlerts', label: 'Stock Alerts', icon: BellRing },
                 { id: 'fulfillment', label: 'Orders', icon: ShoppingBag },
                 { id: 'customers', label: 'Customers', icon: Users },
-                { id: 'inventory', label: 'Item Master', icon: Package },
-                { id: 'molecules', label: 'Molecule Master', icon: Dna },
+                { id: 'itemMaster', label: 'Item Master', icon: Package },
+                { id: 'moleculeMaster', label: 'Molecule Master', icon: Dna },
               ].map(tab => (
                 <Button 
                   key={tab.id} 
@@ -279,8 +279,8 @@ export default function SupervisorConsole() {
         {activeTab === 'stockAlerts' && <StockEnquiryTab db={db} isVerified={isVerified} />}
         {activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} />}
         {activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} />}
-        {activeTab === 'inventory' && <InventoryTab db={db} isVerified={isVerified} />}
-        {activeTab === 'molecules' && <MoleculeMasterTab db={db} isVerified={isVerified} />}
+        {activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} />}
+        {activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} />}
       </main>
     </div>
   );
@@ -305,18 +305,19 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
       <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase">Clinical Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-6">
         {[
           { label: 'Enquiries', icon: FileText, count: pres?.filter(p => p.status === 'Pending Review').length || 0, tab: 'enquiries' as AdminTab },
           { label: 'Stock Alerts', icon: BellRing, count: alerts?.length || 0, tab: 'stockAlerts' as AdminTab },
           { label: 'Active Orders', icon: ShoppingBag, count: orders?.filter(o => o.status !== 'Delivered').length || 0, tab: 'fulfillment' as AdminTab },
           { label: 'Customers', icon: Users, count: users?.length || 0, tab: 'customers' as AdminTab },
-          { label: 'Molecules', icon: Dna, count: mols?.length || 0, tab: 'molecules' as AdminTab },
+          { label: 'Item Master', icon: Package, count: meds?.length || 0, tab: 'itemMaster' as AdminTab },
+          { label: 'Molecules', icon: Dna, count: mols?.length || 0, tab: 'moleculeMaster' as AdminTab },
         ].map(card => (
-          <Card key={card.label} className="rounded-[32px] p-8 border-none shadow-sm hover:shadow-xl transition-all cursor-pointer bg-white group" onClick={() => setTab(card.tab)}>
-            <card.icon className="w-10 h-10 text-primary mb-6 group-hover:scale-110 transition-transform" />
-            <CardTitle className="text-sm font-black uppercase text-gray-400 tracking-widest mb-1">{card.label}</CardTitle>
-            <p className="text-4xl font-black text-primary">{card.count}</p>
+          <Card key={card.label} className="rounded-[32px] p-6 border-none shadow-sm hover:shadow-xl transition-all cursor-pointer bg-white group" onClick={() => setTab(card.tab)}>
+            <card.icon className="w-8 h-8 text-primary mb-4 group-hover:scale-110 transition-transform" />
+            <CardTitle className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">{card.label}</CardTitle>
+            <p className="text-3xl font-black text-primary">{card.count}</p>
           </Card>
         ))}
       </div>
@@ -421,7 +422,7 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
              <div className="aspect-[4/5] relative bg-gray-100 overflow-hidden">
                 <img src={enq.imageUrl} alt="Prescription" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                 <Badge className={`absolute top-4 right-4 text-white text-[8px] font-black uppercase border-none px-4 py-1.5 rounded-full shadow-lg ${
-                  enq.status === 'Pending Review' ? 'bg-orange-500' : enq.status === 'Completed' ? 'bg-green-600' : 'bg-blue-600'
+                  enq.status === 'Pending Review' ? 'bg-orange-50' : enq.status === 'Completed' ? 'bg-green-600' : 'bg-blue-600'
                 }`}>
                   {enq.status}
                 </Badge>
@@ -1033,7 +1034,7 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
   );
 }
 
-function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
   const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster')), [db]);
   const { data: medicines, isLoading } = useCollection(medsQuery);
@@ -1102,7 +1103,6 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
           });
           
           if (data.sku) {
-             // Create a deterministic ID from SKU or let Firebase generate
              addDocumentNonBlocking(collection(db, 'medicines'), {
                ...data,
                createdAt: serverTimestamp(),
