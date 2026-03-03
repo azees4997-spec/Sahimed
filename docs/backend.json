@@ -5,56 +5,67 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Represents a user registered in the HealthLink Pharmacy app, storing personal details and administrative flags.",
+      "description": "Represents a patient registered in the HealthLink Pharmacy app.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the UserProfile entity."
+          "description": "Unique identifier for the patient (Firebase UID)."
         },
         "email": {
           "type": "string",
-          "description": "The user's email address, used for communication and login.",
           "format": "email"
         },
         "phoneNumber": {
-          "type": "string",
-          "description": "The user's phone number, used for OTP-based login."
+          "type": "string"
         },
         "firstName": {
-          "type": "string",
-          "description": "The first name of the user."
+          "type": "string"
         },
         "lastName": {
-          "type": "string",
-          "description": "The last name of the user."
-        },
-        "isAdmin": {
-          "type": "boolean",
-          "description": "A flag indicating if the user has administrative privileges."
+          "type": "string"
         },
         "createdAt": {
           "type": "string",
-          "description": "Timestamp when the user profile was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the user profile was last updated.",
           "format": "date-time"
         }
       },
       "required": [
         "id",
         "phoneNumber",
-        "createdAt",
-        "updatedAt"
+        "createdAt"
+      ]
+    },
+    "AdminProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AdminProfile",
+      "type": "object",
+      "description": "Represents a clinical supervisor with administrative access.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the admin (Firebase UID)."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "pharmacist"]
+        },
+        "activatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "activatedAt"
       ]
     }
   },
   "auth": {
     "providers": [
       "phone",
-      "anonymous"
+      "anonymous",
+      "password"
     ]
   },
   "firestore": {
@@ -66,11 +77,27 @@
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores individual user profile data.",
+          "description": "Stores patient profile data.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique Firebase Authentication UID of the user."
+              "description": "Patient UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/adminProfiles/{userId}",
+        "definition": {
+          "entityName": "AdminProfile",
+          "schema": {
+            "$ref": "#/backend/entities/AdminProfile"
+          },
+          "description": "Stores clinical supervisor roles.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Admin UID."
             }
           ]
         }
@@ -79,47 +106,7 @@
         "path": "/medicines/{medicineId}",
         "definition": {
           "entityName": "Medicine",
-          "description": "Publicly accessible collection for all medicine products.",
-          "params": [
-            {
-              "name": "medicineId",
-              "description": "The unique identifier for the medicine product."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/userProfiles/{userId}/orders/{orderId}",
-        "definition": {
-          "entityName": "Order",
-          "description": "Stores completed orders placed by a user.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique Firebase Authentication UID of the user."
-            },
-            {
-              "name": "orderId",
-              "description": "The unique identifier for the order."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/userProfiles/{userId}/prescriptions/{prescriptionId}",
-        "definition": {
-          "entityName": "Prescription",
-          "description": "Stores user-uploaded prescriptions.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique Firebase Authentication UID of the user."
-            },
-            {
-              "name": "prescriptionId",
-              "description": "The unique identifier for the prescription."
-            }
-          ]
+          "description": "Public catalog of medicines."
         }
       }
     ]

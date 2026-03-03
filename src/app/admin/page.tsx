@@ -61,7 +61,7 @@ export default function SupervisorConsole() {
     if (!db || !user) return;
     setIsVerifying(true);
     try {
-      const snap = await getDoc(doc(db, 'roles_admin', user.uid));
+      const snap = await getDoc(doc(db, 'adminProfiles', user.uid));
       if (snap.exists()) {
         setTimeout(() => {
           setIsVerified(true);
@@ -103,12 +103,12 @@ export default function SupervisorConsole() {
 
   const bootstrapAdmin = () => {
     if (!db || !user) return;
-    setDocumentNonBlocking(doc(db, 'roles_admin', user.uid), {
-      uid: user.uid,
+    setDocumentNonBlocking(doc(db, 'adminProfiles', user.uid), {
+      id: user.uid,
       role: 'admin',
       activatedAt: new Date().toISOString()
     }, { merge: true });
-    toast({ title: 'Requesting Authority', description: 'Synchronizing... please wait 5 seconds.' });
+    toast({ title: 'Requesting Authority', description: 'Synchronizing clinical role... please wait 5 seconds.' });
     setTimeout(performVerification, 5000);
   };
 
@@ -243,20 +243,11 @@ function SeedDataButton({ db }: { db: any }) {
           category: 'Diabetes', 
           imageUrl: 'https://picsum.photos/seed/dia1/300/300', 
           availableQuantity: 100, 
-          description: 'Janumet is a combination of two anti-diabetic medicines: Sitagliptin and Metformin. It is used to lower high blood sugar levels in patients with Type 2 Diabetes.',
-          uses: ['Management of Type 2 Diabetes', 'Improving Glycemic control'],
-          sideEffects: ['Nausea', 'Vomiting', 'Stomach upset', 'Headache'],
-          howItWorks: 'Sitagliptin works by increasing insulin release from the pancreas and reducing hormones that raise blood sugar. Metformin decreases sugar production in the liver and improves body response to insulin.',
+          description: 'Janumet is a combination of two anti-diabetic medicines: Sitagliptin and Metformin.',
+          uses: ['Management of Type 2 Diabetes'],
+          sideEffects: ['Nausea', 'Vomiting'],
           packSize: 'Strip of 15 tablets',
-          strength: '50mg/500mg',
-          safetyAdvice: {
-            alcohol: "Unsafe. May cause lactic acidosis.",
-            pregnancy: "Consult doctor. Generally considered safe if prescribed.",
-            breastfeeding: "Consult doctor. Safe if clinical benefits outweigh risks.",
-            driving: "Safe. Does not affect alertness.",
-            kidney: "Caution required. Adjust dose if creatinine levels are high.",
-            liver: "Consult doctor. Not recommended in severe liver disease."
-          }
+          strength: '50mg/500mg'
         },
         { 
           name: 'Sitagliptin M 50/500', 
@@ -268,20 +259,11 @@ function SeedDataButton({ db }: { db: any }) {
           category: 'Diabetes', 
           imageUrl: 'https://picsum.photos/seed/dia2/300/300', 
           availableQuantity: 500, 
-          description: 'Bio-equivalent generic version of Sitagliptin + Metformin. Clinically identical to branded alternatives but more affordable.',
-          uses: ['Management of Type 2 Diabetes', 'Affordable glucose control'],
-          sideEffects: ['Nausea', 'Mild digestive upset'],
-          howItWorks: 'Same clinical pathway as Janumet. Sourced from WHO-GMP certified facilities.',
+          description: 'Bio-equivalent generic version of Sitagliptin + Metformin.',
+          uses: ['Management of Type 2 Diabetes'],
+          sideEffects: ['Nausea'],
           packSize: 'Strip of 15 tablets',
-          strength: '50mg/500mg',
-          safetyAdvice: {
-            alcohol: "Unsafe. Risk of metabolic complications.",
-            pregnancy: "Consult doctor.",
-            breastfeeding: "Consult doctor.",
-            driving: "Safe.",
-            kidney: "Dose adjustment needed.",
-            liver: "Consult doctor."
-          }
+          strength: '50mg/500mg'
         }
       ];
 

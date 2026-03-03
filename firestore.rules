@@ -13,8 +13,8 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // Existence-over-Content check for admin role
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      // Existence-over-Content check for admin role in the new adminProfiles collection
+      return isSignedIn() && exists(/databases/$(database)/documents/adminProfiles/$(request.auth.uid));
     }
 
     function isOwner(userId) {
@@ -55,11 +55,11 @@ service cloud.firestore {
       }
     }
 
-    match /roles_admin/{userId} {
+    match /adminProfiles/{userId} {
       // Allow self-read for verification; list for existing admins
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      // Bootstrap: Allow initial creation by any authenticated user
+      // Bootstrap: Allow initial creation by any authenticated user for clinical setup
       allow create: if isSignedIn();
       allow update, delete: if isAdmin();
     }
