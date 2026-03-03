@@ -61,17 +61,17 @@ service cloud.firestore {
     }
 
     match /moleculeMaster/{moleculeId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /medicines/{medicineId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /categories/{categoryId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 

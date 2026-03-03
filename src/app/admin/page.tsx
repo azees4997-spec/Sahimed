@@ -82,6 +82,7 @@ export default function SupervisorConsole() {
     try {
       const snap = await getDoc(doc(db, 'adminProfiles', user.uid));
       if (snap.exists()) {
+        // Explicit delay to ensure Firestore rules propagation
         setTimeout(() => {
           setIsVerified(true);
           setIsVerifying(false);
@@ -353,6 +354,7 @@ function SeedDataButton({ db }: { db: any }) {
 function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab) => void, isVerified: boolean }) {
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
   const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster')), [db]);
+  // Gated collection group queries to prevent permission denial
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
 
