@@ -79,15 +79,6 @@ export default function ProductCard({ product }: { product: Product }) {
         />
         
         <div className="absolute top-2 left-2 z-10 flex flex-col gap-1.5">
-           {!product.isGeneric ? (
-              <div className="bg-primary/10 text-primary text-[7px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1 backdrop-blur-sm">
-                 <UserIcon className="w-2 h-2" /> Your Item
-              </div>
-           ) : (
-              <div className="bg-accent/10 text-accent text-[7px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1 backdrop-blur-sm">
-                 <Sparkles className="w-2 h-2" /> Recommendation
-              </div>
-           )}
            {savingsPercent > 0 && !isOutOfStock && product.isGeneric && (
               <div className="bg-accent text-white text-[7px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-lg">
                 SAVE {savingsPercent}%

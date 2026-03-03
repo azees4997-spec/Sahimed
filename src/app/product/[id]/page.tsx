@@ -152,15 +152,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="text-center py-2">
                <div className="inline-flex items-center gap-2 bg-primary/5 px-6 py-2.5 rounded-full border border-primary/10 shadow-sm animate-in fade-in slide-in-from-top-4">
                   <Activity className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-[10px] font-black text-gray-900 uppercase tracking-tighter">Molecule Bridge: {product.saltComposition}</span>
+                  <span className="text-[10px] font-black text-gray-900 uppercase tracking-tighter">Composition: {product.saltComposition}</span>
                </div>
             </div>
 
-            {/* Side-by-Side Comparison Grid - FORCED grid-cols-2 even on mobile */}
+            {/* Side-by-Side Comparison Grid */}
             <div className="grid grid-cols-2 gap-3 sm:gap-6 items-stretch">
               {/* Branded Card */}
               <Card className={cn(
-                "rounded-[32px] sm:rounded-[40px] border-none bg-white p-4 sm:p-10 shadow-sm transition-all relative overflow-hidden flex flex-col group h-full",
+                "rounded-[32px] sm:rounded-[40px] border-none bg-white p-4 sm:p-10 shadow-sm transition-all relative overflow-hidden flex flex-col h-full",
                 brandedOutOfStock && "opacity-80"
               )}>
                 <div className="flex items-center justify-between mb-4 sm:mb-8">
@@ -218,17 +218,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               {/* Generic Card */}
               <Card className={cn(
-                "rounded-[32px] sm:rounded-[40px] border-[1.5px] sm:border-[2.5px] border-accent bg-white p-4 sm:p-10 shadow-2xl shadow-accent/10 transition-all relative overflow-hidden flex flex-col group h-full",
+                "rounded-[32px] sm:rounded-[40px] border-[1.5px] sm:border-[2.5px] border-accent bg-white p-4 sm:p-10 shadow-2xl shadow-accent/10 transition-all relative overflow-hidden flex flex-col h-full",
                 genericOutOfStock && "opacity-80"
               )}>
                 <div className="absolute top-0 right-0 bg-accent text-white px-2 py-1 sm:px-5 sm:py-2 rounded-bl-[12px] sm:rounded-bl-[20px] text-[6px] sm:text-[10px] font-black uppercase tracking-widest shadow-lg">SAVE {percentageSaved}%</div>
                 
                 <div className="flex items-center justify-between mb-4 sm:mb-8">
                   <div className="space-y-0.5">
-                    <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">MOLECULE LINK</p>
+                    <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">GENERIC SKU</p>
                     <p className="text-[8px] sm:text-[10px] font-black text-accent uppercase">BIO-EQUIVALENT</p>
                   </div>
-                  <Badge className="bg-accent/10 text-accent border-none text-[6px] sm:text-[8px] font-black uppercase px-2 py-0.5 sm:px-3 sm:py-1 rounded-full whitespace-nowrap">Recommended</Badge>
+                  <Badge className="bg-accent/10 text-accent border-none text-[6px] sm:text-[8px] font-black uppercase px-2 py-0.5 sm:px-3 sm:py-1 rounded-full whitespace-nowrap">Our Recommendation</Badge>
                 </div>
                 
                 <div className="mb-4 sm:mb-10 relative">
@@ -298,7 +298,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                    <div className="space-y-4">
                       <div className="flex items-center gap-2">
                          <div className="h-1 w-8 sm:h-1.5 sm:w-12 bg-accent rounded-full" />
-                         <span className="text-[8px] sm:text-[10px] font-black text-accent uppercase tracking-[0.3em]">Clinical Excellence</span>
+                         <span className="text-[8px] sm:text-[10px] font-black text-accent uppercase tracking-[0.3em]">Excellence Quality</span>
                       </div>
                       <h1 className="text-2xl sm:text-4xl font-black text-gray-900 uppercase tracking-tighter leading-none">{product.name}</h1>
                       <div className="space-y-1 sm:space-y-2">
@@ -342,14 +342,14 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         )}
 
-        {/* Clinical Info Cards */}
+        {/* Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-12">
           <Card className="rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 border-none bg-white shadow-sm hover:shadow-xl transition-all">
             <h3 className="text-[10px] sm:text-sm font-black text-gray-900 uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-               <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /> Therapeutic Uses
+               <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /> Common Uses
             </h3>
             <div className="flex flex-wrap gap-2">
-               {(product.uses || ["Clinical Management", "Pharmacist Verified"]).map((use: string, i: number) => (
+               {(product.uses || ["Quality Management", "Professional Verified"]).map((use: string, i: number) => (
                  <span key={i} className="bg-gray-50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl text-[8px] sm:text-[10px] font-bold text-gray-600 uppercase border border-dashed">{use}</span>
                ))}
             </div>
@@ -357,10 +357,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
           <Card className="rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 border-none bg-white shadow-sm hover:shadow-xl transition-all">
             <h3 className="text-[10px] sm:text-sm font-black text-gray-900 uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-               <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-accent" /> Pharmacist Notes
+               <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-accent" /> Expert Notes
             </h3>
             <p className="text-[9px] sm:text-[11px] font-bold text-gray-500 uppercase leading-relaxed tracking-widest">
-              This medication is quality-tested and sourced directly from clinical channels in Mumbai. Always follow the prescribed dosage.
+              This product is quality-tested and sourced directly from professional channels. Always follow the guidelines.
             </p>
           </Card>
         </div>
