@@ -1,4 +1,3 @@
-
 "use client"
 
 import { use, useState, useEffect } from 'react';
@@ -26,6 +25,7 @@ import Link from 'next/link';
 import { useFirestore, useDoc, useCollection, useMemoFirebase, useUser, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, query, where, limit, serverTimestamp } from 'firebase/firestore';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
