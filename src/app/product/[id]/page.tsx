@@ -156,67 +156,61 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                </div>
             </div>
 
-            {/* Side-by-Side Comparison Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            {/* Side-by-Side Comparison Grid - FORCED grid-cols-2 even on mobile */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 items-stretch">
               {/* Branded Card */}
               <Card className={cn(
-                "rounded-[40px] border-none bg-white p-6 sm:p-10 shadow-sm transition-all relative overflow-hidden flex flex-col group h-full",
+                "rounded-[32px] sm:rounded-[40px] border-none bg-white p-4 sm:p-10 shadow-sm transition-all relative overflow-hidden flex flex-col group h-full",
                 brandedOutOfStock && "opacity-80"
               )}>
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center justify-between mb-4 sm:mb-8">
                   <div className="space-y-0.5">
-                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">BRANDED SKU</p>
-                    <p className="text-[10px] font-black text-gray-400 uppercase">{product.name.split(' ')[0]}</p>
+                    <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">BRANDED SKU</p>
+                    <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase truncate max-w-[60px] sm:max-w-none">{product.name.split(' ')[0]}</p>
                   </div>
-                  <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase px-3 py-1 rounded-full">Your Item</Badge>
+                  <Badge className="bg-primary/10 text-primary border-none text-[6px] sm:text-[8px] font-black uppercase px-2 py-0.5 sm:px-3 sm:py-1 rounded-full whitespace-nowrap">Your Item</Badge>
                 </div>
                 
-                <div className="mb-10">
+                <div className="mb-4 sm:mb-10">
                   <ImageViewer src={product.imageUrl} alt={product.name} />
                 </div>
 
-                <div className="flex-1 space-y-6">
-                  <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight leading-tight">{product.name}</h3>
+                <div className="flex-1 space-y-4 sm:space-y-6">
+                  <h3 className="text-[11px] sm:text-xl font-black text-gray-900 uppercase tracking-tight leading-tight line-clamp-2">{product.name}</h3>
                   
-                  <div className="space-y-5">
+                  <div className="space-y-3 sm:space-y-5">
                     <div className="space-y-0.5">
-                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Composition</p>
-                      <p className="text-[11px] font-black text-gray-700 uppercase">{product.saltComposition}</p>
+                      <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">Packing</p>
+                      <p className="text-[9px] sm:text-[11px] font-black text-gray-700 uppercase truncate">{product.packSize}</p>
                     </div>
                     <div className="space-y-0.5">
-                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Packing</p>
-                      <p className="text-[11px] font-black text-gray-700 uppercase">{product.packSize}</p>
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Marketer</p>
-                      <p className="text-[11px] font-black text-gray-700 uppercase">{product.manufacturer}</p>
+                      <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">Marketer</p>
+                      <p className="text-[9px] sm:text-[11px] font-black text-gray-700 uppercase truncate">{product.manufacturer}</p>
                     </div>
                   </div>
                   
-                  <div className="pt-8 border-t border-gray-50 mt-auto">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                           <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">MRP</span>
-                           <span className="text-[10px] text-gray-400 line-through">₹{product.mrp || product.price + 100}</span>
-                        </div>
-                        <div className="text-[32px] font-black text-gray-900 leading-none">₹{product.price}</div>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase mt-1">₹{getUnitPrice(product.price, product.packSize)} / Unit</p>
+                  <div className="pt-4 sm:pt-8 border-t border-gray-50 mt-auto">
+                    <div className="flex flex-col mb-4">
+                      <div className="flex items-center gap-2">
+                         <span className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">MRP</span>
+                         <span className="text-[9px] sm:text-[10px] text-gray-400 line-through">₹{product.mrp || product.price + 100}</span>
                       </div>
+                      <div className="text-xl sm:text-[32px] font-black text-gray-900 leading-none">₹{product.price}</div>
+                      <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase mt-1">₹{getUnitPrice(product.price, product.packSize)} / Unit</p>
                     </div>
                     
                     {brandedOutOfStock ? (
-                      <Button onClick={() => handleNotify(product)} className="w-full h-16 rounded-full text-[11px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 gap-2">
-                        <BellRing className="w-4 h-4" /> Notify Stock
+                      <Button onClick={() => handleNotify(product)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 gap-1 sm:gap-2">
+                        <BellRing className="w-3 h-3 sm:w-4 sm:h-4" /> Notify
                       </Button>
                     ) : brandedQty > 0 ? (
-                      <div className="flex items-center justify-between bg-primary rounded-full h-16 px-6 shadow-xl shadow-primary/20">
-                        <button onClick={() => updateQuantity(product.id, -1)} className="p-2 text-white"><Minus className="w-5 h-5" /></button>
-                        <span className="text-xl font-black text-white">{brandedQty}</span>
-                        <button onClick={() => updateQuantity(product.id, 1)} className="p-2 text-white"><Plus className="w-5 h-5" /></button>
+                      <div className="flex items-center justify-between bg-primary rounded-full h-10 sm:h-16 px-2 sm:px-6 shadow-xl shadow-primary/20">
+                        <button onClick={() => updateQuantity(product.id, -1)} className="p-1 sm:p-2 text-white"><Minus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
+                        <span className="text-xs sm:text-xl font-black text-white">{brandedQty}</span>
+                        <button onClick={() => updateQuantity(product.id, 1)} className="p-1 sm:p-2 text-white"><Plus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
                       </div>
                     ) : (
-                      <Button onClick={() => addToCart(product, 1)} className="w-full h-16 rounded-full text-[11px] font-black uppercase bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">Add To Cart</Button>
+                      <Button onClick={() => addToCart(product, 1)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">Add To Cart</Button>
                     )}
                   </div>
                 </div>
@@ -224,70 +218,64 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               {/* Generic Card */}
               <Card className={cn(
-                "rounded-[40px] border-[2.5px] border-accent bg-white p-6 sm:p-10 shadow-2xl shadow-accent/10 transition-all relative overflow-hidden flex flex-col group h-full",
+                "rounded-[32px] sm:rounded-[40px] border-[1.5px] sm:border-[2.5px] border-accent bg-white p-4 sm:p-10 shadow-2xl shadow-accent/10 transition-all relative overflow-hidden flex flex-col group h-full",
                 genericOutOfStock && "opacity-80"
               )}>
-                <div className="absolute top-0 right-0 bg-accent text-white px-5 py-2 rounded-bl-[20px] text-[10px] font-black uppercase tracking-widest shadow-lg">SAVE {percentageSaved}%</div>
+                <div className="absolute top-0 right-0 bg-accent text-white px-2 py-1 sm:px-5 sm:py-2 rounded-bl-[12px] sm:rounded-bl-[20px] text-[6px] sm:text-[10px] font-black uppercase tracking-widest shadow-lg">SAVE {percentageSaved}%</div>
                 
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center justify-between mb-4 sm:mb-8">
                   <div className="space-y-0.5">
-                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">MOLECULE LINK</p>
-                    <p className="text-[10px] font-black text-accent uppercase">BIO-EQUIVALENT</p>
+                    <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">MOLECULE LINK</p>
+                    <p className="text-[8px] sm:text-[10px] font-black text-accent uppercase">BIO-EQUIVALENT</p>
                   </div>
-                  <Badge className="bg-accent/10 text-accent border-none text-[8px] font-black uppercase px-3 py-1 rounded-full">Our Recommendation</Badge>
+                  <Badge className="bg-accent/10 text-accent border-none text-[6px] sm:text-[8px] font-black uppercase px-2 py-0.5 sm:px-3 sm:py-1 rounded-full whitespace-nowrap">Recommended</Badge>
                 </div>
                 
-                <div className="mb-10 relative">
+                <div className="mb-4 sm:mb-10 relative">
                   <ImageViewer src={genericSubstitute.imageUrl} alt={genericSubstitute.name} />
                   {!genericOutOfStock && (
-                    <div className="absolute -bottom-2 -right-2 bg-accent text-white rounded-full p-3 shadow-2xl animate-bounce">
-                      <Sparkles className="w-5 h-5" />
+                    <div className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 bg-accent text-white rounded-full p-1.5 sm:p-3 shadow-2xl animate-bounce">
+                      <Sparkles className="w-3 h-3 sm:w-5 sm:h-5" />
                     </div>
                   )}
                 </div>
 
-                <div className="flex-1 space-y-6">
-                  <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight leading-tight">{genericSubstitute.name}</h3>
+                <div className="flex-1 space-y-4 sm:space-y-6">
+                  <h3 className="text-[11px] sm:text-xl font-black text-gray-900 uppercase tracking-tight leading-tight line-clamp-2">{genericSubstitute.name}</h3>
                   
-                  <div className="space-y-5">
+                  <div className="space-y-3 sm:space-y-5">
                     <div className="space-y-0.5">
-                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Composition</p>
-                      <p className="text-[11px] font-black text-gray-700 uppercase">{genericSubstitute.saltComposition}</p>
+                      <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">Packing</p>
+                      <p className="text-[9px] sm:text-[11px] font-black text-gray-700 uppercase truncate">{genericSubstitute.packSize}</p>
                     </div>
                     <div className="space-y-0.5">
-                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Packing</p>
-                      <p className="text-[11px] font-black text-gray-700 uppercase">{genericSubstitute.packSize}</p>
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Marketer</p>
-                      <p className="text-[11px] font-black text-gray-700 uppercase">{genericSubstitute.manufacturer}</p>
+                      <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">Marketer</p>
+                      <p className="text-[9px] sm:text-[11px] font-black text-gray-700 uppercase truncate">{genericSubstitute.manufacturer}</p>
                     </div>
                   </div>
 
-                  <div className="pt-8 border-t border-gray-50 mt-auto">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                           <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">MRP</span>
-                           <span className="text-[10px] text-gray-400 line-through">₹{genericSubstitute.mrp || genericSubstitute.price + 50}</span>
-                        </div>
-                        <div className="text-[32px] font-black text-accent leading-none">₹{genericSubstitute.price}</div>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase mt-1">₹{getUnitPrice(genericSubstitute.price, genericSubstitute.packSize)} / Unit</p>
+                  <div className="pt-4 sm:pt-8 border-t border-gray-50 mt-auto">
+                    <div className="flex flex-col mb-4">
+                      <div className="flex items-center gap-2">
+                         <span className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">MRP</span>
+                         <span className="text-[9px] sm:text-[10px] text-gray-400 line-through">₹{genericSubstitute.mrp || genericSubstitute.price + 50}</span>
                       </div>
+                      <div className="text-xl sm:text-[32px] font-black text-accent leading-none">₹{genericSubstitute.price}</div>
+                      <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase mt-1">₹{getUnitPrice(genericSubstitute.price, genericSubstitute.packSize)} / Unit</p>
                     </div>
                     
                     {genericOutOfStock ? (
-                      <Button onClick={() => handleNotify(genericSubstitute)} className="w-full h-16 rounded-full text-[11px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 gap-2">
-                        <BellRing className="w-4 h-4" /> Notify Stock
+                      <Button onClick={() => handleNotify(genericSubstitute)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 gap-1 sm:gap-2">
+                        <BellRing className="w-3 h-3 sm:w-4 sm:h-4" /> Notify
                       </Button>
                     ) : genericQty > 0 ? (
-                      <div className="flex items-center justify-between bg-accent rounded-full h-16 px-6 shadow-xl shadow-accent/20">
-                        <button onClick={() => updateQuantity(genericSubstitute.id, -1)} className="p-2 text-white"><Minus className="w-5 h-5" /></button>
-                        <span className="text-xl font-black text-white">{genericQty}</span>
-                        <button onClick={() => updateQuantity(genericSubstitute.id, 1)} className="p-2 text-white"><Plus className="w-5 h-5" /></button>
+                      <div className="flex items-center justify-between bg-accent rounded-full h-10 sm:h-16 px-2 sm:px-6 shadow-xl shadow-accent/20">
+                        <button onClick={() => updateQuantity(genericSubstitute.id, -1)} className="p-1 sm:p-2 text-white"><Minus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
+                        <span className="text-xs sm:text-xl font-black text-white">{genericQty}</span>
+                        <button onClick={() => updateQuantity(genericSubstitute.id, 1)} className="p-1 sm:p-2 text-white"><Plus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
                       </div>
                     ) : (
-                      <Button onClick={() => addToCart(genericSubstitute, 1)} className="w-full h-16 rounded-full text-[11px] font-black uppercase bg-accent shadow-xl shadow-accent/30 hover:scale-[1.02] transition-transform text-white">Switch & Save</Button>
+                      <Button onClick={() => addToCart(genericSubstitute, 1)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-accent shadow-xl shadow-accent/30 hover:scale-[1.02] transition-transform text-white">Switch & Save</Button>
                     )}
                   </div>
                 </div>
@@ -296,8 +284,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         ) : (
           <div className="space-y-8 animate-in fade-in duration-700">
-             <div className="bg-white rounded-[50px] p-8 sm:p-12 shadow-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-12 items-center overflow-hidden relative">
-                <div className="absolute top-8 right-8 bg-accent/5 text-accent px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-accent/10">
+             <div className="bg-white rounded-[32px] sm:rounded-[50px] p-6 sm:p-12 shadow-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-center overflow-hidden relative">
+                <div className="absolute top-4 right-4 sm:top-8 sm:right-8 bg-accent/5 text-accent px-3 py-1 sm:px-5 sm:py-2 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest border border-accent/10">
                    Our Recommendation
                 </div>
                 
@@ -306,48 +294,48 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                    <ImageViewer src={product.imageUrl} alt={product.name} />
                 </div>
 
-                <div className="space-y-8">
+                <div className="space-y-6 sm:space-y-8">
                    <div className="space-y-4">
                       <div className="flex items-center gap-2">
-                         <div className="h-1.5 w-12 bg-accent rounded-full" />
-                         <span className="text-[10px] font-black text-accent uppercase tracking-[0.3em]">Clinical Excellence</span>
+                         <div className="h-1 w-8 sm:h-1.5 sm:w-12 bg-accent rounded-full" />
+                         <span className="text-[8px] sm:text-[10px] font-black text-accent uppercase tracking-[0.3em]">Clinical Excellence</span>
                       </div>
-                      <h1 className="text-4xl font-black text-gray-900 uppercase tracking-tighter leading-none">{product.name}</h1>
-                      <div className="space-y-2">
-                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Composition</p>
-                        <p className="text-sm font-bold text-gray-500 uppercase tracking-widest leading-relaxed">{product.saltComposition}</p>
-                      </div>
-                   </div>
-
-                   <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-[32px] border">
-                      <div className="space-y-1">
-                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Unit Price</p>
-                        <p className="text-3xl font-black text-accent">₹{product.price}</p>
-                        <p className="text-[8px] font-bold text-gray-400 uppercase">₹{getUnitPrice(product.price, product.packSize)} / UNIT</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Marketer</p>
-                        <p className="text-xs font-bold text-gray-900 uppercase truncate">{product.manufacturer}</p>
+                      <h1 className="text-2xl sm:text-4xl font-black text-gray-900 uppercase tracking-tighter leading-none">{product.name}</h1>
+                      <div className="space-y-1 sm:space-y-2">
+                        <p className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">Composition</p>
+                        <p className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-widest leading-relaxed">{product.saltComposition}</p>
                       </div>
                    </div>
 
-                   <div className="flex gap-4">
+                   <div className="grid grid-cols-2 gap-4 sm:gap-6 bg-gray-50 p-4 sm:p-6 rounded-[24px] sm:rounded-[32px] border">
+                      <div className="space-y-0.5">
+                        <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">Unit Price</p>
+                        <p className="text-2xl sm:text-3xl font-black text-accent">₹{product.price}</p>
+                        <p className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase">₹{getUnitPrice(product.price, product.packSize)} / UNIT</p>
+                      </div>
+                      <div className="space-y-0.5">
+                        <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">Marketer</p>
+                        <p className="text-[10px] sm:text-xs font-bold text-gray-900 uppercase truncate">{product.manufacturer}</p>
+                      </div>
+                   </div>
+
+                   <div className="flex gap-3 sm:gap-4">
                       {brandedOutOfStock ? (
-                         <Button onClick={() => handleNotify(product)} className="flex-1 h-16 rounded-full text-sm font-black uppercase tracking-widest bg-orange-600 shadow-xl shadow-orange-200">Notify Stock</Button>
+                         <Button onClick={() => handleNotify(product)} className="flex-1 h-12 sm:h-16 rounded-full text-xs sm:text-sm font-black uppercase tracking-widest bg-orange-600 shadow-xl shadow-orange-200">Notify Stock</Button>
                       ) : (
-                        <div className="flex-1 flex gap-3">
+                        <div className="flex-1 flex gap-2 sm:gap-3">
                            {brandedQty > 0 ? (
-                              <div className="flex items-center justify-between bg-accent rounded-full h-16 flex-1 px-8 shadow-2xl shadow-accent/20">
-                                 <button onClick={() => updateQuantity(product.id, -1)} className="p-2 text-white"><Minus className="w-6 h-6" /></button>
-                                 <span className="text-xl font-black text-white">{brandedQty}</span>
-                                 <button onClick={() => updateQuantity(product.id, 1)} className="p-2 text-white"><Plus className="w-6 h-6" /></button>
+                              <div className="flex items-center justify-between bg-accent rounded-full h-12 sm:h-16 flex-1 px-4 sm:px-8 shadow-2xl shadow-accent/20">
+                                 <button onClick={() => updateQuantity(product.id, -1)} className="p-1 sm:p-2 text-white"><Minus className="w-4 h-4 sm:w-6 sm:h-6" /></button>
+                                 <span className="text-sm sm:text-xl font-black text-white">{brandedQty}</span>
+                                 <button onClick={() => updateQuantity(product.id, 1)} className="p-1 sm:p-2 text-white"><Plus className="w-4 h-4 sm:w-6 sm:h-6" /></button>
                               </div>
                            ) : (
-                             <Button onClick={() => addToCart(product, 1)} className="flex-1 h-16 rounded-full text-sm font-black uppercase tracking-widest bg-accent shadow-2xl shadow-accent/30 text-white">Add To Cart</Button>
+                             <Button onClick={() => addToCart(product, 1)} className="flex-1 h-12 sm:h-16 rounded-full text-xs sm:text-sm font-black uppercase tracking-widest bg-accent shadow-2xl shadow-accent/30 text-white">Add To Cart</Button>
                            )}
                         </div>
                       )}
-                      <Button variant="outline" className="w-16 h-16 rounded-full border-2"><Info className="w-6 h-6" /></Button>
+                      <Button variant="outline" className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 p-0 flex items-center justify-center"><Info className="w-5 h-5 sm:w-6 sm:h-6" /></Button>
                    </div>
                 </div>
              </div>
@@ -355,23 +343,23 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         )}
 
         {/* Clinical Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-          <Card className="rounded-[40px] p-8 border-none bg-white shadow-sm hover:shadow-xl transition-all">
-            <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-6 flex items-center gap-3">
-               <Activity className="w-5 h-5 text-primary" /> Therapeutic Uses
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-12">
+          <Card className="rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 border-none bg-white shadow-sm hover:shadow-xl transition-all">
+            <h3 className="text-[10px] sm:text-sm font-black text-gray-900 uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+               <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /> Therapeutic Uses
             </h3>
             <div className="flex flex-wrap gap-2">
                {(product.uses || ["Clinical Management", "Pharmacist Verified"]).map((use: string, i: number) => (
-                 <span key={i} className="bg-gray-50 px-4 py-2 rounded-2xl text-[10px] font-bold text-gray-600 uppercase border border-dashed">{use}</span>
+                 <span key={i} className="bg-gray-50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl text-[8px] sm:text-[10px] font-bold text-gray-600 uppercase border border-dashed">{use}</span>
                ))}
             </div>
           </Card>
 
-          <Card className="rounded-[40px] p-8 border-none bg-white shadow-sm hover:shadow-xl transition-all">
-            <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-6 flex items-center gap-3">
-               <ShieldCheck className="w-5 h-5 text-accent" /> Pharmacist Notes
+          <Card className="rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 border-none bg-white shadow-sm hover:shadow-xl transition-all">
+            <h3 className="text-[10px] sm:text-sm font-black text-gray-900 uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+               <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-accent" /> Pharmacist Notes
             </h3>
-            <p className="text-[11px] font-bold text-gray-500 uppercase leading-relaxed tracking-widest">
+            <p className="text-[9px] sm:text-[11px] font-bold text-gray-500 uppercase leading-relaxed tracking-widest">
               This medication is quality-tested and sourced directly from clinical channels in Mumbai. Always follow the prescribed dosage.
             </p>
           </Card>
@@ -380,4 +368,3 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     </div>
   );
 }
-
