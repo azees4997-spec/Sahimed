@@ -22,13 +22,6 @@ export interface Product {
   dosageForm?: string;
   uses?: string[];
   sideEffects?: string[];
-  safetyAdvice?: {
-    alcohol?: string;
-    pregnancy?: string;
-    driving?: string;
-    kidney?: string;
-    liver?: string;
-  };
 }
 
 interface CartItem extends Product {
@@ -52,7 +45,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
-  // Localized default to Mumbai, MH
+  // Defaulting to Mumbai, MH
   const [location, setLocation] = useState('Mumbai, MH');
 
   useEffect(() => {

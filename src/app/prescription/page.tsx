@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Camera, CheckCircle2, ArrowLeft, Home, ShoppingBag, Loader2, Send, ShieldCheck } from 'lucide-react';
+import { Camera, CheckCircle2, ArrowLeft, Home, Loader2, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
@@ -62,7 +62,7 @@ export default function PrescriptionPage() {
         patientName: patientName || 'Self',
         notes: notes,
         uploadDate: serverTimestamp(),
-        status: 'Pending Review', // Essential for collectionGroup filtering in admin panel
+        status: 'Pending Review', // Set explicitly for clinical auditing
         analysisSummary: 'Manual Prescription Enquiry',
         phoneNumber: user.phoneNumber || ''
       };
@@ -72,7 +72,7 @@ export default function PrescriptionPage() {
       
       setTimeout(() => {
         setIsSuccess(true);
-        toast({ title: "Enquiry Sent", description: "Pharmacist review in progress." });
+        toast({ title: "Enquiry Sent", description: "Pharmacist review in progress (Mumbai HQ)." });
       }, 800);
     } catch (err) {
       toast({ variant: "destructive", title: "Submission Failed" });
@@ -89,7 +89,7 @@ export default function PrescriptionPage() {
         </div>
         <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight mb-4">Submission Sent</h1>
         <p className="text-gray-500 font-medium max-w-xs mb-12 leading-relaxed uppercase text-[10px] tracking-widest">
-          A licensed pharmacist will review your clinical records and notify you within 30 minutes.
+          A licensed pharmacist in Mumbai will review your records and notify you shortly.
         </p>
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <Link href="/">

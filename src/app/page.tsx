@@ -4,12 +4,12 @@
 import * as React from 'react';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
-import { Activity, HeartPulse, Zap, Sparkles, Loader2, ShieldCheck, Camera, ChevronRight, Wind, ShieldPlus } from 'lucide-react';
+import { Activity, HeartPulse, Zap, Sparkles, Loader2, Camera, ChevronRight, Wind, ShieldPlus } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
-import { collection, query, limit, orderBy, where } from 'firebase/firestore';
+import { collection, query, limit, orderBy } from 'firebase/firestore';
 import {
   Carousel,
   CarouselContent,
@@ -150,7 +150,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center justify-between mb-8 px-1">
               <div className="space-y-1">
-                <h2 className="text-[13px] font-black text-gray-900 uppercase tracking-[0.25em]">Best Sellers</h2>
+                <h2 className="text-[13px] font-black text-gray-900 uppercase tracking-[0.25em]">Clinical Best Sellers</h2>
                 <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Verified quality medicines</p>
               </div>
               <Link href="/search" className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5 bg-primary/5 px-4 py-2 rounded-full hover:bg-primary/10 transition-colors">

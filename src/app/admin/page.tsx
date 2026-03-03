@@ -7,7 +7,6 @@ import {
   LogOut, 
   Loader2, 
   Package, 
-  Database, 
   ShoppingBag, 
   ShieldAlert,
   UserPlus,
@@ -15,7 +14,6 @@ import {
   FileText,
   Trash2,
   Search,
-  CheckCircle2,
   Plus,
   RefreshCw,
   Copy,
@@ -24,14 +22,9 @@ import {
   Home,
   X,
   Edit2,
-  Upload,
   Download,
-  Fingerprint,
-  Dna,
   Link as LinkIcon,
   Users,
-  BriefcaseMedical,
-  Phone,
   MessageSquare,
   Clock,
   ClipboardList,
@@ -64,7 +57,7 @@ import {
   deleteDocumentNonBlocking,
   addDocumentNonBlocking
 } from '@/firebase';
-import { doc, collection, query, orderBy, collectionGroup, getDoc, serverTimestamp, setDoc, where } from 'firebase/firestore';
+import { doc, collection, query, collectionGroup, getDoc, serverTimestamp } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -157,7 +150,7 @@ export default function SupervisorConsole() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F7F6] gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Syncing clinical authority...</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Syncing clinical authority (Mumbai HQ)...</p>
       </div>
     );
   }
@@ -294,8 +287,6 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster')), [db]);
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles')) : null, [db, isVerified]);
   const stockAlertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'stockEnquiries')) : null, [db, isVerified]);
-  
-  // Gated collection groups to prevent permission errors on dashboard load
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
 
@@ -376,7 +367,6 @@ function StockEnquiryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  // Collection group query without orderBy to avoid needing composite indexes instantly
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
@@ -427,7 +417,7 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
              <div className="aspect-[4/5] relative bg-gray-100 overflow-hidden">
                 <img src={enq.imageUrl} alt="Prescription" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                 <Badge className={`absolute top-4 right-4 text-white text-[8px] font-black uppercase border-none px-4 py-1.5 rounded-full shadow-lg ${
-                  enq.status === 'Pending Review' ? 'bg-orange-50' : enq.status === 'Completed' ? 'bg-green-600' : 'bg-blue-600'
+                  enq.status === 'Pending Review' ? 'bg-orange-500' : enq.status === 'Completed' ? 'bg-green-600' : 'bg-blue-600'
                 }`}>
                   {enq.status}
                 </Badge>
@@ -440,7 +430,7 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                   </div>
                   <div className="text-right">
                     <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Contact</p>
-                    <p className="text-[10px] font-bold text-gray-900 flex items-center gap-1 justify-end"><Phone className="w-2.5 h-2.5" /> {enq.phoneNumber || 'N/A'}</p>
+                    <p className="text-[10px] font-bold text-gray-900 flex items-center gap-1 justify-end"> {enq.phoneNumber || 'N/A'}</p>
                   </div>
                 </div>
 
@@ -730,13 +720,12 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
               <th className="px-8 py-6">Full Name</th>
               <th className="px-8 py-6">Mobile Number</th>
               <th className="px-8 py-6">Email Address</th>
-              <th className="px-8 py-6">Registration</th>
               <th className="px-8 py-6 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {isLoading ? (
-              <tr><td colSpan={6} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
+              <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
             ) : users?.map(u => (
               <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-8 py-6">
@@ -746,13 +735,10 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                   <span className="font-black text-gray-900 text-xs uppercase">{u.firstName} {u.lastName}</span>
                 </td>
                 <td className="px-8 py-6">
-                  <span className="text-[10px] font-bold text-gray-600 font-code">{u.phoneNumber}</span>
+                  <span className="text-[10px] font-bold text-gray-600">{u.phoneNumber}</span>
                 </td>
                 <td className="px-8 py-6">
                   <span className="text-[10px] font-bold text-gray-400">{u.email || 'N/A'}</span>
-                </td>
-                <td className="px-8 py-6">
-                   <span className="text-[10px] font-bold text-gray-400">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}</span>
                 </td>
                 <td className="px-8 py-6 text-right">
                    <Dialog open={selectedUser?.id === u.id} onOpenChange={(open) => !open && setSelectedUser(null)}>
