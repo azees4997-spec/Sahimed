@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from 'next/link';
@@ -27,20 +28,41 @@ export default function Navbar() {
   
   const db = useFirestore();
 
+  // Fetch a larger set for client-side matching to ensure better "top match" accuracy
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'medicines'), limit(100));
+    return query(collection(db, 'medicines'), limit(500));
   }, [db]);
   
   const { data: allMedicines } = useCollection(medicinesQuery);
   const [suggestions, setSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
-    if (search.trim().length > 1 && allMedicines) {
-      const filtered = allMedicines.filter(p => 
-        p.name.toLowerCase().includes(search.toLowerCase()) || 
-        p.saltComposition.toLowerCase().includes(search.toLowerCase())
-      ).slice(0, 5);
+    if (search.trim().length > 0 && allMedicines) {
+      const searchLower = search.toLowerCase();
+      const filtered = allMedicines
+        .filter(p => 
+          (p.name?.toLowerCase().includes(searchLower)) || 
+          (p.saltComposition?.toLowerCase().includes(searchLower))
+        )
+        .sort((a, b) => {
+          // Prioritize results where the name STARTS with the search query
+          const aNameStart = a.name?.toLowerCase().startsWith(searchLower);
+          const bNameStart = b.name?.toLowerCase().startsWith(searchLower);
+          
+          if (aNameStart && !bNameStart) return -1;
+          if (!aNameStart && bNameStart) return 1;
+          
+          // Secondary: Prioritize results where the salt composition starts with the query
+          const aSaltStart = a.saltComposition?.toLowerCase().startsWith(searchLower);
+          const bSaltStart = b.saltComposition?.toLowerCase().startsWith(searchLower);
+          
+          if (aSaltStart && !bSaltStart) return -1;
+          if (!aSaltStart && bSaltStart) return 1;
+          
+          return 0;
+        })
+        .slice(0, 6); // Show top 6 matches
       setSuggestions(filtered);
     } else {
       setSuggestions([]);
@@ -111,12 +133,12 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-[60] bg-white/80 backdrop-blur-md border-b safe-top pb-2 shadow-sm transition-all duration-300">
+      <nav className="sticky top-0 z-[100] bg-white/80 backdrop-blur-xl border-b safe-top pb-2 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 md:h-16">
             <div className="flex items-center gap-3">
               <Link href="/" className="flex items-center gap-2 active:scale-95 transition-transform">
-                <div className="bg-primary p-1.5 rounded-lg shadow-md">
+                <div className="bg-primary p-1.5 rounded-lg shadow-lg">
                   <div className="text-white font-black text-xs tracking-tighter">HL</div>
                 </div>
                 <span className="hidden sm:block font-black text-lg text-primary font-headline tracking-tight text-[18px]">HealthLink</span>
@@ -130,7 +152,7 @@ export default function Navbar() {
                     <ChevronDown className="w-2 h-2 shrink-0 opacity-40" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-64 p-4 rounded-3xl shadow-2xl border-none animate-in slide-in-from-top-4 duration-300">
+                <PopoverContent className="w-64 p-4 rounded-3xl shadow-3xl border-none animate-in slide-in-from-top-4 duration-500">
                   <div className="space-y-4">
                     <Button 
                       onClick={handleGeoLocation} 
@@ -196,7 +218,7 @@ export default function Navbar() {
             <form onSubmit={handleSearch} className="relative group">
               <Input
                 type="text"
-                placeholder="Search medicines, salts or health needs..."
+                placeholder="Search products, brands or health needs..."
                 className="w-full pl-12 pr-4 py-6 rounded-3xl border-[2.5px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 transition-all bg-white h-12 sm:h-14 font-black text-xs sm:text-sm shadow-xl shadow-primary/10"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -204,7 +226,7 @@ export default function Navbar() {
               />
               <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-primary w-5 h-5 group-focus-within:scale-110 transition-transform" />
               {suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-3xl shadow-2xl border-none overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-[32px] shadow-3xl border-none overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-300">
                   {suggestions.map((p) => (
                     <button
                       key={p.id}
@@ -214,17 +236,25 @@ export default function Navbar() {
                         setIsSearchExpanded(false);
                         router.push(`/product/${p.id}`);
                       }}
-                      className="w-full p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors border-b last:border-none text-left active:bg-primary/5"
+                      className="w-full p-5 flex items-center gap-4 hover:bg-primary/5 transition-all border-b last:border-none text-left active:scale-[0.98]"
                     >
-                      <div className="w-10 h-10 bg-gray-50 rounded-xl flex-shrink-0">
-                        <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain p-1" />
+                      <div className="w-12 h-12 bg-gray-50 rounded-xl flex-shrink-0 border border-gray-100 p-1">
+                        <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-black text-[10px] uppercase text-gray-900 truncate">{p.name}</p>
-                        <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest truncate">{p.saltComposition}</p>
+                        <p className="font-black text-[11px] uppercase text-gray-900 truncate tracking-tight">{p.name}</p>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">{p.saltComposition}</p>
                       </div>
                     </button>
                   ))}
+                  <div className="p-4 bg-gray-50 border-t">
+                     <button 
+                       onClick={handleSearch}
+                       className="w-full py-2 text-[9px] font-black text-primary uppercase tracking-[0.2em] hover:text-primary/70 transition-colors"
+                     >
+                       View All Results for "{search}"
+                     </button>
+                  </div>
                 </div>
               )}
             </form>
