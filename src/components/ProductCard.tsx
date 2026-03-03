@@ -80,12 +80,12 @@ export default function ProductCard({ product }: { product: Product }) {
         
         <div className="absolute top-2 left-2 z-10 flex flex-col gap-1.5">
            {!product.isGeneric ? (
-              <div className="bg-gray-200 text-gray-700 text-[7px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
+              <div className="bg-primary/10 text-primary text-[7px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1 backdrop-blur-sm">
                  <UserIcon className="w-2 h-2" /> Your Item
               </div>
            ) : (
-              <div className="bg-primary text-white text-[7px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
-                 <Sparkles className="w-2 h-2" /> Our Recommendation
+              <div className="bg-accent/10 text-accent text-[7px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1 backdrop-blur-sm">
+                 <Sparkles className="w-2 h-2" /> Recommendation
               </div>
            )}
            {savingsPercent > 0 && !isOutOfStock && product.isGeneric && (
@@ -102,29 +102,32 @@ export default function ProductCard({ product }: { product: Product }) {
         )}
       </Link>
       
-      <div className="p-3.5 flex flex-col flex-1 gap-2">
-        <div className="space-y-1">
-          <p className="text-[7px] text-gray-400 font-black uppercase tracking-[0.05em] truncate">{product.manufacturer}</p>
+      <div className="p-4 flex flex-col flex-1 gap-3">
+        <div className="space-y-1.5">
+          <p className="text-[7px] text-gray-400 font-black uppercase tracking-[0.1em] truncate">{product.manufacturer}</p>
           <Link href={`/product/${product.id}`}>
             <h3 className="font-black text-gray-900 line-clamp-2 min-h-[2.4em] text-[11px] leading-tight uppercase tracking-tight group-hover:text-primary transition-colors">
               {product.name}
             </h3>
           </Link>
-          <p className="text-[8px] text-gray-500 font-bold uppercase tracking-tight opacity-90 line-clamp-1 truncate">
-            {product.saltComposition}
-          </p>
+          <div className="flex flex-col gap-0.5">
+            <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Composition</p>
+            <p className="text-[8px] text-gray-600 font-bold uppercase tracking-tight opacity-90 line-clamp-1 truncate">
+              {product.saltComposition}
+            </p>
+          </div>
         </div>
         
-        <div className="mt-auto pt-2 border-t border-gray-50 flex flex-col gap-2">
+        <div className="mt-auto pt-3 border-t border-gray-50 flex flex-col gap-3">
           <div className="flex items-center justify-between">
              <div className="flex flex-col leading-none">
                 <div className="flex items-center gap-2">
-                  <span className="text-[14px] font-black text-gray-900 tracking-tighter">₹{product.price}</span>
+                  <span className={cn("text-[16px] font-black tracking-tighter", product.isGeneric ? "text-accent" : "text-gray-900")}>₹{product.price}</span>
                   {savingsPercent > 0 && (
                     <span className="text-[10px] text-gray-400 line-through font-bold">₹{Math.round(mrp)}</span>
                   )}
                 </div>
-                <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest mt-1.5">{product.packSize}</span>
+                <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest mt-2">{product.packSize}</span>
              </div>
           </div>
           
@@ -133,30 +136,33 @@ export default function ProductCard({ product }: { product: Product }) {
               <Button 
                 onClick={handleNotify}
                 variant="outline"
-                className="rounded-full h-9 w-full p-0 border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-600 font-black text-[9px] uppercase tracking-widest gap-1 shadow-sm"
+                className="rounded-full h-10 w-full p-0 border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-600 font-black text-[9px] uppercase tracking-widest gap-1 shadow-sm"
               >
                 <BellRing className="w-3 h-3" /> Notify
               </Button>
             ) : quantity > 0 ? (
-              <div className="flex items-center gap-1 bg-primary rounded-full p-0.5 shadow-lg shadow-primary/20 w-full overflow-hidden">
+              <div className={cn("flex items-center gap-1 rounded-full p-0.5 shadow-lg w-full overflow-hidden", product.isGeneric ? "bg-accent shadow-accent/20" : "bg-primary shadow-primary/20")}>
                 <Button 
                   onClick={handleDecrement} 
-                  className="h-8 w-8 p-0 rounded-full bg-white/20 text-white hover:bg-white/30 border-none shadow-none shrink-0"
+                  className="h-9 w-9 p-0 rounded-full bg-white/20 text-white hover:bg-white/30 border-none shadow-none shrink-0"
                 >
-                  <Minus className="w-3 h-3" />
+                  <Minus className="w-3.5 h-3.5" />
                 </Button>
-                <span className="text-[10px] font-black text-white flex-1 text-center">{quantity}</span>
+                <span className="text-[11px] font-black text-white flex-1 text-center">{quantity}</span>
                 <Button 
                   onClick={handleIncrement} 
-                  className="h-8 w-8 p-0 rounded-full bg-white/20 text-white hover:bg-white/30 border-none shadow-none shrink-0"
+                  className="h-9 w-9 p-0 rounded-full bg-white/20 text-white hover:bg-white/30 border-none shadow-none shrink-0"
                 >
-                  <Plus className="w-3 h-3" />
+                  <Plus className="w-3.5 h-3.5" />
                 </Button>
               </div>
             ) : (
               <Button 
                 onClick={handleAdd} 
-                className="rounded-full h-9 w-full p-0 shadow-md bg-primary hover:bg-primary/90 text-white border-none font-black text-[9px] uppercase tracking-widest gap-2 active:scale-95 transition-all"
+                className={cn(
+                  "rounded-full h-10 w-full p-0 shadow-md text-white border-none font-black text-[9px] uppercase tracking-widest gap-2 active:scale-95 transition-all",
+                  product.isGeneric ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90"
+                )}
               >
                 Add <ShoppingCart className="w-3.5 h-3.5" />
               </Button>
