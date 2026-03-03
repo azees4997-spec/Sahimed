@@ -19,7 +19,9 @@ import {
   Clock,
   LayoutGrid,
   Zap,
-  RefreshCw
+  RefreshCw,
+  Copy,
+  Check
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,6 +54,7 @@ export default function SupervisorConsole() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [isVerified, setIsVerified] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [copied, setCopied] = useState(false);
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,12 +67,11 @@ export default function SupervisorConsole() {
       const snap = await getDoc(doc(db, 'adminProfiles', user.uid));
       if (snap.exists()) {
         // Clinical safety delay to ensure Firestore rules are propagated
-        // This prevents "Missing or insufficient permissions" on initial role assignment
         setTimeout(() => {
           setIsVerified(true);
           setIsVerifying(false);
           toast({ title: "Identity Verified", description: "Clinical supervisor access active." });
-        }, 2000);
+        }, 1500);
       } else {
         setIsVerified(false);
         setIsVerifying(false);
@@ -105,6 +107,15 @@ export default function SupervisorConsole() {
     signOut(auth);
   };
 
+  const copyUid = () => {
+    if (user) {
+      navigator.clipboard.writeText(user.uid);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast({ title: "UID Copied", description: "Use this to create an Admin Profile in the console." });
+    }
+  };
+
   const bootstrapAdmin = () => {
     if (!db || !user) return;
     setDocumentNonBlocking(doc(db, 'adminProfiles', user.uid), {
@@ -124,7 +135,7 @@ export default function SupervisorConsole() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F7F6] gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Syncing security context...</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Syncing clinical authority...</p>
       </div>
     );
   }
@@ -135,7 +146,7 @@ export default function SupervisorConsole() {
         <Card className="max-w-md w-full rounded-[40px] shadow-2xl border-none overflow-hidden bg-white">
           <CardHeader className="text-center p-10 bg-primary text-white">
             <Lock className="w-10 h-10 mx-auto mb-4 opacity-50" />
-            <CardTitle className="text-2xl font-black uppercase tracking-tight">Supervisor Gateway</CardTitle>
+            <CardTitle className="text-2xl font-black uppercase tracking-tight text-white">Supervisor Gateway</CardTitle>
           </CardHeader>
           <CardContent className="p-8">
             <form onSubmit={handleLogin} className="space-y-4">
@@ -162,10 +173,21 @@ export default function SupervisorConsole() {
       <div className="min-h-screen flex items-center justify-center bg-[#F4F7F6] p-4">
         <Card className="max-w-md w-full rounded-[40px] shadow-2xl border-none p-10 text-center space-y-6 bg-white">
           <ShieldAlert className="w-12 h-12 text-orange-500 mx-auto" />
-          <div>
-            <h2 className="text-xl font-black uppercase mb-2">Restricted Area</h2>
-            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Logged in as {user.email}, but clinical supervisor role is not detected in the database.</p>
+          <div className="space-y-2">
+            <h2 className="text-xl font-black uppercase">Restricted Area</h2>
+            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Logged in as {user.email}, but clinical supervisor role is not detected.</p>
           </div>
+          
+          <div className="bg-gray-50 p-4 rounded-2xl space-y-2">
+            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Your Unique Identifier (UID)</p>
+            <div className="flex items-center gap-2 bg-white border p-3 rounded-xl">
+              <code className="text-[10px] font-black text-gray-600 truncate flex-1">{user.uid}</code>
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-primary" onClick={copyUid}>
+                {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+              </Button>
+            </div>
+          </div>
+
           <div className="space-y-3 pt-6 border-t">
             <Button onClick={bootstrapAdmin} className="w-full gap-2 rounded-full h-14 bg-orange-600 hover:bg-orange-700 uppercase font-black text-[10px] tracking-widest">
               <UserPlus className="w-4 h-4" /> Initialize Admin Role
