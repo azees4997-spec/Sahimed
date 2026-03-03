@@ -16,21 +16,17 @@ import {
   Trash2,
   Search,
   CheckCircle2,
-  Clock,
-  LayoutGrid,
-  Zap,
+  Plus,
   RefreshCw,
   Copy,
   Check,
-  Plus,
-  ArrowRight,
   ExternalLink,
   Home,
-  Camera,
-  Image as ImageIcon,
-  Upload,
   X,
-  Stethoscope
+  Edit2,
+  Upload,
+  Download,
+  FileSpreadsheet
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -391,34 +387,120 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   const { data: medicines, isLoading } = useCollection(medsQuery);
   const { toast } = useToast();
   const [search, setSearch] = useState('');
-  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingMedicine, setEditingMedicine] = useState<any>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const filtered = medicines?.filter(m => 
     m.name?.toLowerCase().includes(search.toLowerCase()) || 
     m.saltComposition?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleEdit = (med: any) => {
+    setEditingMedicine(med);
+    setIsFormOpen(true);
+  };
+
+  const handleAddNew = () => {
+    setEditingMedicine(null);
+    setIsFormOpen(true);
+  };
+
+  const downloadCSVTemplate = () => {
+    const headers = "name,manufacturer,saltComposition,dosageForm,price,mrp,availableQuantity,packSize,category,isGeneric,prescriptionRequired,imageUrl,description\n";
+    const sample = "Janumet 50/500,MSD,Sitagliptin+Metformin,Tablet,1250,1450,100,Strip of 15,Diabetes,false,true,https://picsum.photos/seed/1/300/300,Sample description\n";
+    const blob = new Blob([headers + sample], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'clinical_sku_template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split('\n');
+      const headers = lines[0].split(',');
+      let importedCount = 0;
+
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const values = lines[i].split(',');
+        const medData: any = {};
+        
+        headers.forEach((header, index) => {
+          const key = header.trim();
+          let value: any = values[index]?.trim();
+          
+          if (['price', 'mrp', 'availableQuantity'].includes(key)) value = Number(value) || 0;
+          if (['isGeneric', 'prescriptionRequired'].includes(key)) value = value?.toLowerCase() === 'true';
+          
+          medData[key] = value;
+        });
+
+        if (medData.name) {
+          await addDocumentNonBlocking(collection(db, 'medicines'), {
+            ...medData,
+            imageUrls: medData.imageUrl ? [medData.imageUrl] : [],
+            createdAt: serverTimestamp()
+          });
+          importedCount++;
+        }
+      }
+      toast({ title: "Bulk Import Complete", description: `Successfully imported ${importedCount} clinical SKUs.` });
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-2">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h2 className="text-2xl font-black uppercase text-gray-900">Inventory Control</h2>
-        <div className="flex items-center gap-4">
-          <div className="relative w-64">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
             <Input placeholder="Filter medicines..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-full border-none bg-white font-bold text-xs" />
           </div>
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+          
+          <Button variant="outline" onClick={downloadCSVTemplate} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2">
+            <Download className="w-3.5 h-3.5" /> Template
+          </Button>
+
+          <div className="relative">
+             <input type="file" accept=".csv" onChange={handleCSVUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+             <Button variant="outline" className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2">
+               <Upload className="w-3.5 h-3.5" /> Bulk Upload
+             </Button>
+          </div>
+
+          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
-              <Button className="rounded-full h-10 px-6 font-black text-[9px] uppercase tracking-widest gap-2 shadow-lg shadow-primary/20">
+              <Button onClick={handleAddNew} className="rounded-full h-10 px-6 font-black text-[9px] uppercase tracking-widest gap-2 shadow-lg shadow-primary/20">
                 <Plus className="w-3.5 h-3.5" /> Add SKU
               </Button>
             </DialogTrigger>
             <DialogContent className="rounded-[40px] max-w-2xl border-none">
               <DialogHeader>
-                <DialogTitle className="text-xl font-black uppercase tracking-tight">Add New Medicine</DialogTitle>
-                <CardDescription className="uppercase text-[8px] font-black tracking-widest">Register clinical product to catalog</CardDescription>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">
+                  {editingMedicine ? 'Edit Clinical SKU' : 'Add New Medicine'}
+                </DialogTitle>
+                <CardDescription className="uppercase text-[8px] font-black tracking-widest">
+                  {editingMedicine ? `Modifying ${editingMedicine.name}` : 'Register clinical product to catalog'}
+                </CardDescription>
               </DialogHeader>
-              <AddMedicineForm db={db} onSuccess={() => setIsAddOpen(false)} />
+              <MedicineForm 
+                db={db} 
+                initialData={editingMedicine} 
+                onSuccess={() => {
+                  setIsFormOpen(false);
+                  setEditingMedicine(null);
+                }} 
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -433,7 +515,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                 <th className="px-8 py-6">Salt Composition</th>
                 <th className="px-8 py-6 text-center">Unit Price</th>
                 <th className="px-8 py-6 text-center">Stock Level</th>
-                <th className="px-8 py-6 text-right">Delete</th>
+                <th className="px-8 py-6 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -458,12 +540,17 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                     </Badge>
                   </td>
                   <td className="px-8 py-6 text-right">
-                    <Button variant="ghost" size="icon" className="text-gray-300 hover:text-red-500 rounded-full" onClick={() => {
-                      deleteDocumentNonBlocking(doc(db, 'medicines', med.id));
-                      toast({ title: "SKU Deleted", description: "Product removed from catalog." });
-                    }}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button variant="ghost" size="icon" className="text-gray-300 hover:text-primary rounded-full" onClick={() => handleEdit(med)}>
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="text-gray-300 hover:text-red-500 rounded-full" onClick={() => {
+                        deleteDocumentNonBlocking(doc(db, 'medicines', med.id));
+                        toast({ title: "SKU Deleted", description: "Product removed from catalog." });
+                      }}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -475,21 +562,21 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   );
 }
 
-function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) {
+function MedicineForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
   const { toast } = useToast();
   const [form, setForm] = useState({
-    name: '',
-    manufacturer: '',
-    saltComposition: '',
-    dosageForm: 'Tablet',
-    price: '',
-    mrp: '',
-    availableQuantity: '',
-    packSize: '',
-    category: 'Diabetes',
-    isGeneric: false,
-    prescriptionRequired: false,
-    imageUrls: [] as string[]
+    name: initialData?.name || '',
+    manufacturer: initialData?.manufacturer || '',
+    saltComposition: initialData?.saltComposition || '',
+    dosageForm: initialData?.dosageForm || 'Tablet',
+    price: initialData?.price || '',
+    mrp: initialData?.mrp || '',
+    availableQuantity: initialData?.availableQuantity || '',
+    packSize: initialData?.packSize || '',
+    category: initialData?.category || 'Diabetes',
+    isGeneric: initialData?.isGeneric || false,
+    prescriptionRequired: initialData?.prescriptionRequired || false,
+    imageUrls: initialData?.imageUrls || (initialData?.imageUrl ? [initialData.imageUrl] : [])
   });
 
   const [uploading, setUploading] = useState(false);
@@ -530,15 +617,25 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
       return;
     }
 
-    addDocumentNonBlocking(collection(db, 'medicines'), {
+    const payload = {
       ...form,
-      imageUrl: form.imageUrls[0], // Primary image for compatibility
+      imageUrl: form.imageUrls[0],
       price: Number(form.price),
       mrp: Number(form.mrp),
       availableQuantity: Number(form.availableQuantity),
-      createdAt: serverTimestamp()
-    });
-    toast({ title: "SKU Added", description: `${form.name} is now live in catalog.` });
+      updatedAt: serverTimestamp()
+    };
+
+    if (initialData?.id) {
+      updateDocumentNonBlocking(doc(db, 'medicines', initialData.id), payload);
+      toast({ title: "SKU Updated", description: `${form.name} changes committed.` });
+    } else {
+      addDocumentNonBlocking(collection(db, 'medicines'), {
+        ...payload,
+        createdAt: serverTimestamp()
+      });
+      toast({ title: "SKU Added", description: `${form.name} is now live in catalog.` });
+    }
     onSuccess();
   };
 
@@ -547,7 +644,7 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
       <div className="col-span-2 space-y-3">
         <Label className="text-[9px] font-black uppercase">Product Images (Clinical Asset Library)</Label>
         <div className="grid grid-cols-4 gap-3">
-          {form.imageUrls.map((url, idx) => (
+          {form.imageUrls.map((url: string, idx: number) => (
             <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border bg-gray-50 group">
               <Image src={url} alt={`Preview ${idx}`} fill className="object-contain" />
               <button 
@@ -561,14 +658,14 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
           ))}
           <button 
             type="button"
-            onClick={() => document.getElementById('sku-multi-image')?.click()}
+            onClick={() => document.getElementById('sku-multi-image-form')?.click()}
             className="aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-gray-400 hover:text-primary hover:border-primary transition-all bg-gray-50"
           >
             {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
             <span className="text-[8px] font-black uppercase mt-1">Upload Asset</span>
           </button>
         </div>
-        <input id="sku-multi-image" type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+        <input id="sku-multi-image-form" type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
       </div>
 
       <div className="space-y-2">
@@ -599,7 +696,7 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
         <Input value={form.packSize} onChange={e => setForm({...form, packSize: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
       </div>
       <div className="space-y-2">
-        <Label className="text-[9px] font-black uppercase">Initial Stock</Label>
+        <Label className="text-[9px] font-black uppercase">Stock Count</Label>
         <Input type="number" value={form.availableQuantity} onChange={e => setForm({...form, availableQuantity: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
       </div>
       <div className="space-y-2">
@@ -615,28 +712,28 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
         <div className="flex items-center space-x-2 p-3 bg-primary/5 rounded-2xl border border-primary/10">
           <input 
             type="checkbox" 
-            id="is-gen" 
+            id="is-gen-form" 
             checked={form.isGeneric} 
             onChange={e => setForm({...form, isGeneric: e.target.checked})} 
             className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
           />
-          <Label htmlFor="is-gen" className="text-[9px] font-black uppercase cursor-pointer">Generic Alternative</Label>
+          <Label htmlFor="is-gen-form" className="text-[9px] font-black uppercase cursor-pointer">Generic Alternative</Label>
         </div>
         <div className="flex items-center space-x-2 p-3 bg-orange-50 rounded-2xl border border-orange-100">
           <input 
             type="checkbox" 
-            id="rx-req" 
+            id="rx-req-form" 
             checked={form.prescriptionRequired} 
             onChange={e => setForm({...form, prescriptionRequired: e.target.checked})} 
             className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
           />
-          <Label htmlFor="rx-req" className="text-[9px] font-black uppercase cursor-pointer">RX Required</Label>
+          <Label htmlFor="rx-req-form" className="text-[9px] font-black uppercase cursor-pointer">RX Required</Label>
         </div>
       </div>
 
       <div className="col-span-2 flex items-center gap-3 pt-6 border-t mt-4">
         <Button type="submit" disabled={uploading} className="flex-1 rounded-full h-14 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">
-          {uploading ? <Loader2 className="animate-spin" /> : "Commit SKU to Catalog"}
+          {uploading ? <Loader2 className="animate-spin" /> : (initialData ? "Update Clinical SKU" : "Commit SKU to Catalog")}
         </Button>
         <Button type="button" variant="ghost" onClick={onSuccess} className="rounded-full h-14 font-black uppercase text-[10px] tracking-widest text-gray-400">Cancel</Button>
       </div>
