@@ -214,6 +214,9 @@ export default function SupervisorConsole() {
             <Button onClick={bootstrapAdmin} className="w-full gap-2 rounded-full h-14 bg-orange-600 hover:bg-orange-700 uppercase font-black text-[10px] tracking-widest">
               <UserPlus className="w-4 h-4" /> Initialize Admin Role
             </Button>
+            <Button onClick={performVerification} variant="outline" className="w-full h-14 rounded-full font-black uppercase text-[10px] border-2">
+               Refresh Authority
+            </Button>
             <Button onClick={handleLogout} variant="ghost" className="w-full text-gray-400 font-bold uppercase text-[9px] tracking-widest">Sign Out</Button>
           </div>
         </Card>
@@ -289,8 +292,8 @@ export default function SupervisorConsole() {
 function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab) => void, isVerified: boolean }) {
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
   const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster')), [db]);
-  const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles')), [db]);
-  const stockAlertsQuery = useMemoFirebase(() => query(collection(db, 'stockEnquiries')), [db]);
+  const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles')) : null, [db, isVerified]);
+  const stockAlertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'stockEnquiries')) : null, [db, isVerified]);
   
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
@@ -326,7 +329,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
 }
 
 function StockEnquiryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const alertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'stockEnquiries'), orderBy('timestamp', 'desc')) : null, [db, isVerified]);
+  const alertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'stockEnquiries')) : null, [db, isVerified]);
   const { data: alerts, isLoading } = useCollection(alertsQuery);
 
   return (
@@ -710,7 +713,7 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles')), [db]);
+  const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles')) : null, [db, isVerified]);
   const { data: users, isLoading } = useCollection(usersQuery);
   const [selectedUser, setSelectedUser] = useState<any>(null);
 
@@ -1148,7 +1151,7 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                 <Plus className="w-3.5 h-3.5" /> Add SKU
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[40px] max-w-2xl border-none">
+            <DialogContent className="rounded-[40px] max-2xl border-none">
               <DialogHeader>
                 <DialogTitle className="text-xl font-black uppercase tracking-tight">
                   {editingMedicine ? 'Edit Item SKU' : 'Add New Medicine'}

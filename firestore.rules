@@ -23,11 +23,13 @@ service cloud.firestore {
     // --- COLLECTION GROUP RULES ---
     // Specifically gated for verified admins to perform clinical auditing
     match /{path=**}/orders/{orderId} {
-      allow read, list, write: if isAdmin();
+      allow read, list: if isAdmin();
+      allow write: if isAdmin();
     }
     
     match /{path=**}/prescriptions/{prescriptionId} {
-      allow read, list, write: if isAdmin();
+      allow read, list: if isAdmin();
+      allow write: if isAdmin();
     }
 
     // --- TOP-LEVEL COLLECTIONS ---
