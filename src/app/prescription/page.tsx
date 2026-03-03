@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from 'react';
@@ -14,7 +15,10 @@ import {
   Home, 
   Loader2, 
   RotateCcw,
-  ClipboardCheck
+  ClipboardCheck,
+  ShieldCheck,
+  User,
+  FileText
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
@@ -162,46 +166,52 @@ export default function PrescriptionPage() {
 
           <input id="file-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
 
-          {image && (
-            <div className="space-y-6 animate-in slide-in-from-bottom-6 duration-500">
-              <div className="bg-white p-8 rounded-[40px] shadow-sm border space-y-8">
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Ordering For (Patient Name)</Label>
-                  <Input 
-                    placeholder="e.g. Self or Family Member Name" 
-                    value={patientName} 
-                    onChange={e => setPatientName(e.target.value)} 
-                    className="rounded-2xl h-14 bg-gray-50 border-none font-bold text-sm focus-visible:ring-primary shadow-inner"
-                  />
+          {/* Form Fields - Patient Info & Notes */}
+          <div className="space-y-6 animate-in slide-in-from-bottom-6 duration-500">
+            <div className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 space-y-8">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 ml-1">
+                  <User className="w-3.5 h-3.5 text-primary" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ordering For (Patient Name)</Label>
                 </div>
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Notes for Supervisor</Label>
-                  <Textarea 
-                    placeholder="Any specific instructions or chronic history..." 
-                    value={notes} 
-                    onChange={e => setNotes(e.target.value)}
-                    className="rounded-2xl bg-gray-50 border-none font-bold min-h-[120px] text-sm focus-visible:ring-primary shadow-inner p-5"
-                  />
-                </div>
+                <Input 
+                  placeholder="e.g. Self or Family Member Name" 
+                  value={patientName} 
+                  onChange={e => setPatientName(e.target.value)} 
+                  className="rounded-2xl h-14 bg-gray-50 border-none font-bold text-sm focus-visible:ring-primary shadow-inner px-6"
+                />
+              </div>
 
-                <div className="pt-4 flex flex-col gap-4">
-                  <Button 
-                    onClick={handleSubmitEnquiry} 
-                    disabled={submitting}
-                    className="w-full h-20 rounded-full font-black uppercase tracking-widest shadow-2xl shadow-primary/30 text-lg gap-4 active:scale-95 transition-all"
-                  >
-                    {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <ClipboardCheck className="w-6 h-6" />}
-                    {user ? "Submit for Clinical Review" : "Login to Submit"}
-                  </Button>
-                  
-                  <div className="flex items-center justify-center gap-2">
-                     <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                     <p className="text-[9px] text-gray-400 font-black uppercase tracking-[0.2em]">Pharmacist Verified Portal</p>
-                  </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 ml-1">
+                  <FileText className="w-3.5 h-3.5 text-primary" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Notes for Clinical Supervisor</Label>
+                </div>
+                <Textarea 
+                  placeholder="Mention current symptoms or specific requirements..." 
+                  value={notes} 
+                  onChange={e => setNotes(e.target.value)}
+                  className="rounded-2xl bg-gray-50 border-none font-bold min-h-[140px] text-sm focus-visible:ring-primary shadow-inner p-6 resize-none"
+                />
+              </div>
+
+              <div className="pt-4 flex flex-col gap-4">
+                <Button 
+                  onClick={handleSubmitEnquiry} 
+                  disabled={submitting || !image}
+                  className="w-full h-20 rounded-full font-black uppercase tracking-widest shadow-2xl shadow-primary/30 text-lg gap-4 active:scale-95 transition-all"
+                >
+                  {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <ClipboardCheck className="w-6 h-6" />}
+                  {user ? "Submit for Clinical Review" : "Login to Submit"}
+                </Button>
+                
+                <div className="flex items-center justify-center gap-2">
+                   <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
+                   <p className="text-[9px] text-gray-400 font-black uppercase tracking-[0.2em]">Pharmacist Verified Portal</p>
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </main>
     </div>

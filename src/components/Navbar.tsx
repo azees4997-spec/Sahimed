@@ -2,21 +2,27 @@
 "use client"
 
 import Link from 'next/link';
-import { ShoppingCart, User, MapPin, ChevronDown, LocateFixed, Loader2, Search as SearchIcon } from 'lucide-react';
+import { ShoppingCart, User, MapPin, ChevronDown, LocateFixed, Loader2, Search as SearchIcon, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, limit } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 export default function Navbar() {
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
+  
   const { totalItems, location, setLocation } = useCart();
   const [search, setSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  
   const router = useRouter();
   const suggestionRef = useRef<HTMLDivElement>(null);
   
@@ -46,16 +52,18 @@ export default function Navbar() {
     const handleClickOutside = (event: MouseEvent) => {
       if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node)) {
         setSuggestions([]);
+        if (!isHomePage) setIsSearchExpanded(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isHomePage]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (search.trim()) {
       setSuggestions([]);
+      setIsSearchExpanded(false);
       router.push(`/search?q=${encodeURIComponent(search)}`);
     }
   };
@@ -104,7 +112,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-white border-b safe-top pb-2 shadow-sm">
+      <nav className="sticky top-0 z-[60] bg-white border-b safe-top pb-2 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 md:h-16">
             <div className="flex items-center gap-3">
@@ -112,7 +120,7 @@ export default function Navbar() {
                 <div className="bg-primary p-1.5 rounded-lg shadow-md">
                   <div className="text-white font-black text-xs tracking-tighter">HL</div>
                 </div>
-                <span className="hidden sm:block font-black text-lg text-primary font-headline tracking-tight text-nowrap text-[18px]">HealthLink</span>
+                <span className="hidden sm:block font-black text-lg text-primary font-headline tracking-tight text-[18px]">HealthLink</span>
               </Link>
 
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -156,6 +164,19 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Dynamic Search Toggle for non-home pages */}
+              {!isHomePage && (
+                <button 
+                  onClick={() => setIsSearchExpanded(!isSearchExpanded)}
+                  className={cn(
+                    "p-2 hover:bg-gray-50 rounded-full active:scale-90 transition-all",
+                    isSearchExpanded ? "text-primary bg-primary/5" : "text-gray-700"
+                  )}
+                >
+                  {isSearchExpanded ? <X className="w-5 h-5" /> : <SearchIcon className="w-5 h-5" />}
+                </button>
+              )}
+              
               <Link href="/cart" className="relative p-2 hover:bg-gray-50 rounded-full active:scale-90 transition-transform">
                 <ShoppingCart className="w-5 h-5 text-gray-700" />
                 {totalItems > 0 && (
@@ -170,14 +191,19 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="pb-3 px-1" ref={suggestionRef}>
+          {/* Special Search Bar - Visible on Home or when Expanded */}
+          <div className={cn(
+            "pb-3 px-1 transition-all duration-300 overflow-hidden",
+            (isHomePage || isSearchExpanded) ? "max-h-24 opacity-100 mt-2" : "max-h-0 opacity-0 pointer-events-none"
+          )} ref={suggestionRef}>
             <form onSubmit={handleSearch} className="relative group">
               <Input
                 type="text"
                 placeholder="Search medicines, salts or health needs..."
-                className="w-full pl-12 pr-4 py-6 rounded-3xl border-[2.5px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 transition-all bg-white h-12 sm:h-14 font-black text-xs sm:text-sm shadow-xl shadow-primary/5"
+                className="w-full pl-12 pr-4 py-6 rounded-3xl border-[2.5px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 transition-all bg-white h-12 sm:h-14 font-black text-xs sm:text-sm shadow-xl shadow-primary/10"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                autoFocus={isSearchExpanded}
               />
               <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-primary w-5 h-5 group-focus-within:scale-110 transition-transform" />
               {suggestions.length > 0 && (
@@ -188,6 +214,7 @@ export default function Navbar() {
                       onClick={() => {
                         setSearch('');
                         setSuggestions([]);
+                        setIsSearchExpanded(false);
                         router.push(`/product/${p.id}`);
                       }}
                       className="w-full p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors border-b last:border-none text-left"
