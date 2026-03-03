@@ -318,7 +318,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
 }
 
 function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, [db, isVerified]);
+  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
   const { data: medicines } = useCollection(medsQuery);
@@ -587,7 +587,7 @@ function DigitizationWorkflow({ db, enquiry, medicines, onSuccess }: { db: any, 
 }
 
 function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, [db, isVerified]);
+  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
   const { toast } = useToast();
 
@@ -656,8 +656,9 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles'), orderBy('createdAt', 'desc')), [db]);
+  const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles')), [db]);
   const { data: users, isLoading } = useCollection(usersQuery);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-2">
@@ -671,11 +672,12 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
               <th className="px-8 py-6">Mobile Number</th>
               <th className="px-8 py-6">Email Address</th>
               <th className="px-8 py-6">Registration</th>
+              <th className="px-8 py-6 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {isLoading ? (
-              <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
+              <tr><td colSpan={6} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
             ) : users?.map(u => (
               <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-8 py-6">
@@ -693,6 +695,22 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                 <td className="px-8 py-6">
                    <span className="text-[10px] font-bold text-gray-400">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}</span>
                 </td>
+                <td className="px-8 py-6 text-right">
+                   <Dialog open={selectedUser?.id === u.id} onOpenChange={(open) => !open && setSelectedUser(null)}>
+                      <DialogTrigger asChild>
+                        <Button onClick={() => setSelectedUser(u)} variant="outline" size="sm" className="rounded-full h-8 px-4 font-black uppercase text-[8px] tracking-widest border-2">
+                          View History
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-3xl rounded-[40px] border-none overflow-hidden">
+                         <DialogHeader>
+                           <DialogTitle className="text-xl font-black uppercase">Patient History: {u.firstName} {u.lastName}</DialogTitle>
+                           <CardDescription className="text-[9px] font-black uppercase tracking-widest">Auditing clinical orders and interactions</CardDescription>
+                         </DialogHeader>
+                         {selectedUser && <PatientHistoryView db={db} userId={selectedUser.id} />}
+                      </DialogContent>
+                   </Dialog>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -702,8 +720,42 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   );
 }
 
+function PatientHistoryView({ db, userId }: { db: any, userId: string }) {
+  const ordersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles', userId, 'orders')), [db, userId]);
+  const { data: orders, isLoading } = useCollection(ordersQuery);
+
+  return (
+    <div className="py-6 space-y-4 max-h-[60vh] overflow-y-auto scrollbar-hide">
+      {isLoading ? (
+        <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
+      ) : orders?.length ? (
+        <div className="space-y-3">
+          {orders.map(order => (
+            <div key={order.id} className="bg-gray-50 p-4 rounded-2xl border border-dashed flex items-center justify-between">
+               <div>
+                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Order Ref: #{order.id.substring(0,8).toUpperCase()}</p>
+                  <p className="text-[11px] font-black text-gray-900">{order.items?.length} Items • ₹{order.totalAmount}</p>
+                  <p className="text-[8px] font-bold text-gray-500 uppercase mt-1">{order.orderDate?.toDate().toLocaleDateString()}</p>
+               </div>
+               <Badge className={`text-[8px] font-black uppercase rounded-full ${
+                  order.status === 'Delivered' ? 'bg-green-600' : 'bg-primary'
+               }`}>
+                 {order.status}
+               </Badge>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="py-20 text-center bg-gray-50 rounded-3xl">
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No order history found for this patient.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc')), [db]);
+  const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster')), [db]);
   const { data: molecules, isLoading } = useCollection(molsQuery);
   const { toast } = useToast();
   const [search, setSearch] = useState('');
@@ -725,19 +777,6 @@ function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean })
     setIsFormOpen(true);
   };
 
-  const downloadMaster = () => {
-    if (!molecules) return;
-    const headers = "masterId,molecule,form\n";
-    const rows = molecules.map(m => `"${m.masterId}","${m.molecule}","${m.form}"`).join("\n");
-    const blob = new Blob([headers + rows], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'molecule_master.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-2">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -747,10 +786,6 @@ function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean })
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
             <Input placeholder="Search Molecule..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-full border-none bg-white font-bold text-xs" />
           </div>
-          
-          <Button variant="outline" onClick={downloadMaster} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2">
-            <Download className="w-3.5 h-3.5" /> Export Master
-          </Button>
 
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
@@ -885,7 +920,7 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
 }
 
 function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines'), orderBy('name', 'asc')), [db]);
+  const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
   const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster')), [db]);
   const { data: medicines, isLoading } = useCollection(medsQuery);
   const { data: molecules } = useCollection(molsQuery);
@@ -913,19 +948,6 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     setIsFormOpen(true);
   };
 
-  const downloadCatalog = () => {
-    if (!medicines) return;
-    const headers = "sku,moleculeId,name,manufacturer,price,availableQuantity\n";
-    const rows = medicines.map(m => `"${m.sku}","${m.moleculeId}","${m.name}","${m.manufacturer}",${m.price},${m.availableQuantity}`).join("\n");
-    const blob = new Blob([headers + rows], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'sku_master.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-2">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -936,10 +958,6 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
             <Input placeholder="Search SKU or Molecule..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-full border-none bg-white font-bold text-xs" />
           </div>
           
-          <Button variant="outline" onClick={downloadCatalog} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2">
-            <Download className="w-3.5 h-3.5" /> Export Catalog
-          </Button>
-
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
               <Button onClick={handleAddNew} className="rounded-full h-10 px-6 font-black text-[9px] uppercase tracking-widest gap-2 shadow-lg shadow-primary/20">
@@ -1044,14 +1062,11 @@ function MedicineForm({ db, initialData, molecules, onSuccess }: { db: any, init
     name: initialData?.name || '',
     manufacturer: initialData?.manufacturer || '',
     saltComposition: initialData?.saltComposition || '',
-    dosageForm: initialData?.dosageForm || 'Tablet',
     price: initialData?.price || '',
     mrp: initialData?.mrp || '',
     availableQuantity: initialData?.availableQuantity || '',
-    packSize: initialData?.packSize || '',
     category: initialData?.category || 'Diabetes',
     isGeneric: initialData?.isGeneric || false,
-    prescriptionRequired: initialData?.prescriptionRequired || false,
     imageUrls: initialData?.imageUrls || (initialData?.imageUrl ? [initialData.imageUrl] : [])
   });
 
