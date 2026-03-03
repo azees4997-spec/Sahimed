@@ -87,7 +87,8 @@ export default function SupervisorConsole() {
     setIsVerifying(true);
     try {
       const snap = await getDoc(doc(db, 'adminProfiles', user.uid));
-      if (snap.exists()) {
+      if (snap.exists() && snap.data().role === 'admin') {
+        // Success: identity confirmed
         setTimeout(() => {
           setIsVerified(true);
           setIsVerifying(false);
