@@ -1,4 +1,3 @@
-
 "use client"
 
 import Navbar from '@/components/Navbar';
@@ -128,7 +127,9 @@ export default function CartPage() {
             <div className="mt-8 space-y-4">
               <h2 className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Available Promo Codes</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {availablePromos.map(promo => {
+                {availablePromos.length === 0 ? (
+                  <p className="text-[10px] font-bold text-gray-400 uppercase italic ml-2">No active promotions available at this time.</p>
+                ) : availablePromos.map(promo => {
                   const isEligible = totalPrice >= promo.minOrderValue;
                   const isApplied = appliedPromo?.id === promo.id;
                   return (
@@ -144,7 +145,7 @@ export default function CartPage() {
                           <Tag className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className={cn("text-xs uppercase tracking-widest font-black", isEligible ? "text-primary" : "text-gray-400")}>
+                          <p className={cn("text-xs uppercase tracking-widest font-black", isEligible || isApplied ? "text-primary" : "text-gray-400")}>
                             {promo.code}
                           </p>
                           <p className="text-[8px] font-bold text-gray-400 uppercase">{promo.description}</p>

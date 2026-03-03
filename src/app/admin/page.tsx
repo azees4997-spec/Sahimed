@@ -1,7 +1,6 @@
-
 "use client"
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   ShieldCheck, 
   LogOut, 
@@ -13,29 +12,18 @@ import {
   Lock,
   FileText,
   Trash2,
-  Search,
   Plus,
-  RefreshCw,
+  Edit2,
+  Users,
+  BellRing,
+  Dna,
+  Receipt,
+  Tag,
+  Home,
+  ExternalLink,
   Copy,
   Check,
-  ExternalLink,
-  Home,
-  X,
-  Edit2,
-  Download,
-  Link as LinkIcon,
-  Users,
-  MessageSquare,
-  Clock,
-  ClipboardList,
-  FileDown,
-  FileUp,
-  BellRing,
-  Calendar,
-  Dna,
-  MapPin,
-  Tag,
-  Receipt
+  ClipboardList
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,7 +44,6 @@ import {
   useAuth, 
   useMemoFirebase, 
   useCollection,
-  useDoc,
   setDocumentNonBlocking,
   updateDocumentNonBlocking,
   deleteDocumentNonBlocking,
@@ -65,7 +52,6 @@ import {
 import { doc, collection, query, collectionGroup, getDoc, serverTimestamp, where, limit } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import Link from 'next/link';
-import Image from 'next/image';
 
 type AdminTab = 'overview' | 'itemMaster' | 'moleculeMaster' | 'enquiries' | 'fulfillment' | 'customers' | 'stockAlerts' | 'fees' | 'promocodes';
 
@@ -133,7 +119,7 @@ export default function SupervisorConsole() {
       navigator.clipboard.writeText(user.uid);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      toast({ title: "UID Copied", description: "Use this to create an Admin Profile in the console." });
+      toast({ title: "UID Copied", description: "Use this to create an Admin Profile." });
     }
   };
 
@@ -154,7 +140,7 @@ export default function SupervisorConsole() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F7F6] gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Syncing clinical authority (Mumbai HQ)...</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Syncing clinical authority...</p>
       </div>
     );
   }
@@ -171,7 +157,7 @@ export default function SupervisorConsole() {
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Admin Email</Label>
-                <input type="email" placeholder="admin@sahimed.com" value={email} onChange={e => setEmail(e.target.value)} required className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none focus:ring-2 focus:ring-primary/20" />
+                <input type="email" placeholder="admin@healthlink.com" value={email} onChange={e => setEmail(e.target.value)} required className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none focus:ring-2 focus:ring-primary/20" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Password</Label>
@@ -232,7 +218,7 @@ export default function SupervisorConsole() {
               </div>
               <div className="flex flex-col items-start leading-none">
                 <span className="font-black text-lg tracking-tighter text-gray-900 uppercase">Supervisor Terminal</span>
-                <span className="text-[8px] font-black text-primary uppercase tracking-[0.3em]">Mumbai HQ</span>
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.3em]">Clinical Hub</span>
               </div>
             </button>
             <nav className="hidden xl:flex gap-1 overflow-x-auto scrollbar-hide">
@@ -542,8 +528,6 @@ function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
   );
 }
 
-// ... rest of the Admin components (OverviewTab, EnquiriesTab, FulfillmentTab, etc.) same as before ...
-
 function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab) => void, isVerified: boolean }) {
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
   const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster')), [db]);
@@ -580,49 +564,6 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
           </Card>
         ))}
       </div>
-    </div>
-  );
-}
-
-function StockEnquiryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const alertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'stockEnquiries')) : null, [db, isVerified]);
-  const { data: alerts, isLoading } = useCollection(alertsQuery);
-
-  return (
-    <div className="space-y-6 animate-in slide-in-from-bottom-2">
-      <h2 className="text-2xl font-black uppercase text-gray-900">Stock Enquiries</h2>
-      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 text-[9px] font-black uppercase text-gray-400 border-b">
-            <tr>
-              <th className="px-8 py-6">Timestamp</th>
-              <th className="px-8 py-6">Patient UID</th>
-              <th className="px-8 py-6">Requested Item</th>
-              <th className="px-8 py-6 text-right">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {isLoading ? (
-              <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
-            ) : alerts?.map(alert => (
-              <tr key={alert.id}>
-                <td className="px-8 py-6 text-[10px] font-bold text-gray-400">
-                  {alert.timestamp?.toDate ? alert.timestamp.toDate().toLocaleString() : 'Recent'}
-                </td>
-                <td className="px-8 py-6">
-                  <code className="text-[10px] font-black text-primary bg-primary/5 px-2 py-1 rounded">{alert.userId?.substring(0,10).toUpperCase()}</code>
-                </td>
-                <td className="px-8 py-6 font-black text-xs text-gray-900 uppercase">
-                  {alert.medicineName}
-                </td>
-                <td className="px-8 py-6 text-right">
-                  <Badge className="bg-orange-500 text-white text-[8px] font-black uppercase">Unfulfilled</Badge>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
     </div>
   );
 }
@@ -715,9 +656,6 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     </div>
   );
 }
-
-// ... other Admin tab sub-components (FulfillmentTab, CustomersTab, ItemMasterTab, MoleculeMasterTab, etc.) remain as they were ...
-// Note: I would re-insert them here but I must be concise as per system instructions.
 
 function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
