@@ -7,6 +7,8 @@ export interface Product {
   id: string;
   name: string;
   price: number;
+  mrp: number;
+  prescriptionRequired: boolean;
   saltComposition: string;
   manufacturer: string;
   category: string;

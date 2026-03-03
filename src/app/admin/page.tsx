@@ -295,6 +295,7 @@ function SeedDataButton({ db }: { db: any }) {
           name: 'Janumet 50/500', 
           price: 1250, 
           mrp: 1450,
+          prescriptionRequired: true,
           saltComposition: 'Sitagliptin + Metformin', 
           manufacturer: 'MSD Pharmaceuticals', 
           isGeneric: false, 
@@ -311,6 +312,7 @@ function SeedDataButton({ db }: { db: any }) {
           name: 'Sitagliptin M 50/500', 
           price: 240, 
           mrp: 1200,
+          prescriptionRequired: true,
           saltComposition: 'Sitagliptin + Metformin', 
           manufacturer: 'HealthLink Generic', 
           isGeneric: true, 
@@ -469,9 +471,11 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
     manufacturer: '',
     saltComposition: '',
     price: '',
+    mrp: '',
     availableQuantity: '',
     category: 'Diabetes',
     isGeneric: false,
+    prescriptionRequired: false,
     imageUrl: 'https://picsum.photos/seed/med/300/300'
   });
 
@@ -480,6 +484,7 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
     addDocumentNonBlocking(collection(db, 'medicines'), {
       ...form,
       price: Number(form.price),
+      mrp: Number(form.mrp),
       availableQuantity: Number(form.availableQuantity),
       createdAt: serverTimestamp()
     });
@@ -506,8 +511,21 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
         <Input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
       </div>
       <div className="space-y-2">
+        <Label className="text-[9px] font-black uppercase">MRP (₹)</Label>
+        <Input type="number" value={form.mrp} onChange={e => setForm({...form, mrp: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="space-y-2">
         <Label className="text-[9px] font-black uppercase">Initial Stock</Label>
         <Input type="number" value={form.availableQuantity} onChange={e => setForm({...form, availableQuantity: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="flex items-center space-x-2 pt-4">
+        <input 
+          type="checkbox" 
+          id="rx-req" 
+          checked={form.prescriptionRequired} 
+          onChange={e => setForm({...form, prescriptionRequired: e.target.checked})} 
+        />
+        <Label htmlFor="rx-req" className="text-[9px] font-black uppercase">Prescription Required</Label>
       </div>
       <div className="col-span-2 flex items-center gap-3 pt-4 border-t">
         <Button type="submit" className="flex-1 rounded-full h-14 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">Create SKU</Button>
