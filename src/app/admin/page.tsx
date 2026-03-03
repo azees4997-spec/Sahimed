@@ -1,7 +1,6 @@
-
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   ShieldCheck, 
   LogOut, 
@@ -34,7 +33,9 @@ import {
   Phone,
   MessageSquare,
   Clock,
-  ClipboardList
+  ClipboardList,
+  FileDown,
+  FileUp
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -285,7 +286,6 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster')), [db]);
   const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles')), [db]);
   
-  // Defensive gating for collection group queries
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
 
@@ -761,20 +761,68 @@ function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean })
   const [search, setSearch] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMolecule, setEditingMolecule] = useState<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filtered = molecules?.filter(m => 
     m.molecule?.toLowerCase().includes(search.toLowerCase()) || 
     m.masterId?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAddNew = () => {
-    setEditingMolecule(null);
-    setIsFormOpen(true);
+  const handleExportCSV = () => {
+    if (!molecules || molecules.length === 0) return;
+    const headers = ['masterId', 'molecule', 'form'];
+    const rows = molecules.map(m => [m.masterId, m.molecule, m.form].map(v => `"${v}"`).join(','));
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `molecule_master_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
-  const handleEdit = (mol: any) => {
-    setEditingMolecule(mol);
-    setIsFormOpen(true);
+  const handleDownloadTemplate = () => {
+    const csvContent = 'masterId,molecule,form\nsita-met-50-500,"Sitagliptin 50mg + Metformin 500mg",Tablet';
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'molecule_master_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const lines = text.split('\n').filter(l => l.trim());
+        const headers = lines[0].split(',').map(h => h.trim());
+        
+        for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+          const data: any = {};
+          headers.forEach((h, idx) => data[h] = values[idx]);
+          
+          if (data.masterId) {
+            setDocumentNonBlocking(doc(db, 'moleculeMaster', data.masterId), {
+              ...data,
+              updatedAt: serverTimestamp()
+            }, { merge: true });
+          }
+        }
+        toast({ title: "Import Successful", description: `${lines.length - 1} molecules imported.` });
+      } catch (err) {
+        toast({ variant: 'destructive', title: "Import Failed", description: "Invalid CSV format." });
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
@@ -787,9 +835,22 @@ function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean })
             <Input placeholder="Search Molecule..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-full border-none bg-white font-bold text-xs" />
           </div>
 
+          <div className="flex items-center gap-2">
+             <Button variant="outline" size="sm" onClick={handleDownloadTemplate} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2">
+               <FileDown className="w-3.5 h-3.5" /> Template
+             </Button>
+             <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2">
+               <FileUp className="w-3.5 h-3.5" /> Import
+             </Button>
+             <input type="file" ref={fileInputRef} onChange={handleImportCSV} accept=".csv" className="hidden" />
+             <Button variant="outline" size="sm" onClick={handleExportCSV} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2">
+               <Download className="w-3.5 h-3.5" /> Export
+             </Button>
+          </div>
+
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
-              <Button onClick={handleAddNew} className="rounded-full h-10 px-6 font-black text-[9px] uppercase tracking-widest gap-2 shadow-lg shadow-primary/20">
+              <Button onClick={() => { setEditingMolecule(null); setIsFormOpen(true); }} className="rounded-full h-10 px-6 font-black text-[9px] uppercase tracking-widest gap-2 shadow-lg shadow-primary/20">
                 <Plus className="w-3.5 h-3.5" /> Add Molecule
               </Button>
             </DialogTrigger>
@@ -844,7 +905,7 @@ function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean })
                   </td>
                   <td className="px-8 py-6 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="text-gray-300 hover:text-primary rounded-full" onClick={() => handleEdit(mol)}>
+                      <Button variant="ghost" size="icon" className="text-gray-300 hover:text-primary rounded-full" onClick={() => { setEditingMolecule(mol); setIsFormOpen(true); }}>
                         <Edit2 className="w-4 h-4" />
                       </Button>
                       <Button variant="ghost" size="icon" className="text-gray-300 hover:text-red-500 rounded-full" onClick={() => {
@@ -928,6 +989,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   const [search, setSearch] = useState('');
   const [editingMedicine, setEditingMedicine] = useState<any>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const moleculeMap = new Map(molecules?.map(m => [m.masterId, m]));
 
@@ -938,14 +1000,70 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     m.moleculeId?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleEdit = (med: any) => {
-    setEditingMedicine(med);
-    setIsFormOpen(true);
+  const handleExportCSV = () => {
+    if (!medicines || medicines.length === 0) return;
+    const headers = ['sku', 'name', 'moleculeId', 'manufacturer', 'saltComposition', 'price', 'mrp', 'availableQuantity', 'category', 'isGeneric', 'packSize'];
+    const rows = medicines.map(m => headers.map(h => `"${m[h] ?? ''}"`).join(','));
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `inventory_master_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
-  const handleAddNew = () => {
-    setEditingMedicine(null);
-    setIsFormOpen(true);
+  const handleDownloadTemplate = () => {
+    const headers = ['sku', 'name', 'moleculeId', 'manufacturer', 'saltComposition', 'price', 'mrp', 'availableQuantity', 'category', 'isGeneric', 'packSize'];
+    const example = 'JAN-500,"Janumet 50/500",sita-met-50-500,"MSD Pharma","Sitagliptin + Metformin",1250,1450,100,Diabetes,false,"Strip of 15"';
+    const csvContent = [headers.join(','), example].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'inventory_sku_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const lines = text.split('\n').filter(l => l.trim());
+        const headers = lines[0].split(',').map(h => h.trim());
+        
+        for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+          const data: any = {};
+          headers.forEach((h, idx) => {
+            const val = values[idx];
+            if (h === 'price' || h === 'mrp' || h === 'availableQuantity') data[h] = Number(val);
+            else if (h === 'isGeneric') data[h] = val.toLowerCase() === 'true';
+            else data[h] = val;
+          });
+          
+          if (data.sku) {
+             // Create a deterministic ID from SKU or let Firebase generate
+             addDocumentNonBlocking(collection(db, 'medicines'), {
+               ...data,
+               createdAt: serverTimestamp(),
+               updatedAt: serverTimestamp()
+             });
+          }
+        }
+        toast({ title: "Import Successful", description: "Bulk clinical SKUs added." });
+      } catch (err) {
+        toast({ variant: 'destructive', title: "Import Failed", description: "Invalid CSV format." });
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
@@ -957,10 +1075,23 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
             <Input placeholder="Search SKU or Molecule..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-full border-none bg-white font-bold text-xs" />
           </div>
+
+          <div className="flex items-center gap-2">
+             <Button variant="outline" size="sm" onClick={handleDownloadTemplate} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2">
+               <FileDown className="w-3.5 h-3.5" /> Template
+             </Button>
+             <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2">
+               <FileUp className="w-3.5 h-3.5" /> Import
+             </Button>
+             <input type="file" ref={fileInputRef} onChange={handleImportCSV} accept=".csv" className="hidden" />
+             <Button variant="outline" size="sm" onClick={handleExportCSV} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2">
+               <Download className="w-3.5 h-3.5" /> Export
+             </Button>
+          </div>
           
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
-              <Button onClick={handleAddNew} className="rounded-full h-10 px-6 font-black text-[9px] uppercase tracking-widest gap-2 shadow-lg shadow-primary/20">
+              <Button onClick={() => { setEditingMedicine(null); setIsFormOpen(true); }} className="rounded-full h-10 px-6 font-black text-[9px] uppercase tracking-widest gap-2 shadow-lg shadow-primary/20">
                 <Plus className="w-3.5 h-3.5" /> Add SKU
               </Button>
             </DialogTrigger>
@@ -1013,7 +1144,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                     <td className="px-8 py-6">
                       <div className="flex flex-col">
                         <span className="font-black text-gray-900 text-xs">{med.name}</span>
-                        <span className="text-[8px] text-gray-400 uppercase font-bold tracking-widest">{med.manufacturer}</span>
+                        <span className="text-[8px] text-gray-400 uppercase font-bold tracking-widest">{med.manufacturer} • {med.packSize}</span>
                       </div>
                     </td>
                     <td className="px-8 py-6">
@@ -1032,7 +1163,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                     </td>
                     <td className="px-8 py-6 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="text-gray-300 hover:text-primary rounded-full" onClick={() => handleEdit(med)}>
+                        <Button variant="ghost" size="icon" className="text-gray-300 hover:text-primary rounded-full" onClick={() => { setEditingMedicine(med); setIsFormOpen(true); }}>
                           <Edit2 className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="text-gray-300 hover:text-red-500 rounded-full" onClick={() => {
@@ -1067,6 +1198,7 @@ function MedicineForm({ db, initialData, molecules, onSuccess }: { db: any, init
     availableQuantity: initialData?.availableQuantity || '',
     category: initialData?.category || 'Diabetes',
     isGeneric: initialData?.isGeneric || false,
+    packSize: initialData?.packSize || '',
     imageUrls: initialData?.imageUrls || (initialData?.imageUrl ? [initialData.imageUrl] : [])
   });
 
@@ -1128,7 +1260,7 @@ function MedicineForm({ db, initialData, molecules, onSuccess }: { db: any, init
       </div>
 
       <div className="space-y-2">
-        <Label className="text-[9px] font-black uppercase">SKU ID</Label>
+        <Label className="text-[9px] font-black uppercase">SKU ID (Unique)</Label>
         <Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
       </div>
       <div className="space-y-2">
@@ -1149,6 +1281,14 @@ function MedicineForm({ db, initialData, molecules, onSuccess }: { db: any, init
         <Label className="text-[9px] font-black uppercase">Manufacturer</Label>
         <Input value={form.manufacturer} onChange={e => setForm({...form, manufacturer: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
       </div>
+      <div className="space-y-2">
+        <Label className="text-[9px] font-black uppercase">Packaging (e.g. Strip of 10)</Label>
+        <Input value={form.packSize} onChange={e => setForm({...form, packSize: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-[9px] font-black uppercase">Clinical Category</Label>
+        <Input value={form.category} onChange={e => setForm({...form, category: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
       <div className="space-y-2 col-span-2">
         <Label className="text-[9px] font-black uppercase">Salt Composition</Label>
         <Input value={form.saltComposition} onChange={e => setForm({...form, saltComposition: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
@@ -1158,8 +1298,16 @@ function MedicineForm({ db, initialData, molecules, onSuccess }: { db: any, init
         <Input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
       </div>
       <div className="space-y-2">
+        <Label className="text-[9px] font-black uppercase">MRP (₹)</Label>
+        <Input type="number" value={form.mrp} onChange={e => setForm({...form, mrp: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="space-y-2">
         <Label className="text-[9px] font-black uppercase">Stock Level</Label>
         <Input type="number" value={form.availableQuantity} onChange={e => setForm({...form, availableQuantity: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="flex items-center gap-2 pt-6">
+        <input type="checkbox" id="isGen" checked={form.isGeneric} onChange={e => setForm({...form, isGeneric: e.target.checked})} className="w-5 h-5 accent-primary" />
+        <Label htmlFor="isGen" className="text-[9px] font-black uppercase cursor-pointer">Mark as Generic Alternative</Label>
       </div>
 
       <div className="col-span-2 flex items-center gap-3 pt-6 border-t">
