@@ -40,7 +40,7 @@ export default function Home() {
 
   const getIcon = (name: string) => {
     const n = name.toLowerCase();
-    const props = { className: "w-6 h-6 sm:w-8 sm:h-8" };
+    const props = { className: "w-5 h-5 sm:w-8 sm:h-8" };
     if (n.includes('diabet')) return <Activity {...props} />;
     if (n.includes('heart')) return <HeartPulse {...props} />;
     if (n.includes('gastro')) return <Zap {...props} />;
@@ -123,7 +123,7 @@ export default function Home() {
         </section>
 
         <section className="py-6">
-          <div className="max-w-7xl mx-auto px-4">
+          <div className="max-w-7xl mx-auto px-4 overflow-hidden">
             <div className="flex items-center justify-between mb-6 px-1">
               <h2 className="text-[12px] font-black text-gray-900 uppercase tracking-[0.2em]">Shop by Category</h2>
               <Link href="/search" className="text-[10px] font-black text-primary uppercase tracking-widest">See All</Link>
@@ -131,10 +131,10 @@ export default function Home() {
             {catsLoading ? (
               <div className="flex justify-center p-4"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-6">
+              <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide px-1 sm:grid sm:grid-cols-6 sm:overflow-visible sm:gap-6">
                 {categories?.map((cat: any) => (
-                  <Link key={cat.id} href={`/search?c=${cat.name}`} className="group flex flex-col items-center active:scale-95 transition-transform">
-                    <div className="w-full aspect-square bg-white rounded-[28px] flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-100 p-4 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                  <Link key={cat.id} href={`/search?c=${cat.name}`} className="group flex flex-col items-center shrink-0 w-24 sm:w-auto active:scale-95 transition-transform">
+                    <div className="w-full aspect-square bg-white rounded-[24px] flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-100 p-4 group-hover:bg-primary group-hover:text-white transition-all duration-300">
                       {getIcon(cat.name)}
                     </div>
                     <h3 className="font-black text-[8px] sm:text-[10px] text-gray-700 uppercase tracking-tighter truncate w-full text-center px-1 group-hover:text-primary transition-colors">{cat.name}</h3>
