@@ -3,7 +3,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product, useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
@@ -13,10 +13,13 @@ export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
   const { toast } = useToast();
   const quantity = getItemQuantity(product.id);
+  const isOutOfStock = (product.availableQuantity || 0) <= 0;
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOutOfStock) return;
+    
     addToCart(product);
     toast({
       title: "Added to cart",
@@ -27,6 +30,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const handleIncrement = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOutOfStock) return;
     updateQuantity(product.id, 1);
   };
 
@@ -37,7 +41,7 @@ export default function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <div className="group bg-white rounded-2xl border border-gray-50 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col active:scale-[0.98] h-full">
+    <div className={`group bg-white rounded-2xl border border-gray-50 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col active:scale-[0.98] h-full ${isOutOfStock ? 'opacity-60 grayscale' : ''}`}>
       <Link href={`/product/${product.id}`} className="relative aspect-square w-full overflow-hidden bg-gray-50/20">
         <Image
           src={product.imageUrl}
@@ -48,6 +52,11 @@ export default function ProductCard({ product }: { product: Product }) {
         />
         {product.isGeneric && (
           <Badge className="absolute top-1.5 left-1.5 bg-green-600 text-[6px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border-none shadow-sm">Save</Badge>
+        )}
+        {isOutOfStock && (
+          <div className="absolute inset-0 bg-white/40 flex items-center justify-center p-4">
+            <Badge variant="destructive" className="font-black text-[8px] uppercase tracking-widest rounded-full px-3 py-1">Out of Stock</Badge>
+          </div>
         )}
       </Link>
       
@@ -63,7 +72,14 @@ export default function ProductCard({ product }: { product: Product }) {
         <div className="mt-auto flex items-center justify-between gap-1">
           <span className="text-[9px] sm:text-[10px] font-black text-gray-900 tracking-tighter">₹{product.price}</span>
           
-          {quantity > 0 ? (
+          {isOutOfStock ? (
+            <Button 
+              disabled 
+              className="rounded-lg h-7 w-full p-0 bg-gray-100 text-gray-400 border border-gray-200 font-black text-[8px] uppercase tracking-widest"
+            >
+              Unavailable
+            </Button>
+          ) : quantity > 0 ? (
             <div className="flex items-center gap-1 bg-primary rounded-lg p-0.5 shadow-lg w-full">
               <Button 
                 onClick={handleDecrement} 

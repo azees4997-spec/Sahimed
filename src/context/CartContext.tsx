@@ -10,6 +10,7 @@ export interface Product {
   name: string;
   price: number;
   mrp: number;
+  availableQuantity: number; // Added for inventory control
   prescriptionRequired: boolean;
   saltComposition: string;
   manufacturer: string;

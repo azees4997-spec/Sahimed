@@ -25,7 +25,8 @@ import {
   Package,
   CheckCircle2,
   XCircle,
-  Fingerprint
+  Fingerprint,
+  AlertTriangle
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
@@ -45,11 +46,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   
   const { data: product, isLoading: productLoading } = useDoc(productRef);
 
-  // Link bio-equivalents using Molecule ID
   const genericQuery = useMemoFirebase(() => {
     if (!db || !product || product.isGeneric) return null;
     
-    // Priority 1: Match by Molecule ID
     if (product.moleculeId) {
       return query(
         collection(db, 'medicines'),
@@ -59,7 +58,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       );
     }
     
-    // Fallback: Match by Salt Composition
     return query(
       collection(db, 'medicines'),
       where('saltComposition', '==', product.saltComposition),
@@ -93,6 +91,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     ? Math.round(((product.price - genericSubstitute.price) / product.price) * 100) 
     : 0;
 
+  const brandedOutOfStock = (product?.availableQuantity || 0) <= 0;
+  const genericOutOfStock = genericSubstitute ? (genericSubstitute.availableQuantity || 0) <= 0 : false;
+
   return (
     <div className="min-h-screen bg-[#F8F8F8] pb-32 page-transition-wrapper">
       <Navbar />
@@ -106,10 +107,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <span className="text-primary truncate">{product?.name}</span>
         </div>
 
-        {/* Side-by-Side Comparison Container */}
         <div className="grid grid-cols-2 gap-3 mb-6">
-          {/* Branded Product Card */}
-          <Card className="rounded-[24px] border-none bg-white overflow-hidden flex flex-col p-4 shadow-sm border border-gray-100">
+          <Card className={`rounded-[24px] border-none bg-white overflow-hidden flex flex-col p-4 shadow-sm border border-gray-100 ${brandedOutOfStock ? 'opacity-70 grayscale' : ''}`}>
             <div className="flex items-center justify-between mb-3">
               <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest">Branded SKU: {product?.sku || 'N/A'}</p>
               <div className="bg-blue-50 px-2 py-0.5 rounded-full">
@@ -119,12 +118,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             
             <div className="aspect-square w-full max-w-[100px] bg-gray-50 rounded-2xl mx-auto mb-4 p-2 relative">
               <img src={product?.imageUrl} alt={product?.name} className="w-full h-full object-contain" />
+              {brandedOutOfStock && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/20">
+                   <div className="bg-red-600 text-white font-black text-[7px] uppercase px-3 py-1 rounded-full shadow-lg">Stock Out</div>
+                </div>
+              )}
             </div>
 
             <div className="flex-1 flex flex-col gap-2">
               <h3 className="text-[11px] font-black text-gray-900 uppercase min-h-[2.5em] leading-tight">{product?.name}</h3>
               
-              {/* Product Details Stack */}
               <div className="space-y-2">
                 <div>
                   <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest">Composition</p>
@@ -161,7 +164,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <p className="text-[8px] font-bold text-gray-400">₹{(product?.price / getUnitCount(product?.packSize || '')).toFixed(1)} / Unit</p>
                 
                 <div className="mt-4">
-                  {brandedQty > 0 ? (
+                  {brandedOutOfStock ? (
+                    <Button disabled className="w-full h-10 rounded-xl text-[9px] font-black uppercase tracking-widest bg-gray-100 text-gray-400">Out of Stock</Button>
+                  ) : brandedQty > 0 ? (
                     <div className="flex items-center justify-between bg-primary rounded-xl h-10 px-2 shadow-lg">
                       <button onClick={() => updateQuantity(product.id, -1)} className="p-1.5 text-white"><Minus className="w-3.5 h-3.5" /></button>
                       <span className="text-[11px] font-black text-white">{brandedQty}</span>
@@ -175,12 +180,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
           </Card>
 
-          {/* Recommended Generic Card */}
           {genericSubstitute ? (
-            <Card className="rounded-[24px] border-2 border-green-500 bg-white overflow-hidden flex flex-col p-4 shadow-2xl shadow-green-100 relative">
-              <div className="absolute top-0 right-0 z-10">
-                <div className="bg-green-500 text-white font-black text-[7px] uppercase px-3 py-1 rounded-bl-xl shadow-lg">Save {percentageSaved}%</div>
-              </div>
+            <Card className={`rounded-[24px] border-2 border-green-500 bg-white overflow-hidden flex flex-col p-4 shadow-2xl shadow-green-100 relative ${genericOutOfStock ? 'opacity-70 grayscale' : ''}`}>
+              {!genericOutOfStock && (
+                <div className="absolute top-0 right-0 z-10">
+                  <div className="bg-green-500 text-white font-black text-[7px] uppercase px-3 py-1 rounded-bl-xl shadow-lg">Save {percentageSaved}%</div>
+                </div>
+              )}
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[6px] font-black text-green-600 uppercase tracking-widest">Molecule Link: {genericSubstitute.moleculeId}</p>
                 <div className="bg-green-50 px-2 py-0.5 rounded-full">
@@ -190,12 +196,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               <div className="aspect-square w-full max-w-[100px] bg-green-50/50 rounded-2xl mx-auto mb-4 p-2 relative">
                 <img src={genericSubstitute.imageUrl} alt={genericSubstitute.name} className="w-full h-full object-contain" />
+                {genericOutOfStock && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/20">
+                     <div className="bg-red-600 text-white font-black text-[7px] uppercase px-3 py-1 rounded-full shadow-lg">Stock Out</div>
+                  </div>
+                )}
               </div>
 
               <div className="flex-1 flex flex-col gap-2">
                 <h3 className="text-[11px] font-black text-gray-900 uppercase min-h-[2.5em] leading-tight">{genericSubstitute.name}</h3>
                 
-                {/* Product Details Stack */}
                 <div className="space-y-2">
                   <div>
                     <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest">Composition</p>
@@ -228,7 +238,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   <p className="text-[8px] font-bold text-gray-400">₹{(genericSubstitute.price / getUnitCount(genericSubstitute.packSize || '')).toFixed(1)} / Unit</p>
                   
                   <div className="mt-4">
-                    {genericQty > 0 ? (
+                    {genericOutOfStock ? (
+                      <Button disabled className="w-full h-10 rounded-xl text-[9px] font-black uppercase tracking-widest bg-gray-100 text-gray-400">Out of Stock</Button>
+                    ) : genericQty > 0 ? (
                       <div className="flex items-center justify-between bg-green-600 rounded-xl h-10 px-2 shadow-xl">
                         <button onClick={() => updateQuantity(genericSubstitute.id, -1)} className="p-1.5 text-white"><Minus className="w-3.5 h-3.5" /></button>
                         <span className="text-[11px] font-black text-white">{genericQty}</span>

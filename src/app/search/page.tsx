@@ -35,7 +35,8 @@ function SearchResults() {
     const saltMatch = p.saltComposition?.toLowerCase().includes(q);
     const matchesQuery = !q || nameMatch || saltMatch;
     const matchesCategory = !c || p.category === c;
-    return matchesQuery && matchesCategory;
+    const hasStock = (p.availableQuantity || 0) > 0; // Filter out zero stock
+    return matchesQuery && matchesCategory && hasStock;
   });
 
   return (
@@ -43,7 +44,6 @@ function SearchResults() {
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 py-6 md:py-12">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Sidebar Filters - Desktop */}
           <aside className="w-full md:w-64 space-y-6 hidden md:block">
             <div className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
               <h3 className="font-black text-[9px] uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-2">
@@ -75,7 +75,6 @@ function SearchResults() {
             </div>
           </aside>
 
-          {/* Results Area */}
           <div className="flex-1">
             <div className="flex items-center justify-between mb-6 px-1">
               <div>

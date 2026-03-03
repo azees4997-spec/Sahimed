@@ -26,7 +26,7 @@ export default function Home() {
 
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(12));
+    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(50));
   }, [db]);
 
   const categoriesQuery = useMemoFirebase(() => {
@@ -37,7 +37,6 @@ export default function Home() {
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
 
-  // Exactly 3 banners as requested
   const heroBanners = PlaceHolderImages.filter(img => img.id.startsWith('hero-')).slice(0, 3);
 
   const getIcon = (name: string) => {
@@ -50,12 +49,14 @@ export default function Home() {
     return <Activity {...props} />;
   };
 
+  // Filter out products with zero stock for storefront display
+  const availableMedicines = medicines?.filter(p => (p.availableQuantity || 0) > 0).slice(0, 12);
+
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F8F8] page-transition-wrapper">
       <Navbar />
 
       <main className="flex-1 pb-10">
-        {/* Banner Section - Wide not High */}
         <section className="bg-white py-2">
           <div className="max-w-7xl mx-auto px-4">
             <Carousel 
@@ -100,7 +101,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Action Button */}
         <section className="py-2">
           <div className="max-w-7xl mx-auto px-4">
              <Link href="/prescription">
@@ -122,7 +122,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Therapy Hub */}
         <section className="py-4">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center justify-between mb-4 px-1">
@@ -145,7 +144,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Product Grid */}
         <section className="py-8 bg-white border-t border-gray-100 mt-4 rounded-t-[40px] shadow-2xl">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center justify-between mb-6 px-1">
@@ -156,7 +154,7 @@ export default function Home() {
               <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {medicines?.map((p: any) => (
+                {availableMedicines?.map((p: any) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
               </div>
