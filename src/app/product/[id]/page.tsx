@@ -187,7 +187,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     <div className="flex flex-col mb-4">
                       <div className="flex items-center gap-2">
                          <span className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">MRP</span>
-                         <span className="text-[9px] sm:text-[10px] text-gray-400 line-through">₹{product.mrp || product.price + 100}</span>
+                         <span className="text-[9px] sm:text-[10px] text-red-600 line-through">₹{product.mrp || product.price + 100}</span>
                          <span className="text-[8px] sm:text-[9px] font-black text-accent uppercase">Save ₹{brandedSavings}</span>
                       </div>
                       <div className="text-xl sm:text-[32px] font-black text-primary leading-none">₹{product.price}</div>
@@ -247,7 +247,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     <div className="flex flex-col mb-4">
                       <div className="flex items-center gap-2">
                          <span className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">MRP</span>
-                         <span className="text-[9px] sm:text-[10px] text-gray-400 line-through">₹{genericSubstitute.mrp || genericSubstitute.price + 50}</span>
+                         <span className="text-[9px] sm:text-[10px] text-red-600 line-through">₹{genericSubstitute.mrp || genericSubstitute.price + 50}</span>
                          <div className="bg-accent text-white px-2 py-0.5 rounded-md text-[8px] font-black">
                            SAVE ₹{savingsAmount} ({percentageSaved}%)
                          </div>
@@ -302,7 +302,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                    <div className="grid grid-cols-2 gap-4 sm:gap-6 bg-gray-50 p-4 sm:p-6 rounded-[24px] sm:rounded-[32px] border">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-gray-400 line-through">₹{product.mrp || product.price + 50}</span>
+                          <span className="text-[9px] text-red-600 line-through">₹{product.mrp || product.price + 50}</span>
                           <span className="text-[9px] font-black text-accent uppercase">Save ₹{brandedSavings}</span>
                         </div>
                         <p className="text-2xl sm:text-3xl font-black text-primary">₹{product.price}</p>

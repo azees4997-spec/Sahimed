@@ -127,7 +127,7 @@ export default function ProductCard({ product }: { product: Product }) {
               <div className="flex items-center gap-2">
                 <span className="text-lg font-black text-primary">₹{product.price}</span>
                 {savingsAmount > 0 && (
-                  <span className="text-xs text-gray-400 line-through font-bold">₹{Math.round(mrp)}</span>
+                  <span className="text-xs text-red-600 line-through font-bold">₹{Math.round(mrp)}</span>
                 )}
               </div>
               {savingsAmount > 0 && (

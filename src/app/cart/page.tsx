@@ -144,7 +144,7 @@ export default function CartPage() {
 
                   <div className="text-right shrink-0 px-4">
                     <p className="text-xl font-black text-gray-900">₹{item.price * item.quantity}</p>
-                    <p className="text-[9px] text-gray-400 uppercase tracking-widest font-black line-through">₹{(item.mrp || item.price + 50) * item.quantity}</p>
+                    <p className="text-[9px] text-red-600 uppercase tracking-widest font-black line-through">₹{(item.mrp || item.price + 50) * item.quantity}</p>
                   </div>
                 </div>
               ))}
@@ -269,7 +269,7 @@ export default function CartPage() {
               <div className="space-y-6 mb-10 relative z-10">
                 <div className="flex justify-between text-[11px] font-black text-gray-500 uppercase tracking-widest">
                   <span>Cart Gross (MRP)</span>
-                  <span>₹{totalMrp}</span>
+                  <span className="text-red-600">₹{totalMrp}</span>
                 </div>
                 
                 <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
