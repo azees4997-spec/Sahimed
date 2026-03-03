@@ -1,535 +1,114 @@
+
 {
   "entities": {
     "Customer": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Customer",
       "type": "object",
-      "description": "Represents a user of the HealthLink Pharmacy application, storing their profile information and linking to their authentication ID.",
+      "description": "Represents a user of the HealthLink Pharmacy application.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Customer entity."
-        },
-        "firebaseAuthId": {
-          "type": "string",
-          "description": "Unique identifier from the external Firebase Authentication system for this user. (Relationship: External 1:1 Customer)"
-        },
-        "email": {
-          "type": "string",
-          "description": "The customer's email address.",
-          "format": "email"
-        },
-        "name": {
-          "type": "string",
-          "description": "The full name of the customer."
-        },
-        "phone": {
-          "type": "string",
-          "description": "The customer's primary phone number."
-        },
-        "defaultShippingAddressId": {
-          "type": "string",
-          "description": "Reference to the customer's default shipping address. (Relationship: Customer 1:N Address)"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the customer record was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the customer record was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "firebaseAuthId": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "firebaseAuthId",
-        "email",
-        "name",
-        "phone",
-        "createdAt",
-        "updatedAt"
-      ]
-    },
-    "Address": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Address",
-      "type": "object",
-      "description": "Stores a physical address, typically associated with a Customer for shipping or billing purposes.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Address entity."
-        },
-        "customerId": {
-          "type": "string",
-          "description": "Reference to the Customer who owns this address. (Relationship: Customer 1:N Address)"
-        },
-        "label": {
-          "type": "string",
-          "description": "A descriptive label for the address, e.g., 'Home', 'Work', 'Office'."
-        },
-        "street": {
-          "type": "string",
-          "description": "The street address, including building number and street name."
-        },
-        "city": {
-          "type": "string",
-          "description": "The city of the address."
-        },
-        "state": {
-          "type": "string",
-          "description": "The state, province, or region of the address."
-        },
-        "postalCode": {
-          "type": "string",
-          "description": "The postal or ZIP code of the address."
-        },
-        "country": {
-          "type": "string",
-          "description": "The country of the address."
-        },
-        "isDefault": {
-          "type": "boolean",
-          "description": "Indicates if this is the default address for the associated customer."
-        }
-      },
-      "required": [
-        "id",
-        "customerId",
-        "label",
-        "street",
-        "city",
-        "state",
-        "postalCode",
-        "country",
-        "isDefault"
-      ]
+      "required": ["id", "firebaseAuthId", "email", "name", "phone", "createdAt", "updatedAt"]
     },
     "Medicine": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Medicine",
       "type": "object",
-      "description": "Represents a single medicine product available in the pharmacy catalog.",
+      "description": "Represents a single medicine product.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Medicine entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The brand or generic name of the medicine."
-        },
-        "manufacturer": {
-          "type": "string",
-          "description": "The company that manufactures the medicine."
-        },
-        "saltComposition": {
-          "type": "string",
-          "description": "The primary active pharmaceutical ingredient (API) or 'salt' of the medicine, used for finding substitutes."
-        },
-        "price": {
-          "type": "number",
-          "description": "The current selling price of the medicine."
-        },
-        "category": {
-          "type": "string",
-          "description": "The categorization of the medicine, e.g., 'Chronic', 'Wellness', 'Baby Care'."
-        },
-        "description": {
-          "type": "string",
-          "description": "A detailed description of the medicine, including usage, side effects, etc."
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL to the product image of the medicine.",
-          "format": "uri"
-        },
-        "isTopDeal": {
-          "type": "boolean",
-          "description": "A flag indicating if this medicine should be featured in the 'Top Deals' section."
-        },
-        "stockQuantity": {
-          "type": "number",
-          "description": "The current quantity of this medicine available in stock."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the medicine product was added to the catalog.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the medicine product information was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "manufacturer": { "type": "string" },
+        "saltComposition": { "type": "string" },
+        "price": { "type": "number" },
+        "mrp": { "type": "number" },
+        "availableQuantity": { "type": "number" },
+        "sku": { "type": "string" },
+        "category": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "isGeneric": { "type": "boolean" },
+        "packSize": { "type": "string" }
       },
-      "required": [
-        "id",
-        "name",
-        "manufacturer",
-        "saltComposition",
-        "price",
-        "category",
-        "description",
-        "imageUrl",
-        "isTopDeal",
-        "stockQuantity",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "name", "price", "category"]
     },
-    "CartItem": {
+    "Fee": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "CartItem",
+      "title": "Fee",
       "type": "object",
-      "description": "Represents a single medicine and its quantity added to a customer's shopping cart.",
+      "description": "Represents a dynamic charge applied at the cart level.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the CartItem entity."
-        },
-        "customerId": {
-          "type": "string",
-          "description": "Reference to the Customer who owns this cart item. (Relationship: Customer 1:N CartItem)"
-        },
-        "medicineId": {
-          "type": "string",
-          "description": "Reference to the Medicine product added to the cart. (Relationship: Medicine 1:N CartItem)"
-        },
-        "quantity": {
-          "type": "number",
-          "description": "The number of units of the medicine in the cart."
-        },
-        "priceAtAddition": {
-          "type": "number",
-          "description": "The price of one unit of the medicine at the time it was added to the cart."
-        },
-        "addedAt": {
-          "type": "string",
-          "description": "Timestamp when the item was added to the cart.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["fixed", "percentage"] },
+        "isActive": { "type": "boolean" }
       },
-      "required": [
-        "id",
-        "customerId",
-        "medicineId",
-        "quantity",
-        "priceAtAddition",
-        "addedAt"
-      ]
+      "required": ["id", "name", "amount", "type", "isActive"]
     },
-    "Order": {
+    "PromoCode": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Order",
+      "title": "PromoCode",
       "type": "object",
-      "description": "Represents a confirmed purchase order made by a customer.",
+      "description": "Represents a promotional discount code with clinical targeting.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Order entity."
-        },
-        "customerId": {
-          "type": "string",
-          "description": "Reference to the Customer who placed the order. (Relationship: Customer 1:N Order)"
-        },
-        "orderDate": {
-          "type": "string",
-          "description": "Timestamp when the order was placed.",
-          "format": "date-time"
-        },
-        "totalAmount": {
-          "type": "number",
-          "description": "The total monetary amount of the order, including all items and any shipping/taxes."
-        },
-        "shippingAddressId": {
-          "type": "string",
-          "description": "Reference to the Address where the order will be shipped. (Relationship: Address 1:N Order)"
-        },
-        "status": {
-          "type": "string",
-          "description": "The current status of the order (e.g., 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled')."
-        },
-        "prescriptionIds": {
-          "type": "array",
-          "description": "References to Prescription entities associated with this order. (Relationship: Order N:N Prescription)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "adminNotes": {
-          "type": "string",
-          "description": "Internal notes added by an administrator regarding the order."
-        }
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "description": { "type": "string" },
+        "discountType": { "type": "string", "enum": ["fixed", "percentage"] },
+        "discountValue": { "type": "number" },
+        "minOrderValue": { "type": "number" },
+        "applyTo": { "type": "string", "enum": ["cart", "product", "customer", "both"] },
+        "targetId": { "type": "string", "description": "Specific Product ID or Customer ID if applicable" },
+        "isActive": { "type": "boolean" },
+        "validUntil": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "customerId",
-        "orderDate",
-        "totalAmount",
-        "shippingAddressId",
-        "status"
-      ]
-    },
-    "OrderItem": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "OrderItem",
-      "type": "object",
-      "description": "Represents a single line item within a customer's order, detailing the medicine and quantity purchased.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the OrderItem entity."
-        },
-        "orderId": {
-          "type": "string",
-          "description": "Reference to the Order this item belongs to. (Relationship: Order 1:N OrderItem)"
-        },
-        "medicineId": {
-          "type": "string",
-          "description": "Reference to the Medicine product purchased. (Relationship: Medicine 1:N OrderItem)"
-        },
-        "quantity": {
-          "type": "number",
-          "description": "The number of units of the medicine purchased in this order item."
-        },
-        "unitPrice": {
-          "type": "number",
-          "description": "The price of one unit of the medicine at the time the order was placed."
-        },
-        "subtotal": {
-          "type": "number",
-          "description": "The total price for this order item (quantity * unitPrice)."
-        }
-      },
-      "required": [
-        "id",
-        "orderId",
-        "medicineId",
-        "quantity",
-        "unitPrice",
-        "subtotal"
-      ]
-    },
-    "Prescription": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Prescription",
-      "type": "object",
-      "description": "Stores details about a prescription uploaded by a customer, including image reference and analysis status.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Prescription entity."
-        },
-        "customerId": {
-          "type": "string",
-          "description": "Reference to the Customer who uploaded this prescription. (Relationship: Customer 1:N Prescription)"
-        },
-        "uploadDate": {
-          "type": "string",
-          "description": "Timestamp when the prescription image was uploaded.",
-          "format": "date-time"
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL to the stored image of the prescription.",
-          "format": "uri"
-        },
-        "status": {
-          "type": "string",
-          "description": "The current processing status of the prescription (e.g., 'Pending Review', 'Reviewed', 'Requires Clarification', 'Processed')."
-        },
-        "extractedMedications": {
-          "type": "array",
-          "description": "A list of medication names extracted from the prescription image by AI analysis.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "reviewerNotes": {
-          "type": "string",
-          "description": "Notes added by a pharmacist or administrator during the review process."
-        },
-        "associatedOrderIds": {
-          "type": "array",
-          "description": "References to orders that this prescription is associated with. (Relationship: Prescription N:N Order)",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "customerId",
-        "uploadDate",
-        "imageUrl",
-        "status"
-      ]
+      "required": ["id", "code", "discountType", "discountValue", "applyTo", "isActive"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous", "phone"]
   },
   "firestore": {
     "structure": [
       {
-        "path": "/users/{userId}",
+        "path": "/fees/{feeId}",
         "definition": {
-          "entityName": "Customer",
-          "schema": {
-            "$ref": "#/backend/entities/Customer"
-          },
-          "description": "Stores individual customer profiles. The document ID is the Firebase Authentication UID (`userId`), which is also stored in the 'id' and 'firebaseAuthId' fields. This collection is private to the owning user.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique Firebase Authentication UID of the customer."
-            }
-          ]
+          "entityName": "Fee",
+          "schema": { "$ref": "#/backend/entities/Fee" },
+          "description": "Global clinical fees managed by admins."
         }
       },
       {
-        "path": "/users/{userId}/addresses/{addressId}",
+        "path": "/promocodes/{promoId}",
         "definition": {
-          "entityName": "Address",
-          "schema": {
-            "$ref": "#/backend/entities/Address"
-          },
-          "description": "Subcollection storing delivery and billing addresses for a specific customer. Authorization is based on the parent 'userId' from the path. The 'customerId' field in the document matches the 'userId' in the path, ensuring Authorization Independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique Firebase Authentication UID of the customer."
-            },
-            {
-              "name": "addressId",
-              "description": "The unique identifier for a specific address."
-            }
-          ]
+          "entityName": "PromoCode",
+          "schema": { "$ref": "#/backend/entities/PromoCode" },
+          "description": "Promotional codes for patients."
         }
       },
       {
         "path": "/medicines/{medicineId}",
         "definition": {
           "entityName": "Medicine",
-          "schema": {
-            "$ref": "#/backend/entities/Medicine"
-          },
-          "description": "Stores the catalog of available medicine products. This collection is publicly readable for all users, but write access is restricted to administrators.",
-          "params": [
-            {
-              "name": "medicineId",
-              "description": "The unique identifier for a specific medicine product."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/Medicine" },
+          "description": "Catalog of medicines."
         }
       },
       {
-        "path": "/users/{userId}/cartItems/{cartItemId}",
+        "path": "/userProfiles/{userId}",
         "definition": {
-          "entityName": "CartItem",
-          "schema": {
-            "$ref": "#/backend/entities/CartItem"
-          },
-          "description": "Subcollection storing items currently in a customer's shopping cart. Authorization is based on the parent 'userId' from the path. The 'customerId' field in the document matches the 'userId' in the path, ensuring Authorization Independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique Firebase Authentication UID of the customer."
-            },
-            {
-              "name": "cartItemId",
-              "description": "The unique identifier for an item in the shopping cart."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/orders/{orderId}",
-        "definition": {
-          "entityName": "Order",
-          "schema": {
-            "$ref": "#/backend/entities/Order"
-          },
-          "description": "Subcollection storing confirmed purchase orders for a specific customer. Authorization is based on the parent 'userId' from the path. The 'customerId' field in the document matches the 'userId' in the path, ensuring Authorization Independence. Admins have read access to this collection via collection group queries.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique Firebase Authentication UID of the customer."
-            },
-            {
-              "name": "orderId",
-              "description": "The unique identifier for a specific order."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/orders/{orderId}/orderItems/{orderItemId}",
-        "definition": {
-          "entityName": "OrderItem",
-          "schema": {
-            "$ref": "#/backend/entities/OrderItem"
-          },
-          "description": "Subcollection storing individual line items within a customer's order. Authorization is based on the 'userId' from the grand-parent path, providing Authorization Independence without needing additional 'customerId' fields in the document itself. Allows atomic order and order item creation and secure listing.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique Firebase Authentication UID of the customer who placed the order."
-            },
-            {
-              "name": "orderId",
-              "description": "The unique identifier for the parent order."
-            },
-            {
-              "name": "orderItemId",
-              "description": "The unique identifier for a specific item within the order."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/prescriptions/{prescriptionId}",
-        "definition": {
-          "entityName": "Prescription",
-          "schema": {
-            "$ref": "#/backend/entities/Prescription"
-          },
-          "description": "Subcollection storing prescription uploads for a specific customer. Authorization is based on the parent 'userId' from the path. The 'customerId' field in the document matches the 'userId' in the path, ensuring Authorization Independence. Admins have read access to this collection via collection group queries.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique Firebase Authentication UID of the customer."
-            },
-            {
-              "name": "prescriptionId",
-              "description": "The unique identifier for a specific prescription upload."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles_admin/{adminId}",
-        "definition": {
-          "entityName": "AdminRole",
-          "schema": {
-            "$ref": "#/backend/entities/AdminRole"
-          },
-          "description": "This collection explicitly defines administrative roles. The document ID (`adminId`) is the Firebase Authentication UID of the administrator. The mere existence of a document signifies admin privileges, enabling simple and robust Database Access Control (DBAC) for admin-specific UIs and data access.",
-          "params": [
-            {
-              "name": "adminId",
-              "description": "The unique Firebase Authentication UID of an administrator."
-            }
-          ]
+          "entityName": "Customer",
+          "schema": { "$ref": "#/backend/entities/Customer" },
+          "description": "Patient profiles."
         }
       }
-    ],
-    "reasoning": "The Firestore structure for HealthLink Pharmacy prioritizes security, scalability, and debuggability by adhering to the core design principles. \n\n**Authorization Independence:** All user-specific data (Customer profiles, Addresses, Cart Items, Orders, Order Items, Prescriptions) are organized under a top-level `/users/{userId}` collection. The `userId` in the path directly corresponds to `request.auth.uid`. For subcollections like `/users/{userId}/addresses/{addressId}` or `/users/{userId}/orders/{orderId}/orderItems/{orderItemId}`, the authorization is derived solely from the `userId` in the immediate parent path. This structure eliminates the need for expensive and complex `get()` calls in security rules to check parent document ownership, ensuring atomic operations and improving rule performance and debuggability. For instance, an `OrderItem` document, despite being deeply nested, implicitly belongs to the `userId` in its path, allowing simple rules like `allow read, write: if request.auth.uid == userId;` without having to fetch the parent `Order` document.\n\n**Querying for Authorization Purposes (QAPs):**\n1.  **User-Specific Data:** The hierarchical structure `/users/{userId}/<subcollection>` inherently supports Querying for Authorization Purposes. When a user queries their own data (e.g., `db.collection('users').doc(request.auth.uid).collection('orders').get()`), the `userId` in the path directly filters the data to only what the authenticated user owns. Security rules can simply verify `request.auth.uid == userId`, ensuring only an authorized user can access their specific subcollections.\n2.  **Global/Public Data:** The `/medicines` collection is a top-level collection, designed for public read access by all users and restricted write access for administrators. This segregation makes list queries for products efficient and secure for all users.\n3.  **Admin Access (DBAC):** Admin users, identified by their UID in the `/roles_admin/{adminId}` collection, can perform broader queries. To view all orders or prescriptions (e.g., for an admin panel), `collectionGroup` queries can be used (e.g., `db.collectionGroup('orders').get()`). Security rules for these collections can check for the admin role: `allow list: if exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));`. This ensures that `list` operations remain secure and efficient, as roles are checked via direct document existence rather than complex queries.\n\n**Structural Segregation:**\n*   `/medicines/{medicineId}`: All documents in this collection represent public product data, accessible to all users for reading. Write access is restricted to administrators.\n*   `/users/{userId}` and its subcollections (`/addresses`, `/cartItems`, `/orders`, `/prescriptions`): These collections are strictly private. Each document within these subcollections belongs exclusively to the `userId` specified in its path, ensuring a homogeneous security posture where only the owner can access their data. Nested `orderItems` within `orders` maintains this strict ownership.\n*   `/roles_admin/{adminId}`: This collection stores administrator UIDs, serving as the single source of truth for global admin privileges. Its homogeneous security posture is 'read by anyone for authorization check, write by trusted system/admin', enabling clear DBAC.\n\n**Denormalization:** The primary denormalization strategy is implicit through the hierarchical path for user-owned data. The `customerId` field present in many entities (`Address`, `CartItem`, `Order`, `Prescription`) naturally aligns with the `userId` wildcard in the path, making authorization checks simple and eliminating `get()` calls. For `OrderItem` documents, while `customerId` is not explicitly in its schema, its placement under `/users/{userId}/orders/{orderId}/orderItems/{orderItemId}` means that the `userId` from the path is always available for authorization checks, effectively denormalizing the owner's ID without adding a redundant field to every `OrderItem` document. This design ensures highly robust and easily debuggable security rules while supporting scalable data access patterns."
+    ]
   }
 }

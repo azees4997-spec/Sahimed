@@ -2,6 +2,8 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
 export interface Product {
   id: string;
@@ -11,21 +13,36 @@ export interface Product {
   price: number;
   mrp: number;
   availableQuantity: number;
-  prescriptionRequired: boolean;
   saltComposition: string;
   manufacturer: string;
   category: string;
   imageUrl: string;
-  imageUrls?: string[];
   isGeneric?: boolean;
   packSize?: string;
-  dosageForm?: string;
-  uses?: string[];
-  sideEffects?: string[];
 }
 
 interface CartItem extends Product {
   quantity: number;
+}
+
+interface Fee {
+  id: string;
+  name: string;
+  amount: number;
+  type: 'fixed' | 'percentage';
+  isActive: boolean;
+}
+
+interface PromoCode {
+  id: string;
+  code: string;
+  description: string;
+  discountType: 'fixed' | 'percentage';
+  discountValue: number;
+  minOrderValue: number;
+  applyTo: 'cart' | 'product' | 'customer' | 'both';
+  targetId?: string;
+  isActive: boolean;
 }
 
 interface CartContextType {
@@ -39,14 +56,36 @@ interface CartContextType {
   totalPrice: number;
   location: string;
   setLocation: (loc: string) => void;
+  appliedPromo: PromoCode | null;
+  applyPromo: (promo: PromoCode | null) => void;
+  activeFees: Fee[];
+  availablePromos: PromoCode[];
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
-  // Defaulting to Mumbai, MH
   const [location, setLocation] = useState('Mumbai, MH');
+  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
+  
+  const db = useFirestore();
+
+  // Fetch dynamic fees
+  const feesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'fees'), where('isActive', '==', true));
+  }, [db]);
+  const { data: activeFeesData } = useCollection(feesQuery);
+  const activeFees: Fee[] = (activeFeesData as any[]) || [];
+
+  // Fetch available promos
+  const promosQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'promocodes'), where('isActive', '==', true));
+  }, [db]);
+  const { data: availablePromosData } = useCollection(promosQuery);
+  const availablePromos: PromoCode[] = (availablePromosData as any[]) || [];
 
   useEffect(() => {
     const savedCart = localStorage.getItem('hl_cart');
@@ -58,11 +97,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
     }
     const savedLoc = localStorage.getItem('hl_location');
-    if (savedLoc) {
-      setLocation(savedLoc);
-    } else {
-      localStorage.setItem('hl_location', 'Mumbai, MH');
-    }
+    if (savedLoc) setLocation(savedLoc);
   }, []);
 
   useEffect(() => {
@@ -109,14 +144,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return cart.find(item => item.id === id)?.quantity || 0;
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+    setCart([]);
+    setAppliedPromo(null);
+  };
+
+  const applyPromo = (promo: PromoCode | null) => setAppliedPromo(promo);
 
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
   const totalPrice = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   return (
     <CartContext.Provider value={{
-      cart, addToCart, removeFromCart, updateQuantity, clearCart, getItemQuantity, totalItems, totalPrice, location, setLocation
+      cart, addToCart, removeFromCart, updateQuantity, clearCart, getItemQuantity, totalItems, totalPrice, location, setLocation,
+      appliedPromo, applyPromo, activeFees, availablePromos
     }}>
       {children}
     </CartContext.Provider>
