@@ -30,7 +30,10 @@ service cloud.firestore {
 
     /** @description Checks if the user is a verified clinical supervisor/admin. */
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/adminProfiles/$(request.auth.uid));
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/adminProfiles/$(request.auth.uid)) &&
+             (get(/databases/$(database)/documents/adminProfiles/$(request.auth.uid)).data.role == 'admin' || 
+              get(/databases/$(database)/documents/adminProfiles/$(request.auth.uid)).data.role == 'pharmacist');
     }
 
     function isExistingOwner(userId) {
@@ -61,8 +64,9 @@ service cloud.firestore {
       }
 
       match /orders/{orderId} {
-        allow get, list: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) || isAdmin(); // Admins can create digitized orders
+        allow get: if isOwner(userId) || isAdmin();
+        allow list: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) || isAdmin(); 
         allow update: if isAdmin();
         allow delete: if isAdmin();
       }
@@ -107,7 +111,7 @@ service cloud.firestore {
     match /adminProfiles/{adminId} {
       allow get: if isSignedIn();
       allow list: if isAdmin();
-      allow create: if isSignedIn() && request.resource.data.id == request.auth.uid; // Allow bootstrap
+      allow create: if isSignedIn() && request.resource.data.id == request.auth.uid; 
       allow update, delete: if isAdmin();
     }
 

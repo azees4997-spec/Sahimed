@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
@@ -31,7 +30,8 @@ import {
   FileDown,
   FileUp,
   BellRing,
-  Calendar
+  Calendar,
+  Dna
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -86,15 +86,14 @@ export default function SupervisorConsole() {
       const snap = await getDoc(doc(db, 'adminProfiles', user.uid));
       if (snap.exists() && (snap.data().role === 'admin' || snap.data().role === 'pharmacist')) {
         setIsVerified(true);
-        setIsVerifying(false);
         toast({ title: "Identity Verified", description: "Clinical supervisor access active." });
       } else {
         setIsVerified(false);
-        setIsVerifying(false);
       }
     } catch (err) {
       console.error("Verification failed", err);
       setIsVerified(false);
+    } finally {
       setIsVerifying(false);
     }
   };
@@ -384,7 +383,10 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   });
 
   const updateStatus = (enquiry: any, status: string) => {
-    if (!enquiry.userId) return;
+    if (!enquiry.userId) {
+      toast({ variant: 'destructive', title: 'Data Mismatch', description: 'Patient identifier missing from enquiry.' });
+      return;
+    }
     const ref = doc(db, 'userProfiles', enquiry.userId, 'prescriptions', enquiry.id);
     updateDocumentNonBlocking(ref, { status });
     toast({ title: "Clinical Update", description: `Enquiry status changed to ${status}` });
@@ -518,6 +520,11 @@ function DigitizationWorkflow({ db, enquiry, medicines, onSuccess }: { db: any, 
   const handleCreateOrder = async () => {
     if (selectedItems.length === 0) {
       toast({ variant: 'destructive', title: 'Cart Empty', description: 'Add clinical SKUs before ordering.' });
+      return;
+    }
+
+    if (!enquiry.userId) {
+      toast({ variant: 'destructive', title: 'Critical Error', description: 'Patient UID is required for fulfillment.' });
       return;
     }
 
