@@ -21,6 +21,7 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
+    // Specifically gated for verified admins to perform clinical auditing
     match /{path=**}/orders/{orderId} {
       allow read, list, update: if isAdmin();
     }
@@ -56,17 +57,17 @@ service cloud.firestore {
     match /adminProfiles/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create: if isSignedIn();
+      allow create: if isSignedIn(); // Allow initial self-registration
       allow update, delete: if isAdmin();
     }
 
     match /moleculeMaster/{moleculeId} {
-      allow get, list: if true;
+      allow get, list: if true; // Public catalog reference
       allow write: if isAdmin();
     }
 
     match /medicines/{medicineId} {
-      allow get, list: if true;
+      allow get, list: if true; // Public product browsing
       allow write: if isAdmin();
     }
 

@@ -60,7 +60,7 @@ import {
   deleteDocumentNonBlocking,
   addDocumentNonBlocking
 } from '@/firebase';
-import { doc, collection, query, orderBy, collectionGroup, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, collection, query, orderBy, collectionGroup, getDoc, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -87,13 +87,10 @@ export default function SupervisorConsole() {
     setIsVerifying(true);
     try {
       const snap = await getDoc(doc(db, 'adminProfiles', user.uid));
-      if (snap.exists() && snap.data().role === 'admin') {
-        // Success: identity confirmed
-        setTimeout(() => {
-          setIsVerified(true);
-          setIsVerifying(false);
-          toast({ title: "Identity Verified", description: "Clinical supervisor access active." });
-        }, 1500);
+      if (snap.exists() && (snap.data().role === 'admin' || snap.data().role === 'pharmacist')) {
+        setIsVerified(true);
+        setIsVerifying(false);
+        toast({ title: "Identity Verified", description: "Clinical supervisor access active." });
       } else {
         setIsVerified(false);
         setIsVerifying(false);
@@ -149,7 +146,7 @@ export default function SupervisorConsole() {
     
     setIsVerifying(true);
     toast({ title: 'Requesting Authority', description: 'Provisioning admin role... please wait.' });
-    setTimeout(performVerification, 6000);
+    setTimeout(performVerification, 3000);
   };
 
   if (isUserLoading || isVerifying) {
@@ -265,7 +262,6 @@ export default function SupervisorConsole() {
                 Live Store
               </Button>
             </Link>
-            <SeedDataButton db={db} />
             <Button variant="ghost" onClick={performVerification} size="icon" className="w-10 h-10 rounded-xl text-gray-400"><RefreshCw className="w-4 h-4" /></Button>
             <Button variant="ghost" onClick={handleLogout} size="icon" className="w-10 h-10 rounded-xl text-gray-400 hover:text-red-500"><LogOut className="w-4 h-4" /></Button>
           </div>
@@ -284,85 +280,12 @@ export default function SupervisorConsole() {
   );
 }
 
-function SeedDataButton({ db }: { db: any }) {
-  const { toast } = useToast();
-  const [seeding, setSeeding] = useState(false);
-
-  const seed = async () => {
-    setSeeding(true);
-    try {
-      const molecules = [
-        { masterId: 'sita-met-50-500', molecule: 'Sitagliptin 50mg + Metformin 500mg', form: 'Tablet' },
-        { masterId: 'ator-20', molecule: 'Atorvastatin 20mg', form: 'Tablet' }
-      ];
-
-      for (const mol of molecules) {
-        await setDoc(doc(db, 'moleculeMaster', mol.masterId), mol);
-      }
-
-      const medicines = [
-        { 
-          sku: 'JAN-50-500-15',
-          moleculeId: 'sita-met-50-500',
-          name: 'Janumet 50/500', 
-          price: 1250, 
-          mrp: 1450,
-          prescriptionRequired: true,
-          saltComposition: 'Sitagliptin + Metformin', 
-          manufacturer: 'MSD Pharmaceuticals', 
-          isGeneric: false, 
-          category: 'Diabetes', 
-          imageUrl: 'https://picsum.photos/seed/dia1/300/300', 
-          imageUrls: ['https://picsum.photos/seed/dia1/300/300'],
-          availableQuantity: 100, 
-          description: 'Janumet is a combination of two anti-diabetic medicines.',
-          packSize: 'Strip of 15 tablets',
-          dosageForm: 'Tablet'
-        },
-        { 
-          sku: 'TAL-50-500-15',
-          moleculeId: 'sita-met-50-500',
-          name: 'Talumet 50/500', 
-          price: 240, 
-          mrp: 1200,
-          prescriptionRequired: true,
-          saltComposition: 'Sitagliptin + Metformin', 
-          manufacturer: 'VSD Generics', 
-          isGeneric: true, 
-          category: 'Diabetes', 
-          imageUrl: 'https://picsum.photos/seed/dia2/300/300', 
-          imageUrls: ['https://picsum.photos/seed/dia2/300/300'],
-          availableQuantity: 500, 
-          description: 'Bio-equivalent generic version.',
-          packSize: 'Strip of 15 tablets',
-          dosageForm: 'Tablet'
-        }
-      ];
-
-      for (const med of medicines) {
-        await addDocumentNonBlocking(collection(db, 'medicines'), med);
-      }
-
-      toast({ title: "Clinical Seed Complete", description: "Molecules and SKU pairs initialized." });
-    } catch (e) {
-      toast({ variant: 'destructive', title: "Seeding Failed" });
-    } finally {
-      setSeeding(false);
-    }
-  };
-
-  return (
-    <Button onClick={seed} disabled={seeding} variant="outline" className="rounded-xl border-2 font-black text-[9px] uppercase gap-1.5 h-10 px-4">
-      {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
-      Seed Database
-    </Button>
-  );
-}
-
 function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab) => void, isVerified: boolean }) {
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
   const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster')), [db]);
   const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles')), [db]);
+  
+  // Defensive gating for collection group queries
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
 
