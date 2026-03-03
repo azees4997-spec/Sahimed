@@ -64,17 +64,17 @@ export default function SupervisorConsole() {
       const snap = await getDoc(doc(db, 'adminProfiles', user.uid));
       if (snap.exists()) {
         // Clinical safety delay to ensure Firestore rules are propagated
+        // This prevents "Missing or insufficient permissions" on initial role assignment
         setTimeout(() => {
           setIsVerified(true);
           setIsVerifying(false);
-          toast({ title: "Clinical Clear", description: "Operational paths synchronized." });
-        }, 1500);
+          toast({ title: "Identity Verified", description: "Clinical supervisor access active." });
+        }, 2000);
       } else {
         setIsVerified(false);
         setIsVerifying(false);
       }
     } catch (err) {
-      console.error("Verification failed", err);
       setIsVerified(false);
       setIsVerifying(false);
     }
@@ -83,6 +83,8 @@ export default function SupervisorConsole() {
   useEffect(() => {
     if (user && !isVerified) {
       performVerification();
+    } else if (!user) {
+      setIsVerified(false);
     }
   }, [user]);
 
@@ -92,7 +94,7 @@ export default function SupervisorConsole() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Invalid Credentials', description: 'Access key rejected.' });
+      toast({ variant: 'destructive', title: 'Access Denied', description: 'Invalid clinical credentials.' });
     } finally {
       setAuthLoading(false);
     }
@@ -110,15 +112,19 @@ export default function SupervisorConsole() {
       role: 'admin',
       activatedAt: new Date().toISOString()
     }, { merge: true });
-    toast({ title: 'Requesting Authority', description: 'Synchronizing clinical role... please wait 5 seconds.' });
-    setTimeout(performVerification, 5000);
+    
+    setIsVerifying(true);
+    toast({ title: 'Requesting Authority', description: 'Provisioning admin role... please wait.' });
+    
+    // Longer timeout for first-time setup to allow Security Rules to sync
+    setTimeout(performVerification, 6000);
   };
 
   if (isUserLoading || isVerifying) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F7F6] gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Verifying security context...</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Syncing security context...</p>
       </div>
     );
   }
@@ -134,15 +140,15 @@ export default function SupervisorConsole() {
           <CardContent className="p-8">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email ID</Label>
-                <Input type="email" placeholder="admin@healthlink.com" value={email} onChange={e => setEmail(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Admin Email</Label>
+                <Input type="email" placeholder="admin@sahimed.com" value={email} onChange={e => setEmail(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Password</Label>
                 <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
               </div>
-              <Button type="submit" disabled={authLoading} className="w-full h-14 rounded-full font-black uppercase tracking-widest mt-4">
-                {authLoading ? <Loader2 className="animate-spin" /> : "Access Terminal"}
+              <Button type="submit" disabled={authLoading} className="w-full h-14 rounded-full font-black uppercase tracking-widest mt-4 shadow-xl shadow-primary/20">
+                {authLoading ? <Loader2 className="animate-spin" /> : "Authorize Access"}
               </Button>
             </form>
           </CardContent>
@@ -157,14 +163,14 @@ export default function SupervisorConsole() {
         <Card className="max-w-md w-full rounded-[40px] shadow-2xl border-none p-10 text-center space-y-6 bg-white">
           <ShieldAlert className="w-12 h-12 text-orange-500 mx-auto" />
           <div>
-            <h2 className="text-xl font-black uppercase mb-2">Access Restricted</h2>
-            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Identity confirmed, but clinical supervisor role is not yet activated.</p>
+            <h2 className="text-xl font-black uppercase mb-2">Restricted Area</h2>
+            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Logged in as {user.email}, but clinical supervisor role is not detected in the database.</p>
           </div>
           <div className="space-y-3 pt-6 border-t">
             <Button onClick={bootstrapAdmin} className="w-full gap-2 rounded-full h-14 bg-orange-600 hover:bg-orange-700 uppercase font-black text-[10px] tracking-widest">
               <UserPlus className="w-4 h-4" /> Initialize Admin Role
             </Button>
-            <Button onClick={handleLogout} variant="ghost" className="w-full text-gray-400 font-bold uppercase text-[9px] tracking-widest">Exit Terminal</Button>
+            <Button onClick={handleLogout} variant="ghost" className="w-full text-gray-400 font-bold uppercase text-[9px] tracking-widest">Sign Out</Button>
           </div>
         </Card>
       </div>
@@ -178,14 +184,14 @@ export default function SupervisorConsole() {
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
               <div className="bg-primary p-1.5 rounded-lg"><ShieldCheck className="text-white w-4 h-4" /></div>
-              <span className="font-black text-lg tracking-tighter text-gray-900 uppercase">Supervisor</span>
+              <span className="font-black text-lg tracking-tighter text-gray-900 uppercase">Supervisor Terminal</span>
             </div>
             <nav className="hidden lg:flex gap-1">
               {[
                 { id: 'overview', label: 'Dashboard', icon: LayoutGrid },
-                { id: 'inventory', label: 'Inventory', icon: Package },
-                { id: 'enquiries', label: 'Enquiries', icon: FileText },
-                { id: 'fulfillment', label: 'Fulfillment', icon: ShoppingBag }
+                { id: 'inventory', label: 'SKU Master', icon: Package },
+                { id: 'enquiries', label: 'Prescriptions', icon: FileText },
+                { id: 'fulfillment', label: 'Orders', icon: ShoppingBag }
               ].map(tab => (
                 <Button 
                   key={tab.id} 
@@ -226,8 +232,11 @@ function SeedDataButton({ db }: { db: any }) {
     try {
       const categories = [
         { name: 'Diabetes', description: 'Glucose Management' },
-        { name: 'Heart Care', description: 'Cardiac Wellness' },
-        { name: 'Gastro', description: 'Acid Control' }
+        { name: 'Heart care', description: 'Cardiac Wellness' },
+        { name: 'Stomach care', icon: 'Zap', description: 'Digestive & gut health' },
+        { name: 'Liver care', icon: 'ShieldPlus', description: 'Hepatic support' },
+        { name: 'Derma care', icon: 'Sparkles', description: 'Skin & dermatological solutions' },
+        { name: 'Respicare', icon: 'Wind', description: 'Respiratory & lung health' }
       ];
 
       for (const cat of categories) {
@@ -273,9 +282,9 @@ function SeedDataButton({ db }: { db: any }) {
         await addDocumentNonBlocking(collection(db, 'medicines'), med);
       }
 
-      toast({ title: "Master Catalog Seeded", description: "Therapeutic categories and clinical product pairs initialized." });
+      toast({ title: "Catalog Seeded", description: "Therapeutic categories and clinical product pairs initialized." });
     } catch (e) {
-      toast({ variant: 'destructive', title: "Seeding Aborted" });
+      toast({ variant: 'destructive', title: "Seeding Failed" });
     } finally {
       setSeeding(false);
     }
@@ -284,7 +293,7 @@ function SeedDataButton({ db }: { db: any }) {
   return (
     <Button onClick={seed} disabled={seeding} variant="outline" className="rounded-xl border-2 font-black text-[9px] uppercase gap-1.5 h-10 px-4">
       {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
-      Seed Catalog
+      Seed Database
     </Button>
   );
 }
@@ -300,12 +309,12 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
-      <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase">Overview</h1>
+      <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase">Clinical Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: 'Active SKUs', icon: Package, count: meds?.length || 0, tab: 'inventory' as AdminTab },
-          { label: 'Enquiries', icon: FileText, count: pres?.length || 0, tab: 'enquiries' as AdminTab },
-          { label: 'Fulfillment', icon: ShoppingBag, count: orders?.filter(o => o.status !== 'Delivered').length || 0, tab: 'fulfillment' as AdminTab },
+          { label: 'Active Catalog', icon: Package, count: meds?.length || 0, tab: 'inventory' as AdminTab },
+          { label: 'Unchecked Enquiries', icon: FileText, count: pres?.filter(p => p.status === 'Pending Review').length || 0, tab: 'enquiries' as AdminTab },
+          { label: 'Open Orders', icon: ShoppingBag, count: orders?.filter(o => o.status !== 'Delivered').length || 0, tab: 'fulfillment' as AdminTab },
         ].map(card => (
           <Card key={card.label} className="rounded-[32px] p-8 border-none shadow-sm hover:shadow-xl transition-all cursor-pointer bg-white group" onClick={() => setTab(card.tab)}>
             <card.icon className="w-10 h-10 text-primary mb-6 group-hover:scale-110 transition-transform" />
@@ -332,10 +341,10 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-2">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black uppercase text-gray-900">SKU Master</h2>
+        <h2 className="text-2xl font-black uppercase text-gray-900">Inventory Control</h2>
         <div className="relative w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-          <Input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-full border-none bg-white font-bold text-xs" />
+          <Input placeholder="Filter medicines..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-full border-none bg-white font-bold text-xs" />
         </div>
       </div>
 
@@ -344,11 +353,11 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[9px] font-black uppercase text-gray-400 border-b">
               <tr>
-                <th className="px-8 py-6">Product</th>
-                <th className="px-8 py-6">Composition</th>
-                <th className="px-8 py-6 text-center">Price</th>
-                <th className="px-8 py-6 text-center">Stock</th>
-                <th className="px-8 py-6 text-right">Action</th>
+                <th className="px-8 py-6">Product & MFR</th>
+                <th className="px-8 py-6">Salt Composition</th>
+                <th className="px-8 py-6 text-center">Unit Price</th>
+                <th className="px-8 py-6 text-center">Stock Level</th>
+                <th className="px-8 py-6 text-right">Delete</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -368,13 +377,13 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                   <td className="px-8 py-6 font-black text-center text-sm">₹{med.price}</td>
                   <td className="px-8 py-6 text-center">
                     <Badge variant={med.availableQuantity < 50 ? 'destructive' : 'secondary'} className="px-3 py-1 rounded-full font-black text-[8px] uppercase">
-                      {med.availableQuantity}
+                      {med.availableQuantity || 0} Units
                     </Badge>
                   </td>
                   <td className="px-8 py-6 text-right">
                     <Button variant="ghost" size="icon" className="text-gray-300 hover:text-red-500 rounded-full" onClick={() => {
                       deleteDocumentNonBlocking(doc(db, 'medicines', med.id));
-                      toast({ title: "SKU Purged", description: "Removed from database." });
+                      toast({ title: "SKU Deleted", description: "Product removed from catalog." });
                     }}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -390,19 +399,23 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, [db, isVerified]);
+  // Gated collectionGroup query
+  const presQuery = useMemoFirebase(() => 
+    isVerified ? query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, 
+    [db, isVerified]
+  );
   const { data: enquiries, isLoading } = useCollection(presQuery);
   const { toast } = useToast();
 
   const updateStatus = (enquiry: any, status: string) => {
     const ref = doc(db, 'userProfiles', enquiry.userId, 'prescriptions', enquiry.id);
     updateDocumentNonBlocking(ref, { status });
-    toast({ title: "Clinical Update", description: `Status: ${status}` });
+    toast({ title: "Status Updated", description: `Enquiry set to ${status}` });
   };
 
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-2">
-      <h2 className="text-2xl font-black uppercase text-gray-900">Enquiries</h2>
+      <h2 className="text-2xl font-black uppercase text-gray-900">Patient Enquiries</h2>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {isLoading ? (
           <div className="col-span-full py-20 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
@@ -414,16 +427,16 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
              </div>
              <CardContent className="p-5 flex-1 flex flex-col">
                 <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Patient Ref</p>
-                <p className="text-[10px] font-black text-gray-900 truncate mb-4">ID_{enq.userId.substring(0,8).toUpperCase()}</p>
+                <p className="text-[10px] font-black text-gray-900 truncate mb-4">P_{enq.userId.substring(0,8).toUpperCase()}</p>
                 <div className="mt-auto flex gap-2">
-                  <Button onClick={() => updateStatus(enq, 'Acknowledged')} size="sm" className="flex-1 rounded-full h-8 font-black uppercase text-[8px] tracking-widest">OK</Button>
+                  <Button onClick={() => updateStatus(enq, 'Acknowledged')} size="sm" className="flex-1 rounded-full h-8 font-black uppercase text-[8px] tracking-widest">Approve</Button>
                   <Button variant="outline" size="sm" className="flex-1 rounded-full h-8 font-black uppercase text-[8px] tracking-widest">Detail</Button>
                 </div>
              </CardContent>
           </Card>
         )) : (
           <div className="col-span-full py-20 text-center bg-white rounded-[32px] border border-dashed">
-            <p className="text-gray-400 font-bold uppercase text-[9px] tracking-widest">No enquiries found</p>
+            <p className="text-gray-400 font-bold uppercase text-[9px] tracking-widest">No prescription enquiries found</p>
           </div>
         )}
       </div>
@@ -432,47 +445,55 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, [db, isVerified]);
+  // Gated collectionGroup query
+  const ordersQuery = useMemoFirebase(() => 
+    isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, 
+    [db, isVerified]
+  );
   const { data: orders, isLoading } = useCollection(ordersQuery);
   const { toast } = useToast();
 
   const updateStatus = (order: any, status: string) => {
     const ref = doc(db, 'userProfiles', order.userId, 'orders', order.id);
     updateDocumentNonBlocking(ref, { status });
-    toast({ title: "Fulfillment Update", description: `Order: ${status}` });
+    toast({ title: "Logistics Updated", description: `Order ${order.id.substring(0,6)} is now ${status}` });
   };
 
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-2">
-      <h2 className="text-2xl font-black uppercase text-gray-900">Logistics</h2>
+      <h2 className="text-2xl font-black uppercase text-gray-900">Order Fulfillment</h2>
       <Card className="rounded-[24px] overflow-hidden border-none shadow-sm bg-white">
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-[9px] font-black uppercase text-gray-400 border-b">
             <tr>
               <th className="px-8 py-6">Order ID</th>
+              <th className="px-8 py-6">Items</th>
               <th className="px-8 py-6">Value</th>
               <th className="px-8 py-6">Status</th>
-              <th className="px-8 py-6 text-right">Dispatch</th>
+              <th className="px-8 py-6 text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {isLoading ? (
-              <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
+              <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
             ) : orders?.length ? orders.map(order => (
               <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-8 py-6 font-black text-gray-900 text-xs">#{order.id.substring(0,8).toUpperCase()}</td>
+                <td className="px-8 py-6">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase">{order.items?.length || 0} Clinical SKUs</span>
+                </td>
                 <td className="px-8 py-6 font-black text-primary text-sm">₹{order.totalAmount}</td>
                 <td className="px-8 py-6">
                   <Badge variant="outline" className="text-[8px] uppercase font-bold">{order.status}</Badge>
                 </td>
                 <td className="px-8 py-6 text-right">
                   {order.status !== 'Delivered' && (
-                    <Button onClick={() => updateStatus(order, 'Shipped')} size="sm" className="rounded-full h-8 px-4 font-black uppercase text-[8px] tracking-widest">Ship</Button>
+                    <Button onClick={() => updateStatus(order, 'Shipped')} size="sm" className="rounded-full h-8 px-4 font-black uppercase text-[8px] tracking-widest shadow-md">Dispatch</Button>
                   )}
                 </td>
               </tr>
             )) : (
-              <tr><td colSpan={4} className="p-10 text-center text-[9px] text-gray-400 font-black uppercase">Queue Empty</td></tr>
+              <tr><td colSpan={5} className="p-10 text-center text-[9px] text-gray-400 font-black uppercase">Fulfillment queue empty</td></tr>
             )}
           </tbody>
         </table>
