@@ -1,4 +1,4 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/prescription-analysis-and-pre-fill-flow.ts';
+// AI flows are registered here for development
