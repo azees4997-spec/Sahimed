@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
@@ -31,7 +32,8 @@ import {
   FileUp,
   BellRing,
   Calendar,
-  Dna
+  Dna,
+  MapPin
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,12 +54,13 @@ import {
   useAuth, 
   useMemoFirebase, 
   useCollection,
+  useDoc,
   setDocumentNonBlocking,
   updateDocumentNonBlocking,
   deleteDocumentNonBlocking,
   addDocumentNonBlocking
 } from '@/firebase';
-import { doc, collection, query, collectionGroup, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, query, collectionGroup, getDoc, serverTimestamp, where, limit } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -727,25 +730,29 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
               <th className="px-8 py-6">Full Name</th>
               <th className="px-8 py-6">Mobile Number</th>
               <th className="px-8 py-6">Email Address</th>
+              <th className="px-8 py-6">Primary Hub (Address)</th>
               <th className="px-8 py-6 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {isLoading ? (
-              <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
+              <tr><td colSpan={6} className="p-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
             ) : users?.map(u => (
               <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-8 py-6">
                    <code className="text-[10px] font-black text-primary bg-primary/5 px-3 py-1 rounded-md">{u.id.substring(0,10)}</code>
                 </td>
                 <td className="px-8 py-6">
-                  <span className="font-black text-gray-900 text-xs uppercase">{u.firstName} {u.lastName}</span>
+                  <span className="font-black text-gray-900 text-xs uppercase">{u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'No Name'}</span>
                 </td>
                 <td className="px-8 py-6">
-                  <span className="text-[10px] font-bold text-gray-600">{u.phoneNumber}</span>
+                  <span className="text-[10px] font-bold text-gray-600">{u.phoneNumber || u.phone || 'N/A'}</span>
                 </td>
                 <td className="px-8 py-6">
                   <span className="text-[10px] font-bold text-gray-400">{u.email || 'N/A'}</span>
+                </td>
+                <td className="px-8 py-6">
+                  <CustomerAddressCell db={db} userId={u.id} />
                 </td>
                 <td className="px-8 py-6 text-right">
                    <Dialog open={selectedUser?.id === u.id} onOpenChange={(open) => !open && setSelectedUser(null)}>
@@ -756,7 +763,7 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                       </DialogTrigger>
                       <DialogContent className="max-w-3xl rounded-[40px] border-none overflow-hidden">
                          <DialogHeader>
-                           <DialogTitle className="text-xl font-black uppercase">Patient History: {u.firstName} {u.lastName}</DialogTitle>
+                           <DialogTitle className="text-xl font-black uppercase">Patient History: {u.name || `${u.firstName || ''} ${u.lastName || ''}`}</DialogTitle>
                            <CardDescription className="text-[9px] font-black uppercase tracking-widest">Auditing clinical orders and interactions</CardDescription>
                          </DialogHeader>
                          {selectedUser && <PatientHistoryView db={db} userId={selectedUser.id} />}
@@ -768,6 +775,23 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
           </tbody>
         </table>
       </Card>
+    </div>
+  );
+}
+
+function CustomerAddressCell({ db, userId }: { db: any, userId: string }) {
+  const addrQuery = useMemoFirebase(() => query(collection(db, 'userProfiles', userId, 'addresses'), where('isDefault', '==', true), limit(1)), [db, userId]);
+  const { data: addresses, isLoading } = useCollection(addrQuery);
+  const defaultAddress = addresses?.[0];
+
+  if (isLoading) return <Loader2 className="w-3 h-3 animate-spin text-gray-200" />;
+  
+  return (
+    <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase">
+      <MapPin className="w-3 h-3 text-primary shrink-0" />
+      <span className="truncate max-w-[150px]">
+        {defaultAddress ? `${defaultAddress.city}, ${defaultAddress.state}` : 'No hub linked'}
+      </span>
     </div>
   );
 }
