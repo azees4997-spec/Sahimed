@@ -29,7 +29,8 @@ import {
   Camera,
   Image as ImageIcon,
   Upload,
-  X
+  X,
+  Stethoscope
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -312,6 +313,7 @@ function SeedDataButton({ db }: { db: any }) {
           uses: ['Management of Type 2 Diabetes'],
           sideEffects: ['Nausea', 'Vomiting'],
           packSize: 'Strip of 15 tablets',
+          dosageForm: 'Tablet',
           strength: '50mg/500mg'
         },
         { 
@@ -330,6 +332,7 @@ function SeedDataButton({ db }: { db: any }) {
           uses: ['Management of Type 2 Diabetes'],
           sideEffects: ['Nausea'],
           packSize: 'Strip of 15 tablets',
+          dosageForm: 'Tablet',
           strength: '50mg/500mg'
         }
       ];
@@ -442,7 +445,7 @@ function InventoryTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                     <div className="flex flex-col">
                       <span className="font-black text-gray-900 text-xs">{med.name}</span>
                       <span className="text-[8px] text-gray-400 uppercase font-bold tracking-widest">{med.manufacturer}</span>
-                      <span className="text-[7px] text-primary font-black uppercase mt-0.5">{med.packSize}</span>
+                      <span className="text-[7px] text-primary font-black uppercase mt-0.5">{med.packSize} • {med.dosageForm}</span>
                     </div>
                   </td>
                   <td className="px-8 py-6">
@@ -478,6 +481,7 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
     name: '',
     manufacturer: '',
     saltComposition: '',
+    dosageForm: 'Tablet',
     price: '',
     mrp: '',
     availableQuantity: '',
@@ -541,7 +545,7 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 py-4 max-h-[70vh] overflow-y-auto px-1 scrollbar-hide">
       <div className="col-span-2 space-y-3">
-        <Label className="text-[9px] font-black uppercase">Product Images (Upload Multiple)</Label>
+        <Label className="text-[9px] font-black uppercase">Product Images (Clinical Asset Library)</Label>
         <div className="grid grid-cols-4 gap-3">
           {form.imageUrls.map((url, idx) => (
             <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border bg-gray-50 group">
@@ -561,7 +565,7 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
             className="aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-gray-400 hover:text-primary hover:border-primary transition-all bg-gray-50"
           >
             {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
-            <span className="text-[8px] font-black uppercase mt-1">Add Image</span>
+            <span className="text-[8px] font-black uppercase mt-1">Upload Asset</span>
           </button>
         </div>
         <input id="sku-multi-image" type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
@@ -577,7 +581,18 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
       </div>
       <div className="space-y-2 col-span-2">
         <Label className="text-[9px] font-black uppercase">Salt Composition</Label>
-        <Input value={form.saltComposition} onChange={e => setForm({...form, saltComposition: e.target.value})} required className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+        <Input value={form.saltComposition} onChange={e => setForm({...form, saltComposition: e.target.value})} required placeholder="e.g. Paracetamol 500mg" className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-[9px] font-black uppercase">Dosage Form</Label>
+        <select value={form.dosageForm} onChange={e => setForm({...form, dosageForm: e.target.value})} className="w-full h-12 rounded-xl bg-gray-50 border-none px-4 font-bold outline-none focus:ring-2 focus:ring-primary/20">
+          <option value="Tablet">Tablet</option>
+          <option value="Capsule">Capsule</option>
+          <option value="Syrup">Syrup</option>
+          <option value="Injection">Injection</option>
+          <option value="Ointment">Ointment</option>
+          <option value="Drops">Drops</option>
+        </select>
       </div>
       <div className="space-y-2">
         <Label className="text-[9px] font-black uppercase">Packaging (e.g. Strip of 15)</Label>
@@ -597,7 +612,7 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
       </div>
 
       <div className="flex items-center gap-6 pt-4 col-span-2">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 p-3 bg-primary/5 rounded-2xl border border-primary/10">
           <input 
             type="checkbox" 
             id="is-gen" 
@@ -605,9 +620,9 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
             onChange={e => setForm({...form, isGeneric: e.target.checked})} 
             className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
           />
-          <Label htmlFor="is-gen" className="text-[9px] font-black uppercase">Generic Alternative</Label>
+          <Label htmlFor="is-gen" className="text-[9px] font-black uppercase cursor-pointer">Generic Alternative</Label>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 p-3 bg-orange-50 rounded-2xl border border-orange-100">
           <input 
             type="checkbox" 
             id="rx-req" 
@@ -615,13 +630,13 @@ function AddMedicineForm({ db, onSuccess }: { db: any, onSuccess: () => void }) 
             onChange={e => setForm({...form, prescriptionRequired: e.target.checked})} 
             className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
           />
-          <Label htmlFor="rx-req" className="text-[9px] font-black uppercase">RX Required</Label>
+          <Label htmlFor="rx-req" className="text-[9px] font-black uppercase cursor-pointer">RX Required</Label>
         </div>
       </div>
 
       <div className="col-span-2 flex items-center gap-3 pt-6 border-t mt-4">
         <Button type="submit" disabled={uploading} className="flex-1 rounded-full h-14 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">
-          {uploading ? <Loader2 className="animate-spin" /> : "Create SKU"}
+          {uploading ? <Loader2 className="animate-spin" /> : "Commit SKU to Catalog"}
         </Button>
         <Button type="button" variant="ghost" onClick={onSuccess} className="rounded-full h-14 font-black uppercase text-[10px] tracking-widest text-gray-400">Cancel</Button>
       </div>

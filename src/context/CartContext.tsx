@@ -16,6 +16,7 @@ export interface Product {
   imageUrls?: string[];
   isGeneric?: boolean;
   packSize?: string;
+  dosageForm?: string; // e.g., Tablet, Syrup, Injection
   uses?: string[];
   sideEffects?: string[];
   safetyAdvice?: {
