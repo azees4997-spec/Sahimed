@@ -69,46 +69,23 @@
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/userProfiles/{userId}",
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores patient profile data.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "Patient UID."
-            }
-          ]
-        }
+    "/userProfiles/{userId}": {
+      "schema": {
+        "$ref": "#/backend/entities/UserProfile"
       },
-      {
-        "path": "/adminProfiles/{userId}",
-        "definition": {
-          "entityName": "AdminProfile",
-          "schema": {
-            "$ref": "#/backend/entities/AdminProfile"
-          },
-          "description": "Stores clinical supervisor roles.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "Admin UID."
-            }
-          ]
-        }
+      "description": "Stores patient profile data."
+    },
+    "/adminProfiles/{userId}": {
+      "schema": {
+        "$ref": "#/backend/entities/AdminProfile"
       },
-      {
-        "path": "/medicines/{medicineId}",
-        "definition": {
-          "entityName": "Medicine",
-          "description": "Public catalog of medicines."
-        }
-      }
-    ]
+      "description": "Stores clinical supervisor roles."
+    },
+    "/medicines/{medicineId}": {
+      "schema": {
+        "type": "object"
+      },
+      "description": "Public catalog of medicines."
+    }
   }
 }

@@ -63,6 +63,7 @@ export default function SupervisorConsole() {
     try {
       const snap = await getDoc(doc(db, 'adminProfiles', user.uid));
       if (snap.exists()) {
+        // Clinical safety delay to ensure Firestore rules are propagated
         setTimeout(() => {
           setIsVerified(true);
           setIsVerifying(false);
@@ -73,6 +74,7 @@ export default function SupervisorConsole() {
         setIsVerifying(false);
       }
     } catch (err) {
+      console.error("Verification failed", err);
       setIsVerified(false);
       setIsVerifying(false);
     }
