@@ -52,7 +52,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [location, setLocation] = useState('Select Location');
+  // Defaulting to Mumbai, MH as requested
+  const [location, setLocation] = useState('Mumbai, MH');
 
   useEffect(() => {
     const savedCart = localStorage.getItem('hl_cart');
