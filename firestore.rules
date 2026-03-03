@@ -1,93 +1,180 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * HEALTHLINK PHARMACY SECURITY RULES
-     * Strict Authorization Independence & Sequential Gating
+     * HEALTHLINK PHARMACY SECURITY RULES - PROTOTYPING VERSION
+     * 
+     * CORE PHILOSOPHY:
+     * This ruleset enforces a strict User-Ownership model. All sensitive data (profiles, addresses, 
+     * orders, prescriptions) is nested under a unique /users/{userId} path, where {userId} 
+     * is guaranteed to be the Firebase Authentication UID.
+     * 
+     * DATA STRUCTURE:
+     * - /users/{userId}: Private profile.
+     * - /users/{userId}/[subcollections]: Private data (orders, cart, addresses).
+     * - /medicines/{medicineId}: Public product catalog.
+     * - /roles_admin/{adminId}: Secure registry of administrative UIDs.
+     * 
+     * KEY SECURITY DECISIONS:
+     * 1. Authorization Independence: We rely on the path variables (e.g., {userId}) for authorization, 
+     *    minimizing the need for costly get() lookups.
+     * 2. Administrative Access: Users whose UIDs exist in the /roles_admin collection are granted 
+     *    elevated read access to customer orders and prescriptions for processing.
+     * 3. Public Catalog: Medicines are readable by anyone (including unauthenticated users) to 
+     *    allow browsing before sign-in, but writes are strictly restricted to admins.
+     * 4. Relational Integrity: On document creation, we enforce that internal fields like 'customerId' 
+     *    match the owner's UID in the path to prevent data spoofing.
+     * 
+     * DENORMALIZATION FOR AUTHORIZATION:
+     * To ensure fast rules, we assume critical fields like 'customerId' or 'id' are populated on the 
+     * documents to match the path wildcards.
      */
 
+    // --- GLOBAL HELPER FUNCTIONS ---
+
+    /** @description Checks if the user is authenticated. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/adminProfiles/$(request.auth.uid));
-    }
-
+    /** @description Checks if the authenticated user matches the provided ID. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // --- COLLECTION GROUP RULES ---
-    // Specifically gated for verified admins to perform clinical auditing
-    match /{path=**}/orders/{orderId} {
-      allow read, list: if isAdmin();
-      allow write: if isAdmin();
-    }
-    
-    match /{path=**}/prescriptions/{prescriptionId} {
-      allow read, list: if isAdmin();
-      allow write: if isAdmin();
+    /** @description Checks if the authenticated user has an entry in the admin roles collection. */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    // --- TOP-LEVEL COLLECTIONS ---
+    /** @description Combines ownership check with existence check for destructive/modifying operations. */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
 
-    match /userProfiles/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
+    // --- COLLECTION RULES ---
 
-      match /orders/{orderId} {
-        allow read, list: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) || isAdmin();
-        allow update: if isAdmin(); 
-      }
+    /**
+     * @description Rules for the primary Customer profile.
+     * @path /users/{userId}
+     * @allow (get) If the user is the owner or an admin.
+     * @deny (create) If the document ID does not match the authenticated user's UID.
+     * @principle Validates that users can only create and manage their own profile.
+     */
+    match /users/{userId} {
+      allow get, list: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
 
-      match /prescriptions/{prescriptionId} {
-        allow read, list, create: if isOwner(userId) || isAdmin();
-        allow update: if isOwner(userId) || isAdmin();
-      }
-
+      /**
+       * @description Subcollection for shipping and billing addresses.
+       * @path /users/{userId}/addresses/{addressId}
+       * @allow (list) If the authenticated user is the parent {userId}.
+       * @deny (create) If the internal 'customerId' field does not match the path {userId}.
+       * @principle Enforces Authorization Independence via path-based ownership.
+       */
       match /addresses/{addressId} {
-        allow read, list, write: if isOwner(userId);
+        allow get, list: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && request.resource.data.customerId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.customerId == resource.data.customerId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Subcollection for items currently in a user's shopping cart.
+       * @path /users/{userId}/cartItems/{cartItemId}
+       * @allow (create) If authenticated user matches the path's userId.
+       * @deny (update) If attempting to change the customerId owner.
+       * @principle Restricts cart access to the individual owner.
+       */
+      match /cartItems/{cartItemId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.customerId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.customerId == resource.data.customerId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Subcollection for confirmed purchase orders.
+       * @path /users/{userId}/orders/{orderId}
+       * @allow (get/list) To the owner for tracking or admins for fulfillment.
+       * @deny (write) To anyone who is not the owner.
+       * @principle Supports admin visibility for business operations.
+       */
+      match /orders/{orderId} {
+        allow get, list: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && request.resource.data.customerId == userId;
+        allow update: if (isExistingOwner(userId) && request.resource.data.customerId == resource.data.customerId) || isAdmin();
+        allow delete: if isExistingOwner(userId) || isAdmin();
+
+        /**
+         * @description Line items within a specific order.
+         * @path /users/{userId}/orders/{orderId}/orderItems/{orderItemId}
+         * @allow (get) If the user owns the parent order or is admin.
+         * @deny (delete) If user is not the owner of the order tree.
+         * @principle Deeply nested ownership validation based on root UID.
+         */
+        match /orderItems/{orderItemId} {
+          allow get, list: if isOwner(userId) || isAdmin();
+          allow create: if isOwner(userId);
+          allow update: if isExistingOwner(userId) || isAdmin();
+          allow delete: if isExistingOwner(userId) || isAdmin();
+        }
+      }
+
+      /**
+       * @description Subcollection for uploaded prescriptions.
+       * @path /users/{userId}/prescriptions/{prescriptionId}
+       * @allow (create) When a user uploads a new prescription.
+       * @deny (update) If an unauthorized user attempts to modify status or reviewer notes.
+       * @principle Ensures sensitive medical documents are private to owner and pharmacists.
+       */
+      match /prescriptions/{prescriptionId} {
+        allow get, list: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && request.resource.data.customerId == userId;
+        allow update: if (isExistingOwner(userId) && request.resource.data.customerId == resource.data.customerId) || isAdmin();
+        allow delete: if isExistingOwner(userId) || isAdmin();
       }
     }
 
-    match /adminProfiles/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
-      allow create: if isSignedIn(); // Allow initial self-registration
-      allow update, delete: if isAdmin();
-    }
-
-    match /moleculeMaster/{moleculeId} {
-      allow get, list: if true; // Public catalog reference
-      allow write: if isAdmin();
-    }
-
+    /**
+     * @description Public catalog of medicines.
+     * @path /medicines/{medicineId}
+     * @allow (get/list) For all users, including those not signed in.
+     * @deny (write) For all non-admin users.
+     * @principle Public consumption with strictly authorized administrative management.
+     */
     match /medicines/{medicineId} {
-      allow get, list: if true; // Public product browsing
-      allow write: if isAdmin();
-    }
-
-    match /categories/{categoryId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow create, update, delete: if isAdmin();
     }
 
-    match /userCarts/{userId} {
-      allow read, write: if isOwner(userId);
-      match /cartItems/{itemId} {
-        allow read, write: if isOwner(userId);
-      }
+    /**
+     * @description Registry of administrative user IDs.
+     * @path /roles_admin/{adminId}
+     * @allow (get) For any signed-in user to verify permissions (required for isAdmin check).
+     * @deny (write) To prevent users from promoting themselves to admin.
+     * @principle Secure role-based access control (RBAC) anchor.
+     */
+    match /roles_admin/{adminId} {
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      allow create, update, delete: if false; // TODO: Admin roles should be managed via CLI or Super Admin.
     }
 
-    match /stockEnquiries/{enquiryId} {
-      allow create: if isSignedIn();
-      allow read, list: if isAdmin();
+    // --- COLLECTION GROUP RULES ---
+    
+    /**
+     * @description Allows admins to search for orders/prescriptions across all users.
+     * @principle Necessary for business-wide order processing and prescription review.
+     */
+    match /{path=**}/orders/{orderId} {
+      allow list: if isAdmin();
+    }
+    match /{path=**}/prescriptions/{prescriptionId} {
+      allow list: if isAdmin();
     }
   }
 }
