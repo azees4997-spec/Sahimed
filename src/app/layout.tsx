@@ -1,3 +1,4 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
@@ -5,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import MobileCartBar from '@/components/MobileCartBar';
 import BottomNav from '@/components/BottomNav';
+import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
   title: 'SahiMed | sahi dawa sahi daam pe',
@@ -48,6 +50,7 @@ export default function RootLayout({
               <div className="flex-1 pb-16 sm:pb-0">
                 {children}
               </div>
+              <Footer />
               <BottomNav />
               <MobileCartBar />
             </div>
