@@ -32,7 +32,12 @@ import {
   MoreVertical,
   ChevronRight,
   Search,
-  FileDown
+  FileDown,
+  Eye,
+  Calendar,
+  CreditCard,
+  MapPin,
+  Clock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -647,10 +652,10 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   const { toast } = useToast();
   
   const [shippingOrder, setShippingOrder] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [shippingData, setShippingData] = useState({ carrier: '', trackingId: '' });
 
   const handleShipClick = (order: any) => {
-    // Dynamically set shipping data from the order, or empty for a new entry
     setShippingData({ 
       carrier: order.carrier || '', 
       trackingId: order.trackingId || '' 
@@ -685,7 +690,7 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
             ) : orders?.length === 0 ? (
               <tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No orders found in database</td></tr>
             ) : orders?.map(order => (
-              <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
+              <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
                 <td className="px-10 py-8 font-black text-sm uppercase">#{order.id.substring(0,8)}</td>
                 <td className="px-10 py-8 text-[11px] font-bold text-gray-500">#{order.userId?.substring(0,8)}</td>
                 <td className="px-10 py-8 font-black text-primary">₹{order.totalAmount}</td>
@@ -694,6 +699,9 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                 </td>
                 <td className="px-10 py-8 text-right">
                   <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)} className="h-10 w-10 rounded-xl hover:bg-primary/5 text-primary">
+                      <Eye className="w-4 h-4" />
+                    </Button>
                     {order.status !== 'Shipped' && order.status !== 'Delivered' && (
                       <Button onClick={() => handleShipClick(order)} size="sm" className="rounded-full h-10 px-6 text-[9px] uppercase font-black bg-blue-600 text-white">Ship</Button>
                     )}
@@ -713,6 +721,7 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
         </table>
       </Card>
       
+      {/* Shipment Dialog */}
       <Dialog open={!!shippingOrder} onOpenChange={(open) => !open && setShippingOrder(null)}>
         <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden shadow-3xl">
           <div className="bg-blue-600 p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Shipment Details</DialogTitle></div>
@@ -726,6 +735,92 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
               <Input placeholder="Tracking ID" value={shippingData.trackingId} onChange={e => setShippingData({...shippingData, trackingId: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold px-6" />
             </div>
             <Button onClick={() => updateStatus(shippingOrder, 'Shipped', { ...shippingData, shippedAt: serverTimestamp() })} className="w-full h-16 rounded-full font-black uppercase bg-blue-600 text-white">Log Shipment</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Order Details Dialog */}
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+        <DialogContent className="rounded-[40px] max-w-3xl border-none p-0 overflow-hidden shadow-3xl">
+          <div className="bg-primary p-8 text-white flex justify-between items-center">
+            <div>
+              <DialogTitle className="text-2xl font-black uppercase tracking-tight">Order Breakdown</DialogTitle>
+              <p className="text-[9px] font-black uppercase tracking-widest opacity-60">REF: #{selectedOrder?.id?.substring(0,12)}</p>
+            </div>
+            <Badge className="bg-white text-primary uppercase text-[10px] font-black h-8 px-4">{selectedOrder?.status}</Badge>
+          </div>
+          <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto scrollbar-hide">
+            {/* Meta Info */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+               <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Order Date</span>
+                  </div>
+                  <p className="text-xs font-bold text-gray-900">{selectedOrder?.orderDate?.toDate ? selectedOrder.orderDate.toDate().toLocaleString() : 'Processing'}</p>
+               </div>
+               <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <User className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Patient UID</span>
+                  </div>
+                  <p className="text-xs font-bold text-gray-900 truncate">#{selectedOrder?.userId?.substring(0,12)}</p>
+               </div>
+               <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Hub Reference</span>
+                  </div>
+                  <p className="text-xs font-bold text-gray-900">ADDR_ID: {selectedOrder?.shippingAddressId}</p>
+               </div>
+               <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <CreditCard className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Payment</span>
+                  </div>
+                  <p className="text-xs font-bold text-emerald-600">{selectedOrder?.paymentStatus || 'Verified'}</p>
+               </div>
+            </div>
+
+            {/* Items List */}
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Clinical Inventory Breakdown</h4>
+              <div className="space-y-3">
+                {selectedOrder?.items?.map((item: any, idx: number) => (
+                  <div key={idx} className="bg-gray-50 p-4 rounded-2xl flex items-center justify-between group hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white rounded-xl border p-2">
+                        <img src={item.imageUrl} alt="" className="w-full h-full object-contain" />
+                      </div>
+                      <div>
+                        <p className="font-black text-xs uppercase tracking-tight text-gray-900">{item.name}</p>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">CODE: {item.medicineId?.substring(0,8)}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                       <p className="text-xs font-black text-gray-900">₹{item.unitPrice} × {item.quantity}</p>
+                       <p className="text-[10px] font-black text-primary">₹{item.unitPrice * item.quantity}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Financial Summary */}
+            <div className="bg-gray-50 p-6 rounded-[32px] space-y-4">
+               <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-500">
+                  <span>Gross Total</span>
+                  <span>₹{selectedOrder?.totalAmount}</span>
+               </div>
+               <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-500">
+                  <span>Clinical Fees</span>
+                  <span>₹0</span>
+               </div>
+               <div className="pt-4 border-t border-dashed flex justify-between items-baseline">
+                  <span className="text-sm font-black uppercase tracking-widest text-gray-900">Net Payable</span>
+                  <span className="text-3xl font-black text-primary">₹{selectedOrder?.totalAmount}</span>
+               </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
