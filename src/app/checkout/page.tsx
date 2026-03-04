@@ -8,24 +8,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { MapPin, ShieldCheck, Loader2, Phone, User, Home, Building2, Hash, ArrowRight } from 'lucide-react';
+import { MapPin, ShieldCheck, Loader2, Phone, User, Home, Building2, Hash, ArrowRight, LocateFixed } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
 
 export default function CheckoutPage() {
-  const { cart, totalPrice, clearCart } = useCart();
+  const { cart, totalPrice, clearCart, location: homepageLocation } = useCart();
   const { user } = useUser();
   const db = useFirestore();
   const [loading, setLoading] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
   const [orderInfo, setOrderInfo] = useState({
     patientName: '',
     phoneNumber: '',
-    street: '',
+    street: homepageLocation || '',
     landmark: '',
     pincode: ''
   });
@@ -34,11 +35,47 @@ export default function CheckoutPage() {
     if (user) {
       setOrderInfo(prev => ({
         ...prev,
-        phoneNumber: user.phoneNumber?.replace('+91', '') || '',
-        patientName: user.displayName || ''
+        phoneNumber: user.phoneNumber?.replace('+91', '') || prev.phoneNumber,
+        patientName: user.displayName || prev.patientName
       }));
     }
   }, [user]);
+
+  const handleLocateMe = () => {
+    setIsLocating(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+            const data = await response.json();
+            
+            if (data && data.address) {
+              const neighborhood = data.address.suburb || data.address.neighbourhood || data.address.road || '';
+              const city = data.address.city || data.address.town || data.address.village || '';
+              const road = data.address.road || '';
+              setOrderInfo(prev => ({
+                ...prev,
+                street: `${road ? road + ', ' : ''}${neighborhood}${city ? ', ' + city : ''}`,
+                pincode: data.address.postcode || prev.pincode
+              }));
+              toast({ title: "Location Updated", description: "GPS coordinates applied." });
+            }
+          } catch (e) {
+            toast({ variant: 'destructive', title: 'Location Error', description: 'Could not fetch address.' });
+          } finally {
+            setIsLocating(false);
+          }
+        },
+        () => {
+          setIsLocating(false);
+          toast({ variant: 'destructive', title: 'Permission Denied', description: 'Allow GPS access to use this feature.' });
+        }
+      );
+    }
+  };
 
   const handlePlaceOrder = async () => {
     if (!user) {
@@ -112,13 +149,17 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
             <Card className="rounded-[40px] border-none shadow-sm overflow-hidden bg-white">
-              <CardHeader className="bg-white p-8 border-b">
+              <CardHeader className="bg-white p-8 border-b flex flex-row items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
                     <MapPin className="w-4 h-4" />
                   </div>
                   <CardTitle className="text-xl font-black uppercase tracking-tight">Delivery Address Provision</CardTitle>
                 </div>
+                <Button variant="ghost" onClick={handleLocateMe} disabled={isLocating} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2 bg-primary/5 text-primary hover:bg-primary/10 active:scale-95">
+                  {isLocating ? <Loader2 className="animate-spin w-3 h-3" /> : <LocateFixed className="w-3 h-3" />}
+                  Locate Me
+                </Button>
               </CardHeader>
               <CardContent className="p-8 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

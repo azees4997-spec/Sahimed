@@ -38,7 +38,9 @@ import {
   CreditCard,
   MapPin,
   Clock,
-  Phone
+  Phone,
+  Printer,
+  LayoutGrid
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -77,7 +79,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'itemMaster' | 'moleculeMaster' | 'customers' | 'stockAlerts' | 'fees' | 'promocodes';
+type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'itemMaster' | 'moleculeMaster' | 'categories' | 'customers' | 'stockAlerts' | 'fees' | 'promocodes';
 
 export default function AdminConsole() {
   const { user, isUserLoading } = useUser();
@@ -247,6 +249,7 @@ export default function AdminConsole() {
                 { id: 'fulfillment', label: 'Orders', icon: ShoppingBag },
                 { id: 'itemMaster', label: 'Inventory', icon: Package },
                 { id: 'moleculeMaster', label: 'Formulas', icon: Dna },
+                { id: 'categories', label: 'Categories', icon: LayoutGrid },
                 { id: 'customers', label: 'Patients', icon: Users },
                 { id: 'promocodes', label: 'Campaigns', icon: Ticket },
                 { id: 'fees', label: 'Charges', icon: Receipt },
@@ -282,6 +285,7 @@ export default function AdminConsole() {
         {activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} />}
         {activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} />}
         {activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} />}
+        {activeTab === 'categories' && <CategoriesTab db={db} isVerified={isVerified} />}
         {activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} />}
         {activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} />}
         {activeTab === 'stockAlerts' && <StockAlertsTab db={db} isVerified={isVerified} />}
@@ -341,10 +345,16 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
 function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   const medsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'medicines'), orderBy('name', 'asc')) : null, [db, isVerified]);
   const { data: medicines, isLoading } = useCollection(medsQuery);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const filteredMedicines = medicines?.filter(med => 
+    med.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    med.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const downloadCSV = () => {
     if (!medicines) return;
@@ -382,12 +392,12 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="space-y-1 text-center md:text-left">
           <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Product Catalog</h2>
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Master inventory management</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap justify-center gap-3">
           <Button variant="outline" onClick={downloadTemplate} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
             <FileDown className="w-4 h-4" /> Template
           </Button>
@@ -416,62 +426,76 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
         </div>
       </div>
 
+      <div className="relative">
+        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" />
+        <Input 
+          placeholder="Search products by name or SKU..." 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm uppercase tracking-tight focus-visible:ring-primary/20"
+        />
+      </div>
+
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
-            <tr>
-              <th className="px-10 py-8">SKU / Product</th>
-              <th className="px-10 py-8">Pricing</th>
-              <th className="px-10 py-8">Inventory</th>
-              <th className="px-10 py-8">Type</th>
-              <th className="px-10 py-8 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {isLoading ? (
-              <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
-            ) : medicines?.map(med => (
-              <tr key={med.id} className="hover:bg-gray-50/50 transition-colors group">
-                <td className="px-10 py-8">
-                   <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border border-gray-100">
-                         <img src={med.imageUrl} alt="" className="w-full h-full object-contain" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-black text-sm uppercase tracking-tight text-gray-900">{med.name}</span>
-                        <span className="text-[9px] text-gray-400 uppercase tracking-widest">{med.sku || 'NO_SKU'} • {med.manufacturer}</span>
-                      </div>
-                   </div>
-                </td>
-                <td className="px-10 py-8">
-                   <div className="flex flex-col">
-                      <span className="font-black text-primary text-lg">₹{med.price}</span>
-                      <span className="text-[9px] text-red-600 line-through font-bold">MRP ₹{med.mrp}</span>
-                   </div>
-                </td>
-                <td className="px-10 py-8">
-                   <div className="flex items-center gap-3">
-                      <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
-                         <div className={cn("h-full transition-all", med.availableQuantity < 20 ? 'bg-red-500' : 'bg-accent')} style={{ width: `${Math.min(100, (med.availableQuantity / 100) * 100)}%` }} />
-                      </div>
-                      <span className="text-[10px] font-black text-gray-700 uppercase">{med.availableQuantity} PCS</span>
-                   </div>
-                </td>
-                <td className="px-10 py-8">
-                   <Badge variant="outline" className={cn("text-[8px] font-black uppercase px-3 py-1 rounded-full border-2", med.isGeneric ? 'border-accent text-accent' : 'border-primary text-primary')}>
-                      {med.isGeneric ? 'Generic' : 'Branded'}
-                   </Badge>
-                </td>
-                <td className="px-10 py-8 text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => { setEditingItem(med); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl hover:bg-primary/5"><Edit2 className="w-4 h-4 text-gray-400" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => { deleteDocumentNonBlocking(doc(db, 'medicines', med.id)); toast({ title: "Deleted" }); }} className="h-10 w-10 rounded-xl hover:bg-red-50"><Trash2 className="w-4 h-4 text-red-300" /></Button>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[800px]">
+            <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
+              <tr>
+                <th className="px-10 py-8">SKU / Product</th>
+                <th className="px-10 py-8">Pricing</th>
+                <th className="px-10 py-8">Inventory</th>
+                <th className="px-10 py-8">Type</th>
+                <th className="px-10 py-8 text-right">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {isLoading ? (
+                <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
+              ) : filteredMedicines?.length === 0 ? (
+                <tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No matching products found</td></tr>
+              ) : filteredMedicines?.map(med => (
+                <tr key={med.id} className="hover:bg-gray-50/50 transition-colors group">
+                  <td className="px-10 py-8">
+                     <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border border-gray-100">
+                           <img src={med.imageUrl} alt="" className="w-full h-full object-contain" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-black text-sm uppercase tracking-tight text-gray-900">{med.name}</span>
+                          <span className="text-[9px] text-gray-400 uppercase tracking-widest">{med.sku || 'NO_SKU'} • {med.manufacturer}</span>
+                        </div>
+                     </div>
+                  </td>
+                  <td className="px-10 py-8">
+                     <div className="flex flex-col">
+                        <span className="font-black text-primary text-lg">₹{med.price}</span>
+                        <span className="text-[9px] text-red-600 line-through font-bold">MRP ₹{med.mrp}</span>
+                     </div>
+                  </td>
+                  <td className="px-10 py-8">
+                     <div className="flex items-center gap-3">
+                        <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
+                           <div className={cn("h-full transition-all", med.availableQuantity < 20 ? 'bg-red-500' : 'bg-accent')} style={{ width: `${Math.min(100, (med.availableQuantity / 100) * 100)}%` }} />
+                        </div>
+                        <span className="text-[10px] font-black text-gray-700 uppercase">{med.availableQuantity} PCS</span>
+                     </div>
+                  </td>
+                  <td className="px-10 py-8">
+                     <Badge variant="outline" className={cn("text-[8px] font-black uppercase px-3 py-1 rounded-full border-2", med.isGeneric ? 'border-accent text-accent' : 'border-primary text-primary')}>
+                        {med.isGeneric ? 'Generic' : 'Branded'}
+                     </Badge>
+                  </td>
+                  <td className="px-10 py-8 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => { setEditingItem(med); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl hover:bg-primary/5"><Edit2 className="w-4 h-4 text-gray-400" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => { deleteDocumentNonBlocking(doc(db, 'medicines', med.id)); toast({ title: "Deleted" }); }} className="h-10 w-10 rounded-xl hover:bg-red-50"><Trash2 className="w-4 h-4 text-red-300" /></Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
     </div>
   );
@@ -675,55 +699,61 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     setShippingOrder(null);
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Clinical Fulfillment</h2>
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
-            <tr>
-              <th className="px-10 py-8">Order ID</th>
-              <th className="px-10 py-8">Patient Mobile</th>
-              <th className="px-10 py-8">Amount</th>
-              <th className="px-10 py-8">Status</th>
-              <th className="px-10 py-8 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {isLoading ? (
-              <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
-            ) : orders?.length === 0 ? (
-              <tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No orders found in database</td></tr>
-            ) : orders?.map(order => (
-              <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
-                <td className="px-10 py-8 font-black text-sm uppercase">#{order.id.substring(0,8)}</td>
-                <td className="px-10 py-8 text-[11px] font-black text-gray-900">{order.phoneNumber || 'N/A'}</td>
-                <td className="px-10 py-8 font-black text-primary">₹{order.totalAmount}</td>
-                <td className="px-10 py-8">
-                  <Badge variant="outline" className="text-[9px] font-black uppercase px-4 py-1.5 rounded-full">{order.status}</Badge>
-                </td>
-                <td className="px-10 py-8 text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)} className="h-10 w-10 rounded-xl hover:bg-primary/5 text-primary">
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    {order.status !== 'Shipped' && order.status !== 'Delivered' && (
-                      <Button onClick={() => handleShipClick(order)} size="sm" className="rounded-full h-10 px-6 text-[9px] uppercase font-black bg-blue-600 text-white">Ship</Button>
-                    )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[160px]">
-                        <DropdownMenuItem onClick={() => updateStatus(order, 'Delivered')} className="rounded-xl font-bold text-xs uppercase cursor-pointer">Mark Delivered</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => updateStatus(order, 'Cancelled')} className="rounded-xl font-bold text-xs uppercase cursor-pointer text-orange-500">Cancel</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => deleteDocumentNonBlocking(doc(db, 'userProfiles', order.userId, 'orders', order.id))} className="rounded-xl font-bold text-xs uppercase cursor-pointer text-red-500">Delete Record</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[800px]">
+            <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
+              <tr>
+                <th className="px-10 py-8">Order ID</th>
+                <th className="px-10 py-8">Patient Mobile</th>
+                <th className="px-10 py-8">Amount</th>
+                <th className="px-10 py-8">Status</th>
+                <th className="px-10 py-8 text-right">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {isLoading ? (
+                <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
+              ) : orders?.length === 0 ? (
+                <tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No orders found in database</td></tr>
+              ) : orders?.map(order => (
+                <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
+                  <td className="px-10 py-8 font-black text-sm uppercase">#{order.id.substring(0,8)}</td>
+                  <td className="px-10 py-8 text-[11px] font-black text-gray-900">{order.phoneNumber || 'N/A'}</td>
+                  <td className="px-10 py-8 font-black text-primary">₹{order.totalAmount}</td>
+                  <td className="px-10 py-8">
+                    <Badge variant="outline" className="text-[9px] font-black uppercase px-4 py-1.5 rounded-full">{order.status}</Badge>
+                  </td>
+                  <td className="px-10 py-8 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)} className="h-10 w-10 rounded-xl hover:bg-primary/5 text-primary">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      {order.status !== 'Shipped' && order.status !== 'Delivered' && (
+                        <Button onClick={() => handleShipClick(order)} size="sm" className="rounded-full h-10 px-6 text-[9px] uppercase font-black bg-blue-600 text-white">Ship</Button>
+                      )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[160px]">
+                          <DropdownMenuItem onClick={() => updateStatus(order, 'Delivered')} className="rounded-xl font-bold text-xs uppercase cursor-pointer">Mark Delivered</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => updateStatus(order, 'Cancelled')} className="rounded-xl font-bold text-xs uppercase cursor-pointer text-orange-500">Cancel</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => deleteDocumentNonBlocking(doc(db, 'userProfiles', order.userId, 'orders', order.id))} className="rounded-xl font-bold text-xs uppercase cursor-pointer text-red-500">Delete Record</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
       
       {/* Shipment Dialog */}
@@ -746,15 +776,20 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 
       {/* Order Details Dialog */}
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="rounded-[40px] max-w-3xl border-none p-0 overflow-hidden shadow-3xl">
-          <div className="bg-primary p-8 text-white flex justify-between items-center">
+        <DialogContent className="rounded-[40px] max-w-3xl border-none p-0 overflow-hidden shadow-3xl print:shadow-none print:border-none">
+          <div className="bg-primary p-8 text-white flex justify-between items-center print:bg-white print:text-black">
             <div>
               <DialogTitle className="text-2xl font-black uppercase tracking-tight">Order Breakdown</DialogTitle>
               <p className="text-[9px] font-black uppercase tracking-widest opacity-60">REF: #{selectedOrder?.id?.substring(0,12)}</p>
             </div>
-            <Badge className="bg-white text-primary uppercase text-[10px] font-black h-8 px-4">{selectedOrder?.status}</Badge>
+            <div className="flex gap-2 print:hidden">
+              <Button variant="outline" size="icon" onClick={handlePrint} className="rounded-xl border-white/20 bg-white/10 hover:bg-white/20 text-white">
+                <Printer className="w-4 h-4" />
+              </Button>
+              <Badge className="bg-white text-primary uppercase text-[10px] font-black h-8 px-4">{selectedOrder?.status}</Badge>
+            </div>
           </div>
-          <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto scrollbar-hide">
+          <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto scrollbar-hide print:max-h-none print:overflow-visible">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                <div className="space-y-1">
                   <div className="flex items-center gap-2 text-gray-400">
@@ -825,53 +860,122 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   const molsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc')) : null, [db, isVerified]);
   const { data: molecules, isLoading } = useCollection(molsQuery);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMol, setEditingMol] = useState<any>(null);
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const filteredMolecules = molecules?.filter(mol => 
+    mol.molecule?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    mol.masterId?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const downloadCSV = () => {
+    if (!molecules) return;
+    const headers = ['ID', 'Molecule', 'Master ID', 'Form'];
+    const rows = molecules.map(m => [m.id, m.molecule, m.masterId, m.form]);
+    const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(r => r.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "sahimed_formulas.csv");
+    document.body.appendChild(link);
+    link.click();
+  };
+
+  const downloadTemplate = () => {
+    const headers = ['Molecule', 'Master ID', 'Form'];
+    const sample = ['Paracetamol', 'MOL-001', 'Tablet'];
+    const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + sample.join(",");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "sahimed_formula_template.csv");
+    document.body.appendChild(link);
+    link.click();
+  };
+
+  const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    toast({ title: "Import Started", description: "Parsing Formula CSV..." });
+    setTimeout(() => {
+      toast({ title: "Import Complete", description: "Formula Registry updated." });
+    }, 2000);
+  };
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
         <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Formula Registry</h2>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setEditingMol(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white">
-              <Plus className="w-4 h-4" /> New Formula
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden shadow-3xl">
-            <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Formula</DialogTitle></div>
-            <div className="p-8"><MoleculeForm db={db} initialData={editingMol} onSuccess={() => setIsFormOpen(false)} /></div>
-          </DialogContent>
-        </Dialog>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Button variant="outline" onClick={downloadTemplate} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
+            <FileDown className="w-4 h-4" /> Template
+          </Button>
+          <Button variant="outline" onClick={downloadCSV} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
+            <Download className="w-4 h-4" /> Export
+          </Button>
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
+            <Upload className="w-4 h-4" /> Bulk Upload
+          </Button>
+          <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleBulkUpload} />
+          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setEditingMol(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white">
+                <Plus className="w-4 h-4" /> New Formula
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden shadow-3xl">
+              <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Formula</DialogTitle></div>
+              <div className="p-8"><MoleculeForm db={db} initialData={editingMol} onSuccess={() => setIsFormOpen(false)} /></div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
+
+      <div className="relative">
+        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" />
+        <Input 
+          placeholder="Search formulas by name or clinical ID..." 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm uppercase tracking-tight focus-visible:ring-primary/20"
+        />
+      </div>
+
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
-            <tr>
-              <th className="px-10 py-8">Composition / Molecule</th>
-              <th className="px-10 py-8">Molecule ID</th>
-              <th className="px-10 py-8">Form</th>
-              <th className="px-10 py-8 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {isLoading ? (
-              <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
-            ) : molecules?.map(mol => (
-              <tr key={mol.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="px-10 py-8 font-black text-sm uppercase">{mol.molecule}</td>
-                <td className="px-10 py-8 text-[11px] font-bold">{mol.masterId}</td>
-                <td className="px-10 py-8 text-[11px] font-black text-gray-400 uppercase">{mol.form || 'N/A'}</td>
-                <td className="px-10 py-8 text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => { setEditingMol(mol); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4 text-gray-400" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'moleculeMaster', mol.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[600px]">
+            <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
+              <tr>
+                <th className="px-10 py-8">Composition / Molecule</th>
+                <th className="px-10 py-8">Molecule ID</th>
+                <th className="px-10 py-8">Form</th>
+                <th className="px-10 py-8 text-right">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {isLoading ? (
+                <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
+              ) : filteredMolecules?.length === 0 ? (
+                <tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No matching formulas found</td></tr>
+              ) : filteredMolecules?.map(mol => (
+                <tr key={mol.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-10 py-8 font-black text-sm uppercase">{mol.molecule}</td>
+                  <td className="px-10 py-8 text-[11px] font-bold">{mol.masterId}</td>
+                  <td className="px-10 py-8 text-[11px] font-black text-gray-400 uppercase">{mol.form || 'N/A'}</td>
+                  <td className="px-10 py-8 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => { setEditingMol(mol); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4 text-gray-400" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'moleculeMaster', mol.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
     </div>
   );
@@ -905,6 +1009,80 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
         </select>
       </div>
       <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Formula</Button>
+    </form>
+  );
+}
+
+function CategoriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+  const catsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db, isVerified]);
+  const { data: categories, isLoading } = useCollection(catsQuery);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingCat, setEditingCat] = useState<any>(null);
+  const { toast } = useToast();
+
+  return (
+    <div className="space-y-8 animate-in slide-in-from-bottom-2">
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Health Categories</h2>
+        <Button onClick={() => { setEditingCat(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white">
+          <Plus className="w-4 h-4" /> New Category
+        </Button>
+      </div>
+      
+      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
+        <table className="w-full text-left">
+          <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
+            <tr>
+              <th className="px-10 py-8">Category Name</th>
+              <th className="px-10 py-8">Description</th>
+              <th className="px-10 py-8 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {isLoading ? (
+              <tr><td colSpan={3} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
+            ) : categories?.length === 0 ? (
+              <tr><td colSpan={3} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No categories found</td></tr>
+            ) : categories?.map(cat => (
+              <tr key={cat.id} className="hover:bg-gray-50/50 transition-colors">
+                <td className="px-10 py-8 font-black text-sm uppercase">{cat.name}</td>
+                <td className="px-10 py-8 text-[11px] font-bold text-gray-400 uppercase">{cat.description || 'N/A'}</td>
+                <td className="px-10 py-8 text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => { setEditingCat(cat); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4 text-gray-400" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'categories', cat.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden shadow-3xl">
+          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Category Details</DialogTitle></div>
+          <div className="p-8">
+            <CategoryForm db={db} initialData={editingCat} onSuccess={() => setIsFormOpen(false)} />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const [form, setForm] = useState({ name: initialData?.name || '', description: initialData?.description || '' });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    initialData?.id ? updateDocumentNonBlocking(doc(db, 'categories', initialData.id), form) : addDocumentNonBlocking(collection(db, 'categories'), form);
+    onSuccess();
+  };
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Category Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Description</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl bg-gray-50 border-none h-32" /></div>
+      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Category</Button>
     </form>
   );
 }

@@ -27,7 +27,9 @@ import {
   ShieldAlert,
   Skull,
   Stethoscope,
-  ClipboardList
+  ClipboardList,
+  CheckCircle2,
+  ArrowRight
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -122,14 +124,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <span className="text-primary truncate">{product.name}</span>
         </div>
 
-        <div className="bg-white rounded-[40px] sm:rounded-[50px] p-6 sm:p-12 shadow-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-start relative mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-start relative mb-12">
            <div className="sticky top-24">
-              <div className="aspect-square relative w-full max-w-[400px] mx-auto bg-gray-50 rounded-[40px] p-10 border border-gray-100">
-                <Image src={product.imageUrl} alt={product.name} fill className="object-contain p-10" />
-              </div>
-              <div className="mt-8 grid grid-cols-2 gap-4">
-                 <Button onClick={() => window.open(`https://wa.me/91XXXXXXXXXX?text=Hi, SahiMed! I need ${product.name}`, '_blank')} variant="outline" className="h-14 rounded-3xl border-2 border-green-100 text-green-600 font-black uppercase text-[10px] tracking-widest gap-2 active:scale-95 transition-all"><MessageCircle className="w-4 h-4" /> WhatsApp</Button>
-                 <Button onClick={() => window.location.href = 'tel:+91XXXXXXXXXX'} variant="outline" className="h-14 rounded-3xl border-2 border-blue-100 text-blue-600 font-black uppercase text-[10px] tracking-widest gap-2 active:scale-95 transition-all"><Phone className="w-4 h-4" /> Call Hub</Button>
+              <div className="bg-white rounded-[40px] p-6 sm:p-12 shadow-2xl border border-gray-100 overflow-hidden">
+                <div className="aspect-square relative w-full max-w-[400px] mx-auto bg-gray-50 rounded-[40px] p-10 border border-gray-100">
+                  <Image src={product.imageUrl} alt={product.name} fill className="object-contain p-10" />
+                </div>
+                <div className="mt-8 grid grid-cols-2 gap-4">
+                  <Button onClick={() => window.open(`https://wa.me/91XXXXXXXXXX?text=Hi, SahiMed! I need ${product.name}`, '_blank')} variant="outline" className="h-14 rounded-3xl border-2 border-green-100 text-green-600 font-black uppercase text-[10px] tracking-widest gap-2 active:scale-95 transition-all"><MessageCircle className="w-4 h-4" /> WhatsApp</Button>
+                  <Button onClick={() => window.location.href = 'tel:+91XXXXXXXXXX'} variant="outline" className="h-14 rounded-3xl border-2 border-blue-100 text-blue-600 font-black uppercase text-[10px] tracking-widest gap-2 active:scale-95 transition-all"><Phone className="w-4 h-4" /> Call Hub</Button>
+                </div>
               </div>
            </div>
 
@@ -140,30 +144,51 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                  <p className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-widest">{product.saltComposition}</p>
               </div>
 
+              {/* Side-by-Side Mobile Optimized Comparison */}
+              <div className="grid grid-cols-2 gap-3 sm:gap-6">
+                <Card className="rounded-[32px] border-2 border-primary/10 shadow-sm p-5 flex flex-col justify-between">
+                  <div>
+                    <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest mb-3 text-primary border-primary/20">Branded Price</Badge>
+                    <p className="text-2xl font-black text-gray-900">₹{product.price}</p>
+                    <p className="text-[9px] text-red-500 line-through font-bold">MRP ₹{product.mrp || product.price + 50}</p>
+                  </div>
+                  <div className="mt-4">
+                    {brandedQty > 0 ? (
+                      <div className="flex items-center justify-between bg-primary rounded-full h-12 px-4 text-white">
+                        <button onClick={() => updateQuantity(product.id, -1)}><Minus className="w-4 h-4" /></button>
+                        <span className="font-black">{brandedQty}</span>
+                        <button onClick={() => updateQuantity(product.id, 1)}><Plus className="w-4 h-4" /></button>
+                      </div>
+                    ) : (
+                      <Button onClick={() => addToCart(product, 1)} disabled={isOutOfStock} className="w-full h-12 rounded-full bg-primary text-white font-black uppercase text-[9px]">Add Branded</Button>
+                    )}
+                  </div>
+                </Card>
+                <Card className="rounded-[32px] border-2 border-accent/20 shadow-xl p-5 bg-accent/5 flex flex-col justify-between relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-accent/10 rounded-full -mr-12 -mt-12" />
+                  <div className="relative z-10">
+                    <Badge className="bg-accent text-white text-[8px] font-black uppercase tracking-widest mb-3">Sahi Generic</Badge>
+                    <p className="text-2xl font-black text-accent">₹{Math.round(product.price * 0.2)}</p>
+                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Save ~80%</p>
+                  </div>
+                  <div className="mt-4 relative z-10">
+                    <Button variant="outline" className="w-full h-12 rounded-full border-accent text-accent font-black uppercase text-[9px] hover:bg-accent hover:text-white transition-all">Switch & Save</Button>
+                  </div>
+                </Card>
+              </div>
+
               <div className="bg-gray-50 p-6 rounded-[32px] border flex justify-between items-center">
                  <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pricing</p>
-                    <p className="text-3xl font-black text-primary">₹{product.price}</p>
-                    <p className="text-[9px] text-red-500 line-through font-bold">MRP ₹{product.mrp || product.price + 50}</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Clinical Authority</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <ShieldCheck className="w-4 h-4 text-primary" />
+                      <span className="font-black text-gray-900 text-xs uppercase">Pharmacist Approved</span>
+                    </div>
                  </div>
                  <div className="text-right">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pack Size</p>
                     <p className="font-black text-gray-900 uppercase">{product.packSize || "N/A"}</p>
                  </div>
-              </div>
-
-              <div className="flex gap-4">
-                 {isOutOfStock ? (
-                   <Button onClick={() => handleNotify(product)} className="flex-1 h-20 rounded-full font-black uppercase tracking-widest bg-orange-600 shadow-2xl shadow-orange-100 text-white">Notify Stock</Button>
-                 ) : brandedQty > 0 ? (
-                    <div className="flex-1 flex items-center justify-between bg-primary rounded-full h-20 px-8 shadow-2xl shadow-primary/20">
-                       <button onClick={() => updateQuantity(product.id, -1)} className="text-white hover:scale-110 transition-transform"><Minus className="w-6 h-6" /></button>
-                       <span className="text-2xl font-black text-white">{brandedQty}</span>
-                       <button onClick={() => updateQuantity(product.id, 1)} className="text-white hover:scale-110 transition-transform"><Plus className="w-6 h-6" /></button>
-                    </div>
-                 ) : (
-                    <Button onClick={() => addToCart(product, 1)} className="flex-1 h-20 rounded-full font-black uppercase tracking-widest bg-primary shadow-2xl shadow-primary/30 text-white text-lg active:scale-95 transition-all">Add to Bag</Button>
-                 )}
               </div>
 
               <Accordion type="single" collapsible className="w-full">
@@ -197,16 +222,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                              <h4 className="text-[10px] font-black uppercase mb-1 text-orange-600">Safety Advice</h4>
                              <p className="text-xs font-bold text-orange-900 uppercase leading-relaxed">{product.safetyAdvice || "Consult professional medical advice before use."}</p>
                           </div>
-                       </div>
-                    </AccordionContent>
-                 </AccordionItem>
-
-                 <AccordionItem value="sideeffects" className="border-b border-gray-100">
-                    <AccordionTrigger className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-900 py-6">Side Effects</AccordionTrigger>
-                    <AccordionContent className="pb-8">
-                       <div className="flex gap-4 items-start bg-red-50 p-6 rounded-3xl">
-                          <Skull className="w-6 h-6 text-red-600 shrink-0" />
-                          <p className="text-xs font-bold text-red-900 uppercase leading-relaxed">{product.sideEffects || "No common side effects reported."}</p>
                        </div>
                     </AccordionContent>
                  </AccordionItem>
