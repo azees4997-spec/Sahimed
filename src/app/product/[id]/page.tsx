@@ -18,7 +18,9 @@ import {
   BellRing,
   Sparkles,
   ShieldCheck,
-  Maximize2
+  Maximize2,
+  Phone,
+  MessageCircle
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import {
@@ -87,7 +89,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     return null;
   };
 
-  // IMMEDIATE FEEDBACK: Show skeleton if ID exists but data is still fetching
   if (productLoading || !product) {
     return (
       <div className="min-h-screen bg-[#F8F8F8]">
@@ -348,7 +349,25 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-12">
+        {/* Quick Inquiry Options */}
+        <div className="mt-8 grid grid-cols-2 gap-4">
+           <Button 
+            variant="outline" 
+            className="h-14 rounded-[24px] border-2 border-green-100 bg-white text-green-600 hover:bg-green-50 font-black uppercase text-[10px] tracking-widest gap-2 shadow-sm active:scale-95 transition-all"
+            onClick={() => window.open(`https://wa.me/91XXXXXXXXXX?text=Hi, I have a question about ${product.name}`, '_blank')}
+           >
+             <MessageCircle className="w-4 h-4" /> Ask on WhatsApp
+           </Button>
+           <Button 
+            variant="outline" 
+            className="h-14 rounded-[24px] border-2 border-blue-100 bg-white text-blue-600 hover:bg-blue-50 font-black uppercase text-[10px] tracking-widest gap-2 shadow-sm active:scale-95 transition-all"
+            onClick={() => window.location.href = 'tel:+91XXXXXXXXXX'}
+           >
+             <Phone className="w-4 h-4" /> Call for Inquiry
+           </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-8">
           <Card className="rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 border-none bg-white shadow-sm hover:shadow-xl transition-all">
             <h3 className="text-[10px] sm:text-sm font-black text-gray-900 uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
                <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /> Uses & Benefits

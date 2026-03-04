@@ -4,7 +4,7 @@
 import * as React from 'react';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
-import { Activity, HeartPulse, Zap, Sparkles, Loader2, Camera, ChevronRight, Wind, ShieldPlus } from 'lucide-react';
+import { Activity, HeartPulse, Zap, Sparkles, Loader2, Camera, ChevronRight, Wind, ShieldPlus, Phone, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -59,6 +59,7 @@ export default function Home() {
       <Navbar />
 
       <main className="flex-1">
+        {/* Hero Section */}
         <section className="bg-white py-4">
           <div className="max-w-7xl mx-auto px-6 sm:px-12">
             <Carousel 
@@ -104,27 +105,46 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Quick Actions Bar */}
         <section className="py-2">
-          <div className="max-w-7xl mx-auto px-6 sm:px-12">
+          <div className="max-w-7xl mx-auto px-6 sm:px-12 flex flex-col gap-3">
+             {/* Prescription Bar */}
              <Link href="/prescription">
-                <Button className="w-full h-14 rounded-[24px] bg-white border-2 border-primary/5 text-primary hover:bg-primary/5 shadow-md flex items-center justify-between px-6 sm:px-8 group active:scale-[0.99] transition-all">
-                  <div className="flex items-center gap-4 sm:gap-6">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary text-white rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                      <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Button className="w-full h-12 rounded-[20px] bg-white border-2 border-primary/5 text-primary hover:bg-primary/5 shadow-md flex items-center justify-between px-6 group active:scale-[0.99] transition-all">
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <Camera className="w-4 h-4" />
                     </div>
                     <div className="text-left">
-                      <p className="font-black text-[12px] sm:text-[14px] uppercase tracking-tight text-gray-900">Scan & Upload Prescription</p>
-                      <p className="text-[7px] sm:text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Quick Order System</p>
+                      <p className="font-black text-[12px] uppercase tracking-tight text-gray-900">Scan & Upload Prescription</p>
+                      <p className="text-[7px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Quick Order System</p>
                     </div>
                   </div>
-                  <div className="bg-primary/5 p-1.5 sm:p-2 rounded-full group-hover:bg-primary group-hover:text-white transition-colors">
-                    <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  </div>
+                  <ChevronRight className="w-4 h-4 opacity-40" />
                 </Button>
              </Link>
+
+             {/* Order via WhatsApp & Call */}
+             <div className="grid grid-cols-2 gap-3">
+               <Button 
+                variant="outline" 
+                className="h-12 rounded-[20px] border-2 border-green-100 bg-white text-green-600 hover:bg-green-50 font-black uppercase text-[10px] tracking-widest gap-2 active:scale-95 transition-all shadow-sm"
+                onClick={() => window.open('https://wa.me/91XXXXXXXXXX', '_blank')}
+               >
+                 <MessageCircle className="w-4 h-4" /> WhatsApp Order
+               </Button>
+               <Button 
+                variant="outline" 
+                className="h-12 rounded-[20px] border-2 border-blue-100 bg-white text-blue-600 hover:bg-blue-50 font-black uppercase text-[10px] tracking-widest gap-2 active:scale-95 transition-all shadow-sm"
+                onClick={() => window.location.href = 'tel:+91XXXXXXXXXX'}
+               >
+                 <Phone className="w-4 h-4" /> Call to Order
+               </Button>
+             </div>
           </div>
         </section>
 
+        {/* Categories Section */}
         <section className="py-4">
           <div className="max-w-7xl mx-auto px-6 sm:px-12">
             <div className="flex items-center justify-between mb-4 px-2">
@@ -155,6 +175,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Best Sellers Section */}
         <section className="py-6 bg-white border-t border-gray-100 mt-4 rounded-t-[40px] shadow-lg overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 sm:px-12">
             <div className="flex items-center justify-between mb-6 px-2">
@@ -192,9 +213,9 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="bg-white py-3 border-t border-gray-100 text-center">
+      <footer className="bg-white py-4 border-t border-gray-100 text-center">
         <div className="max-w-7xl mx-auto px-6 sm:px-12">
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-1.5">
             <div className="bg-primary p-1 rounded-lg">
               <div className="text-white font-black text-[8px] tracking-tighter uppercase">SM</div>
             </div>
@@ -204,7 +225,7 @@ export default function Home() {
                 sahi dawa sahi daam pe
               </p>
             </div>
-            <div className="w-full max-w-xs h-px bg-gray-50 my-1" />
+            <div className="w-full max-w-[100px] h-px bg-gray-50 my-1" />
             <p className="text-[7px] font-black text-gray-400 uppercase tracking-[0.2em]">
               © Sahimed 2026. All rights reserved.
             </p>
