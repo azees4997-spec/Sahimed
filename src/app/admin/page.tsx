@@ -237,7 +237,7 @@ export default function AdminConsole() {
             <nav className="hidden xl:flex gap-1 overflow-x-auto scrollbar-hide">
               {[
                 { id: 'overview', label: 'Home', icon: Home },
-                { id: 'enquiries', label: 'Review', icon: FileText },
+                { id: 'enquiries', label: 'Enquiries', icon: FileText },
                 { id: 'fulfillment', label: 'Orders', icon: ShoppingBag },
                 { id: 'itemMaster', label: 'Inventory', icon: Package },
                 { id: 'moleculeMaster', label: 'Formulas', icon: Dna },
@@ -613,7 +613,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
 }
 
 function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, [db, isVerified]);
+  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
 
   return (
@@ -631,7 +631,7 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                 <img src={enq.imageUrl} className="w-full h-full object-cover" alt="Prescription" />
               </div>
               <p className="font-black text-sm uppercase mb-1">{enq.patientName || 'Patient Request'}</p>
-              <p className="text-[10px] font-bold text-gray-400 uppercase mb-4">{enq.uploadDate?.toDate().toLocaleDateString()}</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase mb-4">{enq.uploadDate?.toDate ? enq.uploadDate.toDate().toLocaleDateString() : 'Date Pending'}</p>
               <Button className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white">Create Order</Button>
             </Card>
           ))}
@@ -642,7 +642,8 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, [db, isVerified]);
+  // Collection group queries without ORDER BY often load more reliably without manual index creation
+  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
   const { toast } = useToast();
   
@@ -673,10 +674,12 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
           <tbody className="divide-y divide-gray-50">
             {isLoading ? (
               <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
+            ) : orders?.length === 0 ? (
+              <tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No orders found in database</td></tr>
             ) : orders?.map(order => (
               <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-10 py-8 font-black text-sm uppercase">#{order.id.substring(0,8)}</td>
-                <td className="px-10 py-8 text-[11px] font-bold text-gray-500">#{order.userId.substring(0,8)}</td>
+                <td className="px-10 py-8 text-[11px] font-bold text-gray-500">#{order.userId?.substring(0,8)}</td>
                 <td className="px-10 py-8 font-black text-primary">₹{order.totalAmount}</td>
                 <td className="px-10 py-8">
                   <Badge variant="outline" className="text-[9px] font-black uppercase px-4 py-1.5 rounded-full">{order.status}</Badge>
@@ -691,6 +694,7 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                       <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[160px]">
                         <DropdownMenuItem onClick={() => updateStatus(order, 'Delivered')} className="rounded-xl font-bold text-xs uppercase cursor-pointer">Mark Delivered</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => updateStatus(order, 'Cancelled')} className="rounded-xl font-bold text-xs uppercase cursor-pointer text-orange-500">Cancel</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => deleteDocumentNonBlocking(doc(db, 'userProfiles', order.userId, 'orders', order.id))} className="rounded-xl font-bold text-xs uppercase cursor-pointer text-red-500">Delete Record</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -866,8 +870,8 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function PatientHistoryView({ db, userId }: { db: any, userId: string }) {
-  const ordersQuery = useMemoFirebase(() => userId ? query(collection(db, 'userProfiles', userId, 'orders'), orderBy('orderDate', 'desc')) : null, [db, userId]);
-  const presQuery = useMemoFirebase(() => userId ? query(collection(db, 'userProfiles', userId, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, [db, userId]);
+  const ordersQuery = useMemoFirebase(() => userId ? query(collection(db, 'userProfiles', userId, 'orders')) : null, [db, userId]);
+  const presQuery = useMemoFirebase(() => userId ? query(collection(db, 'userProfiles', userId, 'prescriptions')) : null, [db, userId]);
   
   const { data: orders, isLoading: ordersLoading } = useCollection(ordersQuery);
   const { data: prescriptions, isLoading: presLoading } = useCollection(presQuery);
@@ -907,7 +911,7 @@ function PatientHistoryView({ db, userId }: { db: any, userId: string }) {
 }
 
 function StockAlertsTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const alertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'stockEnquiries'), orderBy('timestamp', 'desc')) : null, [db, isVerified]);
+  const alertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'stockEnquiries')) : null, [db, isVerified]);
   const { data: alerts, isLoading } = useCollection(alertsQuery);
 
   return (
@@ -927,7 +931,7 @@ function StockAlertsTab({ db, isVerified }: { db: any, isVerified: boolean }) {
             {isLoading ? (
               <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
             ) : alerts?.length === 0 ? (
-              <tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300">No active stock alerts</td></tr>
+              <tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No active stock alerts</td></tr>
             ) : alerts?.map(alert => (
               <tr key={alert.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-10 py-8 font-black text-sm uppercase text-gray-900">{alert.medicineName}</td>
