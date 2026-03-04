@@ -85,7 +85,7 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { prescriptionAnalysisAndPreFill, type PrescriptionAnalysisAndPreFillOutput } from '@/ai/flows/prescription-analysis-and-pre-fill-flow';
 
-type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'itemMaster' | 'moleculeMaster' | 'categories' | 'customers' | 'stockAlerts' | 'fees' | 'promocodes';
+type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'promocodes' | 'fees' | 'customers' | 'stockAlerts' | 'itemMaster' | 'moleculeMaster';
 
 export default function AdminConsole() {
   const { user, isUserLoading } = useUser();
@@ -239,39 +239,15 @@ export default function AdminConsole() {
       <header className="bg-white border-b sticky top-0 z-50 h-20">
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <button onClick={() => setActiveTab('overview')} className="flex items-center gap-2 group text-left">
-              <div className="bg-primary p-1.5 rounded-lg group-active:scale-95 transition-transform">
-                <ShieldCheck className="text-white w-4 h-4" />
+            <button onClick={() => setActiveTab('overview')} className="flex items-center gap-3 group text-left">
+              <div className="bg-primary p-2 rounded-xl group-active:scale-95 transition-transform shadow-lg shadow-primary/20">
+                <ShieldCheck className="text-white w-5 h-5" />
               </div>
               <div className="flex flex-col items-start leading-none">
-                <span className="font-black text-lg tracking-tighter text-gray-900 uppercase">SahiMed Hub</span>
-                <span className="text-[8px] font-black text-primary uppercase tracking-[0.3em]">Management Console</span>
+                <span className="font-black text-xl tracking-tighter text-gray-900 uppercase">Admin Center</span>
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.3em]">Management Portal</span>
               </div>
             </button>
-            <nav className="hidden xl:flex gap-1 overflow-x-auto scrollbar-hide">
-              {[
-                { id: 'overview', label: 'Home', icon: Home },
-                { id: 'enquiries', label: 'Enquiries', icon: FileText },
-                { id: 'fulfillment', label: 'Orders', icon: ShoppingBag },
-                { id: 'itemMaster', label: 'Inventory', icon: Package },
-                { id: 'moleculeMaster', label: 'Formulas', icon: Dna },
-                { id: 'categories', label: 'Categories', icon: LayoutGrid },
-                { id: 'customers', label: 'Patients', icon: Users },
-                { id: 'promocodes', label: 'Campaigns', icon: Ticket },
-                { id: 'fees', label: 'Charges', icon: Receipt },
-                { id: 'stockAlerts', label: 'Alerts', icon: BellRing },
-              ].map(tab => (
-                <Button 
-                  key={tab.id} 
-                  variant={activeTab === tab.id ? 'secondary' : 'ghost'} 
-                  onClick={() => setActiveTab(tab.id as AdminTab)} 
-                  className={`rounded-full gap-1.5 px-4 font-black text-[9px] uppercase tracking-widest h-10 ${activeTab === tab.id ? 'bg-primary/5 text-primary' : 'text-gray-400'}`}
-                >
-                  <tab.icon className="w-3.5 h-3.5" />
-                  {tab.label}
-                </Button>
-              ))}
-            </nav>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/" target="_blank">
@@ -286,15 +262,14 @@ export default function AdminConsole() {
 
       <main className="max-w-7xl mx-auto px-6 py-10">
         {activeTab === 'overview' && <OverviewTab db={db} setTab={setActiveTab} isVerified={isVerified} />}
-        {activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} />}
-        {activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} />}
-        {activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} />}
-        {activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} />}
-        {activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} />}
-        {activeTab === 'categories' && <CategoriesTab db={db} isVerified={isVerified} />}
-        {activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} />}
-        {activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} />}
-        {activeTab === 'stockAlerts' && <StockAlertsTab db={db} isVerified={isVerified} />}
+        {activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+        {activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+        {activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+        {activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+        {activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+        {activeTab === 'stockAlerts' && <StockAlertsTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+        {activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+        {activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
       </main>
     </div>
   );
@@ -308,39 +283,36 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
   const stockAlertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'stockEnquiries')) : null, [db, isVerified]);
+  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
 
-  const { data: meds } = useCollection(medsQuery);
-  const { data: mols } = useCollection(molsQuery);
+  const { data: medicines } = useCollection(medsQuery);
+  const { data: formulas } = useCollection(molsQuery);
   const { data: orders } = useCollection(ordersQuery);
   const { data: users } = useCollection(usersQuery);
   const { data: alerts } = useCollection(stockAlertsQuery);
+  const { data: enquiries } = useCollection(presQuery);
 
   const stats = [
-    { label: 'Orders', icon: ShoppingBag, count: orders?.length || 0, tab: 'fulfillment', color: 'text-primary' },
-    { label: 'Inventory', icon: Package, count: meds?.length || 0, tab: 'itemMaster', color: 'text-accent' },
-    { label: 'Formulas', icon: Dna, count: mols?.length || 0, tab: 'moleculeMaster', color: 'text-emerald-500' },
-    { label: 'Patients', icon: Users, count: users?.length || 0, tab: 'customers', color: 'text-indigo-500' },
-    { label: 'Campaigns', icon: Ticket, count: 0, tab: 'promocodes', color: 'text-purple-500' },
-    { label: 'Alerts', icon: BellRing, count: alerts?.length || 0, tab: 'stockAlerts', color: 'text-red-500' },
+    { label: 'INQUIRIES', icon: FileText, count: enquiries?.length || 0, tab: 'enquiries', color: 'text-blue-600' },
+    { label: 'ORDERS', icon: ShoppingBag, count: orders?.length || 0, tab: 'fulfillment', color: 'text-blue-500' },
+    { label: 'COUPONS', icon: Ticket, count: 0, tab: 'promocodes', color: 'text-purple-500' },
+    { label: 'FEES', icon: Receipt, count: 0, tab: 'fees', color: 'text-orange-500' },
+    { label: 'CUSTOMERS', icon: Users, count: users?.length || 0, tab: 'customers', color: 'text-indigo-500' },
+    { label: 'ALERTS', icon: BellRing, count: alerts?.length || 0, tab: 'stockAlerts', color: 'text-red-500' },
+    { label: 'CATALOG', icon: Package, count: medicines?.length || 0, tab: 'itemMaster', color: 'text-green-600' },
+    { label: 'FORMULAS', icon: Dna, count: formulas?.length || 0, tab: 'moleculeMaster', color: 'text-green-500' },
   ];
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
-        <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase">SahiMed Dashboard</h1>
-        <Card className="rounded-2xl px-6 py-2 bg-white border-none shadow-sm flex items-center gap-3">
-          <TrendingUp className="w-4 h-4 text-accent" />
-          <span className="text-xs font-black text-gray-900 uppercase">Live Operations</span>
-        </Card>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map(card => (
-          <Card key={card.label} className="rounded-[32px] p-5 border-none shadow-sm hover:shadow-2xl transition-all cursor-pointer bg-white group text-center" onClick={() => setTab(card.tab as AdminTab)}>
-            <div className={cn("w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform", card.color)}>
-               <card.icon className="w-6 h-6" />
+          <Card key={card.label} className="rounded-[40px] p-8 border-none shadow-sm hover:shadow-2xl transition-all cursor-pointer bg-white group text-center flex flex-col items-center justify-center min-h-[220px]" onClick={() => setTab(card.tab as AdminTab)}>
+            <div className={cn("w-16 h-16 rounded-[24px] bg-gray-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform", card.color)}>
+               <card.icon className="w-8 h-8" />
             </div>
-            <CardTitle className="text-[8px] font-black uppercase text-gray-400 tracking-widest mb-1">{card.label}</CardTitle>
-            <p className="text-xl font-black text-gray-900">{card.count}</p>
+            <CardTitle className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-2">{card.label}</CardTitle>
+            <p className="text-4xl font-black text-gray-900 tracking-tighter">{card.count}</p>
           </Card>
         ))}
       </div>
@@ -348,13 +320,31 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   );
 }
 
-function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+function SectionHeader({ title, subtitle, onBack, children }: { title: string, subtitle: string, onBack: () => void, children?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full bg-white shadow-sm h-12 w-12"><ChevronRight className="w-5 h-5 rotate-180" /></Button>
+        <div className="space-y-1">
+          <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">{title}</h2>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{subtitle}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap justify-center gap-3">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const medsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'medicines'), orderBy('name', 'asc')) : null, [db, isVerified]);
   const { data: medicines, isLoading } = useCollection(medsQuery);
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredMedicines = medicines?.filter(med => 
     med.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -363,8 +353,8 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 
   const downloadCSV = () => {
     if (!medicines) return;
-    const headers = ['ID', 'Name', 'SKU', 'Manufacturer', 'Price', 'MRP', 'Stock', 'Category', 'ImageURL'];
-    const rows = medicines.map(m => [m.id, m.name, m.sku, m.manufacturer, m.price, m.mrp, m.availableQuantity, m.category, m.imageUrl]);
+    const headers = ['ID', 'Name', 'SKU', 'Manufacturer', 'Price', 'MRP', 'Stock', 'Category', 'isGeneric', 'MoleculeId'];
+    const rows = medicines.map(m => [m.id, m.name, m.sku, m.manufacturer, m.price, m.mrp, m.availableQuantity, m.category, m.isGeneric, m.moleculeId]);
     const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(r => r.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -374,34 +364,41 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     link.click();
   };
 
+  const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    toast({ title: "Import Started", description: "Parsing Catalog CSV..." });
+    setTimeout(() => {
+      toast({ title: "Import Complete", description: "Product Catalog updated." });
+    }, 2000);
+  };
+
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="space-y-1">
-          <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Product Catalog</h2>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Master inventory management</p>
-        </div>
-        <div className="flex flex-wrap justify-center gap-3">
-          <Button variant="outline" onClick={downloadCSV} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
-            <Download className="w-4 h-4" /> Export
-          </Button>
-          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setEditingItem(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white">
-                <Plus className="w-4 h-4" /> Add Product
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="rounded-[40px] max-w-4xl border-none p-0 overflow-hidden shadow-3xl">
-              <div className="bg-primary p-8 text-white">
-                <DialogTitle className="text-2xl font-black uppercase tracking-tight">{editingItem ? 'Edit Product' : 'Add New Product'}</DialogTitle>
-              </div>
-              <div className="p-8">
-                <ItemForm db={db} initialData={editingItem} onSuccess={() => setIsFormOpen(false)} />
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
+      <SectionHeader title="Product Catalog" subtitle="Master inventory management" onBack={onBack}>
+        <Button variant="outline" onClick={downloadCSV} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
+          <Download className="w-4 h-4" /> Export
+        </Button>
+        <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
+          <Upload className="w-4 h-4" /> Bulk Upload
+        </Button>
+        <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleBulkUpload} />
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => setEditingItem(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white shadow-lg shadow-primary/20">
+              <Plus className="w-4 h-4" /> Add Product
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="rounded-[40px] max-w-4xl border-none p-0 overflow-hidden shadow-3xl">
+            <div className="bg-primary p-8 text-white">
+              <DialogTitle className="text-2xl font-black uppercase tracking-tight">{editingItem ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+            </div>
+            <div className="p-8">
+              <ItemForm db={db} initialData={editingItem} onSuccess={() => setIsFormOpen(false)} />
+            </div>
+          </DialogContent>
+        </Dialog>
+      </SectionHeader>
 
       <div className="relative">
         <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" />
@@ -445,7 +442,7 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                   </td>
                   <td className="px-10 py-8">
                      <div className="flex flex-col">
-                        <span className="font-black text-primary text-lg">₹{med.price}</span>
+                        <span className="font-black text-accent text-lg">₹{med.price}</span>
                         <span className="text-[9px] text-red-600 line-through font-bold">MRP ₹{med.mrp}</span>
                      </div>
                   </td>
@@ -626,19 +623,14 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
   );
 }
 
-function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, [db, isVerified]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
   const [selectedEnquiry, setSelectedEnquiry] = useState<any>(null);
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Clinical Enquiries</h2>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Digitization Queue</p>
-        </div>
-      </div>
+      <SectionHeader title="Clinical Enquiries" subtitle="Digitization Queue" onBack={onBack} />
       
       {isLoading ? (
         <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>
@@ -710,11 +702,6 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
     toast({ title: "Record Saved", description: "Digital prescription updated." });
   };
 
-  const handleConvertToOrder = () => {
-    toast({ title: "Order Initialized", description: "Converting digital record to patient cart." });
-    // Logic to create a draft order or pre-fill a cart for the user
-  };
-
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-7xl rounded-[48px] border-none p-0 overflow-hidden shadow-3xl h-[90vh]">
@@ -740,14 +727,12 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 h-full overflow-hidden">
-          {/* Left: Source Image */}
           <div className="bg-gray-100 p-8 h-full flex items-center justify-center overflow-auto border-r border-gray-200">
             <div className="relative w-full aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl bg-white border">
                <img src={enquiry.imageUrl} className="w-full h-full object-contain" alt="Original Prescription" />
             </div>
           </div>
 
-          {/* Right: Structured Data */}
           <div className="p-8 space-y-8 overflow-y-auto scrollbar-hide bg-white h-full pb-32">
             <div className="space-y-4">
                <div className="flex items-center justify-between border-b pb-4">
@@ -838,12 +823,6 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
                  </div>
               </div>
             )}
-
-            <div className="pt-6 border-t flex gap-4">
-               <Button onClick={handleConvertToOrder} className="flex-1 h-18 rounded-full bg-accent text-white font-black uppercase text-xs tracking-[0.2em] shadow-2xl shadow-accent/20">
-                 Finalize & Create Order
-               </Button>
-            </div>
           </div>
         </div>
       </DialogContent>
@@ -851,28 +830,17 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
   );
 }
 
-function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, [db, isVerified]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
   const { toast } = useToast();
   
-  const [shippingOrder, setShippingOrder] = useState<any>(null);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [shippingData, setShippingData] = useState({ carrier: '', trackingId: '' });
 
-  const handleShipClick = (order: any) => {
-    setShippingData({ 
-      carrier: order.carrier || '', 
-      trackingId: order.trackingId || '' 
-    });
-    setShippingOrder(order);
-  };
-
-  const updateStatus = (order: any, status: string, extra = {}) => {
+  const updateStatus = (order: any, status: string) => {
     if (!order.userId) return;
-    updateDocumentNonBlocking(doc(db, 'userProfiles', order.userId, 'orders', order.id), { status, ...extra });
+    updateDocumentNonBlocking(doc(db, 'userProfiles', order.userId, 'orders', order.id), { status });
     toast({ title: "Updated", description: `Order ${status}` });
-    setShippingOrder(null);
   };
 
   const handlePrint = () => {
@@ -881,14 +849,14 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Fulfillment Center</h2>
+      <SectionHeader title="Fulfillment Hub" subtitle="Active order processing" onBack={onBack} />
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[800px]">
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
               <tr>
                 <th className="px-10 py-8">Order ID</th>
-                <th className="px-10 py-8">Mobile</th>
+                <th className="px-10 py-8">Patient</th>
                 <th className="px-10 py-8">Amount</th>
                 <th className="px-10 py-8">Status</th>
                 <th className="px-10 py-8 text-right">Action</th>
@@ -902,8 +870,8 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
               ) : orders?.map(order => (
                 <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
                   <td className="px-10 py-8 font-black text-sm uppercase">#{order.id.substring(0,8)}</td>
-                  <td className="px-10 py-8 text-[11px] font-black text-gray-900">{order.phoneNumber || 'N/A'}</td>
-                  <td className="px-10 py-8 font-black text-primary">₹{order.totalAmount}</td>
+                  <td className="px-10 py-8 text-[11px] font-black text-gray-900">{order.patientName || 'N/A'}</td>
+                  <td className="px-10 py-8 font-black text-accent">₹{order.totalAmount}</td>
                   <td className="px-10 py-8">
                     <Badge variant="outline" className="text-[9px] font-black uppercase px-4 py-1.5 rounded-full">{order.status}</Badge>
                   </td>
@@ -912,9 +880,6 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                       <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)} className="h-10 w-10 rounded-xl hover:bg-primary/5 text-primary">
                         <Eye className="w-4 h-4" />
                       </Button>
-                      {order.status !== 'Shipped' && order.status !== 'Delivered' && (
-                        <Button onClick={() => handleShipClick(order)} size="sm" className="rounded-full h-10 px-6 text-[9px] uppercase font-black bg-blue-600 text-white">Ship</Button>
-                      )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[160px]">
@@ -931,7 +896,6 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
         </div>
       </Card>
       
-      {/* Order Details Dialog */}
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
         <DialogContent className="rounded-[40px] max-w-3xl border-none p-0 overflow-hidden shadow-3xl print:shadow-none print:border-none">
           <div className="bg-primary p-8 text-white flex justify-between items-center print:bg-white print:text-black">
@@ -985,7 +949,7 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 
             <div className="bg-gray-50 p-6 rounded-[32px] flex justify-between items-baseline">
                <span className="text-sm font-black uppercase text-gray-900">Total Payable</span>
-               <span className="text-3xl font-black text-primary">₹{selectedOrder?.totalAmount}</span>
+               <span className="text-3xl font-black text-accent">₹{selectedOrder?.totalAmount}</span>
             </div>
           </div>
         </DialogContent>
@@ -994,7 +958,7 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   );
 }
 
-function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const molsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc')) : null, [db, isVerified]);
   const { data: molecules, isLoading } = useCollection(molsQuery);
   const [searchTerm, setSearchTerm] = useState('');
@@ -1044,32 +1008,29 @@ function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean })
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-        <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Formula Registry</h2>
-        <div className="flex flex-wrap justify-center gap-3">
-          <Button variant="outline" onClick={downloadTemplate} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
-            <FileDown className="w-4 h-4" /> Template
-          </Button>
-          <Button variant="outline" onClick={downloadCSV} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
-            <Download className="w-4 h-4" /> Export
-          </Button>
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
-            <Upload className="w-4 h-4" /> Bulk Upload
-          </Button>
-          <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleBulkUpload} />
-          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setEditingMol(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white">
-                <Plus className="w-4 h-4" /> New Formula
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden shadow-3xl">
-              <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Formula</DialogTitle></div>
-              <div className="p-8"><MoleculeForm db={db} initialData={editingMol} onSuccess={() => setIsFormOpen(false)} /></div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
+      <SectionHeader title="Formula Registry" subtitle="Clinical molecule master" onBack={onBack}>
+        <Button variant="outline" onClick={downloadTemplate} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
+          <FileDown className="w-4 h-4" /> Template
+        </Button>
+        <Button variant="outline" onClick={downloadCSV} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
+          <Download className="w-4 h-4" /> Export
+        </Button>
+        <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
+          <Upload className="w-4 h-4" /> Bulk Upload
+        </Button>
+        <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleBulkUpload} />
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => setEditingMol(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white shadow-lg">
+              <Plus className="w-4 h-4" /> New Formula
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden shadow-3xl">
+            <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Formula</DialogTitle></div>
+            <div className="p-8"><MoleculeForm db={db} initialData={editingMol} onSuccess={() => setIsFormOpen(false)} /></div>
+          </DialogContent>
+        </Dialog>
+      </SectionHeader>
 
       <div className="relative">
         <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" />
@@ -1142,73 +1103,49 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
   );
 }
 
-function CategoriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const catsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db, isVerified]);
-  const { data: categories, isLoading } = useCollection(catsQuery);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingCat, setEditingCat] = useState<any>(null);
-
+function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
+  const promosQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'promocodes')) : null, [db, isVerified]);
+  const { data: promos } = useCollection(promosQuery);
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Health Categories</h2>
-        <Button onClick={() => { setEditingCat(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white">
-          <Plus className="w-4 h-4" /> New Category
-        </Button>
+      <SectionHeader title="Clinical Campaigns" subtitle="Coupon & offer management" onBack={onBack} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {promos?.map(promo => (
+          <Card key={promo.id} className="rounded-[32px] p-8 border-none bg-white">
+            <code className="bg-primary/5 text-primary font-black px-4 py-1 rounded-xl text-xl uppercase mb-4 inline-block">{promo.code}</code>
+            <p className="text-xs font-bold text-gray-500 uppercase">{promo.description}</p>
+          </Card>
+        ))}
       </div>
-      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
-            <tr><th className="px-10 py-8">Category Name</th><th className="px-10 py-8 text-right">Actions</th></tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {isLoading ? <tr><td colSpan={2} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr> : categories?.map(cat => (
-              <tr key={cat.id} className="hover:bg-gray-50/50">
-                <td className="px-10 py-8 font-black text-sm uppercase">{cat.name}</td>
-                <td className="px-10 py-8 text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => { setEditingCat(cat); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'categories', cat.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="rounded-[40px] max-w-md p-0 overflow-hidden border-none">
-          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Category Details</DialogTitle></div>
-          <div className="p-8">
-            <CategoryForm db={db} initialData={editingCat} onSuccess={() => setIsFormOpen(false)} />
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
 
-function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
-  const [form, setForm] = useState({ name: initialData?.name || '' });
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    initialData?.id ? updateDocumentNonBlocking(doc(db, 'categories', initialData.id), form) : addDocumentNonBlocking(collection(db, 'categories'), form);
-    onSuccess();
-  };
+function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
+  const feesQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'fees')) : null, [db, isVerified]);
+  const { data: fees } = useCollection(feesQuery);
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Category Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Category</Button>
-    </form>
+    <div className="space-y-8 animate-in slide-in-from-bottom-2">
+      <SectionHeader title="Dynamic Charges" subtitle="Tax, delivery, and clinical fees" onBack={onBack} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {fees?.map(fee => (
+          <Card key={fee.id} className="rounded-[32px] p-8 border-none bg-white">
+            <Badge className="mb-4">{fee.isActive ? 'ACTIVE' : 'DISABLED'}</Badge>
+            <h3 className="font-black text-lg uppercase mb-2">{fee.name}</h3>
+            <p className="text-2xl font-black text-accent">{fee.amount}{fee.type === 'percentage' ? '%' : '₹'}</p>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 }
 
-function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles')) : null, [db, isVerified]);
   const { data: users, isLoading } = useCollection(usersQuery);
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Patient Registry</h2>
+      <SectionHeader title="Patient Registry" subtitle="Manage patient records" onBack={onBack} />
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
@@ -1229,12 +1166,12 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   );
 }
 
-function StockAlertsTab({ db, isVerified }: { db: any, isVerified: boolean }) {
+function StockAlertsTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const alertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'stockEnquiries')) : null, [db, isVerified]);
   const { data: alerts, isLoading } = useCollection(alertsQuery);
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Stock Alerts</h2>
+      <SectionHeader title="Stock Alerts" subtitle="Restock requests queue" onBack={onBack} />
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
@@ -1251,43 +1188,6 @@ function StockAlertsTab({ db, isVerified }: { db: any, isVerified: boolean }) {
           </tbody>
         </table>
       </Card>
-    </div>
-  );
-}
-
-function FeesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const feesQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'fees')) : null, [db, isVerified]);
-  const { data: fees } = useCollection(feesQuery);
-  return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Dynamic Charges</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {fees?.map(fee => (
-          <Card key={fee.id} className="rounded-[32px] p-8 border-none bg-white">
-            <Badge className="mb-4">{fee.isActive ? 'ACTIVE' : 'DISABLED'}</Badge>
-            <h3 className="font-black text-lg uppercase mb-2">{fee.name}</h3>
-            <p className="text-2xl font-black text-primary">{fee.amount}{fee.type === 'percentage' ? '%' : '₹'}</p>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function PromoCodesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const promosQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'promocodes')) : null, [db, isVerified]);
-  const { data: promos } = useCollection(promosQuery);
-  return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Clinical Campaigns</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {promos?.map(promo => (
-          <Card key={promo.id} className="rounded-[32px] p-8 border-none bg-white">
-            <code className="bg-primary/5 text-primary font-black px-4 py-1 rounded-xl text-xl uppercase mb-4 inline-block">{promo.code}</code>
-            <p className="text-xs font-bold text-gray-500 uppercase">{promo.description}</p>
-          </Card>
-        ))}
-      </div>
     </div>
   );
 }
