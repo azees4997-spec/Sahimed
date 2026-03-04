@@ -19,6 +19,18 @@ export interface Product {
   imageUrl: string;
   isGeneric?: boolean;
   packSize?: string;
+  // Clinical Details
+  description?: string;
+  howToUse?: string;
+  treatment?: string;
+  safetyAdvice?: string;
+  sideEffects?: string;
+  alcoholInteraction?: string;
+  pregnancyInteraction?: string;
+  lactationInteraction?: string;
+  drivingInteraction?: string;
+  kidneyInteraction?: string;
+  liverInteraction?: string;
 }
 
 interface CartItem extends Product {

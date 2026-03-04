@@ -21,7 +21,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Medicine",
       "type": "object",
-      "description": "Represents a single medicine product.",
+      "description": "Represents a single medicine product with clinical data.",
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
@@ -34,7 +34,18 @@
         "category": { "type": "string" },
         "imageUrl": { "type": "string", "format": "uri" },
         "isGeneric": { "type": "boolean" },
-        "packSize": { "type": "string" }
+        "packSize": { "type": "string" },
+        "description": { "type": "string" },
+        "howToUse": { "type": "string" },
+        "treatment": { "type": "string" },
+        "safetyAdvice": { "type": "string" },
+        "sideEffects": { "type": "string" },
+        "alcoholInteraction": { "type": "string" },
+        "pregnancyInteraction": { "type": "string" },
+        "lactationInteraction": { "type": "string" },
+        "drivingInteraction": { "type": "string" },
+        "kidneyInteraction": { "type": "string" },
+        "liverInteraction": { "type": "string" }
       },
       "required": ["id", "name", "price", "category"]
     },
@@ -107,6 +118,14 @@
           "entityName": "Customer",
           "schema": { "$ref": "#/backend/entities/Customer" },
           "description": "Patient profiles."
+        }
+      },
+      {
+        "path": "/stockEnquiries/{enquiryId}",
+        "definition": {
+          "entityName": "StockEnquiry",
+          "schema": { "type": "object", "properties": { "medicineId": { "type": "string" }, "userId": { "type": "string" } } },
+          "description": "Requests for out-of-stock items."
         }
       }
     ]

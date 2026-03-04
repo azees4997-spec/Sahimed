@@ -3,14 +3,12 @@
 
 import React, { use, useState } from 'react';
 import Navbar from '@/components/Navbar';
-import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Activity,
-  Loader2,
   ChevronRight,
   Info,
   Plus,
@@ -20,9 +18,18 @@ import {
   ShieldCheck,
   Maximize2,
   Phone,
-  MessageCircle
+  MessageCircle,
+  Beer,
+  Baby,
+  Milk,
+  Car,
+  ShieldAlert,
+  Skull,
+  Stethoscope,
+  ClipboardList
 } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
   Dialog,
   DialogContent,
@@ -34,6 +41,21 @@ import { doc, collection, query, where, limit, serverTimestamp } from 'firebase/
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+
+// Custom Detailed Icons
+const KidneyIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 21a9 9 0 0 0 9-9c0-5-4-9-9-9s-9 4-9 9a9 9 0 0 0 9 9z" />
+    <path d="M12 7v10M8 12h8" />
+  </svg>
+);
+
+const LiverIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 12c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8-8 3.6-8 8z" />
+    <path d="M12 8l-4 4 4 4 4-4-4-4z" />
+  </svg>
+);
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -53,16 +75,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const genericQuery = useMemoFirebase(() => {
     if (!db || !product || product.isGeneric) return null;
-    
-    return query(
-      collection(db, 'medicines'),
-      where('moleculeId', '==', product.moleculeId || ''),
-      where('isGeneric', '==', true),
-      limit(1)
-    );
+    return query(collection(db, 'medicines'), where('moleculeId', '==', product.moleculeId || ''), where('isGeneric', '==', true), limit(1));
   }, [db, product]);
   
-  const { data: genericAlternatives, isLoading: genericLoading } = useCollection(genericQuery);
+  const { data: genericAlternatives } = useCollection(genericQuery);
   const genericSubstitute = genericAlternatives?.[0];
 
   const handleNotify = (p: any) => {
@@ -70,79 +86,35 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       toast({ title: "Login Required", description: "Sign in to receive stock notifications." });
       return;
     }
-    const enquiryData = {
-      medicineId: p.id,
-      medicineName: p.name,
-      userId: user.uid,
-      timestamp: serverTimestamp()
-    };
+    const enquiryData = { medicineId: p.id, medicineName: p.name, userId: user.uid, timestamp: serverTimestamp() };
     addDocumentNonBlocking(collection(db, 'stockEnquiries'), enquiryData);
     toast({ title: "Notification Set", description: "We will notify you when stock returns." });
-  };
-
-  const getUnitPrice = (price: number, packSize: string = "") => {
-    const match = packSize?.match(/\d+/);
-    if (match) {
-      const units = parseInt(match[0]);
-      if (units > 0) return (price / units).toFixed(1);
-    }
-    return null;
   };
 
   if (productLoading || !product) {
     return (
       <div className="min-h-screen bg-[#F8F8F8]">
         <Navbar />
-        <main className="max-w-7xl mx-auto px-4 py-8 space-y-12 animate-in fade-in duration-300">
-           <div className="flex justify-center"><Skeleton className="h-10 w-64 rounded-full shimmer" /></div>
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Skeleton className="h-[600px] rounded-[40px] shimmer" />
-              <Skeleton className="h-[600px] rounded-[40px] shimmer" />
-           </div>
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Skeleton className="h-32 rounded-[32px] shimmer" />
-              <Skeleton className="h-32 rounded-[32px] shimmer" />
-           </div>
+        <main className="max-w-7xl mx-auto px-4 py-8 space-y-12">
+           <Skeleton className="h-[600px] rounded-[40px] shimmer" />
         </main>
       </div>
     );
   }
 
   const brandedQty = getItemQuantity(product?.id || '');
-  const genericQty = genericSubstitute ? getItemQuantity(genericSubstitute.id) : 0;
+  const isOutOfStock = (product.availableQuantity || 0) <= 0;
 
-  const brandedSavings = Math.max(0, Math.round((product.mrp || product.price + 50) - product.price));
-  const savingsAmount = product && genericSubstitute ? Math.round(product.price - genericSubstitute.price) : 0;
-  const percentageSaved = product && genericSubstitute 
-    ? Math.round(((product.price - genericSubstitute.price) / product.price) * 100) 
-    : 0;
-
-  const brandedOutOfStock = (product.availableQuantity || 0) <= 0;
-  const genericOutOfStock = genericSubstitute ? (genericSubstitute.availableQuantity || 0) <= 0 : false;
-
-  const ImageViewer = ({ src, alt }: { src: string, alt: string }) => (
-    <Dialog>
-      <DialogTrigger asChild>
-        <div className="relative cursor-zoom-in group">
-          <div className="aspect-square relative w-full max-w-[280px] mx-auto">
-            <Image 
-              src={src} 
-              alt={alt} 
-              fill 
-              className={cn("object-contain transition-transform duration-500 group-hover:scale-105", brandedOutOfStock && "grayscale")} 
-            />
-          </div>
-          <div className="absolute bottom-0 right-0 p-2 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-            <Maximize2 className="w-4 h-4 text-gray-400" />
-          </div>
-        </div>
-      </DialogTrigger>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-transparent shadow-none">
-        <div className="relative w-full h-[80vh] flex items-center justify-center bg-white rounded-3xl overflow-hidden p-6">
-          <Image src={src} alt={alt} fill className="object-contain" />
-        </div>
-      </DialogContent>
-    </Dialog>
+  const InteractionCard = ({ icon: Icon, title, description }: { icon: any, title: string, description?: string }) => (
+    <div className="bg-white p-5 rounded-3xl border border-gray-100 flex gap-4 transition-all hover:shadow-lg">
+      <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary shrink-0">
+        <Icon className="w-6 h-6" />
+      </div>
+      <div>
+        <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{title}</h4>
+        <p className="text-xs font-bold text-gray-700 leading-relaxed">{description || "No specific interaction details provided."}</p>
+      </div>
+    </div>
   );
 
   return (
@@ -153,241 +125,117 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <div className="flex items-center gap-1.5 mb-6 text-[8px] font-black text-gray-400 uppercase tracking-widest px-1">
           <Link href="/" className="hover:text-primary">Home</Link>
           <ChevronRight className="w-2 h-2" />
-          <Link href="/search" className="hover:text-primary">Search</Link>
-          <ChevronRight className="w-2 h-2" />
           <span className="text-primary truncate">{product.name}</span>
         </div>
 
-        {!product.isGeneric && genericSubstitute ? (
-          <div className="space-y-6">
-            <div className="text-center py-2">
-               <div className="inline-flex items-center gap-2 bg-primary/5 px-6 py-2.5 rounded-full border border-primary/10 shadow-sm animate-in fade-in slide-in-from-top-4">
-                  <Activity className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-[10px] font-black text-gray-900 uppercase tracking-tighter">Composition: {product.saltComposition}</span>
-               </div>
-            </div>
+        <div className="bg-white rounded-[40px] sm:rounded-[50px] p-6 sm:p-12 shadow-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-start relative mb-12">
+           <div className="sticky top-24">
+              <div className="aspect-square relative w-full max-w-[400px] mx-auto bg-gray-50 rounded-[40px] p-10 border border-gray-100">
+                <Image src={product.imageUrl} alt={product.name} fill className="object-contain p-10" />
+              </div>
+              <div className="mt-8 grid grid-cols-2 gap-4">
+                 <Button onClick={() => window.open(`https://wa.me/91XXXXXXXXXX?text=Hi, SahiMed! I need ${product.name}`, '_blank')} variant="outline" className="h-14 rounded-3xl border-2 border-green-100 text-green-600 font-black uppercase text-[10px] tracking-widest gap-2"><MessageCircle className="w-4 h-4" /> WhatsApp</Button>
+                 <Button onClick={() => window.location.href = 'tel:+91XXXXXXXXXX'} variant="outline" className="h-14 rounded-3xl border-2 border-blue-100 text-blue-600 font-black uppercase text-[10px] tracking-widest gap-2"><Phone className="w-4 h-4" /> Call Hub</Button>
+              </div>
+           </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-6 items-stretch">
-              {/* Branded Card */}
-              <Card className={cn(
-                "rounded-[32px] sm:rounded-[40px] border-none bg-white p-4 sm:p-10 shadow-sm flex flex-col h-full overflow-hidden relative tap-highlight",
-                brandedOutOfStock && "opacity-80"
-              )}>
-                <div className="flex items-center justify-between mb-4 sm:mb-8">
-                  <Badge className="bg-gray-100 text-gray-500 border-none text-[8px] sm:text-[10px] font-black uppercase px-3 py-1.5 rounded-full">Your Item</Badge>
-                </div>
-                
-                <div className="mb-4 sm:mb-10">
-                  <ImageViewer src={product.imageUrl} alt={product.name} />
-                </div>
+           <div className="space-y-8">
+              <div className="space-y-4">
+                 <Badge className="bg-accent text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">Quality Verified</Badge>
+                 <h1 className="text-3xl sm:text-5xl font-black text-gray-900 uppercase tracking-tighter leading-none">{product.name}</h1>
+                 <p className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-widest">{product.saltComposition}</p>
+              </div>
 
-                <div className="flex-1 space-y-4 sm:space-y-6">
-                  <h3 className="text-[11px] sm:text-xl font-black text-gray-900 uppercase tracking-tight leading-tight line-clamp-2">{product.name}</h3>
-                  
-                  <div className="space-y-3 sm:space-y-5">
-                    <div className="space-y-0.5">
-                      <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">Packing</p>
-                      <p className="text-[9px] sm:text-[11px] font-black text-gray-700 uppercase truncate">{product.packSize}</p>
+              <div className="bg-gray-50 p-6 rounded-[32px] border flex justify-between items-center">
+                 <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pricing</p>
+                    <p className="text-3xl font-black text-primary">₹{product.price}</p>
+                    <p className="text-[9px] text-red-500 line-through font-bold">MRP ₹{product.mrp || product.price + 50}</p>
+                 </div>
+                 <div className="text-right">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pack Size</p>
+                    <p className="font-black text-gray-900 uppercase">{product.packSize || "N/A"}</p>
+                 </div>
+              </div>
+
+              <div className="flex gap-4">
+                 {isOutOfStock ? (
+                   <Button onClick={() => handleNotify(product)} className="flex-1 h-20 rounded-full font-black uppercase tracking-widest bg-orange-600 shadow-2xl shadow-orange-100 text-white">Notify Stock</Button>
+                 ) : brandedQty > 0 ? (
+                    <div className="flex-1 flex items-center justify-between bg-primary rounded-full h-20 px-8 shadow-2xl shadow-primary/20">
+                       <button onClick={() => updateQuantity(product.id, -1)} className="text-white"><Minus className="w-6 h-6" /></button>
+                       <span className="text-2xl font-black text-white">{brandedQty}</span>
+                       <button onClick={() => updateQuantity(product.id, 1)} className="text-white"><Plus className="w-6 h-6" /></button>
                     </div>
-                    <div className="space-y-0.5">
-                      <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">Marketer</p>
-                      <p className="text-[9px] sm:text-[11px] font-black text-gray-700 uppercase truncate">{product.manufacturer}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4 sm:pt-8 border-t border-gray-50 mt-auto">
-                    <div className="flex flex-col mb-4">
-                      <div className="flex items-center gap-2">
-                         <span className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">MRP</span>
-                         <span className="text-[9px] sm:text-[10px] text-red-600 line-through font-bold">₹{product.mrp || product.price + 100}</span>
-                         <span className="text-[8px] sm:text-[9px] font-black text-accent uppercase">Save ₹{brandedSavings}</span>
-                      </div>
-                      <div className="text-xl sm:text-[32px] font-black text-primary leading-none">₹{product.price}</div>
-                      <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase mt-1">₹{getUnitPrice(product.price, product.packSize)} / Unit</p>
-                    </div>
-                    
-                    {brandedOutOfStock ? (
-                      <Button onClick={() => handleNotify(product)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 gap-1 sm:gap-2 tap-highlight">
-                        <BellRing className="w-3 h-3 sm:w-4 sm:h-4" /> Notify
-                      </Button>
-                    ) : brandedQty > 0 ? (
-                      <div className="flex items-center justify-between bg-primary rounded-full h-10 sm:h-16 px-2 sm:px-6 shadow-xl shadow-primary/20">
-                        <button onClick={() => updateQuantity(product.id, -1)} className="p-1 sm:p-2 text-white tap-highlight"><Minus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
-                        <span className="text-xs sm:text-xl font-black text-white">{brandedQty}</span>
-                        <button onClick={() => updateQuantity(product.id, 1)} className="p-1 sm:p-2 text-white tap-highlight"><Plus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
-                      </div>
-                    ) : (
-                      <Button onClick={() => addToCart(product, 1)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform tap-highlight">Add To Cart</Button>
-                    )}
-                  </div>
-                </div>
-              </Card>
+                 ) : (
+                    <Button onClick={() => addToCart(product, 1)} className="flex-1 h-20 rounded-full font-black uppercase tracking-widest bg-primary shadow-2xl shadow-primary/30 text-white text-lg">Add to Bag</Button>
+                 )}
+              </div>
 
-              {/* Generic Card */}
-              <Card className={cn(
-                "rounded-[32px] sm:rounded-[40px] border-[1.5px] sm:border-[2.5px] border-accent bg-white p-4 sm:p-10 shadow-2xl shadow-accent/10 transition-all flex flex-col h-full relative tap-highlight",
-                genericOutOfStock && "opacity-80"
-              )}>
-                <div className="flex items-center justify-between mb-4 sm:mb-8">
-                  <Badge className="bg-accent text-white border-none text-[8px] sm:text-[10px] font-black uppercase px-3 py-1.5 rounded-full">Our Recommendation</Badge>
-                </div>
-                
-                <div className="mb-4 sm:mb-10 relative">
-                  <ImageViewer src={genericSubstitute.imageUrl} alt={genericSubstitute.name} />
-                  {!genericOutOfStock && (
-                    <div className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 bg-accent text-white rounded-full p-1.5 sm:p-3 shadow-2xl animate-bounce">
-                      <Sparkles className="w-3 h-3 sm:w-5 sm:h-5" />
-                    </div>
-                  )}
-                </div>
+              <Accordion type="single" collapsible className="w-full">
+                 <AccordionItem value="overview" className="border-b border-gray-100">
+                    <AccordionTrigger className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-900 py-6">Product Overview</AccordionTrigger>
+                    <AccordionContent className="pb-8 space-y-4">
+                       <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-primary">Description</Label>
+                          <p className="text-xs font-bold text-gray-600 leading-relaxed uppercase">{product.description || "Clinical description pending review."}</p>
+                       </div>
+                       <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-primary">Treatment</Label>
+                          <p className="text-xs font-bold text-gray-600 leading-relaxed uppercase">{product.treatment || "Used for primary clinical treatment."}</p>
+                       </div>
+                    </AccordionContent>
+                 </AccordionItem>
 
-                <div className="flex-1 space-y-4 sm:space-y-6">
-                  <h3 className="text-[11px] sm:text-xl font-black text-gray-900 uppercase tracking-tight leading-tight line-clamp-2">{genericSubstitute.name}</h3>
-                  
-                  <div className="space-y-3 sm:space-y-5">
-                    <div className="space-y-0.5">
-                      <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">Packing</p>
-                      <p className="text-[9px] sm:text-[11px] font-black text-gray-700 uppercase truncate">{genericSubstitute.packSize}</p>
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">Marketer</p>
-                      <p className="text-[9px] sm:text-[11px] font-black text-gray-700 uppercase truncate">{genericSubstitute.manufacturer}</p>
-                    </div>
-                  </div>
+                 <AccordionItem value="howtouse" className="border-b border-gray-100">
+                    <AccordionTrigger className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-900 py-6">Usage & Safety</AccordionTrigger>
+                    <AccordionContent className="pb-8 space-y-6">
+                       <div className="flex gap-4 items-start bg-gray-50 p-6 rounded-3xl">
+                          <ClipboardList className="w-6 h-6 text-primary shrink-0" />
+                          <div>
+                             <h4 className="text-[10px] font-black uppercase mb-1">How to consume</h4>
+                             <p className="text-xs font-bold text-gray-600 uppercase leading-relaxed">{product.howToUse || "Take as directed by your physician."}</p>
+                          </div>
+                       </div>
+                       <div className="flex gap-4 items-start bg-orange-50 p-6 rounded-3xl">
+                          <ShieldAlert className="w-6 h-6 text-orange-600 shrink-0" />
+                          <div>
+                             <h4 className="text-[10px] font-black uppercase mb-1 text-orange-600">Safety Advice</h4>
+                             <p className="text-xs font-bold text-orange-900 uppercase leading-relaxed">{product.safetyAdvice || "Consult professional medical advice before use."}</p>
+                          </div>
+                       </div>
+                    </AccordionContent>
+                 </AccordionItem>
 
-                  <div className="pt-4 sm:pt-8 border-t border-gray-50 mt-auto">
-                    <div className="flex flex-col mb-4">
-                      <div className="flex items-center gap-2">
-                         <span className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">MRP</span>
-                         <span className="text-[9px] sm:text-[10px] text-red-600 line-through font-bold">₹{genericSubstitute.mrp || genericSubstitute.price + 50}</span>
-                         <div className="bg-accent text-white px-2 py-0.5 rounded-md text-[8px] font-black">
-                           SAVE ₹{savingsAmount} ({percentageSaved}%)
-                         </div>
-                      </div>
-                      <div className="text-xl sm:text-[32px] font-black text-accent leading-none">₹{genericSubstitute.price}</div>
-                      <p className="text-[8px] sm:text-[9px] font-black text-accent uppercase mt-1">₹{getUnitPrice(genericSubstitute.price, genericSubstitute.packSize)} / Unit</p>
-                    </div>
-                    
-                    {genericOutOfStock ? (
-                      <Button onClick={() => handleNotify(genericSubstitute)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 gap-1 sm:gap-2 tap-highlight">
-                        <BellRing className="w-3 h-3 sm:w-4 sm:h-4" /> Notify
-                      </Button>
-                    ) : genericQty > 0 ? (
-                      <div className="flex items-center justify-between bg-accent rounded-full h-10 sm:h-16 px-2 sm:px-6 shadow-xl shadow-accent/20">
-                        <button onClick={() => updateQuantity(genericSubstitute.id, -1)} className="p-1 sm:p-2 text-white tap-highlight"><Minus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
-                        <span className="text-xs sm:text-xl font-black text-white">{genericQty}</span>
-                        <button onClick={() => updateQuantity(genericSubstitute.id, 1)} className="p-1 sm:p-2 text-white tap-highlight"><Plus className="w-3 h-3 sm:w-5 sm:h-5" /></button>
-                      </div>
-                    ) : (
-                      <Button onClick={() => addToCart(genericSubstitute, 1)} className="w-full h-10 sm:h-16 rounded-full text-[8px] sm:text-[11px] font-black uppercase bg-accent shadow-xl shadow-accent/30 hover:scale-[1.02] transition-transform text-white tap-highlight">Switch & Save</Button>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-8 animate-in fade-in duration-700">
-             <div className="bg-white rounded-[32px] sm:rounded-[50px] p-6 sm:p-12 shadow-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-center overflow-hidden relative">
-                <div className="absolute top-4 right-4 sm:top-8 sm:right-8">
-                   <Badge className="bg-accent text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">Our Recommendation</Badge>
-                </div>
-                
-                <div className="relative">
-                   <div className="absolute inset-0 bg-accent/5 rounded-full blur-[100px] opacity-30" />
-                   <ImageViewer src={product.imageUrl} alt={product.name} />
-                </div>
-
-                <div className="space-y-6 sm:space-y-8">
-                   <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                         <div className="h-1 w-8 sm:h-1.5 sm:w-12 bg-accent rounded-full" />
-                         <span className="text-[8px] sm:text-[10px] font-black text-accent uppercase tracking-[0.3em]">Premium Quality</span>
-                      </div>
-                      <h1 className="text-2xl sm:text-4xl font-black text-gray-900 uppercase tracking-tighter leading-none">{product.name}</h1>
-                      <div className="space-y-1 sm:space-y-2">
-                        <p className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">Composition</p>
-                        <p className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-widest leading-relaxed">{product.saltComposition}</p>
-                      </div>
-                   </div>
-
-                   <div className="grid grid-cols-2 gap-4 sm:gap-6 bg-gray-50 p-4 sm:p-6 rounded-[24px] sm:rounded-[32px] border">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-red-600 line-through font-bold">₹{product.mrp || product.price + 50}</span>
-                          <span className="text-[9px] font-black text-accent uppercase">Save ₹{brandedSavings}</span>
-                        </div>
-                        <p className="text-2xl sm:text-3xl font-black text-primary">₹{product.price}</p>
-                        <p className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase">₹{getUnitPrice(product.price, product.packSize)} / UNIT</p>
-                      </div>
-                      <div className="space-y-0.5">
-                        <p className="text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest">Marketer</p>
-                        <p className="text-[10px] sm:text-xs font-bold text-gray-900 uppercase truncate">{product.manufacturer}</p>
-                      </div>
-                   </div>
-
-                   <div className="flex gap-3 sm:gap-4">
-                      {brandedOutOfStock ? (
-                         <Button onClick={() => handleNotify(product)} className="flex-1 h-12 sm:h-16 rounded-full text-xs sm:text-sm font-black uppercase tracking-widest bg-orange-600 shadow-xl shadow-orange-200 tap-highlight">Notify Stock</Button>
-                      ) : (
-                        <div className="flex-1 flex gap-2 sm:gap-3">
-                           {brandedQty > 0 ? (
-                              <div className="flex items-center justify-between bg-primary rounded-full h-12 sm:h-16 flex-1 px-4 sm:px-8 shadow-2xl shadow-primary/20">
-                                 <button onClick={() => updateQuantity(product.id, -1)} className="p-1 sm:p-2 text-white tap-highlight"><Minus className="w-4 h-4 sm:w-6 sm:h-6" /></button>
-                                 <span className="text-sm sm:text-xl font-black text-white">{brandedQty}</span>
-                                 <button onClick={() => updateQuantity(product.id, 1)} className="p-1 sm:p-2 text-white tap-highlight"><Plus className="w-4 h-4 sm:w-6 sm:h-6" /></button>
-                              </div>
-                           ) : (
-                             <Button onClick={() => addToCart(product, 1)} className="flex-1 h-12 sm:h-16 rounded-full text-xs sm:text-sm font-black uppercase tracking-widest bg-primary shadow-2xl shadow-primary/30 text-white tap-highlight">Add To Cart</Button>
-                           )}
-                        </div>
-                      )}
-                      <Button variant="outline" className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 p-0 flex items-center justify-center tap-highlight"><Info className="w-5 h-5 sm:w-6 sm:h-6" /></Button>
-                   </div>
-                </div>
-             </div>
-          </div>
-        )}
-
-        {/* Quick Inquiry Options */}
-        <div className="mt-8 grid grid-cols-2 gap-4">
-           <Button 
-            variant="outline" 
-            className="h-14 rounded-[24px] border-2 border-green-100 bg-white text-green-600 hover:bg-green-50 font-black uppercase text-[10px] tracking-widest gap-2 shadow-sm active:scale-95 transition-all"
-            onClick={() => window.open(`https://wa.me/91XXXXXXXXXX?text=Hi, I have a question about ${product.name}`, '_blank')}
-           >
-             <MessageCircle className="w-4 h-4" /> Ask on WhatsApp
-           </Button>
-           <Button 
-            variant="outline" 
-            className="h-14 rounded-[24px] border-2 border-blue-100 bg-white text-blue-600 hover:bg-blue-50 font-black uppercase text-[10px] tracking-widest gap-2 shadow-sm active:scale-95 transition-all"
-            onClick={() => window.location.href = 'tel:+91XXXXXXXXXX'}
-           >
-             <Phone className="w-4 h-4" /> Call for Inquiry
-           </Button>
+                 <AccordionItem value="sideeffects" className="border-b border-gray-100">
+                    <AccordionTrigger className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-900 py-6">Side Effects</AccordionTrigger>
+                    <AccordionContent className="pb-8">
+                       <div className="flex gap-4 items-start bg-red-50 p-6 rounded-3xl">
+                          <Skull className="w-6 h-6 text-red-600 shrink-0" />
+                          <p className="text-xs font-bold text-red-900 uppercase leading-relaxed">{product.sideEffects || "No common side effects reported."}</p>
+                       </div>
+                    </AccordionContent>
+                 </AccordionItem>
+              </Accordion>
+           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-8">
-          <Card className="rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 border-none bg-white shadow-sm hover:shadow-xl transition-all">
-            <h3 className="text-[10px] sm:text-sm font-black text-gray-900 uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-               <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /> Uses & Benefits
-            </h3>
-            <div className="flex flex-wrap gap-2">
-               {(product.uses || ["Quality Assured", "Customer Approved"]).map((use: string, i: number) => (
-                 <span key={i} className="bg-gray-50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl text-[8px] sm:text-[10px] font-bold text-gray-600 uppercase border border-dashed">{use}</span>
-               ))}
-            </div>
-          </Card>
-
-          <Card className="rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 border-none bg-white shadow-sm hover:shadow-xl transition-all">
-            <h3 className="text-[10px] sm:text-sm font-black text-gray-900 uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-               <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-accent" /> Quality Guarantee
-            </h3>
-            <p className="text-[9px] sm:text-[11px] font-bold text-gray-500 uppercase leading-relaxed tracking-widest">
-              Sourced directly from verified manufacturers. Every product undergoes rigorous quality checks before reaching our customers.
-            </p>
-          </Card>
-        </div>
+        {/* Clinical Interactions Hub */}
+        <section className="space-y-8 animate-in slide-in-from-bottom-6">
+           <div className="flex items-center gap-3">
+              <Stethoscope className="w-6 h-6 text-primary" />
+              <h2 className="text-xl font-black uppercase tracking-tighter">Clinical Interactions</h2>
+           </div>
+           
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <InteractionCard icon={Beer} title="Alcohol" description={product.alcoholInteraction} />
+              <InteractionCard icon={Baby} title="Pregnancy" description={product.pregnancyInteraction} />
+              <InteractionCard icon={Milk} title="Lactation" description={product.lactationInteraction} />
+              <InteractionCard icon={Car} title="Driving" description={product.drivingInteraction} />
+              <InteractionCard icon={KidneyIcon} title="Kidney Health" description={product.kidneyInteraction} />
+              <InteractionCard icon={LiverIcon} title="Liver Health" description={product.liverInteraction} />
+           </div>
+        </section>
       </main>
     </div>
   );
