@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from 'next/link';
@@ -208,26 +207,31 @@ export default function Navbar() {
             "pb-5 transition-all duration-500 ease-in-out overflow-visible",
             (isHomePage || isSearchExpanded) ? "max-h-[500px] opacity-100 mt-2" : "max-h-0 opacity-0 pointer-events-none"
           )} ref={suggestionRef}>
-            <form onSubmit={handleSearch} className="relative flex gap-3">
-              <div className="relative flex-1">
+            <form onSubmit={handleSearch} className="relative w-full">
+              <div className="relative">
                 <Input
                   type="text"
                   placeholder="Search products, brands or health needs..."
-                  className="w-full pl-12 pr-12 rounded-3xl border-[2.5px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 bg-white h-12 sm:h-14 font-black text-xs sm:text-sm shadow-xl shadow-primary/5"
+                  className="w-full pl-12 pr-24 rounded-3xl border-[2.5px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 bg-white h-12 sm:h-14 font-black text-xs sm:text-sm shadow-xl shadow-primary/5"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   autoFocus={isSearchExpanded}
                 />
                 <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-primary w-5 h-5" />
-                {(isProcessing || medsLoading) && (
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                     <Loader2 className="w-5 h-5 text-primary animate-spin" />
-                  </div>
-                )}
+                
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  {(isProcessing || medsLoading) && (
+                     <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                  )}
+                  <Button 
+                    type="submit" 
+                    size="sm"
+                    className="rounded-2xl h-8 sm:h-10 px-4 font-black uppercase text-[9px] tracking-widest shadow-md bg-primary hover:bg-primary/90 transition-all active:scale-95"
+                  >
+                    Search
+                  </Button>
+                </div>
               </div>
-              <Button type="submit" className="rounded-3xl h-12 sm:h-14 px-8 font-black uppercase text-[11px] tracking-widest shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 transition-all active:scale-95 shrink-0">
-                Search
-              </Button>
 
               {search.trim().length > 0 && !isProcessing && (
                 <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-[32px] shadow-3xl border-none overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-300">

@@ -1,4 +1,3 @@
-
 import { Product } from "@/context/CartContext";
 
 export interface ExtendedProduct extends Product {
@@ -30,12 +29,12 @@ export const PRODUCTS: ExtendedProduct[] = [
     name: "Sitagliptin M 50/500",
     price: 240,
     saltComposition: "Sitagliptin 50mg + Metformin 500mg",
-    manufacturer: "HealthLink Generic",
+    manufacturer: "SahiMed Generic",
     category: "Diabetes",
     imageUrl: "https://picsum.photos/seed/diab2/300/300",
     isGeneric: true,
     packSize: "Strip of 15 tablets",
-    mfrDetails: "HealthLink Labs, Hyderabad, India",
+    mfrDetails: "SahiMed Labs, Hyderabad, India",
     uses: ["Type 2 Diabetes Mellitus", "Affordable Glycemic Control"],
     sideEffects: ["Nausea", "Diarrhea"],
     description: "Generic Sitagliptin + Metformin provides the exact same clinical benefit as branded versions at a significantly lower cost."

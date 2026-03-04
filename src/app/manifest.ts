@@ -1,4 +1,3 @@
-
 import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -8,7 +7,6 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Professional Healthcare Solutions & Medicine Delivery',
     start_url: '/',
     display: 'standalone',
-    background_color: '#ffffff',
     background_color: '#ffffff',
     theme_color: '#0056b3',
     icons: [
