@@ -191,20 +191,20 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="bg-white py-6 border-t border-gray-100 text-center">
+      <footer className="bg-white py-3 border-t border-gray-100 text-center">
         <div className="max-w-7xl mx-auto px-6 sm:px-12">
-          <div className="flex flex-col items-center gap-3">
-            <div className="bg-primary p-1.5 rounded-lg">
-              <div className="text-white font-black text-[10px] tracking-tighter uppercase">SM</div>
+          <div className="flex flex-col items-center gap-2">
+            <div className="bg-primary p-1 rounded-lg">
+              <div className="text-white font-black text-[8px] tracking-tighter uppercase">SM</div>
             </div>
-            <div className="space-y-1">
-              <p className="text-[11px] font-black text-gray-900 uppercase tracking-[0.3em]">SahiMed</p>
-              <p className="text-[9px] font-bold text-primary uppercase tracking-widest">
+            <div className="space-y-0.5">
+              <p className="text-[10px] font-black text-gray-900 uppercase tracking-[0.3em]">SahiMed</p>
+              <p className="text-[8px] font-bold text-primary uppercase tracking-widest">
                 sahi dawa sahi daam pe
               </p>
             </div>
-            <div className="w-full max-w-xs h-px bg-gray-50 my-2" />
-            <p className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em]">
+            <div className="w-full max-w-xs h-px bg-gray-50 my-1" />
+            <p className="text-[7px] font-black text-gray-400 uppercase tracking-[0.2em]">
               © Sahimed 2026. All rights reserved.
             </p>
           </div>
