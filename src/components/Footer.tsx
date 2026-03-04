@@ -1,4 +1,3 @@
-
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -25,7 +24,7 @@ export default function Footer() {
         
         <div className="flex flex-col gap-2">
           <p className="text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">
-            Sahimed copyright all rights reserved
+            © Sahimed copyright all rights reserved
           </p>
           <div className="flex items-center justify-center gap-2 text-gray-400">
             <ShieldCheck className="w-3.5 h-3.5 text-accent" />
