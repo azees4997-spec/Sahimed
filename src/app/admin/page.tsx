@@ -45,7 +45,8 @@ import {
   Truck,
   MapPin,
   Clock,
-  ChevronDown
+  ChevronDown,
+  FileWarning
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -86,7 +87,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'promocodes' | 'fees' | 'customers' | 'stockAlerts' | 'itemMaster' | 'moleculeMaster';
 
-const ORDER_STATUSES = ['Pending', 'Confirmed', 'Processing', 'Shipping', 'Delivered', 'Cancelled'];
+const ORDER_STATUSES = ['Pending', 'Packed', 'Shipping', 'Delivered', 'Cancelled'];
 
 export default function AdminConsole() {
   const { user, isUserLoading } = useUser();
@@ -281,7 +282,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
   const stockAlertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'stockEnquiries')) : null, [db, isVerified]);
-  const presQuery = useMemoFirebase(() => isVerified ? collectionGroup(db, 'prescriptions') : null, [db, isVerified]);
+  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
 
   const { data: medicines } = useCollection(medsQuery);
   const { data: formulas } = useCollection(molsQuery);
@@ -402,8 +403,8 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                   </td>
                   <td className="px-8 py-6 max-w-[250px]">
                     <div className="flex flex-col gap-0.5">
-                      <p className="text-[10px] font-bold text-gray-600 line-clamp-1">{order.shippingDetails?.street}</p>
-                      <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">{order.shippingDetails?.pincode} • {order.shippingDetails?.landmark || 'No Landmark'}</p>
+                      <p className="text-[10px] font-bold text-gray-600 line-clamp-1">{order.shippingDetails?.street || 'No Street Provided'}</p>
+                      <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">{order.shippingDetails?.pincode} {order.shippingDetails?.landmark ? `• ${order.shippingDetails.landmark}` : ''}</p>
                     </div>
                   </td>
                   <td className="px-8 py-6 font-black text-accent text-sm">₹{order.totalAmount}</td>
@@ -454,7 +455,7 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                <div className="space-y-4">
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Delivery Address</h4>
                   <div className="space-y-1">
-                     <p className="font-bold text-[11px] leading-relaxed">{selectedOrder?.shippingDetails?.street}</p>
+                     <p className="font-bold text-[11px] leading-relaxed">{selectedOrder?.shippingDetails?.street || 'No Street Provided'}</p>
                      <p className="text-[10px] font-black text-primary uppercase tracking-widest">PIN: {selectedOrder?.shippingDetails?.pincode}</p>
                      {selectedOrder?.shippingDetails?.landmark && <p className="text-[10px] text-gray-400 font-bold uppercase">Lmk: {selectedOrder?.shippingDetails?.landmark}</p>}
                   </div>
@@ -462,7 +463,7 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
             </div>
 
             <div className="space-y-4">
-               <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Clinical Order Items</h4>
+               <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Ordered Clinical Items</h4>
                <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
                   {selectedOrder?.items?.map((item: any, i: number) => (
                     <div key={i} className="flex justify-between items-center">
@@ -478,6 +479,16 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                   ))}
                </div>
             </div>
+
+            {selectedOrder?.prescriptionId && (
+               <div className="space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Linked Prescription</h4>
+                  <div className="bg-orange-50/30 p-4 rounded-2xl flex items-center gap-3 border border-orange-100">
+                     <FileText className="w-5 h-5 text-orange-500" />
+                     <p className="text-[10px] font-black uppercase text-orange-600">Verification Required</p>
+                  </div>
+               </div>
+            )}
 
             <div className="flex justify-between items-baseline pt-4 border-t">
               <span className="font-black text-sm uppercase text-gray-400 tracking-widest">Total Payable</span>
@@ -869,7 +880,7 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
 // --- ENQUIRIES TAB (DIGITIZATION HUB) ---
 
 function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const presQuery = useMemoFirebase(() => isVerified ? collectionGroup(db, 'prescriptions') : null, [db, isVerified]);
+  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, [db, isVerified]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
   const [selectedEnquiry, setSelectedEnquiry] = useState<any>(null);
 
