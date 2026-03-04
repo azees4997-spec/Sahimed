@@ -8,13 +8,13 @@ import MobileCartBar from '@/components/MobileCartBar';
 import BottomNav from '@/components/BottomNav';
 
 export const metadata: Metadata = {
-  title: 'HealthLink Pharmacy | Professional Healthcare Solutions',
+  title: 'SahiMed | Professional Healthcare Solutions',
   description: 'High-end pharmacy e-commerce for all your medicine needs.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'HealthLink',
+    title: 'SahiMed',
   },
   formatDetection: {
     telephone: false,
