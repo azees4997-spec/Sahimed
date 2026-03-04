@@ -369,48 +369,20 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     link.click();
   };
 
-  const downloadTemplate = () => {
-    const headers = ['Name', 'SKU', 'Manufacturer', 'Price', 'MRP', 'Stock', 'Category', 'ImageURL', 'MoleculeID', 'PackSize', 'Description'];
-    const sample = ['Example Medicine', 'SKU123', 'SahiMed Labs', '450', '500', '100', 'Diabetes', 'https://picsum.photos/300/300', 'MOL123', '15 Tablets', 'Clinical description...'];
-    const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + sample.join(",");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "sahimed_template.csv");
-    document.body.appendChild(link);
-    link.click();
-  };
-
-  const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    toast({ title: "Import Started", description: "Parsing CSV data..." });
-    setTimeout(() => {
-      toast({ title: "Import Complete", description: "Product catalog updated." });
-    }, 2000);
-  };
-
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="space-y-1 text-center md:text-left">
+        <div className="space-y-1">
           <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Product Catalog</h2>
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Master inventory management</p>
         </div>
         <div className="flex flex-wrap justify-center gap-3">
-          <Button variant="outline" onClick={downloadTemplate} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
-            <FileDown className="w-4 h-4" /> Template
-          </Button>
           <Button variant="outline" onClick={downloadCSV} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
             <Download className="w-4 h-4" /> Export
           </Button>
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
-            <Upload className="w-4 h-4" /> Bulk Upload
-          </Button>
-          <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleBulkUpload} />
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => setEditingItem(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary shadow-xl shadow-primary/20 text-white">
+              <Button onClick={() => setEditingItem(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white">
                 <Plus className="w-4 h-4" /> Add Product
               </Button>
             </DialogTrigger>
@@ -432,7 +404,7 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
           placeholder="Search products by name or SKU..." 
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm uppercase tracking-tight focus-visible:ring-primary/20"
+          className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm uppercase tracking-tight"
         />
       </div>
 
@@ -679,7 +651,7 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
+  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, [db, isVerified]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
   const { toast } = useToast();
   
@@ -904,7 +876,7 @@ function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean })
           placeholder="Search formulas by name or clinical ID..." 
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm uppercase tracking-tight focus-visible:ring-primary/20"
+          className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm uppercase tracking-tight"
         />
       </div>
 
@@ -1118,4 +1090,3 @@ function PromoCodesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     </div>
   );
 }
-

@@ -55,7 +55,7 @@ export default function Home() {
   const displayMedicines = medicines?.slice(0, 10);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F8F8] pharma-bg-pattern page-transition-wrapper">
+    <div className="min-h-screen flex flex-col bg-[#F4F7F6] pharma-bg-pattern page-transition-wrapper">
       <Navbar />
 
       <main className="flex-1 relative overflow-hidden pb-12">
@@ -157,7 +157,7 @@ export default function Home() {
             {catsLoading ? (
               <div className="grid grid-cols-3 gap-3 sm:gap-4 sm:grid-cols-6">
                 {[...Array(6)].map((_, i) => (
-                  <Skeleton key={i} className="aspect-square rounded-[24px] shimmer" />
+                  <Skeleton key={i} className="aspect-square rounded-[24px]" />
                 ))}
               </div>
             ) : (
@@ -191,7 +191,7 @@ export default function Home() {
             {medsLoading || !displayMedicines ? (
               <div className="flex gap-4 overflow-hidden">
                 {[...Array(4)].map((_, i) => (
-                  <Skeleton key={i} className="w-[180px] h-[300px] shrink-0 rounded-[32px] shimmer" />
+                  <Skeleton key={i} className="w-[180px] h-[300px] shrink-0 rounded-[32px]" />
                 ))}
               </div>
             ) : (
@@ -211,4 +211,3 @@ export default function Home() {
     </div>
   );
 }
-

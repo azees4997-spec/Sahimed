@@ -70,10 +70,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   if (productLoading || !product) {
     return (
-      <div className="min-h-screen bg-[#F0FDF4]/30">
+      <div className="min-h-screen bg-[#EFF6FF]">
         <Navbar />
         <main className="max-w-7xl mx-auto px-4 py-8">
-           <Skeleton className="h-[600px] rounded-[40px] shimmer" />
+           <Skeleton className="h-[600px] rounded-[40px]" />
         </main>
       </div>
     );
@@ -95,7 +95,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const GenericProduct = product.isGeneric ? product : alternative;
 
   return (
-    <div className="min-h-screen bg-[#F0FDF4]/30 pb-32">
+    <div className="min-h-screen bg-[#EFF6FF] pb-32">
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 py-6">
@@ -121,7 +121,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               isOutOfStock={(BrandedProduct?.availableQuantity || 0) <= 0}
               onAdd={() => addToCart(BrandedProduct!)}
               quantity={getItemQuantity(BrandedProduct?.id || '')}
-              updateQty={(d) => updateQuantity(BrandedProduct!.id, d)}
+              updateQty={(d: number) => updateQuantity(BrandedProduct!.id, d)}
             />
           </div>
 
@@ -133,7 +133,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               isOutOfStock={(GenericProduct?.availableQuantity || 0) <= 0}
               onAdd={() => addToCart(GenericProduct!)}
               quantity={getItemQuantity(GenericProduct?.id || '')}
-              updateQty={(d) => updateQuantity(GenericProduct!.id, d)}
+              updateQty={(d: number) => updateQuantity(GenericProduct!.id, d)}
             />
           </div>
         </div>
@@ -271,4 +271,3 @@ function ComparisonCard({ product, type, isOutOfStock, onAdd, quantity, updateQt
     </Card>
   );
 }
-
