@@ -340,7 +340,7 @@ function SectionHeader({ title, subtitle, onBack, children }: { title: string, s
 
 function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
-  const { data: orders, isLoading } = useCollection(ordersQuery);
+  const { data: orders, isLoading, error } = useCollection(ordersQuery);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isShippingDialogOpen, setIsShippingDialogOpen] = useState(false);
   const [shippingData, setShippingData] = useState({ carrier: '', trackingId: '' });
@@ -379,6 +379,14 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Fulfillment Hub" subtitle="Active order processing" onBack={onBack} />
+      
+      {error && (
+        <div className="bg-red-50 p-6 rounded-[32px] border border-red-100 flex items-center gap-4">
+           <AlertCircle className="w-6 h-6 text-red-500" />
+           <p className="text-[10px] font-black uppercase text-red-600">Sync Error: Verify Firestore Indices</p>
+        </div>
+      )}
+
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[1000px]">
@@ -397,45 +405,59 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                 <tr><td colSpan={6} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
               ) : (orders?.length === 0 || !orders) ? (
                 <tr><td colSpan={6} className="p-20 text-center font-bold text-gray-400 uppercase tracking-widest">Waiting for orders from Firestore...</td></tr>
-              ) : orders?.map(order => (
-                <tr key={order?.id || Math.random().toString()} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="px-8 py-6 font-black text-xs uppercase">#{order?.id?.substring(0,8) || 'N/A'}</td>
-                  <td className="px-8 py-6">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-xs">{order?.patientName || 'Patient'}</span>
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{order?.phoneNumber || 'No number'}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 max-w-[250px]">
-                    <div className="flex flex-col gap-0.5">
-                      <p className="text-[10px] font-bold text-gray-600 line-clamp-1">{order?.shippingDetails?.street || 'No address'}</p>
-                      <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">{order?.shippingDetails?.pincode} {order?.shippingDetails?.landmark ? `• ${order.shippingDetails.landmark}` : ''}</p>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 font-black text-accent text-sm">₹{order?.totalAmount || 0}</td>
-                  <td className="px-8 py-6">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="h-8 rounded-full px-4 text-[9px] font-black uppercase tracking-widest border-2 gap-2">
-                          {order?.status || 'Pending'} <ChevronDown className="w-3 h-3" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="rounded-2xl border-none shadow-2xl p-2 min-w-[140px]">
-                        {ORDER_STATUSES.map(status => (
-                          <DropdownMenuItem key={status} onClick={() => handleStatusUpdate(order, status)} className="rounded-xl font-bold text-[10px] uppercase h-10 px-4">
-                            {status}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                  <td className="px-8 py-6 text-right">
-                    <div className="flex justify-end gap-2">
-                       <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)} className="h-9 w-9 rounded-xl text-primary"><Eye className="w-4 h-4" /></Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              ) : orders?.map(order => {
+                // DEFENSIVE RENDERING FOR THE ROW
+                const patientMobile = order?.phoneNumber || <span className="text-red-500 font-black">NO PHONE</span>;
+                const deliveryAddress = order?.shippingDetails?.street || <span className="text-red-500 font-black">MISSING ADDRESS</span>;
+                const itemCount = order?.items?.length || 0;
+
+                return (
+                  <tr key={order?.id || Math.random().toString()} className="hover:bg-gray-50/50 transition-colors group">
+                    <td className="px-8 py-6 font-black text-xs uppercase">#{order?.id?.substring(0,8) || 'N/A'}</td>
+                    <td className="px-8 py-6">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-xs">{order?.patientName || 'Patient'}</span>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{patientMobile}</span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6 max-w-[250px]">
+                      <div className="flex flex-col gap-0.5">
+                        <p className="text-[10px] font-bold text-gray-600 line-clamp-1">{deliveryAddress}</p>
+                        <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">
+                          {order?.shippingDetails?.pincode || 'NO_PIN'} {order?.shippingDetails?.landmark ? `• ${order.shippingDetails.landmark}` : ''}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                       <div className="flex flex-col leading-none">
+                          <span className="font-black text-accent text-sm">₹{order?.totalAmount || 0}</span>
+                          <span className="text-[8px] font-black text-gray-300 uppercase mt-1">{itemCount} ITEMS</span>
+                       </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" className="h-8 rounded-full px-4 text-[9px] font-black uppercase tracking-widest border-2 gap-2">
+                            {order?.status || 'Pending'} <ChevronDown className="w-3 h-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="rounded-2xl border-none shadow-2xl p-2 min-w-[140px]">
+                          {ORDER_STATUSES.map(status => (
+                            <DropdownMenuItem key={status} onClick={() => handleStatusUpdate(order, status)} className="rounded-xl font-bold text-[10px] uppercase h-10 px-4">
+                              {status}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                      <div className="flex justify-end gap-2">
+                         <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)} className="h-9 w-9 rounded-xl text-primary"><Eye className="w-4 h-4" /></Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -453,15 +475,15 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                <div className="space-y-4">
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Patient Details</h4>
                   <div className="space-y-1">
-                     <p className="font-black text-sm">{selectedOrder?.patientName}</p>
-                     <p className="text-[10px] font-bold text-gray-500">{selectedOrder?.phoneNumber}</p>
+                     <p className="font-black text-sm">{selectedOrder?.patientName || 'Unknown Patient'}</p>
+                     <p className="text-[10px] font-bold text-gray-500">{selectedOrder?.phoneNumber || 'No Phone'}</p>
                   </div>
                </div>
                <div className="space-y-4">
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Delivery Address</h4>
                   <div className="space-y-1">
                      <p className="font-bold text-[11px] leading-relaxed">{selectedOrder?.shippingDetails?.street || 'No Street Provided'}</p>
-                     <p className="text-[10px] font-black text-primary uppercase tracking-widest">PIN: {selectedOrder?.shippingDetails?.pincode}</p>
+                     <p className="text-[10px] font-black text-primary uppercase tracking-widest">PIN: {selectedOrder?.shippingDetails?.pincode || 'N/A'}</p>
                      {selectedOrder?.shippingDetails?.landmark && <p className="text-[10px] text-gray-400 font-bold uppercase">Lmk: {selectedOrder?.shippingDetails?.landmark}</p>}
                   </div>
                </div>
@@ -473,21 +495,25 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                   {selectedOrder?.items?.map((item: any, i: number) => (
                     <div key={i} className="flex justify-between items-center">
                        <div className="flex items-center gap-3">
-                          <img src={item?.imageUrl} className="w-10 h-10 object-contain bg-white rounded-lg p-1 border" alt="" />
+                          {item?.imageUrl ? (
+                            <img src={item.imageUrl} className="w-10 h-10 object-contain bg-white rounded-lg p-1 border" alt="" />
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center"><Package className="w-4 h-4 text-gray-400" /></div>
+                          )}
                           <div className="text-left">
-                            <p className="text-[11px] font-black uppercase">{item?.name}</p>
-                            <p className="text-[9px] text-gray-400 font-bold uppercase">Qty: {item?.quantity}</p>
+                            <p className="text-[11px] font-black uppercase">{item?.name || 'Unknown Item'}</p>
+                            <p className="text-[9px] text-gray-400 font-bold uppercase">Qty: {item?.quantity || 0}</p>
                           </div>
                        </div>
                        <span className="font-black text-xs text-gray-900">₹{(item?.unitPrice || 0) * (item?.quantity || 0)}</span>
                     </div>
-                  ))}
+                  )) || <p className="text-[10px] font-black text-gray-300 text-center uppercase">0 ITEMS</p>}
                </div>
             </div>
 
             <div className="flex justify-between items-baseline pt-4 border-t">
               <span className="font-black text-sm uppercase text-gray-400 tracking-widest">Total Payable</span>
-              <span className="text-3xl font-black text-accent">₹{selectedOrder?.totalAmount}</span>
+              <span className="text-3xl font-black text-accent">₹{selectedOrder?.totalAmount || 0}</span>
             </div>
             
             {selectedOrder?.carrier && (
@@ -844,12 +870,20 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
 
 function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
-  const { data: enquiries, isLoading } = useCollection(presQuery);
+  const { data: enquiries, isLoading, error } = useCollection(presQuery);
   const [selectedEnquiry, setSelectedEnquiry] = useState<any>(null);
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Clinical Enquiries" subtitle="Prescription review queue" onBack={onBack} />
+      
+      {error && (
+        <div className="bg-red-50 p-6 rounded-[32px] border border-red-100 flex items-center gap-4">
+           <AlertCircle className="w-6 h-6 text-red-500" />
+           <p className="text-[10px] font-black uppercase text-red-600">Listener Error: Verify Collection Group Permissions</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-8">
         {isLoading ? (
           <div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>
@@ -860,31 +894,44 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
              </div>
              <p className="font-black text-gray-400 uppercase tracking-widest text-[10px]">Waiting for enquiries from Firestore...</p>
           </div>
-        ) : enquiries?.map(enq => (
-          <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white p-6 group hover:shadow-2xl transition-all duration-500">
-            <div className="aspect-[3/4] rounded-3xl bg-gray-50 mb-6 overflow-hidden border border-gray-100 relative shadow-inner">
-              <img src={enq?.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Prescription" />
-              <div className="absolute top-4 right-4">
-                <Badge className={cn(
-                  "uppercase text-[8px] font-black px-3 py-1.5 rounded-full border-none shadow-lg",
-                  enq?.status === 'Digitized' ? "bg-accent text-white" : "bg-primary text-white"
-                )}>
-                  {enq?.status || 'Pending'}
-                </Badge>
+        ) : enquiries?.map(enq => {
+          // DEFENSIVE RENDERING FOR ENQUIRY CARDS
+          const patientMobile = enq?.phoneNumber || <span className="text-red-500 font-black">NO PHONE</span>;
+          const patientName = enq?.patientName || 'Patient Request';
+
+          return (
+            <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white p-6 group hover:shadow-2xl transition-all duration-500">
+              <div className="aspect-[3/4] rounded-3xl bg-gray-50 mb-6 overflow-hidden border border-gray-100 relative shadow-inner">
+                {enq?.imageUrl ? (
+                  <img src={enq.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Prescription" />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                     <FileWarning className="w-10 h-10 text-gray-200" />
+                     <span className="text-[8px] font-black text-red-400 uppercase">NO_IMAGE_DATA</span>
+                  </div>
+                )}
+                <div className="absolute top-4 right-4">
+                  <Badge className={cn(
+                    "uppercase text-[8px] font-black px-3 py-1.5 rounded-full border-none shadow-lg",
+                    enq?.status === 'Digitized' ? "bg-accent text-white" : "bg-primary text-white"
+                  )}>
+                    {enq?.status || 'Pending'}
+                  </Badge>
+                </div>
               </div>
-            </div>
-            <div className="space-y-1 mb-6">
-               <p className="font-black text-sm uppercase text-gray-900 tracking-tight truncate">{enq?.patientName || 'Patient Request'}</p>
-               <div className="flex items-center gap-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                  <Phone className="w-2.5 h-2.5" />
-                  <span>{enq?.phoneNumber || 'No number provided'}</span>
-               </div>
-            </div>
-            <Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-              <Wand2 className="w-3.5 h-3.5" /> Digitize & Order
-            </Button>
-          </Card>
-        ))}
+              <div className="space-y-1 mb-6">
+                 <p className="font-black text-sm uppercase text-gray-900 tracking-tight truncate">{patientName}</p>
+                 <div className="flex items-center gap-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                    <Phone className="w-2.5 h-2.5" />
+                    <span>{patientMobile}</span>
+                 </div>
+              </div>
+              <Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                <Wand2 className="w-3.5 h-3.5" /> Digitize & Order
+              </Button>
+            </Card>
+          );
+        })}
       </div>
 
       {selectedEnquiry && <DigitizationTerminal db={db} enquiry={selectedEnquiry} onClose={() => setSelectedEnquiry(null)} />}
@@ -1018,14 +1065,21 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
             <Button onClick={handleCompleteOrder} disabled={orderItems.length === 0} className="rounded-full h-12 px-8 font-black text-[10px] uppercase bg-white text-primary hover:bg-white/90 shadow-xl transition-all gap-2">
               <Check className="w-4 h-4" /> Complete Order
             </Button>
-            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl bg-white/5 text-white hover:bg-white/10 ml-2">
+            <Button variant="ghost" size="icon" onClose={onClose} className="rounded-xl bg-white/5 text-white hover:bg-white/10 ml-2">
                <X className="w-5 h-5" />
             </Button>
           </div>
         </div>
         <div className="grid grid-cols-2 h-full overflow-hidden">
           <div className="bg-gray-100 p-8 overflow-auto border-r flex items-start justify-center">
-             <img src={enquiry?.imageUrl} className="max-w-full rounded-3xl shadow-2xl border-4 border-white" alt="Prescription" />
+             {enquiry?.imageUrl ? (
+               <img src={enquiry.imageUrl} className="max-w-full rounded-3xl shadow-2xl border-4 border-white" alt="Prescription" />
+             ) : (
+               <div className="flex flex-col items-center justify-center gap-4 text-gray-300">
+                  <FileWarning className="w-20 h-20" />
+                  <p className="font-black uppercase tracking-widest text-xs">No Prescription Image Found</p>
+               </div>
+             )}
           </div>
           <div className="p-8 space-y-8 overflow-auto bg-white scrollbar-hide pb-24">
             
