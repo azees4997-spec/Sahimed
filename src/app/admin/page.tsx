@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
@@ -339,6 +338,7 @@ function SectionHeader({ title, subtitle, onBack, children }: { title: string, s
 // --- FULFILLMENT TAB ---
 
 function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
+  // Use collectionGroup query for real-time link to 'orders' across all user profiles
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, [db, isVerified]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -380,7 +380,7 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
               <tr>
                 <th className="px-8 py-6">Order ID</th>
-                <th className="px-8 py-6">Customer / Contact</th>
+                <th className="px-8 py-6">Contact / Mobile</th>
                 <th className="px-8 py-6">Delivery Address</th>
                 <th className="px-8 py-6">Amount</th>
                 <th className="px-8 py-6">Status</th>
@@ -390,20 +390,20 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 <tr><td colSpan={6} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
-              ) : orders?.length === 0 ? (
-                <tr><td colSpan={6} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No orders found</td></tr>
+              ) : (orders?.length === 0 || !orders) ? (
+                <tr><td colSpan={6} className="p-20 text-center font-bold text-gray-400 uppercase tracking-widest">Waiting for orders from Firestore...</td></tr>
               ) : orders?.map(order => (
                 <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
                   <td className="px-8 py-6 font-black text-xs uppercase">#{order.id.substring(0,8)}</td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
                       <span className="font-bold text-xs">{order.patientName || 'Patient'}</span>
-                      <span className="text-[10px] text-gray-400 font-bold">{order.phoneNumber}</span>
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{order.phoneNumber || 'No number provided'}</span>
                     </div>
                   </td>
                   <td className="px-8 py-6 max-w-[250px]">
                     <div className="flex flex-col gap-0.5">
-                      <p className="text-[10px] font-bold text-gray-600 line-clamp-1">{order.shippingDetails?.street || 'No Street Provided'}</p>
+                      <p className="text-[10px] font-bold text-gray-600 line-clamp-1">{order.shippingDetails?.street || 'No address provided'}</p>
                       <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">{order.shippingDetails?.pincode} {order.shippingDetails?.landmark ? `• ${order.shippingDetails.landmark}` : ''}</p>
                     </div>
                   </td>
@@ -479,16 +479,6 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                   ))}
                </div>
             </div>
-
-            {selectedOrder?.prescriptionId && (
-               <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Linked Prescription</h4>
-                  <div className="bg-orange-50/30 p-4 rounded-2xl flex items-center gap-3 border border-orange-100">
-                     <FileText className="w-5 h-5 text-orange-500" />
-                     <p className="text-[10px] font-black uppercase text-orange-600">Verification Required</p>
-                  </div>
-               </div>
-            )}
 
             <div className="flex justify-between items-baseline pt-4 border-t">
               <span className="font-black text-sm uppercase text-gray-400 tracking-widest">Total Payable</span>
