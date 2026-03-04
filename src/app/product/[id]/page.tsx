@@ -5,6 +5,7 @@ import React, { use, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -42,17 +43,18 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Custom Detailed Icons
+// Custom Detailed Icons for Clinical Authority
 const KidneyIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 21a9 9 0 0 0 9-9c0-5-4-9-9-9s-9 4-9 9a9 9 0 0 0 9 9z" />
-    <path d="M12 7v10M8 12h8" />
+    <path d="M12 21a9 9 0 0 0 9-9c0-5-4-9-9-9s-9 4-9 9a9 9 0 0 0 9 21z" />
+    <path d="M12 7v6" />
+    <circle cx="12" cy="17" r="1" />
   </svg>
 );
 
 const LiverIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 12c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8-8 3.6-8 8z" />
+    <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9z" />
     <path d="M12 8l-4 4 4 4 4-4-4-4z" />
   </svg>
 );
@@ -72,14 +74,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   }, [db, id]);
   
   const { data: product, isLoading: productLoading } = useDoc(productRef);
-
-  const genericQuery = useMemoFirebase(() => {
-    if (!db || !product || product.isGeneric) return null;
-    return query(collection(db, 'medicines'), where('moleculeId', '==', product.moleculeId || ''), where('isGeneric', '==', true), limit(1));
-  }, [db, product]);
-  
-  const { data: genericAlternatives } = useCollection(genericQuery);
-  const genericSubstitute = genericAlternatives?.[0];
 
   const handleNotify = (p: any) => {
     if (!user) {
@@ -134,8 +128,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <Image src={product.imageUrl} alt={product.name} fill className="object-contain p-10" />
               </div>
               <div className="mt-8 grid grid-cols-2 gap-4">
-                 <Button onClick={() => window.open(`https://wa.me/91XXXXXXXXXX?text=Hi, SahiMed! I need ${product.name}`, '_blank')} variant="outline" className="h-14 rounded-3xl border-2 border-green-100 text-green-600 font-black uppercase text-[10px] tracking-widest gap-2"><MessageCircle className="w-4 h-4" /> WhatsApp</Button>
-                 <Button onClick={() => window.location.href = 'tel:+91XXXXXXXXXX'} variant="outline" className="h-14 rounded-3xl border-2 border-blue-100 text-blue-600 font-black uppercase text-[10px] tracking-widest gap-2"><Phone className="w-4 h-4" /> Call Hub</Button>
+                 <Button onClick={() => window.open(`https://wa.me/91XXXXXXXXXX?text=Hi, SahiMed! I need ${product.name}`, '_blank')} variant="outline" className="h-14 rounded-3xl border-2 border-green-100 text-green-600 font-black uppercase text-[10px] tracking-widest gap-2 active:scale-95 transition-all"><MessageCircle className="w-4 h-4" /> WhatsApp</Button>
+                 <Button onClick={() => window.location.href = 'tel:+91XXXXXXXXXX'} variant="outline" className="h-14 rounded-3xl border-2 border-blue-100 text-blue-600 font-black uppercase text-[10px] tracking-widest gap-2 active:scale-95 transition-all"><Phone className="w-4 h-4" /> Call Hub</Button>
               </div>
            </div>
 
@@ -163,12 +157,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                    <Button onClick={() => handleNotify(product)} className="flex-1 h-20 rounded-full font-black uppercase tracking-widest bg-orange-600 shadow-2xl shadow-orange-100 text-white">Notify Stock</Button>
                  ) : brandedQty > 0 ? (
                     <div className="flex-1 flex items-center justify-between bg-primary rounded-full h-20 px-8 shadow-2xl shadow-primary/20">
-                       <button onClick={() => updateQuantity(product.id, -1)} className="text-white"><Minus className="w-6 h-6" /></button>
+                       <button onClick={() => updateQuantity(product.id, -1)} className="text-white hover:scale-110 transition-transform"><Minus className="w-6 h-6" /></button>
                        <span className="text-2xl font-black text-white">{brandedQty}</span>
-                       <button onClick={() => updateQuantity(product.id, 1)} className="text-white"><Plus className="w-6 h-6" /></button>
+                       <button onClick={() => updateQuantity(product.id, 1)} className="text-white hover:scale-110 transition-transform"><Plus className="w-6 h-6" /></button>
                     </div>
                  ) : (
-                    <Button onClick={() => addToCart(product, 1)} className="flex-1 h-20 rounded-full font-black uppercase tracking-widest bg-primary shadow-2xl shadow-primary/30 text-white text-lg">Add to Bag</Button>
+                    <Button onClick={() => addToCart(product, 1)} className="flex-1 h-20 rounded-full font-black uppercase tracking-widest bg-primary shadow-2xl shadow-primary/30 text-white text-lg active:scale-95 transition-all">Add to Bag</Button>
                  )}
               </div>
 
@@ -221,7 +215,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         </div>
 
         {/* Clinical Interactions Hub */}
-        <section className="space-y-8 animate-in slide-in-from-bottom-6">
+        <section className="space-y-8 animate-in slide-in-from-bottom-6 mt-12">
            <div className="flex items-center gap-3">
               <Stethoscope className="w-6 h-6 text-primary" />
               <h2 className="text-xl font-black uppercase tracking-tighter">Clinical Interactions</h2>
