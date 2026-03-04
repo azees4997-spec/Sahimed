@@ -5,7 +5,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Customer",
       "type": "object",
-      "description": "Represents a user of the HealthLink Pharmacy application.",
+      "description": "Represents a user of the SahiMed application.",
       "properties": {
         "id": { "type": "string" },
         "firebaseAuthId": { "type": "string" },
@@ -25,12 +25,13 @@
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
+        "sku": { "type": "string" },
+        "moleculeId": { "type": "string", "description": "Mapping to Formula Registry" },
         "manufacturer": { "type": "string" },
         "saltComposition": { "type": "string" },
         "price": { "type": "number" },
         "mrp": { "type": "number" },
         "availableQuantity": { "type": "number" },
-        "sku": { "type": "string" },
         "category": { "type": "string" },
         "imageUrl": { "type": "string", "format": "uri" },
         "isGeneric": { "type": "boolean" },
@@ -48,6 +49,19 @@
         "liverInteraction": { "type": "string" }
       },
       "required": ["id", "name", "price", "category"]
+    },
+    "Molecule": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Molecule",
+      "type": "object",
+      "description": "Clinical formula definitions.",
+      "properties": {
+        "id": { "type": "string" },
+        "molecule": { "type": "string" },
+        "masterId": { "type": "string" },
+        "form": { "type": "string" }
+      },
+      "required": ["id", "molecule"]
     },
     "Fee": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -110,6 +124,14 @@
           "entityName": "Medicine",
           "schema": { "$ref": "#/backend/entities/Medicine" },
           "description": "Catalog of medicines."
+        }
+      },
+      {
+        "path": "/moleculeMaster/{molId}",
+        "definition": {
+          "entityName": "Molecule",
+          "schema": { "$ref": "#/backend/entities/Molecule" },
+          "description": "Formula Registry."
         }
       },
       {

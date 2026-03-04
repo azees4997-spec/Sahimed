@@ -26,12 +26,13 @@ import {
   Check,
   ClipboardList,
   TrendingUp,
-  Activity,
   User,
   Download,
   Upload,
   MoreVertical,
-  ChevronRight
+  ChevronRight,
+  Search,
+  FileDown
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,7 +65,7 @@ import {
   deleteDocumentNonBlocking,
   addDocumentNonBlocking
 } from '@/firebase';
-import { doc, collection, query, collectionGroup, getDoc, serverTimestamp, where, limit, orderBy } from 'firebase/firestore';
+import { doc, collection, query, collectionGroup, getDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -236,9 +237,9 @@ export default function AdminConsole() {
             <nav className="hidden xl:flex gap-1 overflow-x-auto scrollbar-hide">
               {[
                 { id: 'overview', label: 'Home', icon: Home },
-                { id: 'enquiries', label: 'Inquiries', icon: FileText },
-                { id: 'fulfillment', label: 'Orders', icon: ShoppingBag },
-                { id: 'itemMaster', label: 'Inventory', icon: Package },
+                { id: 'enquiries', label: 'Prescriptions', icon: FileText },
+                { id: 'fulfillment', label: 'Fulfillment', icon: ShoppingBag },
+                { id: 'itemMaster', label: 'Item Master', icon: Package },
                 { id: 'moleculeMaster', label: 'Formulas', icon: Dna },
                 { id: 'customers', label: 'Patients', icon: Users },
                 { id: 'promocodes', label: 'Campaigns', icon: Ticket },
@@ -299,13 +300,11 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const { data: alerts } = useCollection(stockAlertsQuery);
 
   const stats = [
-    { label: 'Inquiries', icon: FileText, count: 0, tab: 'enquiries', color: 'text-blue-500' },
     { label: 'Orders', icon: ShoppingBag, count: orders?.length || 0, tab: 'fulfillment', color: 'text-primary' },
     { label: 'Inventory', icon: Package, count: meds?.length || 0, tab: 'itemMaster', color: 'text-accent' },
     { label: 'Formulas', icon: Dna, count: mols?.length || 0, tab: 'moleculeMaster', color: 'text-emerald-500' },
     { label: 'Patients', icon: Users, count: users?.length || 0, tab: 'customers', color: 'text-indigo-500' },
     { label: 'Campaigns', icon: Ticket, count: 0, tab: 'promocodes', color: 'text-purple-500' },
-    { label: 'Charges', icon: Receipt, count: 0, tab: 'fees', color: 'text-orange-500' },
     { label: 'Alerts', icon: BellRing, count: alerts?.length || 0, tab: 'stockAlerts', color: 'text-red-500' },
   ];
 
@@ -318,7 +317,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
           <span className="text-xs font-black text-gray-900 uppercase">Live Operations</span>
         </Card>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {stats.map(card => (
           <Card key={card.label} className="rounded-[32px] p-5 border-none shadow-sm hover:shadow-2xl transition-all cursor-pointer bg-white group text-center" onClick={() => setTab(card.tab as AdminTab)}>
             <div className={cn("w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform", card.color)}>
@@ -343,8 +342,8 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 
   const downloadCSV = () => {
     if (!medicines) return;
-    const headers = ['ID', 'Name', 'SKU', 'Manufacturer', 'Price', 'MRP', 'Stock', 'Category'];
-    const rows = medicines.map(m => [m.id, m.name, m.sku, m.manufacturer, m.price, m.mrp, m.availableQuantity, m.category]);
+    const headers = ['ID', 'Name', 'SKU', 'Manufacturer', 'Price', 'MRP', 'Stock', 'Category', 'ImageURL'];
+    const rows = medicines.map(m => [m.id, m.name, m.sku, m.manufacturer, m.price, m.mrp, m.availableQuantity, m.category, m.imageUrl]);
     const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(r => r.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -354,12 +353,22 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     link.click();
   };
 
+  const downloadTemplate = () => {
+    const headers = ['Name', 'SKU', 'Manufacturer', 'Price', 'MRP', 'Stock', 'Category', 'ImageURL', 'MoleculeID', 'PackSize', 'Description'];
+    const sample = ['Example Medicine', 'SKU123', 'SahiMed Labs', '450', '500', '100', 'Diabetes', 'https://images.unsplash.com/...', 'MOL123', '15 Tablets', 'Clinical description...'];
+    const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + sample.join(",");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "sahimed_template.csv");
+    document.body.appendChild(link);
+    link.click();
+  };
+
   const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     toast({ title: "Import Started", description: "Parsing CSV data..." });
-    // In a real scenario, we'd use PapaParse here. 
-    // This hook preserves the requirement for the function to exist.
     setTimeout(() => {
       toast({ title: "Import Complete", description: "Product catalog updated." });
     }, 2000);
@@ -370,11 +379,14 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Product Catalog</h2>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Manage clinical inventory and insights</p>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Master inventory management</p>
         </div>
         <div className="flex gap-3">
+          <Button variant="outline" onClick={downloadTemplate} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
+            <FileDown className="w-4 h-4" /> Template
+          </Button>
           <Button variant="outline" onClick={downloadCSV} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
-            <Download className="w-4 h-4" /> Export CSV
+            <Download className="w-4 h-4" /> Export
           </Button>
           <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
             <Upload className="w-4 h-4" /> Bulk Upload
@@ -389,7 +401,6 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
             <DialogContent className="rounded-[40px] max-w-4xl border-none p-0 overflow-hidden shadow-3xl">
               <div className="bg-primary p-8 text-white">
                 <DialogTitle className="text-2xl font-black uppercase tracking-tight">{editingItem ? 'Edit Product' : 'Add New Product'}</DialogTitle>
-                <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mt-1">Catalog & Clinical Entry</p>
               </div>
               <div className="p-8">
                 <ItemForm db={db} initialData={editingItem} onSuccess={() => setIsFormOpen(false)} />
@@ -417,7 +428,7 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
               <tr key={med.id} className="hover:bg-gray-50/50 transition-colors group">
                 <td className="px-10 py-8">
                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border border-gray-100 group-hover:scale-110 transition-transform">
+                      <div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border border-gray-100">
                          <img src={med.imageUrl} alt="" className="w-full h-full object-contain" />
                       </div>
                       <div className="flex flex-col">
@@ -461,6 +472,9 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc')), [db]);
+  const { data: molecules } = useCollection(molsQuery);
+
   const [form, setForm] = useState({
     name: initialData?.name || '',
     sku: initialData?.sku || '',
@@ -470,6 +484,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     availableQuantity: initialData?.availableQuantity || 0,
     category: initialData?.category || '',
     imageUrl: initialData?.imageUrl || '',
+    moleculeId: initialData?.moleculeId || '',
     isGeneric: initialData?.isGeneric || false,
     saltComposition: initialData?.saltComposition || '',
     packSize: initialData?.packSize || '',
@@ -518,6 +533,17 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
             <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
           </div>
           <div className="space-y-2">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Molecule / Formula Mapping</Label>
+            <select 
+              value={form.moleculeId} 
+              onChange={e => setForm({...form, moleculeId: e.target.value})}
+              className="w-full rounded-2xl h-14 bg-gray-50 border-none font-bold px-4 outline-none"
+            >
+              <option value="">Unmapped</option>
+              {molecules?.map(m => <option key={m.id} value={m.id}>{m.molecule}</option>)}
+            </select>
+          </div>
+          <div className="space-y-2">
             <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">SKU / Code</Label>
             <Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
           </div>
@@ -537,13 +563,9 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
             <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Stock Units</Label>
             <Input type="number" value={form.availableQuantity} onChange={e => setForm({...form, availableQuantity: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
           </div>
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pack Size</Label>
-            <Input value={form.packSize} onChange={e => setForm({...form, packSize: e.target.value})} placeholder="e.g. 15 Tablets" className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
-          </div>
           <div className="col-span-2 space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Image URL</Label>
-            <Input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Image URL (Public Link)</Label>
+            <Input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} placeholder="https://..." required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
           </div>
         </TabsContent>
 
@@ -555,10 +577,6 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
           <div className="space-y-2">
             <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">How to Use</Label>
             <Textarea value={form.howToUse} onChange={e => setForm({...form, howToUse: e.target.value})} className="rounded-2xl bg-gray-50 border-none" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Clinical Treatment</Label>
-            <Textarea value={form.treatment} onChange={e => setForm({...form, treatment: e.target.value})} className="rounded-2xl bg-gray-50 border-none" />
           </div>
           <div className="space-y-2">
             <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Safety Advice</Label>
@@ -588,7 +606,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       </Tabs>
 
       <div className="sticky bottom-0 bg-white pt-6 border-t mt-4 flex gap-4">
-        <Button type="submit" className="flex-1 h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white shadow-xl shadow-primary/20">Save Clinical Data</Button>
+        <Button type="submit" className="flex-1 h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white shadow-xl shadow-primary/20">Save Product Data</Button>
       </div>
     </form>
   );
@@ -600,11 +618,11 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Inquiry Queue</h2>
+      <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Prescription Review</h2>
       {isLoading ? (
         <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>
       ) : enquiries?.length === 0 ? (
-        <div className="py-20 text-center font-bold text-gray-300">No active prescription requests</div>
+        <div className="py-20 text-center font-bold text-gray-300">No pending clinical requests</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-8">
           {enquiries?.map(enq => (
@@ -614,7 +632,7 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
               </div>
               <p className="font-black text-sm uppercase mb-1">{enq.patientName || 'Patient Request'}</p>
               <p className="text-[10px] font-bold text-gray-400 uppercase mb-4">{enq.uploadDate?.toDate().toLocaleDateString()}</p>
-              <Button className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white">Fulfill Request</Button>
+              <Button className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white">Create Order</Button>
             </Card>
           ))}
         </div>
@@ -634,18 +652,19 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   const updateStatus = (order: any, status: string, extra = {}) => {
     if (!order.userId) return;
     updateDocumentNonBlocking(doc(db, 'userProfiles', order.userId, 'orders', order.id), { status, ...extra });
-    toast({ title: "Updated", description: `Order is now ${status}` });
+    toast({ title: "Updated", description: `Order ${status}` });
     setShippingOrder(null);
   };
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Fulfillment Center</h2>
+      <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Clinical Fulfillment</h2>
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
             <tr>
-              <th className="px-10 py-8">Order REF</th>
+              <th className="px-10 py-8">Order ID</th>
+              <th className="px-10 py-8">Patient</th>
               <th className="px-10 py-8">Amount</th>
               <th className="px-10 py-8">Status</th>
               <th className="px-10 py-8 text-right">Action</th>
@@ -653,10 +672,11 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
           </thead>
           <tbody className="divide-y divide-gray-50">
             {isLoading ? (
-              <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
+              <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
             ) : orders?.map(order => (
               <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-10 py-8 font-black text-sm uppercase">#{order.id.substring(0,8)}</td>
+                <td className="px-10 py-8 text-[11px] font-bold text-gray-500">#{order.userId.substring(0,8)}</td>
                 <td className="px-10 py-8 font-black text-primary">₹{order.totalAmount}</td>
                 <td className="px-10 py-8">
                   <Badge variant="outline" className="text-[9px] font-black uppercase px-4 py-1.5 rounded-full">{order.status}</Badge>
@@ -664,14 +684,13 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                 <td className="px-10 py-8 text-right">
                   <div className="flex justify-end gap-2">
                     {order.status !== 'Shipped' && order.status !== 'Delivered' && (
-                      <Button onClick={() => setShippingOrder(order)} size="sm" className="rounded-full h-10 px-6 text-[9px] uppercase font-black bg-blue-600 text-white shadow-lg">Mark Shipped</Button>
+                      <Button onClick={() => setShippingOrder(order)} size="sm" className="rounded-full h-10 px-6 text-[9px] uppercase font-black bg-blue-600 text-white">Ship</Button>
                     )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[160px]">
                         <DropdownMenuItem onClick={() => updateStatus(order, 'Delivered')} className="rounded-xl font-bold text-xs uppercase cursor-pointer">Mark Delivered</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => updateStatus(order, 'Cancelled')} className="rounded-xl font-bold text-xs uppercase cursor-pointer text-orange-500">Cancel Order</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => deleteDocumentNonBlocking(doc(db, 'userProfiles', order.userId, 'orders', order.id))} className="rounded-xl font-bold text-xs uppercase cursor-pointer text-red-500">Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => updateStatus(order, 'Cancelled')} className="rounded-xl font-bold text-xs uppercase cursor-pointer text-orange-500">Cancel</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -684,17 +703,17 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
       
       <Dialog open={!!shippingOrder} onOpenChange={(open) => !open && setShippingOrder(null)}>
         <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden shadow-3xl">
-          <div className="bg-blue-600 p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Logistics Info</DialogTitle></div>
+          <div className="bg-blue-600 p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Shipment Details</DialogTitle></div>
           <div className="p-8 space-y-6">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Carrier Name</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Logistics Partner</Label>
               <Input placeholder="e.g. BlueDart" value={shippingData.carrier} onChange={e => setShippingData({...shippingData, carrier: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold px-6" />
             </div>
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">AWB Number / Tracking ID</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">AWB / Tracking Number</Label>
               <Input placeholder="Tracking ID" value={shippingData.trackingId} onChange={e => setShippingData({...shippingData, trackingId: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold px-6" />
             </div>
-            <Button onClick={() => updateStatus(shippingOrder, 'Shipped', { ...shippingData, shippedAt: serverTimestamp() })} className="w-full h-16 rounded-full font-black uppercase bg-blue-600 text-white shadow-xl shadow-blue-200">Confirm Shipment</Button>
+            <Button onClick={() => updateStatus(shippingOrder, 'Shipped', { ...shippingData, shippedAt: serverTimestamp() })} className="w-full h-16 rounded-full font-black uppercase bg-blue-600 text-white">Log Shipment</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -707,25 +726,20 @@ function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean })
   const { data: molecules, isLoading } = useCollection(molsQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMol, setEditingMol] = useState<any>(null);
-  const { toast } = useToast();
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Formulas Registry</h2>
+        <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Formula Registry</h2>
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingMol(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary shadow-xl shadow-primary/20 text-white">
+            <Button onClick={() => setEditingMol(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white">
               <Plus className="w-4 h-4" /> New Formula
             </Button>
           </DialogTrigger>
           <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden shadow-3xl">
-            <div className="bg-primary p-8 text-white">
-              <DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Formula</DialogTitle>
-            </div>
-            <div className="p-8">
-              <MoleculeForm db={db} initialData={editingMol} onSuccess={() => setIsFormOpen(false)} />
-            </div>
+            <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Formula</DialogTitle></div>
+            <div className="p-8"><MoleculeForm db={db} initialData={editingMol} onSuccess={() => setIsFormOpen(false)} /></div>
           </DialogContent>
         </Dialog>
       </div>
@@ -771,7 +785,7 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Formula Name</Label><Input value={form.molecule} onChange={e => setForm({...form, molecule: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Master ID</Label><Input value={form.masterId} onChange={e => setForm({...form, masterId: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white shadow-xl shadow-primary/20">Save Formula</Button>
+      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Formula</Button>
     </form>
   );
 }
@@ -779,6 +793,7 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
 function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles')) : null, [db, isVerified]);
   const { data: users, isLoading } = useCollection(usersQuery);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
@@ -787,9 +802,9 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
             <tr>
-              <th className="px-10 py-8">Patient ID</th>
-              <th className="px-10 py-8">Name / Identity</th>
-              <th className="px-10 py-8">Contact</th>
+              <th className="px-10 py-8">Patient Name</th>
+              <th className="px-10 py-8">Contact Info</th>
+              <th className="px-10 py-8">Verified UID</th>
               <th className="px-10 py-8 text-right">Actions</th>
             </tr>
           </thead>
@@ -798,24 +813,57 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
               <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
             ) : users?.map(u => (
               <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="px-10 py-8 text-[11px] font-black text-primary uppercase">#{u.id.substring(0,10)}</td>
                 <td className="px-10 py-8">
                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400">
-                         <User className="w-5 h-5" />
-                      </div>
-                      <span className="font-black text-sm uppercase">{u.name || u.email?.split('@')[0] || 'Patient'}</span>
+                      <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary"><User className="w-5 h-5" /></div>
+                      <span className="font-black text-sm uppercase">{u.name || u.email?.split('@')[0] || 'SahiMed Patient'}</span>
                    </div>
                 </td>
-                <td className="px-10 py-8 text-[11px] font-bold text-gray-500">{u.phoneNumber || u.email || 'N/A'}</td>
+                <td className="px-10 py-8">
+                   <div className="flex flex-col">
+                      <span className="text-[11px] font-black text-gray-900">{u.phoneNumber || 'NO_PHONE'}</span>
+                      <span className="text-[10px] font-bold text-gray-400">{u.email}</span>
+                   </div>
+                </td>
+                <td className="px-10 py-8 text-[11px] font-black text-gray-400 uppercase">#{u.id.substring(0,12)}</td>
                 <td className="px-10 py-8 text-right">
-                   <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"><ChevronRight className="w-4 h-4" /></Button>
+                   <Button variant="outline" onClick={() => setSelectedUser(u)} className="rounded-full h-10 font-black uppercase text-[9px] tracking-widest border-2">View History</Button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </Card>
+
+      <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
+        <DialogContent className="rounded-[40px] max-w-3xl border-none p-0 overflow-hidden shadow-3xl">
+           <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Patient History: {selectedUser?.name || 'SahiMed Member'}</DialogTitle></div>
+           <div className="p-8">
+              <PatientHistoryView db={db} userId={selectedUser?.id} />
+           </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function PatientHistoryView({ db, userId }: { db: any, userId: string }) {
+  const ordersQuery = useMemoFirebase(() => userId ? query(collection(db, 'userProfiles', userId, 'orders'), orderBy('orderDate', 'desc')) : null, [db, userId]);
+  const { data: orders, isLoading } = useCollection(ordersQuery);
+
+  if (isLoading) return <div className="py-10 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
+
+  return (
+    <div className="space-y-4">
+      {orders?.length === 0 ? <p className="text-center font-bold text-gray-300 py-10">No orders found for this patient.</p> : orders?.map(order => (
+        <div key={order.id} className="bg-gray-50 p-6 rounded-3xl flex items-center justify-between">
+           <div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Order REF: #{order.id.substring(0,8)}</p>
+              <p className="font-black text-gray-900">₹{order.totalAmount} • {order.status}</p>
+           </div>
+           <Badge className="bg-primary text-white uppercase text-[8px] font-black">{order.orderDate?.toDate().toLocaleDateString()}</Badge>
+        </div>
+      ))}
     </div>
   );
 }
@@ -826,15 +874,15 @@ function StockAlertsTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Stock Alerts Queue</h2>
+      <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Stock Inquiries</h2>
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
             <tr>
-              <th className="px-10 py-8">Date</th>
-              <th className="px-10 py-8">Medicine Requested</th>
+              <th className="px-10 py-8">Requested Medicine</th>
               <th className="px-10 py-8">Patient UID</th>
-              <th className="px-10 py-8 text-right">Actions</th>
+              <th className="px-10 py-8">Date</th>
+              <th className="px-10 py-8 text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -844,9 +892,9 @@ function StockAlertsTab({ db, isVerified }: { db: any, isVerified: boolean }) {
               <tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300">No active stock alerts</td></tr>
             ) : alerts?.map(alert => (
               <tr key={alert.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="px-10 py-8 text-[10px] font-black text-gray-400 uppercase">{alert.timestamp?.toDate().toLocaleString()}</td>
                 <td className="px-10 py-8 font-black text-sm uppercase text-gray-900">{alert.medicineName}</td>
                 <td className="px-10 py-8 text-[10px] font-bold text-gray-500">#{alert.userId.substring(0,12)}</td>
+                <td className="px-10 py-8 text-[10px] font-black text-gray-400 uppercase">{alert.timestamp?.toDate().toLocaleString()}</td>
                 <td className="px-10 py-8 text-right">
                   <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'stockEnquiries', alert.id))} className="h-10 w-10 rounded-xl hover:bg-red-50"><Trash2 className="w-4 h-4 text-red-300" /></Button>
                 </td>
@@ -865,8 +913,8 @@ function FeesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <div className="flex justify-between">
-        <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Service Charges</h2>
-        <Button className="rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white"><Plus className="w-4 h-4 mr-2" /> Add Fee</Button>
+        <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Clinical Charges</h2>
+        <Button className="rounded-full h-12 font-black uppercase text-[10px] bg-primary text-white"><Plus className="w-4 h-4 mr-2" /> Add Fee</Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {fees?.map(fee => (
@@ -888,7 +936,7 @@ function PromoCodesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <div className="flex justify-between">
         <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Campaigns</h2>
-        <Button className="rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white"><Plus className="w-4 h-4 mr-2" /> New Coupon</Button>
+        <Button className="rounded-full h-12 font-black uppercase text-[10px] bg-primary text-white"><Plus className="w-4 h-4 mr-2" /> New Coupon</Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {promos?.map(promo => (
