@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from 'react';
@@ -26,7 +27,6 @@ export default function Home() {
 
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    // Optimized: Limit to 20 for initial home page load to improve speed
     return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(20));
   }, [db]);
 
@@ -167,12 +167,13 @@ export default function Home() {
               </Link>
             </div>
             
-            {medsLoading ? (
+            {medsLoading || !displayMedicines ? (
               <div className="flex gap-4 overflow-hidden">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="w-[180px] shrink-0 space-y-3">
                     <Skeleton className="aspect-square rounded-[24px] shimmer" />
-                    <Skeleton className="h-3 w-3/4 shimmer" />
+                    <Skeleton className="h-4 w-full shimmer" />
+                    <Skeleton className="h-2 w-1/2 shimmer" />
                   </div>
                 ))}
               </div>

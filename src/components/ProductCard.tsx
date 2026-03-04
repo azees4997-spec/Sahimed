@@ -1,3 +1,4 @@
+
 "use client"
 
 import Image from 'next/image';
@@ -70,11 +71,14 @@ export default function ProductCard({ product }: { product: Product }) {
   const packSizeDisplay = product.packSize?.match(/\d+/)?.[0] || product.packSize;
 
   return (
-    <div className={cn(
-      "group bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col active:scale-[0.98] tap-highlight h-full",
-      isOutOfStock && "opacity-90"
-    )}>
-      <Link href={`/product/${product.id}`} className="relative aspect-square w-full overflow-hidden bg-white">
+    <Link 
+      href={`/product/${product.id}`}
+      className={cn(
+        "group bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col active:scale-[0.98] tap-highlight h-full",
+        isOutOfStock && "opacity-90"
+      )}
+    >
+      <div className="relative aspect-square w-full overflow-hidden bg-white">
         <Image
           src={product.imageUrl}
           alt={product.name}
@@ -101,15 +105,13 @@ export default function ProductCard({ product }: { product: Product }) {
             <Badge variant="destructive" className="font-black text-[8px] uppercase tracking-widest rounded-full px-2 py-0.5 bg-gray-900/90 shadow-xl border-none">Out of Stock</Badge>
           </div>
         )}
-      </Link>
+      </div>
       
       <div className="p-4 flex flex-col flex-1">
         <div className="space-y-1 mb-4">
-          <Link href={`/product/${product.id}`}>
-            <h3 className="font-black text-gray-900 line-clamp-2 text-sm uppercase tracking-tight group-hover:text-primary transition-colors">
-              {product.name}
-            </h3>
-          </Link>
+          <h3 className="font-black text-gray-900 line-clamp-2 text-sm uppercase tracking-tight group-hover:text-primary transition-colors">
+            {product.name}
+          </h3>
           <p className="text-[10px] font-bold text-gray-400 uppercase truncate">
             {product.saltComposition}
           </p>
@@ -173,6 +175,6 @@ export default function ProductCard({ product }: { product: Product }) {
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

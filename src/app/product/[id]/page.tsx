@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { use, useState } from 'react';
@@ -86,22 +87,25 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     return null;
   };
 
-  if (productLoading || !id) {
+  // IMMEDIATE FEEDBACK: Show skeleton if ID exists but data is still fetching
+  if (productLoading || !product) {
     return (
       <div className="min-h-screen bg-[#F8F8F8]">
         <Navbar />
-        <main className="max-w-7xl mx-auto px-4 py-8 space-y-12">
+        <main className="max-w-7xl mx-auto px-4 py-8 space-y-12 animate-in fade-in duration-300">
            <div className="flex justify-center"><Skeleton className="h-10 w-64 rounded-full shimmer" /></div>
-           <div className="grid grid-cols-2 gap-6">
-              <Skeleton className="h-[500px] rounded-[40px] shimmer" />
-              <Skeleton className="h-[500px] rounded-[40px] shimmer" />
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Skeleton className="h-[600px] rounded-[40px] shimmer" />
+              <Skeleton className="h-[600px] rounded-[40px] shimmer" />
+           </div>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Skeleton className="h-32 rounded-[32px] shimmer" />
+              <Skeleton className="h-32 rounded-[32px] shimmer" />
            </div>
         </main>
       </div>
     );
   }
-
-  if (!product && !productLoading) return notFound();
 
   const brandedQty = getItemQuantity(product?.id || '');
   const genericQty = genericSubstitute ? getItemQuantity(genericSubstitute.id) : 0;
