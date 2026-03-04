@@ -323,7 +323,7 @@ function SectionHeader({ title, subtitle, onBack, children }: { title: string, s
   return (
     <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full bg-white shadow-sm h-12 w-12 hover:scale-110 transition-transform"><ChevronRight className="w-5 h-5 rotate-180" /></Button>
+        <button onClick={onBack} className="rounded-full bg-white shadow-sm h-12 w-12 hover:scale-110 transition-transform flex items-center justify-center"><ChevronRight className="w-5 h-5 rotate-180" /></button>
         <div className="space-y-1">
           <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">{title}</h2>
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{subtitle}</p>
@@ -339,7 +339,7 @@ function SectionHeader({ title, subtitle, onBack, children }: { title: string, s
 // --- FULFILLMENT TAB ---
 
 function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, [db, isVerified]);
+  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isShippingDialogOpen, setIsShippingDialogOpen] = useState(false);
@@ -606,15 +606,14 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
                 <th className="px-10 py-8">Product</th>
                 <th className="px-10 py-8">Pricing</th>
                 <th className="px-10 py-8">Stock</th>
-                <th className="px-10 py-8">Clinical Details</th>
                 <th className="px-10 py-8 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
-                <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
+                <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
               ) : filteredMedicines?.length === 0 ? (
-                <tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No matching products</td></tr>
+                <tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No matching products</td></tr>
               ) : filteredMedicines?.map(med => (
                 <tr key={med.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-10 py-8">
@@ -636,16 +635,6 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
                   </td>
                   <td className="px-10 py-8">
                      <span className="text-[10px] font-black text-gray-700 uppercase">{med.availableQuantity} PCS</span>
-                  </td>
-                  <td className="px-10 py-8">
-                     <div className="flex flex-col gap-1.5">
-                       <Badge variant="outline" className={cn("w-fit text-[8px] font-black uppercase px-3 py-1 rounded-full border-2", med.isGeneric ? 'border-accent text-accent' : 'border-primary text-primary')}>
-                          {med.isGeneric ? 'Generic' : 'Branded'}
-                       </Badge>
-                       {med.prescriptionRequired && (
-                         <Badge variant="outline" className="w-fit text-[8px] font-black uppercase px-3 py-1 rounded-full border-2 border-orange-200 text-orange-600">RX Required</Badge>
-                       )}
-                     </div>
                   </td>
                   <td className="px-10 py-8 text-right">
                     <div className="flex justify-end gap-2">
@@ -752,18 +741,6 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
     link.click();
   };
 
-  const downloadTemplate = () => {
-    const headers = ['Molecule', 'Master ID', 'Form'];
-    const sample = ['Paracetamol', 'MOL-101', 'Tablet'];
-    const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + sample.join(",");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "formula_template.csv");
-    document.body.appendChild(link);
-    link.click();
-  };
-
   const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -776,9 +753,6 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Formula Registry" subtitle="Clinical molecule master" onBack={onBack}>
-        <Button variant="outline" onClick={downloadTemplate} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
-          <FileDown className="w-4 h-4" /> Template
-        </Button>
         <Button variant="outline" onClick={downloadCSV} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
           <Download className="w-4 h-4" /> Export
         </Button>
@@ -859,13 +833,7 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
       <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Master ID</Label><Input value={form.masterId} onChange={e => setForm({...form, masterId: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       <div className="space-y-2">
         <Label className="text-[10px] font-black uppercase text-gray-400">Dosage Form</Label>
-        <Input 
-          value={form.form} 
-          onChange={e => setForm({...form, form: e.target.value})} 
-          placeholder="e.g. Tablet, Syrup, Injection"
-          required 
-          className="rounded-2xl h-14 bg-gray-50 border-none font-bold" 
-        />
+        <Input value={form.form} onChange={e => setForm({...form, form: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
       </div>
       <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Formula</Button>
     </form>
@@ -875,7 +843,8 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
 // --- ENQUIRIES TAB (DIGITIZATION HUB) ---
 
 function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, [db, isVerified]);
+  // Defensive query: removing orderBy to ensure results show even without complex indexes
+  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
   const [selectedEnquiry, setSelectedEnquiry] = useState<any>(null);
 
@@ -885,12 +854,12 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-8">
         {isLoading ? (
           <div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>
-        ) : enquiries?.length === 0 ? (
+        ) : (enquiries?.length === 0 || !enquiries) ? (
           <div className="col-span-full py-20 text-center">
              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FileText className="w-8 h-8 text-gray-200" />
              </div>
-             <p className="font-black text-gray-400 uppercase tracking-widest text-[10px]">No active enquiries</p>
+             <p className="font-black text-gray-400 uppercase tracking-widest text-[10px]">Waiting for enquiries from Firestore...</p>
           </div>
         ) : enquiries?.map(enq => (
           <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white p-6 group hover:shadow-2xl transition-all duration-500">
@@ -911,7 +880,6 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
                   <Phone className="w-2.5 h-2.5" />
                   <span>{enq?.phoneNumber || 'No number provided'}</span>
                </div>
-               <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{enq?.uploadDate?.toDate ? enq.uploadDate.toDate().toLocaleDateString() : 'Just now'}</p>
             </div>
             <Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
               <Wand2 className="w-3.5 h-3.5" /> Digitize & Order
@@ -1133,9 +1101,9 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
                         className="rounded-xl h-12 bg-white border-none font-bold pl-10 shadow-inner text-[10px]"
                        />
                     </div>
-                    <Button onClick={handleApplyPromo} disabled={validatingPromo} variant="outline" className="rounded-xl h-12 px-6 font-black uppercase text-[10px] tracking-widest border-2">
+                    <button onClick={handleApplyPromo} disabled={validatingPromo} className="rounded-xl h-12 px-6 font-black uppercase text-[10px] tracking-widest border-2 bg-white hover:bg-gray-50 active:scale-95 transition-all">
                        {validatingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
-                    </Button>
+                    </button>
                   </div>
 
                   {activePromo && (
