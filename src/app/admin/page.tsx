@@ -341,8 +341,8 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 
   const downloadCSV = () => {
     if (!medicines) return;
-    const headers = ['ID', 'Name', 'SKU', 'Manufacturer', 'Price', 'MRP', 'Stock', 'Category', 'isGeneric'];
-    const rows = medicines.map(m => [m.id, m.name, m.sku, m.manufacturer, m.price, m.mrp, m.availableQuantity, m.category, m.isGeneric]);
+    const headers = ['ID', 'Name', 'SKU', 'Manufacturer', 'Price', 'MRP', 'Stock', 'Category', 'isGeneric', 'Molecule ID'];
+    const rows = medicines.map(m => [m.id, m.name, m.sku, m.manufacturer, m.price, m.mrp, m.availableQuantity, m.category, m.isGeneric, m.moleculeId]);
     const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(r => r.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -455,6 +455,9 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 }
 
 function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc')), [db]);
+  const { data: molecules } = useCollection(molsQuery);
+
   const [form, setForm] = useState({
     name: initialData?.name || '',
     sku: initialData?.sku || '',
@@ -464,7 +467,8 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     availableQuantity: initialData?.availableQuantity || 0,
     category: initialData?.category || '',
     imageUrl: initialData?.imageUrl || '',
-    isGeneric: initialData?.isGeneric || false
+    isGeneric: initialData?.isGeneric || false,
+    moleculeId: initialData?.moleculeId || ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -478,6 +482,22 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-2 gap-6">
         <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Product Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-gray-400">Molecule Mapping</Label>
+          <select value={form.moleculeId} onChange={e => setForm({...form, moleculeId: e.target.value})} className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none">
+             <option value="">Select Molecule</option>
+             {molecules?.map(m => (
+               <option key={m.id} value={m.id}>{m.molecule} ({m.form})</option>
+             ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+           <Label className="text-[10px] font-black uppercase text-gray-400">Type</Label>
+           <select value={form.isGeneric ? 'true' : 'false'} onChange={e => setForm({...form, isGeneric: e.target.value === 'true'})} className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none">
+             <option value="false">Branded</option>
+             <option value="true">Generic</option>
+           </select>
+        </div>
         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">SKU</Label><Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Price</Label><Input type="number" value={form.price} onChange={e => setForm({...form, price: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       </div>
@@ -620,6 +640,16 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Molecule Name</Label><Input value={form.molecule} onChange={e => setForm({...form, molecule: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Master ID</Label><Input value={form.masterId} onChange={e => setForm({...form, masterId: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase text-gray-400">Dosage Form</Label>
+        <Input 
+          value={form.form} 
+          onChange={e => setForm({...form, form: e.target.value})} 
+          placeholder="e.g. Tablet, Syrup, Injection"
+          required 
+          className="rounded-2xl h-14 bg-gray-50 border-none font-bold" 
+        />
+      </div>
       <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Formula</Button>
     </form>
   );
