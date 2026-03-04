@@ -40,7 +40,12 @@ import {
   Clock,
   Phone,
   Printer,
-  LayoutGrid
+  LayoutGrid,
+  Wand2,
+  ListChecks,
+  Sparkles,
+  Save,
+  AlertCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -78,6 +83,7 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { prescriptionAnalysisAndPreFill, type PrescriptionAnalysisAndPreFillOutput } from '@/ai/flows/prescription-analysis-and-pre-fill-flow';
 
 type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'itemMaster' | 'moleculeMaster' | 'categories' | 'customers' | 'stockAlerts' | 'fees' | 'promocodes';
 
@@ -349,7 +355,6 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredMedicines = medicines?.filter(med => 
     med.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -622,12 +627,19 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
 }
 
 function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
+  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, [db, isVerified]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
+  const [selectedEnquiry, setSelectedEnquiry] = useState<any>(null);
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Prescription Review</h2>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">Clinical Enquiries</h2>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Digitization Queue</p>
+        </div>
+      </div>
+      
       {isLoading ? (
         <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>
       ) : enquiries?.length === 0 ? (
@@ -635,18 +647,207 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-8">
           {enquiries?.map(enq => (
-            <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white p-6">
-              <div className="aspect-[3/4] rounded-3xl bg-gray-100 mb-6 overflow-hidden relative">
-                <img src={enq.imageUrl} className="w-full h-full object-cover" alt="Prescription" />
+            <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white p-6 group hover:shadow-xl transition-all">
+              <div className="aspect-[3/4] rounded-3xl bg-gray-100 mb-6 overflow-hidden relative border border-gray-100">
+                <img src={enq.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt="Prescription" />
+                <Badge className="absolute top-4 right-4 bg-white/90 backdrop-blur text-primary text-[8px] font-black uppercase">{enq.status || 'Pending'}</Badge>
               </div>
-              <p className="font-black text-sm uppercase mb-1">{enq.patientName || 'Patient Request'}</p>
-              <p className="text-[10px] font-bold text-gray-400 uppercase mb-4">{enq.uploadDate?.toDate ? enq.uploadDate.toDate().toLocaleDateString() : 'Date Pending'}</p>
-              <Button className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white">Process Order</Button>
+              <p className="font-black text-sm uppercase mb-1 truncate">{enq.patientName || 'Patient Request'}</p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[10px] font-bold text-gray-400 uppercase">{enq.uploadDate?.toDate ? enq.uploadDate.toDate().toLocaleDateString() : 'Date Pending'}</p>
+                <Badge variant="outline" className="text-[8px] font-black uppercase border-gray-100">{enq.phoneNumber || 'NO_MOB'}</Badge>
+              </div>
+              <Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white gap-2">
+                <Wand2 className="w-3.5 h-3.5" /> Digitize Request
+              </Button>
             </Card>
           ))}
         </div>
       )}
+
+      {selectedEnquiry && (
+        <DigitizationTerminal 
+          db={db} 
+          enquiry={selectedEnquiry} 
+          onClose={() => setSelectedEnquiry(null)} 
+        />
+      )}
     </div>
+  );
+}
+
+function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any, onClose: () => void }) {
+  const [analyzing, setAnalyzing] = useState(false);
+  const [results, setResults] = useState<any[]>(enquiry.digitizedData || []);
+  const [summary, setSummary] = useState(enquiry.analysisSummary || '');
+  const { toast } = useToast();
+
+  const handleAIAnalysis = async () => {
+    setAnalyzing(true);
+    try {
+      const output = await prescriptionAnalysisAndPreFill({ prescriptionImageUri: enquiry.imageUrl });
+      if (output.isLegible) {
+        setResults(output.medications);
+        setSummary(output.analysisSummary);
+        toast({ title: "Analysis Complete", description: "Medications extracted successfully." });
+      } else {
+        toast({ variant: "destructive", title: "Legibility Issue", description: output.analysisSummary });
+      }
+    } catch (err) {
+      toast({ variant: "destructive", title: "AI Error", description: "Failed to process prescription." });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const handleSave = () => {
+    updateDocumentNonBlocking(doc(db, 'userProfiles', enquiry.userId, 'prescriptions', enquiry.id), {
+      digitizedData: results,
+      analysisSummary: summary,
+      status: 'Digitized',
+      digitizedAt: serverTimestamp()
+    });
+    toast({ title: "Record Saved", description: "Digital prescription updated." });
+  };
+
+  const handleConvertToOrder = () => {
+    toast({ title: "Order Initialized", description: "Converting digital record to patient cart." });
+    // Logic to create a draft order or pre-fill a cart for the user
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-7xl rounded-[48px] border-none p-0 overflow-hidden shadow-3xl h-[90vh]">
+        <div className="bg-primary p-8 text-white flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Digitization Hub</DialogTitle>
+              <p className="text-[9px] font-black uppercase tracking-widest opacity-60">AI-Powered Prescription Decoding</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleAIAnalysis} disabled={analyzing} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20">
+              {analyzing ? <Loader2 className="animate-spin w-4 h-4" /> : <Wand2 className="w-4 h-4" />}
+              Run AI Analysis
+            </Button>
+            <Button onClick={handleSave} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 bg-white text-primary hover:bg-white/90">
+              <Save className="w-4 h-4" /> Save Record
+            </Button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 h-full overflow-hidden">
+          {/* Left: Source Image */}
+          <div className="bg-gray-100 p-8 h-full flex items-center justify-center overflow-auto border-r border-gray-200">
+            <div className="relative w-full aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl bg-white border">
+               <img src={enquiry.imageUrl} className="w-full h-full object-contain" alt="Original Prescription" />
+            </div>
+          </div>
+
+          {/* Right: Structured Data */}
+          <div className="p-8 space-y-8 overflow-y-auto scrollbar-hide bg-white h-full pb-32">
+            <div className="space-y-4">
+               <div className="flex items-center justify-between border-b pb-4">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 flex items-center gap-2">
+                    <ListChecks className="w-4 h-4 text-primary" /> Extracted Medications
+                  </h3>
+                  <Badge variant="outline" className="text-[9px] font-black uppercase">{results.length} Identified</Badge>
+               </div>
+
+               {results.length === 0 ? (
+                 <div className="py-20 text-center space-y-4 bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200">
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm">
+                      <FileText className="w-6 h-6 text-gray-200" />
+                    </div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No digitized data found.<br/>Click "Run AI Analysis" to extract details.</p>
+                 </div>
+               ) : (
+                 <div className="space-y-4">
+                    {results.map((med, idx) => (
+                      <Card key={idx} className="rounded-[32px] p-6 border-none bg-gray-50/50 space-y-4 hover:shadow-md transition-all">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="col-span-2 space-y-1">
+                            <Label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">Drug Name</Label>
+                            <Input 
+                              value={med.drugName} 
+                              onChange={(e) => {
+                                const newResults = [...results];
+                                newResults[idx].drugName = e.target.value;
+                                setResults(newResults);
+                              }}
+                              className="h-12 rounded-xl bg-white border-none font-bold text-xs shadow-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">Dosage</Label>
+                            <Input 
+                              value={med.dosage} 
+                              onChange={(e) => {
+                                const newResults = [...results];
+                                newResults[idx].dosage = e.target.value;
+                                setResults(newResults);
+                              }}
+                              className="h-12 rounded-xl bg-white border-none font-bold text-xs shadow-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">Quantity</Label>
+                            <Input 
+                              type="number"
+                              value={med.quantity} 
+                              onChange={(e) => {
+                                const newResults = [...results];
+                                newResults[idx].quantity = Number(e.target.value);
+                                setResults(newResults);
+                              }}
+                              className="h-12 rounded-xl bg-white border-none font-bold text-xs shadow-sm"
+                            />
+                          </div>
+                          <div className="col-span-2 space-y-1">
+                            <Label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">Instructions</Label>
+                            <Textarea 
+                              value={med.instructions} 
+                              onChange={(e) => {
+                                const newResults = [...results];
+                                newResults[idx].instructions = e.target.value;
+                                setResults(newResults);
+                              }}
+                              className="rounded-xl bg-white border-none font-bold text-xs shadow-sm resize-none h-20"
+                            />
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => setResults(results.filter((_, i) => i !== idx))} className="text-red-400 hover:text-red-600 font-black text-[9px] uppercase tracking-widest w-full">Remove Item</Button>
+                      </Card>
+                    ))}
+                    <Button onClick={() => setResults([...results, { drugName: '', dosage: '', quantity: 1, instructions: '' }])} variant="outline" className="w-full h-14 rounded-3xl border-2 border-dashed border-primary/20 text-primary font-black uppercase text-[10px] tracking-widest hover:bg-primary/5">
+                      <Plus className="w-4 h-4 mr-2" /> Add Medication Manually
+                    </Button>
+                 </div>
+               )}
+            </div>
+
+            {summary && (
+              <div className="bg-orange-50 p-6 rounded-[32px] border border-orange-100 flex gap-4">
+                 <AlertCircle className="w-5 h-5 text-orange-600 shrink-0" />
+                 <div>
+                    <h4 className="text-[10px] font-black uppercase text-orange-600 tracking-widest mb-1">Pharmacist Notes / AI Summary</h4>
+                    <p className="text-xs font-bold text-orange-900/70 leading-relaxed uppercase">{summary}</p>
+                 </div>
+              </div>
+            )}
+
+            <div className="pt-6 border-t flex gap-4">
+               <Button onClick={handleConvertToOrder} className="flex-1 h-18 rounded-full bg-accent text-white font-black uppercase text-xs tracking-[0.2em] shadow-2xl shadow-accent/20">
+                 Finalize & Create Order
+               </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
