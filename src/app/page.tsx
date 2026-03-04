@@ -52,7 +52,7 @@ export default function Home() {
     return <Activity {...props} />;
   };
 
-  const displayMedicines = medicines?.slice(0, 10);
+  const displayMedicines = medicines?.slice(0, 12);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F4F7F6] pharma-bg-pattern page-transition-wrapper">
@@ -87,7 +87,7 @@ export default function Home() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent flex items-end p-6 sm:p-16">
                         <div className="max-w-2xl text-white space-y-3 sm:space-y-6">
-                          <span className="bg-accent text-white text-[8px] sm:text-[10px] font-black px-3 py-1 sm:py-1.5 rounded-full uppercase tracking-[0.2em] shadow-lg inline-block">
+                          <span className="bg-accent text-white text-[8px] sm:text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-[0.2em] shadow-lg inline-block">
                             {index === 0 ? 'Switch & Save' : index === 1 ? 'Express Delivery' : 'Verified Quality'}
                           </span>
                           <h1 className="text-lg sm:text-5xl font-black font-headline uppercase tracking-tighter leading-tight text-balance">
@@ -175,8 +175,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Best Sellers Section */}
-        <section className="py-6 sm:py-10 bg-white border-t border-gray-100 mt-6 rounded-t-[40px] shadow-lg overflow-hidden relative z-10">
+        {/* Best Sellers Section - Mobile Grid Upgrade */}
+        <section className="py-6 sm:py-10 bg-white border-t border-gray-100 mt-6 rounded-t-[40px] shadow-lg relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-12">
             <div className="flex items-center justify-between mb-8 px-2">
               <div className="space-y-1">
@@ -189,20 +189,22 @@ export default function Home() {
             </div>
             
             {medsLoading || !displayMedicines ? (
-              <div className="flex gap-4 overflow-hidden px-2">
-                {[...Array(4)].map((_, i) => (
-                  <Skeleton key={i} className="w-[180px] h-[300px] shrink-0 rounded-[32px]" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="space-y-4">
+                     <Skeleton className="aspect-square rounded-[32px] shimmer" />
+                     <div className="space-y-2">
+                        <Skeleton className="h-4 w-3/4 shimmer" />
+                        <Skeleton className="h-2 w-1/2 shimmer" />
+                     </div>
+                  </div>
                 ))}
               </div>
             ) : (
-              <div className="flex overflow-x-auto pb-6 gap-6 px-2 scrollbar-hide snap-x">
-                <div className="flex gap-6">
-                  {displayMedicines?.map((p: any) => (
-                    <div key={p.id} className="w-[200px] sm:w-[260px] snap-start">
-                      <ProductCard product={p} />
-                    </div>
-                  ))}
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
+                {displayMedicines?.map((p: any) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
               </div>
             )}
           </div>
