@@ -271,7 +271,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
   const stockAlertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'stockEnquiries')) : null, [db, isVerified]);
-  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
+  const presQuery = useMemoFirebase(() => isVerified ? collectionGroup(db, 'prescriptions') : null, [db, isVerified]);
 
   const { data: medicines } = useCollection(medsQuery);
   const { data: formulas } = useCollection(molsQuery);
@@ -725,7 +725,7 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
 // --- ENQUIRIES TAB (DIGITIZATION HUB) ---
 
 function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, [db, isVerified]);
+  const presQuery = useMemoFirebase(() => isVerified ? collectionGroup(db, 'prescriptions') : null, [db, isVerified]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
   const [selectedEnquiry, setSelectedEnquiry] = useState<any>(null);
 
