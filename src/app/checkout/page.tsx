@@ -249,7 +249,7 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-4 mb-10 pt-6 border-t border-dashed relative z-10">
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-500">
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
                   <span>Cart Total</span>
                   <span>₹{totalPrice}</span>
                 </div>

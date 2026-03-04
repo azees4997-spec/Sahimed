@@ -766,7 +766,7 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
               <Plus className="w-4 h-4" /> New Formula
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden shadow-3xl">
+          <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden shadow-3xl">
             <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Formula</DialogTitle></div>
             <div className="p-8"><MoleculeForm db={db} initialData={editingMol} onSuccess={() => setIsFormOpen(false)} /></div>
           </DialogContent>
@@ -843,7 +843,6 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
 // --- ENQUIRIES TAB (DIGITIZATION HUB) ---
 
 function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  // Defensive query: removing orderBy to ensure results show even without complex indexes
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
   const [selectedEnquiry, setSelectedEnquiry] = useState<any>(null);
