@@ -8,14 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { MapPin, ShieldCheck, Loader2, Phone, User, Home, Building2, Hash } from 'lucide-react';
+import { MapPin, ShieldCheck, Loader2, Phone, User, Home, Building2, Hash, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
 
 export default function CheckoutPage() {
-  const { cart, totalPrice, clearCart, location } = useCart();
+  const { cart, totalPrice, clearCart } = useCart();
   const { user } = useUser();
   const db = useFirestore();
   const [loading, setLoading] = useState(false);
@@ -47,7 +47,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!orderInfo.street || !orderInfo.pincode || !orderInfo.phoneNumber) {
+    if (!orderInfo.street || !orderInfo.pincode || !orderInfo.phoneNumber || !orderInfo.patientName) {
       toast({ variant: "destructive", title: "Incomplete Address", description: "Please provide essential delivery details." });
       return;
     }
@@ -102,7 +102,12 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-[#F8F8F8] pb-32 sm:pb-8 page-transition-wrapper">
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 py-8 md:py-16">
-        <h1 className="text-3xl font-black font-headline mb-12 text-gray-900 uppercase tracking-widest">Secure Checkout</h1>
+        <div className="flex items-center gap-4 mb-12">
+           <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Secure Checkout</h1>
+           <div className="bg-primary/5 px-4 py-1 rounded-full border border-primary/10">
+              <span className="text-[10px] font-black text-primary uppercase tracking-widest">Final Step</span>
+           </div>
+        </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
@@ -112,88 +117,98 @@ export default function CheckoutPage() {
                   <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
                     <MapPin className="w-4 h-4" />
                   </div>
-                  <CardTitle className="text-xl font-black uppercase tracking-tight">Delivery Details</CardTitle>
+                  <CardTitle className="text-xl font-black uppercase tracking-tight">Delivery Address Provision</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="p-8 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Patient Name</Label>
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <Input value={orderInfo.patientName} onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})} placeholder="Full Name" className="h-14 pl-12 rounded-2xl bg-gray-50 border-none font-bold" />
+              <CardContent className="p-8 space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 ml-1">
+                      <User className="w-3.5 h-3.5 text-primary" />
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Patient Full Name</Label>
                     </div>
+                    <Input value={orderInfo.patientName} onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})} placeholder="Full Name" className="h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6" />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Contact Number</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <Input value={orderInfo.phoneNumber} onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value})} placeholder="Mobile Number" className="h-14 pl-12 rounded-2xl bg-gray-50 border-none font-bold" />
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 ml-1">
+                      <Phone className="w-3.5 h-3.5 text-primary" />
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Number</Label>
                     </div>
+                    <Input value={orderInfo.phoneNumber} onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value})} placeholder="Mobile Number" className="h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6" />
                   </div>
-                  <div className="md:col-span-2 space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Street / Area Name</Label>
-                    <div className="relative">
-                      <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <Input value={orderInfo.street} onChange={e => setOrderInfo({...orderInfo, street: e.target.value})} placeholder="Apartment, Street, Area" className="h-14 pl-12 rounded-2xl bg-gray-50 border-none font-bold" />
+                  <div className="md:col-span-2 space-y-3">
+                    <div className="flex items-center gap-2 ml-1">
+                      <Home className="w-3.5 h-3.5 text-primary" />
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Complete Street Address</Label>
                     </div>
+                    <Input value={orderInfo.street} onChange={e => setOrderInfo({...orderInfo, street: e.target.value})} placeholder="House No, Street Name, Area" className="h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6" />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Landmark (Optional)</Label>
-                    <div className="relative">
-                      <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <Input value={orderInfo.landmark} onChange={e => setOrderInfo({...orderInfo, landmark: e.target.value})} placeholder="Nearby landmark" className="h-14 pl-12 rounded-2xl bg-gray-50 border-none font-bold" />
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 ml-1">
+                      <Building2 className="w-3.5 h-3.5 text-primary" />
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Landmark (Optional)</Label>
                     </div>
+                    <Input value={orderInfo.landmark} onChange={e => setOrderInfo({...orderInfo, landmark: e.target.value})} placeholder="Nearby clinical landmark" className="h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6" />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Pincode</Label>
-                    <div className="relative">
-                      <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <Input value={orderInfo.pincode} onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value})} placeholder="6-digit PIN" maxLength={6} className="h-14 pl-12 rounded-2xl bg-gray-50 border-none font-bold" />
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 ml-1">
+                      <Hash className="w-3.5 h-3.5 text-primary" />
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pincode</Label>
                     </div>
+                    <Input value={orderInfo.pincode} onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value})} placeholder="6-digit PIN" maxLength={6} className="h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6" />
                   </div>
                 </div>
               </CardContent>
             </Card>
+
+            <div className="bg-accent/5 p-8 rounded-[40px] border border-accent/10 flex items-center gap-6">
+               <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-lg border border-accent/10 shrink-0">
+                  <ShieldCheck className="w-8 h-8 text-accent" />
+               </div>
+               <div>
+                  <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Pharmacist Verified Checkout</h3>
+                  <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Every order is reviewed for clinical safety and accuracy by our team.</p>
+               </div>
+            </div>
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white p-10 rounded-[50px] shadow-2xl border border-gray-100 sticky top-24">
-              <h2 className="text-2xl font-black mb-10 text-gray-900 uppercase tracking-widest">Bill Summary</h2>
-              <div className="space-y-6 mb-10 max-h-[30vh] overflow-y-auto scrollbar-hide">
+            <div className="bg-white p-10 rounded-[50px] shadow-2xl border border-gray-50 sticky top-24 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16" />
+              
+              <h2 className="text-[11px] font-black mb-10 text-gray-400 uppercase tracking-[0.3em] relative z-10">Bill Breakdown</h2>
+              
+              <div className="space-y-6 mb-10 max-h-[30vh] overflow-y-auto scrollbar-hide relative z-10">
                  {cart.map(item => (
-                   <div key={item.id} className="flex justify-between items-center text-sm p-2 border-b border-gray-50 last:border-none">
+                   <div key={item.id} className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl group transition-all">
                      <div className="flex flex-col">
-                        <span className="text-gray-900 font-black">{item.name}</span>
-                        <span className="text-[10px] text-gray-400 font-bold">Qty: {item.quantity}</span>
+                        <span className="text-gray-900 font-black text-[11px] uppercase truncate max-w-[140px]">{item.name}</span>
+                        <span className="text-[8px] text-gray-400 font-black uppercase tracking-widest">Qty: {item.quantity}</span>
                      </div>
-                     <span className="font-black text-gray-900">₹{item.price * item.quantity}</span>
+                     <span className="font-black text-primary text-sm">₹{item.price * item.quantity}</span>
                    </div>
                  ))}
               </div>
-              <div className="space-y-5 mb-10 pt-6 border-t border-gray-100">
-                <div className="flex justify-between text-gray-500 font-bold">
+
+              <div className="space-y-4 mb-10 pt-6 border-t border-dashed relative z-10">
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-500">
                   <span>Cart Total</span>
                   <span>₹{totalPrice}</span>
                 </div>
-                <div className="flex justify-between text-gray-500 font-bold">
-                  <span>Shipping</span>
-                  <span className="text-green-600 font-black uppercase text-[10px]">FREE</span>
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                  <span className="text-gray-500">Shipping</span>
+                  <span className="text-accent">FREE</span>
                 </div>
                 <div className="pt-8 border-t border-gray-100 flex justify-between items-baseline">
-                  <span className="text-xl font-black text-gray-900 uppercase tracking-widest">Total</span>
-                  <span className="text-4xl font-black text-primary">₹{totalPrice}</span>
+                  <span className="text-sm font-black text-gray-900 uppercase tracking-widest">Final Total</span>
+                  <span className="text-4xl font-black text-primary tracking-tighter">₹{totalPrice}</span>
                 </div>
               </div>
-              <Button onClick={handlePlaceOrder} disabled={loading || cart.length === 0} className="w-full h-16 rounded-full text-lg font-black uppercase tracking-widest shadow-2xl shadow-primary/40 hover:scale-[1.02] transition-all gap-3">
-                {loading ? <Loader2 className="animate-spin" /> : (user ? "Confirm & Pay" : "Login to Checkout")}
+
+              <Button onClick={handlePlaceOrder} disabled={loading || cart.length === 0} className="w-full h-20 rounded-full text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-[1.02] transition-all gap-4 relative z-10 bg-primary text-white">
+                {loading ? <Loader2 className="animate-spin" /> : (user ? "Confirm Order" : "Login to Checkout")}
+                <ArrowRight className="w-5 h-5" />
               </Button>
-              <div className="mt-10 flex flex-col gap-4">
-                 <div className="flex items-center gap-4 text-[10px] font-black uppercase text-gray-400 tracking-widest bg-gray-50 p-5 rounded-[24px] border border-gray-100">
-                   <ShieldCheck className="w-5 h-5 text-green-500 shrink-0" />
-                   Pharmacist Verified • Secure Gateway
-                 </div>
-              </div>
             </div>
           </div>
         </div>
