@@ -71,7 +71,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-type AdminTab = 'overview' | 'itemMaster' | 'moleculeMaster' | 'enquiries' | 'fulfillment' | 'customers' | 'stockAlerts' | 'fees' | 'promocodes';
+type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'itemMaster' | 'moleculeMaster' | 'customers' | 'stockAlerts' | 'fees' | 'promocodes';
 
 export default function AdminConsole() {
   const { user, isUserLoading } = useUser();
@@ -237,9 +237,9 @@ export default function AdminConsole() {
             <nav className="hidden xl:flex gap-1 overflow-x-auto scrollbar-hide">
               {[
                 { id: 'overview', label: 'Home', icon: Home },
-                { id: 'enquiries', label: 'Prescriptions', icon: FileText },
-                { id: 'fulfillment', label: 'Fulfillment', icon: ShoppingBag },
-                { id: 'itemMaster', label: 'Item Master', icon: Package },
+                { id: 'enquiries', label: 'Review', icon: FileText },
+                { id: 'fulfillment', label: 'Orders', icon: ShoppingBag },
+                { id: 'itemMaster', label: 'Inventory', icon: Package },
                 { id: 'moleculeMaster', label: 'Formulas', icon: Dna },
                 { id: 'customers', label: 'Patients', icon: Users },
                 { id: 'promocodes', label: 'Campaigns', icon: Ticket },
@@ -355,7 +355,7 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 
   const downloadTemplate = () => {
     const headers = ['Name', 'SKU', 'Manufacturer', 'Price', 'MRP', 'Stock', 'Category', 'ImageURL', 'MoleculeID', 'PackSize', 'Description'];
-    const sample = ['Example Medicine', 'SKU123', 'SahiMed Labs', '450', '500', '100', 'Diabetes', 'https://images.unsplash.com/...', 'MOL123', '15 Tablets', 'Clinical description...'];
+    const sample = ['Example Medicine', 'SKU123', 'SahiMed Labs', '450', '500', '100', 'Diabetes', 'https://picsum.photos/300/300', 'MOL123', '15 Tablets', 'Clinical description...'];
     const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + sample.join(",");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -747,18 +747,20 @@ function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean })
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
             <tr>
-              <th className="px-10 py-8">Formula Name</th>
-              <th className="px-10 py-8">Master ID</th>
+              <th className="px-10 py-8">Composition / Molecule</th>
+              <th className="px-10 py-8">Molecule ID</th>
+              <th className="px-10 py-8">Form</th>
               <th className="px-10 py-8 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {isLoading ? (
-              <tr><td colSpan={3} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
+              <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
             ) : molecules?.map(mol => (
               <tr key={mol.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-10 py-8 font-black text-sm uppercase">{mol.molecule}</td>
                 <td className="px-10 py-8 text-[11px] font-bold">{mol.masterId}</td>
+                <td className="px-10 py-8 text-[11px] font-black text-gray-400 uppercase">{mol.form || 'N/A'}</td>
                 <td className="px-10 py-8 text-right">
                   <div className="flex justify-end gap-2">
                     <Button variant="ghost" size="icon" onClick={() => { setEditingMol(mol); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4 text-gray-400" /></Button>
@@ -775,16 +777,32 @@ function MoleculeMasterTab({ db, isVerified }: { db: any, isVerified: boolean })
 }
 
 function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
-  const [form, setForm] = useState({ molecule: initialData?.molecule || '', masterId: initialData?.masterId || '', form: initialData?.form || 'Tablet' });
+  const [form, setForm] = useState({ 
+    molecule: initialData?.molecule || '', 
+    masterId: initialData?.masterId || '', 
+    form: initialData?.form || 'Tablet' 
+  });
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     initialData?.id ? updateDocumentNonBlocking(doc(db, 'moleculeMaster', initialData.id), form) : addDocumentNonBlocking(collection(db, 'moleculeMaster'), form);
     onSuccess();
   };
+  
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Formula Name</Label><Input value={form.molecule} onChange={e => setForm({...form, molecule: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Master ID</Label><Input value={form.masterId} onChange={e => setForm({...form, masterId: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Composition Name</Label><Input value={form.molecule} onChange={e => setForm({...form, molecule: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Molecule ID</Label><Input value={form.masterId} onChange={e => setForm({...form, masterId: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Form</Label>
+        <select value={form.form} onChange={e => setForm({...form, form: e.target.value})} className="w-full rounded-2xl h-14 bg-gray-50 border-none font-bold px-4 outline-none">
+          <option value="Tablet">Tablet</option>
+          <option value="Syrup">Syrup</option>
+          <option value="Capsule">Capsule</option>
+          <option value="Injection">Injection</option>
+          <option value="Cream">Cream</option>
+        </select>
+      </div>
       <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Formula</Button>
     </form>
   );
@@ -821,7 +839,7 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                 </td>
                 <td className="px-10 py-8">
                    <div className="flex flex-col">
-                      <span className="text-[11px] font-black text-gray-900">{u.phoneNumber || 'NO_PHONE'}</span>
+                      <span className="text-[11px] font-black text-gray-900">{u.phone || u.phoneNumber || 'NO_PHONE'}</span>
                       <span className="text-[10px] font-bold text-gray-400">{u.email}</span>
                    </div>
                 </td>
@@ -849,21 +867,41 @@ function CustomersTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 
 function PatientHistoryView({ db, userId }: { db: any, userId: string }) {
   const ordersQuery = useMemoFirebase(() => userId ? query(collection(db, 'userProfiles', userId, 'orders'), orderBy('orderDate', 'desc')) : null, [db, userId]);
-  const { data: orders, isLoading } = useCollection(ordersQuery);
+  const presQuery = useMemoFirebase(() => userId ? query(collection(db, 'userProfiles', userId, 'prescriptions'), orderBy('uploadDate', 'desc')) : null, [db, userId]);
+  
+  const { data: orders, isLoading: ordersLoading } = useCollection(ordersQuery);
+  const { data: prescriptions, isLoading: presLoading } = useCollection(presQuery);
 
-  if (isLoading) return <div className="py-10 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
+  if (ordersLoading || presLoading) return <div className="py-10 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
 
   return (
-    <div className="space-y-4">
-      {orders?.length === 0 ? <p className="text-center font-bold text-gray-300 py-10">No orders found for this patient.</p> : orders?.map(order => (
-        <div key={order.id} className="bg-gray-50 p-6 rounded-3xl flex items-center justify-between">
-           <div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Order REF: #{order.id.substring(0,8)}</p>
-              <p className="font-black text-gray-900">₹{order.totalAmount} • {order.status}</p>
-           </div>
-           <Badge className="bg-primary text-white uppercase text-[8px] font-black">{order.orderDate?.toDate().toLocaleDateString()}</Badge>
+    <div className="space-y-8">
+      <div className="space-y-4">
+        <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Order History</h4>
+        {orders?.length === 0 ? <p className="text-center font-bold text-gray-300 py-10">No orders found.</p> : orders?.map(order => (
+          <div key={order.id} className="bg-gray-50 p-6 rounded-3xl flex items-center justify-between">
+             <div>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Order REF: #{order.id.substring(0,8)}</p>
+                <p className="font-black text-gray-900">₹{order.totalAmount} • {order.status}</p>
+             </div>
+             <Badge className="bg-primary text-white uppercase text-[8px] font-black">{order.orderDate?.toDate ? order.orderDate.toDate().toLocaleDateString() : 'Pending'}</Badge>
+          </div>
+        ))}
+      </div>
+      
+      <div className="space-y-4">
+        <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Prescription Uploads</h4>
+        <div className="grid grid-cols-2 gap-4">
+          {prescriptions?.map(pres => (
+            <div key={pres.id} className="bg-gray-50 p-4 rounded-3xl space-y-3">
+              <div className="aspect-square relative rounded-2xl overflow-hidden bg-white">
+                <img src={pres.imageUrl} alt="Prescription" className="w-full h-full object-cover" />
+              </div>
+              <p className="text-[9px] font-black uppercase tracking-tight text-center text-gray-400">{pres.uploadDate?.toDate ? pres.uploadDate.toDate().toLocaleDateString() : 'Date Pending'}</p>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   );
 }
@@ -894,7 +932,7 @@ function StockAlertsTab({ db, isVerified }: { db: any, isVerified: boolean }) {
               <tr key={alert.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-10 py-8 font-black text-sm uppercase text-gray-900">{alert.medicineName}</td>
                 <td className="px-10 py-8 text-[10px] font-bold text-gray-500">#{alert.userId.substring(0,12)}</td>
-                <td className="px-10 py-8 text-[10px] font-black text-gray-400 uppercase">{alert.timestamp?.toDate().toLocaleString()}</td>
+                <td className="px-10 py-8 text-[10px] font-black text-gray-400 uppercase">{alert.timestamp?.toDate ? alert.timestamp.toDate().toLocaleString() : 'Pending'}</td>
                 <td className="px-10 py-8 text-right">
                   <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'stockEnquiries', alert.id))} className="h-10 w-10 rounded-xl hover:bg-red-50"><Trash2 className="w-4 h-4 text-red-300" /></Button>
                 </td>
