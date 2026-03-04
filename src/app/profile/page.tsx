@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -80,7 +79,7 @@ export default function ProfilePage() {
           </div>
           <h1 className="text-3xl font-black uppercase tracking-tighter mb-4 text-gray-900">SahiMed Account</h1>
           <p className="text-gray-400 font-bold text-[10px] uppercase tracking-widest mb-12 leading-relaxed max-w-[280px] mx-auto">
-            Manage your orders, prescriptions, and health journey in one secure hub.
+            sahi dawa sahi daam pe. Manage your health journey in one secure hub.
           </p>
           <Link href="/login" className="w-full">
             <Button className="w-full h-18 rounded-full font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 text-xs gap-3">
@@ -109,7 +108,7 @@ export default function ProfilePage() {
             <h1 className="text-3xl font-black text-gray-900 mb-1 uppercase tracking-tighter">
               {user?.email?.split('@')[0] || 'SahiMed Member'}
             </h1>
-            <p className="text-gray-400 font-black text-[10px] uppercase tracking-widest">Active Session</p>
+            <p className="text-gray-400 font-black text-[10px] uppercase tracking-widest">Active Customer Session</p>
           </div>
           <div className="md:ml-auto">
             <Button 

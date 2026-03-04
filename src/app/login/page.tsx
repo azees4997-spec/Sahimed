@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -94,7 +93,7 @@ export default function LoginPage() {
             <Smartphone className="w-10 h-10 text-white" />
           </div>
           <CardTitle className="text-3xl font-black font-headline mb-2 tracking-tight">SahiMed Login</CardTitle>
-          <CardDescription className="text-white/70 uppercase text-[9px] font-black tracking-widest">Secure Customer Access</CardDescription>
+          <CardDescription className="text-white/70 uppercase text-[9px] font-black tracking-widest">sahi dawa sahi daam pe</CardDescription>
         </CardHeader>
         
         <CardContent className="p-12">

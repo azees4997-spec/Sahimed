@@ -7,8 +7,8 @@ import MobileCartBar from '@/components/MobileCartBar';
 import BottomNav from '@/components/BottomNav';
 
 export const metadata: Metadata = {
-  title: 'SahiMed | Professional Healthcare Solutions',
-  description: 'High-end pharmacy e-commerce for all your medicine needs.',
+  title: 'SahiMed | sahi dawa sahi daam pe',
+  description: 'SahiMed Pharmacy - High-end healthcare solutions and medicine delivery at the right price.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

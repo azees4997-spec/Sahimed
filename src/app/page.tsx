@@ -51,7 +51,7 @@ export default function Home() {
     return <Activity {...props} />;
   };
 
-  const displayMedicines = medicines?.slice(0, 30);
+  const displayMedicines = medicines?.slice(0, 10);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F8F8] page-transition-wrapper">
@@ -102,50 +102,50 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="py-4">
+        <section className="py-2">
           <div className="max-w-7xl mx-auto px-6 sm:px-12">
              <Link href="/prescription">
-                <Button className="w-full h-16 sm:h-20 rounded-[32px] bg-white border-2 border-primary/5 text-primary hover:bg-primary/5 shadow-xl shadow-primary/5 flex items-center justify-between px-6 sm:px-8 group active:scale-[0.99] transition-all">
+                <Button className="w-full h-14 sm:h-16 rounded-[24px] bg-white border-2 border-primary/5 text-primary hover:bg-primary/5 shadow-md flex items-center justify-between px-6 sm:px-8 group active:scale-[0.99] transition-all">
                   <div className="flex items-center gap-4 sm:gap-6">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary text-white rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                      <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary text-white rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <div className="text-left">
-                      <p className="font-black text-[13px] sm:text-[15px] uppercase tracking-tight text-gray-900">Scan & Upload Prescription</p>
-                      <p className="text-[8px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Quick Order System</p>
+                      <p className="font-black text-[12px] sm:text-[14px] uppercase tracking-tight text-gray-900">Scan & Upload Prescription</p>
+                      <p className="text-[7px] sm:text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Quick Order System</p>
                     </div>
                   </div>
-                  <div className="bg-primary/5 p-2 sm:p-3 rounded-full group-hover:bg-primary group-hover:text-white transition-colors">
-                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <div className="bg-primary/5 p-1.5 sm:p-2 rounded-full group-hover:bg-primary group-hover:text-white transition-colors">
+                    <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
                 </Button>
              </Link>
           </div>
         </section>
 
-        <section className="py-6">
+        <section className="py-4">
           <div className="max-w-7xl mx-auto px-6 sm:px-12">
-            <div className="flex items-center justify-between mb-6 px-2">
-              <h2 className="text-[13px] font-black text-gray-900 uppercase tracking-[0.3em]">Health Categories</h2>
-              <Link href="/search" className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">View Catalog</Link>
+            <div className="flex items-center justify-between mb-4 px-2">
+              <h2 className="text-[12px] font-black text-gray-900 uppercase tracking-[0.3em]">Health Categories</h2>
+              <Link href="/search" className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline">View All</Link>
             </div>
             {catsLoading ? (
-              <div className="grid grid-cols-3 gap-6 sm:grid-cols-6">
+              <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="flex flex-col items-center gap-3">
-                    <Skeleton className="w-full aspect-square rounded-[32px] shimmer" />
-                    <Skeleton className="h-3 w-16 rounded shimmer" />
+                  <div key={i} className="flex flex-col items-center gap-2">
+                    <Skeleton className="w-full aspect-square rounded-[24px] shimmer" />
+                    <Skeleton className="h-3 w-12 rounded shimmer" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-6 sm:grid-cols-6">
+              <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
                 {categories?.map((cat: any) => (
                   <Link key={cat.id} href={`/search?c=${cat.name}`} className="group flex flex-col items-center active:scale-95 transition-transform">
-                    <div className="w-full aspect-square bg-white rounded-[32px] flex items-center justify-center text-primary mb-3 shadow-sm border border-gray-100 p-5 group-hover:bg-primary group-hover:text-white transition-all duration-500 hover:shadow-xl">
+                    <div className="w-full aspect-square bg-white rounded-[24px] flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-100 p-4 group-hover:bg-primary group-hover:text-white transition-all duration-500 hover:shadow-lg">
                       {getIcon(cat.name)}
                     </div>
-                    <h3 className="font-black text-[9px] sm:text-[11px] text-gray-700 uppercase tracking-tighter truncate w-full text-center px-1 group-hover:text-primary transition-colors">{cat.name}</h3>
+                    <h3 className="font-black text-[8px] sm:text-[10px] text-gray-700 uppercase tracking-tighter truncate w-full text-center px-1 group-hover:text-primary transition-colors">{cat.name}</h3>
                   </Link>
                 ))}
               </div>
@@ -153,32 +153,32 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="py-10 bg-white border-t border-gray-100 mt-6 rounded-t-[60px] shadow-2xl overflow-hidden">
+        <section className="py-6 bg-white border-t border-gray-100 mt-4 rounded-t-[40px] shadow-lg overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 sm:px-12">
-            <div className="flex items-center justify-between mb-8 px-2">
-              <div className="space-y-1.5">
-                <h2 className="text-[15px] font-black text-gray-900 uppercase tracking-[0.3em]">Our Best Sellers</h2>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Customer favorite healthcare essentials</p>
+            <div className="flex items-center justify-between mb-6 px-2">
+              <div className="space-y-1">
+                <h2 className="text-[13px] font-black text-gray-900 uppercase tracking-[0.3em]">Our Best Sellers</h2>
+                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Customer favorite essentials</p>
               </div>
-              <Link href="/search" className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2 bg-primary/5 px-6 py-3 rounded-full hover:bg-primary/10 transition-colors shadow-sm">
-                Shop Full Catalog <ChevronRight className="w-4 h-4" />
+              <Link href="/search" className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5 bg-primary/5 px-4 py-2 rounded-full hover:bg-primary/10 transition-colors shadow-sm">
+                Full Catalog <ChevronRight className="w-3 h-3" />
               </Link>
             </div>
             
             {medsLoading ? (
-              <div className="flex gap-6 overflow-hidden">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="w-[200px] shrink-0 space-y-4">
-                    <Skeleton className="aspect-square rounded-[32px] shimmer" />
-                    <Skeleton className="h-4 w-3/4 shimmer" />
+              <div className="flex gap-4 overflow-hidden">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="w-[180px] shrink-0 space-y-3">
+                    <Skeleton className="aspect-square rounded-[24px] shimmer" />
+                    <Skeleton className="h-3 w-3/4 shimmer" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="flex overflow-x-auto pb-6 gap-6 scrollbar-hide snap-x">
-                <div className="flex gap-6">
+              <div className="flex overflow-x-auto pb-4 gap-4 scrollbar-hide snap-x">
+                <div className="flex gap-4">
                   {displayMedicines?.map((p: any) => (
-                    <div key={p.id} className="w-[200px] sm:w-[260px] snap-start">
+                    <div key={p.id} className="w-[180px] sm:w-[220px] snap-start">
                       <ProductCard product={p} />
                     </div>
                   ))}
@@ -189,20 +189,20 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="bg-white py-8 border-t border-gray-100 text-center">
+      <footer className="bg-white py-6 border-t border-gray-100 text-center">
         <div className="max-w-7xl mx-auto px-6 sm:px-12">
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-3">
             <div className="bg-primary p-1.5 rounded-lg">
               <div className="text-white font-black text-[10px] tracking-tighter uppercase">SM</div>
             </div>
             <div className="space-y-1">
-              <p className="text-[10px] font-black text-gray-900 uppercase tracking-[0.4em]">SahiMed Pharmacy</p>
-              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                Professional Healthcare • Express Delivery • Clinical Excellence
+              <p className="text-[11px] font-black text-gray-900 uppercase tracking-[0.3em]">SahiMed</p>
+              <p className="text-[9px] font-bold text-primary uppercase tracking-widest">
+                sahi dawa sahi daam pe
               </p>
             </div>
-            <div className="w-full max-w-sm h-px bg-gray-50 my-2" />
-            <p className="text-[8px] font-black text-gray-400 uppercase tracking-[0.3em]">
+            <div className="w-full max-w-xs h-px bg-gray-50 my-2" />
+            <p className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em]">
               © Sahimed 2026. All rights reserved.
             </p>
           </div>

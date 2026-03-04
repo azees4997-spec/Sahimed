@@ -133,7 +133,10 @@ export default function Navbar() {
                 <div className="bg-primary p-2 rounded-xl shadow-lg group-hover:rotate-6 transition-transform">
                   <div className="text-white font-black text-sm tracking-tighter">SM</div>
                 </div>
-                <span className="hidden sm:block font-black text-2xl text-primary font-headline tracking-tighter">SahiMed</span>
+                <div className="hidden sm:flex flex-col items-start leading-none">
+                  <span className="font-black text-2xl text-primary font-headline tracking-tighter">SahiMed</span>
+                  <span className="text-[7px] font-black text-primary/60 uppercase tracking-widest mt-0.5">sahi dawa sahi daam pe</span>
+                </div>
               </Link>
 
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -211,8 +214,8 @@ export default function Navbar() {
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder="Search products, brands or health needs..."
-                  className="w-full pl-12 pr-24 rounded-3xl border-[2.5px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 bg-white h-12 sm:h-14 font-black text-xs sm:text-sm shadow-xl shadow-primary/5"
+                  placeholder="Search medicines or health needs..."
+                  className="w-full pl-12 pr-12 rounded-3xl border-[2px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 bg-white h-12 font-black text-xs shadow-md"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   autoFocus={isSearchExpanded}
@@ -221,12 +224,12 @@ export default function Navbar() {
                 
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
                   {(isProcessing || medsLoading) && (
-                     <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                     <Loader2 className="w-3 h-3 text-primary animate-spin" />
                   )}
                   <Button 
                     type="submit" 
                     size="sm"
-                    className="rounded-2xl h-8 sm:h-10 px-4 font-black uppercase text-[9px] tracking-widest shadow-md bg-primary hover:bg-primary/90 transition-all active:scale-95"
+                    className="rounded-2xl h-8 px-4 font-black uppercase text-[9px] tracking-widest shadow-md bg-primary hover:bg-primary/90 transition-all active:scale-95"
                   >
                     Search
                   </Button>
