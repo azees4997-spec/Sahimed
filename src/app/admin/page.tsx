@@ -37,7 +37,8 @@ import {
   Calendar,
   CreditCard,
   MapPin,
-  Clock
+  Clock,
+  Phone
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -584,6 +585,10 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
             <Textarea value={form.howToUse} onChange={e => setForm({...form, howToUse: e.target.value})} className="rounded-2xl bg-gray-50 border-none" />
           </div>
           <div className="space-y-2">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Treatment</Label>
+            <Textarea value={form.treatment} onChange={e => setForm({...form, treatment: e.target.value})} className="rounded-2xl bg-gray-50 border-none" />
+          </div>
+          <div className="space-y-2">
             <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Safety Advice</Label>
             <Textarea value={form.safetyAdvice} onChange={e => setForm({...form, safetyAdvice: e.target.value})} className="rounded-2xl bg-gray-50 border-none" />
           </div>
@@ -678,7 +683,7 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
           <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
             <tr>
               <th className="px-10 py-8">Order ID</th>
-              <th className="px-10 py-8">Patient</th>
+              <th className="px-10 py-8">Patient Mobile</th>
               <th className="px-10 py-8">Amount</th>
               <th className="px-10 py-8">Status</th>
               <th className="px-10 py-8 text-right">Action</th>
@@ -692,7 +697,7 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
             ) : orders?.map(order => (
               <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
                 <td className="px-10 py-8 font-black text-sm uppercase">#{order.id.substring(0,8)}</td>
-                <td className="px-10 py-8 text-[11px] font-bold text-gray-500">#{order.userId?.substring(0,8)}</td>
+                <td className="px-10 py-8 text-[11px] font-black text-gray-900">{order.phoneNumber || 'N/A'}</td>
                 <td className="px-10 py-8 font-black text-primary">₹{order.totalAmount}</td>
                 <td className="px-10 py-8">
                   <Badge variant="outline" className="text-[9px] font-black uppercase px-4 py-1.5 rounded-full">{order.status}</Badge>
@@ -750,7 +755,6 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
             <Badge className="bg-white text-primary uppercase text-[10px] font-black h-8 px-4">{selectedOrder?.status}</Badge>
           </div>
           <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto scrollbar-hide">
-            {/* Meta Info */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                <div className="space-y-1">
                   <div className="flex items-center gap-2 text-gray-400">
@@ -761,28 +765,24 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                </div>
                <div className="space-y-1">
                   <div className="flex items-center gap-2 text-gray-400">
-                    <User className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Patient UID</span>
+                    <Phone className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Patient Mobile</span>
                   </div>
-                  <p className="text-xs font-bold text-gray-900 truncate">#{selectedOrder?.userId?.substring(0,12)}</p>
+                  <p className="text-xs font-bold text-gray-900">{selectedOrder?.phoneNumber || 'N/A'}</p>
                </div>
-               <div className="space-y-1">
+               <div className="space-y-1 col-span-2">
                   <div className="flex items-center gap-2 text-gray-400">
                     <MapPin className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Hub Reference</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Delivery Address</span>
                   </div>
-                  <p className="text-xs font-bold text-gray-900">ADDR_ID: {selectedOrder?.shippingAddressId}</p>
-               </div>
-               <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-gray-400">
-                    <CreditCard className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Payment</span>
+                  <div className="text-xs font-bold text-gray-900 leading-relaxed">
+                    <p>{selectedOrder?.shippingDetails?.street || 'N/A'}</p>
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">LM: {selectedOrder?.shippingDetails?.landmark || 'None'}</p>
+                    <p>PIN: {selectedOrder?.shippingDetails?.pincode || 'N/A'}</p>
                   </div>
-                  <p className="text-xs font-bold text-emerald-600">{selectedOrder?.paymentStatus || 'Verified'}</p>
                </div>
             </div>
 
-            {/* Items List */}
             <div className="space-y-4">
               <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Clinical Inventory Breakdown</h4>
               <div className="space-y-3">
@@ -798,23 +798,17 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                       </div>
                     </div>
                     <div className="text-right">
-                       <p className="text-xs font-black text-gray-900">₹{item.unitPrice} × {item.quantity}</p>
-                       <p className="text-[10px] font-black text-primary">₹{item.unitPrice * item.quantity}</p>
+                       <p className="text-sm font-black text-gray-900">Qty: {item.quantity}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Financial Summary */}
             <div className="bg-gray-50 p-6 rounded-[32px] space-y-4">
                <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-500">
                   <span>Gross Total</span>
                   <span>₹{selectedOrder?.totalAmount}</span>
-               </div>
-               <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-500">
-                  <span>Clinical Fees</span>
-                  <span>₹0</span>
                </div>
                <div className="pt-4 border-t border-dashed flex justify-between items-baseline">
                   <span className="text-sm font-black uppercase tracking-widest text-gray-900">Net Payable</span>
