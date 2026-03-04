@@ -1,9 +1,10 @@
+
 "use client"
 
 import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Plus, Minus, Ticket, Check, X, Sparkles, PartyPopper, ChevronRight } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Plus, Minus, Ticket, Check, X, PartyPopper, ChevronRight, FileWarning, Camera } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -41,6 +42,8 @@ export default function CartPage() {
 
   const finalPayable = Math.max(0, totalPrice + feeTotal - promoDiscount);
   const totalSavings = (totalMrp - totalPrice) + promoDiscount;
+
+  const requiresPrescription = cart.some(item => item.prescriptionRequired);
 
   if (cart.length === 0) {
     return (
@@ -85,6 +88,23 @@ export default function CartPage() {
           </div>
         </div>
 
+        {requiresPrescription && (
+          <div className="bg-orange-50 border-2 border-orange-100 p-6 rounded-[40px] mb-8 flex items-center gap-6 animate-in slide-in-from-top-4 shadow-lg shadow-orange-100/50">
+            <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shrink-0">
+               <FileWarning className="w-6 h-6" />
+            </div>
+            <div className="flex-1">
+              <p className="text-orange-900 font-black text-sm uppercase tracking-tight">Prescription Required</p>
+              <p className="text-[9px] font-bold text-orange-600/70 uppercase tracking-widest mt-1">Some items in your cart require a valid clinical prescription.</p>
+            </div>
+            <Link href="/prescription">
+               <Button variant="outline" className="rounded-full border-orange-200 text-orange-600 hover:bg-orange-100 font-black uppercase text-[10px] tracking-widest px-6 h-12 gap-2">
+                 <Camera className="w-4 h-4" /> Upload Now
+               </Button>
+            </Link>
+          </div>
+        )}
+
         {appliedPromo && (
           <div className="bg-green-50 border-2 border-green-100 p-6 rounded-[40px] mb-8 flex items-center justify-center gap-4 animate-in zoom-in duration-500 shadow-xl shadow-green-100/50">
             <PartyPopper className="w-8 h-8 text-green-600 animate-bounce" />
@@ -108,7 +128,12 @@ export default function CartPage() {
                   
                   <div className="flex-1 min-w-0 py-2">
                     <Link href={`/product/${item.id}`} className="group/title">
-                      <h3 className="font-black text-gray-900 truncate group-hover/title:text-primary transition-colors text-sm uppercase tracking-tight mb-1">{item.name}</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-black text-gray-900 truncate group-hover/title:text-primary transition-colors text-sm uppercase tracking-tight">{item.name}</h3>
+                        {item.prescriptionRequired && (
+                          <Badge variant="outline" className="text-[7px] font-black uppercase text-orange-500 border-orange-200">RX Required</Badge>
+                        )}
+                      </div>
                     </Link>
                     <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate mb-4">{item.saltComposition}</p>
                     
@@ -292,12 +317,21 @@ export default function CartPage() {
                 </div>
               </div>
               
-              <Link href="/checkout">
-                 <Button className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all gap-4 bg-primary text-white">
-                   Checkout Now
-                   <ArrowRight className="w-5 h-5" />
-                 </Button>
-              </Link>
+              {requiresPrescription ? (
+                <Link href="/prescription">
+                  <Button className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-orange/40 hover:scale-[1.02] active:scale-95 transition-all gap-4 bg-orange-600 text-white">
+                    Upload Prescription
+                    <Camera className="w-5 h-5" />
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/checkout">
+                   <Button className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all gap-4 bg-primary text-white">
+                     Checkout Now
+                     <ArrowRight className="w-5 h-5" />
+                   </Button>
+                </Link>
+              )}
               
               <div className="mt-10 pt-8 border-t border-gray-50 flex items-center gap-4">
                  <div className="w-12 h-12 bg-accent/5 rounded-[20px] flex items-center justify-center shrink-0 border border-accent/10">

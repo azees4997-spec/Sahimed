@@ -18,6 +18,7 @@ export interface Product {
   category: string;
   imageUrl: string;
   isGeneric?: boolean;
+  prescriptionRequired?: boolean;
   packSize?: string;
   // Clinical Details
   description?: string;

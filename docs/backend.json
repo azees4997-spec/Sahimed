@@ -35,6 +35,7 @@
         "category": { "type": "string" },
         "imageUrl": { "type": "string", "format": "uri" },
         "isGeneric": { "type": "boolean" },
+        "prescriptionRequired": { "type": "boolean", "default": false },
         "packSize": { "type": "string" },
         "description": { "type": "string" },
         "howToUse": { "type": "string" },

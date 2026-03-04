@@ -41,7 +41,11 @@ import {
   ShoppingCart,
   PlusCircle,
   MinusCircle,
-  Tag
+  Tag,
+  Truck,
+  MapPin,
+  Clock,
+  ChevronDown
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -81,6 +85,8 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'promocodes' | 'fees' | 'customers' | 'stockAlerts' | 'itemMaster' | 'moleculeMaster';
+
+const ORDER_STATUSES = ['Pending', 'Confirmed', 'Processing', 'Shipping', 'Delivered', 'Cancelled'];
 
 export default function AdminConsole() {
   const { user, isUserLoading } = useUser();
@@ -329,6 +335,192 @@ function SectionHeader({ title, subtitle, onBack, children }: { title: string, s
   );
 }
 
+// --- FULFILLMENT TAB ---
+
+function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
+  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, [db, isVerified]);
+  const { data: orders, isLoading } = useCollection(ordersQuery);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isShippingDialogOpen, setIsShippingDialogOpen] = useState(false);
+  const [shippingData, setShippingData] = useState({ carrier: '', trackingId: '' });
+  const { toast } = useToast();
+
+  const handleStatusUpdate = (order: any, newStatus: string) => {
+    if (newStatus === 'Shipping') {
+      setSelectedOrder(order);
+      setShippingData({ carrier: order.carrier || '', trackingId: order.trackingId || '' });
+      setIsShippingDialogOpen(true);
+      return;
+    }
+
+    const orderRef = doc(db, 'userProfiles', order.userId, 'orders', order.id);
+    updateDocumentNonBlocking(orderRef, { status: newStatus });
+    toast({ title: "Status Updated", description: `Order status set to ${newStatus}.` });
+  };
+
+  const finalizeShipping = () => {
+    if (!selectedOrder) return;
+    const orderRef = doc(db, 'userProfiles', selectedOrder.userId, 'orders', selectedOrder.id);
+    updateDocumentNonBlocking(orderRef, { 
+      status: 'Shipping',
+      carrier: shippingData.carrier,
+      trackingId: shippingData.trackingId
+    });
+    setIsShippingDialogOpen(false);
+    toast({ title: "Shipping Details Saved", description: "Logistics data has been linked." });
+  };
+
+  return (
+    <div className="space-y-8 animate-in slide-in-from-bottom-2">
+      <SectionHeader title="Fulfillment Hub" subtitle="Active order processing" onBack={onBack} />
+      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[1000px]">
+            <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
+              <tr>
+                <th className="px-8 py-6">Order ID</th>
+                <th className="px-8 py-6">Customer / Contact</th>
+                <th className="px-8 py-6">Delivery Address</th>
+                <th className="px-8 py-6">Amount</th>
+                <th className="px-8 py-6">Status</th>
+                <th className="px-8 py-6 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {isLoading ? (
+                <tr><td colSpan={6} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
+              ) : orders?.length === 0 ? (
+                <tr><td colSpan={6} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No orders found</td></tr>
+              ) : orders?.map(order => (
+                <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
+                  <td className="px-8 py-6 font-black text-xs uppercase">#{order.id.substring(0,8)}</td>
+                  <td className="px-8 py-6">
+                    <div className="flex flex-col">
+                      <span className="font-bold text-xs">{order.patientName || 'Patient'}</span>
+                      <span className="text-[10px] text-gray-400 font-bold">{order.phoneNumber}</span>
+                    </div>
+                  </td>
+                  <td className="px-8 py-6 max-w-[250px]">
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-[10px] font-bold text-gray-600 line-clamp-1">{order.shippingDetails?.street}</p>
+                      <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">{order.shippingDetails?.pincode} • {order.shippingDetails?.landmark || 'No Landmark'}</p>
+                    </div>
+                  </td>
+                  <td className="px-8 py-6 font-black text-accent text-sm">₹{order.totalAmount}</td>
+                  <td className="px-8 py-6">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="h-8 rounded-full px-4 text-[9px] font-black uppercase tracking-widest border-2 gap-2">
+                          {order.status} <ChevronDown className="w-3 h-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="rounded-2xl border-none shadow-2xl p-2 min-w-[140px]">
+                        {ORDER_STATUSES.map(status => (
+                          <DropdownMenuItem key={status} onClick={() => handleStatusUpdate(order, status)} className="rounded-xl font-bold text-[10px] uppercase h-10 px-4">
+                            {status}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
+                  <td className="px-8 py-6 text-right">
+                    <div className="flex justify-end gap-2">
+                       <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)} className="h-9 w-9 rounded-xl text-primary"><Eye className="w-4 h-4" /></Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Dialog open={!!selectedOrder && !isShippingDialogOpen} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+        <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden shadow-3xl print:shadow-none">
+          <div className="bg-primary p-8 text-white flex justify-between items-center print:bg-white print:text-black">
+            <div><DialogTitle className="text-2xl font-black uppercase">Order Details</DialogTitle><p className="text-[9px] opacity-60 uppercase">ID: {selectedOrder?.id}</p></div>
+            <Button variant="outline" size="icon" onClick={() => window.print()} className="rounded-xl bg-white/10 text-white print:hidden"><Printer className="w-4 h-4" /></Button>
+          </div>
+          <div className="p-8 space-y-8 overflow-y-auto max-h-[70vh] scrollbar-hide">
+            
+            <div className="grid grid-cols-2 gap-8">
+               <div className="space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Patient Details</h4>
+                  <div className="space-y-1">
+                     <p className="font-black text-sm">{selectedOrder?.patientName}</p>
+                     <p className="text-[10px] font-bold text-gray-500">{selectedOrder?.phoneNumber}</p>
+                  </div>
+               </div>
+               <div className="space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Delivery Address</h4>
+                  <div className="space-y-1">
+                     <p className="font-bold text-[11px] leading-relaxed">{selectedOrder?.shippingDetails?.street}</p>
+                     <p className="text-[10px] font-black text-primary uppercase tracking-widest">PIN: {selectedOrder?.shippingDetails?.pincode}</p>
+                     {selectedOrder?.shippingDetails?.landmark && <p className="text-[10px] text-gray-400 font-bold uppercase">Lmk: {selectedOrder?.shippingDetails?.landmark}</p>}
+                  </div>
+               </div>
+            </div>
+
+            <div className="space-y-4">
+               <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Clinical Order Items</h4>
+               <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
+                  {selectedOrder?.items?.map((item: any, i: number) => (
+                    <div key={i} className="flex justify-between items-center">
+                       <div className="flex items-center gap-3">
+                          <img src={item.imageUrl} className="w-10 h-10 object-contain bg-white rounded-lg p-1 border" alt="" />
+                          <div className="text-left">
+                            <p className="text-[11px] font-black uppercase">{item.name}</p>
+                            <p className="text-[9px] text-gray-400 font-bold uppercase">Qty: {item.quantity}</p>
+                          </div>
+                       </div>
+                       <span className="font-black text-xs text-gray-900">₹{item.unitPrice * item.quantity}</span>
+                    </div>
+                  ))}
+               </div>
+            </div>
+
+            <div className="flex justify-between items-baseline pt-4 border-t">
+              <span className="font-black text-sm uppercase text-gray-400 tracking-widest">Total Payable</span>
+              <span className="text-3xl font-black text-accent">₹{selectedOrder?.totalAmount}</span>
+            </div>
+            
+            {selectedOrder?.carrier && (
+               <div className="bg-blue-50/50 p-6 rounded-[32px] border border-blue-100/50 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-600 shadow-sm"><Truck className="w-5 h-5" /></div>
+                     <div className="text-left">
+                        <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">Shipping via {selectedOrder.carrier}</p>
+                        <p className="text-xs font-black uppercase text-gray-900">{selectedOrder.trackingId}</p>
+                     </div>
+                  </div>
+               </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isShippingDialogOpen} onOpenChange={setIsShippingDialogOpen}>
+        <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden shadow-3xl">
+          <div className="bg-blue-600 p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Logistics Details</DialogTitle></div>
+          <div className="p-8 space-y-6">
+             <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-gray-400">Logistics Partner Name</Label>
+                <Input value={shippingData.carrier} onChange={e => setShippingData({...shippingData, carrier: e.target.value})} placeholder="e.g. BlueDart, Delhivery" className="rounded-2xl h-14 bg-gray-50 border-none font-bold shadow-inner px-6" />
+             </div>
+             <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-gray-400">AWB / Tracking ID</Label>
+                <Input value={shippingData.trackingId} onChange={e => setShippingData({...shippingData, trackingId: e.target.value})} placeholder="Tracking number" className="rounded-2xl h-14 bg-gray-50 border-none font-bold shadow-inner px-6" />
+             </div>
+             <Button onClick={finalizeShipping} className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-blue-600 text-white shadow-xl shadow-blue-200">
+               Confirm Shipping
+             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 // --- ITEM MASTER TAB ---
 
 function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
@@ -347,8 +539,8 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 
   const downloadCSV = () => {
     if (!medicines) return;
-    const headers = ['ID', 'Name', 'SKU', 'Manufacturer', 'Price', 'MRP', 'Stock', 'Category', 'isGeneric', 'Molecule ID'];
-    const rows = medicines.map(m => [m.id, m.name, m.sku, m.manufacturer, m.price, m.mrp, m.availableQuantity, m.category, m.isGeneric, m.moleculeId]);
+    const headers = ['ID', 'Name', 'SKU', 'Manufacturer', 'Price', 'MRP', 'Stock', 'Category', 'isGeneric', 'PrescriptionRequired', 'Molecule ID'];
+    const rows = medicines.map(m => [m.id, m.name, m.sku, m.manufacturer, m.price, m.mrp, m.availableQuantity, m.category, m.isGeneric, m.prescriptionRequired, m.moleculeId]);
     const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(r => r.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -408,7 +600,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
                 <th className="px-10 py-8">Product</th>
                 <th className="px-10 py-8">Pricing</th>
                 <th className="px-10 py-8">Stock</th>
-                <th className="px-10 py-8">Type</th>
+                <th className="px-10 py-8">Clinical Details</th>
                 <th className="px-10 py-8 text-right">Actions</th>
               </tr>
             </thead>
@@ -440,9 +632,14 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
                      <span className="text-[10px] font-black text-gray-700 uppercase">{med.availableQuantity} PCS</span>
                   </td>
                   <td className="px-10 py-8">
-                     <Badge variant="outline" className={cn("text-[8px] font-black uppercase px-3 py-1.5 rounded-full border-2", med.isGeneric ? 'border-accent text-accent' : 'border-primary text-primary')}>
-                        {med.isGeneric ? 'Generic' : 'Branded'}
-                     </Badge>
+                     <div className="flex flex-col gap-1.5">
+                       <Badge variant="outline" className={cn("w-fit text-[8px] font-black uppercase px-3 py-1 rounded-full border-2", med.isGeneric ? 'border-accent text-accent' : 'border-primary text-primary')}>
+                          {med.isGeneric ? 'Generic' : 'Branded'}
+                       </Badge>
+                       {med.prescriptionRequired && (
+                         <Badge variant="outline" className="w-fit text-[8px] font-black uppercase px-3 py-1 rounded-full border-2 border-orange-200 text-orange-600">RX Required</Badge>
+                       )}
+                     </div>
                   </td>
                   <td className="px-10 py-8 text-right">
                     <div className="flex justify-end gap-2">
@@ -474,6 +671,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     category: initialData?.category || '',
     imageUrl: initialData?.imageUrl || '',
     isGeneric: initialData?.isGeneric || false,
+    prescriptionRequired: initialData?.prescriptionRequired || false,
     moleculeId: initialData?.moleculeId || ''
   });
 
@@ -487,10 +685,10 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-2 gap-6">
-        <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Product Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+        <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Product Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold shadow-inner px-6" /></div>
         <div className="space-y-2">
           <Label className="text-[10px] font-black uppercase text-gray-400">Molecule Mapping</Label>
-          <select value={form.moleculeId} onChange={e => setForm({...form, moleculeId: e.target.value})} className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none">
+          <select value={form.moleculeId} onChange={e => setForm({...form, moleculeId: e.target.value})} className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none shadow-inner">
              <option value="">Select Molecule</option>
              {molecules?.map(m => (
                <option key={m.id} value={m.id}>{m.molecule} ({m.form})</option>
@@ -499,15 +697,22 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
         </div>
         <div className="space-y-2">
            <Label className="text-[10px] font-black uppercase text-gray-400">Type</Label>
-           <select value={form.isGeneric ? 'true' : 'false'} onChange={e => setForm({...form, isGeneric: e.target.value === 'true'})} className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none">
+           <select value={form.isGeneric ? 'true' : 'false'} onChange={e => setForm({...form, isGeneric: e.target.value === 'true'})} className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none shadow-inner">
              <option value="false">Branded</option>
              <option value="true">Generic</option>
            </select>
         </div>
-        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">SKU</Label><Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Price</Label><Input type="number" value={form.price} onChange={e => setForm({...form, price: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+        <div className="space-y-2">
+           <Label className="text-[10px] font-black uppercase text-gray-400">Prescription Control</Label>
+           <select value={form.prescriptionRequired ? 'true' : 'false'} onChange={e => setForm({...form, prescriptionRequired: e.target.value === 'true'})} className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none shadow-inner">
+             <option value="false">OTC (No RX Required)</option>
+             <option value="true">Prescription Required</option>
+           </select>
+        </div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">SKU</Label><Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold shadow-inner px-6" /></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Price</Label><Input type="number" value={form.price} onChange={e => setForm({...form, price: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold shadow-inner px-6" /></div>
       </div>
-      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Product</Button>
+      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white shadow-xl shadow-primary/20">Save Product</Button>
     </form>
   );
 }
@@ -658,71 +863,6 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
       </div>
       <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Formula</Button>
     </form>
-  );
-}
-
-// --- FULFILLMENT TAB ---
-
-function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, [db, isVerified]);
-  const { data: orders, isLoading } = useCollection(ordersQuery);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
-
-  return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Fulfillment Hub" subtitle="Active order processing" onBack={onBack} />
-      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[800px]">
-            <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
-              <tr>
-                <th className="px-10 py-8">Order ID</th>
-                <th className="px-10 py-8">Amount</th>
-                <th className="px-10 py-8">Status</th>
-                <th className="px-10 py-8 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
-              ) : orders?.map(order => (
-                <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="px-10 py-8 font-black text-sm uppercase">#{order.id.substring(0,8)}</td>
-                  <td className="px-10 py-8 font-black text-accent">₹{order.totalAmount}</td>
-                  <td className="px-10 py-8"><Badge variant="outline" className="text-[9px] font-black uppercase px-4 py-1.5 rounded-full">{order.status}</Badge></td>
-                  <td className="px-10 py-8 text-right">
-                    <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)} className="h-10 w-10 rounded-xl text-primary"><Eye className="w-4 h-4" /></Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden shadow-3xl print:shadow-none">
-          <div className="bg-primary p-8 text-white flex justify-between items-center print:bg-white print:text-black">
-            <div><DialogTitle className="text-2xl font-black uppercase">Order Invoice</DialogTitle><p className="text-[9px] opacity-60 uppercase">ID: {selectedOrder?.id}</p></div>
-            <Button variant="outline" size="icon" onClick={() => window.print()} className="rounded-xl bg-white/10 text-white print:hidden"><Printer className="w-4 h-4" /></Button>
-          </div>
-          <div className="p-8 space-y-6">
-            <div className="bg-gray-50 p-6 rounded-3xl space-y-3">
-              {selectedOrder?.items?.map((item: any, i: number) => (
-                <div key={i} className="flex justify-between items-center text-xs font-bold">
-                  <span>{item.name} x {item.quantity}</span>
-                  <span>₹{item.unitPrice * item.quantity}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between items-baseline pt-4 border-t">
-              <span className="font-black text-sm uppercase">Total Payable</span>
-              <span className="text-3xl font-black text-accent">₹{selectedOrder?.totalAmount}</span>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
   );
 }
 

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { MapPin, ShieldCheck, Loader2, Phone, User, Home, Building2, Hash, ArrowRight, LocateFixed } from 'lucide-react';
+import { MapPin, ShieldCheck, Loader2, Phone, User, Home, Building2, Hash, ArrowRight, LocateFixed, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
@@ -31,6 +31,8 @@ export default function CheckoutPage() {
     pincode: ''
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   useEffect(() => {
     if (user) {
       setOrderInfo(prev => ({
@@ -40,6 +42,16 @@ export default function CheckoutPage() {
       }));
     }
   }, [user]);
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!orderInfo.patientName.trim()) newErrors.patientName = "Name is required";
+    if (!orderInfo.phoneNumber.trim()) newErrors.phoneNumber = "Phone is required";
+    if (!orderInfo.street.trim()) newErrors.street = "Street address is required";
+    if (!orderInfo.pincode.trim() || orderInfo.pincode.length !== 6) newErrors.pincode = "Valid 6-digit pincode is required";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleLocateMe = () => {
     setIsLocating(true);
@@ -84,8 +96,8 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!orderInfo.street || !orderInfo.pincode || !orderInfo.phoneNumber || !orderInfo.patientName) {
-      toast({ variant: "destructive", title: "Incomplete Address", description: "Please provide essential delivery details." });
+    if (!validate()) {
+      toast({ variant: "destructive", title: "Incomplete Address", description: "Please fill all mandatory delivery fields." });
       return;
     }
 
@@ -166,23 +178,26 @@ export default function CheckoutPage() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 ml-1">
                       <User className="w-3.5 h-3.5 text-primary" />
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Patient Full Name</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Patient Full Name <span className="text-red-500">*</span></Label>
                     </div>
-                    <Input value={orderInfo.patientName} onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})} placeholder="Full Name" className="h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6" />
+                    <Input value={orderInfo.patientName} onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})} placeholder="Full Name" className={cn("h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.patientName && "ring-2 ring-red-500")} />
+                    {errors.patientName && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.patientName}</p>}
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 ml-1">
                       <Phone className="w-3.5 h-3.5 text-primary" />
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Number</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Number <span className="text-red-500">*</span></Label>
                     </div>
-                    <Input value={orderInfo.phoneNumber} onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value})} placeholder="Mobile Number" className="h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6" />
+                    <Input value={orderInfo.phoneNumber} onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value})} placeholder="Mobile Number" className={cn("h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.phoneNumber && "ring-2 ring-red-500")} />
+                    {errors.phoneNumber && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.phoneNumber}</p>}
                   </div>
                   <div className="md:col-span-2 space-y-3">
                     <div className="flex items-center gap-2 ml-1">
                       <Home className="w-3.5 h-3.5 text-primary" />
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Complete Street Address</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Complete Street Address <span className="text-red-500">*</span></Label>
                     </div>
-                    <Input value={orderInfo.street} onChange={e => setOrderInfo({...orderInfo, street: e.target.value})} placeholder="House No, Street Name, Area" className="h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6" />
+                    <Input value={orderInfo.street} onChange={e => setOrderInfo({...orderInfo, street: e.target.value})} placeholder="House No, Street Name, Area" className={cn("h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.street && "ring-2 ring-red-500")} />
+                    {errors.street && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.street}</p>}
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 ml-1">
@@ -194,9 +209,10 @@ export default function CheckoutPage() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 ml-1">
                       <Hash className="w-3.5 h-3.5 text-primary" />
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pincode</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pincode <span className="text-red-500">*</span></Label>
                     </div>
-                    <Input value={orderInfo.pincode} onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value})} placeholder="6-digit PIN" maxLength={6} className="h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6" />
+                    <Input value={orderInfo.pincode} onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value})} placeholder="6-digit PIN" maxLength={6} className={cn("h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.pincode && "ring-2 ring-red-500")} />
+                    {errors.pincode && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.pincode}</p>}
                   </div>
                 </div>
               </CardContent>
