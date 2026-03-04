@@ -39,7 +39,9 @@ import {
   X,
   Phone,
   ShoppingCart,
-  PlusCircle
+  PlusCircle,
+  MinusCircle,
+  Tag
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -72,12 +74,11 @@ import {
   deleteDocumentNonBlocking,
   addDocumentNonBlocking
 } from '@/firebase';
-import { doc, collection, query, collectionGroup, getDoc, serverTimestamp, orderBy, where } from 'firebase/firestore';
+import { doc, collection, query, collectionGroup, getDoc, getDocs, serverTimestamp, orderBy, where } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { prescriptionAnalysisAndPreFill } from '@/ai/flows/prescription-analysis-and-pre-fill-flow';
 
 type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'promocodes' | 'fees' | 'customers' | 'stockAlerts' | 'itemMaster' | 'moleculeMaster';
 
@@ -779,11 +780,11 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
 }
 
 function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any, onClose: () => void }) {
-  const [analyzing, setAnalyzing] = useState(false);
-  const [results, setResults] = useState<any[]>(enquiry.digitizedData || []);
-  const [summary, setSummary] = useState(enquiry.analysisSummary || '');
   const [searchQueryStr, setSearchQueryStr] = useState('');
   const [orderItems, setOrderItems] = useState<any[]>([]);
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [activePromo, setActivePromo] = useState<any>(null);
+  const [validatingPromo, setValidatingPromo] = useState(false);
   const { toast } = useToast();
 
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
@@ -793,24 +794,6 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
     m.name.toLowerCase().includes(searchQueryStr.toLowerCase()) || 
     m.saltComposition?.toLowerCase().includes(searchQueryStr.toLowerCase())
   ).slice(0, 5) : [];
-
-  const handleAIAnalysis = async () => {
-    setAnalyzing(true);
-    try {
-      const output = await prescriptionAnalysisAndPreFill({ prescriptionImageUri: enquiry.imageUrl });
-      if (output.isLegible) {
-        setResults(output.medications);
-        setSummary(output.analysisSummary);
-        toast({ title: "Analysis Complete", description: "Medications extracted successfully." });
-      } else {
-        toast({ variant: "destructive", title: "Legibility Issue", description: output.analysisSummary });
-      }
-    } catch (err) {
-      toast({ variant: "destructive", title: "AI Error", description: "Failed to process prescription image." });
-    } finally {
-      setAnalyzing(false);
-    }
-  };
 
   const addToDraftOrder = (med: any) => {
     const existing = orderItems.find(item => item.id === med.id);
@@ -823,6 +806,48 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
     toast({ title: "Item Added", description: `${med.name} added to draft order.` });
   };
 
+  const updateDraftQuantity = (id: string, delta: number) => {
+    setOrderItems(prev => prev.map(item => {
+      if (item.id === id) {
+        const newQty = Math.max(1, item.quantity + delta);
+        return { ...item, quantity: newQty };
+      }
+      return item;
+    }));
+  };
+
+  const handleApplyPromo = async () => {
+    if (!promoCodeInput.trim()) return;
+    setValidatingPromo(true);
+    try {
+      const q = query(collection(db, 'promocodes'), where('code', '==', promoCodeInput.trim().toUpperCase()), where('isActive', '==', true));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        const promo = { ...snap.docs[0].data(), id: snap.docs[0].id };
+        setActivePromo(promo);
+        toast({ title: "Promo Applied", description: `Voucher ${promo.code} is active.` });
+      } else {
+        setActivePromo(null);
+        toast({ variant: 'destructive', title: 'Invalid Code', description: 'Promo code not found or inactive.' });
+      }
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not validate promo code.' });
+    } finally {
+      setValidatingPromo(false);
+    }
+  };
+
+  const calculateSubtotal = () => orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  
+  const calculateDiscount = () => {
+    const subtotal = calculateSubtotal();
+    if (!activePromo || subtotal < activePromo.minOrderValue) return 0;
+    if (activePromo.discountType === 'fixed') return activePromo.discountValue;
+    return (subtotal * (activePromo.discountValue / 100));
+  };
+
+  const estimatedTotal = Math.max(0, calculateSubtotal() - calculateDiscount());
+
   const handleCompleteOrder = () => {
     if (!enquiry.userId) {
        toast({ variant: 'destructive', title: 'Error', description: 'User identifier missing.' });
@@ -833,12 +858,13 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
        return;
     }
 
-    const totalAmount = orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-
     const orderData = {
       userId: enquiry.userId,
       orderDate: serverTimestamp(),
-      totalAmount: totalAmount,
+      totalAmount: estimatedTotal,
+      subtotal: calculateSubtotal(),
+      discountAmount: calculateDiscount(),
+      promoCode: activePromo?.code || null,
       status: 'Created by Admin',
       paymentStatus: 'Pending',
       patientName: enquiry.patientName || 'Patient',
@@ -856,8 +882,6 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
     addDocumentNonBlocking(orderRef, orderData);
 
     updateDocumentNonBlocking(doc(db, 'userProfiles', enquiry.userId, 'prescriptions', enquiry.id), {
-      digitizedData: results,
-      analysisSummary: summary,
       status: 'Digitized',
       digitizedAt: serverTimestamp()
     });
@@ -871,18 +895,15 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
       <DialogContent className="max-w-7xl rounded-[48px] border-none p-0 overflow-hidden shadow-3xl h-[90vh]">
         <div className="bg-primary p-8 text-white flex justify-between items-center shrink-0">
           <div className="flex items-center gap-4">
-            <div className="bg-white/10 p-2 rounded-xl"><Sparkles className="w-6 h-6" /></div>
+            <div className="bg-white/10 p-2 rounded-xl"><ShoppingCart className="w-6 h-6" /></div>
             <div>
               <DialogTitle className="text-2xl font-black uppercase tracking-tight">Digitization & Order Terminal</DialogTitle>
               <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Patient: {enquiry.patientName || 'Self'} • {enquiry.phoneNumber || 'N/A'}</p>
             </div>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" onClick={handleAIAnalysis} disabled={analyzing} className="rounded-full h-12 px-6 font-black text-[10px] uppercase bg-white/10 text-white border-white/20 hover:bg-white/20 transition-all gap-2">
-              {analyzing ? <Loader2 className="animate-spin w-4 h-4" /> : <Wand2 className="w-4 h-4" />} AI Scan
-            </Button>
-            <Button onClick={handleCompleteOrder} disabled={orderItems.length === 0} className="rounded-full h-12 px-6 font-black text-[10px] uppercase bg-white text-primary hover:bg-white/90 shadow-xl transition-all gap-2">
-              <ShoppingCart className="w-4 h-4" /> Complete Order
+            <Button onClick={handleCompleteOrder} disabled={orderItems.length === 0} className="rounded-full h-12 px-8 font-black text-[10px] uppercase bg-white text-primary hover:bg-white/90 shadow-xl transition-all gap-2">
+              <Check className="w-4 h-4" /> Complete Order
             </Button>
             <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl bg-white/5 text-white hover:bg-white/10 ml-2">
                <X className="w-5 h-5" />
@@ -893,7 +914,7 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
           <div className="bg-gray-100 p-8 overflow-auto border-r flex items-start justify-center">
              <img src={enquiry.imageUrl} className="max-w-full rounded-3xl shadow-2xl border-4 border-white" alt="Prescription" />
           </div>
-          <div className="p-8 space-y-8 overflow-auto bg-white scrollbar-hide">
+          <div className="p-8 space-y-8 overflow-auto bg-white scrollbar-hide pb-24">
             
             <div className="space-y-4">
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 border-b pb-4">Order on Behalf (Product Search)</h3>
@@ -929,13 +950,17 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
             </div>
 
             {orderItems.length > 0 && (
-              <div className="space-y-4 animate-in slide-in-from-top-4">
+              <div className="space-y-6 animate-in slide-in-from-top-4">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Draft Order Items</h3>
                 <div className="space-y-3">
                   {orderItems.map((item, i) => (
                     <div key={i} className="bg-gray-50 p-4 rounded-2xl flex items-center justify-between border border-gray-100">
-                      <div className="flex items-center gap-3">
-                         <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black">{item.quantity}x</Badge>
+                      <div className="flex items-center gap-4">
+                         <div className="flex items-center bg-white rounded-xl border p-1 shadow-sm">
+                            <button onClick={() => updateDraftQuantity(item.id, -1)} className="p-1 hover:text-primary transition-colors"><MinusCircle className="w-5 h-5" /></button>
+                            <span className="w-8 text-center font-black text-xs">{item.quantity}</span>
+                            <button onClick={() => updateDraftQuantity(item.id, 1)} className="p-1 hover:text-primary transition-colors"><PlusCircle className="w-5 h-5" /></button>
+                         </div>
                          <div className="text-left">
                            <p className="text-xs font-black uppercase">{item.name}</p>
                            <p className="text-[9px] text-gray-400 font-bold uppercase">₹{item.price} per unit</p>
@@ -949,53 +974,59 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
                       </div>
                     </div>
                   ))}
-                  <div className="pt-4 border-t border-dashed flex justify-between items-baseline">
-                    <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Estimated Total</span>
-                    <span className="text-2xl font-black text-accent">₹{orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0)}</span>
+                </div>
+
+                <div className="bg-gray-50 p-6 rounded-[32px] border border-gray-100 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 relative">
+                       <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                       <Input 
+                        placeholder="APPLY PROMOCODE" 
+                        value={promoCodeInput}
+                        onChange={e => setPromoCodeInput(e.target.value.toUpperCase())}
+                        className="rounded-xl h-12 bg-white border-none font-bold pl-10 shadow-inner text-[10px]"
+                       />
+                    </div>
+                    <Button onClick={handleApplyPromo} disabled={validatingPromo} variant="outline" className="rounded-xl h-12 px-6 font-black uppercase text-[10px] tracking-widest border-2">
+                       {validatingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+                    </Button>
+                  </div>
+
+                  {activePromo && (
+                    <div className="flex justify-between items-center bg-green-50 p-3 rounded-xl border border-green-100 animate-in zoom-in duration-300">
+                       <div className="flex items-center gap-2 text-green-700">
+                          <Ticket className="w-4 h-4" />
+                          <span className="text-[10px] font-black uppercase">{activePromo.code} APPLIED</span>
+                       </div>
+                       <Button variant="ghost" size="sm" onClick={() => setActivePromo(null)} className="h-6 text-green-700 hover:bg-green-100 font-black uppercase text-[8px]">Remove</Button>
+                    </div>
+                  )}
+
+                  <div className="space-y-2 pt-2 border-t border-dashed">
+                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
+                      <span>Subtotal</span>
+                      <span>₹{calculateSubtotal()}</span>
+                    </div>
+                    {activePromo && (
+                      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-accent">
+                        <span>Discount</span>
+                        <span>- ₹{calculateDiscount()}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-baseline pt-4">
+                      <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Estimated Total</span>
+                      <span className="text-3xl font-black text-accent">₹{estimatedTotal}</span>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 border-b pb-4 pt-4">Prescription AI Extraction</h3>
-            <div className="space-y-6">
-              {results.length === 0 ? (
-                <div className="py-20 text-center">
-                   <AlertCircle className="w-10 h-10 text-gray-100 mx-auto mb-4" />
-                   <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No medications extracted yet</p>
-                </div>
-              ) : results.map((med, idx) => (
-                <Card key={idx} className="p-6 rounded-3xl border-none bg-gray-50 space-y-4 shadow-sm">
-                  <div className="space-y-2">
-                     <Label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">Drug Name</Label>
-                     <Input value={med.drugName} onChange={e => { const r = [...results]; r[idx].drugName = e.target.value; setResults(r); }} className="bg-white border-none font-bold h-12 rounded-xl shadow-inner px-4" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">Dosage</Label>
-                      <Input value={med.dosage} onChange={e => { const r = [...results]; r[idx].dosage = e.target.value; setResults(r); }} className="bg-white border-none font-bold h-12 rounded-xl shadow-inner px-4" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">Quantity</Label>
-                      <Input type="number" value={med.quantity} onChange={e => { const r = [...results]; r[idx].quantity = Number(e.target.value); setResults(r); }} className="bg-white border-none font-bold h-12 rounded-xl shadow-inner px-4" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                     <Label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">Instructions</Label>
-                     <Input value={med.instructions} onChange={e => { const r = [...results]; r[idx].instructions = e.target.value; setResults(r); }} className="bg-white border-none font-bold h-12 rounded-xl shadow-inner px-4" />
-                  </div>
-                </Card>
-              ))}
-            </div>
-            
-            {summary && (
-              <div className="bg-primary/5 p-6 rounded-3xl space-y-2 border border-primary/10 mt-10">
-                <div className="flex items-center gap-2 text-primary">
-                   <Sparkles className="w-4 h-4" />
-                   <span className="text-[10px] font-black uppercase tracking-widest">AI Clinical Analysis</span>
-                </div>
-                <p className="text-xs font-bold text-gray-600 leading-relaxed">{summary}</p>
-              </div>
+            {!orderItems.length && (
+               <div className="py-20 text-center space-y-4 opacity-40">
+                  <ShoppingBag className="w-16 h-16 mx-auto text-gray-200" />
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">No items in draft order</p>
+               </div>
             )}
           </div>
         </div>
