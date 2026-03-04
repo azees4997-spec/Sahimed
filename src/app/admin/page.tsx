@@ -642,13 +642,21 @@ function EnquiriesTab({ db, isVerified }: { db: any, isVerified: boolean }) {
 }
 
 function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
-  // Collection group queries without ORDER BY often load more reliably without manual index creation
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
   const { toast } = useToast();
   
   const [shippingOrder, setShippingOrder] = useState<any>(null);
   const [shippingData, setShippingData] = useState({ carrier: '', trackingId: '' });
+
+  const handleShipClick = (order: any) => {
+    // Dynamically set shipping data from the order, or empty for a new entry
+    setShippingData({ 
+      carrier: order.carrier || '', 
+      trackingId: order.trackingId || '' 
+    });
+    setShippingOrder(order);
+  };
 
   const updateStatus = (order: any, status: string, extra = {}) => {
     if (!order.userId) return;
@@ -687,7 +695,7 @@ function FulfillmentTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                 <td className="px-10 py-8 text-right">
                   <div className="flex justify-end gap-2">
                     {order.status !== 'Shipped' && order.status !== 'Delivered' && (
-                      <Button onClick={() => setShippingOrder(order)} size="sm" className="rounded-full h-10 px-6 text-[9px] uppercase font-black bg-blue-600 text-white">Ship</Button>
+                      <Button onClick={() => handleShipClick(order)} size="sm" className="rounded-full h-10 px-6 text-[9px] uppercase font-black bg-blue-600 text-white">Ship</Button>
                     )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
