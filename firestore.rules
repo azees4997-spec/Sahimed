@@ -3,9 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * HEALTHLINK PHARMACY SECURITY RULES - CLINICAL HUB VERSION
+     * SAHIMED PHARMACY SECURITY RULES
      * 
-     * CORE PHILOSOPHY:
      * Enforces strict User-Ownership for sensitive patient data while allowing
      * public access to the clinical catalog, promotional hubs, and fees.
      */
@@ -30,9 +29,6 @@ service cloud.firestore {
 
     // --- COLLECTION RULES ---
 
-    /**
-     * @description Patient profiles and their clinical history.
-     */
     match /userProfiles/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
@@ -67,9 +63,6 @@ service cloud.firestore {
       }
     }
 
-    /**
-     * @description Public clinical catalog, promotions, and fees.
-     */
     match /medicines/{medicineId} {
       allow get, list: if true;
       allow create, update, delete: if isAdmin();
@@ -95,17 +88,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    /**
-     * @description Stock notifications requested by patients.
-     */
     match /stockEnquiries/{enquiryId} {
       allow create: if isSignedIn();
       allow get, list, delete: if isAdmin();
     }
 
-    /**
-     * @description Clinical supervisor registry.
-     */
     match /adminProfiles/{adminId} {
       allow get: if isSignedIn();
       allow list: if isAdmin();

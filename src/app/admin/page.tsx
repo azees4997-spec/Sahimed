@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
@@ -386,7 +385,7 @@ function ItemMasterTab({ db, isVerified }: { db: any, isVerified: boolean }) {
                 <td className="px-10 py-8">
                    <div className="flex flex-col">
                       <span className="font-black text-primary text-lg">₹{med.price}</span>
-                      <span className="text-[9px] text-red-400 line-through font-bold">MRP ₹{med.mrp}</span>
+                      <span className="text-[9px] text-red-600 line-through font-bold">MRP ₹{med.mrp}</span>
                    </div>
                 </td>
                 <td className="px-10 py-8">
