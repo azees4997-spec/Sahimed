@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
@@ -34,7 +35,8 @@ import {
   ListChecks,
   Sparkles,
   Save,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -310,10 +312,10 @@ function SectionHeader({ title, subtitle, onBack, children }: { title: string, s
   return (
     <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full bg-white shadow-sm h-12 w-12"><ChevronRight className="w-5 h-5 rotate-180" /></Button>
+        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full bg-white shadow-sm h-12 w-12 hover:scale-110 transition-transform"><ChevronRight className="w-5 h-5 rotate-180" /></Button>
         <div className="space-y-1">
           <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">{title}</h2>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{subtitle}</p>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{subtitle}</p>
         </div>
       </div>
       <div className="flex flex-wrap justify-center gap-3">
@@ -434,7 +436,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
                      <span className="text-[10px] font-black text-gray-700 uppercase">{med.availableQuantity} PCS</span>
                   </td>
                   <td className="px-10 py-8">
-                     <Badge variant="outline" className={cn("text-[8px] font-black uppercase px-3 py-1 rounded-full border-2", med.isGeneric ? 'border-accent text-accent' : 'border-primary text-primary')}>
+                     <Badge variant="outline" className={cn("text-[8px] font-black uppercase px-3 py-1.5 rounded-full border-2", med.isGeneric ? 'border-accent text-accent' : 'border-primary text-primary')}>
                         {med.isGeneric ? 'Generic' : 'Branded'}
                      </Badge>
                   </td>
@@ -733,14 +735,31 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-8">
         {isLoading ? (
           <div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>
+        ) : enquiries?.length === 0 ? (
+          <div className="col-span-full py-20 text-center">
+             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-8 h-8 text-gray-200" />
+             </div>
+             <p className="font-black text-gray-400 uppercase tracking-widest text-[10px]">No active enquiries</p>
+          </div>
         ) : enquiries?.map(enq => (
-          <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white p-6 group">
-            <div className="aspect-[3/4] rounded-3xl bg-gray-100 mb-6 overflow-hidden border relative">
-              <img src={enq.imageUrl} className="w-full h-full object-cover" alt="Prescription" />
-              <Badge className="absolute top-4 right-4 bg-white/90 text-primary uppercase text-[8px] font-black">{enq.status}</Badge>
+          <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white p-6 group hover:shadow-2xl transition-all duration-500">
+            <div className="aspect-[3/4] rounded-3xl bg-gray-50 mb-6 overflow-hidden border border-gray-100 relative shadow-inner">
+              <img src={enq.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Prescription" />
+              <div className="absolute top-4 right-4">
+                <Badge className={cn(
+                  "uppercase text-[8px] font-black px-3 py-1.5 rounded-full border-none shadow-lg",
+                  enq.status === 'Digitized' ? "bg-accent text-white" : "bg-primary text-white"
+                )}>
+                  {enq.status}
+                </Badge>
+              </div>
             </div>
-            <p className="font-black text-sm uppercase mb-4 truncate">{enq.patientName || 'Patient Request'}</p>
-            <Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white gap-2">
+            <div className="space-y-1 mb-6">
+               <p className="font-black text-sm uppercase text-gray-900 tracking-tight truncate">{enq.patientName || 'Patient Request'}</p>
+               <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{enq.uploadDate?.toDate ? enq.uploadDate.toDate().toLocaleDateString() : 'Just now'}</p>
+            </div>
+            <Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
               <Wand2 className="w-3.5 h-3.5" /> Digitize Request
             </Button>
           </Card>
@@ -765,25 +784,29 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
       if (output.isLegible) {
         setResults(output.medications);
         setSummary(output.analysisSummary);
-        toast({ title: "Analysis Complete", description: "Medications extracted." });
+        toast({ title: "Analysis Complete", description: "Medications extracted successfully." });
       } else {
         toast({ variant: "destructive", title: "Legibility Issue", description: output.analysisSummary });
       }
     } catch (err) {
-      toast({ variant: "destructive", title: "AI Error", description: "Failed to process prescription." });
+      toast({ variant: "destructive", title: "AI Error", description: "Failed to process prescription image." });
     } finally {
       setAnalyzing(false);
     }
   };
 
   const handleSave = () => {
+    if (!enquiry.userId) {
+       toast({ variant: 'destructive', title: 'Error', description: 'User identifier missing.' });
+       return;
+    }
     updateDocumentNonBlocking(doc(db, 'userProfiles', enquiry.userId, 'prescriptions', enquiry.id), {
       digitizedData: results,
       analysisSummary: summary,
       status: 'Digitized',
       digitizedAt: serverTimestamp()
     });
-    toast({ title: "Record Saved" });
+    toast({ title: "Record Saved", description: "Prescription successfully digitized." });
     onClose();
   };
 
@@ -792,32 +815,69 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
       <DialogContent className="max-w-7xl rounded-[48px] border-none p-0 overflow-hidden shadow-3xl h-[90vh]">
         <div className="bg-primary p-8 text-white flex justify-between items-center shrink-0">
           <div className="flex items-center gap-4">
-            <Sparkles className="w-6 h-6" />
-            <DialogTitle className="text-2xl font-black uppercase tracking-tight">Digitization Hub</DialogTitle>
+            <div className="bg-white/10 p-2 rounded-xl"><Sparkles className="w-6 h-6" /></div>
+            <div>
+              <DialogTitle className="text-2xl font-black uppercase tracking-tight">Digitization Terminal</DialogTitle>
+              <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Patient: {enquiry.patientName || 'Self'}</p>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleAIAnalysis} disabled={analyzing} className="rounded-full h-12 px-6 font-black text-[10px] uppercase bg-white/10 text-white border-white/20">
-              {analyzing ? <Loader2 className="animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />} AI Scan
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={handleAIAnalysis} disabled={analyzing} className="rounded-full h-12 px-6 font-black text-[10px] uppercase bg-white/10 text-white border-white/20 hover:bg-white/20 transition-all gap-2">
+              {analyzing ? <Loader2 className="animate-spin w-4 h-4" /> : <Wand2 className="w-4 h-4" />} AI Scan
             </Button>
-            <Button onClick={handleSave} className="rounded-full h-12 px-6 font-black text-[10px] uppercase bg-white text-primary">
-              <Save className="w-4 h-4 mr-2" /> Save Record
+            <Button onClick={handleSave} className="rounded-full h-12 px-6 font-black text-[10px] uppercase bg-white text-primary hover:bg-white/90 shadow-xl transition-all gap-2">
+              <Save className="w-4 h-4" /> Save Record
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl bg-white/5 text-white hover:bg-white/10 ml-2">
+               <X className="w-5 h-5" />
             </Button>
           </div>
         </div>
         <div className="grid grid-cols-2 h-full overflow-hidden">
-          <div className="bg-gray-100 p-8 overflow-auto border-r"><img src={enquiry.imageUrl} className="w-full rounded-3xl shadow-xl" alt="" /></div>
-          <div className="p-8 space-y-6 overflow-auto bg-white">
-            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 border-b pb-4">Extracted Medications</h3>
-            {results.map((med, idx) => (
-              <Card key={idx} className="p-6 rounded-3xl border-none bg-gray-50 space-y-4">
-                <Input value={med.drugName} onChange={e => { const r = [...results]; r[idx].drugName = e.target.value; setResults(r); }} className="bg-white border-none font-bold" />
-                <div className="grid grid-cols-2 gap-4">
-                  <Input value={med.dosage} onChange={e => { const r = [...results]; r[idx].dosage = e.target.value; setResults(r); }} className="bg-white border-none" />
-                  <Input type="number" value={med.quantity} onChange={e => { const r = [...results]; r[idx].quantity = Number(e.target.value); setResults(r); }} className="bg-white border-none" />
+          <div className="bg-gray-100 p-8 overflow-auto border-r flex items-start justify-center">
+             <img src={enquiry.imageUrl} className="max-w-full rounded-3xl shadow-2xl border-4 border-white" alt="Prescription" />
+          </div>
+          <div className="p-8 space-y-8 overflow-auto bg-white scrollbar-hide">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 border-b pb-4">Extracted Medications</h3>
+            <div className="space-y-6">
+              {results.length === 0 ? (
+                <div className="py-20 text-center">
+                   <AlertCircle className="w-10 h-10 text-gray-100 mx-auto mb-4" />
+                   <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No medications extracted yet</p>
                 </div>
-              </Card>
-            ))}
-            {summary && <div className="bg-orange-50 p-6 rounded-3xl text-[10px] font-bold text-orange-900/70 uppercase"><AlertCircle className="w-4 h-4 mb-2" />{summary}</div>}
+              ) : results.map((med, idx) => (
+                <Card key={idx} className="p-6 rounded-3xl border-none bg-gray-50 space-y-4 shadow-sm">
+                  <div className="space-y-2">
+                     <Label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">Drug Name</Label>
+                     <Input value={med.drugName} onChange={e => { const r = [...results]; r[idx].drugName = e.target.value; setResults(r); }} className="bg-white border-none font-bold h-12 rounded-xl shadow-inner px-4" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">Dosage</Label>
+                      <Input value={med.dosage} onChange={e => { const r = [...results]; r[idx].dosage = e.target.value; setResults(r); }} className="bg-white border-none font-bold h-12 rounded-xl shadow-inner px-4" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">Quantity</Label>
+                      <Input type="number" value={med.quantity} onChange={e => { const r = [...results]; r[idx].quantity = Number(e.target.value); setResults(r); }} className="bg-white border-none font-bold h-12 rounded-xl shadow-inner px-4" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                     <Label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">Instructions</Label>
+                     <Input value={med.instructions} onChange={e => { const r = [...results]; r[idx].instructions = e.target.value; setResults(r); }} className="bg-white border-none font-bold h-12 rounded-xl shadow-inner px-4" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+            
+            {summary && (
+              <div className="bg-primary/5 p-6 rounded-3xl space-y-2 border border-primary/10 mt-10">
+                <div className="flex items-center gap-2 text-primary">
+                   <Sparkles className="w-4 h-4" />
+                   <span className="text-[10px] font-black uppercase tracking-widest">AI Clinical Analysis</span>
+                </div>
+                <p className="text-xs font-bold text-gray-600 leading-relaxed">{summary}</p>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
