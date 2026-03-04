@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { use, useState } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,10 +14,8 @@ import {
   Info,
   Plus,
   Minus,
-  BellRing,
   Sparkles,
   ShieldCheck,
-  Maximize2,
   Phone,
   MessageCircle,
   Beer,
@@ -25,48 +23,27 @@ import {
   Milk,
   Car,
   ShieldAlert,
-  Skull,
   Stethoscope,
   ClipboardList,
   CheckCircle2,
-  ArrowRight
+  ArrowRight,
+  Loader2,
+  Dna
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
-import { useFirestore, useDoc, useCollection, useMemoFirebase, useUser, addDocumentNonBlocking } from '@/firebase';
-import { doc, collection, query, where, limit, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useDoc, useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { doc, collection, query, where, limit } from 'firebase/firestore';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
-
-// Custom Detailed Icons for Clinical Authority
-const KidneyIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 21a9 9 0 0 0 9-9c0-5-4-9-9-9s-9 4-9 9a9 9 0 0 0 9 21z" />
-    <path d="M12 7v6" />
-    <circle cx="12" cy="17" r="1" />
-  </svg>
-);
-
-const LiverIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9z" />
-    <path d="M12 8l-4 4 4 4 4-4-4-4z" />
-  </svg>
-);
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const id = resolvedParams?.id;
   
   const db = useFirestore();
-  const { user } = useUser();
   const { toast } = useToast();
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
 
@@ -77,29 +54,30 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   
   const { data: product, isLoading: productLoading } = useDoc(productRef);
 
-  const handleNotify = (p: any) => {
-    if (!user) {
-      toast({ title: "Login Required", description: "Sign in to receive stock notifications." });
-      return;
-    }
-    const enquiryData = { medicineId: p.id, medicineName: p.name, userId: user.uid, timestamp: serverTimestamp() };
-    addDocumentNonBlocking(collection(db, 'stockEnquiries'), enquiryData);
-    toast({ title: "Notification Set", description: "We will notify you when stock returns." });
-  };
+  // Fetch Alternative (Generic if this is Branded, or vice versa)
+  const alternativeQuery = useMemoFirebase(() => {
+    if (!db || !product?.moleculeId) return null;
+    return query(
+      collection(db, 'medicines'), 
+      where('moleculeId', '==', product.moleculeId),
+      where('isGeneric', '==', !product.isGeneric),
+      limit(1)
+    );
+  }, [db, product?.moleculeId, product?.isGeneric]);
+
+  const { data: alternatives } = useCollection(alternativeQuery);
+  const alternative = alternatives?.[0];
 
   if (productLoading || !product) {
     return (
-      <div className="min-h-screen bg-[#F8F8F8]">
+      <div className="min-h-screen bg-[#F0FDF4]/30">
         <Navbar />
-        <main className="max-w-7xl mx-auto px-4 py-8 space-y-12">
+        <main className="max-w-7xl mx-auto px-4 py-8">
            <Skeleton className="h-[600px] rounded-[40px] shimmer" />
         </main>
       </div>
     );
   }
-
-  const brandedQty = getItemQuantity(product?.id || '');
-  const isOutOfStock = (product.availableQuantity || 0) <= 0;
 
   const InteractionCard = ({ icon: Icon, title, description }: { icon: any, title: string, description?: string }) => (
     <div className="bg-white p-5 rounded-3xl border border-gray-100 flex gap-4 transition-all hover:shadow-lg">
@@ -113,139 +91,184 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     </div>
   );
 
+  const BrandedProduct = product.isGeneric ? alternative : product;
+  const GenericProduct = product.isGeneric ? product : alternative;
+
   return (
-    <div className="min-h-screen bg-[#F8F8F8] pb-32 page-transition-wrapper">
+    <div className="min-h-screen bg-[#F0FDF4]/30 pb-32">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex items-center gap-1.5 mb-6 text-[8px] font-black text-gray-400 uppercase tracking-widest px-1">
-          <Link href="/" className="hover:text-primary">Home</Link>
-          <ChevronRight className="w-2 h-2" />
-          <span className="text-primary truncate">{product.name}</span>
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {/* Composition Header */}
+        <div className="text-center mb-10 space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
+           <div className="inline-flex items-center gap-2 bg-primary/10 px-6 py-2 rounded-full border border-primary/20">
+              <Dna className="w-4 h-4 text-primary" />
+              <span className="text-xs font-black text-primary uppercase tracking-widest">Active Composition</span>
+           </div>
+           <h2 className="text-xl sm:text-3xl font-black text-gray-900 uppercase tracking-tighter">
+              {product.saltComposition || "Clinical Formula"}
+           </h2>
+           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em]">Bio-Equivalent Comparison Hub</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-start relative mb-12">
-           <div className="sticky top-24">
-              <div className="bg-white rounded-[40px] p-6 sm:p-12 shadow-2xl border border-gray-100 overflow-hidden">
-                <div className="aspect-square relative w-full max-w-[400px] mx-auto bg-gray-50 rounded-[40px] p-10 border border-gray-100">
-                  <Image src={product.imageUrl} alt={product.name} fill className="object-contain p-10" />
-                </div>
-                <div className="mt-8 grid grid-cols-2 gap-4">
-                  <Button onClick={() => window.open(`https://wa.me/91XXXXXXXXXX?text=Hi, SahiMed! I need ${product.name}`, '_blank')} variant="outline" className="h-14 rounded-3xl border-2 border-green-100 text-green-600 font-black uppercase text-[10px] tracking-widest gap-2 active:scale-95 transition-all"><MessageCircle className="w-4 h-4" /> WhatsApp</Button>
-                  <Button onClick={() => window.location.href = 'tel:+91XXXXXXXXXX'} variant="outline" className="h-14 rounded-3xl border-2 border-blue-100 text-blue-600 font-black uppercase text-[10px] tracking-widest gap-2 active:scale-95 transition-all"><Phone className="w-4 h-4" /> Call Hub</Button>
-                </div>
-              </div>
-           </div>
+        {/* Side-by-Side Comparison Hub */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-8 mb-12 items-stretch">
+          {/* Branded Card */}
+          <div className="flex flex-col h-full">
+            <ComparisonCard 
+              product={BrandedProduct} 
+              type="Branded" 
+              isOutOfStock={(BrandedProduct?.availableQuantity || 0) <= 0}
+              onAdd={() => addToCart(BrandedProduct!)}
+              quantity={getItemQuantity(BrandedProduct?.id || '')}
+              updateQty={(d) => updateQuantity(BrandedProduct!.id, d)}
+            />
+          </div>
 
-           <div className="space-y-8">
-              <div className="space-y-4">
-                 <Badge className="bg-accent text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">Quality Verified</Badge>
-                 <h1 className="text-3xl sm:text-5xl font-black text-gray-900 uppercase tracking-tighter leading-none">{product.name}</h1>
-                 <p className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-widest">{product.saltComposition}</p>
-              </div>
+          {/* Generic Card */}
+          <div className="flex flex-col h-full">
+            <ComparisonCard 
+              product={GenericProduct} 
+              type="Generic" 
+              isOutOfStock={(GenericProduct?.availableQuantity || 0) <= 0}
+              onAdd={() => addToCart(GenericProduct!)}
+              quantity={getItemQuantity(GenericProduct?.id || '')}
+              updateQty={(d) => updateQuantity(GenericProduct!.id, d)}
+            />
+          </div>
+        </div>
 
-              {/* Side-by-Side Mobile Optimized Comparison */}
-              <div className="grid grid-cols-2 gap-3 sm:gap-6">
-                <Card className="rounded-[32px] border-2 border-primary/10 shadow-sm p-5 flex flex-col justify-between">
+        {/* Smart Info Section */}
+        <section className="bg-white rounded-[40px] p-6 sm:p-12 shadow-sm border border-gray-100 animate-in slide-in-from-bottom-6 duration-700">
+          <Tabs defaultValue="clinical" className="w-full">
+            <TabsList className="bg-gray-50 p-1.5 rounded-2xl w-full grid grid-cols-3 h-14 mb-10">
+              <TabsTrigger value="clinical" className="rounded-xl font-black text-[9px] sm:text-[11px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Clinical Data</TabsTrigger>
+              <TabsTrigger value="safety" className="rounded-xl font-black text-[9px] sm:text-[11px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Safety Advice</TabsTrigger>
+              <TabsTrigger value="interactions" className="rounded-xl font-black text-[9px] sm:text-[11px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Interactions</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="clinical" className="space-y-8">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div className="space-y-4">
+                     <h3 className="flex items-center gap-3 text-lg font-black uppercase tracking-tight text-gray-900">
+                        <ClipboardList className="w-5 h-5 text-primary" /> 
+                        Primary Treatment
+                     </h3>
+                     <p className="text-sm font-bold text-gray-600 leading-relaxed uppercase">{product.treatment || "Standard clinical protocol."}</p>
+                  </div>
+                  <div className="space-y-4">
+                     <h3 className="flex items-center gap-3 text-lg font-black uppercase tracking-tight text-gray-900">
+                        <Info className="w-5 h-5 text-primary" /> 
+                        Pharmacology
+                     </h3>
+                     <p className="text-sm font-bold text-gray-600 leading-relaxed uppercase">{product.description || "Bio-available active ingredients."}</p>
+                  </div>
+               </div>
+            </TabsContent>
+
+            <TabsContent value="safety" className="space-y-6">
+               <div className="bg-orange-50/50 p-8 rounded-[32px] border border-orange-100 flex gap-6">
+                  <ShieldAlert className="w-8 h-8 text-orange-600 shrink-0" />
                   <div>
-                    <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest mb-3 text-primary border-primary/20">Branded Price</Badge>
-                    <p className="text-2xl font-black text-gray-900">₹{product.price}</p>
-                    <p className="text-[9px] text-red-500 line-through font-bold">MRP ₹{product.mrp || product.price + 50}</p>
+                    <h4 className="text-xs font-black uppercase text-orange-600 mb-2">Patient Safety Manual</h4>
+                    <p className="text-sm font-bold text-orange-900/70 leading-relaxed uppercase">{product.safetyAdvice || "Consult your clinical supervisor before use."}</p>
                   </div>
-                  <div className="mt-4">
-                    {brandedQty > 0 ? (
-                      <div className="flex items-center justify-between bg-primary rounded-full h-12 px-4 text-white">
-                        <button onClick={() => updateQuantity(product.id, -1)}><Minus className="w-4 h-4" /></button>
-                        <span className="font-black">{brandedQty}</span>
-                        <button onClick={() => updateQuantity(product.id, 1)}><Plus className="w-4 h-4" /></button>
-                      </div>
-                    ) : (
-                      <Button onClick={() => addToCart(product, 1)} disabled={isOutOfStock} className="w-full h-12 rounded-full bg-primary text-white font-black uppercase text-[9px]">Add Branded</Button>
-                    )}
+               </div>
+               <div className="bg-blue-50/50 p-8 rounded-[32px] border border-blue-100 flex gap-6">
+                  <Stethoscope className="w-8 h-8 text-blue-600 shrink-0" />
+                  <div>
+                    <h4 className="text-xs font-black uppercase text-blue-600 mb-2">Usage Protocol</h4>
+                    <p className="text-sm font-bold text-blue-900/70 leading-relaxed uppercase">{product.howToUse || "Take as directed by a healthcare professional."}</p>
                   </div>
-                </Card>
-                <Card className="rounded-[32px] border-2 border-accent/20 shadow-xl p-5 bg-accent/5 flex flex-col justify-between relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-accent/10 rounded-full -mr-12 -mt-12" />
-                  <div className="relative z-10">
-                    <Badge className="bg-accent text-white text-[8px] font-black uppercase tracking-widest mb-3">Sahi Generic</Badge>
-                    <p className="text-2xl font-black text-accent">₹{Math.round(product.price * 0.2)}</p>
-                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Save ~80%</p>
-                  </div>
-                  <div className="mt-4 relative z-10">
-                    <Button variant="outline" className="w-full h-12 rounded-full border-accent text-accent font-black uppercase text-[9px] hover:bg-accent hover:text-white transition-all">Switch & Save</Button>
-                  </div>
-                </Card>
-              </div>
+               </div>
+            </TabsContent>
 
-              <div className="bg-gray-50 p-6 rounded-[32px] border flex justify-between items-center">
-                 <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Clinical Authority</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <ShieldCheck className="w-4 h-4 text-primary" />
-                      <span className="font-black text-gray-900 text-xs uppercase">Pharmacist Approved</span>
-                    </div>
-                 </div>
-                 <div className="text-right">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pack Size</p>
-                    <p className="font-black text-gray-900 uppercase">{product.packSize || "N/A"}</p>
-                 </div>
-              </div>
-
-              <Accordion type="single" collapsible className="w-full">
-                 <AccordionItem value="overview" className="border-b border-gray-100">
-                    <AccordionTrigger className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-900 py-6">Product Overview</AccordionTrigger>
-                    <AccordionContent className="pb-8 space-y-4">
-                       <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase text-primary">Description</Label>
-                          <p className="text-xs font-bold text-gray-600 leading-relaxed uppercase">{product.description || "Clinical description pending review."}</p>
-                       </div>
-                       <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase text-primary">Treatment</Label>
-                          <p className="text-xs font-bold text-gray-600 leading-relaxed uppercase">{product.treatment || "Used for primary clinical treatment."}</p>
-                       </div>
-                    </AccordionContent>
-                 </AccordionItem>
-
-                 <AccordionItem value="howtouse" className="border-b border-gray-100">
-                    <AccordionTrigger className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-900 py-6">Usage & Safety</AccordionTrigger>
-                    <AccordionContent className="pb-8 space-y-6">
-                       <div className="flex gap-4 items-start bg-gray-50 p-6 rounded-3xl">
-                          <ClipboardList className="w-6 h-6 text-primary shrink-0" />
-                          <div>
-                             <h4 className="text-[10px] font-black uppercase mb-1">How to consume</h4>
-                             <p className="text-xs font-bold text-gray-600 uppercase leading-relaxed">{product.howToUse || "Take as directed by your physician."}</p>
-                          </div>
-                       </div>
-                       <div className="flex gap-4 items-start bg-orange-50 p-6 rounded-3xl">
-                          <ShieldAlert className="w-6 h-6 text-orange-600 shrink-0" />
-                          <div>
-                             <h4 className="text-[10px] font-black uppercase mb-1 text-orange-600">Safety Advice</h4>
-                             <p className="text-xs font-bold text-orange-900 uppercase leading-relaxed">{product.safetyAdvice || "Consult professional medical advice before use."}</p>
-                          </div>
-                       </div>
-                    </AccordionContent>
-                 </AccordionItem>
-              </Accordion>
-           </div>
-        </div>
-
-        {/* Clinical Interactions Hub */}
-        <section className="space-y-8 animate-in slide-in-from-bottom-6 mt-12">
-           <div className="flex items-center gap-3">
-              <Stethoscope className="w-6 h-6 text-primary" />
-              <h2 className="text-xl font-black uppercase tracking-tighter">Clinical Interactions</h2>
-           </div>
-           
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <TabsContent value="interactions" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <InteractionCard icon={Beer} title="Alcohol" description={product.alcoholInteraction} />
               <InteractionCard icon={Baby} title="Pregnancy" description={product.pregnancyInteraction} />
               <InteractionCard icon={Milk} title="Lactation" description={product.lactationInteraction} />
               <InteractionCard icon={Car} title="Driving" description={product.drivingInteraction} />
-              <InteractionCard icon={KidneyIcon} title="Kidney Health" description={product.kidneyInteraction} />
-              <InteractionCard icon={LiverIcon} title="Liver Health" description={product.liverInteraction} />
-           </div>
+            </TabsContent>
+          </Tabs>
         </section>
+
+        {/* Quick Contact Bar */}
+        <div className="mt-12 grid grid-cols-2 gap-4">
+           <Button onClick={() => window.open(`https://wa.me/91XXXXXXXXXX?text=Hi, SahiMed! I need ${product.name}`, '_blank')} variant="outline" className="h-16 rounded-[24px] border-2 border-green-100 bg-white text-green-600 hover:bg-green-50 font-black uppercase text-[10px] tracking-widest gap-3 active:scale-95 transition-all shadow-sm">
+              <MessageCircle className="w-5 h-5" /> WhatsApp Hub
+           </Button>
+           <Button onClick={() => window.location.href = 'tel:+91XXXXXXXXXX'} variant="outline" className="h-16 rounded-[24px] border-2 border-blue-100 bg-white text-blue-600 hover:bg-blue-50 font-black uppercase text-[10px] tracking-widest gap-3 active:scale-95 transition-all shadow-sm">
+              <Phone className="w-5 h-5" /> Call Pharmacist
+           </Button>
+        </div>
       </main>
     </div>
   );
 }
+
+function ComparisonCard({ product, type, isOutOfStock, onAdd, quantity, updateQty }: any) {
+  if (!product) {
+    return (
+      <Card className="h-full rounded-[32px] border-2 border-dashed border-gray-100 bg-gray-50/50 flex flex-col items-center justify-center p-8 opacity-50">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-300 mb-3" />
+        <p className="text-[8px] font-black uppercase tracking-widest text-gray-300 text-center">Locating Bio-Equivalent...</p>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className={cn(
+      "h-full rounded-[32px] flex flex-col overflow-hidden transition-all duration-500 hover:shadow-2xl border-2",
+      type === 'Branded' ? 'border-primary/10' : 'border-accent/20 bg-accent/5'
+    )}>
+       <div className="p-4 sm:p-6 flex flex-col h-full">
+          <Badge className={cn(
+            "w-fit mb-4 text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-md",
+            type === 'Branded' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-accent text-white'
+          )}>
+            {type === 'Branded' ? 'Original Branded' : 'Sahi Generic'}
+          </Badge>
+
+          <div className="aspect-square relative w-full bg-white rounded-2xl mb-4 border border-gray-100 p-4">
+            <Image src={product.imageUrl} alt={product.name} fill className="object-contain p-2" />
+            {isOutOfStock && (
+               <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center rounded-2xl">
+                  <Badge variant="destructive" className="font-black text-[8px] uppercase tracking-widest">Out of Stock</Badge>
+               </div>
+            )}
+          </div>
+
+          <div className="space-y-2 mb-6">
+             <h3 className="font-black text-[11px] sm:text-sm uppercase tracking-tight text-gray-900 line-clamp-2 leading-tight h-8">{product.name}</h3>
+             <p className="text-[8px] text-gray-400 font-bold uppercase truncate">{product.manufacturer}</p>
+             <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-primary">₹{product.price}</span>
+                {product.mrp && <span className="text-[8px] text-gray-400 line-through font-bold">MRP ₹{product.mrp}</span>}
+             </div>
+          </div>
+
+          <div className="mt-auto">
+             {quantity > 0 ? (
+                <div className="flex items-center justify-between bg-primary rounded-full h-11 px-3 text-white shadow-lg animate-in zoom-in duration-300">
+                  <button onClick={() => updateQty(-1)} className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded-full"><Minus className="w-3.5 h-3.5" /></button>
+                  <span className="font-black text-xs">{quantity}</span>
+                  <button onClick={() => updateQty(1)} className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded-full"><Plus className="w-3.5 h-3.5" /></button>
+                </div>
+             ) : (
+                <Button 
+                  onClick={onAdd} 
+                  disabled={isOutOfStock}
+                  className={cn(
+                    "w-full h-11 rounded-full font-black uppercase text-[9px] tracking-widest active:scale-95 transition-all shadow-md",
+                    type === 'Branded' ? 'bg-primary text-white' : 'bg-accent text-white'
+                  )}
+                >
+                  {isOutOfStock ? "Notify" : "Add to Bag"}
+                </Button>
+             )}
+          </div>
+       </div>
+    </Card>
+  );
+}
+

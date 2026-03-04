@@ -126,26 +126,26 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-[100] bg-white/90 backdrop-blur-xl border-b safe-top pb-2 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10">
+      <nav className="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b safe-top pb-2 transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-10">
           <div className="flex justify-between items-center h-16 md:h-20">
-            <div className="flex items-center gap-6">
-              <Link href="/" className="flex items-center gap-3 active:scale-95 transition-transform group">
-                <div className="bg-primary p-2 rounded-xl shadow-lg group-hover:rotate-6 transition-transform">
-                  <div className="text-white font-black text-sm tracking-tighter">SM</div>
+            <div className="flex items-center gap-2 sm:gap-6">
+              <Link href="/" className="flex items-center gap-2 sm:gap-3 active:scale-95 transition-transform group">
+                <div className="bg-primary p-1.5 sm:p-2 rounded-xl shadow-lg group-hover:rotate-6 transition-transform shrink-0">
+                  <div className="text-white font-black text-[10px] sm:text-sm tracking-tighter">SM</div>
                 </div>
-                <div className="hidden sm:flex flex-col items-start leading-none">
-                  <span className="font-black text-2xl text-primary font-headline tracking-tighter">SahiMed</span>
-                  <span className="text-[7px] font-black text-primary/60 uppercase tracking-widest mt-0.5">sahi dawa sahi daam pe</span>
+                <div className="hidden xs:flex flex-col items-start leading-none shrink-0">
+                  <span className="font-black text-lg sm:text-2xl text-primary font-headline tracking-tighter">SahiMed</span>
+                  <span className="text-[6px] sm:text-[7px] font-black text-primary/60 uppercase tracking-widest mt-0.5">sahi dawa sahi daam pe</span>
                 </div>
               </Link>
 
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2 text-[10px] font-black text-gray-500 hover:text-primary p-2.5 h-auto rounded-xl bg-gray-50 border border-gray-100 uppercase tracking-widest transition-all active:scale-95">
-                    <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
-                    <span className="truncate max-w-[120px]">{location}</span>
-                    <ChevronDown className="w-2.5 h-2.5 shrink-0 opacity-40" />
+                  <Button variant="ghost" className="flex items-center gap-1.5 sm:gap-2 text-[8px] sm:text-[10px] font-black text-gray-500 hover:text-primary p-2 h-auto rounded-xl bg-gray-50 border border-gray-100 uppercase tracking-widest transition-all active:scale-95 max-w-[100px] sm:max-w-none">
+                    <MapPin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-primary shrink-0" />
+                    <span className="truncate">{location}</span>
+                    <ChevronDown className="w-2 h-2 shrink-0 opacity-40" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-72 p-5 rounded-[32px] shadow-3xl border-none animate-in slide-in-from-top-4 duration-500">
@@ -180,12 +180,12 @@ export default function Navbar() {
               </Popover>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               {!isHomePage && (
                 <button 
                   onClick={() => setIsSearchExpanded(!isSearchExpanded)}
                   className={cn(
-                    "p-2.5 hover:bg-gray-50 rounded-full active:scale-90 transition-all",
+                    "p-2 sm:p-2.5 hover:bg-gray-50 rounded-full active:scale-90 transition-all",
                     isSearchExpanded ? "text-primary bg-primary/5" : "text-gray-700"
                   )}
                 >
@@ -193,54 +193,54 @@ export default function Navbar() {
                 </button>
               )}
               
-              <Link href="/cart" className="relative p-2.5 hover:bg-gray-50 rounded-full active:scale-90 transition-transform">
+              <Link href="/cart" className="relative p-2 sm:p-2.5 hover:bg-gray-50 rounded-full active:scale-90 transition-transform">
                 <ShoppingCart className="w-5 h-5 text-gray-700" />
                 {totalItems > 0 && (
-                  <span className="absolute top-1 right-1 bg-accent text-white text-[9px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-white shadow-md animate-in zoom-in duration-300">
+                  <span className="absolute top-1 right-1 bg-accent text-white text-[8px] sm:text-[9px] font-black px-1 sm:px-1.5 py-0.5 rounded-full ring-2 ring-white shadow-md">
                     {totalItems}
                   </span>
                 )}
               </Link>
-              <Link href="/profile" className="p-2.5 hover:bg-gray-50 rounded-full active:scale-90 transition-transform">
+              <Link href="/profile" className="p-2 sm:p-2.5 hover:bg-gray-50 rounded-full active:scale-90 transition-transform">
                 <User className="w-5 h-5 text-gray-700" />
               </Link>
             </div>
           </div>
 
           <div className={cn(
-            "pb-5 transition-all duration-500 ease-in-out overflow-visible",
-            (isHomePage || isSearchExpanded) ? "max-h-[500px] opacity-100 mt-2" : "max-h-0 opacity-0 pointer-events-none"
+            "pb-3 sm:pb-5 transition-all duration-500 ease-in-out overflow-visible",
+            (isHomePage || isSearchExpanded) ? "max-h-[500px] opacity-100 mt-1 sm:mt-2" : "max-h-0 opacity-0 pointer-events-none"
           )} ref={suggestionRef}>
             <form onSubmit={handleSearch} className="relative w-full">
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder="Search medicines or health needs..."
-                  className="w-full pl-12 pr-12 rounded-3xl border-[2px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 bg-white h-12 font-black text-xs shadow-md"
+                  placeholder="Search medicines..."
+                  className="w-full pl-10 sm:pl-12 pr-12 rounded-2xl sm:rounded-3xl border-[2px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 bg-white h-10 sm:h-12 font-black text-[10px] sm:text-xs shadow-md"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   autoFocus={isSearchExpanded}
                 />
-                <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-primary w-5 h-5" />
+                <SearchIcon className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-primary w-4 sm:w-5 h-4 sm:h-5" />
                 
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
                   {(isProcessing || medsLoading) && (
                      <Loader2 className="w-3 h-3 text-primary animate-spin" />
                   )}
                   <Button 
                     type="submit" 
                     size="sm"
-                    className="rounded-2xl h-8 px-4 font-black uppercase text-[9px] tracking-widest shadow-md bg-primary hover:bg-primary/90 transition-all active:scale-95"
+                    className="rounded-xl sm:rounded-2xl h-7 sm:h-8 px-3 sm:px-4 font-black uppercase text-[8px] sm:text-[9px] tracking-widest shadow-md bg-primary hover:bg-primary/90 transition-all active:scale-95"
                   >
-                    Search
+                    Go
                   </Button>
                 </div>
               </div>
 
               {search.trim().length > 0 && !isProcessing && (
-                <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-[32px] shadow-3xl border-none overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] sm:rounded-[32px] shadow-3xl border-none overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-300">
                   {suggestions.length > 0 ? (
-                    <>
+                    <div className="max-h-[350px] overflow-y-auto scrollbar-hide">
                       {suggestions.map((p) => (
                         <button
                           key={p.id}
@@ -250,22 +250,22 @@ export default function Navbar() {
                             setIsSearchExpanded(false);
                             router.push(`/product/${p.id}`);
                           }}
-                          className="w-full p-5 flex items-center gap-4 hover:bg-primary/5 transition-all border-b last:border-none text-left active:scale-[0.98]"
+                          className="w-full p-4 sm:p-5 flex items-center gap-3 sm:gap-4 hover:bg-primary/5 transition-all border-b last:border-none text-left active:scale-[0.98]"
                         >
-                          <div className="w-12 h-12 bg-gray-50 rounded-xl flex-shrink-0 border border-gray-100 p-1">
+                          <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gray-50 rounded-xl flex-shrink-0 border border-gray-100 p-1">
                             <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-black text-[11px] uppercase text-gray-900 truncate tracking-tight">{p.name}</p>
-                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">{p.saltComposition}</p>
+                            <p className="font-black text-[10px] sm:text-[11px] uppercase text-gray-900 truncate tracking-tight">{p.name}</p>
+                            <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">{p.saltComposition}</p>
                           </div>
-                          <div className="text-primary font-black text-[10px] bg-primary/5 px-3 py-1 rounded-full shrink-0">₹{p.price}</div>
+                          <div className="text-primary font-black text-[8px] sm:text-[10px] bg-primary/5 px-2.5 py-1 rounded-full shrink-0">₹{p.price}</div>
                         </button>
                       ))}
-                    </>
+                    </div>
                   ) : (
-                    <div className="p-10 text-center">
-                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No exact matches found</p>
+                    <div className="p-8 text-center">
+                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No results for "{search}"</p>
                     </div>
                   )}
                 </div>
@@ -277,3 +277,4 @@ export default function Navbar() {
     </>
   );
 }
+
