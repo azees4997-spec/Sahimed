@@ -563,6 +563,17 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
             <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
           </div>
           <div className="space-y-2">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Classification (Mapping)</Label>
+            <select 
+              value={form.isGeneric ? 'generic' : 'branded'} 
+              onChange={e => setForm({...form, isGeneric: e.target.value === 'generic'})}
+              className="w-full rounded-2xl h-14 bg-gray-50 border-none font-bold px-4 outline-none"
+            >
+              <option value="branded">Branded / Original</option>
+              <option value="generic">Sahi Generic</option>
+            </select>
+          </div>
+          <div className="space-y-2">
             <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Molecule / Formula Mapping</Label>
             <select 
               value={form.moleculeId} 
