@@ -1,10 +1,9 @@
-
 "use client"
 
 import * as React from 'react';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
-import { Activity, HeartPulse, Zap, Sparkles, Loader2, Camera, ChevronRight, Wind, ShieldPlus, Phone, MessageCircle } from 'lucide-react';
+import { Activity, HeartPulse, Zap, Sparkles, Loader2, Camera, ChevronRight, Wind, ShieldPlus, Phone, MessageCircle, Dna } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -55,12 +54,20 @@ export default function Home() {
   const displayMedicines = medicines?.slice(0, 10);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F8F8] page-transition-wrapper">
+    <div className="min-h-screen flex flex-col bg-[#F8F8F8] pharma-bg-pattern page-transition-wrapper">
       <Navbar />
 
-      <main className="flex-1">
+      <main className="flex-1 relative overflow-hidden">
+        {/* Subtle Decorative Elements */}
+        <div className="absolute top-40 right-10 opacity-5 pointer-events-none rotate-12 hidden lg:block">
+           <Dna size={400} />
+        </div>
+        <div className="absolute top-[800px] left-[-50px] opacity-5 pointer-events-none -rotate-12 hidden lg:block">
+           <ShieldPlus size={300} />
+        </div>
+
         {/* Hero Section */}
-        <section className="bg-white py-4">
+        <section className="bg-white py-4 relative z-10">
           <div className="max-w-7xl mx-auto px-6 sm:px-12">
             <Carousel 
               className="w-full" 
@@ -106,7 +113,7 @@ export default function Home() {
         </section>
 
         {/* Quick Actions Bar */}
-        <section className="py-2">
+        <section className="py-2 relative z-10">
           <div className="max-w-7xl mx-auto px-6 sm:px-12 flex flex-col gap-3">
              {/* Prescription Bar */}
              <Link href="/prescription">
@@ -145,7 +152,7 @@ export default function Home() {
         </section>
 
         {/* Categories Section */}
-        <section className="py-4">
+        <section className="py-4 relative z-10">
           <div className="max-w-7xl mx-auto px-6 sm:px-12">
             <div className="flex items-center justify-between mb-4 px-2">
               <h2 className="text-[12px] font-black text-gray-900 uppercase tracking-[0.3em]">Health Categories</h2>
@@ -176,7 +183,7 @@ export default function Home() {
         </section>
 
         {/* Best Sellers Section */}
-        <section className="py-6 bg-white border-t border-gray-100 mt-4 rounded-t-[40px] shadow-lg overflow-hidden">
+        <section className="py-6 bg-white border-t border-gray-100 mt-4 rounded-t-[40px] shadow-lg overflow-hidden relative z-10">
           <div className="max-w-7xl mx-auto px-6 sm:px-12">
             <div className="flex items-center justify-between mb-6 px-2">
               <div className="space-y-1">
