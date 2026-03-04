@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
@@ -338,7 +339,6 @@ function SectionHeader({ title, subtitle, onBack, children }: { title: string, s
 // --- FULFILLMENT TAB ---
 
 function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  // Use collectionGroup query for real-time link to 'orders' across all user profiles
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc')) : null, [db, isVerified]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -349,8 +349,13 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
   const handleStatusUpdate = (order: any, newStatus: string) => {
     if (newStatus === 'Shipping') {
       setSelectedOrder(order);
-      setShippingData({ carrier: order.carrier || '', trackingId: order.trackingId || '' });
+      setShippingData({ carrier: order?.carrier || '', trackingId: order?.trackingId || '' });
       setIsShippingDialogOpen(true);
+      return;
+    }
+
+    if (!order?.userId || !order?.id) {
+      toast({ variant: 'destructive', title: 'Data Error', description: 'Missing order identifiers.' });
       return;
     }
 
@@ -360,7 +365,7 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
   };
 
   const finalizeShipping = () => {
-    if (!selectedOrder) return;
+    if (!selectedOrder || !selectedOrder.userId || !selectedOrder.id) return;
     const orderRef = doc(db, 'userProfiles', selectedOrder.userId, 'orders', selectedOrder.id);
     updateDocumentNonBlocking(orderRef, { 
       status: 'Shipping',
@@ -393,26 +398,26 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
               ) : (orders?.length === 0 || !orders) ? (
                 <tr><td colSpan={6} className="p-20 text-center font-bold text-gray-400 uppercase tracking-widest">Waiting for orders from Firestore...</td></tr>
               ) : orders?.map(order => (
-                <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="px-8 py-6 font-black text-xs uppercase">#{order.id.substring(0,8)}</td>
+                <tr key={order?.id || Math.random().toString()} className="hover:bg-gray-50/50 transition-colors group">
+                  <td className="px-8 py-6 font-black text-xs uppercase">#{order?.id?.substring(0,8) || 'N/A'}</td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
-                      <span className="font-bold text-xs">{order.patientName || 'Patient'}</span>
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{order.phoneNumber || 'No number provided'}</span>
+                      <span className="font-bold text-xs">{order?.patientName || 'Patient'}</span>
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{order?.phoneNumber || 'No number'}</span>
                     </div>
                   </td>
                   <td className="px-8 py-6 max-w-[250px]">
                     <div className="flex flex-col gap-0.5">
-                      <p className="text-[10px] font-bold text-gray-600 line-clamp-1">{order.shippingDetails?.street || 'No address provided'}</p>
-                      <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">{order.shippingDetails?.pincode} {order.shippingDetails?.landmark ? `• ${order.shippingDetails.landmark}` : ''}</p>
+                      <p className="text-[10px] font-bold text-gray-600 line-clamp-1">{order?.shippingDetails?.street || 'No address'}</p>
+                      <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">{order?.shippingDetails?.pincode} {order?.shippingDetails?.landmark ? `• ${order.shippingDetails.landmark}` : ''}</p>
                     </div>
                   </td>
-                  <td className="px-8 py-6 font-black text-accent text-sm">₹{order.totalAmount}</td>
+                  <td className="px-8 py-6 font-black text-accent text-sm">₹{order?.totalAmount || 0}</td>
                   <td className="px-8 py-6">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="h-8 rounded-full px-4 text-[9px] font-black uppercase tracking-widest border-2 gap-2">
-                          {order.status} <ChevronDown className="w-3 h-3" />
+                          {order?.status || 'Pending'} <ChevronDown className="w-3 h-3" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="rounded-2xl border-none shadow-2xl p-2 min-w-[140px]">
@@ -468,13 +473,13 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                   {selectedOrder?.items?.map((item: any, i: number) => (
                     <div key={i} className="flex justify-between items-center">
                        <div className="flex items-center gap-3">
-                          <img src={item.imageUrl} className="w-10 h-10 object-contain bg-white rounded-lg p-1 border" alt="" />
+                          <img src={item?.imageUrl} className="w-10 h-10 object-contain bg-white rounded-lg p-1 border" alt="" />
                           <div className="text-left">
-                            <p className="text-[11px] font-black uppercase">{item.name}</p>
-                            <p className="text-[9px] text-gray-400 font-bold uppercase">Qty: {item.quantity}</p>
+                            <p className="text-[11px] font-black uppercase">{item?.name}</p>
+                            <p className="text-[9px] text-gray-400 font-bold uppercase">Qty: {item?.quantity}</p>
                           </div>
                        </div>
-                       <span className="font-black text-xs text-gray-900">₹{item.unitPrice * item.quantity}</span>
+                       <span className="font-black text-xs text-gray-900">₹{(item?.unitPrice || 0) * (item?.quantity || 0)}</span>
                     </div>
                   ))}
                </div>
@@ -890,23 +895,23 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
         ) : enquiries?.map(enq => (
           <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white p-6 group hover:shadow-2xl transition-all duration-500">
             <div className="aspect-[3/4] rounded-3xl bg-gray-50 mb-6 overflow-hidden border border-gray-100 relative shadow-inner">
-              <img src={enq.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Prescription" />
+              <img src={enq?.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Prescription" />
               <div className="absolute top-4 right-4">
                 <Badge className={cn(
                   "uppercase text-[8px] font-black px-3 py-1.5 rounded-full border-none shadow-lg",
-                  enq.status === 'Digitized' ? "bg-accent text-white" : "bg-primary text-white"
+                  enq?.status === 'Digitized' ? "bg-accent text-white" : "bg-primary text-white"
                 )}>
-                  {enq.status}
+                  {enq?.status || 'Pending'}
                 </Badge>
               </div>
             </div>
             <div className="space-y-1 mb-6">
-               <p className="font-black text-sm uppercase text-gray-900 tracking-tight truncate">{enq.patientName || 'Patient Request'}</p>
+               <p className="font-black text-sm uppercase text-gray-900 tracking-tight truncate">{enq?.patientName || 'Patient Request'}</p>
                <div className="flex items-center gap-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">
                   <Phone className="w-2.5 h-2.5" />
-                  <span>{enq.phoneNumber || 'No number provided'}</span>
+                  <span>{enq?.phoneNumber || 'No number provided'}</span>
                </div>
-               <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{enq.uploadDate?.toDate ? enq.uploadDate.toDate().toLocaleDateString() : 'Just now'}</p>
+               <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{enq?.uploadDate?.toDate ? enq.uploadDate.toDate().toLocaleDateString() : 'Just now'}</p>
             </div>
             <Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
               <Wand2 className="w-3.5 h-3.5" /> Digitize & Order
@@ -932,7 +937,7 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
   const { data: medicines } = useCollection(medsQuery);
 
   const searchedMeds = searchQueryStr.trim() ? medicines?.filter(m => 
-    m.name.toLowerCase().includes(searchQueryStr.toLowerCase()) || 
+    m.name?.toLowerCase().includes(searchQueryStr.toLowerCase()) || 
     m.saltComposition?.toLowerCase().includes(searchQueryStr.toLowerCase())
   ).slice(0, 5) : [];
 
@@ -978,7 +983,7 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
     }
   };
 
-  const calculateSubtotal = () => orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const calculateSubtotal = () => orderItems.reduce((acc, item) => acc + ((item?.price || 0) * (item?.quantity || 0)), 0);
   
   const calculateDiscount = () => {
     const subtotal = calculateSubtotal();
@@ -990,7 +995,7 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
   const estimatedTotal = Math.max(0, calculateSubtotal() - calculateDiscount());
 
   const handleCompleteOrder = () => {
-    if (!enquiry.userId) {
+    if (!enquiry?.userId) {
        toast({ variant: 'destructive', title: 'Error', description: 'User identifier missing.' });
        return;
     }
@@ -1008,8 +1013,8 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
       promoCode: activePromo?.code || null,
       status: 'Created by Admin',
       paymentStatus: 'Pending',
-      patientName: enquiry.patientName || 'Patient',
-      phoneNumber: enquiry.phoneNumber || '',
+      patientName: enquiry?.patientName || 'Patient',
+      phoneNumber: enquiry?.phoneNumber || '',
       items: orderItems.map(item => ({
         medicineId: item.id,
         quantity: item.quantity,
@@ -1039,7 +1044,7 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
             <div className="bg-white/10 p-2 rounded-xl"><ShoppingCart className="w-6 h-6" /></div>
             <div>
               <DialogTitle className="text-2xl font-black uppercase tracking-tight">Digitization & Order Terminal</DialogTitle>
-              <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Patient: {enquiry.patientName || 'Self'} • {enquiry.phoneNumber || 'N/A'}</p>
+              <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Patient: {enquiry?.patientName || 'Self'} • {enquiry?.phoneNumber || 'N/A'}</p>
             </div>
           </div>
           <div className="flex gap-3">
@@ -1053,7 +1058,7 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
         </div>
         <div className="grid grid-cols-2 h-full overflow-hidden">
           <div className="bg-gray-100 p-8 overflow-auto border-r flex items-start justify-center">
-             <img src={enquiry.imageUrl} className="max-w-full rounded-3xl shadow-2xl border-4 border-white" alt="Prescription" />
+             <img src={enquiry?.imageUrl} className="max-w-full rounded-3xl shadow-2xl border-4 border-white" alt="Prescription" />
           </div>
           <div className="p-8 space-y-8 overflow-auto bg-white scrollbar-hide pb-24">
             
@@ -1076,10 +1081,10 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
                         className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors border-b last:border-none"
                       >
                         <div className="flex items-center gap-3">
-                          <img src={m.imageUrl} className="w-10 h-10 object-contain bg-gray-50 rounded-lg p-1" alt="" />
+                          <img src={m?.imageUrl} className="w-10 h-10 object-contain bg-gray-50 rounded-lg p-1" alt="" />
                           <div className="text-left">
-                            <p className="text-sm font-black uppercase">{m.name}</p>
-                            <p className="text-[9px] text-gray-400 font-bold uppercase">{m.saltComposition}</p>
+                            <p className="text-sm font-black uppercase">{m?.name}</p>
+                            <p className="text-[9px] text-gray-400 font-bold uppercase">{m?.saltComposition}</p>
                           </div>
                         </div>
                         <PlusCircle className="w-5 h-5 text-primary" />
@@ -1108,10 +1113,10 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
                          </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="font-black text-xs">₹{item.price * item.quantity}</span>
-                        <Button variant="ghost" size="icon" onClick={() => setOrderItems(orderItems.filter(oi => oi.id !== item.id))} className="h-8 w-8 text-red-300 hover:text-red-500">
+                        <span className="font-black text-xs">₹{(item?.price || 0) * (item?.quantity || 0)}</span>
+                        <button onClick={() => setOrderItems(orderItems.filter(oi => oi.id !== item.id))} className="h-8 w-8 text-red-300 hover:text-red-500 transition-colors">
                           <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        </button>
                       </div>
                     </div>
                   ))}

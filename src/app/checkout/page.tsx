@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 export default function CheckoutPage() {
   const { cart, totalPrice, clearCart, location: homepageLocation } = useCart();
