@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from 'react';
@@ -105,7 +106,7 @@ export default function Home() {
         <section className="py-2">
           <div className="max-w-7xl mx-auto px-6 sm:px-12">
              <Link href="/prescription">
-                <Button className="w-full h-14 sm:h-16 rounded-[24px] bg-white border-2 border-primary/5 text-primary hover:bg-primary/5 shadow-md flex items-center justify-between px-6 sm:px-8 group active:scale-[0.99] transition-all">
+                <Button className="w-full h-14 rounded-[24px] bg-white border-2 border-primary/5 text-primary hover:bg-primary/5 shadow-md flex items-center justify-between px-6 sm:px-8 group active:scale-[0.99] transition-all">
                   <div className="flex items-center gap-4 sm:gap-6">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary text-white rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                       <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
