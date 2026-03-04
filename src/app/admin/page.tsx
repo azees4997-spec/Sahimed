@@ -36,7 +36,10 @@ import {
   Sparkles,
   Save,
   AlertCircle,
-  X
+  X,
+  Phone,
+  ShoppingCart,
+  PlusCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -69,7 +72,7 @@ import {
   deleteDocumentNonBlocking,
   addDocumentNonBlocking
 } from '@/firebase';
-import { doc, collection, query, collectionGroup, getDoc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { doc, collection, query, collectionGroup, getDoc, serverTimestamp, orderBy, where } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -757,10 +760,14 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
             </div>
             <div className="space-y-1 mb-6">
                <p className="font-black text-sm uppercase text-gray-900 tracking-tight truncate">{enq.patientName || 'Patient Request'}</p>
+               <div className="flex items-center gap-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                  <Phone className="w-2.5 h-2.5" />
+                  <span>{enq.phoneNumber || 'No number provided'}</span>
+               </div>
                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{enq.uploadDate?.toDate ? enq.uploadDate.toDate().toLocaleDateString() : 'Just now'}</p>
             </div>
             <Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-              <Wand2 className="w-3.5 h-3.5" /> Digitize Request
+              <Wand2 className="w-3.5 h-3.5" /> Digitize & Order
             </Button>
           </Card>
         ))}
@@ -775,7 +782,17 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
   const [analyzing, setAnalyzing] = useState(false);
   const [results, setResults] = useState<any[]>(enquiry.digitizedData || []);
   const [summary, setSummary] = useState(enquiry.analysisSummary || '');
+  const [searchQueryStr, setSearchQueryStr] = useState('');
+  const [orderItems, setOrderItems] = useState<any[]>([]);
   const { toast } = useToast();
+
+  const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
+  const { data: medicines } = useCollection(medsQuery);
+
+  const searchedMeds = searchQueryStr.trim() ? medicines?.filter(m => 
+    m.name.toLowerCase().includes(searchQueryStr.toLowerCase()) || 
+    m.saltComposition?.toLowerCase().includes(searchQueryStr.toLowerCase())
+  ).slice(0, 5) : [];
 
   const handleAIAnalysis = async () => {
     setAnalyzing(true);
@@ -795,18 +812,57 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
     }
   };
 
-  const handleSave = () => {
+  const addToDraftOrder = (med: any) => {
+    const existing = orderItems.find(item => item.id === med.id);
+    if (existing) {
+      setOrderItems(orderItems.map(item => item.id === med.id ? { ...item, quantity: item.quantity + 1 } : item));
+    } else {
+      setOrderItems([...orderItems, { ...med, quantity: 1 }]);
+    }
+    setSearchQueryStr('');
+    toast({ title: "Item Added", description: `${med.name} added to draft order.` });
+  };
+
+  const handleCompleteOrder = () => {
     if (!enquiry.userId) {
        toast({ variant: 'destructive', title: 'Error', description: 'User identifier missing.' });
        return;
     }
+    if (orderItems.length === 0) {
+       toast({ variant: 'destructive', title: 'Empty Order', description: 'Add at least one medicine to the order.' });
+       return;
+    }
+
+    const totalAmount = orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
+    const orderData = {
+      userId: enquiry.userId,
+      orderDate: serverTimestamp(),
+      totalAmount: totalAmount,
+      status: 'Created by Admin',
+      paymentStatus: 'Pending',
+      patientName: enquiry.patientName || 'Patient',
+      phoneNumber: enquiry.phoneNumber || '',
+      items: orderItems.map(item => ({
+        medicineId: item.id,
+        quantity: item.quantity,
+        unitPrice: item.price,
+        name: item.name,
+        imageUrl: item.imageUrl
+      }))
+    };
+
+    const orderRef = collection(db, 'userProfiles', enquiry.userId, 'orders');
+    addDocumentNonBlocking(orderRef, orderData);
+
     updateDocumentNonBlocking(doc(db, 'userProfiles', enquiry.userId, 'prescriptions', enquiry.id), {
       digitizedData: results,
       analysisSummary: summary,
       status: 'Digitized',
       digitizedAt: serverTimestamp()
     });
-    toast({ title: "Record Saved", description: "Prescription successfully digitized." });
+
+    toast({ title: "Order Created", description: "Pharmacist-initiated order has been placed." });
     onClose();
   };
 
@@ -817,16 +873,16 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
           <div className="flex items-center gap-4">
             <div className="bg-white/10 p-2 rounded-xl"><Sparkles className="w-6 h-6" /></div>
             <div>
-              <DialogTitle className="text-2xl font-black uppercase tracking-tight">Digitization Terminal</DialogTitle>
-              <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Patient: {enquiry.patientName || 'Self'}</p>
+              <DialogTitle className="text-2xl font-black uppercase tracking-tight">Digitization & Order Terminal</DialogTitle>
+              <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Patient: {enquiry.patientName || 'Self'} • {enquiry.phoneNumber || 'N/A'}</p>
             </div>
           </div>
           <div className="flex gap-3">
             <Button variant="outline" onClick={handleAIAnalysis} disabled={analyzing} className="rounded-full h-12 px-6 font-black text-[10px] uppercase bg-white/10 text-white border-white/20 hover:bg-white/20 transition-all gap-2">
               {analyzing ? <Loader2 className="animate-spin w-4 h-4" /> : <Wand2 className="w-4 h-4" />} AI Scan
             </Button>
-            <Button onClick={handleSave} className="rounded-full h-12 px-6 font-black text-[10px] uppercase bg-white text-primary hover:bg-white/90 shadow-xl transition-all gap-2">
-              <Save className="w-4 h-4" /> Save Record
+            <Button onClick={handleCompleteOrder} disabled={orderItems.length === 0} className="rounded-full h-12 px-6 font-black text-[10px] uppercase bg-white text-primary hover:bg-white/90 shadow-xl transition-all gap-2">
+              <ShoppingCart className="w-4 h-4" /> Complete Order
             </Button>
             <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl bg-white/5 text-white hover:bg-white/10 ml-2">
                <X className="w-5 h-5" />
@@ -838,7 +894,70 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
              <img src={enquiry.imageUrl} className="max-w-full rounded-3xl shadow-2xl border-4 border-white" alt="Prescription" />
           </div>
           <div className="p-8 space-y-8 overflow-auto bg-white scrollbar-hide">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 border-b pb-4">Extracted Medications</h3>
+            
+            <div className="space-y-4">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 border-b pb-4">Order on Behalf (Product Search)</h3>
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input 
+                  placeholder="Find medicines to add to order..." 
+                  value={searchQueryStr}
+                  onChange={e => setSearchQueryStr(e.target.value)}
+                  className="rounded-2xl h-14 bg-gray-50 border-none font-bold pl-12 shadow-inner"
+                />
+                {searchedMeds.length > 0 && (
+                  <div className="absolute top-16 left-0 right-0 bg-white rounded-2xl shadow-2xl border z-20 overflow-hidden">
+                    {searchedMeds.map(m => (
+                      <button 
+                        key={m.id}
+                        onClick={() => addToDraftOrder(m)}
+                        className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors border-b last:border-none"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img src={m.imageUrl} className="w-10 h-10 object-contain bg-gray-50 rounded-lg p-1" alt="" />
+                          <div className="text-left">
+                            <p className="text-sm font-black uppercase">{m.name}</p>
+                            <p className="text-[9px] text-gray-400 font-bold uppercase">{m.saltComposition}</p>
+                          </div>
+                        </div>
+                        <PlusCircle className="w-5 h-5 text-primary" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {orderItems.length > 0 && (
+              <div className="space-y-4 animate-in slide-in-from-top-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Draft Order Items</h3>
+                <div className="space-y-3">
+                  {orderItems.map((item, i) => (
+                    <div key={i} className="bg-gray-50 p-4 rounded-2xl flex items-center justify-between border border-gray-100">
+                      <div className="flex items-center gap-3">
+                         <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black">{item.quantity}x</Badge>
+                         <div className="text-left">
+                           <p className="text-xs font-black uppercase">{item.name}</p>
+                           <p className="text-[9px] text-gray-400 font-bold uppercase">₹{item.price} per unit</p>
+                         </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="font-black text-xs">₹{item.price * item.quantity}</span>
+                        <Button variant="ghost" size="icon" onClick={() => setOrderItems(orderItems.filter(oi => oi.id !== item.id))} className="h-8 w-8 text-red-300 hover:text-red-500">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="pt-4 border-t border-dashed flex justify-between items-baseline">
+                    <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Estimated Total</span>
+                    <span className="text-2xl font-black text-accent">₹{orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 border-b pb-4 pt-4">Prescription AI Extraction</h3>
             <div className="space-y-6">
               {results.length === 0 ? (
                 <div className="py-20 text-center">
