@@ -135,7 +135,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <section className="bg-white rounded-[48px] p-6 sm:p-14 shadow-2xl border border-gray-50 animate-in slide-in-from-bottom-8 duration-700 overflow-hidden">
           <Tabs defaultValue="clinical" className="w-full">
             <div className="flex justify-center mb-10">
-              <TabsList className="bg-gray-100 p-1.5 rounded-full h-14 sm:h-16 w-full max-w-[600px] flex items-center">
+              <TabsList className="bg-gray-100 p-1.5 rounded-full h-14 sm:h-16 w-full max-w-[600px] flex items-center justify-center">
                 <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[9px] sm:text-[11px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md transition-all duration-300">Clinical Data</TabsTrigger>
                 <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[9px] sm:text-[11px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md transition-all duration-300">Safety Advice</TabsTrigger>
                 <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[9px] sm:text-[11px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md transition-all duration-300">Interactions</TabsTrigger>
@@ -269,9 +269,11 @@ function ComparisonCard({ product, type, isOutOfStock, onAdd, quantity, updateQt
             {product.name}
           </h3>
           <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate">{product.manufacturer}</p>
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100/50">
-            <span className={cn("text-lg font-black", isGeneric ? 'text-accent' : 'text-primary')}>₹{product.price}</span>
-            {product.mrp && <span className="text-[10px] text-gray-400 line-through font-bold">MRP ₹{product.mrp}</span>}
+          <div className="flex flex-col gap-1 pt-4 border-t border-gray-100/50">
+            <div className="flex items-center justify-between">
+              <span className="text-lg font-black text-accent">₹{product.price}</span>
+              {product.mrp && <span className="text-[10px] text-red-500 line-through font-bold">₹{product.mrp}</span>}
+            </div>
           </div>
         </div>
 

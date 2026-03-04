@@ -189,16 +189,16 @@ export default function Home() {
             </div>
             
             {medsLoading || !displayMedicines ? (
-              <div className="flex gap-4 overflow-hidden">
+              <div className="flex gap-4 overflow-hidden px-2">
                 {[...Array(4)].map((_, i) => (
                   <Skeleton key={i} className="w-[180px] h-[300px] shrink-0 rounded-[32px]" />
                 ))}
               </div>
             ) : (
-              <div className="flex overflow-x-auto pb-6 gap-4 scrollbar-hide snap-x">
-                <div className="flex gap-4">
+              <div className="flex overflow-x-auto pb-6 gap-6 px-2 scrollbar-hide snap-x">
+                <div className="flex gap-6">
                   {displayMedicines?.map((p: any) => (
-                    <div key={p.id} className="w-[180px] sm:w-[240px] snap-start">
+                    <div key={p.id} className="w-[200px] sm:w-[260px] snap-start">
                       <ProductCard product={p} />
                     </div>
                   ))}
