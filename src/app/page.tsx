@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from 'react';
@@ -27,12 +26,13 @@ export default function Home() {
 
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(50));
+    // Optimized: Limit to 20 for initial home page load to improve speed
+    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(20));
   }, [db]);
 
   const categoriesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'categories'), orderBy('name', 'asc'));
+    return query(collection(db, 'categories'), orderBy('name', 'asc'), limit(12));
   }, [db]);
 
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
@@ -77,6 +77,7 @@ export default function Home() {
                         className="object-cover opacity-60 group-hover:scale-105 transition-transform duration-1000"
                         data-ai-hint={banner.imageHint}
                         priority={index === 0}
+                        sizes="(max-width: 768px) 100vw, 1200px"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent flex items-end p-8 sm:p-16">
                         <div className="max-w-2xl text-white space-y-4 sm:space-y-6">
@@ -84,7 +85,7 @@ export default function Home() {
                             {index === 0 ? 'Switch & Save' : index === 1 ? 'Express Delivery' : 'Verified Quality'}
                           </span>
                           <h1 className="text-2xl sm:text-5xl font-black font-headline uppercase tracking-tighter leading-tight text-balance">
-                            {banner.description.replace('HealthLink', 'SahiMed')}
+                            {banner.description}
                           </h1>
                           <div className="pt-2 sm:pt-6">
                             <Link href="/search">

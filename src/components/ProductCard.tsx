@@ -84,6 +84,8 @@ export default function ProductCard({ product }: { product: Product }) {
             isOutOfStock && "grayscale opacity-40"
           )}
           data-ai-hint="medicine product"
+          sizes="(max-width: 768px) 50vw, 300px"
+          loading="lazy"
         />
         
         {savingsPercent > 0 && !isOutOfStock && (

@@ -1,4 +1,3 @@
-
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
@@ -27,6 +26,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
+  themeColor: '#0056b3',
 };
 
 export default function RootLayout({
