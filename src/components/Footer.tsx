@@ -19,14 +19,14 @@ export default function Footer() {
            </div>
            <div className="flex flex-col items-start leading-none">
              <span className="font-black text-xl text-primary tracking-tighter uppercase">SahiMed</span>
-             <span className="text-[6px] font-black text-primary/70 uppercase tracking-[0.45em] mt-0.5 text-left w-full whitespace-nowrap">sahi dawa sahi daam pe</span>
+             <span className="text-[6px] font-black text-primary/70 uppercase tracking-[0.38em] mt-0.5 text-left w-full whitespace-nowrap">sahi dawa sahi daam pe</span>
            </div>
         </div>
         
         {/* Copyright & Network Section */}
         <div className="flex flex-col gap-1.5">
           <p className="text-[10px] font-black text-gray-900 uppercase tracking-[0.15em] flex items-center justify-center gap-1.5">
-            <span className="text-lg font-light leading-none">©</span> SahiMed | All rights reserved
+            <span className="text-lg font-light leading-none">©</span> 2026 SahiMed | All rights reserved
           </p>
           <div className="flex items-center justify-center gap-2 text-gray-400">
             <ShieldCheck className="w-3 h-3 text-accent/60" />
