@@ -46,7 +46,9 @@ import {
   MapPin,
   Clock,
   ChevronDown,
-  FileWarning
+  FileWarning,
+  Calendar as CalendarIcon,
+  Megaphone
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,6 +69,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { 
   useUser, 
@@ -84,6 +93,7 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { format } from "date-fns";
 
 type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'promocodes' | 'fees' | 'customers' | 'stockAlerts' | 'itemMaster' | 'moleculeMaster';
 
@@ -266,10 +276,29 @@ export default function AdminConsole() {
         {activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
         {activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
         {activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-        {activeTab === 'stockAlerts' && <StockAlertsTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+        {activeTab === 'stockAlerts' && <AlertsTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
         {activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
         {activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
       </main>
+    </div>
+  );
+}
+
+// --- SHARED UI ---
+
+function SectionHeader({ title, subtitle, onBack, children }: { title: string, subtitle: string, onBack: () => void, children?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+      <div className="flex items-center gap-4">
+        <button onClick={onBack} className="rounded-full bg-white shadow-sm h-12 w-12 hover:scale-110 transition-transform flex items-center justify-center"><ChevronRight className="w-5 h-5 rotate-180" /></button>
+        <div className="space-y-1">
+          <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">{title}</h2>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{subtitle}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap justify-center gap-3">
+        {children}
+      </div>
     </div>
   );
 }
@@ -281,23 +310,25 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster')), [db]);
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles')) : null, [db, isVerified]);
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
-  const stockAlertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'stockEnquiries')) : null, [db, isVerified]);
+  const promosQuery = useMemoFirebase(() => query(collection(db, 'promocodes')), [db]);
+  const feesQuery = useMemoFirebase(() => query(collection(db, 'fees')), [db]);
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
 
   const { data: medicines } = useCollection(medsQuery);
   const { data: formulas } = useCollection(molsQuery);
   const { data: orders } = useCollection(ordersQuery);
   const { data: users } = useCollection(usersQuery);
-  const { data: alerts } = useCollection(stockAlertsQuery);
+  const { data: promos } = useCollection(promosQuery);
+  const { data: fees } = useCollection(feesQuery);
   const { data: enquiries } = useCollection(presQuery);
 
   const stats = [
     { label: 'INQUIRIES', icon: FileText, count: enquiries?.length || 0, tab: 'enquiries', color: 'text-blue-600' },
     { label: 'ORDERS', icon: ShoppingBag, count: orders?.length || 0, tab: 'fulfillment', color: 'text-blue-500' },
-    { label: 'COUPONS', icon: Ticket, count: 0, tab: 'promocodes', color: 'text-purple-500' },
-    { label: 'FEES', icon: Receipt, count: 0, tab: 'fees', color: 'text-orange-500' },
+    { label: 'COUPONS', icon: Ticket, count: promos?.length || 0, tab: 'promocodes', color: 'text-purple-500' },
+    { label: 'FEES', icon: Receipt, count: fees?.length || 0, tab: 'fees', color: 'text-orange-500' },
     { label: 'CUSTOMERS', icon: Users, count: users?.length || 0, tab: 'customers', color: 'text-indigo-500' },
-    { label: 'ALERTS', icon: BellRing, count: alerts?.length || 0, tab: 'stockAlerts', color: 'text-red-500' },
+    { label: 'ALERTS', icon: Megaphone, count: 0, tab: 'stockAlerts', color: 'text-red-500' },
     { label: 'CATALOG', icon: Package, count: medicines?.length || 0, tab: 'itemMaster', color: 'text-green-600' },
     { label: 'FORMULAS', icon: Dna, count: formulas?.length || 0, tab: 'moleculeMaster', color: 'text-green-500' },
   ];
@@ -314,23 +345,6 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
             <p className="text-4xl font-black text-gray-900 tracking-tighter">{card.count}</p>
           </Card>
         ))}
-      </div>
-    </div>
-  );
-}
-
-function SectionHeader({ title, subtitle, onBack, children }: { title: string, subtitle: string, onBack: () => void, children?: React.ReactNode }) {
-  return (
-    <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
-      <div className="flex items-center gap-4">
-        <button onClick={onBack} className="rounded-full bg-white shadow-sm h-12 w-12 hover:scale-110 transition-transform flex items-center justify-center"><ChevronRight className="w-5 h-5 rotate-180" /></button>
-        <div className="space-y-1">
-          <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">{title}</h2>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{subtitle}</p>
-        </div>
-      </div>
-      <div className="flex flex-wrap justify-center gap-3">
-        {children}
       </div>
     </div>
   );
@@ -406,7 +420,6 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
               ) : (orders?.length === 0 || !orders) ? (
                 <tr><td colSpan={6} className="p-20 text-center font-bold text-gray-400 uppercase tracking-widest">Waiting for orders from Firestore...</td></tr>
               ) : orders?.map(order => {
-                // DEFENSIVE RENDERING FOR THE ROW
                 const patientMobile = order?.phoneNumber || <span className="text-red-500 font-black">NO PHONE</span>;
                 const deliveryAddress = order?.shippingDetails?.street || <span className="text-red-500 font-black">MISSING ADDRESS</span>;
                 const itemCount = order?.items?.length || 0;
@@ -895,7 +908,6 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
              <p className="font-black text-gray-400 uppercase tracking-widest text-[10px]">Waiting for enquiries from Firestore...</p>
           </div>
         ) : enquiries?.map(enq => {
-          // DEFENSIVE RENDERING FOR ENQUIRY CARDS
           const patientMobile = enq?.phoneNumber || <span className="text-red-500 font-black">NO PHONE</span>;
           const patientName = enq?.patientName || 'Patient Request';
 
@@ -1001,7 +1013,7 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
   
   const calculateDiscount = () => {
     const subtotal = calculateSubtotal();
-    if (!activePromo || subtotal < activePromo.minOrderValue) return 0;
+    if (!activePromo || subtotal < (activePromo.minOrderValue || 0)) return 0;
     if (activePromo.discountType === 'fixed') return activePromo.discountValue;
     return (subtotal * (activePromo.discountValue / 100));
   };
@@ -1065,7 +1077,7 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
             <Button onClick={handleCompleteOrder} disabled={orderItems.length === 0} className="rounded-full h-12 px-8 font-black text-[10px] uppercase bg-white text-primary hover:bg-white/90 shadow-xl transition-all gap-2">
               <Check className="w-4 h-4" /> Complete Order
             </Button>
-            <Button variant="ghost" size="icon" onClose={onClose} className="rounded-xl bg-white/5 text-white hover:bg-white/10 ml-2">
+            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl bg-white/5 text-white hover:bg-white/10 ml-2">
                <X className="w-5 h-5" />
             </Button>
           </div>
@@ -1202,9 +1214,356 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
   );
 }
 
-// --- PLACEHOLDER TABS ---
+// --- MANAGEMENT TABS (VOUCHERS, FEES, CUSTOMERS, ALERTS) ---
 
-function PromoCodesTab({ onBack }: { onBack: () => void }) { return <div className="space-y-8"><SectionHeader title="Coupons" subtitle="Manage offers" onBack={onBack} /></div>; }
-function FeesTab({ onBack }: { onBack: () => void }) { return <div className="space-y-8"><SectionHeader title="Fees" subtitle="Manage dynamic charges" onBack={onBack} /></div>; }
-function CustomersTab({ onBack }: { onBack: () => void }) { return <div className="space-y-8"><SectionHeader title="Customers" subtitle="Manage patient registry" onBack={onBack} /></div>; }
-function StockAlertsTab({ onBack }: { onBack: () => void }) { return <div className="space-y-8"><SectionHeader title="Stock Alerts" subtitle="Manage restock queue" onBack={onBack} /></div>; }
+function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
+  const promosQuery = useMemoFirebase(() => query(collection(db, 'promocodes'), orderBy('code', 'asc')), [db]);
+  const { data: promos, isLoading } = useCollection(promosQuery);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingPromo, setEditingMol] = useState<any>(null);
+
+  return (
+    <div className="space-y-8 animate-in slide-in-from-bottom-2">
+      <SectionHeader title="Clinical Coupons" subtitle="Manage patient offers" onBack={onBack}>
+        <Button onClick={() => { setEditingMol(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white">
+          <Plus className="w-4 h-4" /> New Coupon
+        </Button>
+      </SectionHeader>
+
+      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
+              <tr>
+                <th className="px-10 py-8">Code</th>
+                <th className="px-10 py-8">Type</th>
+                <th className="px-10 py-8">Value</th>
+                <th className="px-10 py-8">Status</th>
+                <th className="px-10 py-8 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {isLoading ? (
+                <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
+              ) : promos?.length === 0 ? (
+                <tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No active coupons</td></tr>
+              ) : promos?.map(promo => (
+                <tr key={promo.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-10 py-8 font-black text-sm uppercase tracking-widest text-primary">{promo.code}</td>
+                  <td className="px-10 py-8 text-[10px] font-bold uppercase text-gray-400">{promo.discountType}</td>
+                  <td className="px-10 py-8 font-black text-accent">{promo.discountType === 'fixed' ? '₹' : ''}{promo.discountValue}{promo.discountType === 'percentage' ? '%' : ''}</td>
+                  <td className="px-10 py-8">
+                    <Badge className={cn("rounded-full uppercase font-black text-[8px]", promo.isActive ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400")}>
+                      {promo.isActive ? 'ACTIVE' : 'DISABLED'}
+                    </Badge>
+                  </td>
+                  <td className="px-10 py-8 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => { setEditingMol(promo); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4 text-gray-400" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'promocodes', promo.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden shadow-3xl">
+          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Coupon</DialogTitle></div>
+          <div className="p-8">
+            <PromoForm db={db} initialData={editingPromo} onSuccess={() => setIsFormOpen(false)} />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const [form, setForm] = useState({
+    code: initialData?.code || '',
+    description: initialData?.description || '',
+    discountType: initialData?.discountType || 'fixed',
+    discountValue: initialData?.discountValue || 0,
+    minOrderValue: initialData?.minOrderValue || 0,
+    isActive: initialData?.isActive ?? true,
+    applyTo: 'cart'
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = { ...form, discountValue: Number(form.discountValue), minOrderValue: Number(form.minOrderValue) };
+    initialData?.id ? updateDocumentNonBlocking(doc(db, 'promocodes', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'promocodes'), payload);
+    onSuccess();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Coupon Code</Label><Input value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase()})} required className="rounded-2xl h-14 bg-gray-50 border-none font-black text-lg tracking-widest px-6" /></div>
+      <div className="grid grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-gray-400">Type</Label>
+          <Select value={form.discountType} onValueChange={v => setForm({...form, discountType: v})}>
+            <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
+            <SelectContent className="rounded-2xl"><SelectItem value="fixed">Fixed Amount</SelectItem><SelectItem value="percentage">Percentage %</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Value</Label><Input type="number" value={form.discountValue} onChange={e => setForm({...form, discountValue: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      </div>
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Min Order Requirement</Label><Input type="number" value={form.minOrderValue} onChange={e => setForm({...form, minOrderValue: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Voucher</Button>
+    </form>
+  );
+}
+
+function FeesTab({ db, onBack }: { db: any, onBack: () => void }) {
+  const feesQuery = useMemoFirebase(() => query(collection(db, 'fees'), orderBy('name', 'asc')), [db]);
+  const { data: fees, isLoading } = useCollection(feesQuery);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingFee, setEditingFee] = useState<any>(null);
+
+  return (
+    <div className="space-y-8 animate-in slide-in-from-bottom-2">
+      <SectionHeader title="Clinical Fees" subtitle="Manage dynamic charges" onBack={onBack}>
+        <Button onClick={() => { setEditingFee(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white">
+          <Plus className="w-4 h-4" /> Add Charge
+        </Button>
+      </SectionHeader>
+
+      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
+              <tr>
+                <th className="px-10 py-8">Charge Name</th>
+                <th className="px-10 py-8">Amount</th>
+                <th className="px-10 py-8">Type</th>
+                <th className="px-10 py-8">Status</th>
+                <th className="px-10 py-8 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {isLoading ? (
+                <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
+              ) : fees?.length === 0 ? (
+                <tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No clinical fees configured</td></tr>
+              ) : fees?.map(fee => (
+                <tr key={fee.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-10 py-8 font-black text-sm uppercase">{fee.name}</td>
+                  <td className="px-10 py-8 font-black text-gray-900">₹{fee.amount}</td>
+                  <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">{fee.type}</td>
+                  <td className="px-10 py-8">
+                    <Badge className={cn("rounded-full font-black text-[8px]", fee.isActive ? "bg-accent text-white" : "bg-gray-100 text-gray-400")}>
+                      {fee.isActive ? 'ENABLED' : 'PAUSED'}
+                    </Badge>
+                  </td>
+                  <td className="px-10 py-8 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => { setEditingFee(fee); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4 text-gray-400" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'fees', fee.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden shadow-3xl">
+          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Fee Configuration</DialogTitle></div>
+          <div className="p-8">
+            <FeeForm db={db} initialData={editingFee} onSuccess={() => setIsFormOpen(false)} />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const [form, setForm] = useState({
+    name: initialData?.name || '',
+    amount: initialData?.amount || 0,
+    type: initialData?.type || 'fixed',
+    isActive: initialData?.isActive ?? true
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = { ...form, amount: Number(form.amount) };
+    initialData?.id ? updateDocumentNonBlocking(doc(db, 'fees', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'fees'), payload);
+    onSuccess();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Charge Name (e.g. Delivery Charge)</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <div className="grid grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-gray-400">Type</Label>
+          <Select value={form.type} onValueChange={v => setForm({...form, type: v as 'fixed' | 'percentage'})}>
+            <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
+            <SelectContent className="rounded-2xl"><SelectItem value="fixed">Fixed ₹</SelectItem><SelectItem value="percentage">Percentage %</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Amount</Label><Input type="number" value={form.amount} onChange={e => setForm({...form, amount: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      </div>
+      <div className="flex items-center gap-2 p-2">
+        <input type="checkbox" id="active" checked={form.isActive} onChange={e => setForm({...form, isActive: e.target.checked})} className="w-5 h-5 accent-primary" />
+        <Label htmlFor="active" className="text-[10px] font-black uppercase text-gray-600">Active and Chargeable</Label>
+      </div>
+      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Configuration</Button>
+    </form>
+  );
+}
+
+function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
+  const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles'), orderBy('createdAt', 'desc')) : null, [db, isVerified]);
+  const { data: users, isLoading } = useCollection(usersQuery);
+
+  return (
+    <div className="space-y-8 animate-in slide-in-from-bottom-2">
+      <SectionHeader title="Patient Registry" subtitle="Manage customer profiles" onBack={onBack} />
+
+      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
+              <tr>
+                <th className="px-10 py-8">Patient Name</th>
+                <th className="px-10 py-8">Mobile Number</th>
+                <th className="px-10 py-8">Joined On</th>
+                <th className="px-10 py-8 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {isLoading ? (
+                <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
+              ) : users?.length === 0 ? (
+                <tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No registered patients</td></tr>
+              ) : users?.map(patient => (
+                <tr key={patient.id} className="hover:bg-gray-50/50 transition-colors group">
+                  <td className="px-10 py-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-primary font-black text-xs">
+                        {patient.name?.charAt(0) || 'P'}
+                      </div>
+                      <span className={cn("font-black text-sm uppercase tracking-tight", !patient.name && "text-red-500")}>
+                        {patient.name || 'NO NAME'}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-10 py-8 font-bold text-sm text-gray-600">
+                    <span className={cn(!patient.phone && "text-red-500 font-black")}>
+                      {patient.phone || 'MISSING PHONE'}
+                    </span>
+                  </td>
+                  <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">
+                    {patient.createdAt ? format(new Date(patient.createdAt), 'MMM dd, yyyy') : 'N/A'}
+                  </td>
+                  <td className="px-10 py-8 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"><Eye className="w-4 h-4 text-gray-400" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'userProfiles', patient.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function AlertsTab({ db, onBack }: { db: any, onBack: () => void }) {
+  const alertsQuery = useMemoFirebase(() => query(collection(db, 'systemAlerts'), orderBy('createdAt', 'desc')), [db]);
+  const { data: alerts, isLoading } = useCollection(alertsQuery);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingAlert, setEditingAlert] = useState<any>(null);
+
+  return (
+    <div className="space-y-8 animate-in slide-in-from-bottom-2">
+      <SectionHeader title="Clinical Broadcasts" subtitle="System-wide patient alerts" onBack={onBack}>
+        <Button onClick={() => { setEditingAlert(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-red-600 text-white shadow-lg shadow-red-100">
+          <Plus className="w-4 h-4" /> Create Alert
+        </Button>
+      </SectionHeader>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {isLoading ? (
+          <div className="col-span-full py-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></div>
+        ) : alerts?.length === 0 ? (
+          <div className="col-span-full py-20 text-center bg-white rounded-[40px] border border-dashed border-gray-200">
+            <Megaphone className="w-12 h-12 text-gray-100 mx-auto mb-4" />
+            <p className="font-black text-gray-300 uppercase tracking-widest text-[10px]">No active broadcasts</p>
+          </div>
+        ) : alerts?.map(alert => (
+          <Card key={alert.id} className={cn("rounded-[32px] p-6 border-none shadow-sm transition-all hover:shadow-xl", alert.isActive ? "bg-red-50/50 ring-2 ring-red-100" : "bg-white")}>
+            <div className="flex justify-between items-start mb-4">
+              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", alert.isActive ? "bg-red-600 text-white" : "bg-gray-100 text-gray-400")}>
+                <Megaphone className="w-5 h-5" />
+              </div>
+              <Badge className={cn("rounded-full text-[8px] font-black px-3 py-1", alert.isActive ? "bg-red-600 text-white" : "bg-gray-100 text-gray-400")}>
+                {alert.isActive ? 'LIVE' : 'OFF'}
+              </Badge>
+            </div>
+            <div className="space-y-2 mb-6">
+              <h3 className="font-black text-sm uppercase tracking-tight text-gray-900">{alert.title}</h3>
+              <p className="text-xs font-bold text-gray-500 line-clamp-2 uppercase">{alert.message}</p>
+            </div>
+            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <span className="text-[8px] font-black text-gray-400 uppercase">{format(alert.createdAt?.toDate?.() || new Date(), 'MMM dd')}</span>
+              <div className="flex gap-1">
+                <Button variant="ghost" size="icon" onClick={() => { setEditingAlert(alert); setIsFormOpen(true); }} className="h-8 w-8 rounded-lg"><Edit2 className="w-3.5 h-3.5" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'systemAlerts', alert.id))} className="h-8 w-8 rounded-lg text-red-300 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden shadow-3xl">
+          <div className="bg-red-600 p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Broadcast Message</DialogTitle></div>
+          <div className="p-8">
+            <AlertForm db={db} initialData={editingAlert} onSuccess={() => setIsFormOpen(false)} />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function AlertForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const [form, setForm] = useState({
+    title: initialData?.title || '',
+    message: initialData?.message || '',
+    isActive: initialData?.isActive ?? true
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = { ...form, createdAt: initialData?.createdAt || serverTimestamp() };
+    initialData?.id ? updateDocumentNonBlocking(doc(db, 'systemAlerts', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'systemAlerts'), payload);
+    onSuccess();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Broadcast Title</Label><Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Notification Message</Label><Textarea value={form.message} onChange={e => setForm({...form, message: e.target.value})} required className="rounded-2xl min-h-[120px] bg-gray-50 border-none font-bold p-6" /></div>
+      <div className="flex items-center gap-2">
+        <input type="checkbox" id="broadcast-active" checked={form.isActive} onChange={e => setForm({...form, isActive: e.target.checked})} className="w-5 h-5 accent-red-600" />
+        <Label htmlFor="broadcast-active" className="text-[10px] font-black uppercase text-gray-600">Publish to patients immediately</Label>
+      </div>
+      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-red-600 text-white shadow-xl shadow-red-100">Send Broadcast</Button>
+    </form>
+  );
+}
