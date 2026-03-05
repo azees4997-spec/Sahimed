@@ -26,7 +26,6 @@ export default function ProductCard({ product }: { product: Product }) {
     if (isOutOfStock) return;
     
     addToCart(product);
-    // Silent confirmation per prior context of non-intrusive UI
   };
 
   const handleNotify = (e: React.MouseEvent) => {
@@ -74,7 +73,7 @@ export default function ProductCard({ product }: { product: Product }) {
     <Link 
       href={`/product/${product.id}`}
       className={cn(
-        "group bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 overflow-hidden flex flex-col active:scale-[0.98] h-full",
+        "group bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col active:scale-[0.98] h-full",
         isOutOfStock && "opacity-90"
       )}
     >
@@ -92,14 +91,6 @@ export default function ProductCard({ product }: { product: Product }) {
           loading="lazy"
         />
         
-        {savingsPercent > 0 && !isOutOfStock && (
-          <div className="absolute top-3 left-3 z-10">
-            <div className="bg-accent text-white text-[8px] sm:text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded shadow-xl animate-in fade-in zoom-in duration-500">
-              SAVE ₹{savingsAmount} ({savingsPercent}%)
-            </div>
-          </div>
-        )}
-
         {isOutOfStock && (
           <div className="absolute inset-0 flex items-center justify-center p-2 bg-white/40 backdrop-blur-[2px]">
             <Badge variant="destructive" className="font-black text-[8px] uppercase tracking-widest rounded-full px-3 py-1 bg-gray-900/90 shadow-2xl border-none">Out of Stock</Badge>
@@ -108,37 +99,38 @@ export default function ProductCard({ product }: { product: Product }) {
       </div>
       
       <div className="p-4 flex flex-col flex-1">
-        <div className="space-y-1 mb-4">
-          <h3 className="font-black text-gray-900 text-[13px] sm:text-base uppercase tracking-tight group-hover:text-primary transition-colors leading-tight line-clamp-2 min-h-[2.5rem]">
+        <div className="mb-3">
+          <h3 className="font-black text-gray-900 text-sm sm:text-base uppercase tracking-tight group-hover:text-primary transition-colors leading-tight line-clamp-2 min-h-[2.5rem]">
             {product.name}
           </h3>
-          <p className="text-[10px] sm:text-xs font-medium text-gray-400 uppercase truncate">
+          <p className="text-[10px] font-bold text-gray-400 uppercase truncate">
             {product.saltComposition}
           </p>
         </div>
 
-        <div className="space-y-1.5 mb-5">
-          <div className="flex items-center gap-2">
-            <span className="text-[8px] font-black text-gray-300 uppercase tracking-[0.2em]">Packing:</span>
+        <div className="space-y-1 mb-4">
+          <div className="flex items-center gap-1">
+            <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">PACKING:</span>
             <span className="text-[10px] font-bold text-gray-600 uppercase">{product.packSize}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[8px] font-black text-gray-300 uppercase tracking-[0.2em]">Marketer:</span>
+          <div className="flex items-center gap-1">
+            <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">MARKETER:</span>
             <span className="text-[10px] font-bold text-gray-600 uppercase truncate max-w-[120px]">{product.manufacturer}</span>
           </div>
         </div>
         
         <div className="mt-auto space-y-4 pt-4 border-t border-dashed border-gray-100">
           <div className="flex flex-col gap-0.5">
-            <div className="flex items-center justify-between items-end">
-              <div className="flex flex-col">
-                <span className="text-[9px] sm:text-[10px] text-gray-400 font-bold line-through tracking-tight">MRP ₹{Math.round(mrp)}</span>
-                <span className="text-xl sm:text-2xl font-black text-accent tracking-tighter">₹{product.price}</span>
-              </div>
-              <div className="text-right">
-                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">₹{unitPrice} / UNIT</p>
-              </div>
+            <span className="text-[10px] text-red-500 font-bold line-through tracking-tight">MRP ₹{Math.round(mrp)}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-xl sm:text-2xl font-black text-accent tracking-tighter leading-none">₹{product.price}</span>
+              {savingsPercent > 0 && !isOutOfStock && (
+                <div className="bg-accent/10 text-accent text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded">
+                  SAVE ₹{savingsAmount} ({savingsPercent}%)
+                </div>
+              )}
             </div>
+            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">₹{unitPrice} / UNIT</p>
           </div>
           
           <div className="flex items-center justify-between gap-2">
@@ -146,7 +138,7 @@ export default function ProductCard({ product }: { product: Product }) {
               <Button 
                 onClick={handleNotify}
                 variant="outline"
-                className="rounded-full h-10 sm:h-12 w-full border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-600 font-black text-[9px] sm:text-[10px] uppercase tracking-widest gap-2 shadow-sm transition-all"
+                className="rounded-full h-10 w-full border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-600 font-black text-[9px] uppercase tracking-widest gap-2 shadow-sm transition-all"
               >
                 <BellRing className="w-3.5 h-3.5" /> Notify Me
               </Button>
@@ -169,7 +161,7 @@ export default function ProductCard({ product }: { product: Product }) {
             ) : (
               <Button 
                 onClick={handleAdd} 
-                className="rounded-full h-10 sm:h-12 w-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] sm:text-[11px] uppercase tracking-[0.15em] gap-2 shadow-lg hover:shadow-primary/30 active:scale-95 transition-all"
+                className="rounded-full h-10 w-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest gap-2 shadow-lg active:scale-95 transition-all"
               >
                 ADD <ShoppingCart className="w-4 h-4" />
               </Button>

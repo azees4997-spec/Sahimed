@@ -153,13 +153,13 @@ export default function Home() {
               <Link href="/search" className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline">View All</Link>
             </div>
             {catsLoading ? (
-              <div className="grid grid-cols-3 gap-3 sm:gap-4 sm:grid-cols-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-6">
                 {[...Array(6)].map((_, i) => (
                   <Skeleton key={i} className="aspect-square rounded-[24px]" />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-3 sm:gap-4 sm:grid-cols-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-6">
                 {categories?.map((cat: any) => (
                   <Link key={cat.id} href={`/search?c=${cat.name}`} className="group flex flex-col items-center active:scale-95 transition-transform">
                     <div className="w-full aspect-square bg-white rounded-[24px] flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-100 p-4 sm:p-6 group-hover:bg-primary group-hover:text-white transition-all duration-500 hover:shadow-lg">
@@ -198,7 +198,7 @@ export default function Home() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3 sm:gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                 {displayMedicines?.map((p: any) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
