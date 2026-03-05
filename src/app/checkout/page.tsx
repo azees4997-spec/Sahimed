@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { MapPin, ShieldCheck, Loader2, Phone, User, Home, Building2, Hash, ArrowRight, LocateFixed, AlertCircle, UserPlus, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, updateDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp, doc, getDoc, addDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
@@ -216,12 +216,14 @@ export default function CheckoutPage() {
       const docRef = await addDoc(orderRef, orderData);
       
       if (!isSomeoneElse) {
-        updateDocumentNonBlocking(doc(db, 'userProfiles', user.uid), {
+        // Use setDocumentNonBlocking with merge: true to handle case where profile doesn't exist yet
+        // This avoids the "Missing or insufficient permissions" error triggered by updateDoc on non-existent docs
+        setDocumentNonBlocking(doc(db, 'userProfiles', user.uid), {
           name: orderInfo.patientName,
           phone: orderData.phoneNumber,
           address: orderData.shippingDetails,
           updatedAt: serverTimestamp()
-        });
+        }, { merge: true });
       }
 
       clearCart();
