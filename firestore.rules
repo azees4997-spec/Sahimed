@@ -88,6 +88,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /systemAlerts/{alertId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /stockEnquiries/{enquiryId} {
       allow create: if isSignedIn();
       allow get, list, delete: if isAdmin();

@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "Customer": {
@@ -96,6 +95,20 @@
         "validUntil": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "code", "discountType", "discountValue", "applyTo", "isActive"]
+    },
+    "SystemAlert": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SystemAlert",
+      "type": "object",
+      "description": "Represents a system-wide clinical broadcast.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "message", "isActive"]
     }
   },
   "auth": {
@@ -149,6 +162,14 @@
           "entityName": "StockEnquiry",
           "schema": { "type": "object", "properties": { "medicineId": { "type": "string" }, "userId": { "type": "string" } } },
           "description": "Requests for out-of-stock items."
+        }
+      },
+      {
+        "path": "/systemAlerts/{alertId}",
+        "definition": {
+          "entityName": "SystemAlert",
+          "schema": { "$ref": "#/backend/entities/SystemAlert" },
+          "description": "System-wide broadcasts for patients."
         }
       }
     ]
