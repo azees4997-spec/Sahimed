@@ -11,30 +11,61 @@ interface FirebaseSdks {
   firestore: Firestore;
 }
 
+/**
+ * Persists the SDK instances globally on the window object to survive 
+ * module re-evaluations during hot module replacement (HMR) in development.
+ */
+declare global {
+  interface Window {
+    __sahimedFirebaseSdks?: FirebaseSdks;
+  }
+}
+
 let cachedSdks: FirebaseSdks | null = null;
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase(): FirebaseSdks {
-  if (cachedSdks) return cachedSdks;
-
-  if (!getApps().length) {
-    let firebaseApp;
-    try {
-      firebaseApp = initializeApp();
-    } catch (e) {
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
-      }
-      firebaseApp = initializeApp(firebaseConfig);
-    }
-    cachedSdks = getSdks(firebaseApp);
-    return cachedSdks;
+  // Check if we already have initialized SDKs in this window session
+  if (typeof window !== 'undefined' && window.__sahimedFirebaseSdks) {
+    return window.__sahimedFirebaseSdks;
   }
 
-  cachedSdks = getSdks(getApp());
-  return cachedSdks;
+  if (cachedSdks) return cachedSdks;
+
+  let firebaseApp: FirebaseApp;
+  const existingApps = getApps();
+
+  if (!existingApps.length) {
+    try {
+      // First attempt: environment-based initialization
+      firebaseApp = initializeApp();
+    } catch (e) {
+      // Fallback: explicit config object
+      firebaseApp = initializeApp(firebaseConfig);
+    }
+  } else {
+    firebaseApp = getApp();
+  }
+
+  const sdks: FirebaseSdks = {
+    firebaseApp,
+    auth: getAuth(firebaseApp),
+    firestore: getFirestore(firebaseApp)
+  };
+
+  cachedSdks = sdks;
+  
+  if (typeof window !== 'undefined') {
+    window.__sahimedFirebaseSdks = sdks;
+  }
+
+  return sdks;
 }
 
+/**
+ * Returns SDK instances for a given Firebase app.
+ * Used internally by initializeFirebase.
+ */
 export function getSdks(firebaseApp: FirebaseApp): FirebaseSdks {
   return {
     firebaseApp,
