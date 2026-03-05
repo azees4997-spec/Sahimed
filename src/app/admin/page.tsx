@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
@@ -51,7 +50,11 @@ import {
   Megaphone,
   Stethoscope,
   Activity,
-  ClipboardList
+  ClipboardList,
+  Star,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  UploadCloud
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -89,10 +92,12 @@ import {
   setDocumentNonBlocking,
   updateDocumentNonBlocking,
   deleteDocumentNonBlocking,
-  addDocumentNonBlocking
+  addDocumentNonBlocking,
+  initializeFirebase
 } from '@/firebase';
 import { doc, collection, query, collectionGroup, getDoc, getDocs, serverTimestamp, orderBy, where, writeBatch } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -494,12 +499,21 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 
   const handleExport = () => {
     if (!filtered) return;
-    const headers = "Name,SKU,Manufacturer,Price,MRP,Stock,Category,Generic,RX_Required\n";
-    const rows = filtered.map(m => `"${m.name}","${m.sku || ''}","${m.manufacturer}",${m.price},${m.mrp},${m.availableQuantity},"${m.category}",${m.isGeneric},${m.prescriptionRequired}`).join("\n");
+    const headers = "Name,SKU,Manufacturer,Price,MRP,Stock,Category,Generic,RX_Required,PackSize,Description,HowToUse,Treatment,SafetyAdvice,SideEffects,AlcoholInteraction,PregnancyInteraction,LactationInteraction,DrivingInteraction,KidneyInteraction,LiverInteraction,ImageURL1,ImageURL2,ImageURL3\n";
+    const rows = filtered.map(m => `"${m.name}","${m.sku || ''}","${m.manufacturer}",${m.price},${m.mrp},${m.availableQuantity},"${m.category}",${m.isGeneric},${m.prescriptionRequired},"${m.packSize || ''}","${(m.description || '').replace(/"/g, '""')}","${(m.howToUse || '').replace(/"/g, '""')}","${(m.treatment || '').replace(/"/g, '""')}","${(m.safetyAdvice || '').replace(/"/g, '""')}","${(m.sideEffects || '').replace(/"/g, '""')}","${(m.alcoholInteraction || '').replace(/"/g, '""')}","${(m.pregnancyInteraction || '').replace(/"/g, '""')}","${(m.lactationInteraction || '').replace(/"/g, '""')}","${(m.drivingInteraction || '').replace(/"/g, '""')}","${(m.kidneyInteraction || '').replace(/"/g, '""')}","${(m.liverInteraction || '').replace(/"/g, '""')}","${m.imageUrls?.[0] || ''}","${m.imageUrls?.[1] || ''}","${m.imageUrls?.[2] || ''}"`).join("\n");
     const blob = new Blob([headers + rows], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = `SahiMed_Catalogue_${format(new Date(), 'yyyyMMdd')}.csv`; a.click();
+    a.href = url; a.download = `SahiMed_Catalogue_Master_${format(new Date(), 'yyyyMMdd')}.csv`; a.click();
+  };
+
+  const downloadTemplate = () => {
+    const headers = "Name,SKU,Manufacturer,Price,MRP,Stock,Category,Generic,RX_Required,PackSize,Description,HowToUse,Treatment,SafetyAdvice,SideEffects,AlcoholInteraction,PregnancyInteraction,LactationInteraction,DrivingInteraction,KidneyInteraction,LiverInteraction,ImageURL1,ImageURL2,ImageURL3\n";
+    const sample = `"Sample Product","SKU123","SahiMed Labs",100,150,50,"Diabetes",true,false,"Strip of 10","Clinical Desc","1 daily","Control sugar","Safe","Nausea","None","Consult Dr","Safe","Safe","Safe","Safe","https://picsum.photos/300","",""`;
+    const blob = new Blob([headers + sample], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `SahiMed_Catalogue_Template.csv`; a.click();
   };
 
   const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -513,22 +527,38 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
       let count = 0;
       for (const line of lines) {
         if (!line.trim()) continue;
-        const [name, sku, manufacturer, price, mrp, stock, category] = line.split(",").map(s => s.replace(/"/g, '').trim());
+        const [name, sku, manufacturer, price, mrp, stock, category, generic, rx, pack, desc, how, treat, safety, side, alc, preg, lact, driv, kid, liv, img1, img2, img3] = line.split(",").map(s => s.replace(/"/g, '').trim());
         const ref = doc(collection(db, 'medicines'));
+        const images = [img1, img2, img3].filter(Boolean);
         batch.set(ref, { 
           name, sku, manufacturer, 
           price: Number(price) || 0, 
           mrp: Number(mrp) || 0, 
           availableQuantity: Number(stock) || 0, 
           category,
-          isGeneric: false,
-          prescriptionRequired: false,
-          createdAt: serverTimestamp()
+          isGeneric: generic?.toLowerCase() === 'true',
+          prescriptionRequired: rx?.toLowerCase() === 'true',
+          packSize: pack,
+          description: desc,
+          howToUse: how,
+          treatment: treat,
+          safetyAdvice: safety,
+          sideEffects: side,
+          alcoholInteraction: alc,
+          pregnancyInteraction: preg,
+          lactationInteraction: lact,
+          drivingInteraction: driv,
+          kidneyInteraction: kid,
+          liverInteraction: liv,
+          imageUrls: images,
+          imageUrl: images[0] || '',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
         });
         count++;
       }
       await batch.commit();
-      toast({ title: "Bulk Upload Success", description: `${count} items added to catalogue.` });
+      toast({ title: "Bulk Upload Success", description: `${count} clinical entries added.` });
     };
     reader.readAsText(file);
   };
@@ -537,7 +567,8 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Product Master" subtitle="Global Clinical Catalogue" onBack={onBack}>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExport} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Download className="w-4 h-4" /> Export CSV</Button>
+          <Button variant="outline" onClick={downloadTemplate} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><FileDown className="w-4 h-4" /> Template</Button>
+          <Button variant="outline" onClick={handleExport} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Download className="w-4 h-4" /> Export</Button>
           <div className="relative">
             <input type="file" accept=".csv" onChange={handleBulkUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
             <Button variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Upload className="w-4 h-4" /> Bulk Upload</Button>
@@ -584,6 +615,8 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
   const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc')), [db]);
   const { data: molecules } = useCollection(molsQuery);
+  const { storage } = initializeFirebase();
+  const { toast } = useToast();
 
   const [form, setForm] = useState({
     name: initialData?.name || '',
@@ -593,7 +626,6 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     mrp: initialData?.mrp || 0,
     availableQuantity: initialData?.availableQuantity || 0,
     category: initialData?.category || '',
-    imageUrl: initialData?.imageUrl || '',
     isGeneric: initialData?.isGeneric || false,
     prescriptionRequired: initialData?.prescriptionRequired || false,
     moleculeId: initialData?.moleculeId || '',
@@ -611,9 +643,47 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     liverInteraction: initialData?.liverInteraction || ''
   });
 
+  const [imageUrls, setImageUrls] = useState<string[]>(initialData?.imageUrls || (initialData?.imageUrl ? [initialData.imageUrl] : []));
+  const [thumbnailIdx, setThumbnailIdx] = useState<number>(0);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const storageRef = ref(storage, `medicines/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      const newUrls = [...imageUrls];
+      newUrls[index] = url;
+      setImageUrls(newUrls);
+      toast({ title: "Image Uploaded" });
+    } catch (err) {
+      toast({ variant: 'destructive', title: "Upload Failed" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleUrlPaste = (val: string, index: number) => {
+    const newUrls = [...imageUrls];
+    newUrls[index] = val;
+    setImageUrls(newUrls);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...form, price: Number(form.price), mrp: Number(form.mrp), availableQuantity: Number(form.availableQuantity), updatedAt: serverTimestamp() };
+    const finalImages = imageUrls.filter(Boolean).slice(0, 3);
+    const payload = { 
+      ...form, 
+      price: Number(form.price), 
+      mrp: Number(form.mrp), 
+      availableQuantity: Number(form.availableQuantity), 
+      imageUrls: finalImages,
+      imageUrl: finalImages[thumbnailIdx] || finalImages[0] || '',
+      updatedAt: serverTimestamp() 
+    };
     initialData?.id ? updateDocumentNonBlocking(doc(db, 'medicines', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'medicines'), { ...payload, createdAt: serverTimestamp() });
     onSuccess();
   };
@@ -623,9 +693,9 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       <Tabs defaultValue="basic" className="w-full">
         <TabsList className="bg-gray-100 p-1 rounded-2xl h-14 w-full flex mb-8">
           <TabsTrigger value="basic" className="flex-1 rounded-xl font-black text-[10px] uppercase">Basic Info</TabsTrigger>
+          <TabsTrigger value="images" className="flex-1 rounded-xl font-black text-[10px] uppercase">Images (3 Max)</TabsTrigger>
           <TabsTrigger value="clinical" className="flex-1 rounded-xl font-black text-[10px] uppercase">Clinical Data</TabsTrigger>
-          <TabsTrigger value="safety" className="flex-1 rounded-xl font-black text-[10px] uppercase">Safety Advice</TabsTrigger>
-          <TabsTrigger value="interactions" className="flex-1 rounded-xl font-black text-[10px] uppercase">Interactions</TabsTrigger>
+          <TabsTrigger value="safety" className="flex-1 rounded-xl font-black text-[10px] uppercase">Safety & Interactions</TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic" className="space-y-6 animate-in fade-in duration-300">
@@ -647,6 +717,34 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
           </div>
         </TabsContent>
 
+        <TabsContent value="images" className="space-y-8 animate-in fade-in duration-300">
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[0, 1, 2].map(idx => (
+                <div key={idx} className="bg-gray-50 rounded-[32px] p-6 border-2 border-dashed border-gray-200 flex flex-col items-center gap-4 relative">
+                   <button type="button" onClick={() => setThumbnailIdx(idx)} className={cn("absolute top-4 right-4 p-2 rounded-full transition-all", thumbnailIdx === idx ? "bg-primary text-white" : "bg-white text-gray-300")}>
+                      <Star className="w-4 h-4 fill-current" />
+                   </button>
+                   <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center overflow-hidden border shadow-inner">
+                      {imageUrls[idx] ? <img src={imageUrls[idx]} className="w-full h-full object-contain" /> : <ImageIcon className="text-gray-200 w-10 h-10" />}
+                   </div>
+                   <div className="w-full space-y-3">
+                      <div className="relative">
+                         <input type="file" accept="image/*" onChange={e => handleFileUpload(e, idx)} className="absolute inset-0 opacity-0 cursor-pointer" disabled={uploading} />
+                         <Button variant="outline" className="w-full rounded-xl h-10 text-[9px] font-black uppercase gap-2">
+                            {uploading ? <Loader2 className="animate-spin w-3 h-3" /> : <UploadCloud className="w-3 h-3" />} Device
+                         </Button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                         <LinkIcon className="w-3 h-3 text-gray-400" />
+                         <Input placeholder="Paste URL" value={imageUrls[idx] || ''} onChange={e => handleUrlPaste(e.target.value, idx)} className="h-10 rounded-xl bg-white border-none text-[10px] font-bold" />
+                      </div>
+                   </div>
+                </div>
+              ))}
+           </div>
+           <p className="text-[9px] font-black text-gray-400 uppercase text-center tracking-widest">Max 3 clinical images per product profile.</p>
+        </TabsContent>
+
         <TabsContent value="clinical" className="space-y-6 animate-in fade-in duration-300">
           <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Active Formula Mapping</Label><Select value={form.moleculeId} onValueChange={v => setForm({...form, moleculeId: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select Molecule" /></SelectTrigger><SelectContent className="rounded-2xl">{molecules?.map(m => <SelectItem key={m.id} value={m.id}>{m.molecule} ({m.form})</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Primary Treatment</Label><Textarea value={form.treatment} onChange={e => setForm({...form, treatment: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
@@ -658,17 +756,8 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
           <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Usage Instructions</Label><Textarea value={form.howToUse} onChange={e => setForm({...form, howToUse: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
           <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">General Safety Advice</Label><Textarea value={form.safetyAdvice} onChange={e => setForm({...form, safetyAdvice: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
           <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Kidney Safety</Label><Input value={form.kidneyInteraction} onChange={e => setForm({...form, kidneyInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Liver Safety</Label><Input value={form.liverInteraction} onChange={e => setForm({...form, liverInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="interactions" className="space-y-6 animate-in fade-in duration-300">
-          <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Alcohol Interaction</Label><Input value={form.alcoholInteraction} onChange={e => setForm({...form, alcoholInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Pregnancy Interaction</Label><Input value={form.pregnancyInteraction} onChange={e => setForm({...form, pregnancyInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Lactation Caution</Label><Input value={form.lactationInteraction} onChange={e => setForm({...form, lactationInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Driving Safety</Label><Input value={form.drivingInteraction} onChange={e => setForm({...form, drivingInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Kidney Safety</Label><Input value={form.kidneyInteraction} onChange={e => setForm({...form, kidneyInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
           </div>
         </TabsContent>
       </Tabs>
@@ -696,7 +785,15 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
     const rows = filtered.map(m => `"${m.molecule}","${m.masterId}","${m.form}"`).join("\n");
     const blob = new Blob([headers + rows], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `SahiMed_Registry_${format(new Date(), 'yyyyMMdd')}.csv`; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = `SahiMed_Registry_Master_${format(new Date(), 'yyyyMMdd')}.csv`; a.click();
+  };
+
+  const downloadTemplate = () => {
+    const headers = "Molecule,MasterID,Form\n";
+    const sample = `"Sitagliptin","MOL789","Tablet"`;
+    const blob = new Blob([headers + sample], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `SahiMed_Formula_Template.csv`; a.click();
   };
 
   const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -712,11 +809,11 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
         if (!line.trim()) continue;
         const [molecule, masterId, form] = line.split(",").map(s => s.replace(/"/g, '').trim());
         const ref = doc(collection(db, 'moleculeMaster'));
-        batch.set(ref, { molecule, masterId, form, createdAt: serverTimestamp() });
+        batch.set(ref, { molecule, masterId, form, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
         count++;
       }
       await batch.commit();
-      toast({ title: "Registry Updated", description: `${count} molecules added.` });
+      toast({ title: "Registry Updated", description: `${count} formula entries added.` });
     };
     reader.readAsText(file);
   };
@@ -725,7 +822,8 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Formula Registry" subtitle="Clinical molecule masters" onBack={onBack}>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExport} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Download className="w-4 h-4" /> Export Registry</Button>
+          <Button variant="outline" onClick={downloadTemplate} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><FileDown className="w-4 h-4" /> Template</Button>
+          <Button variant="outline" onClick={handleExport} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Download className="w-4 h-4" /> Export</Button>
           <div className="relative">
             <input type="file" accept=".csv" onChange={handleBulkUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
             <Button variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Upload className="w-4 h-4" /> Bulk Upload</Button>
@@ -774,7 +872,8 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    initialData?.id ? updateDocumentNonBlocking(doc(db, 'moleculeMaster', initialData.id), form) : addDocumentNonBlocking(collection(db, 'moleculeMaster'), { ...form, createdAt: serverTimestamp() });
+    const payload = { ...form, updatedAt: serverTimestamp() };
+    initialData?.id ? updateDocumentNonBlocking(doc(db, 'moleculeMaster', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'moleculeMaster'), { ...payload, createdAt: serverTimestamp() });
     onSuccess();
   };
 
