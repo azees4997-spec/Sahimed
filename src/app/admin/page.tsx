@@ -312,6 +312,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
   const promosQuery = useMemoFirebase(() => query(collection(db, 'promocodes')), [db]);
   const feesQuery = useMemoFirebase(() => query(collection(db, 'fees')), [db]);
+  const alertsQuery = useMemoFirebase(() => query(collection(db, 'systemAlerts')), [db]);
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
 
   const { data: medicines } = useCollection(medsQuery);
@@ -320,6 +321,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const { data: users } = useCollection(usersQuery);
   const { data: promos } = useCollection(promosQuery);
   const { data: fees } = useCollection(feesQuery);
+  const { data: alerts } = useCollection(alertsQuery);
   const { data: enquiries } = useCollection(presQuery);
 
   const stats = [
@@ -328,7 +330,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
     { label: 'COUPONS', icon: Ticket, count: promos?.length || 0, tab: 'promocodes', color: 'text-purple-500' },
     { label: 'FEES', icon: Receipt, count: fees?.length || 0, tab: 'fees', color: 'text-orange-500' },
     { label: 'CUSTOMERS', icon: Users, count: users?.length || 0, tab: 'customers', color: 'text-indigo-500' },
-    { label: 'ALERTS', icon: Megaphone, count: 0, tab: 'stockAlerts', color: 'text-red-500' },
+    { label: 'ALERTS', icon: Megaphone, count: alerts?.length || 0, tab: 'stockAlerts', color: 'text-red-500' },
     { label: 'CATALOG', icon: Package, count: medicines?.length || 0, tab: 'itemMaster', color: 'text-green-600' },
     { label: 'FORMULAS', icon: Dna, count: formulas?.length || 0, tab: 'moleculeMaster', color: 'text-green-500' },
   ];
@@ -394,13 +396,6 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Fulfillment Hub" subtitle="Active order processing" onBack={onBack} />
       
-      {error && (
-        <div className="bg-red-50 p-6 rounded-[32px] border border-red-100 flex items-center gap-4">
-           <AlertCircle className="w-6 h-6 text-red-500" />
-           <p className="text-[10px] font-black uppercase text-red-600">Sync Error: Verify Firestore Indices</p>
-        </div>
-      )}
-
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[1000px]">
@@ -417,15 +412,15 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 <tr><td colSpan={6} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
-              ) : (orders?.length === 0 || !orders) ? (
+              ) : (!orders || orders.length === 0) ? (
                 <tr><td colSpan={6} className="p-20 text-center font-bold text-gray-400 uppercase tracking-widest">Waiting for orders from Firestore...</td></tr>
-              ) : orders?.map(order => {
+              ) : orders.map(order => {
                 const patientMobile = order?.phoneNumber || <span className="text-red-500 font-black">NO PHONE</span>;
                 const deliveryAddress = order?.shippingDetails?.street || <span className="text-red-500 font-black">MISSING ADDRESS</span>;
                 const itemCount = order?.items?.length || 0;
 
                 return (
-                  <tr key={order?.id || Math.random().toString()} className="hover:bg-gray-50/50 transition-colors group">
+                  <tr key={order?.id} className="hover:bg-gray-50/50 transition-colors group">
                     <td className="px-8 py-6 font-black text-xs uppercase">#{order?.id?.substring(0,8) || 'N/A'}</td>
                     <td className="px-8 py-6">
                       <div className="flex flex-col">
@@ -477,13 +472,12 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
       </Card>
 
       <Dialog open={!!selectedOrder && !isShippingDialogOpen} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden shadow-3xl print:shadow-none">
-          <div className="bg-primary p-8 text-white flex justify-between items-center print:bg-white print:text-black">
+        <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden shadow-3xl">
+          <div className="bg-primary p-8 text-white flex justify-between items-center">
             <div><DialogTitle className="text-2xl font-black uppercase">Order Details</DialogTitle><p className="text-[9px] opacity-60 uppercase">ID: {selectedOrder?.id}</p></div>
-            <Button variant="outline" size="icon" onClick={() => window.print()} className="rounded-xl bg-white/10 text-white print:hidden"><Printer className="w-4 h-4" /></Button>
+            <Button variant="outline" size="icon" onClick={() => window.print()} className="rounded-xl bg-white/10 text-white"><Printer className="w-4 h-4" /></Button>
           </div>
           <div className="p-8 space-y-8 overflow-y-auto max-h-[70vh] scrollbar-hide">
-            
             <div className="grid grid-cols-2 gap-8">
                <div className="space-y-4">
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Patient Details</h4>
@@ -497,22 +491,16 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                   <div className="space-y-1">
                      <p className="font-bold text-[11px] leading-relaxed">{selectedOrder?.shippingDetails?.street || 'No Street Provided'}</p>
                      <p className="text-[10px] font-black text-primary uppercase tracking-widest">PIN: {selectedOrder?.shippingDetails?.pincode || 'N/A'}</p>
-                     {selectedOrder?.shippingDetails?.landmark && <p className="text-[10px] text-gray-400 font-bold uppercase">Lmk: {selectedOrder?.shippingDetails?.landmark}</p>}
                   </div>
                </div>
             </div>
-
             <div className="space-y-4">
-               <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Ordered Clinical Items</h4>
+               <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Ordered Items</h4>
                <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
                   {selectedOrder?.items?.map((item: any, i: number) => (
                     <div key={i} className="flex justify-between items-center">
                        <div className="flex items-center gap-3">
-                          {item?.imageUrl ? (
-                            <img src={item.imageUrl} className="w-10 h-10 object-contain bg-white rounded-lg p-1 border" alt="" />
-                          ) : (
-                            <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center"><Package className="w-4 h-4 text-gray-400" /></div>
-                          )}
+                          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border"><Package className="w-4 h-4 text-gray-400" /></div>
                           <div className="text-left">
                             <p className="text-[11px] font-black uppercase">{item?.name || 'Unknown Item'}</p>
                             <p className="text-[9px] text-gray-400 font-bold uppercase">Qty: {item?.quantity || 0}</p>
@@ -523,23 +511,10 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                   )) || <p className="text-[10px] font-black text-gray-300 text-center uppercase">0 ITEMS</p>}
                </div>
             </div>
-
             <div className="flex justify-between items-baseline pt-4 border-t">
               <span className="font-black text-sm uppercase text-gray-400 tracking-widest">Total Payable</span>
               <span className="text-3xl font-black text-accent">₹{selectedOrder?.totalAmount || 0}</span>
             </div>
-            
-            {selectedOrder?.carrier && (
-               <div className="bg-blue-50/50 p-6 rounded-[32px] border border-blue-100/50 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-600 shadow-sm"><Truck className="w-5 h-5" /></div>
-                     <div className="text-left">
-                        <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">Shipping via {selectedOrder.carrier}</p>
-                        <p className="text-xs font-black uppercase text-gray-900">{selectedOrder.trackingId}</p>
-                     </div>
-                  </div>
-               </div>
-            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -550,13 +525,13 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
           <div className="p-8 space-y-6">
              <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-gray-400">Logistics Partner Name</Label>
-                <Input value={shippingData.carrier} onChange={e => setShippingData({...shippingData, carrier: e.target.value})} placeholder="e.g. BlueDart, Delhivery" className="rounded-2xl h-14 bg-gray-50 border-none font-bold shadow-inner px-6" />
+                <Input value={shippingData.carrier} onChange={e => setShippingData({...shippingData, carrier: e.target.value})} placeholder="e.g. BlueDart, Delhivery" className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
              </div>
              <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-gray-400">AWB / Tracking ID</Label>
-                <Input value={shippingData.trackingId} onChange={e => setShippingData({...shippingData, trackingId: e.target.value})} placeholder="Tracking number" className="rounded-2xl h-14 bg-gray-50 border-none font-bold shadow-inner px-6" />
+                <Input value={shippingData.trackingId} onChange={e => setShippingData({...shippingData, trackingId: e.target.value})} placeholder="Tracking number" className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
              </div>
-             <Button onClick={finalizeShipping} className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-blue-600 text-white shadow-xl shadow-blue-200">
+             <Button onClick={finalizeShipping} className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-blue-600 text-white">
                Confirm Shipping
              </Button>
           </div>
@@ -575,45 +550,15 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredMedicines = medicines?.filter(med => 
     med.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     med.sku?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const downloadCSV = () => {
-    if (!medicines) return;
-    const headers = ['ID', 'Name', 'SKU', 'Manufacturer', 'Price', 'MRP', 'Stock', 'Category', 'isGeneric', 'PrescriptionRequired', 'Molecule ID'];
-    const rows = medicines.map(m => [m.id, m.name, m.sku, m.manufacturer, m.price, m.mrp, m.availableQuantity, m.category, m.isGeneric, m.prescriptionRequired, m.moleculeId]);
-    const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(r => r.join(",")).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "sahimed_catalog.csv");
-    document.body.appendChild(link);
-    link.click();
-  };
-
-  const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    toast({ title: "Import Started", description: "Parsing Catalog CSV..." });
-    setTimeout(() => {
-      toast({ title: "Import Complete", description: "Catalog updated." });
-    }, 2000);
-  };
-
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Product Catalog" subtitle="Master inventory management" onBack={onBack}>
-        <Button variant="outline" onClick={downloadCSV} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
-          <Download className="w-4 h-4" /> Export
-        </Button>
-        <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
-          <Upload className="w-4 h-4" /> Bulk Upload
-        </Button>
-        <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleBulkUpload} />
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => setEditingItem(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white shadow-lg">
@@ -719,32 +664,17 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-2 gap-6">
-        <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Product Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold shadow-inner px-6" /></div>
+        <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Product Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
         <div className="space-y-2">
           <Label className="text-[10px] font-black uppercase text-gray-400">Molecule Mapping</Label>
-          <select value={form.moleculeId} onChange={e => setForm({...form, moleculeId: e.target.value})} className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none shadow-inner">
+          <select value={form.moleculeId} onChange={e => setForm({...form, moleculeId: e.target.value})} className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none">
              <option value="">Select Molecule</option>
              {molecules?.map(m => (
                <option key={m.id} value={m.id}>{m.molecule} ({m.form})</option>
              ))}
           </select>
         </div>
-        <div className="space-y-2">
-           <Label className="text-[10px] font-black uppercase text-gray-400">Type</Label>
-           <select value={form.isGeneric ? 'true' : 'false'} onChange={e => setForm({...form, isGeneric: e.target.value === 'true'})} className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none shadow-inner">
-             <option value="false">Branded</option>
-             <option value="true">Generic</option>
-           </select>
-        </div>
-        <div className="space-y-2">
-           <Label className="text-[10px] font-black uppercase text-gray-400">Prescription Control</Label>
-           <select value={form.prescriptionRequired ? 'true' : 'false'} onChange={e => setForm({...form, prescriptionRequired: e.target.value === 'true'})} className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none shadow-inner">
-             <option value="false">OTC (No RX Required)</option>
-             <option value="true">Prescription Required</option>
-           </select>
-        </div>
-        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">SKU</Label><Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold shadow-inner px-6" /></div>
-        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Price</Label><Input type="number" value={form.price} onChange={e => setForm({...form, price: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold shadow-inner px-6" /></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Price</Label><Input type="number" value={form.price} onChange={e => setForm({...form, price: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       </div>
       <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white shadow-xl shadow-primary/20">Save Product</Button>
     </form>
@@ -759,46 +689,15 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMol, setEditingMol] = useState<any>(null);
-  const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredMolecules = molecules?.filter(mol => 
     mol.molecule?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     mol.masterId?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const downloadCSV = () => {
-    if (!molecules) return;
-    const headers = ['Molecule', 'Master ID', 'Form'];
-    const rows = molecules.map(m => [m.molecule, m.masterId, m.form]);
-    const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(r => r.join(",")).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "sahimed_formulas.csv");
-    document.body.appendChild(link);
-    link.click();
-  };
-
-  const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    toast({ title: "Import Started", description: "Parsing Formula CSV..." });
-    setTimeout(() => {
-      toast({ title: "Import Complete", description: "Registry updated." });
-    }, 2000);
-  };
-
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Formula Registry" subtitle="Clinical molecule master" onBack={onBack}>
-        <Button variant="outline" onClick={downloadCSV} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
-          <Download className="w-4 h-4" /> Export
-        </Button>
-        <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-full h-12 px-6 font-black text-[10px] uppercase tracking-widest gap-2 border-2">
-          <Upload className="w-4 h-4" /> Bulk Upload
-        </Button>
-        <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleBulkUpload} />
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => setEditingMol(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white shadow-lg">
@@ -870,10 +769,6 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Molecule Name</Label><Input value={form.molecule} onChange={e => setForm({...form, molecule: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Master ID</Label><Input value={form.masterId} onChange={e => setForm({...form, masterId: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      <div className="space-y-2">
-        <Label className="text-[10px] font-black uppercase text-gray-400">Dosage Form</Label>
-        <Input value={form.form} onChange={e => setForm({...form, form: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
-      </div>
       <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Formula</Button>
     </form>
   );
@@ -883,69 +778,39 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
 
 function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
-  const { data: enquiries, isLoading, error } = useCollection(presQuery);
+  const { data: enquiries, isLoading } = useCollection(presQuery);
   const [selectedEnquiry, setSelectedEnquiry] = useState<any>(null);
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Clinical Enquiries" subtitle="Prescription review queue" onBack={onBack} />
-      
-      {error && (
-        <div className="bg-red-50 p-6 rounded-[32px] border border-red-100 flex items-center gap-4">
-           <AlertCircle className="w-6 h-6 text-red-500" />
-           <p className="text-[10px] font-black uppercase text-red-600">Listener Error: Verify Collection Group Permissions</p>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-8">
         {isLoading ? (
           <div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>
-        ) : (enquiries?.length === 0 || !enquiries) ? (
-          <div className="col-span-full py-20 text-center">
-             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-8 h-8 text-gray-200" />
-             </div>
-             <p className="font-black text-gray-400 uppercase tracking-widest text-[10px]">Waiting for enquiries from Firestore...</p>
-          </div>
-        ) : enquiries?.map(enq => {
+        ) : (!enquiries || enquiries.length === 0) ? (
+          <div className="col-span-full py-20 text-center font-black text-gray-400 uppercase tracking-widest text-[10px]">Waiting for enquiries from Firestore...</div>
+        ) : enquiries.map(enq => {
           const patientMobile = enq?.phoneNumber || <span className="text-red-500 font-black">NO PHONE</span>;
-          const patientName = enq?.patientName || 'Patient Request';
-
           return (
             <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white p-6 group hover:shadow-2xl transition-all duration-500">
-              <div className="aspect-[3/4] rounded-3xl bg-gray-50 mb-6 overflow-hidden border border-gray-100 relative shadow-inner">
-                {enq?.imageUrl ? (
-                  <img src={enq.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Prescription" />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                     <FileWarning className="w-10 h-10 text-gray-200" />
-                     <span className="text-[8px] font-black text-red-400 uppercase">NO_IMAGE_DATA</span>
-                  </div>
-                )}
-                <div className="absolute top-4 right-4">
-                  <Badge className={cn(
-                    "uppercase text-[8px] font-black px-3 py-1.5 rounded-full border-none shadow-lg",
-                    enq?.status === 'Digitized' ? "bg-accent text-white" : "bg-primary text-white"
-                  )}>
-                    {enq?.status || 'Pending'}
-                  </Badge>
-                </div>
+              <div className="aspect-[3/4] rounded-3xl bg-gray-50 mb-6 overflow-hidden border border-gray-100 relative">
+                {enq?.imageUrl ? <img src={enq.imageUrl} className="w-full h-full object-cover" alt="Prescription" /> : <div className="w-full h-full flex items-center justify-center text-gray-200"><FileWarning className="w-10 h-10" /></div>}
+                <div className="absolute top-4 right-4"><Badge className="bg-primary text-white uppercase text-[8px] font-black">{enq?.status || 'Pending'}</Badge></div>
               </div>
               <div className="space-y-1 mb-6">
-                 <p className="font-black text-sm uppercase text-gray-900 tracking-tight truncate">{patientName}</p>
+                 <p className="font-black text-sm uppercase text-gray-900 truncate">{enq?.patientName || 'Patient Request'}</p>
                  <div className="flex items-center gap-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">
                     <Phone className="w-2.5 h-2.5" />
                     <span>{patientMobile}</span>
                  </div>
               </div>
-              <Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+              <Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white gap-2">
                 <Wand2 className="w-3.5 h-3.5" /> Digitize & Order
               </Button>
             </Card>
           );
         })}
       </div>
-
       {selectedEnquiry && <DigitizationTerminal db={db} enquiry={selectedEnquiry} onClose={() => setSelectedEnquiry(null)} />}
     </div>
   );
@@ -956,16 +821,12 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
   const [orderItems, setOrderItems] = useState<any[]>([]);
   const [promoCodeInput, setPromoCodeInput] = useState('');
   const [activePromo, setActivePromo] = useState<any>(null);
-  const [validatingPromo, setValidatingPromo] = useState(false);
   const { toast } = useToast();
 
   const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
   const { data: medicines } = useCollection(medsQuery);
 
-  const searchedMeds = searchQueryStr.trim() ? medicines?.filter(m => 
-    m.name?.toLowerCase().includes(searchQueryStr.toLowerCase()) || 
-    m.saltComposition?.toLowerCase().includes(searchQueryStr.toLowerCase())
-  ).slice(0, 5) : [];
+  const searchedMeds = searchQueryStr.trim() ? medicines?.filter(m => m.name?.toLowerCase().includes(searchQueryStr.toLowerCase())).slice(0, 5) : [];
 
   const addToDraftOrder = (med: any) => {
     const existing = orderItems.find(item => item.id === med.id);
@@ -975,90 +836,34 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
       setOrderItems([...orderItems, { ...med, quantity: 1 }]);
     }
     setSearchQueryStr('');
-    toast({ title: "Item Added", description: `${med.name} added to draft order.` });
-  };
-
-  const updateDraftQuantity = (id: string, delta: number) => {
-    setOrderItems(prev => prev.map(item => {
-      if (item.id === id) {
-        const newQty = Math.max(1, item.quantity + delta);
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    }));
   };
 
   const handleApplyPromo = async () => {
     if (!promoCodeInput.trim()) return;
-    setValidatingPromo(true);
-    try {
-      const q = query(collection(db, 'promocodes'), where('code', '==', promoCodeInput.trim().toUpperCase()), where('isActive', '==', true));
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        const promo = { ...snap.docs[0].data(), id: snap.docs[0].id };
-        setActivePromo(promo);
-        toast({ title: "Promo Applied", description: `Voucher ${promo.code} is active.` });
-      } else {
-        setActivePromo(null);
-        toast({ variant: 'destructive', title: 'Invalid Code', description: 'Promo code not found or inactive.' });
-      }
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not validate promo code.' });
-    } finally {
-      setValidatingPromo(false);
+    const q = query(collection(db, 'promocodes'), where('code', '==', promoCodeInput.trim().toUpperCase()), where('isActive', '==', true));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      setActivePromo({ ...snap.docs[0].data(), id: snap.docs[0].id });
+      toast({ title: "Promo Applied" });
+    } else {
+      toast({ variant: 'destructive', title: 'Invalid Code' });
     }
   };
-
-  const calculateSubtotal = () => orderItems.reduce((acc, item) => acc + ((item?.price || 0) * (item?.quantity || 0)), 0);
-  
-  const calculateDiscount = () => {
-    const subtotal = calculateSubtotal();
-    if (!activePromo || subtotal < (activePromo.minOrderValue || 0)) return 0;
-    if (activePromo.discountType === 'fixed') return activePromo.discountValue;
-    return (subtotal * (activePromo.discountValue / 100));
-  };
-
-  const estimatedTotal = Math.max(0, calculateSubtotal() - calculateDiscount());
 
   const handleCompleteOrder = () => {
-    if (!enquiry?.userId) {
-       toast({ variant: 'destructive', title: 'Error', description: 'User identifier missing.' });
-       return;
-    }
-    if (orderItems.length === 0) {
-       toast({ variant: 'destructive', title: 'Empty Order', description: 'Add at least one medicine to the order.' });
-       return;
-    }
-
+    if (!enquiry?.userId || orderItems.length === 0) return;
     const orderData = {
       userId: enquiry.userId,
       orderDate: serverTimestamp(),
-      totalAmount: estimatedTotal,
-      subtotal: calculateSubtotal(),
-      discountAmount: calculateDiscount(),
-      promoCode: activePromo?.code || null,
+      totalAmount: orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0),
       status: 'Created by Admin',
-      paymentStatus: 'Pending',
       patientName: enquiry?.patientName || 'Patient',
       phoneNumber: enquiry?.phoneNumber || '',
-      items: orderItems.map(item => ({
-        medicineId: item.id,
-        quantity: item.quantity,
-        unitPrice: item.price,
-        name: item.name,
-        imageUrl: item.imageUrl
-      }))
+      items: orderItems.map(item => ({ medicineId: item.id, quantity: item.quantity, unitPrice: item.price, name: item.name }))
     };
-
-    const orderRef = collection(db, 'userProfiles', enquiry.userId, 'orders');
-    addDocumentNonBlocking(orderRef, orderData);
-
-    updateDocumentNonBlocking(doc(db, 'userProfiles', enquiry.userId, 'prescriptions', enquiry.id), {
-      status: 'Digitized',
-      digitizedAt: serverTimestamp()
-    });
-
-    toast({ title: "Order Created", description: "Pharmacist-initiated order has been placed." });
+    addDocumentNonBlocking(collection(db, 'userProfiles', enquiry.userId, 'orders'), orderData);
+    updateDocumentNonBlocking(doc(db, 'userProfiles', enquiry.userId, 'prescriptions', enquiry.id), { status: 'Digitized' });
+    toast({ title: "Order Created" });
     onClose();
   };
 
@@ -1069,57 +874,29 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
           <div className="flex items-center gap-4">
             <div className="bg-white/10 p-2 rounded-xl"><ShoppingCart className="w-6 h-6" /></div>
             <div>
-              <DialogTitle className="text-2xl font-black uppercase tracking-tight">Digitization & Order Terminal</DialogTitle>
-              <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Patient: {enquiry?.patientName || 'Self'} • {enquiry?.phoneNumber || 'N/A'}</p>
+              <DialogTitle className="text-2xl font-black uppercase tracking-tight">Digitization Terminal</DialogTitle>
+              <p className="text-[9px] font-black uppercase opacity-60">Patient: {enquiry?.patientName || 'Self'}</p>
             </div>
           </div>
-          <div className="flex gap-3">
-            <Button onClick={handleCompleteOrder} disabled={orderItems.length === 0} className="rounded-full h-12 px-8 font-black text-[10px] uppercase bg-white text-primary hover:bg-white/90 shadow-xl transition-all gap-2">
-              <Check className="w-4 h-4" /> Complete Order
-            </Button>
-            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl bg-white/5 text-white hover:bg-white/10 ml-2">
-               <X className="w-5 h-5" />
-            </Button>
-          </div>
+          <Button onClick={handleCompleteOrder} disabled={orderItems.length === 0} className="rounded-full h-12 px-8 font-black text-[10px] uppercase bg-white text-primary hover:bg-white/90">
+            Complete Order
+          </Button>
         </div>
         <div className="grid grid-cols-2 h-full overflow-hidden">
           <div className="bg-gray-100 p-8 overflow-auto border-r flex items-start justify-center">
-             {enquiry?.imageUrl ? (
-               <img src={enquiry.imageUrl} className="max-w-full rounded-3xl shadow-2xl border-4 border-white" alt="Prescription" />
-             ) : (
-               <div className="flex flex-col items-center justify-center gap-4 text-gray-300">
-                  <FileWarning className="w-20 h-20" />
-                  <p className="font-black uppercase tracking-widest text-xs">No Prescription Image Found</p>
-               </div>
-             )}
+             {enquiry?.imageUrl ? <img src={enquiry.imageUrl} className="max-w-full rounded-3xl shadow-2xl border-4 border-white" alt="Prescription" /> : <div className="text-gray-300"><FileWarning className="w-20 h-20" /></div>}
           </div>
           <div className="p-8 space-y-8 overflow-auto bg-white scrollbar-hide pb-24">
-            
             <div className="space-y-4">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 border-b pb-4">Order on Behalf (Product Search)</h3>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Order on Behalf</h3>
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input 
-                  placeholder="Find medicines to add to order..." 
-                  value={searchQueryStr}
-                  onChange={e => setSearchQueryStr(e.target.value)}
-                  className="rounded-2xl h-14 bg-gray-50 border-none font-bold pl-12 shadow-inner"
-                />
+                <Input placeholder="Find medicines..." value={searchQueryStr} onChange={e => setSearchQueryStr(e.target.value)} className="rounded-2xl h-14 bg-gray-50 border-none font-bold pl-12" />
                 {searchedMeds.length > 0 && (
                   <div className="absolute top-16 left-0 right-0 bg-white rounded-2xl shadow-2xl border z-20 overflow-hidden">
                     {searchedMeds.map(m => (
-                      <button 
-                        key={m.id}
-                        onClick={() => addToDraftOrder(m)}
-                        className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors border-b last:border-none"
-                      >
-                        <div className="flex items-center gap-3">
-                          <img src={m?.imageUrl} className="w-10 h-10 object-contain bg-gray-50 rounded-lg p-1" alt="" />
-                          <div className="text-left">
-                            <p className="text-sm font-black uppercase">{m?.name}</p>
-                            <p className="text-[9px] text-gray-400 font-bold uppercase">{m?.saltComposition}</p>
-                          </div>
-                        </div>
+                      <button key={m.id} onClick={() => addToDraftOrder(m)} className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors border-b last:border-none">
+                        <div className="flex flex-col items-start"><p className="text-sm font-black uppercase">{m.name}</p><p className="text-[9px] text-gray-400">{m.saltComposition}</p></div>
                         <PlusCircle className="w-5 h-5 text-primary" />
                       </button>
                     ))}
@@ -1127,85 +904,29 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
                 )}
               </div>
             </div>
-
             {orderItems.length > 0 && (
-              <div className="space-y-6 animate-in slide-in-from-top-4">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Draft Order Items</h3>
+              <div className="space-y-6">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Draft Order</h3>
                 <div className="space-y-3">
                   {orderItems.map((item, i) => (
-                    <div key={i} className="bg-gray-50 p-4 rounded-2xl flex items-center justify-between border border-gray-100">
+                    <div key={i} className="bg-gray-50 p-4 rounded-2xl flex items-center justify-between">
                       <div className="flex items-center gap-4">
                          <div className="flex items-center bg-white rounded-xl border p-1 shadow-sm">
-                            <button onClick={() => updateDraftQuantity(item.id, -1)} className="p-1 hover:text-primary transition-colors"><MinusCircle className="w-5 h-5" /></button>
+                            <button onClick={() => setOrderItems(orderItems.map(oi => oi.id === item.id ? { ...oi, quantity: Math.max(1, oi.quantity - 1) } : oi))} className="p-1"><MinusCircle className="w-5 h-5" /></button>
                             <span className="w-8 text-center font-black text-xs">{item.quantity}</span>
-                            <button onClick={() => updateDraftQuantity(item.id, 1)} className="p-1 hover:text-primary transition-colors"><PlusCircle className="w-5 h-5" /></button>
+                            <button onClick={() => setOrderItems(orderItems.map(oi => oi.id === item.id ? { ...oi, quantity: oi.quantity + 1 } : oi))} className="p-1"><PlusCircle className="w-5 h-5" /></button>
                          </div>
-                         <div className="text-left">
-                           <p className="text-xs font-black uppercase">{item.name}</p>
-                           <p className="text-[9px] text-gray-400 font-bold uppercase">₹{item.price} per unit</p>
-                         </div>
+                         <p className="text-xs font-black uppercase">{item.name}</p>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-black text-xs">₹{(item?.price || 0) * (item?.quantity || 0)}</span>
-                        <button onClick={() => setOrderItems(orderItems.filter(oi => oi.id !== item.id))} className="h-8 w-8 text-red-300 hover:text-red-500 transition-colors">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      <span className="font-black text-xs">₹{item.price * item.quantity}</span>
                     </div>
                   ))}
                 </div>
-
-                <div className="bg-gray-50 p-6 rounded-[32px] border border-gray-100 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 relative">
-                       <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                       <Input 
-                        placeholder="APPLY PROMOCODE" 
-                        value={promoCodeInput}
-                        onChange={e => setPromoCodeInput(e.target.value.toUpperCase())}
-                        className="rounded-xl h-12 bg-white border-none font-bold pl-10 shadow-inner text-[10px]"
-                       />
-                    </div>
-                    <button onClick={handleApplyPromo} disabled={validatingPromo} className="rounded-xl h-12 px-6 font-black uppercase text-[10px] tracking-widest border-2 bg-white hover:bg-gray-50 active:scale-95 transition-all">
-                       {validatingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
-                    </button>
-                  </div>
-
-                  {activePromo && (
-                    <div className="flex justify-between items-center bg-green-50 p-3 rounded-xl border border-green-100 animate-in zoom-in duration-300">
-                       <div className="flex items-center gap-2 text-green-700">
-                          <Ticket className="w-4 h-4" />
-                          <span className="text-[10px] font-black uppercase">{activePromo.code} APPLIED</span>
-                       </div>
-                       <Button variant="ghost" size="sm" onClick={() => setActivePromo(null)} className="h-6 text-green-700 hover:bg-green-100 font-black uppercase text-[8px]">Remove</Button>
-                    </div>
-                  )}
-
-                  <div className="space-y-2 pt-2 border-t border-dashed">
-                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
-                      <span>Subtotal</span>
-                      <span>₹{calculateSubtotal()}</span>
-                    </div>
-                    {activePromo && (
-                      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-accent">
-                        <span>Discount</span>
-                        <span>- ₹{calculateDiscount()}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-baseline pt-4">
-                      <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Estimated Total</span>
-                      <span className="text-3xl font-black text-accent">₹{estimatedTotal}</span>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-3">
+                  <Input placeholder="APPLY PROMOCODE" value={promoCodeInput} onChange={e => setPromoCodeInput(e.target.value.toUpperCase())} className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+                  <Button onClick={handleApplyPromo} variant="outline" className="rounded-xl h-12">Apply</Button>
                 </div>
               </div>
-            )}
-
-            {!orderItems.length && (
-               <div className="py-20 text-center space-y-4 opacity-40">
-                  <ShoppingBag className="w-16 h-16 mx-auto text-gray-200" />
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">No items in draft order</p>
-               </div>
             )}
           </div>
         </div>
@@ -1214,53 +935,38 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
   );
 }
 
-// --- MANAGEMENT TABS (VOUCHERS, FEES, CUSTOMERS, ALERTS) ---
+// --- MANAGEMENT TABS ---
 
 function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const promosQuery = useMemoFirebase(() => query(collection(db, 'promocodes'), orderBy('code', 'asc')), [db]);
   const { data: promos, isLoading } = useCollection(promosQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingPromo, setEditingMol] = useState<any>(null);
+  const [editingPromo, setEditingPromo] = useState<any>(null);
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Clinical Coupons" subtitle="Manage patient offers" onBack={onBack}>
-        <Button onClick={() => { setEditingMol(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white">
+        <Button onClick={() => { setEditingPromo(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white">
           <Plus className="w-4 h-4" /> New Coupon
         </Button>
       </SectionHeader>
-
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
-              <tr>
-                <th className="px-10 py-8">Code</th>
-                <th className="px-10 py-8">Type</th>
-                <th className="px-10 py-8">Value</th>
-                <th className="px-10 py-8">Status</th>
-                <th className="px-10 py-8 text-right">Actions</th>
-              </tr>
+              <tr><th className="px-10 py-8">Code</th><th className="px-10 py-8">Type</th><th className="px-10 py-8">Value</th><th className="px-10 py-8">Status</th><th className="px-10 py-8 text-right">Actions</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
-              ) : promos?.length === 0 ? (
-                <tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No active coupons</td></tr>
-              ) : promos?.map(promo => (
+              {isLoading ? (<tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>) : promos?.length === 0 ? (<tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No active coupons</td></tr>) : promos?.map(promo => (
                 <tr key={promo.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-10 py-8 font-black text-sm uppercase tracking-widest text-primary">{promo.code}</td>
+                  <td className="px-10 py-8 font-black text-sm uppercase text-primary">{promo.code}</td>
                   <td className="px-10 py-8 text-[10px] font-bold uppercase text-gray-400">{promo.discountType}</td>
-                  <td className="px-10 py-8 font-black text-accent">{promo.discountType === 'fixed' ? '₹' : ''}{promo.discountValue}{promo.discountType === 'percentage' ? '%' : ''}</td>
-                  <td className="px-10 py-8">
-                    <Badge className={cn("rounded-full uppercase font-black text-[8px]", promo.isActive ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400")}>
-                      {promo.isActive ? 'ACTIVE' : 'DISABLED'}
-                    </Badge>
-                  </td>
+                  <td className="px-10 py-8 font-black text-accent">{promo.discountValue}{promo.discountType === 'percentage' ? '%' : '₹'}</td>
+                  <td className="px-10 py-8"><Badge className={cn("rounded-full font-black text-[8px]", promo.isActive ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400")}>{promo.isActive ? 'ACTIVE' : 'DISABLED'}</Badge></td>
                   <td className="px-10 py-8 text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => { setEditingMol(promo); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4 text-gray-400" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'promocodes', promo.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => { setEditingPromo(promo); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'promocodes', promo.id))}><Trash2 className="w-4 h-4 text-red-300" /></Button>
                     </div>
                   </td>
                 </tr>
@@ -1269,13 +975,10 @@ function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
           </table>
         </div>
       </Card>
-
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden shadow-3xl">
           <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Coupon</DialogTitle></div>
-          <div className="p-8">
-            <PromoForm db={db} initialData={editingPromo} onSuccess={() => setIsFormOpen(false)} />
-          </div>
+          <div className="p-8"><PromoForm db={db} initialData={editingPromo} onSuccess={() => setIsFormOpen(false)} /></div>
         </DialogContent>
       </Dialog>
     </div>
@@ -1283,23 +986,13 @@ function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 }
 
 function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
-  const [form, setForm] = useState({
-    code: initialData?.code || '',
-    description: initialData?.description || '',
-    discountType: initialData?.discountType || 'fixed',
-    discountValue: initialData?.discountValue || 0,
-    minOrderValue: initialData?.minOrderValue || 0,
-    isActive: initialData?.isActive ?? true,
-    applyTo: 'cart'
-  });
-
+  const [form, setForm] = useState({ code: initialData?.code || '', discountType: initialData?.discountType || 'fixed', discountValue: initialData?.discountValue || 0, minOrderValue: initialData?.minOrderValue || 0, isActive: initialData?.isActive ?? true, applyTo: 'cart' });
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const payload = { ...form, discountValue: Number(form.discountValue), minOrderValue: Number(form.minOrderValue) };
     initialData?.id ? updateDocumentNonBlocking(doc(db, 'promocodes', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'promocodes'), payload);
     onSuccess();
   };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Coupon Code</Label><Input value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase()})} required className="rounded-2xl h-14 bg-gray-50 border-none font-black text-lg tracking-widest px-6" /></div>
@@ -1313,7 +1006,6 @@ function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
         </div>
         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Value</Label><Input type="number" value={form.discountValue} onChange={e => setForm({...form, discountValue: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       </div>
-      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Min Order Requirement</Label><Input type="number" value={form.minOrderValue} onChange={e => setForm({...form, minOrderValue: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Voucher</Button>
     </form>
   );
@@ -1332,38 +1024,23 @@ function FeesTab({ db, onBack }: { db: any, onBack: () => void }) {
           <Plus className="w-4 h-4" /> Add Charge
         </Button>
       </SectionHeader>
-
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
-              <tr>
-                <th className="px-10 py-8">Charge Name</th>
-                <th className="px-10 py-8">Amount</th>
-                <th className="px-10 py-8">Type</th>
-                <th className="px-10 py-8">Status</th>
-                <th className="px-10 py-8 text-right">Actions</th>
-              </tr>
+              <tr><th className="px-10 py-8">Charge Name</th><th className="px-10 py-8">Amount</th><th className="px-10 py-8">Type</th><th className="px-10 py-8">Status</th><th className="px-10 py-8 text-right">Actions</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
-              ) : fees?.length === 0 ? (
-                <tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No clinical fees configured</td></tr>
-              ) : fees?.map(fee => (
+              {isLoading ? (<tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>) : fees?.length === 0 ? (<tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No fees configured</td></tr>) : fees?.map(fee => (
                 <tr key={fee.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-10 py-8 font-black text-sm uppercase">{fee.name}</td>
                   <td className="px-10 py-8 font-black text-gray-900">₹{fee.amount}</td>
                   <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">{fee.type}</td>
-                  <td className="px-10 py-8">
-                    <Badge className={cn("rounded-full font-black text-[8px]", fee.isActive ? "bg-accent text-white" : "bg-gray-100 text-gray-400")}>
-                      {fee.isActive ? 'ENABLED' : 'PAUSED'}
-                    </Badge>
-                  </td>
+                  <td className="px-10 py-8"><Badge className={cn("rounded-full font-black text-[8px]", fee.isActive ? "bg-accent text-white" : "bg-gray-100 text-gray-400")}>{fee.isActive ? 'ENABLED' : 'PAUSED'}</Badge></td>
                   <td className="px-10 py-8 text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => { setEditingFee(fee); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4 text-gray-400" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'fees', fee.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => { setEditingFee(fee); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'fees', fee.id))}><Trash2 className="w-4 h-4 text-red-300" /></Button>
                     </div>
                   </td>
                 </tr>
@@ -1372,13 +1049,10 @@ function FeesTab({ db, onBack }: { db: any, onBack: () => void }) {
           </table>
         </div>
       </Card>
-
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden shadow-3xl">
           <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Fee Configuration</DialogTitle></div>
-          <div className="p-8">
-            <FeeForm db={db} initialData={editingFee} onSuccess={() => setIsFormOpen(false)} />
-          </div>
+          <div className="p-8"><FeeForm db={db} initialData={editingFee} onSuccess={() => setIsFormOpen(false)} /></div>
         </DialogContent>
       </Dialog>
     </div>
@@ -1386,36 +1060,19 @@ function FeesTab({ db, onBack }: { db: any, onBack: () => void }) {
 }
 
 function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
-  const [form, setForm] = useState({
-    name: initialData?.name || '',
-    amount: initialData?.amount || 0,
-    type: initialData?.type || 'fixed',
-    isActive: initialData?.isActive ?? true
-  });
-
+  const [form, setForm] = useState({ name: initialData?.name || '', amount: initialData?.amount || 0, type: initialData?.type || 'fixed', isActive: initialData?.isActive ?? true });
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const payload = { ...form, amount: Number(form.amount) };
     initialData?.id ? updateDocumentNonBlocking(doc(db, 'fees', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'fees'), payload);
     onSuccess();
   };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Charge Name (e.g. Delivery Charge)</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Charge Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       <div className="grid grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase text-gray-400">Type</Label>
-          <Select value={form.type} onValueChange={v => setForm({...form, type: v as 'fixed' | 'percentage'})}>
-            <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
-            <SelectContent className="rounded-2xl"><SelectItem value="fixed">Fixed ₹</SelectItem><SelectItem value="percentage">Percentage %</SelectItem></SelectContent>
-          </Select>
-        </div>
         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Amount</Label><Input type="number" value={form.amount} onChange={e => setForm({...form, amount: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      </div>
-      <div className="flex items-center gap-2 p-2">
-        <input type="checkbox" id="active" checked={form.isActive} onChange={e => setForm({...form, isActive: e.target.checked})} className="w-5 h-5 accent-primary" />
-        <Label htmlFor="active" className="text-[10px] font-black uppercase text-gray-600">Active and Chargeable</Label>
+        <div className="flex items-center gap-2 p-2 pt-8"><input type="checkbox" id="active" checked={form.isActive} onChange={e => setForm({...form, isActive: e.target.checked})} className="w-5 h-5" /><Label htmlFor="active" className="text-[10px] font-black uppercase">Active</Label></div>
       </div>
       <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Configuration</Button>
     </form>
@@ -1429,49 +1086,19 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Patient Registry" subtitle="Manage customer profiles" onBack={onBack} />
-
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
-              <tr>
-                <th className="px-10 py-8">Patient Name</th>
-                <th className="px-10 py-8">Mobile Number</th>
-                <th className="px-10 py-8">Joined On</th>
-                <th className="px-10 py-8 text-right">Actions</th>
-              </tr>
+              <tr><th className="px-10 py-8">Patient Name</th><th className="px-10 py-8">Mobile Number</th><th className="px-10 py-8">Joined On</th><th className="px-10 py-8 text-right">Actions</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
-              ) : users?.length === 0 ? (
-                <tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No registered patients</td></tr>
-              ) : users?.map(patient => (
+              {isLoading ? (<tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>) : users?.length === 0 ? (<tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No patients found</td></tr>) : users?.map(patient => (
                 <tr key={patient.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="px-10 py-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-primary font-black text-xs">
-                        {patient.name?.charAt(0) || 'P'}
-                      </div>
-                      <span className={cn("font-black text-sm uppercase tracking-tight", !patient.name && "text-red-500")}>
-                        {patient.name || 'NO NAME'}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-10 py-8 font-bold text-sm text-gray-600">
-                    <span className={cn(!patient.phone && "text-red-500 font-black")}>
-                      {patient.phone || 'MISSING PHONE'}
-                    </span>
-                  </td>
-                  <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">
-                    {patient.createdAt ? format(new Date(patient.createdAt), 'MMM dd, yyyy') : 'N/A'}
-                  </td>
-                  <td className="px-10 py-8 text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"><Eye className="w-4 h-4 text-gray-400" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'userProfiles', patient.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button>
-                    </div>
-                  </td>
+                  <td className="px-10 py-8 font-black text-sm uppercase">{patient.name || <span className="text-red-500">NO NAME</span>}</td>
+                  <td className="px-10 py-8 font-bold text-sm text-gray-600">{patient.phone || <span className="text-red-500">NO PHONE</span>}</td>
+                  <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">{patient.createdAt ? format(new Date(patient.createdAt), 'MMM dd, yyyy') : 'N/A'}</td>
+                  <td className="px-10 py-8 text-right"><Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"><Eye className="w-4 h-4 text-gray-400" /></Button></td>
                 </tr>
               ))}
             </tbody>
@@ -1495,46 +1122,23 @@ function AlertsTab({ db, onBack }: { db: any, onBack: () => void }) {
           <Plus className="w-4 h-4" /> Create Alert
         </Button>
       </SectionHeader>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {isLoading ? (
-          <div className="col-span-full py-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></div>
-        ) : alerts?.length === 0 ? (
-          <div className="col-span-full py-20 text-center bg-white rounded-[40px] border border-dashed border-gray-200">
-            <Megaphone className="w-12 h-12 text-gray-100 mx-auto mb-4" />
-            <p className="font-black text-gray-300 uppercase tracking-widest text-[10px]">No active broadcasts</p>
-          </div>
-        ) : alerts?.map(alert => (
-          <Card key={alert.id} className={cn("rounded-[32px] p-6 border-none shadow-sm transition-all hover:shadow-xl", alert.isActive ? "bg-red-50/50 ring-2 ring-red-100" : "bg-white")}>
-            <div className="flex justify-between items-start mb-4">
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", alert.isActive ? "bg-red-600 text-white" : "bg-gray-100 text-gray-400")}>
-                <Megaphone className="w-5 h-5" />
-              </div>
-              <Badge className={cn("rounded-full text-[8px] font-black px-3 py-1", alert.isActive ? "bg-red-600 text-white" : "bg-gray-100 text-gray-400")}>
-                {alert.isActive ? 'LIVE' : 'OFF'}
-              </Badge>
-            </div>
-            <div className="space-y-2 mb-6">
-              <h3 className="font-black text-sm uppercase tracking-tight text-gray-900">{alert.title}</h3>
-              <p className="text-xs font-bold text-gray-500 line-clamp-2 uppercase">{alert.message}</p>
-            </div>
-            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-              <span className="text-[8px] font-black text-gray-400 uppercase">{format(alert.createdAt?.toDate?.() || new Date(), 'MMM dd')}</span>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="icon" onClick={() => { setEditingAlert(alert); setIsFormOpen(true); }} className="h-8 w-8 rounded-lg"><Edit2 className="w-3.5 h-3.5" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'systemAlerts', alert.id))} className="h-8 w-8 rounded-lg text-red-300 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></Button>
-              </div>
+        {isLoading ? (<div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>) : alerts?.length === 0 ? (<div className="col-span-full py-20 text-center font-black text-gray-300 uppercase tracking-widest text-[10px]">No broadcasts active</div>) : alerts?.map(alert => (
+          <Card key={alert.id} className={cn("rounded-[32px] p-6 border-none shadow-sm", alert.isActive ? "bg-red-50/50 ring-2 ring-red-100" : "bg-white")}>
+            <div className="flex justify-between items-start mb-4"><Megaphone className={cn("w-6 h-6", alert.isActive ? "text-red-600" : "text-gray-300")} /><Badge className={cn("rounded-full text-[8px] font-black", alert.isActive ? "bg-red-600 text-white" : "bg-gray-100 text-gray-400")}>{alert.isActive ? 'LIVE' : 'OFF'}</Badge></div>
+            <h3 className="font-black text-sm uppercase tracking-tight text-gray-900 mb-2">{alert.title}</h3>
+            <p className="text-xs font-bold text-gray-500 line-clamp-2 uppercase mb-6">{alert.message}</p>
+            <div className="flex gap-2 justify-end border-t pt-4">
+              <Button variant="ghost" size="icon" onClick={() => { setEditingAlert(alert); setIsFormOpen(true); }}><Edit2 className="w-3.5 h-3.5" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'systemAlerts', alert.id))} className="text-red-300"><Trash2 className="w-3.5 h-3.5" /></Button>
             </div>
           </Card>
         ))}
       </div>
-
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden shadow-3xl">
           <div className="bg-red-600 p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Broadcast Message</DialogTitle></div>
-          <div className="p-8">
-            <AlertForm db={db} initialData={editingAlert} onSuccess={() => setIsFormOpen(false)} />
-          </div>
+          <div className="p-8"><AlertForm db={db} initialData={editingAlert} onSuccess={() => setIsFormOpen(false)} /></div>
         </DialogContent>
       </Dialog>
     </div>
@@ -1542,28 +1146,19 @@ function AlertsTab({ db, onBack }: { db: any, onBack: () => void }) {
 }
 
 function AlertForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
-  const [form, setForm] = useState({
-    title: initialData?.title || '',
-    message: initialData?.message || '',
-    isActive: initialData?.isActive ?? true
-  });
-
+  const [form, setForm] = useState({ title: initialData?.title || '', message: initialData?.message || '', isActive: initialData?.isActive ?? true });
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const payload = { ...form, createdAt: initialData?.createdAt || serverTimestamp() };
     initialData?.id ? updateDocumentNonBlocking(doc(db, 'systemAlerts', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'systemAlerts'), payload);
     onSuccess();
   };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Broadcast Title</Label><Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Notification Message</Label><Textarea value={form.message} onChange={e => setForm({...form, message: e.target.value})} required className="rounded-2xl min-h-[120px] bg-gray-50 border-none font-bold p-6" /></div>
-      <div className="flex items-center gap-2">
-        <input type="checkbox" id="broadcast-active" checked={form.isActive} onChange={e => setForm({...form, isActive: e.target.checked})} className="w-5 h-5 accent-red-600" />
-        <Label htmlFor="broadcast-active" className="text-[10px] font-black uppercase text-gray-600">Publish to patients immediately</Label>
-      </div>
-      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-red-600 text-white shadow-xl shadow-red-100">Send Broadcast</Button>
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Broadcast Title</Label><Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Message</Label><Textarea value={form.message} onChange={e => setForm({...form, message: e.target.value})} required className="rounded-2xl min-h-[120px] bg-gray-50 border-none font-bold p-6" /></div>
+      <div className="flex items-center gap-2"><input type="checkbox" id="broadcast-active" checked={form.isActive} onChange={e => setForm({...form, isActive: e.target.checked})} className="w-5 h-5 accent-red-600" /><Label htmlFor="broadcast-active" className="text-[10px] font-black uppercase">Live</Label></div>
+      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase bg-red-600 text-white">Send Broadcast</Button>
     </form>
   );
 }
