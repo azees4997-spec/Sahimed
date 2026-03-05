@@ -105,7 +105,7 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from "date-fns";
 
-type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'promocodes' | 'fees' | 'customers' | 'stockAlerts' | 'itemMaster' | 'moleculeMaster';
+type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'promocodes' | 'fees' | 'categories' | 'customers' | 'stockAlerts' | 'itemMaster' | 'moleculeMaster';
 
 const ORDER_STATUSES = ['Pending', 'Packed', 'Shipping', 'Delivered', 'Cancelled'];
 
@@ -285,6 +285,7 @@ export default function AdminConsole() {
         {activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
         {activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
         {activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+        {activeTab === 'categories' && <CategoriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
         {activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
         {activeTab === 'stockAlerts' && <AlertsTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
         {activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
@@ -324,6 +325,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const feesQuery = useMemoFirebase(() => query(collection(db, 'fees')), [db]);
   const alertsQuery = useMemoFirebase(() => query(collection(db, 'systemAlerts')), [db]);
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
+  const catsQuery = useMemoFirebase(() => query(collection(db, 'categories')), [db]);
 
   const { data: medicines } = useCollection(medsQuery);
   const { data: formulas } = useCollection(molsQuery);
@@ -333,12 +335,14 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   const { data: fees } = useCollection(feesQuery);
   const { data: alerts } = useCollection(alertsQuery);
   const { data: enquiries } = useCollection(presQuery);
+  const { data: categories } = useCollection(catsQuery);
 
   const stats = [
     { label: 'INQUIRIES', icon: FileText, count: enquiries?.length || 0, tab: 'enquiries', color: 'text-blue-600' },
     { label: 'ORDERS', icon: ShoppingBag, count: orders?.length || 0, tab: 'fulfillment', color: 'text-blue-500' },
     { label: 'COUPONS', icon: Ticket, count: promos?.length || 0, tab: 'promocodes', color: 'text-purple-500' },
     { label: 'FEES', icon: Receipt, count: fees?.length || 0, tab: 'fees', color: 'text-orange-500' },
+    { label: 'CATEGORIES', icon: Tag, count: categories?.length || 0, tab: 'categories', color: 'text-pink-500' },
     { label: 'CUSTOMERS', icon: Users, count: users?.length || 0, tab: 'customers', color: 'text-indigo-500' },
     { label: 'ALERTS', icon: Megaphone, count: alerts?.length || 0, tab: 'stockAlerts', color: 'text-red-500' },
     { label: 'CATALOG', icon: Package, count: medicines?.length || 0, tab: 'itemMaster', color: 'text-green-600' },
@@ -347,7 +351,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {stats.map(card => (
           <Card key={card.label} className="rounded-[40px] p-8 border-none shadow-sm hover:shadow-2xl transition-all cursor-pointer bg-white group text-center flex flex-col items-center justify-center min-h-[220px]" onClick={() => setTab(card.tab as AdminTab)}>
             <div className={cn("w-16 h-16 rounded-[24px] bg-gray-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform", card.color)}>
@@ -359,6 +363,134 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
         ))}
       </div>
     </div>
+  );
+}
+
+// --- CATEGORIES HUB ---
+
+function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
+  const catsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db, isVerified]);
+  const { data: categories, isLoading } = useCollection(catsQuery);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingCat, setEditingCat] = useState<any>(null);
+
+  return (
+    <div className="space-y-8 animate-in slide-in-from-bottom-2">
+      <SectionHeader title="Health Categories" subtitle="Manage therapeutic classes" onBack={onBack}>
+        <Button onClick={() => { setEditingCat(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white shadow-lg">
+          <Plus className="w-4 h-4" /> New Category
+        </Button>
+      </SectionHeader>
+      
+      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[600px]">
+            <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
+              <tr>
+                <th className="px-10 py-8">Visual</th>
+                <th className="px-10 py-8">Category Name</th>
+                <th className="px-10 py-8">Description</th>
+                <th className="px-10 py-8 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {isLoading ? (
+                <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
+              ) : (!categories || categories.length === 0) ? (
+                <tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No categories found</td></tr>
+              ) : categories.map(cat => (
+                <tr key={cat.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-10 py-8">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-50 border p-2 overflow-hidden flex items-center justify-center">
+                      {cat.imageUrl ? <img src={cat.imageUrl} className="w-full h-full object-contain" /> : <Activity className="text-gray-300 w-6 h-6" />}
+                    </div>
+                  </td>
+                  <td className="px-10 py-8 font-black text-sm uppercase">{cat.name}</td>
+                  <td className="px-10 py-8 text-[11px] font-bold text-gray-500 max-w-[300px] truncate">{cat.description}</td>
+                  <td className="px-10 py-8 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => { setEditingCat(cat); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4 text-gray-400" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'categories', cat.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden shadow-3xl">
+          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Category Definition</DialogTitle></div>
+          <div className="p-8">
+            <CategoryForm db={db} initialData={editingCat} onSuccess={() => setIsFormOpen(false)} />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const { storage } = initializeFirebase();
+  const { toast } = useToast();
+  const [form, setForm] = useState({ 
+    name: initialData?.name || '', 
+    description: initialData?.description || '',
+    imageUrl: initialData?.imageUrl || ''
+  });
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const storageRef = ref(storage, `categories/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      setForm({ ...form, imageUrl: url });
+      toast({ title: "Icon Uploaded" });
+    } catch (err) {
+      toast({ variant: 'destructive', title: "Upload Failed" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = { ...form, createdAt: initialData?.createdAt || serverTimestamp(), updatedAt: serverTimestamp() };
+    initialData?.id ? updateDocumentNonBlocking(doc(db, 'categories', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'categories'), payload);
+    onSuccess();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex flex-col items-center gap-6 mb-8">
+        <div className="w-24 h-24 bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden relative group">
+          {form.imageUrl ? <img src={form.imageUrl} className="w-full h-full object-contain p-4" /> : <Activity className="text-gray-200 w-10 h-10" />}
+          {uploading && <div className="absolute inset-0 bg-white/80 flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>}
+        </div>
+        <div className="relative">
+          <input type="file" accept="image/*" onChange={handleFileUpload} className="absolute inset-0 opacity-0 cursor-pointer" disabled={uploading} />
+          <Button variant="outline" type="button" className="rounded-full h-10 px-6 font-black uppercase text-[9px] tracking-widest gap-2 border-2">
+            <UploadCloud className="w-3.5 h-3.5" /> {form.imageUrl ? 'Change Icon' : 'Upload Icon'}
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase text-gray-400">Category Name</Label>
+        <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase text-gray-400">Description</Label>
+        <Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold p-6" />
+      </div>
+      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white shadow-xl shadow-primary/20">Save Category</Button>
+    </form>
   );
 }
 
@@ -511,7 +643,7 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
   );
 }
 
-// --- ITEM MASTER (PRODUCT CATALOGUE) ---
+// --- ITEM MASTER ---
 
 function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const medsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'medicines'), orderBy('name', 'asc')) : null, [db, isVerified]);
@@ -806,7 +938,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
   );
 }
 
-// --- FORMULATION (MOLECULE MASTER) ---
+// --- FORMULATION ---
 
 function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const molsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc')) : null, [db, isVerified]);
@@ -929,7 +1061,7 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
   );
 }
 
-// --- ENQUIRIES TAB (DIGITIZATION HUB) ---
+// --- ENQUIRIES HUB ---
 
 function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
@@ -1119,7 +1251,7 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
   );
 }
 
-// --- MANAGEMENT TABS ---
+// --- PROMOCODES HUB ---
 
 function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const promosQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'promocodes'), orderBy('code', 'asc')) : null, [db, isVerified]);
@@ -1328,6 +1460,8 @@ function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
     </form>
   );
 }
+
+// --- FEES HUB ---
 
 function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const feesQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'fees'), orderBy('name', 'asc')) : null, [db, isVerified]);

@@ -65,32 +65,32 @@ service cloud.firestore {
     }
 
     match /medicines/{medicineId} {
-      allow get, list: if true;
+      allow read: if true;
       allow create, update, delete: if isAdmin();
     }
 
     match /categories/{categoryId} {
-      allow get, list: if true;
+      allow read: if true;
       allow create, update, delete: if isAdmin();
     }
 
     match /moleculeMaster/{molId} {
-      allow get, list: if true;
+      allow read: if true;
       allow create, update, delete: if isAdmin();
     }
 
     match /promocodes/{promoId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /fees/{feeId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /systemAlerts/{alertId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if isAdmin();
     }
 

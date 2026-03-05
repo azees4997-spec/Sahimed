@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Customer": {
@@ -50,6 +51,21 @@
         "liverInteraction": { "type": "string" }
       },
       "required": ["id", "name", "price", "category"]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Medicine category for therapeutic classification.",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name"]
     },
     "Molecule": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -123,6 +139,14 @@
           "entityName": "Fee",
           "schema": { "$ref": "#/backend/entities/Fee" },
           "description": "Global clinical fees managed by admins."
+        }
+      },
+      {
+        "path": "/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": { "$ref": "#/backend/entities/Category" },
+          "description": "Therapeutic category registry."
         }
       },
       {

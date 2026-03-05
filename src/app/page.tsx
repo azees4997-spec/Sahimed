@@ -162,8 +162,17 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-6">
                 {categories?.map((cat: any) => (
                   <Link key={cat.id} href={`/search?c=${cat.name}`} className="group flex flex-col items-center active:scale-95 transition-transform">
-                    <div className="w-full aspect-square bg-white rounded-[24px] flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-100 p-4 sm:p-6 group-hover:bg-primary group-hover:text-white transition-all duration-500 hover:shadow-lg">
-                      {getIcon(cat.name)}
+                    <div className="w-full aspect-square bg-white rounded-[24px] flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-100 p-4 sm:p-6 group-hover:bg-primary group-hover:text-white transition-all duration-500 hover:shadow-lg relative overflow-hidden">
+                      {cat.imageUrl ? (
+                        <div className="relative w-full h-full">
+                          <Image 
+                            src={cat.imageUrl} 
+                            alt={cat.name} 
+                            fill 
+                            className="object-contain p-2 transition-all group-hover:brightness-0 group-hover:invert duration-500" 
+                          />
+                        </div>
+                      ) : getIcon(cat.name)}
                     </div>
                     <h3 className="font-black text-[8px] sm:text-[10px] text-gray-700 uppercase tracking-tighter truncate w-full text-center group-hover:text-primary transition-colors">{cat.name}</h3>
                   </Link>
