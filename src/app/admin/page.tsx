@@ -741,7 +741,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
             <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Clinical Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">SKU / ID</Label><Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2">
-              <Label className="text-[10px) font-black uppercase text-gray-400">Therapeutic Class</Label>
+              <Label className="text-[10px] font-black uppercase text-gray-400">Therapeutic Class</Label>
               <Select value={form.category} onValueChange={v => setForm({...form, category: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select Class" /></SelectTrigger><SelectContent className="rounded-2xl"><SelectItem value="Diabetes">Diabetes</SelectItem><SelectItem value="Heart care">Heart care</SelectItem><SelectItem value="Stomach care">Stomach care</SelectItem><SelectItem value="Liver care">Liver care</SelectItem><SelectItem value="Derma care">Derma care</SelectItem><SelectItem value="Respicare">Respicare</SelectItem></SelectContent></Select>
             </div>
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Price (Sell)</Label><Input type="number" value={form.price} onChange={e => setForm({...form, price: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
@@ -868,7 +868,7 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
           </div>
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild><Button onClick={() => setEditingMol(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white shadow-lg"><Plus className="w-4 h-4" /> New Formula</Button></DialogTrigger>
-            <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden shadow-3xl">
+            <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden shadow-3xl">
               <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Formula Definition</DialogTitle></div>
               <div className="p-8"><MoleculeForm db={db} initialData={editingMol} onSuccess={() => setIsFormOpen(false)} /></div>
             </DialogContent>
@@ -1130,21 +1130,22 @@ function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Clinical Coupons" subtitle="Manage patient offers" onBack={onBack}>
         <Button onClick={() => { setEditingPromo(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white">
-          <Plus className="w-4 h-4" /> New Coupon
+          <Plus className="w-4 h-4" /> New Campaign
         </Button>
       </SectionHeader>
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
-              <tr><th className="px-10 py-8">Code</th><th className="px-10 py-8">Type</th><th className="px-10 py-8">Value</th><th className="px-10 py-8">Status</th><th className="px-10 py-8 text-right">Actions</th></tr>
+              <tr><th className="px-10 py-8">Code</th><th className="px-10 py-8">Strategy</th><th className="px-10 py-8">Value</th><th className="px-10 py-8">Min. Purchase</th><th className="px-10 py-8">Status</th><th className="px-10 py-8 text-right">Actions</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>) : promos?.length === 0 ? (<tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No active coupons</td></tr>) : promos?.map(promo => (
+              {isLoading ? (<tr><td colSpan={6} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>) : promos?.length === 0 ? (<tr><td colSpan={6} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No active campaigns</td></tr>) : promos?.map(promo => (
                 <tr key={promo.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-10 py-8 font-black text-sm uppercase text-primary">{promo.code}</td>
-                  <td className="px-10 py-8 text-[10px] font-bold uppercase text-gray-400">{promo.discountType}</td>
+                  <td className="px-10 py-8 text-[10px] font-bold uppercase text-gray-400">{promo.applyTo || 'Global Cart'}</td>
                   <td className="px-10 py-8 font-black text-accent">{promo.discountValue}{promo.discountType === 'percentage' ? '%' : '₹'}</td>
+                  <td className="px-10 py-8 font-black text-gray-600">₹{promo.minOrderValue || 0}</td>
                   <td className="px-10 py-8"><Badge className={cn("rounded-full font-black text-[8px]", promo.isActive ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400")}>{promo.isActive ? 'ACTIVE' : 'DISABLED'}</Badge></td>
                   <td className="px-10 py-8 text-right">
                     <div className="flex justify-end gap-2">
@@ -1159,8 +1160,8 @@ function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
         </div>
       </Card>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden shadow-3xl">
-          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Coupon</DialogTitle></div>
+        <DialogContent className="rounded-[40px] max-w-xl border-none p-0 overflow-hidden shadow-3xl">
+          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Campaign Builder</DialogTitle></div>
           <div className="p-8"><PromoForm db={db} initialData={editingPromo} onSuccess={() => setIsFormOpen(false)} /></div>
         </DialogContent>
       </Dialog>
@@ -1169,27 +1170,93 @@ function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 }
 
 function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
-  const [form, setForm] = useState({ code: initialData?.code || '', discountType: initialData?.discountType || 'fixed', discountValue: initialData?.discountValue || 0, minOrderValue: initialData?.minOrderValue || 0, isActive: initialData?.isActive ?? true, applyTo: 'cart' });
+  const [form, setForm] = useState({ 
+    code: initialData?.code || '', 
+    description: initialData?.description || '',
+    discountType: initialData?.discountType || 'fixed', 
+    discountValue: initialData?.discountValue || 0, 
+    minOrderValue: initialData?.minOrderValue || 0, 
+    isActive: initialData?.isActive ?? true, 
+    applyTo: initialData?.applyTo || 'cart' 
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...form, discountValue: Number(form.discountValue), minOrderValue: Number(form.minOrderValue) };
-    initialData?.id ? updateDocumentNonBlocking(doc(db, 'promocodes', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'promocodes'), payload);
+    if (!form.code.trim()) return;
+    const payload = { 
+      ...form, 
+      discountValue: Number(form.discountValue), 
+      minOrderValue: Number(form.minOrderValue),
+      updatedAt: serverTimestamp()
+    };
+    initialData?.id ? updateDocumentNonBlocking(doc(db, 'promocodes', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'promocodes'), { ...payload, createdAt: serverTimestamp() });
     onSuccess();
   };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Coupon Code</Label><Input value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase()})} required className="rounded-2xl h-14 bg-gray-50 border-none font-black text-lg tracking-widest px-6" /></div>
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase text-gray-400">Coupon Code</Label>
+        <Input 
+          value={form.code} 
+          onChange={e => setForm({...form, code: e.target.value.toUpperCase()})} 
+          required 
+          placeholder="e.g. HEALTH50"
+          className="rounded-2xl h-14 bg-gray-50 border-none font-black text-lg tracking-widest px-6" 
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase text-gray-400">Display Description</Label>
+        <Textarea 
+          value={form.description} 
+          onChange={e => setForm({...form, description: e.target.value})} 
+          placeholder="e.g. Save ₹50 on your first prescription order"
+          className="rounded-2xl h-24 bg-gray-50 border-none font-bold" 
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase text-gray-400">Type</Label>
+          <Label className="text-[10px] font-black uppercase text-gray-400">Discount Type</Label>
           <Select value={form.discountType} onValueChange={v => setForm({...form, discountType: v})}>
             <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
-            <SelectContent className="rounded-2xl"><SelectItem value="fixed">Fixed Amount</SelectItem><SelectItem value="percentage">Percentage %</SelectItem></SelectContent>
+            <SelectContent className="rounded-2xl">
+              <SelectItem value="fixed">Fixed ₹</SelectItem>
+              <SelectItem value="percentage">Percentage %</SelectItem>
+            </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Value</Label><Input type="number" value={form.discountValue} onChange={e => setForm({...form, discountValue: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-gray-400">Discount Value</Label>
+          <Input type="number" value={form.discountValue} onChange={e => setForm({...form, discountValue: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+        </div>
       </div>
-      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Voucher</Button>
+
+      <div className="grid grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-gray-400">Min. Purchase (₹)</Label>
+          <Input type="number" value={form.minOrderValue} onChange={e => setForm({...form, minOrderValue: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-gray-400">Target Strategy</Label>
+          <Select value={form.applyTo} onValueChange={v => setForm({...form, applyTo: v})}>
+            <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
+            <SelectContent className="rounded-2xl">
+              <SelectItem value="cart">Global Cart</SelectItem>
+              <SelectItem value="product">Specific Product</SelectItem>
+              <SelectItem value="customer">Patient Targeted</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl">
+        <input type="checkbox" id="promo-active" checked={form.isActive} onChange={e => setForm({...form, isActive: e.target.checked})} className="w-5 h-5 accent-primary" />
+        <Label htmlFor="promo-active" className="text-[10px] font-black uppercase cursor-pointer">Activate Promotion</Label>
+      </div>
+
+      <Button type="submit" className="w-full h-18 rounded-full font-black uppercase tracking-widest bg-primary text-white shadow-2xl shadow-primary/20">Save Campaign</Button>
     </form>
   );
 }
