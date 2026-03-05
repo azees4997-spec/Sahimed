@@ -97,7 +97,7 @@ import {
   addDocumentNonBlocking,
   initializeFirebase
 } from '@/firebase';
-import { doc, collection, query, collectionGroup, getDoc, getDocs, serverTimestamp, orderBy, where, writeBatch } from 'firebase/firestore';
+import { doc, collection, query, collectionGroup, getDoc, getDocs, serverTimestamp, orderBy, where, writeBatch, limit } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Link from 'next/link';
@@ -657,8 +657,8 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 
   const handleExport = () => {
     if (!filtered) return;
-    const headers = "Name,SKU,Manufacturer,Price,MRP,Stock,Category,Generic,RX_Required,PackSize,Description,HowToUse,Treatment,SafetyAdvice,SideEffects,AlcoholInteraction,PregnancyInteraction,LactationInteraction,DrivingInteraction,KidneyInteraction,LiverInteraction,ImageURL1,ImageURL2,ImageURL3\n";
-    const rows = filtered.map(m => `"${m.name}","${m.sku || ''}","${m.manufacturer}",${m.price},${m.mrp},${m.availableQuantity},"${m.category}",${m.isGeneric},${m.prescriptionRequired},"${m.packSize || ''}","${(m.description || '').replace(/"/g, '""')}","${(m.howToUse || '').replace(/"/g, '""')}","${(m.treatment || '').replace(/"/g, '""')}","${(m.safetyAdvice || '').replace(/"/g, '""')}","${(m.sideEffects || '').replace(/"/g, '""')}","${(m.alcoholInteraction || '').replace(/"/g, '""')}","${(m.pregnancyInteraction || '').replace(/"/g, '""')}","${(m.lactationInteraction || '').replace(/"/g, '""')}","${(m.drivingInteraction || '').replace(/"/g, '""')}","${(m.kidneyInteraction || '').replace(/"/g, '""')}","${(m.liverInteraction || '').replace(/"/g, '""')}","${m.imageUrls?.[0] || ''}","${m.imageUrls?.[1] || ''}","${m.imageUrls?.[2] || ''}"`).join("\n");
+    const headers = "Name,SKU,MoleculeMapping,Manufacturer,Price,MRP,Stock,Category,Generic,RX_Required,PackSize,Description,HowToUse,Treatment,SafetyAdvice,SideEffects,AlcoholInteraction,PregnancyInteraction,LactationInteraction,DrivingInteraction,KidneyInteraction,LiverInteraction,ImageURL1,ImageURL2,ImageURL3\n";
+    const rows = filtered.map(m => `"${m.name}","${m.sku || ''}","${m.moleculeId || ''}","${m.manufacturer}",${m.price},${m.mrp},${m.availableQuantity},"${m.category}",${m.isGeneric},${m.prescriptionRequired},"${m.packSize || ''}","${(m.description || '').replace(/"/g, '""')}","${(m.howToUse || '').replace(/"/g, '""')}","${(m.treatment || '').replace(/"/g, '""')}","${(m.safetyAdvice || '').replace(/"/g, '""')}","${(m.sideEffects || '').replace(/"/g, '""')}","${(m.alcoholInteraction || '').replace(/"/g, '""')}","${(m.pregnancyInteraction || '').replace(/"/g, '""')}","${(m.lactationInteraction || '').replace(/"/g, '""')}","${(m.drivingInteraction || '').replace(/"/g, '""')}","${(m.kidneyInteraction || '').replace(/"/g, '""')}","${(m.liverInteraction || '').replace(/"/g, '""')}","${m.imageUrls?.[0] || ''}","${m.imageUrls?.[1] || ''}","${m.imageUrls?.[2] || ''}"`).join("\n");
     const blob = new Blob([headers + rows], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -666,8 +666,8 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
   };
 
   const downloadTemplate = () => {
-    const headers = "Name,SKU,Manufacturer,Price,MRP,Stock,Category,Generic,RX_Required,PackSize,Description,HowToUse,Treatment,SafetyAdvice,SideEffects,AlcoholInteraction,PregnancyInteraction,LactationInteraction,DrivingInteraction,KidneyInteraction,LiverInteraction,ImageURL1,ImageURL2,ImageURL3\n";
-    const sample = `"Sample Product","SKU123","SahiMed Labs",100,150,50,"Diabetes",true,false,"Strip of 10","Clinical Desc","1 daily","Control sugar","Safe","Nausea","None","Consult Dr","Safe","Safe","Safe","Safe","https://picsum.photos/300","",""`;
+    const headers = "Name,SKU,MoleculeMapping,Manufacturer,Price,MRP,Stock,Category,Generic,RX_Required,PackSize,Description,HowToUse,Treatment,SafetyAdvice,SideEffects,AlcoholInteraction,PregnancyInteraction,LactationInteraction,DrivingInteraction,KidneyInteraction,LiverInteraction,ImageURL1,ImageURL2,ImageURL3\n";
+    const sample = `"Sample Product","SKU123","MOL_ID_HERE","SahiMed Labs",100,150,50,"Diabetes",true,false,"Strip of 10","Clinical Desc","1 daily","Control sugar","Safe","Nausea","None","Consult Dr","Safe","Safe","Safe","Safe","https://picsum.photos/300","",""`;
     const blob = new Blob([headers + sample], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -685,11 +685,11 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
       let count = 0;
       for (const line of lines) {
         if (!line.trim()) continue;
-        const [name, sku, manufacturer, price, mrp, stock, category, generic, rx, pack, desc, how, treat, safety, side, alc, preg, lact, driv, kid, liv, img1, img2, img3] = line.split(",").map(s => s.replace(/"/g, '').trim());
+        const [name, sku, molId, manufacturer, price, mrp, stock, category, generic, rx, pack, desc, how, treat, safety, side, alc, preg, lact, driv, kid, liv, img1, img2, img3] = line.split(",").map(s => s.replace(/"/g, '').trim());
         const ref = doc(collection(db, 'medicines'));
         const images = [img1, img2, img3].filter(Boolean);
         batch.set(ref, { 
-          name, sku, manufacturer, 
+          name, sku, moleculeId: molId, manufacturer, 
           price: Number(price) || 0, 
           mrp: Number(mrp) || 0, 
           availableQuantity: Number(stock) || 0, 
@@ -917,7 +917,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
         </TabsContent>
 
         <TabsContent value="clinical" className="space-y-6 animate-in fade-in duration-300">
-          <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Active Formula Mapping</Label><Select value={form.moleculeId} onValueChange={v => setForm({...form, moleculeId: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select Molecule" /></SelectTrigger><SelectContent className="rounded-2xl">{molecules?.map(m => <SelectItem key={m.id} value={m.id}>{m.molecule} ({m.form})</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Molecule Mapping (Clinical Salt)</Label><Select value={form.moleculeId} onValueChange={v => setForm({...form, moleculeId: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select Molecule" /></SelectTrigger><SelectContent className="rounded-2xl">{molecules?.map(m => <SelectItem key={m.id} value={m.id}>{m.molecule} ({m.form})</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Primary Treatment</Label><Textarea value={form.treatment} onChange={e => setForm({...form, treatment: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
           <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Clinical Description</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl min-h-[120px] bg-gray-50 border-none font-bold" /></div>
           <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Expected Side Effects</Label><Textarea value={form.sideEffects} onChange={e => setForm({...form, sideEffects: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
@@ -1294,7 +1294,7 @@ function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
         </div>
       </Card>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="rounded-[40px] max-w-xl border-none p-0 overflow-hidden shadow-3xl">
+        <DialogContent className="rounded-[40px] max-xl border-none p-0 overflow-hidden shadow-3xl">
           <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Campaign Builder</DialogTitle></div>
           <div className="p-8 max-h-[80vh] overflow-y-auto scrollbar-hide">
             <PromoForm db={db} initialData={editingPromo} onSuccess={() => setIsFormOpen(false)} />

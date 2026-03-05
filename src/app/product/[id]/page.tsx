@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { use, useState, useEffect } from 'react';
@@ -234,6 +235,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 }
 
 function ComparisonCard({ product, type, isOutOfStock, onAdd, quantity, updateQty }: any) {
+  const db = useFirestore();
+  const moleculeRef = useMemoFirebase(() => {
+    if (!db || !product?.moleculeId) return null;
+    return doc(db, 'moleculeMaster', product.moleculeId);
+  }, [db, product?.moleculeId]);
+  const { data: molecule } = useDoc(moleculeRef);
+
   if (!product) {
     return (
       <div className="flex-1 flex flex-col">
@@ -253,6 +261,8 @@ function ComparisonCard({ product, type, isOutOfStock, onAdd, quantity, updateQt
   const packSizeMatch = product.packSize?.match(/\d+/);
   const unitsCount = packSizeMatch ? parseInt(packSizeMatch[0]) : 1;
   const unitPrice = (product.price / unitsCount).toFixed(1);
+
+  const displayComposition = product.saltComposition || molecule?.molecule || 'N/A';
 
   return (
     <div className="flex-1 flex flex-col group">
@@ -295,7 +305,7 @@ function ComparisonCard({ product, type, isOutOfStock, onAdd, quantity, updateQt
           <h3 className="font-black text-[12px] sm:text-lg uppercase tracking-tight text-gray-900 line-clamp-2 h-10 sm:h-14 leading-tight">
             {product.name}
           </h3>
-          <p className="text-[10px] font-bold text-gray-400 uppercase truncate">{product.saltComposition}</p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase truncate">{displayComposition}</p>
           
           <div className="pt-4 border-t border-gray-100/50 space-y-1">
              <div className="flex items-center gap-1">

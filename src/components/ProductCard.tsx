@@ -1,3 +1,4 @@
+
 "use client"
 
 import Image from 'next/image';
@@ -7,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Product, useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore, addDocumentNonBlocking, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, serverTimestamp, doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -25,6 +26,12 @@ export default function ProductCard({ product }: { product: Product }) {
   const { toast } = useToast();
   const quantity = getItemQuantity(product.id);
   const isOutOfStock = (product.availableQuantity || 0) <= 0;
+
+  const moleculeRef = useMemoFirebase(() => {
+    if (!db || !product.moleculeId) return null;
+    return doc(db, 'moleculeMaster', product.moleculeId);
+  }, [db, product.moleculeId]);
+  const { data: molecule } = useDoc(moleculeRef);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -73,6 +80,8 @@ export default function ProductCard({ product }: { product: Product }) {
   const packSizeMatch = product.packSize?.match(/\d+/);
   const unitsCount = packSizeMatch ? parseInt(packSizeMatch[0]) : 1;
   const unitPrice = (product.price / unitsCount).toFixed(1);
+
+  const displayComposition = product.saltComposition || molecule?.molecule || 'N/A';
 
   return (
     <div
@@ -126,7 +135,7 @@ export default function ProductCard({ product }: { product: Product }) {
             {product.name}
           </h3>
           <p className="text-[10px] font-bold text-gray-400 uppercase truncate">
-            {product.saltComposition}
+            {displayComposition}
           </p>
         </Link>
 
