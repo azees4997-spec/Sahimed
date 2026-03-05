@@ -1,9 +1,8 @@
-
 "use client"
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Plus, Minus, BellRing, ShoppingCart } from 'lucide-react';
+import { Plus, Minus, BellRing, ShoppingCart, Search as SearchIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product, useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
@@ -24,7 +30,6 @@ export default function ProductCard({ product }: { product: Product }) {
     e.preventDefault();
     e.stopPropagation();
     if (isOutOfStock) return;
-    
     addToCart(product);
   };
 
@@ -70,48 +75,65 @@ export default function ProductCard({ product }: { product: Product }) {
   const unitPrice = (product.price / unitsCount).toFixed(1);
 
   return (
-    <Link 
-      href={`/product/${product.id}`}
+    <div
       className={cn(
-        "group bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col active:scale-[0.98] h-full",
+        "group bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col active:scale-[0.99] h-full",
         isOutOfStock && "opacity-90"
       )}
     >
-      <div className="relative aspect-[5/4] w-full overflow-hidden bg-white border-b border-gray-50">
-        <Image
-          src={product.imageUrl}
-          alt={product.name}
-          fill
-          className={cn(
-            "object-contain p-4 group-hover:scale-110 transition-transform duration-700",
-            isOutOfStock && "grayscale opacity-40"
-          )}
-          data-ai-hint="pharmaceutical product"
-          sizes="(max-width: 768px) 50vw, 300px"
-          loading="lazy"
-        />
-        
-        {isOutOfStock && (
-          <div className="absolute inset-0 flex items-center justify-center p-2 bg-white/40 backdrop-blur-[2px]">
-            <Badge variant="destructive" className="font-black text-[8px] uppercase tracking-widest rounded-full px-3 py-1 bg-gray-900/90 shadow-2xl border-none">Out of Stock</Badge>
-          </div>
-        )}
+      {/* Click-to-View Image Container */}
+      <div className="relative aspect-square w-full overflow-hidden bg-white border-b border-gray-50">
+        <Dialog>
+          <DialogTrigger asChild>
+            <div className="w-full h-full relative cursor-zoom-in group/img">
+              <Image
+                src={product.imageUrl}
+                alt={product.name}
+                fill
+                className={cn(
+                  "object-contain p-3 group-hover/img:scale-105 transition-transform duration-700",
+                  isOutOfStock && "grayscale opacity-40"
+                )}
+                data-ai-hint="pharmaceutical product"
+                sizes="(max-width: 768px) 50vw, 300px"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
+                 <SearchIcon className="w-6 h-6 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
+              </div>
+              
+              {isOutOfStock && (
+                <div className="absolute inset-0 flex items-center justify-center p-2 bg-white/40 backdrop-blur-[2px]">
+                  <Badge variant="destructive" className="font-black text-[8px] uppercase tracking-widest rounded-full px-3 py-1 bg-gray-900/90 shadow-2xl border-none">Out of Stock</Badge>
+                </div>
+              )}
+            </div>
+          </DialogTrigger>
+          <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-white rounded-[40px] overflow-hidden shadow-3xl">
+             <DialogHeader className="sr-only">
+               <DialogTitle>{product.name}</DialogTitle>
+             </DialogHeader>
+             <div className="relative aspect-square w-full bg-white flex items-center justify-center p-6">
+                <Image src={product.imageUrl} alt={product.name} fill className="object-contain p-8" />
+             </div>
+          </DialogContent>
+        </Dialog>
       </div>
       
       <div className="p-4 flex flex-col flex-1">
-        <div className="mb-3">
-          <h3 className="font-black text-gray-900 text-sm sm:text-base uppercase tracking-tight group-hover:text-primary transition-colors leading-tight line-clamp-2 min-h-[2.5rem]">
+        <Link href={`/product/${product.id}`} className="mb-3 block group/title">
+          <h3 className="font-black text-gray-900 text-sm sm:text-base uppercase tracking-tight group-hover/title:text-primary transition-colors leading-tight line-clamp-2 min-h-[2.5rem]">
             {product.name}
           </h3>
           <p className="text-[10px] font-bold text-gray-400 uppercase truncate">
             {product.saltComposition}
           </p>
-        </div>
+        </Link>
 
         <div className="space-y-1 mb-4">
           <div className="flex items-center gap-1">
             <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">PACKING:</span>
-            <span className="text-[10px] font-bold text-gray-600 uppercase">{product.packSize}</span>
+            <span className="text-[10px] font-bold text-gray-600 uppercase">{product.packSize || "N/A"}</span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">MARKETER:</span>
@@ -169,6 +191,6 @@ export default function ProductCard({ product }: { product: Product }) {
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

@@ -27,7 +27,8 @@ import {
   CheckCircle2,
   ArrowRight,
   Loader2,
-  Dna
+  Dna,
+  Search as SearchIcon
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,6 +38,13 @@ import { doc, collection, query, where, limit } from 'firebase/firestore';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -108,6 +116,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.3em]">Precision Bio-Equivalent Comparison</p>
         </div>
 
+        {/* Forced 2-column grid for side-by-side comparison */}
         <div className="grid grid-cols-2 gap-3 sm:gap-8 mb-16 items-stretch">
           <ComparisonCard 
             product={BrandedProduct} 
@@ -237,11 +246,18 @@ function ComparisonCard({ product, type, isOutOfStock, onAdd, quantity, updateQt
   }
 
   const isGeneric = type === 'Generic';
+  const mrp = product.mrp || product.price + (product.price * 0.25);
+  const savingsAmount = Math.max(0, Math.round(mrp - product.price));
+  const savingsPercent = Math.round(((mrp - product.price) / mrp) * 100);
+  
+  const packSizeMatch = product.packSize?.match(/\d+/);
+  const unitsCount = packSizeMatch ? parseInt(packSizeMatch[0]) : 1;
+  const unitPrice = (product.price / unitsCount).toFixed(1);
 
   return (
     <div className="flex-1 flex flex-col group">
       <Card className={cn(
-        "h-full rounded-[32px] sm:rounded-[40px] flex flex-col overflow-hidden transition-all duration-500 group-hover:shadow-2xl border-2 p-4 sm:p-8",
+        "h-full rounded-[32px] sm:rounded-[40px] flex flex-col overflow-hidden transition-all duration-500 group-hover:shadow-2xl border-2 p-4 sm:p-6",
         isGeneric ? 'border-accent/30 bg-accent/5' : 'border-primary/10 bg-white shadow-lg'
       )}>
         <Badge className={cn(
@@ -251,10 +267,25 @@ function ComparisonCard({ product, type, isOutOfStock, onAdd, quantity, updateQt
           {isGeneric ? 'Sahi Generic' : 'Original Branded'}
         </Badge>
 
-        <div className="aspect-square relative w-full bg-white rounded-[24px] sm:rounded-[32px] mb-6 border border-gray-100 p-4 shadow-inner group-hover:scale-[1.02] transition-transform duration-500">
-          <Image src={product.imageUrl} alt={product.name} fill className="object-contain p-3" />
+        <div className="aspect-square relative w-full bg-white rounded-[24px] sm:rounded-[32px] mb-6 border border-gray-100 overflow-hidden">
+           <Dialog>
+             <DialogTrigger asChild>
+                <div className="w-full h-full relative cursor-zoom-in group/img">
+                   <Image src={product.imageUrl} alt={product.name} fill className="object-contain p-3 group-hover/img:scale-105 transition-transform duration-700" />
+                   <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
+                      <SearchIcon className="w-6 h-6 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                   </div>
+                </div>
+             </DialogTrigger>
+             <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-white rounded-[40px] overflow-hidden shadow-3xl">
+                <DialogHeader className="sr-only"><DialogTitle>{product.name}</DialogTitle></DialogHeader>
+                <div className="relative aspect-square w-full">
+                   <Image src={product.imageUrl} alt={product.name} fill className="object-contain p-8" />
+                </div>
+             </DialogContent>
+           </Dialog>
           {isOutOfStock && (
-            <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex items-center justify-center rounded-[24px] sm:rounded-[32px]">
+            <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex items-center justify-center rounded-[24px] sm:rounded-[32px] pointer-events-none">
               <Badge variant="destructive" className="font-black text-[9px] uppercase tracking-[0.2em] px-3 py-1.5">Out of Stock</Badge>
             </div>
           )}
@@ -264,12 +295,30 @@ function ComparisonCard({ product, type, isOutOfStock, onAdd, quantity, updateQt
           <h3 className="font-black text-[12px] sm:text-lg uppercase tracking-tight text-gray-900 line-clamp-2 h-10 sm:h-14 leading-tight">
             {product.name}
           </h3>
-          <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate">{product.manufacturer}</p>
-          <div className="flex flex-col gap-1 pt-4 border-t border-gray-100/50">
+          <p className="text-[10px] font-bold text-gray-400 uppercase truncate">{product.saltComposition}</p>
+          
+          <div className="pt-4 border-t border-gray-100/50 space-y-1">
+             <div className="flex items-center gap-1">
+                <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">PACKING:</span>
+                <span className="text-[10px] font-bold text-gray-600 uppercase">{product.packSize || "N/A"}</span>
+             </div>
+             <div className="flex items-center gap-1">
+                <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">MARKETER:</span>
+                <span className="text-[10px] font-bold text-gray-600 uppercase truncate">{product.manufacturer}</span>
+             </div>
+          </div>
+
+          <div className="flex flex-col gap-1 pt-4">
+            <span className="text-[10px] text-red-500 font-bold line-through">MRP ₹{Math.round(mrp)}</span>
             <div className="flex items-center justify-between">
-              <span className="text-lg font-black text-accent">₹{product.price}</span>
-              {product.mrp && <span className="text-[10px] text-red-500 line-through font-bold">₹{product.mrp}</span>}
+              <span className="text-xl sm:text-2xl font-black text-accent tracking-tighter">₹{product.price}</span>
+              {savingsPercent > 0 && (
+                <div className="bg-accent/10 text-accent text-[8px] font-black uppercase px-2 py-1 rounded">
+                  SAVE ₹{savingsAmount} ({savingsPercent}%)
+                </div>
+              )}
             </div>
+            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">₹{unitPrice} / UNIT</p>
           </div>
         </div>
 
