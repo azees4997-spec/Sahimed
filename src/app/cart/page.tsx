@@ -2,9 +2,9 @@
 "use client"
 
 import Navbar from '@/components/Navbar';
-import { useCart } from '@/context/CartContext';
+import { useCart, Fee } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Plus, Minus, Ticket, Check, X, PartyPopper, ChevronRight, FileWarning, Camera, RotateCcw, ClipboardCheck, Info } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Plus, Minus, Ticket, Check, X, PartyPopper, ChevronRight, FileWarning, Camera, RotateCcw, ClipboardCheck, Info, Truck } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -40,12 +40,16 @@ export default function CartPage() {
 
   const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
   
-  // Calculate Fee Totals with potential strike-through logic
-  const feeTotal = activeFees.reduce((acc, fee) => {
-    if (fee.type === 'fixed') return acc + fee.amount;
-    return acc + (totalPrice * (fee.amount / 100));
+  // Filter and Calculate Applicable Fees based on thresholds
+  const applicableFees = activeFees.filter(f => totalPrice >= (f.minPurchase || 0));
+  
+  const feeTotal = applicableFees.reduce((acc, fee) => {
+    const amt = fee.discountedAmount ?? fee.originalAmount ?? 0;
+    if (fee.type === 'fixed') return acc + amt;
+    return acc + (totalPrice * (amt / 100));
   }, 0);
 
+  // Promo Calculation
   let rawDiscount = 0;
   if (appliedPromo) {
     if (appliedPromo.discountType === 'fixed') {
@@ -55,21 +59,23 @@ export default function CartPage() {
     }
   }
 
-  // Apply Capping Logic
   const promoDiscount = (appliedPromo?.maxDiscount && appliedPromo.maxDiscount > 0) 
     ? Math.min(rawDiscount, appliedPromo.maxDiscount) 
     : rawDiscount;
 
-  const finalPayable = Math.max(0, totalPrice + feeTotal - promoDiscount);
-  const totalSavings = (totalMrp - totalPrice) + promoDiscount;
+  const finalPayableBeforeDelivery = Math.max(0, totalPrice + feeTotal - promoDiscount);
+  
+  // Free Delivery Threshold (linked to a fee doc if available, otherwise static)
+  const deliveryFeeDoc = activeFees.find(f => f.name.toLowerCase().includes('delivery'));
+  const FREE_DELIVERY_THRESHOLD = deliveryFeeDoc?.minPurchase || 500;
+  const deliveryCharge = finalPayableBeforeDelivery < FREE_DELIVERY_THRESHOLD ? (deliveryFeeDoc?.discountedAmount || 40) : 0;
+  const remainingForFree = Math.max(0, FREE_DELIVERY_THRESHOLD - finalPayableBeforeDelivery);
+
+  const finalPayable = finalPayableBeforeDelivery + deliveryCharge;
+  const totalSavings = (totalMrp - totalPrice) + promoDiscount + applicableFees.reduce((acc, f) => acc + (f.originalAmount - f.discountedAmount), 0);
 
   const requiresPrescription = cart.some(item => item.prescriptionRequired);
   const isPrescriptionReady = !requiresPrescription || !!attachedPrescription;
-
-  // Free Delivery Threshold (Static for now, can be linked to a fee doc)
-  const FREE_DELIVERY_THRESHOLD = 500;
-  const deliveryCharge = finalPayable < FREE_DELIVERY_THRESHOLD ? 40 : 0;
-  const remainingForFree = Math.max(0, FREE_DELIVERY_THRESHOLD - finalPayable);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -145,7 +151,7 @@ export default function CartPage() {
               <div className="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
                 <div 
                   className="h-full bg-green-500 transition-all duration-1000" 
-                  style={{ width: `${Math.min(100, (finalPayable / FREE_DELIVERY_THRESHOLD) * 100)}%` }} 
+                  style={{ width: `${Math.min(100, (finalPayableBeforeDelivery / FREE_DELIVERY_THRESHOLD) * 100)}%` }} 
                 />
               </div>
             </div>
@@ -417,6 +423,21 @@ export default function CartPage() {
                   <span className="text-gray-900">₹{(totalPrice * 0.12).toFixed(0)}</span>
                 </div>
                 
+                {applicableFees.map(fee => {
+                  const hasDiscount = fee.discountedAmount < fee.originalAmount;
+                  return (
+                    <div key={fee.id} className="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-500">
+                      <span>{fee.name}</span>
+                      <div className="flex gap-2">
+                        {hasDiscount && (
+                          <span className="text-[#E11D48] line-through opacity-50">₹{fee.originalAmount}</span>
+                        )}
+                        <span className="text-gray-900 font-black">₹{fee.discountedAmount}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+
                 <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-500">
                   <span>Delivery Charge</span>
                   <div className="flex gap-2">
@@ -437,7 +458,7 @@ export default function CartPage() {
                 
                 <div className="pt-10 border-t border-dashed border-gray-200 flex justify-between items-baseline">
                   <span className="text-sm font-black uppercase tracking-[0.2em] text-gray-900">Total Payable</span>
-                  <span className="text-4xl font-black text-primary tracking-tighter">₹{(finalPayable + deliveryCharge).toFixed(0)}</span>
+                  <span className="text-4xl font-black text-primary tracking-tighter">₹{finalPayable.toFixed(0)}</span>
                 </div>
 
                 {totalSavings > 0 && (

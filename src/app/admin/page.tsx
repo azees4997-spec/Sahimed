@@ -1346,13 +1346,19 @@ function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onB
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
-              <tr><th className="px-10 py-8">Charge Name</th><th className="px-10 py-8">Amount</th><th className="px-10 py-8">Type</th><th className="px-10 py-8">Status</th><th className="px-10 py-8 text-right">Actions</th></tr>
+              <tr><th className="px-10 py-8">Charge Name</th><th className="px-10 py-8">Pricing (₹)</th><th className="px-10 py-8">Threshold</th><th className="px-10 py-8">Strategy</th><th className="px-10 py-8">Status</th><th className="px-10 py-8 text-right">Actions</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>) : fees?.length === 0 ? (<tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No fees configured</td></tr>) : fees?.map(fee => (
+              {isLoading ? (<tr><td colSpan={6} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>) : fees?.length === 0 ? (<tr><td colSpan={6} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No fees configured</td></tr>) : fees?.map(fee => (
                 <tr key={fee.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-10 py-8 font-black text-sm uppercase">{fee.name}</td>
-                  <td className="px-10 py-8 font-black text-gray-900">₹{fee.amount}</td>
+                  <td className="px-10 py-8">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#E11D48] line-through font-bold text-[10px] opacity-50">₹{fee.originalAmount}</span>
+                      <span className="font-black text-gray-900">₹{fee.discountedAmount}{fee.type === 'percentage' ? '%' : ''}</span>
+                    </div>
+                  </td>
+                  <td className="px-10 py-8 font-black text-gray-400 text-[10px]">Min. ₹{fee.minPurchase || 0}</td>
                   <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">{fee.type}</td>
                   <td className="px-10 py-8"><Badge className={cn("rounded-full font-black text-[8px]", fee.isActive ? "bg-accent text-white" : "bg-gray-100 text-gray-400")}>{fee.isActive ? 'ENABLED' : 'PAUSED'}</Badge></td>
                   <td className="px-10 py-8 text-right">
@@ -1378,21 +1384,62 @@ function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onB
 }
 
 function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
-  const [form, setForm] = useState({ name: initialData?.name || '', amount: initialData?.amount || 0, type: initialData?.type || 'fixed', isActive: initialData?.isActive ?? true });
+  const [form, setForm] = useState({ 
+    name: initialData?.name || '', 
+    originalAmount: initialData?.originalAmount || 0, 
+    discountedAmount: initialData?.discountedAmount || 0, 
+    minPurchase: initialData?.minPurchase || 0,
+    type: initialData?.type || 'fixed', 
+    isActive: initialData?.isActive ?? true 
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...form, amount: Number(form.amount) };
+    const payload = { 
+      ...form, 
+      originalAmount: Number(form.originalAmount),
+      discountedAmount: Number(form.discountedAmount),
+      minPurchase: Number(form.minPurchase)
+    };
     initialData?.id ? updateDocumentNonBlocking(doc(db, 'fees', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'fees'), payload);
     onSuccess();
   };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Charge Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      
       <div className="grid grid-cols-2 gap-6">
-        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Amount</Label><Input type="number" value={form.amount} onChange={e => setForm({...form, amount: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-        <div className="flex items-center gap-2 p-2 pt-8"><input type="checkbox" id="active" checked={form.isActive} onChange={e => setForm({...form, isActive: e.target.checked})} className="w-5 h-5" /><Label htmlFor="active" className="text-[10px] font-black uppercase">Active</Label></div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-gray-400">Discount Type</Label>
+          <Select value={form.type} onValueChange={v => setForm({...form, type: v as any})}>
+            <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
+            <SelectContent className="rounded-2xl">
+              <SelectItem value="fixed">Fixed ₹</SelectItem>
+              <SelectItem value="percentage">Percentage %</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Min. Purchase Threshold (₹)</Label><Input type="number" value={form.minPurchase} onChange={e => setForm({...form, minPurchase: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       </div>
-      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Configuration</Button>
+
+      <div className="grid grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-gray-400">Original Amount</Label>
+          <Input type="number" value={form.originalAmount} onChange={e => setForm({...form, originalAmount: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-gray-400">Discounted (Payable)</Label>
+          <Input type="number" value={form.discountedAmount} onChange={e => setForm({...form, discountedAmount: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl">
+        <input type="checkbox" id="active" checked={form.isActive} onChange={e => setForm({...form, isActive: e.target.checked})} className="w-5 h-5 accent-primary" />
+        <Label htmlFor="active" className="text-[10px] font-black uppercase cursor-pointer">Active Configuration</Label>
+      </div>
+
+      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white shadow-xl">Save Configuration</Button>
     </form>
   );
 }

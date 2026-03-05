@@ -38,24 +38,26 @@ interface CartItem extends Product {
   quantity: number;
 }
 
-interface Fee {
+export interface Fee {
   id: string;
   name: string;
-  amount: number;
+  originalAmount: number;
+  discountedAmount: number;
   type: 'fixed' | 'percentage';
+  minPurchase: number;
   isActive: boolean;
 }
 
-interface PromoCode {
+export interface PromoCode {
   id: string;
   code: string;
   description: string;
   discountType: 'fixed' | 'percentage';
   discountValue: number;
-  maxDiscount?: number; // Capping field
+  maxDiscount?: number; 
   minOrderValue: number;
   applyTo: 'cart' | 'product' | 'customer' | 'both';
-  targetId?: string; // Links to product ID or customer mobile
+  targetId?: string; 
   isActive: boolean;
 }
 
@@ -88,7 +90,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   
   const db = useFirestore();
 
-  // Fetch dynamic fees
+  // Fetch dynamic fees with real-time sync
   const feesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'fees'), where('isActive', '==', true));
