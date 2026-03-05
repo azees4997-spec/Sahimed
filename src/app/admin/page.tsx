@@ -643,8 +643,19 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     liverInteraction: initialData?.liverInteraction || ''
   });
 
-  const [imageUrls, setImageUrls] = useState<string[]>(initialData?.imageUrls || (initialData?.imageUrl ? [initialData.imageUrl] : []));
-  const [thumbnailIdx, setThumbnailIdx] = useState<number>(0);
+  const [imageUrls, setImageUrls] = useState<string[]>(() => {
+    const arr = initialData?.imageUrls || (initialData?.imageUrl ? [initialData.imageUrl] : []);
+    const result = [...arr];
+    while (result.length < 3) result.push('');
+    return result.slice(0, 3);
+  });
+
+  const [thumbnailIdx, setThumbnailIdx] = useState<number>(() => {
+    if (!initialData?.imageUrl || !initialData?.imageUrls) return 0;
+    const idx = initialData.imageUrls.indexOf(initialData.imageUrl);
+    return idx === -1 ? 0 : idx;
+  });
+
   const [uploading, setUploading] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -693,7 +704,9 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       <Tabs defaultValue="basic" className="w-full">
         <TabsList className="bg-gray-100 p-1 rounded-2xl h-14 w-full flex mb-8">
           <TabsTrigger value="basic" className="flex-1 rounded-xl font-black text-[10px] uppercase">Basic Info</TabsTrigger>
-          <TabsTrigger value="images" className="flex-1 rounded-xl font-black text-[10px] uppercase">Images (3 Max)</TabsTrigger>
+          <TabsTrigger value="images" className="flex-1 rounded-xl font-black text-[10px] uppercase gap-2">
+            <ImageIcon className="w-3 h-3" /> Media & Images
+          </TabsTrigger>
           <TabsTrigger value="clinical" className="flex-1 rounded-xl font-black text-[10px] uppercase">Clinical Data</TabsTrigger>
           <TabsTrigger value="safety" className="flex-1 rounded-xl font-black text-[10px] uppercase">Safety & Interactions</TabsTrigger>
         </TabsList>
