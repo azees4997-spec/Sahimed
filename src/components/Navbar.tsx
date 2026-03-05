@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from 'next/link';
@@ -148,7 +147,7 @@ export default function Navbar() {
                     <ChevronDown className="w-2 h-2 shrink-0 opacity-40" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-72 p-5 rounded-[32px] shadow-3xl border-none animate-in slide-in-from-top-4 duration-500">
+                <PopoverContent sideOffset={12} className="w-72 p-5 rounded-[32px] shadow-3xl border-none animate-in slide-in-from-top-4 duration-500">
                   <div className="space-y-4">
                     <Button 
                       onClick={handleGeoLocation} 
