@@ -48,7 +48,10 @@ import {
   ChevronDown,
   FileWarning,
   Calendar as CalendarIcon,
-  Megaphone
+  Megaphone,
+  Stethoscope,
+  Activity,
+  ClipboardList
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -88,7 +91,7 @@ import {
   deleteDocumentNonBlocking,
   addDocumentNonBlocking
 } from '@/firebase';
-import { doc, collection, query, collectionGroup, getDoc, getDocs, serverTimestamp, orderBy, where } from 'firebase/firestore';
+import { doc, collection, query, collectionGroup, getDoc, getDocs, serverTimestamp, orderBy, where, writeBatch } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -352,7 +355,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
   );
 }
 
-// --- FULFILLMENT TAB ---
+// --- FULFILLMENT HUB ---
 
 function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
@@ -371,17 +374,17 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
     }
 
     if (!order?.userId || !order?.id) {
-      toast({ variant: 'destructive', title: 'Data Error', description: 'Missing order identifiers.' });
+      toast({ variant: 'destructive', title: 'Data Error', description: 'Missing identifiers.' });
       return;
     }
 
     const orderRef = doc(db, 'userProfiles', order.userId, 'orders', order.id);
     updateDocumentNonBlocking(orderRef, { status: newStatus });
-    toast({ title: "Status Updated", description: `Order status set to ${newStatus}.` });
+    toast({ title: "Status Updated", description: `Order set to ${newStatus}.` });
   };
 
   const finalizeShipping = () => {
-    if (!selectedOrder || !selectedOrder.userId || !selectedOrder.id) return;
+    if (!selectedOrder) return;
     const orderRef = doc(db, 'userProfiles', selectedOrder.userId, 'orders', selectedOrder.id);
     updateDocumentNonBlocking(orderRef, { 
       status: 'Shipping',
@@ -389,7 +392,7 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
       trackingId: shippingData.trackingId
     });
     setIsShippingDialogOpen(false);
-    toast({ title: "Shipping Details Saved", description: "Logistics data has been linked." });
+    toast({ title: "Shipping Linked" });
   };
 
   return (
@@ -403,7 +406,7 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
               <tr>
                 <th className="px-8 py-6">Order ID</th>
                 <th className="px-8 py-6">Contact / Mobile</th>
-                <th className="px-8 py-6">Delivery Address</th>
+                <th className="px-8 py-6">Address</th>
                 <th className="px-8 py-6">Amount</th>
                 <th className="px-8 py-6">Status</th>
                 <th className="px-8 py-6 text-right">Action</th>
@@ -411,58 +414,32 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
-                <tr><td colSpan={6} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
+                <tr><td colSpan={6} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
               ) : (!orders || orders.length === 0) ? (
                 <tr><td colSpan={6} className="p-20 text-center font-bold text-gray-400 uppercase tracking-widest">Waiting for orders from Firestore...</td></tr>
               ) : orders.map(order => {
-                const patientMobile = order?.phoneNumber || <span className="text-red-500 font-black">NO PHONE</span>;
-                const deliveryAddress = order?.shippingDetails?.street || <span className="text-red-500 font-black">MISSING ADDRESS</span>;
-                const itemCount = order?.items?.length || 0;
-
+                const mobile = order?.phoneNumber || <span className="text-red-500 font-black">NO PHONE</span>;
+                const address = order?.shippingDetails?.street || <span className="text-red-500 font-black">MISSING ADDRESS</span>;
                 return (
-                  <tr key={order?.id} className="hover:bg-gray-50/50 transition-colors group">
-                    <td className="px-8 py-6 font-black text-xs uppercase">#{order?.id?.substring(0,8) || 'N/A'}</td>
+                  <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-8 py-6 font-black text-xs uppercase">#{order.id.substring(0,8)}</td>
                     <td className="px-8 py-6">
                       <div className="flex flex-col">
-                        <span className="font-bold text-xs">{order?.patientName || 'Patient'}</span>
-                        <span className="text-[10px] font-bold uppercase tracking-widest">{patientMobile}</span>
+                        <span className="font-bold text-xs">{order.patientName || 'Patient'}</span>
+                        <span className="text-[10px] font-bold text-gray-400">{mobile}</span>
                       </div>
                     </td>
-                    <td className="px-8 py-6 max-w-[250px]">
-                      <div className="flex flex-col gap-0.5">
-                        <p className="text-[10px] font-bold text-gray-600 line-clamp-1">{deliveryAddress}</p>
-                        <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">
-                          {order?.shippingDetails?.pincode || 'NO_PIN'} {order?.shippingDetails?.landmark ? `• ${order.shippingDetails.landmark}` : ''}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-8 py-6">
-                       <div className="flex flex-col leading-none">
-                          <span className="font-black text-accent text-sm">₹{order?.totalAmount || 0}</span>
-                          <span className="text-[8px] font-black text-gray-300 uppercase mt-1">{itemCount} ITEMS</span>
-                       </div>
-                    </td>
+                    <td className="px-8 py-6 max-w-[250px]"><p className="text-[10px] font-bold text-gray-600 line-clamp-1">{address}</p></td>
+                    <td className="px-8 py-6 font-black text-accent">₹{order.totalAmount || 0}</td>
                     <td className="px-8 py-6">
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" className="h-8 rounded-full px-4 text-[9px] font-black uppercase tracking-widest border-2 gap-2">
-                            {order?.status || 'Pending'} <ChevronDown className="w-3 h-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="rounded-2xl border-none shadow-2xl p-2 min-w-[140px]">
-                          {ORDER_STATUSES.map(status => (
-                            <DropdownMenuItem key={status} onClick={() => handleStatusUpdate(order, status)} className="rounded-xl font-bold text-[10px] uppercase h-10 px-4">
-                              {status}
-                            </DropdownMenuItem>
-                          ))}
+                        <DropdownMenuTrigger asChild><Button variant="outline" className="h-8 rounded-full px-4 text-[9px] font-black uppercase border-2 gap-2">{order.status || 'Pending'} <ChevronDown className="w-3 h-3" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuContent className="rounded-2xl border-none shadow-2xl p-2">
+                          {ORDER_STATUSES.map(s => <DropdownMenuItem key={s} onClick={() => handleStatusUpdate(order, s)} className="rounded-xl font-bold text-[10px] uppercase h-10 px-4">{s}</DropdownMenuItem>)}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
-                    <td className="px-8 py-6 text-right">
-                      <div className="flex justify-end gap-2">
-                         <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)} className="h-9 w-9 rounded-xl text-primary"><Eye className="w-4 h-4" /></Button>
-                      </div>
-                    </td>
+                    <td className="px-8 py-6 text-right"><Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)} className="h-9 w-9 rounded-xl text-primary"><Eye className="w-4 h-4" /></Button></td>
                   </tr>
                 );
               })}
@@ -471,69 +448,31 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
         </div>
       </Card>
 
-      <Dialog open={!!selectedOrder && !isShippingDialogOpen} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden shadow-3xl">
-          <div className="bg-primary p-8 text-white flex justify-between items-center">
-            <div><DialogTitle className="text-2xl font-black uppercase">Order Details</DialogTitle><p className="text-[9px] opacity-60 uppercase">ID: {selectedOrder?.id}</p></div>
-            <Button variant="outline" size="icon" onClick={() => window.print()} className="rounded-xl bg-white/10 text-white"><Printer className="w-4 h-4" /></Button>
-          </div>
-          <div className="p-8 space-y-8 overflow-y-auto max-h-[70vh] scrollbar-hide">
-            <div className="grid grid-cols-2 gap-8">
-               <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Patient Details</h4>
-                  <div className="space-y-1">
-                     <p className="font-black text-sm">{selectedOrder?.patientName || 'Unknown Patient'}</p>
-                     <p className="text-[10px] font-bold text-gray-500">{selectedOrder?.phoneNumber || 'No Phone'}</p>
-                  </div>
-               </div>
-               <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Delivery Address</h4>
-                  <div className="space-y-1">
-                     <p className="font-bold text-[11px] leading-relaxed">{selectedOrder?.shippingDetails?.street || 'No Street Provided'}</p>
-                     <p className="text-[10px] font-black text-primary uppercase tracking-widest">PIN: {selectedOrder?.shippingDetails?.pincode || 'N/A'}</p>
-                  </div>
-               </div>
-            </div>
-            <div className="space-y-4">
-               <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b pb-2">Ordered Items</h4>
-               <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
-                  {selectedOrder?.items?.map((item: any, i: number) => (
-                    <div key={i} className="flex justify-between items-center">
-                       <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border"><Package className="w-4 h-4 text-gray-400" /></div>
-                          <div className="text-left">
-                            <p className="text-[11px] font-black uppercase">{item?.name || 'Unknown Item'}</p>
-                            <p className="text-[9px] text-gray-400 font-bold uppercase">Qty: {item?.quantity || 0}</p>
-                          </div>
-                       </div>
-                       <span className="font-black text-xs text-gray-900">₹{(item?.unitPrice || 0) * (item?.quantity || 0)}</span>
-                    </div>
-                  )) || <p className="text-[10px] font-black text-gray-300 text-center uppercase">0 ITEMS</p>}
-               </div>
-            </div>
-            <div className="flex justify-between items-baseline pt-4 border-t">
-              <span className="font-black text-sm uppercase text-gray-400 tracking-widest">Total Payable</span>
-              <span className="text-3xl font-black text-accent">₹{selectedOrder?.totalAmount || 0}</span>
-            </div>
+      <Dialog open={!!selectedOrder && !isShippingDialogOpen} onOpenChange={o => !o && setSelectedOrder(null)}>
+        <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden">
+          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase">Order Details</DialogTitle></div>
+          <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+             <div className="grid grid-cols-2 gap-8">
+                <div><h4 className="text-[10px] font-black uppercase text-gray-400 mb-2">Patient</h4><p className="font-black text-sm">{selectedOrder?.patientName}</p><p className="text-xs text-gray-500">{selectedOrder?.phoneNumber}</p></div>
+                <div><h4 className="text-[10px] font-black uppercase text-gray-400 mb-2">Address</h4><p className="text-[11px] font-bold leading-relaxed">{selectedOrder?.shippingDetails?.street}</p></div>
+             </div>
+             <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
+                {selectedOrder?.items?.map((it: any, i: number) => (
+                  <div key={i} className="flex justify-between items-center"><p className="text-[11px] font-black uppercase">{it.name} x {it.quantity}</p><span className="font-black text-xs">₹{it.unitPrice * it.quantity}</span></div>
+                )) || <p className="text-center text-[10px] font-black text-gray-300">0 ITEMS</p>}
+             </div>
+             <div className="flex justify-between border-t pt-4"><span className="font-black text-sm uppercase text-gray-400">Total</span><span className="text-3xl font-black text-accent">₹{selectedOrder?.totalAmount || 0}</span></div>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isShippingDialogOpen} onOpenChange={setIsShippingDialogOpen}>
-        <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden shadow-3xl">
-          <div className="bg-blue-600 p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Logistics Details</DialogTitle></div>
+        <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden">
+          <div className="bg-blue-600 p-8 text-white"><DialogTitle className="text-2xl font-black uppercase">Shipping Details</DialogTitle></div>
           <div className="p-8 space-y-6">
-             <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-gray-400">Logistics Partner Name</Label>
-                <Input value={shippingData.carrier} onChange={e => setShippingData({...shippingData, carrier: e.target.value})} placeholder="e.g. BlueDart, Delhivery" className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
-             </div>
-             <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-gray-400">AWB / Tracking ID</Label>
-                <Input value={shippingData.trackingId} onChange={e => setShippingData({...shippingData, trackingId: e.target.value})} placeholder="Tracking number" className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
-             </div>
-             <Button onClick={finalizeShipping} className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-blue-600 text-white">
-               Confirm Shipping
-             </Button>
+             <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Partner Name</Label><Input value={shippingData.carrier} onChange={e => setShippingData({...shippingData, carrier: e.target.value})} placeholder="e.g. BlueDart" className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+             <div className="space-y-2"><Label className="text-[10px] font-black uppercase">AWB / Tracking</Label><Input value={shippingData.trackingId} onChange={e => setShippingData({...shippingData, trackingId: e.target.value})} placeholder="Tracking ID" className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+             <Button onClick={finalizeShipping} className="w-full h-16 rounded-full font-black uppercase bg-blue-600 text-white">Confirm Shipment</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -541,7 +480,7 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
   );
 }
 
-// --- ITEM MASTER TAB ---
+// --- ITEM MASTER (PRODUCT CATALOGUE) ---
 
 function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const medsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'medicines'), orderBy('name', 'asc')) : null, [db, isVerified]);
@@ -549,84 +488,91 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const { toast } = useToast();
 
-  const filteredMedicines = medicines?.filter(med => 
-    med.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    med.sku?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = medicines?.filter(m => m.name?.toLowerCase().includes(searchTerm.toLowerCase()) || m.sku?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const handleExport = () => {
+    if (!filtered) return;
+    const headers = "Name,SKU,Manufacturer,Price,MRP,Stock,Category,Generic,RX_Required\n";
+    const rows = filtered.map(m => `"${m.name}","${m.sku || ''}","${m.manufacturer}",${m.price},${m.mrp},${m.availableQuantity},"${m.category}",${m.isGeneric},${m.prescriptionRequired}`).join("\n");
+    const blob = new Blob([headers + rows], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `SahiMed_Catalogue_${format(new Date(), 'yyyyMMdd')}.csv`; a.click();
+  };
+
+  const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split("\n").slice(1); // skip headers
+      const batch = writeBatch(db);
+      let count = 0;
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const [name, sku, manufacturer, price, mrp, stock, category] = line.split(",").map(s => s.replace(/"/g, '').trim());
+        const ref = doc(collection(db, 'medicines'));
+        batch.set(ref, { 
+          name, sku, manufacturer, 
+          price: Number(price) || 0, 
+          mrp: Number(mrp) || 0, 
+          availableQuantity: Number(stock) || 0, 
+          category,
+          isGeneric: false,
+          prescriptionRequired: false,
+          createdAt: serverTimestamp()
+        });
+        count++;
+      }
+      await batch.commit();
+      toast({ title: "Bulk Upload Success", description: `${count} items added to catalogue.` });
+    };
+    reader.readAsText(file);
+  };
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Product Catalog" subtitle="Master inventory management" onBack={onBack}>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setEditingItem(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white shadow-lg">
-              <Plus className="w-4 h-4" /> Add Product
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="rounded-[40px] max-w-4xl border-none p-0 overflow-hidden shadow-3xl">
-            <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Product Details</DialogTitle></div>
-            <div className="p-8"><ItemForm db={db} initialData={editingItem} onSuccess={() => setIsFormOpen(false)} /></div>
-          </DialogContent>
-        </Dialog>
+      <SectionHeader title="Product Master" subtitle="Global Clinical Catalogue" onBack={onBack}>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Download className="w-4 h-4" /> Export CSV</Button>
+          <div className="relative">
+            <input type="file" accept=".csv" onChange={handleBulkUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+            <Button variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Upload className="w-4 h-4" /> Bulk Upload</Button>
+          </div>
+          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogTrigger asChild><Button onClick={() => setEditingItem(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white shadow-lg"><Plus className="w-4 h-4" /> New Product</Button></DialogTrigger>
+            <DialogContent className="rounded-[40px] max-w-5xl border-none p-0 overflow-hidden shadow-3xl">
+              <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Product Profile</DialogTitle></div>
+              <div className="p-8 max-h-[80vh] overflow-y-auto scrollbar-hide"><ItemForm db={db} initialData={editingItem} onSuccess={() => setIsFormOpen(false)} /></div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </SectionHeader>
 
-      <div className="relative">
-        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" />
-        <Input 
-          placeholder="Search products by name or SKU..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm uppercase tracking-tight"
-        />
-      </div>
+      <div className="relative"><Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" /><Input placeholder="Search catalog by name or SKU..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm uppercase" /></div>
 
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[800px]">
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
-              <tr>
-                <th className="px-10 py-8">Product</th>
-                <th className="px-10 py-8">Pricing</th>
-                <th className="px-10 py-8">Stock</th>
-                <th className="px-10 py-8 text-right">Actions</th>
-              </tr>
+              <tr><th className="px-10 py-8">Clinical Item</th><th className="px-10 py-8">Pricing (₹)</th><th className="px-10 py-8">Inventory</th><th className="px-10 py-8 text-right">Manage</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
-              ) : filteredMedicines?.length === 0 ? (
-                <tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No matching products</td></tr>
-              ) : filteredMedicines?.map(med => (
-                <tr key={med.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-10 py-8">
-                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border border-gray-100">
-                           <img src={med.imageUrl} alt="" className="w-full h-full object-contain" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-black text-sm uppercase tracking-tight text-gray-900">{med.name}</span>
-                          <span className="text-[9px] text-gray-400 uppercase tracking-widest">{med.sku} • {med.manufacturer}</span>
-                        </div>
-                     </div>
-                  </td>
-                  <td className="px-10 py-8">
-                     <div className="flex flex-col">
-                        <span className="font-black text-accent text-lg">₹{med.price}</span>
-                        <span className="text-[9px] text-red-600 line-through font-bold">MRP ₹{med.mrp}</span>
-                     </div>
-                  </td>
-                  <td className="px-10 py-8">
-                     <span className="text-[10px] font-black text-gray-700 uppercase">{med.availableQuantity} PCS</span>
-                  </td>
-                  <td className="px-10 py-8 text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => { setEditingItem(med); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4 text-gray-400" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'medicines', med.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {isLoading ? (<tr><td colSpan={4} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : filtered?.length === 0 ? (<tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300">No catalogue entries found</td></tr>) : filtered?.map(med => {
+                const price = med.price || <span className="text-red-500 font-black">MISSING</span>;
+                const stock = med.availableQuantity !== undefined ? `${med.availableQuantity} PCS` : <span className="text-red-500 font-black">NO STOCK DATA</span>;
+                return (
+                  <tr key={med.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-10 py-8"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border"><img src={med.imageUrl} alt="" className="w-full h-full object-contain" /></div><div className="flex flex-col"><span className="font-black text-sm uppercase">{med.name}</span><span className="text-[9px] text-gray-400 uppercase">{med.sku} • {med.manufacturer}</span></div></div></td>
+                    <td className="px-10 py-8"><div className="flex flex-col"><span className="font-black text-accent text-lg">₹{price}</span><span className="text-[9px] text-red-600 line-through font-bold">MRP ₹{med.mrp || 0}</span></div></td>
+                    <td className="px-10 py-8 font-black text-[10px] uppercase text-gray-700">{stock}</td>
+                    <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => { setEditingItem(med); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4 text-gray-400" /></Button><Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'medicines', med.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button></div></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -650,37 +596,89 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     imageUrl: initialData?.imageUrl || '',
     isGeneric: initialData?.isGeneric || false,
     prescriptionRequired: initialData?.prescriptionRequired || false,
-    moleculeId: initialData?.moleculeId || ''
+    moleculeId: initialData?.moleculeId || '',
+    packSize: initialData?.packSize || '',
+    description: initialData?.description || '',
+    howToUse: initialData?.howToUse || '',
+    treatment: initialData?.treatment || '',
+    safetyAdvice: initialData?.safetyAdvice || '',
+    sideEffects: initialData?.sideEffects || '',
+    alcoholInteraction: initialData?.alcoholInteraction || '',
+    pregnancyInteraction: initialData?.pregnancyInteraction || '',
+    lactationInteraction: initialData?.lactationInteraction || '',
+    drivingInteraction: initialData?.drivingInteraction || '',
+    kidneyInteraction: initialData?.kidneyInteraction || '',
+    liverInteraction: initialData?.liverInteraction || ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...form, price: Number(form.price), mrp: Number(form.mrp), availableQuantity: Number(form.availableQuantity) };
-    initialData?.id ? updateDocumentNonBlocking(doc(db, 'medicines', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'medicines'), payload);
+    const payload = { ...form, price: Number(form.price), mrp: Number(form.mrp), availableQuantity: Number(form.availableQuantity), updatedAt: serverTimestamp() };
+    initialData?.id ? updateDocumentNonBlocking(doc(db, 'medicines', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'medicines'), { ...payload, createdAt: serverTimestamp() });
     onSuccess();
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-2 gap-6">
-        <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Product Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase text-gray-400">Molecule Mapping</Label>
-          <select value={form.moleculeId} onChange={e => setForm({...form, moleculeId: e.target.value})} className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none">
-             <option value="">Select Molecule</option>
-             {molecules?.map(m => (
-               <option key={m.id} value={m.id}>{m.molecule} ({m.form})</option>
-             ))}
-          </select>
-        </div>
-        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Price</Label><Input type="number" value={form.price} onChange={e => setForm({...form, price: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      </div>
-      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white shadow-xl shadow-primary/20">Save Product</Button>
+    <form onSubmit={handleSubmit} className="space-y-10">
+      <Tabs defaultValue="basic" className="w-full">
+        <TabsList className="bg-gray-100 p-1 rounded-2xl h-14 w-full flex mb-8">
+          <TabsTrigger value="basic" className="flex-1 rounded-xl font-black text-[10px] uppercase">Basic Info</TabsTrigger>
+          <TabsTrigger value="clinical" className="flex-1 rounded-xl font-black text-[10px] uppercase">Clinical Data</TabsTrigger>
+          <TabsTrigger value="safety" className="flex-1 rounded-xl font-black text-[10px] uppercase">Safety Advice</TabsTrigger>
+          <TabsTrigger value="interactions" className="flex-1 rounded-xl font-black text-[10px] uppercase">Interactions</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="basic" className="space-y-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-2 gap-6">
+            <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Clinical Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">SKU / ID</Label><Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase text-gray-400">Therapeutic Class</Label>
+              <Select value={form.category} onValueChange={v => setForm({...form, category: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select Class" /></SelectTrigger><SelectContent className="rounded-2xl"><SelectItem value="Diabetes">Diabetes</SelectItem><SelectItem value="Heart care">Heart care</SelectItem><SelectItem value="Stomach care">Stomach care</SelectItem><SelectItem value="Liver care">Liver care</SelectItem><SelectItem value="Derma care">Derma care</SelectItem><SelectItem value="Respicare">Respicare</SelectItem></SelectContent></Select>
+            </div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Price (Sell)</Label><Input type="number" value={form.price} onChange={e => setForm({...form, price: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">MRP (Print)</Label><Input type="number" value={form.mrp} onChange={e => setForm({...form, mrp: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Current Inventory</Label><Input type="number" value={form.availableQuantity} onChange={e => setForm({...form, availableQuantity: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Pack Size</Label><Input value={form.packSize} onChange={e => setForm({...form, packSize: e.target.value})} placeholder="e.g. Strip of 15" className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="col-span-2 flex items-center gap-8 bg-gray-50 p-6 rounded-3xl">
+               <div className="flex items-center gap-2"><input type="checkbox" id="isGeneric" checked={form.isGeneric} onChange={e => setForm({...form, isGeneric: e.target.checked})} className="w-5 h-5 accent-primary" /><Label htmlFor="isGeneric" className="text-[10px] font-black uppercase">Generic Variant</Label></div>
+               <div className="flex items-center gap-2"><input type="checkbox" id="isRx" checked={form.prescriptionRequired} onChange={e => setForm({...form, prescriptionRequired: e.target.checked})} className="w-5 h-5 accent-red-500" /><Label htmlFor="isRx" className="text-[10px] font-black uppercase text-red-500">RX Required</Label></div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="clinical" className="space-y-6 animate-in fade-in duration-300">
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Active Formula Mapping</Label><Select value={form.moleculeId} onValueChange={v => setForm({...form, moleculeId: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select Molecule" /></SelectTrigger><SelectContent className="rounded-2xl">{molecules?.map(m => <SelectItem key={m.id} value={m.id}>{m.molecule} ({m.form})</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Primary Treatment</Label><Textarea value={form.treatment} onChange={e => setForm({...form, treatment: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Clinical Description</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl min-h-[120px] bg-gray-50 border-none font-bold" /></div>
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Expected Side Effects</Label><Textarea value={form.sideEffects} onChange={e => setForm({...form, sideEffects: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
+        </TabsContent>
+
+        <TabsContent value="safety" className="space-y-6 animate-in fade-in duration-300">
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Usage Instructions</Label><Textarea value={form.howToUse} onChange={e => setForm({...form, howToUse: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">General Safety Advice</Label><Textarea value={form.safetyAdvice} onChange={e => setForm({...form, safetyAdvice: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Kidney Safety</Label><Input value={form.kidneyInteraction} onChange={e => setForm({...form, kidneyInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Liver Safety</Label><Input value={form.liverInteraction} onChange={e => setForm({...form, liverInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="interactions" className="space-y-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Alcohol Interaction</Label><Input value={form.alcoholInteraction} onChange={e => setForm({...form, alcoholInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Pregnancy Interaction</Label><Input value={form.pregnancyInteraction} onChange={e => setForm({...form, pregnancyInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Lactation Caution</Label><Input value={form.lactationInteraction} onChange={e => setForm({...form, lactationInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Driving Safety</Label><Input value={form.drivingInteraction} onChange={e => setForm({...form, drivingInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      <Button type="submit" className="w-full h-20 rounded-[32px] font-black uppercase tracking-widest bg-primary text-white shadow-2xl shadow-primary/20 text-lg">Save Catalogue Entry</Button>
     </form>
   );
 }
 
-// --- MOLECULE MASTER TAB ---
+// --- FORMULATION (MOLECULE MASTER) ---
 
 function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const molsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc')) : null, [db, isVerified]);
@@ -688,65 +686,75 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMol, setEditingMol] = useState<any>(null);
+  const { toast } = useToast();
 
-  const filteredMolecules = molecules?.filter(mol => 
-    mol.molecule?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    mol.masterId?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = molecules?.filter(m => m.molecule?.toLowerCase().includes(searchTerm.toLowerCase()) || m.masterId?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const handleExport = () => {
+    if (!filtered) return;
+    const headers = "Molecule,MasterID,Form\n";
+    const rows = filtered.map(m => `"${m.molecule}","${m.masterId}","${m.form}"`).join("\n");
+    const blob = new Blob([headers + rows], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `SahiMed_Registry_${format(new Date(), 'yyyyMMdd')}.csv`; a.click();
+  };
+
+  const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split("\n").slice(1);
+      const batch = writeBatch(db);
+      let count = 0;
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const [molecule, masterId, form] = line.split(",").map(s => s.replace(/"/g, '').trim());
+        const ref = doc(collection(db, 'moleculeMaster'));
+        batch.set(ref, { molecule, masterId, form, createdAt: serverTimestamp() });
+        count++;
+      }
+      await batch.commit();
+      toast({ title: "Registry Updated", description: `${count} molecules added.` });
+    };
+    reader.readAsText(file);
+  };
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Formula Registry" subtitle="Clinical molecule master" onBack={onBack}>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setEditingMol(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white shadow-lg">
-              <Plus className="w-4 h-4" /> New Formula
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden shadow-3xl">
-            <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Formula</DialogTitle></div>
-            <div className="p-8"><MoleculeForm db={db} initialData={editingMol} onSuccess={() => setIsFormOpen(false)} /></div>
-          </DialogContent>
-        </Dialog>
+      <SectionHeader title="Formula Registry" subtitle="Clinical molecule masters" onBack={onBack}>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Download className="w-4 h-4" /> Export Registry</Button>
+          <div className="relative">
+            <input type="file" accept=".csv" onChange={handleBulkUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+            <Button variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Upload className="w-4 h-4" /> Bulk Upload</Button>
+          </div>
+          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogTrigger asChild><Button onClick={() => setEditingMol(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white shadow-lg"><Plus className="w-4 h-4" /> New Formula</Button></DialogTrigger>
+            <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden shadow-3xl">
+              <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Formula Definition</DialogTitle></div>
+              <div className="p-8"><MoleculeForm db={db} initialData={editingMol} onSuccess={() => setIsFormOpen(false)} /></div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </SectionHeader>
 
-      <div className="relative">
-        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" />
-        <Input 
-          placeholder="Search formulas by name or clinical ID..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm uppercase tracking-tight"
-        />
-      </div>
+      <div className="relative"><Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" /><Input placeholder="Search formulas by name or ID..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm uppercase" /></div>
 
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[600px]">
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
-              <tr>
-                <th className="px-10 py-8">Molecule</th>
-                <th className="px-10 py-8">ID</th>
-                <th className="px-10 py-8">Form</th>
-                <th className="px-10 py-8 text-right">Actions</th>
-              </tr>
+              <tr><th className="px-10 py-8">Molecule</th><th className="px-10 py-8">Master ID</th><th className="px-10 py-8">Clinical Form</th><th className="px-10 py-8 text-right">Actions</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>
-              ) : filteredMolecules?.length === 0 ? (
-                <tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No matching formulas</td></tr>
-              ) : filteredMolecules?.map(mol => (
+              {isLoading ? (<tr><td colSpan={4} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : filtered?.length === 0 ? (<tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300">No molecules recorded</td></tr>) : filtered?.map(mol => (
                 <tr key={mol.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-10 py-8 font-black text-sm uppercase">{mol.molecule}</td>
-                  <td className="px-10 py-8 text-[11px] font-bold">{mol.masterId}</td>
-                  <td className="px-10 py-8 text-[11px] font-black text-gray-400 uppercase">{mol.form}</td>
-                  <td className="px-10 py-8 text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => { setEditingMol(mol); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4 text-gray-400" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'moleculeMaster', mol.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button>
-                    </div>
-                  </td>
+                  <td className="px-10 py-8 text-[11px] font-bold text-gray-500">{mol.masterId}</td>
+                  <td className="px-10 py-8"><Badge variant="outline" className="font-black text-[8px] uppercase">{mol.form}</Badge></td>
+                  <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => { setEditingMol(mol); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4 text-gray-400" /></Button><Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'moleculeMaster', mol.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button></div></td>
                 </tr>
               ))}
             </tbody>
@@ -758,17 +766,27 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
 }
 
 function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
-  const [form, setForm] = useState({ molecule: initialData?.molecule || '', masterId: initialData?.masterId || '', form: initialData?.form || 'Tablet' });
+  const [form, setForm] = useState({ 
+    molecule: initialData?.molecule || '', 
+    masterId: initialData?.masterId || '', 
+    form: initialData?.form || 'Tablet' 
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    initialData?.id ? updateDocumentNonBlocking(doc(db, 'moleculeMaster', initialData.id), form) : addDocumentNonBlocking(collection(db, 'moleculeMaster'), form);
+    initialData?.id ? updateDocumentNonBlocking(doc(db, 'moleculeMaster', initialData.id), form) : addDocumentNonBlocking(collection(db, 'moleculeMaster'), { ...form, createdAt: serverTimestamp() });
     onSuccess();
   };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Molecule Name</Label><Input value={form.molecule} onChange={e => setForm({...form, molecule: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Master ID</Label><Input value={form.masterId} onChange={e => setForm({...form, masterId: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Formula</Button>
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Molecule Name</Label><Input value={form.molecule} onChange={e => setForm({...form, molecule: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Master Clinical ID</Label><Input value={form.masterId} onChange={e => setForm({...form, masterId: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase">Form</Label>
+        <Select value={form.form} onValueChange={v => setForm({...form, form: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger><SelectContent className="rounded-2xl"><SelectItem value="Tablet">Tablet</SelectItem><SelectItem value="Capsule">Capsule</SelectItem><SelectItem value="Syrup">Syrup</SelectItem><SelectItem value="Injection">Injection</SelectItem><SelectItem value="Cream">Cream</SelectItem></SelectContent></Select>
+      </div>
+      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-primary text-white">Save Registry Entry</Button>
     </form>
   );
 }
@@ -1049,7 +1067,7 @@ function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onB
         </div>
       </Card>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden shadow-3xl">
+        <DialogContent className="rounded-[40px] max-md border-none p-0 overflow-hidden shadow-3xl">
           <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Fee Configuration</DialogTitle></div>
           <div className="p-8"><FeeForm db={db} initialData={editingFee} onSuccess={() => setIsFormOpen(false)} /></div>
         </DialogContent>
@@ -1094,8 +1112,8 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (<tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>) : users?.length === 0 ? (<tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No patients found</td></tr>) : users?.map(patient => (
                 <tr key={patient.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="px-10 py-8 font-black text-sm uppercase">{patient.name || <span className="text-red-500">NO NAME</span>}</td>
-                  <td className="px-10 py-8 font-bold text-sm text-gray-600">{patient.phone || <span className="text-red-500">NO PHONE</span>}</td>
+                  <td className="px-10 py-8 font-black text-sm uppercase">{patient.name || <span className="text-red-500 font-black">NO NAME</span>}</td>
+                  <td className="px-10 py-8 font-bold text-sm text-gray-600">{patient.phone || <span className="text-red-500 font-black">NO PHONE</span>}</td>
                   <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">{patient.createdAt ? format(new Date(patient.createdAt), 'MMM dd, yyyy') : 'N/A'}</td>
                   <td className="px-10 py-8 text-right"><Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"><Eye className="w-4 h-4 text-gray-400" /></Button></td>
                 </tr>
