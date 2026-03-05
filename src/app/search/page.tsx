@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useSearchParams } from 'next/navigation';
@@ -90,7 +91,7 @@ function SearchResults() {
             </div>
 
             {medsLoading ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="space-y-4">
                      <Skeleton className="aspect-square rounded-[32px] shimmer" />
@@ -102,7 +103,7 @@ function SearchResults() {
                 ))}
               </div>
             ) : filtered.length > 0 ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                 {filtered.map(p => (
                    <ProductCard key={p.id} product={p} />
                 ))}

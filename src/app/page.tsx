@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from 'react';
@@ -177,7 +178,7 @@ export default function Home() {
             <div className="flex items-center justify-between mb-8 px-2">
               <div className="space-y-1">
                 <h2 className="text-[12px] sm:text-[13px] font-black text-gray-900 uppercase tracking-[0.3em]">Best Sellers</h2>
-                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Most trusted by patients</p>
+                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Side-by-side Clinical Comparison</p>
               </div>
               <Link href="/search" className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-full hover:bg-primary/10 transition-colors">
                 All Products <ChevronRight className="w-3 h-3" />
@@ -185,7 +186,7 @@ export default function Home() {
             </div>
             
             {medsLoading || !displayMedicines ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:gap-6">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="space-y-4">
                      <Skeleton className="aspect-[5/4] rounded-[24px] shimmer" />
@@ -197,7 +198,7 @@ export default function Home() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:gap-6">
                 {displayMedicines?.map((p: any) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
