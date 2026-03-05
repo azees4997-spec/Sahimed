@@ -4,7 +4,7 @@
 import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Plus, Minus, Ticket, Check, X, PartyPopper, ChevronRight, FileWarning, Camera, RotateCcw, ClipboardCheck } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Plus, Minus, Ticket, Check, X, PartyPopper, ChevronRight, FileWarning, Camera, RotateCcw, ClipboardCheck, Info } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -40,25 +40,36 @@ export default function CartPage() {
 
   const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
   
+  // Calculate Fee Totals with potential strike-through logic
   const feeTotal = activeFees.reduce((acc, fee) => {
     if (fee.type === 'fixed') return acc + fee.amount;
     return acc + (totalPrice * (fee.amount / 100));
   }, 0);
 
-  let promoDiscount = 0;
+  let rawDiscount = 0;
   if (appliedPromo) {
     if (appliedPromo.discountType === 'fixed') {
-      promoDiscount = appliedPromo.discountValue;
+      rawDiscount = appliedPromo.discountValue;
     } else {
-      promoDiscount = (totalPrice * (appliedPromo.discountValue / 100));
+      rawDiscount = (totalPrice * (appliedPromo.discountValue / 100));
     }
   }
+
+  // Apply Capping Logic
+  const promoDiscount = (appliedPromo?.maxDiscount && appliedPromo.maxDiscount > 0) 
+    ? Math.min(rawDiscount, appliedPromo.maxDiscount) 
+    : rawDiscount;
 
   const finalPayable = Math.max(0, totalPrice + feeTotal - promoDiscount);
   const totalSavings = (totalMrp - totalPrice) + promoDiscount;
 
   const requiresPrescription = cart.some(item => item.prescriptionRequired);
   const isPrescriptionReady = !requiresPrescription || !!attachedPrescription;
+
+  // Free Delivery Threshold (Static for now, can be linked to a fee doc)
+  const FREE_DELIVERY_THRESHOLD = 500;
+  const deliveryCharge = finalPayable < FREE_DELIVERY_THRESHOLD ? 40 : 0;
+  const remainingForFree = Math.max(0, FREE_DELIVERY_THRESHOLD - finalPayable);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -121,6 +132,25 @@ export default function CartPage() {
              </span>
           </div>
         </div>
+
+        {remainingForFree > 0 && (
+          <div className="bg-white p-4 rounded-[24px] mb-8 border border-green-100 flex items-center gap-4 animate-in slide-in-from-top-2">
+            <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+              <Truck className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] font-black uppercase text-green-600 tracking-widest">
+                Add products worth ₹{remainingForFree} to get free delivery
+              </p>
+              <div className="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div 
+                  className="h-full bg-green-500 transition-all duration-1000" 
+                  style={{ width: `${Math.min(100, (finalPayable / FREE_DELIVERY_THRESHOLD) * 100)}%` }} 
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {requiresPrescription && (
           <div className={cn(
@@ -195,7 +225,9 @@ export default function CartPage() {
               <p className="text-green-800 font-black text-sm uppercase tracking-tight">
                 Congratulations! 🎉 You saved ₹{promoDiscount.toFixed(0)} with code <span className="text-green-600 font-black">{appliedPromo.code}</span>
               </p>
-              <p className="text-[9px] font-black text-green-600/70 uppercase tracking-widest mt-1">Voucher extra discount applied</p>
+              {appliedPromo.maxDiscount && rawDiscount > appliedPromo.maxDiscount && (
+                <p className="text-[8px] font-black text-orange-600 uppercase tracking-widest mt-1">Capped at max discount limit</p>
+              )}
             </div>
           </div>
         )}
@@ -367,28 +399,37 @@ export default function CartPage() {
             <div className="bg-white p-10 rounded-[50px] shadow-2xl border border-gray-50 sticky top-24 overflow-hidden relative animate-in fade-in slide-in-from-right-8 duration-500">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16" />
               
-              <h2 className="text-[11px] font-black mb-10 uppercase tracking-[0.3em] text-gray-400 relative z-10">Order Summary</h2>
+              <h2 className="text-[11px] font-black mb-10 uppercase tracking-[0.3em] text-gray-400 relative z-10">Bill Details</h2>
               
               <div className="space-y-6 mb-10 relative z-10">
                 <div className="flex justify-between text-[11px] font-black text-gray-500 uppercase tracking-widest">
                   <span>Cart Gross (MRP)</span>
-                  <span className="text-[#E11D48]">₹{totalMrp}</span>
+                  <span className="text-[#E11D48] line-through">₹{totalMrp}</span>
                 </div>
                 
                 <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
-                  <span className="text-gray-500">Savings</span>
-                  <span className="text-accent">- ₹{totalSavings.toFixed(0)}</span>
+                  <span className="text-gray-500">Total Savings</span>
+                  <span className="text-accent font-black">₹{totalSavings.toFixed(0)}</span>
+                </div>
+
+                <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-500">
+                  <span>Estimated Taxes</span>
+                  <span className="text-gray-900">₹{(totalPrice * 0.12).toFixed(0)}</span>
                 </div>
                 
-                {activeFees.map(fee => (
-                  <div key={fee.id} className="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-500">
-                    <span>{fee.name}</span>
-                    <span className="text-gray-900">₹{fee.type === 'fixed' ? fee.amount : (totalPrice * (fee.amount / 100)).toFixed(0)}</span>
+                <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-500">
+                  <span>Delivery Charge</span>
+                  <div className="flex gap-2">
+                    {deliveryCharge === 0 ? (
+                      <span className="text-accent font-black">FREE</span>
+                    ) : (
+                      <span className="text-gray-900 font-black">₹{deliveryCharge}</span>
+                    )}
                   </div>
-                ))}
+                </div>
 
                 {appliedPromo && (
-                  <div className="flex justify-between text-[11px] font-black uppercase tracking-widest animate-in slide-in-from-right-4">
+                  <div className="flex justify-between text-[11px] font-black uppercase tracking-widest animate-in slide-in-from-right-4 bg-primary/5 p-3 rounded-xl border border-primary/10">
                     <span className="text-primary flex items-center gap-2 font-black"><Ticket className="w-4 h-4" /> VOUCHER_APPLIED</span>
                     <span className="text-accent font-black">- ₹{promoDiscount.toFixed(0)}</span>
                   </div>
@@ -396,8 +437,17 @@ export default function CartPage() {
                 
                 <div className="pt-10 border-t border-dashed border-gray-200 flex justify-between items-baseline">
                   <span className="text-sm font-black uppercase tracking-[0.2em] text-gray-900">Total Payable</span>
-                  <span className="text-4xl font-black text-primary tracking-tighter">₹{finalPayable.toFixed(0)}</span>
+                  <span className="text-4xl font-black text-primary tracking-tighter">₹{(finalPayable + deliveryCharge).toFixed(0)}</span>
                 </div>
+
+                {totalSavings > 0 && (
+                  <div className="pt-4 flex items-center justify-center gap-2 bg-green-50 rounded-2xl py-3 border border-green-100">
+                    <Check className="w-3.5 h-3.5 text-green-600" />
+                    <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">
+                      You saved ₹{totalSavings.toFixed(0)} on this order
+                    </p>
+                  </div>
+                )}
               </div>
               
               {isPrescriptionReady ? (

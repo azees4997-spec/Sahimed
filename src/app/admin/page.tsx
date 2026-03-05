@@ -55,7 +55,8 @@ import {
   Star,
   Image as ImageIcon,
   Link as LinkIcon,
-  UploadCloud
+  UploadCloud,
+  UserCheck
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -234,7 +235,7 @@ export default function AdminConsole() {
                 setTimeout(() => setCopied(false), 2000);
                 toast({ title: "UID Copied" });
               }}>
-                {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                {copied ? <Check className="w-4 h-4 text-green-500" /> : <LogOut className="w-4 h-4" />}
               </Button>
             </div>
           </div>
@@ -1137,14 +1138,15 @@ function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
-              <tr><th className="px-10 py-8">Code</th><th className="px-10 py-8">Strategy</th><th className="px-10 py-8">Value</th><th className="px-10 py-8">Min. Purchase</th><th className="px-10 py-8">Status</th><th className="px-10 py-8 text-right">Actions</th></tr>
+              <tr><th className="px-10 py-8">Code</th><th className="px-10 py-8">Strategy</th><th className="px-10 py-8">Value</th><th className="px-10 py-8">Cap</th><th className="px-10 py-8">Min. Purchase</th><th className="px-10 py-8">Status</th><th className="px-10 py-8 text-right">Actions</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={6} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>) : promos?.length === 0 ? (<tr><td colSpan={6} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No active campaigns</td></tr>) : promos?.map(promo => (
+              {isLoading ? (<tr><td colSpan={7} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>) : promos?.length === 0 ? (<tr><td colSpan={7} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No active campaigns</td></tr>) : promos?.map(promo => (
                 <tr key={promo.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-10 py-8 font-black text-sm uppercase text-primary">{promo.code}</td>
                   <td className="px-10 py-8 text-[10px] font-bold uppercase text-gray-400">{promo.applyTo || 'Global Cart'}</td>
                   <td className="px-10 py-8 font-black text-accent">{promo.discountValue}{promo.discountType === 'percentage' ? '%' : '₹'}</td>
+                  <td className="px-10 py-8 font-black text-gray-600">{promo.maxDiscount ? `₹${promo.maxDiscount}` : 'NO CAP'}</td>
                   <td className="px-10 py-8 font-black text-gray-600">₹{promo.minOrderValue || 0}</td>
                   <td className="px-10 py-8"><Badge className={cn("rounded-full font-black text-[8px]", promo.isActive ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400")}>{promo.isActive ? 'ACTIVE' : 'DISABLED'}</Badge></td>
                   <td className="px-10 py-8 text-right">
@@ -1162,7 +1164,9 @@ function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="rounded-[40px] max-w-xl border-none p-0 overflow-hidden shadow-3xl">
           <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Campaign Builder</DialogTitle></div>
-          <div className="p-8"><PromoForm db={db} initialData={editingPromo} onSuccess={() => setIsFormOpen(false)} /></div>
+          <div className="p-8 max-h-[80vh] overflow-y-auto scrollbar-hide">
+            <PromoForm db={db} initialData={editingPromo} onSuccess={() => setIsFormOpen(false)} />
+          </div>
         </DialogContent>
       </Dialog>
     </div>
@@ -1175,10 +1179,17 @@ function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
     description: initialData?.description || '',
     discountType: initialData?.discountType || 'fixed', 
     discountValue: initialData?.discountValue || 0, 
+    maxDiscount: initialData?.maxDiscount || 0,
     minOrderValue: initialData?.minOrderValue || 0, 
     isActive: initialData?.isActive ?? true, 
-    applyTo: initialData?.applyTo || 'cart' 
+    applyTo: initialData?.applyTo || 'cart',
+    targetId: initialData?.targetId || ''
   });
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
+  const { data: medicines } = useCollection(medsQuery);
+  const searchedMeds = searchQuery.trim() ? medicines?.filter(m => m.name?.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5) : [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1186,6 +1197,7 @@ function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
     const payload = { 
       ...form, 
       discountValue: Number(form.discountValue), 
+      maxDiscount: Number(form.maxDiscount),
       minOrderValue: Number(form.minOrderValue),
       updatedAt: serverTimestamp()
     };
@@ -1194,7 +1206,7 @@ function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 pb-6">
       <div className="space-y-2">
         <Label className="text-[10px] font-black uppercase text-gray-400">Coupon Code</Label>
         <Input 
@@ -1219,7 +1231,7 @@ function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
       <div className="grid grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label className="text-[10px] font-black uppercase text-gray-400">Discount Type</Label>
-          <Select value={form.discountType} onValueChange={v => setForm({...form, discountType: v})}>
+          <Select value={form.discountType} onValueChange={v => setForm({...form, discountType: v as any})}>
             <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
             <SelectContent className="rounded-2xl">
               <SelectItem value="fixed">Fixed ₹</SelectItem>
@@ -1235,20 +1247,76 @@ function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
 
       <div className="grid grid-cols-2 gap-6">
         <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-gray-400">Max Discount (₹ Cap)</Label>
+          <Input type="number" value={form.maxDiscount} onChange={e => setForm({...form, maxDiscount: Number(e.target.value)})} placeholder="0 for no cap" className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+        </div>
+        <div className="space-y-2">
           <Label className="text-[10px] font-black uppercase text-gray-400">Min. Purchase (₹)</Label>
           <Input type="number" value={form.minOrderValue} onChange={e => setForm({...form, minOrderValue: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
         </div>
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase text-gray-400">Target Strategy</Label>
-          <Select value={form.applyTo} onValueChange={v => setForm({...form, applyTo: v})}>
-            <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
-            <SelectContent className="rounded-2xl">
-              <SelectItem value="cart">Global Cart</SelectItem>
-              <SelectItem value="product">Specific Product</SelectItem>
-              <SelectItem value="customer">Patient Targeted</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      </div>
+
+      <div className="space-y-4 pt-4 border-t">
+        <Label className="text-[10px] font-black uppercase text-gray-400">Target Strategy</Label>
+        <Select value={form.applyTo} onValueChange={v => {
+          setForm({...form, applyTo: v as any, targetId: ''});
+          setSearchQuery('');
+        }}>
+          <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
+          <SelectContent className="rounded-2xl">
+            <SelectItem value="cart">Global Cart</SelectItem>
+            <SelectItem value="product">Specific Product</SelectItem>
+            <SelectItem value="customer">Patient Targeted</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {form.applyTo === 'customer' && (
+          <div className="space-y-2 animate-in slide-in-from-top-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Phone className="w-3 h-3 text-primary" />
+              <Label className="text-[10px] font-black uppercase">Patient Mobile Number</Label>
+            </div>
+            <Input 
+              value={form.targetId} 
+              onChange={e => setForm({...form, targetId: e.target.value.replace(/\D/g, '')})} 
+              placeholder="Enter 10 digit mobile" 
+              maxLength={10}
+              required
+              className="rounded-2xl h-14 bg-blue-50 border-none font-black text-primary px-6" 
+            />
+          </div>
+        )}
+
+        {form.applyTo === 'product' && (
+          <div className="space-y-2 animate-in slide-in-from-top-2 relative">
+            <div className="flex items-center gap-2 mb-1">
+              <Package className="w-3 h-3 text-primary" />
+              <Label className="text-[10px] font-black uppercase">Target Product</Label>
+            </div>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input 
+                value={form.targetId ? (medicines?.find(m => m.id === form.targetId)?.name || 'Product Selected') : searchQuery}
+                onChange={e => { setSearchQuery(e.target.value); setForm({...form, targetId: ''}); }}
+                placeholder="Search catalog..." 
+                className="rounded-2xl h-14 bg-blue-50 border-none font-bold pl-12" 
+              />
+              {form.targetId && (
+                <button onClick={() => setForm({...form, targetId: ''})} className="absolute right-4 top-1/2 -translate-y-1/2 text-primary font-black text-[10px] uppercase">Change</button>
+              )}
+            </div>
+            {searchedMeds.length > 0 && !form.targetId && (
+              <div className="absolute top-full left-0 right-0 z-50 bg-white border rounded-2xl shadow-2xl overflow-hidden mt-2">
+                {searchedMeds.map(m => (
+                  <button key={m.id} type="button" onClick={() => setForm({...form, targetId: m.id})} className="w-full p-4 flex items-center gap-3 hover:bg-gray-50 border-b last:border-none text-left">
+                    <div className="w-8 h-8 bg-gray-100 rounded p-1"><img src={m.imageUrl} className="w-full h-full object-contain" /></div>
+                    <span className="font-bold text-xs uppercase">{m.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl">
@@ -1386,7 +1454,7 @@ function AlertsTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, o
         ))}
       </div>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden shadow-3xl">
+        <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden shadow-3xl">
           <div className="bg-red-600 p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Broadcast Message</DialogTitle></div>
           <div className="p-8"><AlertForm db={db} initialData={editingAlert} onSuccess={() => setIsFormOpen(false)} /></div>
         </DialogContent>

@@ -52,9 +52,10 @@ interface PromoCode {
   description: string;
   discountType: 'fixed' | 'percentage';
   discountValue: number;
+  maxDiscount?: number; // Capping field
   minOrderValue: number;
   applyTo: 'cart' | 'product' | 'customer' | 'both';
-  targetId?: string;
+  targetId?: string; // Links to product ID or customer mobile
   isActive: boolean;
 }
 
