@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
@@ -454,30 +455,54 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
       </Card>
 
       <Dialog open={!!selectedOrder && !isShippingDialogOpen} onOpenChange={o => !o && setSelectedOrder(null)}>
-        <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden">
+        <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden shadow-3xl">
           <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase">Order Details</DialogTitle></div>
-          <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+          <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
              <div className="grid grid-cols-2 gap-8">
                 <div><h4 className="text-[10px] font-black uppercase text-gray-400 mb-2">Patient</h4><p className="font-black text-sm">{selectedOrder?.patientName}</p><p className="text-xs text-gray-500">{selectedOrder?.phoneNumber}</p></div>
                 <div><h4 className="text-[10px] font-black uppercase text-gray-400 mb-2">Address</h4><p className="text-[11px] font-bold leading-relaxed">{selectedOrder?.shippingDetails?.street}</p></div>
              </div>
+
+             {selectedOrder?.prescriptionUrl && (
+               <div className="space-y-3">
+                 <h4 className="text-[10px] font-black uppercase text-gray-400 flex items-center gap-2">
+                   <ClipboardList className="w-3 h-3" /> Attached Prescription
+                 </h4>
+                 <div className="rounded-[32px] border-2 border-gray-100 overflow-hidden aspect-[3/4] bg-gray-50 relative group">
+                   <img src={selectedOrder.prescriptionUrl} className="w-full h-full object-contain" alt="Clinical Attachment" />
+                   <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-all" />
+                 </div>
+               </div>
+             )}
+
              <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
+                <h4 className="text-[10px] font-black uppercase text-gray-400 mb-2">Items Breakdown</h4>
                 {selectedOrder?.items?.map((it: any, i: number) => (
                   <div key={i} className="flex justify-between items-center"><p className="text-[11px] font-black uppercase">{it.name} x {it.quantity}</p><span className="font-black text-xs">₹{it.unitPrice * it.quantity}</span></div>
                 )) || <p className="text-center text-[10px] font-black text-gray-300">0 ITEMS</p>}
              </div>
-             <div className="flex justify-between border-t pt-4"><span className="font-black text-sm uppercase text-gray-400">Total</span><span className="text-3xl font-black text-accent">₹{selectedOrder?.totalAmount || 0}</span></div>
+             
+             <div className="flex justify-between items-center border-t pt-6">
+               <div className="flex flex-col">
+                 <span className="font-black text-[10px] uppercase text-gray-400">Payment Type</span>
+                 <Badge className="bg-green-100 text-green-600 font-black text-[8px] uppercase tracking-widest">{selectedOrder?.paymentType || 'Online'}</Badge>
+               </div>
+               <div className="text-right">
+                 <span className="font-black text-[10px] uppercase text-gray-400">Total Payable</span>
+                 <p className="text-3xl font-black text-accent">₹{selectedOrder?.totalAmount || 0}</p>
+               </div>
+             </div>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isShippingDialogOpen} onOpenChange={setIsShippingDialogOpen}>
-        <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden">
+        <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden shadow-3xl">
           <div className="bg-blue-600 p-8 text-white"><DialogTitle className="text-2xl font-black uppercase">Shipping Details</DialogTitle></div>
           <div className="p-8 space-y-6">
              <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Partner Name</Label><Input value={shippingData.carrier} onChange={e => setShippingData({...shippingData, carrier: e.target.value})} placeholder="e.g. BlueDart" className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
              <div className="space-y-2"><Label className="text-[10px] font-black uppercase">AWB / Tracking</Label><Input value={shippingData.trackingId} onChange={e => setShippingData({...shippingData, trackingId: e.target.value})} placeholder="Tracking ID" className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-             <Button onClick={finalizeShipping} className="w-full h-16 rounded-full font-black uppercase bg-blue-600 text-white">Confirm Shipment</Button>
+             <Button onClick={finalizeShipping} className="w-full h-16 rounded-full font-black uppercase bg-blue-600 text-white shadow-xl shadow-blue-100">Confirm Shipment</Button>
           </div>
         </DialogContent>
       </Dialog>

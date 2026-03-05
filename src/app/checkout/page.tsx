@@ -16,7 +16,7 @@ import { collection, serverTimestamp } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 export default function CheckoutPage() {
-  const { cart, totalPrice, clearCart, location: homepageLocation } = useCart();
+  const { cart, totalPrice, clearCart, location: homepageLocation, attachedPrescription } = useCart();
   const { user } = useUser();
   const db = useFirestore();
   const [loading, setLoading] = useState(false);
@@ -115,8 +115,10 @@ export default function CheckoutPage() {
       totalAmount: totalPrice,
       status: 'Pending',
       paymentStatus: 'Paid',
+      paymentType: 'Online',
       patientName: orderInfo.patientName,
       phoneNumber: orderInfo.phoneNumber,
+      prescriptionUrl: attachedPrescription || null,
       shippingDetails: {
         street: orderInfo.street,
         landmark: orderInfo.landmark,

@@ -4,7 +4,7 @@
 import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Plus, Minus, Ticket, Check, X, PartyPopper, ChevronRight, FileWarning, Camera } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Plus, Minus, Ticket, Check, X, PartyPopper, ChevronRight, FileWarning, Camera, RotateCcw, ClipboardCheck } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -20,9 +20,23 @@ import {
 import { useState } from 'react';
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, totalPrice, totalItems, activeFees, availablePromos, appliedPromo, applyPromo } = useCart();
+  const { 
+    cart, 
+    removeFromCart, 
+    updateQuantity, 
+    totalPrice, 
+    totalItems, 
+    activeFees, 
+    availablePromos, 
+    appliedPromo, 
+    applyPromo,
+    attachedPrescription,
+    setAttachedPrescription
+  } = useCart();
+  
   const { toast } = useToast();
   const [isPromoDialogOpen, setIsPromoDialogOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
   
@@ -44,6 +58,26 @@ export default function CartPage() {
   const totalSavings = (totalMrp - totalPrice) + promoDiscount;
 
   const requiresPrescription = cart.some(item => item.prescriptionRequired);
+  const isPrescriptionReady = !requiresPrescription || !!attachedPrescription;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast({ variant: "destructive", title: "File too large", description: "Limit: 2MB for clinical scans." });
+        return;
+      }
+      
+      setIsUploading(true);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAttachedPrescription(reader.result as string);
+        setIsUploading(false);
+        toast({ title: "Clinical File Attached", description: "Prescription successfully added to your order." });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   if (cart.length === 0) {
     return (
@@ -89,19 +123,68 @@ export default function CartPage() {
         </div>
 
         {requiresPrescription && (
-          <div className="bg-orange-50 border-2 border-orange-100 p-6 rounded-[40px] mb-8 flex items-center gap-6 animate-in slide-in-from-top-4 shadow-lg shadow-orange-100/50">
-            <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shrink-0">
-               <FileWarning className="w-6 h-6" />
+          <div className={cn(
+            "border-2 p-6 rounded-[40px] mb-8 flex items-center gap-6 animate-in slide-in-from-top-4 shadow-lg transition-all duration-500",
+            attachedPrescription ? "bg-green-50 border-green-100 shadow-green-100/50" : "bg-orange-50 border-orange-100 shadow-orange-100/50"
+          )}>
+            <div className={cn(
+              "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0",
+              attachedPrescription ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"
+            )}>
+               {attachedPrescription ? <ClipboardCheck className="w-6 h-6" /> : <FileWarning className="w-6 h-6" />}
             </div>
             <div className="flex-1">
-              <p className="text-orange-900 font-black text-sm uppercase tracking-tight">Prescription Required</p>
-              <p className="text-[9px] font-bold text-orange-600/70 uppercase tracking-widest mt-1">Some items in your cart require a valid clinical prescription.</p>
+              <p className={cn(
+                "font-black text-sm uppercase tracking-tight",
+                attachedPrescription ? "text-green-900" : "text-orange-900"
+              )}>
+                {attachedPrescription ? "Prescription Attached" : "Prescription Required"}
+              </p>
+              <p className={cn(
+                "text-[9px] font-bold uppercase tracking-widest mt-1",
+                attachedPrescription ? "text-green-600/70" : "text-orange-600/70"
+              )}>
+                {attachedPrescription ? "Clinical verification will occur during fulfillment." : "Some items in your cart require a valid clinical prescription."}
+              </p>
             </div>
-            <Link href="/prescription">
-               <Button variant="outline" className="rounded-full border-orange-200 text-orange-600 hover:bg-orange-100 font-black uppercase text-[10px] tracking-widest px-6 h-12 gap-2">
-                 <Camera className="w-4 h-4" /> Upload Now
-               </Button>
-            </Link>
+            
+            <input 
+              type="file" 
+              id="cart-prescription-upload" 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handleFileChange} 
+            />
+
+            {attachedPrescription ? (
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl border-2 border-white overflow-hidden shadow-md relative group">
+                  <Image src={attachedPrescription} alt="Attachment" fill className="object-cover" />
+                  <button 
+                    onClick={() => setAttachedPrescription(null)}
+                    className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+                <Button 
+                  onClick={() => document.getElementById('cart-prescription-upload')?.click()}
+                  variant="outline" 
+                  className="rounded-full border-green-200 text-green-600 hover:bg-green-100 font-black uppercase text-[9px] tracking-widest px-4 h-10 gap-2"
+                >
+                  <RotateCcw className="w-3 h-3" /> Change
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                onClick={() => document.getElementById('cart-prescription-upload')?.click()}
+                disabled={isUploading}
+                variant="outline" 
+                className="rounded-full border-orange-200 text-orange-600 hover:bg-orange-100 font-black uppercase text-[10px] tracking-widest px-6 h-12 gap-2"
+              >
+                <Camera className="w-4 h-4" /> {isUploading ? "Processing..." : "Upload Now"}
+              </Button>
+            )}
           </div>
         )}
 
@@ -317,20 +400,21 @@ export default function CartPage() {
                 </div>
               </div>
               
-              {requiresPrescription ? (
-                <Link href="/prescription">
-                  <Button className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-orange/40 hover:scale-[1.02] active:scale-95 transition-all gap-4 bg-orange-600 text-white">
-                    Upload Prescription
-                    <Camera className="w-5 h-5" />
-                  </Button>
-                </Link>
-              ) : (
+              {isPrescriptionReady ? (
                 <Link href="/checkout">
                    <Button className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all gap-4 bg-primary text-white">
                      Checkout Now
                      <ArrowRight className="w-5 h-5" />
                    </Button>
                 </Link>
+              ) : (
+                <Button 
+                  onClick={() => document.getElementById('cart-prescription-upload')?.click()}
+                  className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-orange/40 hover:scale-[1.02] active:scale-95 transition-all gap-4 bg-orange-600 text-white"
+                >
+                  Upload Prescription
+                  <Camera className="w-5 h-5" />
+                </Button>
               )}
               
               <div className="mt-10 pt-8 border-t border-gray-50 flex items-center gap-4">

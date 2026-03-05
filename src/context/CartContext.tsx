@@ -73,6 +73,8 @@ interface CartContextType {
   applyPromo: (promo: PromoCode | null) => void;
   activeFees: Fee[];
   availablePromos: PromoCode[];
+  attachedPrescription: string | null;
+  setAttachedPrescription: (img: string | null) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -81,6 +83,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [location, setLocation] = useState('Mumbai, MH');
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
+  const [attachedPrescription, setAttachedPrescription] = useState<string | null>(null);
   
   const db = useFirestore();
 
@@ -111,6 +114,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
     const savedLoc = localStorage.getItem('hl_location');
     if (savedLoc) setLocation(savedLoc);
+
+    const savedPrescription = localStorage.getItem('hl_prescription');
+    if (savedPrescription) setAttachedPrescription(savedPrescription);
   }, []);
 
   useEffect(() => {
@@ -120,6 +126,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem('hl_location', location);
   }, [location]);
+
+  useEffect(() => {
+    if (attachedPrescription) {
+      localStorage.setItem('hl_prescription', attachedPrescription);
+    } else {
+      localStorage.removeItem('hl_prescription');
+    }
+  }, [attachedPrescription]);
 
   const addToCart = (product: Product, qty: number = 1) => {
     setCart(prev => {
@@ -160,6 +174,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const clearCart = () => {
     setCart([]);
     setAppliedPromo(null);
+    setAttachedPrescription(null);
   };
 
   const applyPromo = (promo: PromoCode | null) => setAppliedPromo(promo);
@@ -170,7 +185,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   return (
     <CartContext.Provider value={{
       cart, addToCart, removeFromCart, updateQuantity, clearCart, getItemQuantity, totalItems, totalPrice, location, setLocation,
-      appliedPromo, applyPromo, activeFees, availablePromos
+      appliedPromo, applyPromo, activeFees, availablePromos, attachedPrescription, setAttachedPrescription
     }}>
       {children}
     </CartContext.Provider>
