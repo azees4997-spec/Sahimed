@@ -9,20 +9,30 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { MapPin, ShieldCheck, Loader2, Phone, User, Home, Building2, Hash, ArrowRight, LocateFixed, AlertCircle, UserPlus, CheckCircle2 } from 'lucide-react';
+import { MapPin, ShieldCheck, Loader2, Phone, User, Home, Building2, Hash, ArrowRight, LocateFixed, AlertCircle, UserPlus, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp, doc, getDoc } from 'firebase/firestore';
+import { useUser, useFirestore, updateDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp, doc, getDoc, addDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 export default function CheckoutPage() {
-  const { cart, totalPrice, clearCart, location: homepageLocation, attachedPrescription } = useCart();
+  const { 
+    cart, 
+    totalPrice, 
+    clearCart, 
+    location: homepageLocation, 
+    attachedPrescription,
+    activeFees,
+    appliedPromo
+  } = useCart();
+  
   const { user } = useUser();
   const db = useFirestore();
   const [loading, setLoading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [isSomeoneElse, setIsSomeoneElse] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -40,14 +50,12 @@ export default function CheckoutPage() {
   useEffect(() => {
     const fetchProfile = async () => {
       if (user && !isSomeoneElse) {
-        // Start with Auth data
         let profileName = user.displayName || '';
         let profilePhone = user.phoneNumber?.replace('+91', '') || '';
         let profileStreet = homepageLocation || '';
         let profileLandmark = '';
         let profilePincode = '';
 
-        // Try to fetch saved address from Firestore userProfiles
         try {
           const profileDoc = await getDoc(doc(db, 'userProfiles', user.uid));
           if (profileDoc.exists()) {
@@ -70,7 +78,6 @@ export default function CheckoutPage() {
           pincode: profilePincode
         });
       } else if (isSomeoneElse) {
-        // Clear for one-time recipient
         setOrderInfo({
           patientName: '',
           phoneNumber: '',
@@ -82,7 +89,7 @@ export default function CheckoutPage() {
     };
 
     fetchProfile();
-  }, [user, isSomeoneElse, db]);
+  }, [user, isSomeoneElse, db, homepageLocation]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -116,17 +123,17 @@ export default function CheckoutPage() {
                 street: `${road ? road + ', ' : ''}${neighborhood}${city ? ', ' + city : ''}${state ? ', ' + state : ''}`,
                 pincode: data.address.postcode?.replace(/\s/g, '') || prev.pincode
               }));
-              toast({ title: "Location Verified", description: "GPS coordinates applied across India." });
+              toast({ title: "Location Verified" });
             }
           } catch (e) {
-            toast({ variant: 'destructive', title: 'Location Error', description: 'Could not fetch address details.' });
+            toast({ variant: 'destructive', title: 'Location Error' });
           } finally {
             setIsLocating(false);
           }
         },
         () => {
           setIsLocating(false);
-          toast({ variant: 'destructive', title: 'Permission Denied', description: 'Allow GPS access for clinical delivery routing.' });
+          toast({ variant: 'destructive', title: 'Permission Denied' });
         }
       );
     }
@@ -134,27 +141,54 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!user) {
-      toast({ title: "Login Required", description: "Please sign in to complete your clinical order." });
       router.push('/login');
       return;
     }
 
     if (!validate()) {
-      toast({ variant: "destructive", title: "Missing Information", description: "Please fill all required delivery fields." });
+      setOrderError("Please fill all required delivery fields.");
       return;
     }
 
     if (cart.length === 0) {
-      toast({ variant: "destructive", title: "Cart Empty", description: "Your bag is currently empty." });
+      setOrderError("Your bag is currently empty.");
       return;
     }
 
     setLoading(true);
+    setOrderError(null);
     
+    // Re-calculate billing details for document persistence
+    const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
+    const applicableFees = activeFees.filter(f => totalPrice >= (f.minPurchase || 0));
+    const feeTotal = applicableFees.reduce((acc, fee) => {
+      const amt = fee.discountedAmount ?? fee.originalAmount ?? 0;
+      return fee.type === 'fixed' ? acc + amt : acc + (totalPrice * (amt / 100));
+    }, 0);
+
+    let promoDiscount = 0;
+    if (appliedPromo) {
+      const raw = appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue / 100));
+      promoDiscount = (appliedPromo.maxDiscount && appliedPromo.maxDiscount > 0) ? Math.min(raw, appliedPromo.maxDiscount) : raw;
+    }
+
+    const deliveryFeeDoc = activeFees.find(f => f.name.toLowerCase().includes('delivery'));
+    const FREE_DELIVERY_THRESHOLD = deliveryFeeDoc?.minPurchase || 500;
+    const finalBeforeDelivery = Math.max(0, totalPrice + feeTotal - promoDiscount);
+    const deliveryCharge = finalBeforeDelivery < FREE_DELIVERY_THRESHOLD ? (deliveryFeeDoc?.discountedAmount || 40) : 0;
+    const finalAmount = finalBeforeDelivery + deliveryCharge;
+
     const orderData = {
       userId: user.uid,
       orderDate: serverTimestamp(),
-      totalAmount: totalPrice,
+      totalAmount: finalAmount,
+      billingBreakdown: {
+        grossMrp: totalMrp,
+        campaignDiscount: promoDiscount,
+        serviceFees: feeTotal,
+        deliveryCharge: deliveryCharge,
+        savings: (totalMrp - totalPrice) + promoDiscount
+      },
       status: 'Pending',
       paymentStatus: 'Paid',
       paymentType: 'Online',
@@ -177,32 +211,23 @@ export default function CheckoutPage() {
     };
 
     try {
-      // 1. Save order to Firestore
+      // Direct Firestore write to ensure document is created before redirect
       const orderRef = collection(db, 'userProfiles', user.uid, 'orders');
-      addDocumentNonBlocking(orderRef, orderData);
+      const docRef = await addDoc(orderRef, orderData);
       
-      // 2. Persistent Profile Logic: Save address to user profile if ordering for self
       if (!isSomeoneElse) {
         updateDocumentNonBlocking(doc(db, 'userProfiles', user.uid), {
           name: orderInfo.patientName,
           phone: orderData.phoneNumber,
-          address: {
-            street: orderInfo.street,
-            landmark: orderInfo.landmark,
-            pincode: orderInfo.pincode
-          },
+          address: orderData.shippingDetails,
           updatedAt: serverTimestamp()
         });
       }
 
-      toast({ title: "Order Confirmed", description: "Your healthcare needs are being processed." });
       clearCart();
-      
-      setTimeout(() => {
-        router.push('/orders');
-      }, 800);
+      router.push(`/order-success/${docRef.id}`);
     } catch (err) {
-      toast({ variant: "destructive", title: "Order Failed", description: "Encryption/Network failure. Please try again." });
+      setOrderError("Could not place order. Please check your internet connection.");
     } finally {
       setLoading(false);
     }
@@ -219,6 +244,13 @@ export default function CheckoutPage() {
            </div>
         </div>
         
+        {orderError && (
+          <div className="mb-8 p-6 bg-red-50 border-2 border-red-100 rounded-[32px] flex items-center gap-4 animate-in slide-in-from-top-4">
+            <AlertTriangle className="w-6 h-6 text-red-600" />
+            <p className="text-sm font-black uppercase text-red-900 tracking-tight">{orderError}</p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
             <Card className="rounded-[40px] border-none shadow-sm overflow-hidden bg-white">
@@ -230,10 +262,10 @@ export default function CheckoutPage() {
                     </div>
                     <CardTitle className="text-xl font-black uppercase tracking-tight">Delivery Provision</CardTitle>
                   </div>
-                  <Button variant="ghost" onClick={handleLocateMe} disabled={isLocating} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2 bg-primary/5 text-primary hover:bg-primary/10 active:scale-95">
+                  <button onClick={handleLocateMe} disabled={isLocating} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2 bg-primary/5 text-primary hover:bg-primary/10 active:scale-95 transition-all">
                     {isLocating ? <Loader2 className="animate-spin w-3 h-3" /> : <LocateFixed className="w-3 h-3" />}
                     Verify My GPS
-                  </Button>
+                  </button>
                 </div>
 
                 <div className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-gray-100">
@@ -274,14 +306,16 @@ export default function CheckoutPage() {
                       <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Number <span className="text-red-500">*</span></Label>
                     </div>
                     <div className="relative">
-                      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">+91</div>
+                      <div className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center gap-2 pr-4 border-r border-gray-200">
+                        <span className="text-sm font-bold text-gray-400">+91</span>
+                      </div>
                       <Input 
                         value={orderInfo.phoneNumber} 
                         onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10)})} 
-                        placeholder="10-digit Mobile" 
+                        placeholder={orderInfo.phoneNumber ? "" : "10-digit Mobile"} 
                         readOnly={!isSomeoneElse}
                         className={cn(
-                          "h-16 pl-14 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", 
+                          "h-16 pl-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6 transition-all", 
                           errors.phoneNumber && "ring-2 ring-red-500",
                           !isSomeoneElse && "opacity-60 cursor-not-allowed"
                         )} 
