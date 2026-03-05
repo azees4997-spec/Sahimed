@@ -356,7 +356,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
 
 function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
-  const { data: orders, isLoading, error } = useCollection(ordersQuery);
+  const { data: orders, isLoading } = useCollection(ordersQuery);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isShippingDialogOpen, setIsShippingDialogOpen] = useState(false);
   const [shippingData, setShippingData] = useState({ carrier: '', trackingId: '' });
@@ -425,7 +425,7 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                     <td className="px-8 py-6">
                       <div className="flex flex-col">
                         <span className="font-bold text-xs">{order?.patientName || 'Patient'}</span>
-                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{patientMobile}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest">{patientMobile}</span>
                       </div>
                     </td>
                     <td className="px-8 py-6 max-w-[250px]">
@@ -549,7 +549,6 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
-  const { toast } = useToast();
 
   const filteredMedicines = medicines?.filter(med => 
     med.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -798,7 +797,7 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
                 <div className="absolute top-4 right-4"><Badge className="bg-primary text-white uppercase text-[8px] font-black">{enq?.status || 'Pending'}</Badge></div>
               </div>
               <div className="space-y-1 mb-6">
-                 <p className="font-black text-sm uppercase text-gray-900 truncate">{enq?.patientName || 'Patient Request'}</p>
+                 <p className="font-black text-sm uppercase text-gray-900 truncate">{enq?.patientName || <span className="text-red-500">NO NAME</span>}</p>
                  <div className="flex items-center gap-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">
                     <Phone className="w-2.5 h-2.5" />
                     <span>{patientMobile}</span>
@@ -895,7 +894,7 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
                 {searchedMeds.length > 0 && (
                   <div className="absolute top-16 left-0 right-0 bg-white rounded-2xl shadow-2xl border z-20 overflow-hidden">
                     {searchedMeds.map(m => (
-                      <button key={m.id} onClick={() => addToDraftOrder(m)} className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors border-b last:border-none">
+                      <button key={m.id} onClick={() => addToDraftOrder(m)} className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors border-b last:border-none text-left">
                         <div className="flex flex-col items-start"><p className="text-sm font-black uppercase">{m.name}</p><p className="text-[9px] text-gray-400">{m.saltComposition}</p></div>
                         <PlusCircle className="w-5 h-5 text-primary" />
                       </button>
@@ -938,7 +937,7 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
 // --- MANAGEMENT TABS ---
 
 function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const promosQuery = useMemoFirebase(() => query(collection(db, 'promocodes'), orderBy('code', 'asc')), [db]);
+  const promosQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'promocodes'), orderBy('code', 'asc')) : null, [db, isVerified]);
   const { data: promos, isLoading } = useCollection(promosQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPromo, setEditingPromo] = useState<any>(null);
@@ -1011,8 +1010,8 @@ function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
   );
 }
 
-function FeesTab({ db, onBack }: { db: any, onBack: () => void }) {
-  const feesQuery = useMemoFirebase(() => query(collection(db, 'fees'), orderBy('name', 'asc')), [db]);
+function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
+  const feesQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'fees'), orderBy('name', 'asc')) : null, [db, isVerified]);
   const { data: fees, isLoading } = useCollection(feesQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingFee, setEditingFee] = useState<any>(null);
@@ -1109,8 +1108,8 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
   );
 }
 
-function AlertsTab({ db, onBack }: { db: any, onBack: () => void }) {
-  const alertsQuery = useMemoFirebase(() => query(collection(db, 'systemAlerts'), orderBy('createdAt', 'desc')), [db]);
+function AlertsTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
+  const alertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'systemAlerts'), orderBy('createdAt', 'desc')) : null, [db, isVerified]);
   const { data: alerts, isLoading } = useCollection(alertsQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAlert, setEditingAlert] = useState<any>(null);

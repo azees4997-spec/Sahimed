@@ -7,7 +7,7 @@ service cloud.firestore {
      * SAHIMED PHARMACY SECURITY RULES
      * 
      * Enforces strict User-Ownership for sensitive patient data while allowing
-     * public access to the clinical catalog, promotional hubs, and fees.
+     * public access to the clinical catalog, promotional hubs, and system alerts.
      */
 
     // --- GLOBAL HELPER FUNCTIONS ---
@@ -80,17 +80,17 @@ service cloud.firestore {
     }
 
     match /promocodes/{promoId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /fees/{feeId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /systemAlerts/{alertId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
