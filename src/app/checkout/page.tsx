@@ -8,11 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { MapPin, ShieldCheck, Loader2, Phone, User, Home, Building2, Hash, ArrowRight, LocateFixed, AlertCircle } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { MapPin, ShieldCheck, Loader2, Phone, User, Home, Building2, Hash, ArrowRight, LocateFixed, AlertCircle, UserPlus, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 export default function CheckoutPage() {
@@ -21,6 +22,7 @@ export default function CheckoutPage() {
   const db = useFirestore();
   const [loading, setLoading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [isSomeoneElse, setIsSomeoneElse] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -34,22 +36,60 @@ export default function CheckoutPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Effect to load profile data or clear for guest
   useEffect(() => {
-    if (user) {
-      setOrderInfo(prev => ({
-        ...prev,
-        phoneNumber: user.phoneNumber?.replace('+91', '') || prev.phoneNumber,
-        patientName: user.displayName || prev.patientName
-      }));
-    }
-  }, [user]);
+    const fetchProfile = async () => {
+      if (user && !isSomeoneElse) {
+        // Start with Auth data
+        let profileName = user.displayName || '';
+        let profilePhone = user.phoneNumber?.replace('+91', '') || '';
+        let profileStreet = homepageLocation || '';
+        let profileLandmark = '';
+        let profilePincode = '';
+
+        // Try to fetch saved address from Firestore userProfiles
+        try {
+          const profileDoc = await getDoc(doc(db, 'userProfiles', user.uid));
+          if (profileDoc.exists()) {
+            const data = profileDoc.data();
+            profileName = data.name || profileName;
+            profilePhone = data.phone?.replace('+91', '') || profilePhone;
+            profileStreet = data.address?.street || profileStreet;
+            profileLandmark = data.address?.landmark || profileLandmark;
+            profilePincode = data.address?.pincode || profilePincode;
+          }
+        } catch (e) {
+          console.error("Profile sync error", e);
+        }
+
+        setOrderInfo({
+          patientName: profileName,
+          phoneNumber: profilePhone,
+          street: profileStreet,
+          landmark: profileLandmark,
+          pincode: profilePincode
+        });
+      } else if (isSomeoneElse) {
+        // Clear for one-time recipient
+        setOrderInfo({
+          patientName: '',
+          phoneNumber: '',
+          street: '',
+          landmark: '',
+          pincode: ''
+        });
+      }
+    };
+
+    fetchProfile();
+  }, [user, isSomeoneElse, db]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!orderInfo.patientName.trim()) newErrors.patientName = "Name is required";
-    if (!orderInfo.phoneNumber.trim()) newErrors.phoneNumber = "Phone is required";
+    if (!orderInfo.patientName.trim()) newErrors.patientName = "Recipient name is required";
+    if (!orderInfo.phoneNumber.trim()) newErrors.phoneNumber = "Contact number is required";
     if (!orderInfo.street.trim()) newErrors.street = "Street address is required";
-    if (!orderInfo.pincode.trim() || orderInfo.pincode.length !== 6) newErrors.pincode = "Valid 6-digit pincode is required";
+    if (!orderInfo.pincode.trim() || orderInfo.pincode.length !== 6) newErrors.pincode = "Valid 6-digit Indian PIN required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -69,22 +109,24 @@ export default function CheckoutPage() {
               const neighborhood = data.address.suburb || data.address.neighbourhood || data.address.road || '';
               const city = data.address.city || data.address.town || data.address.village || '';
               const road = data.address.road || '';
+              const state = data.address.state || '';
+              
               setOrderInfo(prev => ({
                 ...prev,
-                street: `${road ? road + ', ' : ''}${neighborhood}${city ? ', ' + city : ''}`,
-                pincode: data.address.postcode || prev.pincode
+                street: `${road ? road + ', ' : ''}${neighborhood}${city ? ', ' + city : ''}${state ? ', ' + state : ''}`,
+                pincode: data.address.postcode?.replace(/\s/g, '') || prev.pincode
               }));
-              toast({ title: "Location Updated", description: "GPS coordinates applied." });
+              toast({ title: "Location Verified", description: "GPS coordinates applied across India." });
             }
           } catch (e) {
-            toast({ variant: 'destructive', title: 'Location Error', description: 'Could not fetch address.' });
+            toast({ variant: 'destructive', title: 'Location Error', description: 'Could not fetch address details.' });
           } finally {
             setIsLocating(false);
           }
         },
         () => {
           setIsLocating(false);
-          toast({ variant: 'destructive', title: 'Permission Denied', description: 'Allow GPS access to use this feature.' });
+          toast({ variant: 'destructive', title: 'Permission Denied', description: 'Allow GPS access for clinical delivery routing.' });
         }
       );
     }
@@ -92,18 +134,18 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!user) {
-      toast({ title: "Login Required", description: "Please sign in to complete your order." });
+      toast({ title: "Login Required", description: "Please sign in to complete your clinical order." });
       router.push('/login');
       return;
     }
 
     if (!validate()) {
-      toast({ variant: "destructive", title: "Incomplete Address", description: "Please fill all mandatory delivery fields." });
+      toast({ variant: "destructive", title: "Missing Information", description: "Please fill all required delivery fields." });
       return;
     }
 
     if (cart.length === 0) {
-      toast({ variant: "destructive", title: "Cart Empty", description: "Add items to cart first." });
+      toast({ variant: "destructive", title: "Cart Empty", description: "Your bag is currently empty." });
       return;
     }
 
@@ -117,8 +159,9 @@ export default function CheckoutPage() {
       paymentStatus: 'Paid',
       paymentType: 'Online',
       patientName: orderInfo.patientName,
-      phoneNumber: orderInfo.phoneNumber,
+      phoneNumber: orderInfo.phoneNumber.startsWith('+91') ? orderInfo.phoneNumber : `+91${orderInfo.phoneNumber}`,
       prescriptionUrl: attachedPrescription || null,
+      orderingForSelf: !isSomeoneElse,
       shippingDetails: {
         street: orderInfo.street,
         landmark: orderInfo.landmark,
@@ -134,17 +177,32 @@ export default function CheckoutPage() {
     };
 
     try {
+      // 1. Save order to Firestore
       const orderRef = collection(db, 'userProfiles', user.uid, 'orders');
       addDocumentNonBlocking(orderRef, orderData);
       
-      toast({ title: "Order Placed!", description: "Your healthcare needs are on the way." });
+      // 2. Persistent Profile Logic: Save address to user profile if ordering for self
+      if (!isSomeoneElse) {
+        updateDocumentNonBlocking(doc(db, 'userProfiles', user.uid), {
+          name: orderInfo.patientName,
+          phone: orderData.phoneNumber,
+          address: {
+            street: orderInfo.street,
+            landmark: orderInfo.landmark,
+            pincode: orderInfo.pincode
+          },
+          updatedAt: serverTimestamp()
+        });
+      }
+
+      toast({ title: "Order Confirmed", description: "Your healthcare needs are being processed." });
       clearCart();
       
       setTimeout(() => {
         router.push('/orders');
-      }, 500);
+      }, 800);
     } catch (err) {
-      toast({ variant: "destructive", title: "Order Failed", description: "Something went wrong." });
+      toast({ variant: "destructive", title: "Order Failed", description: "Encryption/Network failure. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -164,26 +222,50 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
             <Card className="rounded-[40px] border-none shadow-sm overflow-hidden bg-white">
-              <CardHeader className="bg-white p-8 border-b flex flex-row items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
-                    <MapPin className="w-4 h-4" />
+              <CardHeader className="bg-white p-8 border-b space-y-6">
+                <div className="flex flex-row items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <CardTitle className="text-xl font-black uppercase tracking-tight">Delivery Provision</CardTitle>
                   </div>
-                  <CardTitle className="text-xl font-black uppercase tracking-tight">Delivery Address Provision</CardTitle>
+                  <Button variant="ghost" onClick={handleLocateMe} disabled={isLocating} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2 bg-primary/5 text-primary hover:bg-primary/10 active:scale-95">
+                    {isLocating ? <Loader2 className="animate-spin w-3 h-3" /> : <LocateFixed className="w-3 h-3" />}
+                    Verify My GPS
+                  </Button>
                 </div>
-                <Button variant="ghost" onClick={handleLocateMe} disabled={isLocating} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2 bg-primary/5 text-primary hover:bg-primary/10 active:scale-95">
-                  {isLocating ? <Loader2 className="animate-spin w-3 h-3" /> : <LocateFixed className="w-3 h-3" />}
-                  Locate Me
-                </Button>
+
+                <div className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                   <div className="flex items-center gap-3">
+                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-colors", isSomeoneElse ? "bg-orange-100 text-orange-600" : "bg-green-100 text-green-600")}>
+                         {isSomeoneElse ? <UserPlus className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+                      </div>
+                      <div>
+                         <p className="text-[10px] font-black uppercase tracking-tight text-gray-900">Ordering for someone else?</p>
+                         <p className="text-[8px] font-bold uppercase text-gray-400">Toggle for recipient mode</p>
+                      </div>
+                   </div>
+                   <Switch 
+                    checked={isSomeoneElse} 
+                    onCheckedChange={setIsSomeoneElse} 
+                    className="data-[state=checked]:bg-orange-500"
+                   />
+                </div>
               </CardHeader>
               <CardContent className="p-8 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 ml-1">
                       <User className="w-3.5 h-3.5 text-primary" />
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Patient Full Name <span className="text-red-500">*</span></Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Recipient Name <span className="text-red-500">*</span></Label>
                     </div>
-                    <Input value={orderInfo.patientName} onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})} placeholder="Full Name" className={cn("h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.patientName && "ring-2 ring-red-500")} />
+                    <Input 
+                      value={orderInfo.patientName} 
+                      onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})} 
+                      placeholder="Full Name" 
+                      className={cn("h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.patientName && "ring-2 ring-red-500")} 
+                    />
                     {errors.patientName && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.patientName}</p>}
                   </div>
                   <div className="space-y-3">
@@ -191,13 +273,26 @@ export default function CheckoutPage() {
                       <Phone className="w-3.5 h-3.5 text-primary" />
                       <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Number <span className="text-red-500">*</span></Label>
                     </div>
-                    <Input value={orderInfo.phoneNumber} onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value})} placeholder="Mobile Number" className={cn("h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.phoneNumber && "ring-2 ring-red-500")} />
+                    <div className="relative">
+                      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">+91</div>
+                      <Input 
+                        value={orderInfo.phoneNumber} 
+                        onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10)})} 
+                        placeholder="10-digit Mobile" 
+                        readOnly={!isSomeoneElse}
+                        className={cn(
+                          "h-16 pl-14 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", 
+                          errors.phoneNumber && "ring-2 ring-red-500",
+                          !isSomeoneElse && "opacity-60 cursor-not-allowed"
+                        )} 
+                      />
+                    </div>
                     {errors.phoneNumber && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.phoneNumber}</p>}
                   </div>
                   <div className="md:col-span-2 space-y-3">
                     <div className="flex items-center gap-2 ml-1">
                       <Home className="w-3.5 h-3.5 text-primary" />
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Complete Street Address <span className="text-red-500">*</span></Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Clinical Delivery Address <span className="text-red-500">*</span></Label>
                     </div>
                     <Input value={orderInfo.street} onChange={e => setOrderInfo({...orderInfo, street: e.target.value})} placeholder="House No, Street Name, Area" className={cn("h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.street && "ring-2 ring-red-500")} />
                     {errors.street && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.street}</p>}
@@ -214,7 +309,7 @@ export default function CheckoutPage() {
                       <Hash className="w-3.5 h-3.5 text-primary" />
                       <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pincode <span className="text-red-500">*</span></Label>
                     </div>
-                    <Input value={orderInfo.pincode} onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value})} placeholder="6-digit PIN" maxLength={6} className={cn("h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.pincode && "ring-2 ring-red-500")} />
+                    <Input value={orderInfo.pincode} onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})} placeholder="6-digit PIN" maxLength={6} className={cn("h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.pincode && "ring-2 ring-red-500")} />
                     {errors.pincode && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.pincode}</p>}
                   </div>
                 </div>
@@ -226,8 +321,8 @@ export default function CheckoutPage() {
                   <ShieldCheck className="w-8 h-8 text-accent" />
                </div>
                <div>
-                  <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Pharmacist Verified Checkout</h3>
-                  <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Every order is reviewed for clinical safety and accuracy by our team.</p>
+                  <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Verified Clinical Checkout</h3>
+                  <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Every order is audited for delivery accuracy and clinical protocol compliance.</p>
                </div>
             </div>
           </div>
@@ -236,7 +331,7 @@ export default function CheckoutPage() {
             <div className="bg-white p-10 rounded-[50px] shadow-2xl border border-gray-50 sticky top-24 overflow-hidden relative">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16" />
               
-              <h2 className="text-[11px] font-black mb-10 text-gray-400 uppercase tracking-[0.3em] relative z-10">Bill Breakdown</h2>
+              <h2 className="text-[11px] font-black mb-10 text-gray-400 uppercase tracking-[0.3em] relative z-10">Clinical Bag Summary</h2>
               
               <div className="space-y-6 mb-10 max-h-[30vh] overflow-y-auto scrollbar-hide relative z-10">
                  {cart.map(item => (
@@ -252,23 +347,30 @@ export default function CheckoutPage() {
 
               <div className="space-y-4 mb-10 pt-6 border-t border-dashed relative z-10">
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
-                  <span>Cart Total</span>
+                  <span>Gross Total</span>
                   <span>₹{totalPrice}</span>
                 </div>
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                  <span className="text-gray-500">Shipping</span>
+                  <span className="text-gray-500">Clinical Logistics</span>
                   <span className="text-accent">FREE</span>
                 </div>
                 <div className="pt-8 border-t border-gray-100 flex justify-between items-baseline">
-                  <span className="text-sm font-black text-gray-900 uppercase tracking-widest">Final Total</span>
+                  <span className="text-sm font-black text-gray-900 uppercase tracking-widest">Payable Amount</span>
                   <span className="text-4xl font-black text-primary tracking-tighter">₹{totalPrice}</span>
                 </div>
               </div>
 
               <Button onClick={handlePlaceOrder} disabled={loading || cart.length === 0} className="w-full h-20 rounded-full text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-[1.02] transition-all gap-4 relative z-10 bg-primary text-white">
-                {loading ? <Loader2 className="animate-spin" /> : (user ? "Confirm Order" : "Login to Checkout")}
+                {loading ? <Loader2 className="animate-spin" /> : (user ? "Finalize Order" : "SignIn to Complete")}
                 <ArrowRight className="w-5 h-5" />
               </Button>
+              
+              {!isSomeoneElse && (
+                <div className="mt-6 flex items-center justify-center gap-2 bg-green-50 p-3 rounded-xl border border-green-100 animate-in slide-in-from-bottom-2">
+                   <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                   <span className="text-[8px] font-black text-green-600 uppercase tracking-widest">Saving to Clinical Profile</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
