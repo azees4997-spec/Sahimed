@@ -934,16 +934,43 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
   const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
   const [selectedEnquiry, setSelectedEnquiry] = useState<any>(null);
+  const [statusFilter, setStatusFilter] = useState<'PENDING' | 'OPEN' | 'COMPLETED'>('PENDING');
+
+  const filteredEnquiries = enquiries?.filter(enq => {
+    const status = (enq.status || 'Pending Review').toUpperCase();
+    if (statusFilter === 'PENDING') return status === 'PENDING REVIEW';
+    if (statusFilter === 'OPEN') return status === 'IN PROCESS' || status === 'PROCESSING';
+    if (statusFilter === 'COMPLETED') return status === 'DIGITIZED' || status === 'COMPLETED';
+    return false;
+  });
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Clinical Enquiries" subtitle="Prescription review queue" onBack={onBack} />
+      
+      <div className="bg-white p-1 rounded-full border flex w-fit gap-1 mb-8">
+        {['PENDING', 'OPEN', 'COMPLETED'].map((status) => (
+          <button
+            key={status}
+            onClick={() => setStatusFilter(status as any)}
+            className={cn(
+              "px-8 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+              statusFilter === status 
+                ? "bg-primary text-white shadow-lg shadow-primary/20 scale-105" 
+                : "text-gray-400 hover:bg-gray-50"
+            )}
+          >
+            {status}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-8">
         {isLoading ? (
           <div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>
-        ) : (!enquiries || enquiries.length === 0) ? (
-          <div className="col-span-full py-20 text-center font-black text-gray-400 uppercase tracking-widest text-[10px]">Waiting for enquiries from Firestore...</div>
-        ) : enquiries.map(enq => {
+        ) : (!filteredEnquiries || filteredEnquiries.length === 0) ? (
+          <div className="col-span-full py-20 text-center font-black text-gray-400 uppercase tracking-widest text-[10px]">No {statusFilter.toLowerCase()} enquiries found</div>
+        ) : filteredEnquiries.map(enq => {
           const patientMobile = enq?.phoneNumber || <span className="text-red-500 font-black">NO PHONE</span>;
           return (
             <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white p-6 group hover:shadow-2xl transition-all duration-500">
@@ -958,9 +985,11 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
                     <span>{patientMobile}</span>
                  </div>
               </div>
-              <Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white gap-2">
-                <Wand2 className="w-3.5 h-3.5" /> Digitize & Order
-              </Button>
+              {statusFilter !== 'COMPLETED' && (
+                <Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white gap-2">
+                  <Wand2 className="w-3.5 h-3.5" /> Digitize & Order
+                </Button>
+              )}
             </Card>
           );
         })}
