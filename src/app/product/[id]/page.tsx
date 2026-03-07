@@ -22,7 +22,8 @@ import {
   Package,
   Loader2,
   ShoppingCart,
-  TrendingDown
+  TrendingDown,
+  Star
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -30,6 +31,7 @@ import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase
 import { doc, getDoc, query, collection, where, limit } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -110,29 +112,45 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     const pPackNum = parseInt(product.packSize?.match(/\d+/)?.[0] || "1");
     const pUnitCost = pPrice > 0 ? (pPrice / pPackNum).toFixed(2) : "0.00";
     const pIsOutOfStock = live ? live.stock <= 0 : false;
+    
+    const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
+      ? product.imageUrl
+      : `https://picsum.photos/seed/${product.id}/300/300`;
 
     return (
       <Card className={cn(
-        "rounded-[20px] sm:rounded-[32px] p-2.5 sm:p-6 flex flex-col h-full border shadow-sm transition-all relative overflow-hidden",
+        "rounded-[20px] p-2.5 sm:p-5 flex flex-col h-full border shadow-sm transition-all relative overflow-hidden",
         isAlt ? "bg-accent/5 border-dashed border-accent/20" : "bg-white border-gray-100"
       )}>
-        <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">
+        <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 block">
           {label}
         </span>
         
-        <div className="flex-1 space-y-1 sm:space-y-3">
-          <h3 className="font-black text-[11px] sm:text-base text-gray-900 uppercase leading-tight line-clamp-2 min-h-[1.8rem] sm:min-h-[2.5rem]">
+        {/* 1. Item Image */}
+        <div className="relative aspect-square w-full bg-white rounded-xl mb-3 overflow-hidden border border-gray-50 p-2">
+          <Image src={safeImageUrl} alt={product.name} fill className="object-contain" />
+        </div>
+
+        <div className="flex-1 space-y-1.5 sm:space-y-3">
+          {/* 2. Item Name */}
+          <h3 className="font-black text-[11px] sm:text-sm text-gray-900 uppercase leading-tight line-clamp-2 min-h-[1.8rem] sm:min-h-[2.5rem]">
             {product.name}
           </h3>
           
-          <div className="space-y-0.5">
-            <p className="text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase">{product.packSize || "N/A"}</p>
-            <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase truncate">{product.manufacturer}</p>
-          </div>
+          {/* 3. Pack Size */}
+          <p className="text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-tight">
+            {product.packSize || "N/A"}
+          </p>
 
-          <div className="pt-1.5 sm:pt-3 border-t border-dashed">
+          {/* 4. Marketing Company */}
+          <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase truncate">
+            {product.manufacturer}
+          </p>
+
+          {/* 5. Sahimed Price & Unit Cost */}
+          <div className="pt-2 border-t border-dashed">
             <div className="flex items-baseline gap-1">
-              <p className={cn("text-[13px] sm:text-2xl font-black tracking-tighter", isAlt ? "text-accent" : "text-primary")}>
+              <p className={cn("text-[13px] sm:text-xl font-black tracking-tighter", isAlt ? "text-accent" : "text-primary")}>
                 ₹{isLiveLoading ? '...' : pPrice}
               </p>
               {live?.mrp > pPrice && (
@@ -143,25 +161,26 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        <div className="mt-3 space-y-1.5">
-          {isAlt && savingsPercentage > 0 && (
-            <div className="bg-accent text-white py-1 rounded-lg text-center shadow-lg">
-              <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight">SAVE {savingsPercentage}%</p>
-            </div>
-          )}
-          
+        {/* Savings Badge for Alt */}
+        {isAlt && savingsPercentage > 0 && (
+          <div className="mt-2 bg-accent text-white py-1 rounded-lg text-center shadow-lg">
+            <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight">SAVE {savingsPercentage}%</p>
+          </div>
+        )}
+
+        <div className="mt-3">
           {pIsOutOfStock ? (
-            <Button disabled className="w-full h-7 sm:h-12 rounded-full font-black uppercase text-[7px] sm:text-[10px] tracking-widest bg-gray-100 text-gray-400">Out of Stock</Button>
+            <Button disabled className="w-full h-8 sm:h-12 rounded-full font-black uppercase text-[7px] sm:text-[10px] tracking-widest bg-gray-100 text-gray-400">Out of Stock</Button>
           ) : qty > 0 ? (
-            <div className="flex items-center gap-1 rounded-full p-0.5 sm:p-1 bg-primary text-white h-7 sm:h-12">
-              <button onClick={() => updateQuantity(product.id, -1)} className="flex-1 h-full flex items-center justify-center font-bold text-xs">-</button>
-              <span className="text-[8px] sm:text-[11px] font-black flex-1 text-center">{qty}</span>
-              <button onClick={() => updateQuantity(product.id, 1)} className="flex-1 h-full flex items-center justify-center font-bold text-xs">+</button>
+            <div className="flex items-center gap-1 rounded-full p-0.5 sm:p-1 bg-primary text-white h-8 sm:h-12">
+              <button onClick={() => updateQuantity(product.id, -1)} className="flex-1 h-full flex items-center justify-center font-bold text-sm">-</button>
+              <span className="text-[8px] sm:text-[11px] font-black flex-1 text-center">{qty} Units</span>
+              <button onClick={() => updateQuantity(product.id, 1)} className="flex-1 h-full flex items-center justify-center font-bold text-sm">+</button>
             </div>
           ) : (
             <Button 
               onClick={() => addToCart(product)} 
-              className={cn("w-full h-7 sm:h-12 rounded-full font-black uppercase text-[7px] sm:text-[10px] tracking-widest gap-1.5 shadow-lg", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
+              className={cn("w-full h-8 sm:h-12 rounded-full font-black uppercase text-[7px] sm:text-[10px] tracking-widest gap-1.5 shadow-lg", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
             >
               Add <ShoppingCart className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
             </Button>
@@ -174,9 +193,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   return (
     <div className="min-h-screen bg-[#F4F7F6] pb-32">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-3 sm:px-10 py-6">
+      <main className="max-w-7xl mx-auto px-2 sm:px-10 py-6">
         
-        {/* 1. CLEAN CLINICAL HEADER - PLAIN COMPOSITION ONLY */}
+        {/* 1. PLAIN COMPOSITION HEADER */}
         <div className="text-center mb-6 sm:mb-10 space-y-3">
            <div className="inline-flex items-center gap-2 bg-primary/10 px-5 py-2 rounded-full border border-primary/20 shadow-sm">
               <Dna className="w-3.5 h-3.5 text-primary" />
@@ -193,31 +212,29 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            )}
         </div>
 
-        {/* 2. STRICT SIDE-BY-SIDE GRID (ANTI-STACKING ON MOBILE) */}
+        {/* 2. FORCED SIDE-BY-SIDE GRID (100% WIDTH MOBILE) */}
         <div className="max-w-[1200px] mx-auto mb-10 sm:mb-16">
-          {genericAlt ? (
-            <div className="grid grid-cols-2 gap-2 sm:gap-6 items-stretch">
-              <ProductComparisonCard 
-                product={staticProduct} 
-                live={liveData} 
-                label="CURRENT SELECTION" 
-              />
+          <div className="grid grid-cols-2 gap-2 sm:gap-6 items-stretch">
+            <ProductComparisonCard 
+              product={staticProduct} 
+              live={liveData} 
+              label="CURRENT SELECTION" 
+            />
+            
+            {genericAlt ? (
               <ProductComparisonCard 
                 product={genericAlt} 
                 live={altLiveData} 
                 label="RECOMMENDED CHOICE" 
                 isAlt 
               />
-            </div>
-          ) : (
-            <div className="max-w-md mx-auto">
-              <ProductComparisonCard 
-                product={staticProduct} 
-                live={liveData} 
-                label="PRODUCT PROFILE" 
-              />
-            </div>
-          )}
+            ) : (
+              <div className="rounded-[20px] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-6 text-center bg-gray-50/50">
+                <Info className="w-8 h-8 text-gray-300 mb-2" />
+                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-tight">No generic variant found for this molecule</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 3. CLINICAL DATA TABS */}
