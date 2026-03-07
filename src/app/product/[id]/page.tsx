@@ -49,9 +49,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const productRef = useMemoFirebase(() => (!db || !id) ? null : doc(db, 'medicines', id), [db, id]);
   const { data: staticProduct, isLoading: productLoading } = useDoc(productRef);
 
-  // 2. Universal Dynamic Price/Stock Sync for Branded Card
+  // 2. Dynamic Price/Stock Sync for Branded
   const [liveData, setLiveData] = useState<{ mrp: number, price: number, stock: number } | null>(null);
-  const [isLiveLoading, setIsLiveLoading] = useState(true);
 
   useEffect(() => {
     const sku = staticProduct?.sku || staticProduct?.id;
@@ -66,15 +65,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             stock: Number(d.stock_quantity) ?? 0 
           });
         }
-        setIsLiveLoading(false);
-      }, (err) => {
-        setIsLiveLoading(false);
       });
       return () => unsubscribe();
-    } else if (!productLoading && !staticProduct) {
-      setIsLiveLoading(false);
     }
-  }, [db, staticProduct?.sku, staticProduct?.id, productLoading]);
+  }, [db, staticProduct?.sku, staticProduct?.id]);
 
   // 3. Clinical Molecule Metadata
   const molRef = useMemoFirebase(() => (!db || !staticProduct?.moleculeId) ? null : doc(db, 'moleculeMaster', staticProduct.moleculeId), [db, staticProduct?.moleculeId]);
@@ -89,9 +83,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { data: genericAlternatives } = useCollection(alternativesQuery);
   const genericAlt = genericAlternatives?.[0];
 
-  // 5. Universal Dynamic Price/Stock Sync for Generic Card
+  // 5. Dynamic Price/Stock Sync for Generic Card
   const [altLiveData, setAltLiveData] = useState<{ price: number, mrp: number, stock: number } | null>(null);
-  const [isAltLiveLoading, setIsAltLiveLoading] = useState(true);
 
   useEffect(() => {
     const altSku = genericAlt?.sku || genericAlt?.id;
@@ -106,43 +99,38 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             stock: Number(d.stock_quantity) ?? 0 
           });
         }
-        setIsAltLiveLoading(false);
-      }, (err) => {
-        setIsAltLiveLoading(false);
       });
       return () => unsubscribe();
-    } else if (genericAlt === null || (!productLoading && !genericAlt)) {
-      setIsAltLiveLoading(false);
     }
-  }, [db, genericAlt?.sku, genericAlt?.id, productLoading]);
+  }, [db, genericAlt?.sku, genericAlt?.id]);
 
   if (productLoading || !staticProduct) {
     return (<div className="min-h-screen bg-[#F8F8F8]"><Navbar /><main className="max-w-7xl mx-auto px-4 py-12"><Skeleton className="h-[400px] rounded-[40px]" /></main></div>);
   }
 
-  // --- PDP LOGIC MODES ---
+  // --- PDP VIEW MODES ---
   const isBranded = !staticProduct.isGeneric;
   const hasGenericAlt = !!genericAlt;
   const showComparison = isBranded && hasGenericAlt;
 
-  // Tiered Price Recovery for Savings Banner
+  // Recalibrated Savings Calculation: Branded MRP - Generic Price
   const brandedMrp = (liveData?.mrp && liveData.mrp > 0) ? liveData.mrp : (staticProduct.mrp || staticProduct.price + 50);
   const genericPrice = (altLiveData?.price && altLiveData.price > 0) ? altLiveData.price : (genericAlt?.price || 0);
   
   const switchSavingsAmt = Math.max(0, brandedMrp - genericPrice);
   const switchSavingsPct = brandedMrp > 0 ? Math.round((switchSavingsAmt / brandedMrp) * 100) : 0;
 
-  const ProductInfoCard = ({ product, live, label, isAlt = false, isLoading = false }: { product: any, live: any, label: string, isAlt?: boolean, isLoading?: boolean }) => {
+  const ComparisonCard = ({ product, live, label, isAlt = false }: { product: any, live: any, label: string, isAlt?: boolean }) => {
     const qty = getItemQuantity(product.id);
     
-    // Tiered Recovery
+    // Tiered Recovery Logic: Instant Static, Async Live
     const pPrice = (live?.price && live.price > 0) ? live.price : product.price;
     const pMrp = (live?.mrp && live.mrp > 0) ? live.mrp : (product.mrp || product.price + 50);
     
     const savingsAmt = Math.max(0, pMrp - pPrice);
     const savingsPct = pMrp > 0 ? Math.round((savingsAmt / pMrp) * 100) : 0;
 
-    // Unit Price Calculation (Parsing from pack size e.g. "Strip of 10")
+    // Unit Price Parsing from pack size string (e.g., "Strip of 10")
     const unitMatch = product.packSize?.match(/(\d+)/);
     const unitCount = (unitMatch && parseInt(unitMatch[1]) > 0) ? parseInt(unitMatch[1]) : 1;
     const unitPrice = pPrice / unitCount;
@@ -159,7 +147,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       )}>
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest block">{label}</span>
-          {!isLoading && savingsPct > 0 && (
+          {savingsPct > 0 && (
             <Badge className="bg-accent text-white text-[7px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
               SAVE {savingsPct}%
             </Badge>
@@ -169,7 +157,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <Dialog>
           <DialogTrigger asChild>
             <div className="relative aspect-square w-full max-h-[120px] sm:max-h-none bg-white rounded-xl mb-2 overflow-hidden border border-gray-50 flex items-center justify-center p-2 cursor-zoom-in group/img">
-              <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-1 transition-transform group-hover/img:scale-105" />
+              <Image src={safeImageUrl} alt={product.name} fill sizes="(max-width: 768px) 45vw, 30vw" className="object-contain p-1 transition-transform group-hover/img:scale-105" />
               <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
                  <Maximize2 className="w-4 h-4 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
               </div>
@@ -199,18 +187,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
           <div className="pt-1.5 border-t border-dashed mt-1.5">
             <div className="flex items-baseline gap-1">
-              <p className={cn("text-lg sm:text-2xl font-black tracking-tighter", pPrice > 0 ? "text-accent" : "text-gray-300")}>
-                {isLoading ? "..." : pPrice > 0 ? `₹${pPrice}` : "..."}
+              <p className="text-lg sm:text-2xl font-black tracking-tighter text-accent">
+                ₹{pPrice}
               </p>
-              {!isLoading && pMrp > pPrice && pPrice > 0 && (
+              {pMrp > pPrice && (
                 <span className="text-[8px] sm:text-[10px] text-red-400 line-through font-bold">₹{pMrp}</span>
               )}
             </div>
-            {!isLoading && pPrice > 0 && (
-              <p className="text-[7px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-tighter">
-                ₹{unitPrice.toFixed(2)} per unit
-              </p>
-            )}
+            <p className="text-[7px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-tighter">
+              ₹{unitPrice.toFixed(2)} per unit
+            </p>
           </div>
         </div>
 
@@ -246,44 +232,41 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            )}
         </div>
 
-        {/* SWITCH & SAVE BANNER (Only for Branded with Alternative) */}
-        {showComparison && !isLiveLoading && !isAltLiveLoading && switchSavingsAmt > 0 && (
+        {/* SWITCH & SAVE BANNER (Calculated: Branded MRP - Generic Price) */}
+        {showComparison && switchSavingsAmt > 0 && (
           <div className="mb-4 animate-in slide-in-from-top-4 duration-700">
             <div className="bg-accent text-white py-2 px-4 rounded-[16px] shadow-lg flex items-center justify-center gap-2 text-center border-b-2 border-accent-foreground/10">
                <TrendingDown className="w-4 h-4" />
                <h2 className="text-[9px] sm:text-lg font-black uppercase tracking-tight">
-                 Switch to Generic & Save ₹{switchSavingsAmt.toFixed(0)} ({switchSavingsPct}% OFF Branded MRP)
+                 Switch to Generic & Save ₹{switchSavingsAmt.toFixed(0)} ({switchSavingsPct}% off Branded MRP)
                </h2>
                <Zap className="w-4 h-4 fill-white" />
             </div>
           </div>
         )}
 
-        {/* DYNAMIC CARD AREA */}
+        {/* DYNAMIC VIEW AREA */}
         <div className="mb-8">
           {showComparison ? (
             <div className="grid grid-cols-2 gap-2 sm:gap-10 items-stretch">
-              <ProductInfoCard 
+              <ComparisonCard 
                 product={staticProduct} 
                 live={liveData} 
                 label="CURRENT SELECTION" 
-                isLoading={isLiveLoading}
               />
-              <ProductInfoCard 
+              <ComparisonCard 
                 product={genericAlt} 
                 live={altLiveData} 
                 label="RECOMMENDED CHOICE" 
                 isAlt 
-                isLoading={isAltLiveLoading}
               />
             </div>
           ) : (
             <div className="flex justify-center">
-              <ProductInfoCard 
+              <ComparisonCard 
                 product={staticProduct} 
                 live={liveData} 
                 label={isBranded ? "BRANDED SELECTION" : "GENERIC CHOICE"} 
-                isLoading={isLiveLoading}
               />
             </div>
           )}

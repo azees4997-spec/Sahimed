@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from 'react';
@@ -24,9 +25,10 @@ export default function Home() {
     Autoplay({ delay: 5000, stopOnInteraction: false })
   );
 
+  // Performance optimization: Reduced limit to 40 for Home Page
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(100));
+    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(40));
   }, [db]);
 
   const categoriesQuery = useMemoFirebase(() => {
@@ -46,7 +48,7 @@ export default function Home() {
       if (seen.has(sku)) return false;
       seen.add(sku);
       return true;
-    }).slice(0, 20); // Maintain best sellers limit
+    }).slice(0, 20); // Focus on top 20 for Home Grid
   }, [medicines]);
 
   const heroBanners = PlaceHolderImages.filter(img => img.id.startsWith('hero-')).slice(0, 3);
@@ -80,6 +82,7 @@ export default function Home() {
                         src={banner.imageUrl && banner.imageUrl.startsWith('http') ? banner.imageUrl : `https://picsum.photos/seed/hero${index}/1200/400`} 
                         alt={banner.description} 
                         fill 
+                        sizes="100vw"
                         className="object-cover opacity-60 group-hover:scale-105 transition-transform duration-1000"
                         priority={index === 0}
                       />
@@ -129,7 +132,7 @@ export default function Home() {
                 {categories?.map((cat: any) => (
                   <Link key={cat.id} href={`/search?c=${cat.name}`} className="group flex flex-col items-center">
                     <div className="w-full aspect-square bg-white rounded-[24px] flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-100 p-4 sm:p-6 group-hover:bg-primary group-hover:text-white transition-all duration-500 relative overflow-hidden">
-                      {cat.imageUrl && cat.imageUrl.startsWith('http') ? <Image src={cat.imageUrl} alt={cat.name} fill className="object-contain p-2 group-hover:brightness-0 group-hover:invert transition-all" /> : getIcon(cat.name)}
+                      {cat.imageUrl && cat.imageUrl.startsWith('http') ? <Image src={cat.imageUrl} alt={cat.name} fill sizes="(max-width: 768px) 30vw, 15vw" className="object-contain p-2 group-hover:brightness-0 group-hover:invert transition-all" /> : getIcon(cat.name)}
                     </div>
                     <h3 className="font-black text-[8px] sm:text-[10px] text-gray-700 uppercase tracking-tighter truncate w-full text-center">{cat.name}</h3>
                   </Link>

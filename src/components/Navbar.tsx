@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from 'next/link';
@@ -28,9 +29,10 @@ export default function Navbar() {
   
   const db = useFirestore();
 
+  // Performance Fix: Reduced limit to 100 to prevent layout slowness
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'medicines'), limit(1000));
+    return query(collection(db, 'medicines'), limit(100));
   }, [db]);
   
   const { data: allMedicines, isLoading: medsLoading } = useCollection(medicinesQuery);
@@ -113,9 +115,7 @@ export default function Navbar() {
             setIsLocating(false);
           }
         },
-        (error) => {
-          setIsLocating(false);
-        },
+        () => setIsLocating(false),
         { enableHighAccuracy: true }
       );
     } else {

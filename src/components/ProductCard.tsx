@@ -19,16 +19,12 @@ export default function ProductCard({ product }: { product: Product }) {
   const { toast } = useToast();
   
   const [liveData, setLiveData] = useState<{ price: number, mrp: number, stock: number } | null>(null);
-  const [isLoadingLive, setIsLoadingLive] = useState(true);
   const quantity = getItemQuantity(product.id);
 
-  // Universal real-time sync for all SKU views
+  // Universal real-time sync for all SKU views - Handled in background
   useEffect(() => {
     const sku = product.sku || product.id;
-    if (!db || !sku) {
-      setIsLoadingLive(false);
-      return;
-    }
+    if (!db || !sku) return;
 
     const liveRef = doc(db, 'product_live_data', sku);
     const unsubscribe = onSnapshot(liveRef, (snap) => {
@@ -40,15 +36,14 @@ export default function ProductCard({ product }: { product: Product }) {
           stock: Number(d.stock_quantity) ?? 0 
         });
       }
-      setIsLoadingLive(false);
     }, (err) => {
-      setIsLoadingLive(false);
+      console.warn("Live sync failure for SKU:", sku);
     });
 
     return () => unsubscribe();
   }, [db, product.sku, product.id]);
 
-  // Tiered Price Selection
+  // Tiered Price Selection: Prioritize Live, Instant Fallback to Static
   const currentPrice = (liveData?.price && liveData.price > 0) ? liveData.price : product.price;
   const currentMrp = (liveData?.mrp && liveData.mrp > 0) ? liveData.mrp : (product.mrp || product.price + 50);
   
@@ -72,8 +67,8 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full group relative">
-      {!isLoadingLive && savingsPct > 0 && (
-        <div className="absolute top-3 left-3 z-10">
+      {savingsPct > 0 && (
+        <div className="absolute top-3 left-3 z-10 animate-in fade-in zoom-in duration-500">
           <Badge className="bg-accent text-white font-black text-[8px] uppercase tracking-tighter px-2 py-0.5 rounded-md shadow-lg border-none">
             {savingsPct}% OFF
           </Badge>
@@ -86,6 +81,7 @@ export default function ProductCard({ product }: { product: Product }) {
             src={safeImageUrl} 
             alt={product.name} 
             fill 
+            sizes="(max-width: 768px) 50vw, 25vw"
             className="object-contain p-2 group-hover:scale-110 transition-transform duration-700" 
           />
         </div>
@@ -105,13 +101,13 @@ export default function ProductCard({ product }: { product: Product }) {
         <div className="pt-2 border-t border-dashed space-y-0.5 mt-auto">
           <div className="flex items-baseline gap-2">
             <p className="text-lg font-black text-accent tracking-tighter">
-              {isLoadingLive ? "..." : currentPrice > 0 ? `₹${currentPrice}` : "TBD"}
+              ₹{currentPrice}
             </p>
-            {!isLoadingLive && currentMrp > currentPrice && currentPrice > 0 && (
+            {currentMrp > currentPrice && (
               <span className="text-[10px] text-red-400 line-through font-bold">₹{currentMrp}</span>
             )}
           </div>
-          {!isLoadingLive && savingsAmt > 0 && (
+          {savingsAmt > 0 && (
             <p className="text-[8px] font-black text-accent uppercase tracking-tighter">
               Save ₹{savingsAmt.toFixed(0)}
             </p>
