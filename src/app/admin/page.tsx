@@ -106,13 +106,9 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from "date-fns";
 
-type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'promocodes' | 'fees' | 'categories' | 'customers' | 'stockAlerts' | 'itemMaster' | 'moleculeMaster';
-
-const ORDER_STATUSES = ['Pending', 'Packed', 'Shipping', 'Delivered', 'Cancelled'];
-
 // --- SHARED UI ---
 
-function SectionHeader({ title, subtitle, onBack, children }: { title: string, subtitle: string, onBack: () => void, children?: React.ReactNode }) {
+function SectionHeader({ title, subtitle, onBack, children }: { title: string, subtitle: string, onBack?: () => void, children?: React.ReactNode }) {
   return (
     <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
       <div className="flex items-center gap-4">
@@ -656,6 +652,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [purgeProgress, setPurgeProgress] = useState<string | null>(null);
   const { toast } = useToast();
 
   const filtered = medicines?.filter(m => m.name?.toLowerCase().includes(searchTerm.toLowerCase()) || m.sku?.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -671,28 +668,32 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
   };
 
   const handlePurgeCatalog = async () => {
-    if (!confirm("CRITICAL WARNING: This will permanently delete ALL medicines from the database. This action is irreversible. Proceed?")) return;
+    if (!confirm("CRITICAL WARNING: This will permanently delete ALL medicines from the database (9,000+ entries capacity). This action is irreversible. Proceed?")) return;
+    
+    setPurgeProgress("Initializing purge...");
+    let totalDeleted = 0;
     
     try {
-      const snap = await getDocs(collection(db, 'medicines'));
-      if (snap.empty) {
-        toast({ title: "Purge Cancelled", description: "Catalog is already empty." });
-        return;
-      }
+      while (true) {
+        // Query in chunks to handle high volume without client-side memory overflow
+        const q = query(collection(db, 'medicines'), limit(500));
+        const snap = await getDocs(q);
+        
+        if (snap.empty) break;
 
-      const batchSize = 500;
-      const docs = snap.docs;
-      
-      for (let i = 0; i < docs.length; i += batchSize) {
         const batch = writeBatch(db);
-        const chunk = docs.slice(i, i + batchSize);
-        chunk.forEach(d => batch.delete(d.ref));
+        snap.docs.forEach(d => batch.delete(d.ref));
         await batch.commit();
+        
+        totalDeleted += snap.docs.length;
+        setPurgeProgress(`Deleting ${totalDeleted}...`);
       }
 
-      toast({ title: "System Reset Successful", description: `${docs.length} entries removed. Storefront is now clean.` });
+      toast({ title: "System Reset Successful", description: `${totalDeleted} entries removed. Storefront is now clean.` });
     } catch (err) {
       toast({ variant: 'destructive', title: "Purge Interrupted", description: "Insufficient authority or network timeout." });
+    } finally {
+      setPurgeProgress(null);
     }
   };
 
@@ -740,7 +741,10 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 
           if (!sku) continue;
 
+          // Resolve clinical ID to Firestore doc ID
           const moleculeDocId = molLookup[molMappingCode] || molMappingCode || '';
+          
+          // Implementation of UPSERT logic based on SKU
           const existingId = medLookup[sku];
           const ref = existingId ? doc(db, 'medicines', existingId) : doc(collection(db, 'medicines'));
           
@@ -790,8 +794,16 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Product Master" subtitle="Global Clinical Catalogue" onBack={onBack}>
         <div className="flex gap-2">
-          <Button variant="destructive" onClick={handlePurgeCatalog} className="rounded-full h-12 px-6 font-black text-[10px] uppercase gap-2 bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100">
-            <Bomb className="w-4 h-4" /> Purge Catalog
+          <Button variant="destructive" onClick={handlePurgeCatalog} disabled={!!purgeProgress} className="rounded-full h-12 px-6 font-black text-[10px] uppercase gap-2 bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100">
+            {purgeProgress ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> {purgeProgress}
+              </>
+            ) : (
+              <>
+                <Bomb className="w-4 h-4" /> Purge Catalog
+              </>
+            )}
           </Button>
           <Button variant="outline" onClick={downloadTemplate} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><FileDown className="w-4 h-4" /> Template</Button>
           <Button variant="outline" onClick={handleExport} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Download className="w-4 h-4" /> Export</Button>
@@ -1685,7 +1697,8 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
 
   const filteredUsers = users?.filter(patient => {
     const searchLower = searchTerm.toLowerCase();
-    const nameStr = (patient.name || '').toLowerCase();
+    const nameStr = String(patient.name || '').toLowerCase();
+    // Safety casting to string to prevent toLowerCase crashes on non-string identifiers
     const identifierStr = String(patient.phone || patient.email || patient.firebaseAuthId || '').toLowerCase();
     
     const matchesSearch = !searchTerm || nameStr.includes(searchLower) || identifierStr.includes(searchLower);
@@ -1870,3 +1883,7 @@ function AlertForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
     </form>
   );
 }
+
+type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'promocodes' | 'fees' | 'categories' | 'customers' | 'stockAlerts' | 'itemMaster' | 'moleculeMaster';
+
+const ORDER_STATUSES = ['Pending', 'Packed', 'Shipping', 'Delivered', 'Cancelled'];

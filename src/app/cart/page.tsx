@@ -246,10 +246,10 @@ export default function CartPage() {
           <div className="lg:col-span-2 space-y-6">
             <div className="space-y-4">
               {cart.map((item) => {
-                // Robust URL Validation for cart items
+                // Robust URL Validation for cart next/image construction
                 const safeImageUrl = item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http')
                   ? item.imageUrl
-                  : 'https://picsum.photos/seed/medicine/300/300';
+                  : `https://picsum.photos/seed/${item.id}/300/300`;
 
                 return (
                   <div key={item.id} className="bg-white p-6 rounded-[40px] shadow-sm border border-gray-100 flex items-center gap-6 group hover:shadow-2xl hover:border-primary/5 transition-all duration-500 animate-in slide-in-from-bottom-4">

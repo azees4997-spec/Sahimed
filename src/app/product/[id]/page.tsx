@@ -116,7 +116,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.3em]">Precision Bio-Equivalent Comparison</p>
         </div>
 
-        {/* Forced 2-column grid for side-by-side comparison */}
         <div className="grid grid-cols-2 gap-3 sm:gap-8 mb-16 items-stretch">
           <ComparisonCard 
             product={BrandedProduct} 
@@ -263,10 +262,10 @@ function ComparisonCard({ product, type, isOutOfStock, onAdd, quantity, updateQt
 
   const displayComposition = product.saltComposition || molecule?.molecule || 'N/A';
 
-  // Robust URL Validation for next/image
+  // Robust URL Validation for next/image construction
   const safeImageUrl = product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http')
     ? product.imageUrl
-    : 'https://picsum.photos/seed/medicine/300/300';
+    : `https://picsum.photos/seed/${product.id}/300/300`;
 
   return (
     <div className="flex-1 flex flex-col group">

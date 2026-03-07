@@ -82,10 +82,10 @@ export default function ProductCard({ product }: { product: Product }) {
 
   const displayComposition = product.saltComposition || molecule?.molecule || 'N/A';
 
-  // Robust URL Validation for next/image
+  // Robust URL Validation for next/image construction
   const safeImageUrl = product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http')
     ? product.imageUrl
-    : 'https://picsum.photos/seed/medicine/300/300';
+    : `https://picsum.photos/seed/${product.id}/300/300`;
 
   return (
     <div
@@ -94,7 +94,6 @@ export default function ProductCard({ product }: { product: Product }) {
         isOutOfStock && "opacity-90"
       )}
     >
-      {/* Click-to-View Image Container */}
       <div className="relative aspect-square w-full overflow-hidden bg-white border-b border-gray-50">
         <Dialog>
           <DialogTrigger asChild>
