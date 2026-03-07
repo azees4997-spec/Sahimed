@@ -37,7 +37,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   
   const db = useFirestore();
   const { toast } = useToast();
-  const { addToCart, getItemQuantity, updateQuantity } = useCart();
+  const { addToCart, getItemQuantity } = useCart();
 
   // 1. Fetch Static Clinical Profile
   const productRef = useMemoFirebase(() => (!db || !id) ? null : doc(db, 'medicines', id), [db, id]);
@@ -132,6 +132,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     const savingsAmt = Math.max(0, pMrp - pPrice);
     const savingsPct = pMrp > 0 ? Math.round((savingsAmt / pMrp) * 100) : 0;
 
+    // Unit Price Calculation
+    const unitMatch = product.packSize?.match(/(\d+)/);
+    const unitCount = unitMatch ? parseInt(unitMatch[1]) : 1;
+    const unitPrice = pPrice / unitCount;
+
     const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
       ? product.imageUrl
       : `https://picsum.photos/seed/${product.id}/300/300`;
@@ -174,6 +179,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <span className="text-[8px] sm:text-[10px] text-red-400 line-through font-bold">₹{pMrp}</span>
               )}
             </div>
+            {!isLoading && pPrice > 0 && (
+              <p className="text-[7px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-tighter mt-0.5">
+                ₹{unitPrice.toFixed(2)} per unit
+              </p>
+            )}
             {!isLoading && savingsAmt > 0 && (
               <p className="text-[7px] sm:text-[9px] font-black text-accent uppercase tracking-tighter mt-0.5">
                 Saved ₹{savingsAmt.toFixed(0)}
