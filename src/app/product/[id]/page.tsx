@@ -113,7 +113,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const hasGenericAlt = !!genericAlt;
   const showComparison = isBranded && hasGenericAlt;
 
-  // Recalibrated Savings Calculation: Branded MRP - Generic Price
+  // Recalibrated Savings Base: Use Branded MRP as the global benchmark
   const brandedMrp = (liveData?.mrp && liveData.mrp > 0) ? liveData.mrp : (staticProduct.mrp || staticProduct.price + 50);
   const genericPrice = (altLiveData?.price && altLiveData.price > 0) ? altLiveData.price : (genericAlt?.price || 0);
   
@@ -127,8 +127,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     const pPrice = (live?.price && live.price > 0) ? live.price : product.price;
     const pMrp = (live?.mrp && live.mrp > 0) ? live.mrp : (product.mrp || product.price + 50);
     
-    const savingsAmt = Math.max(0, pMrp - pPrice);
-    const savingsPct = pMrp > 0 ? Math.round((savingsAmt / pMrp) * 100) : 0;
+    // DYNAMIC SAVINGS CALCULATION
+    // If it's the Generic card in a comparison, show savings relative to the Branded MRP
+    let displaySavingsAmt = Math.max(0, pMrp - pPrice);
+    let displaySavingsPct = pMrp > 0 ? Math.round((displaySavingsAmt / pMrp) * 100) : 0;
+
+    if (isAlt && showComparison) {
+      displaySavingsAmt = Math.max(0, brandedMrp - pPrice);
+      displaySavingsPct = brandedMrp > 0 ? Math.round((displaySavingsAmt / brandedMrp) * 100) : 0;
+    }
 
     // Unit Price Parsing from pack size string (e.g., "Strip of 10")
     const unitMatch = product.packSize?.match(/(\d+)/);
@@ -147,9 +154,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       )}>
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest block">{label}</span>
-          {savingsPct > 0 && (
+          {displaySavingsPct > 0 && (
             <Badge className="bg-accent text-white text-[7px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
-              SAVE {savingsPct}%
+              SAVE {displaySavingsPct}%
             </Badge>
           )}
         </div>
@@ -164,11 +171,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
           </DialogTrigger>
           <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-transparent shadow-none">
+            <DialogTitle className="sr-only">{product.name}</DialogTitle>
             <div className="relative aspect-square w-full bg-white rounded-[40px] overflow-hidden p-8 flex items-center justify-center shadow-3xl">
                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-10" />
                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full border border-gray-100 shadow-xl flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <DialogTitle className="font-black text-[10px] uppercase tracking-widest text-gray-900">{product.name}</DialogTitle>
+                  <span className="font-black text-[10px] uppercase tracking-widest text-gray-900">{product.name}</span>
                </div>
             </div>
           </DialogContent>
@@ -194,10 +202,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <span className="text-[8px] sm:text-[10px] text-red-400 line-through font-bold">₹{pMrp}</span>
               )}
             </div>
-            {/* SAVINGS DETAILS NEAR PRICE/MRP */}
-            {savingsAmt > 0 && (
+            {/* DYNAMIC SAVINGS DISPLAY: Shows comparison-aware savings */}
+            {displaySavingsAmt > 0 && (
               <p className="text-[8px] sm:text-[10px] font-black text-accent uppercase tracking-tighter">
-                Save ₹{savingsAmt.toFixed(0)} ({savingsPct}%)
+                Save ₹{displaySavingsAmt.toFixed(0)} ({displaySavingsPct}%)
               </p>
             )}
             <p className="text-[7px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-tighter">
@@ -211,7 +219,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             onClick={() => addToCart({ ...product, price: pPrice, mrp: pMrp })} 
             className={cn("w-full h-9 sm:h-12 rounded-full font-black uppercase text-[8px] sm:text-[10px] tracking-widest gap-2 shadow-lg active:scale-95 transition-all", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
           >
-            {qty > 0 ? `IN BAG (${qty})` : "ADD TO BAG"} <ShoppingCart className="w-3 sm:w-4 h-3 sm:h-4" />
+            {qty > 0 ? `IN BAG (${qty})` : "ADD"} <ShoppingCart className="w-3 sm:w-4 h-3 sm:h-4" />
           </Button>
         </div>
       </Card>
