@@ -95,7 +95,7 @@ export default function ProductCard({ product }: { product: Product }) {
   return (
     <div className={cn(
       "bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full group",
-      isOutOfStock && "opacity-90"
+      isOutOfStock && !isLoadingLive && "opacity-90"
     )}>
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 p-4 space-y-3">
         
@@ -140,7 +140,7 @@ export default function ProductCard({ product }: { product: Product }) {
             )}
           </div>
           <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
-            {isLoadingLive ? "Fetching..." : `₹${unitCost} per unit`}
+            {isLoadingLive ? "Checking Price..." : `₹${unitCost} per unit`}
           </p>
         </div>
 
@@ -155,8 +155,8 @@ export default function ProductCard({ product }: { product: Product }) {
       {/* 5. Action Handlers */}
       <div className="p-4 pt-0 mt-auto">
         {isLoadingLive ? (
-          <Button disabled className="rounded-full h-10 w-full bg-gray-50 text-gray-300 border-none">
-            <Loader2 className="w-4 h-4 animate-spin" />
+          <Button disabled className="rounded-full h-10 w-full bg-gray-50 text-gray-400 border-none font-black text-[9px] uppercase tracking-widest gap-2">
+            <Loader2 className="w-3 h-3 animate-spin" /> Checking Stock...
           </Button>
         ) : isOutOfStock ? (
           <Button 

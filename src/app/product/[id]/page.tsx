@@ -61,7 +61,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             price: Number(d.sahimed_price) || 0, 
             stock: Number(d.stock_quantity) ?? 0 
           });
+        } else {
+          setLiveData({ mrp: 0, price: 0, stock: 0 });
         }
+        setIsLiveLoading(false);
+      }, (err) => {
+        console.error("Live Data Error:", err);
         setIsLiveLoading(false);
       });
       return () => unsubscribe();
@@ -92,14 +97,19 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             mrp: Number(d.mrp) || 0, 
             stock: Number(d.stock_quantity) ?? 0 
           });
+        } else {
+          setAltLiveData({ price: 0, mrp: 0, stock: 0 });
         }
+        setIsAltLiveLoading(false);
+      }, (err) => {
+        console.error("Alt Live Data Error:", err);
         setIsAltLiveLoading(false);
       });
       return () => unsubscribe();
-    } else if (genericAlt === null) {
+    } else if (genericAlt === null || (!productLoading && !genericAlt)) {
       setIsAltLiveLoading(false);
     }
-  }, [db, genericAlt?.sku]);
+  }, [db, genericAlt?.sku, productLoading]);
 
   if (productLoading || !staticProduct) {
     return (<div className="min-h-screen bg-[#F8F8F8]"><Navbar /><main className="max-w-7xl mx-auto px-4 py-12"><Skeleton className="h-[400px] rounded-[40px]" /></main></div>);
@@ -121,13 +131,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
     return (
       <Card className={cn(
-        "rounded-[24px] p-2 sm:p-5 flex flex-col h-full border shadow-sm transition-all overflow-hidden relative",
+        "rounded-[24px] p-3 sm:p-5 flex flex-col h-full border shadow-sm transition-all overflow-hidden relative",
         isAlt ? "bg-accent/5 border-dashed border-accent/20" : "bg-white border-gray-100"
       )}>
         <span className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{label}</span>
         
         <div className="relative aspect-square w-full bg-white rounded-xl mb-3 overflow-hidden border border-gray-50 flex items-center justify-center p-2">
           <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-1" />
+          {pIsOutOfStock && !isLoading && (
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
+              <span className="bg-white/90 px-3 py-1 rounded-full border border-orange-100 text-[8px] font-black text-orange-600 uppercase tracking-widest">Out of Stock</span>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 space-y-1 sm:space-y-3">
@@ -153,12 +168,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               )}
             </div>
             <p className="text-[8px] sm:text-[11px] text-gray-400 font-bold uppercase">
-              {isLoading ? "Fetching..." : `₹${pUnitCost} per unit`}
+              {isLoading ? "Checking Price..." : `₹${pUnitCost} per unit`}
             </p>
           </div>
         </div>
 
-        {!isLoading && savings > 0 && (
+        {!isLoading && savings > 0 && !pIsOutOfStock && (
           <div className="mt-3 bg-accent text-white py-1 rounded-lg text-center shadow-md">
             <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-tight">SAVE {savings}%</p>
           </div>
@@ -166,7 +181,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
         <div className="mt-3 sm:mt-5">
           {isLoading ? (
-            <Button disabled className="w-full h-8 sm:h-12 rounded-full bg-gray-50"><Loader2 className="w-4 h-4 animate-spin text-gray-300" /></Button>
+            <Button disabled className="w-full h-8 sm:h-12 rounded-full bg-gray-50 text-gray-400 font-black text-[8px] uppercase tracking-widest gap-2">
+              <Loader2 className="w-3 h-3 animate-spin" /> Checking...
+            </Button>
           ) : pIsOutOfStock ? (
             <Button disabled className="w-full h-8 sm:h-12 rounded-full font-black uppercase text-[8px] sm:text-[11px] tracking-widest bg-gray-100 text-gray-400">Out of Stock</Button>
           ) : qty > 0 ? (
