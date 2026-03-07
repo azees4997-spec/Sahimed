@@ -25,10 +25,10 @@ export default function Home() {
     Autoplay({ delay: 5000, stopOnInteraction: false })
   );
 
-  // Performance optimization: Reduced limit to 40 for Home Page
+  // Optimization: Increased limit to ensure 30 unique clinical items after SKU deduplication
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(40));
+    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(60));
   }, [db]);
 
   const categoriesQuery = useMemoFirebase(() => {
@@ -39,7 +39,7 @@ export default function Home() {
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
 
-  // Eliminate duplicate SKU/Item Code rendering
+  // DYNAMIC GRID: Show exactly 30 unique best sellers
   const uniqueMedicines = React.useMemo(() => {
     if (!medicines) return [];
     const seen = new Set();
@@ -48,7 +48,7 @@ export default function Home() {
       if (seen.has(sku)) return false;
       seen.add(sku);
       return true;
-    }).slice(0, 20); // Focus on top 20 for Home Grid
+    }).slice(0, 30); 
   }, [medicines]);
 
   const heroBanners = PlaceHolderImages.filter(img => img.id.startsWith('hero-')).slice(0, 3);

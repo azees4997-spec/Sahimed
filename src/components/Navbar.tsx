@@ -29,7 +29,7 @@ export default function Navbar() {
   
   const db = useFirestore();
 
-  // Performance Fix: Reduced limit to 100 to prevent layout slowness
+  // Performance: Reduced pre-fetch to 100 items
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'medicines'), limit(100));
@@ -39,7 +39,8 @@ export default function Navbar() {
   const [suggestions, setSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
-    if (search.trim().length > 0 && allMedicines) {
+    // TRIGGER: Only search after 3 characters to optimize performance
+    if (search.trim().length >= 3 && allMedicines) {
       setIsProcessing(true);
       const searchLower = search.toLowerCase();
       
@@ -214,7 +215,7 @@ export default function Navbar() {
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder="Search medicines..."
+                  placeholder="Search medicines (min. 3 letters)..."
                   className="w-full pl-10 sm:pl-12 pr-12 rounded-2xl sm:rounded-3xl border-[2px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 bg-white h-10 sm:h-12 font-black text-[10px] sm:text-xs shadow-md"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -236,7 +237,7 @@ export default function Navbar() {
                 </div>
               </div>
 
-              {search.trim().length > 0 && !isProcessing && (
+              {search.trim().length >= 3 && !isProcessing && (
                 <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] sm:rounded-[32px] shadow-3xl border-none overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-300">
                   {suggestions.length > 0 ? (
                     <div className="max-h-[350px] overflow-y-auto scrollbar-hide">
