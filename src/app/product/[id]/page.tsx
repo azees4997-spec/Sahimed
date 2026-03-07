@@ -20,11 +20,11 @@ import {
   Zap,
   AlertTriangle,
   Package,
-  TrendingDown
+  TrendingDown,
+  Loader2
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Link from 'next/link';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, getDoc, query, collection, where, limit } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -42,24 +42,33 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const productRef = useMemoFirebase(() => (!db || !id) ? null : doc(db, 'medicines', id), [db, id]);
   const { data: staticProduct, isLoading: productLoading } = useDoc(productRef);
 
-  // 2. Fetch Live Price & Stock
+  // 2. Fetch Molecule Metadata for Header
+  const molRef = useMemoFirebase(() => (!db || !staticProduct?.moleculeId) ? null : doc(db, 'moleculeMaster', staticProduct.moleculeId), [db, staticProduct?.moleculeId]);
+  const { data: molData } = useDoc(molRef);
+
+  // 3. Fetch Live Price & Stock
   const [liveData, setLiveData] = useState<{ mrp: number, price: number, stock: number } | null>(null);
+  const [isLiveLoading, setIsLiveLoading] = useState(true);
+
   useEffect(() => {
     if (db && staticProduct?.sku) {
+      setIsLiveLoading(true);
       getDoc(doc(db, 'product_live_data', staticProduct.sku)).then(snap => {
         if (snap.exists()) {
           const d = snap.data();
-          setLiveData({ mrp: d.mrp || 0, price: d.sahimed_price || 0, stock: d.stock_quantity || 0 });
+          setLiveData({ mrp: d.mrp || 0, price: d.sahimed_price || 0, stock: d.stock_quantity ?? 0 });
         }
+        setIsLiveLoading(false);
       });
     }
   }, [db, staticProduct?.sku]);
 
-  // 3. Alternatives Logic
+  // 4. Alternatives Logic
   const alternativesQuery = useMemoFirebase(() => {
     if (!db || !staticProduct?.moleculeId || staticProduct?.isGeneric) return null;
     return query(collection(db, 'medicines'), where('moleculeId', '==', staticProduct.moleculeId), where('isGeneric', '==', true), limit(1));
   }, [db, staticProduct?.moleculeId, staticProduct?.isGeneric]);
+  
   const { data: genericAlternatives } = useCollection(alternativesQuery);
   const genericAlt = genericAlternatives?.[0];
 
@@ -69,18 +78,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       getDoc(doc(db, 'product_live_data', genericAlt.sku)).then(snap => {
         if (snap.exists()) {
           const d = snap.data();
-          setAltLiveData({ price: d.sahimed_price || 0, mrp: d.mrp || 0, stock: d.stock_quantity || 0 });
+          setAltLiveData({ price: d.sahimed_price || 0, mrp: d.mrp || 0, stock: d.stock_quantity ?? 0 });
         }
       });
     }
   }, [db, genericAlt?.sku]);
 
   if (productLoading || !staticProduct) {
-    return (<div className="min-h-screen bg-[#F0F9FF]"><Navbar /><main className="max-w-7xl mx-auto px-4 py-12"><Skeleton className="h-[400px] rounded-[40px]" /></main></div>);
+    return (<div className="min-h-screen bg-[#F8F8F8]"><Navbar /><main className="max-w-7xl mx-auto px-4 py-12"><Skeleton className="h-[400px] rounded-[40px]" /></main></div>);
   }
 
   const currentPrice = liveData?.price || 0;
-  const isOutOfStock = liveData ? liveData.stock <= 0 : false;
+  const isOutOfStock = liveData ? liveData.stock === 0 : false;
   const packNum = parseInt(staticProduct.packSize?.match(/\d+/)?.[0] || "1");
   const unitCost = currentPrice > 0 ? (currentPrice / packNum).toFixed(2) : "0.00";
 
@@ -95,122 +104,119 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     ? Math.round(((currentPrice - altPrice) / currentPrice) * 100) 
     : 0;
 
-  const InteractionCard = ({ icon: Icon, title, description }: { icon: any, title: string, description?: string }) => (
-    <div className="bg-white p-6 rounded-[32px] border border-gray-100 flex items-start gap-5 hover:shadow-xl transition-all">
-      <div className="w-12 h-12 bg-primary/5 rounded-[20px] flex items-center justify-center text-primary shrink-0"><Icon className="w-6 h-6" /></div>
-      <div className="flex flex-col">
-        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1.5">{title}</h4>
-        <p className="text-[12px] font-bold text-gray-700 leading-relaxed uppercase">{description || "Standard Clinical Protocol"}</p>
-      </div>
-    </div>
-  );
+  const ProductComparisonCard = ({ product, live, isAlt = false }: { product: any, live: any, isAlt?: boolean }) => {
+    const qty = getItemQuantity(product.id);
+    const pPrice = live?.price || 0;
+    const pPackNum = parseInt(product.packSize?.match(/\d+/)?.[0] || "1");
+    const pUnitCost = pPrice > 0 ? (pPrice / pPackNum).toFixed(2) : "0.00";
+    const pIsOutOfStock = live ? live.stock === 0 : false;
+
+    return (
+      <Card className={cn(
+        "rounded-2xl sm:rounded-[32px] p-3 sm:p-8 flex flex-col h-full border shadow-sm transition-all",
+        isAlt ? "bg-accent/5 border-dashed border-accent/20" : "bg-white border-gray-100"
+      )}>
+        <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 block">
+          {isAlt ? 'RECOMMENDED CHOICE' : 'CURRENT SELECTION'}
+        </span>
+        
+        <div className="flex-1 space-y-1.5 sm:space-y-4">
+          <h3 className="font-black text-[11px] sm:text-lg text-gray-900 uppercase leading-tight line-clamp-2 min-h-[1.8rem] sm:min-h-[2.5rem]">
+            {product.name}
+          </h3>
+          
+          <div className="space-y-0.5">
+            <p className="text-[8px] sm:text-xs font-bold text-gray-500 uppercase">{product.packSize || "N/A"}</p>
+            <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase truncate">{product.manufacturer}</p>
+          </div>
+
+          <div className="pt-2 sm:pt-4 border-t border-dashed">
+            <div className="flex items-baseline gap-1">
+              <p className={cn("text-sm sm:text-3xl font-black tracking-tighter", isAlt ? "text-accent" : "text-primary")}>
+                ₹{isLiveLoading ? '...' : pPrice}
+              </p>
+              {live?.mrp > pPrice && (
+                <span className="text-[8px] sm:text-xs text-red-400 line-through font-bold">₹{live.mrp}</span>
+              )}
+            </div>
+            <p className="text-[7px] sm:text-xs text-gray-400 font-bold">₹{pUnitCost} per unit</p>
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-2">
+          {isAlt && savingsPercentage > 0 && (
+            <div className="bg-accent text-white py-1 rounded-lg text-center shadow-lg animate-in zoom-in-95">
+              <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-tight">SAVE {savingsPercentage}% NOW</p>
+            </div>
+          )}
+          
+          {pIsOutOfStock ? (
+            <Button disabled className="w-full h-8 sm:h-14 rounded-full font-black uppercase text-[8px] sm:text-xs tracking-widest">Out of Stock</Button>
+          ) : qty > 0 ? (
+            <div className="flex items-center gap-1 rounded-full p-0.5 sm:p-1 bg-primary text-white h-8 sm:h-14">
+              <button onClick={() => updateQuantity(product.id, -1)} className="flex-1 h-full flex items-center justify-center font-bold text-xs">-</button>
+              <span className="text-[9px] sm:text-sm font-black flex-1 text-center">{qty}</span>
+              <button onClick={() => updateQuantity(product.id, 1)} className="flex-1 h-full flex items-center justify-center font-bold text-xs">+</button>
+            </div>
+          ) : (
+            <Button 
+              onClick={() => addToCart(product)} 
+              className={cn("w-full h-8 sm:h-14 rounded-full font-black uppercase text-[8px] sm:text-xs tracking-widest shadow-lg", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
+            >
+              {isAlt ? 'Add Generic' : 'Add to Bag'}
+            </Button>
+          )}
+        </div>
+      </Card>
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-[#F0F9FF] pb-32 overflow-x-hidden">
+    <div className="min-h-screen bg-[#F4F7F6] pb-32">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-2 sm:px-10 py-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-10 py-6">
         
-        {/* 1. CLINICAL HEADER */}
-        <div className="text-center mb-6 space-y-3">
-           <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20">
+        {/* 1. CLEAN CLINICAL HEADER */}
+        <div className="text-center mb-8 space-y-3">
+           <div className="inline-flex items-center gap-2 bg-primary/10 px-5 py-2 rounded-full border border-primary/20 shadow-sm">
               <Dna className="w-3.5 h-3.5 text-primary" />
-              <span className="text-[10px] font-black text-primary uppercase tracking-widest">
-                ACTIVE FORMULA: {staticProduct.name.split(' ')[0]} {staticProduct.moleculeId ? `(${staticProduct.moleculeId})` : ""}
+              <span className="text-[10px] sm:text-xs font-black text-primary uppercase tracking-[0.1em]">
+                {molData?.molecule || staticProduct.name.split(' ')[0]}
               </span>
            </div>
            {staticProduct.prescriptionRequired && (
              <div className="flex justify-center">
-               <Badge className="bg-red-50 text-red-600 border-red-100 rounded-full font-black text-[8px] px-4 py-1 uppercase tracking-widest flex items-center gap-1.5">
+               <Badge className="bg-red-50 text-red-600 border-red-100 rounded-full font-black text-[8px] sm:text-[9px] px-4 py-1 uppercase tracking-[0.2em] flex items-center gap-1.5 shadow-sm">
                  <AlertTriangle className="w-3 h-3" /> Prescription Required
                </Badge>
              </div>
            )}
         </div>
 
-        {/* 2. STRICT 2-CARD COMPARISON GRID */}
+        {/* 2. STRICT 2-CARD COMPARISON GRID (ANTI-BLEED) */}
         <div className="max-w-[1200px] mx-auto mb-12">
-          <div className="grid grid-cols-2 gap-2 items-stretch w-full">
-            
-            {/* LEFT CARD: CURRENT SELECTION */}
-            <Card className="rounded-[24px] sm:rounded-[40px] border-none bg-white p-3 sm:p-10 flex flex-col gap-3 sm:gap-6 shadow-xl relative overflow-hidden">
-              <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">CURRENT SELECTION</span>
-              <div className="space-y-2 sm:space-y-4 flex-1">
-                <h3 className="font-black text-[12px] sm:text-lg text-gray-900 uppercase leading-tight line-clamp-2 min-h-[2rem] sm:min-h-[3rem]">{staticProduct.name}</h3>
-                <p className="text-[8px] sm:text-[11px] font-black text-gray-500 uppercase">{staticProduct.packSize || "N/A"}</p>
-                <p className="text-[8px] sm:text-[11px] font-bold text-gray-400 uppercase truncate">{staticProduct.manufacturer}</p>
-                
-                <div className="pt-2 sm:pt-4 border-t border-dashed">
-                  <p className="text-[14px] sm:text-3xl font-black text-accent tracking-tighter">₹{currentPrice || "..."}</p>
-                  <p className="text-[8px] sm:text-xs text-gray-400 font-bold">₹{unitCost} per unit</p>
-                </div>
-              </div>
-              
-              <div className="mt-auto">
-                {isOutOfStock ? (
-                  <Button disabled className="w-full h-10 sm:h-16 rounded-full font-black uppercase text-[9px] sm:text-xs tracking-widest">Out of Stock</Button>
-                ) : quantity > 0 ? (
-                  <div className="flex items-center gap-1 rounded-full p-1 bg-primary text-white h-10 sm:h-16">
-                    <button onClick={() => updateQuantity(staticProduct.id, -1)} className="flex-1 h-full flex items-center justify-center font-bold">-</button>
-                    <span className="text-[10px] sm:text-sm font-black flex-1 text-center">{quantity}</span>
-                    <button onClick={() => updateQuantity(staticProduct.id, 1)} className="flex-1 h-full flex items-center justify-center font-bold">+</button>
-                  </div>
-                ) : (
-                  <Button onClick={() => addToCart(staticProduct)} className="w-full h-10 sm:h-16 rounded-full font-black uppercase text-[9px] sm:text-xs tracking-widest shadow-lg">Add to Bag</Button>
-                )}
-              </div>
-            </Card>
-
-            {/* RIGHT CARD: RECOMMENDED CHOICE */}
-            {genericAlt ? (
-              <Card className="rounded-[24px] sm:rounded-[40px] border-none bg-accent/5 p-3 sm:p-10 flex flex-col gap-3 sm:gap-6 shadow-2xl border-2 border-dashed border-accent/20 relative">
-                <span className="text-[7px] sm:text-[9px] font-black text-accent uppercase tracking-widest">RECOMMENDED CHOICE</span>
-                <div className="space-y-2 sm:space-y-4 flex-1">
-                  <h3 className="font-black text-[12px] sm:text-lg text-accent uppercase leading-tight line-clamp-2 min-h-[2rem] sm:min-h-[3rem]">{genericAlt.name}</h3>
-                  <p className="text-[8px] sm:text-[11px] font-black text-accent/70 uppercase">{genericAlt.packSize || "N/A"}</p>
-                  <p className="text-[8px] sm:text-[11px] font-bold text-accent/40 uppercase truncate">{genericAlt.manufacturer}</p>
-                  
-                  <div className="pt-2 sm:pt-4 border-t border-dashed border-accent/20">
-                    <p className="text-[14px] sm:text-3xl font-black text-accent tracking-tighter">₹{altPrice || "..."}</p>
-                    <p className="text-[8px] sm:text-xs text-accent/60 font-bold">₹{altUnitCost} per unit</p>
-                  </div>
-                </div>
-
-                <div className="mt-auto space-y-2">
-                  {savingsPercentage > 0 && (
-                    <div className="bg-accent text-white p-1.5 sm:p-3 rounded-lg sm:rounded-2xl text-center shadow-lg">
-                      <p className="text-[7px] sm:text-[10px] font-black uppercase">SAVE {savingsPercentage}%</p>
-                    </div>
-                  )}
-                  {altQuantity > 0 ? (
-                    <div className="flex items-center gap-1 rounded-full p-1 bg-accent text-white h-10 sm:h-16">
-                      <button onClick={() => updateQuantity(genericAlt.id, -1)} className="flex-1 h-full flex items-center justify-center font-bold">-</button>
-                      <span className="text-[10px] sm:text-sm font-black flex-1 text-center">{altQuantity}</span>
-                      <button onClick={() => updateQuantity(genericAlt.id, 1)} className="flex-1 h-full flex items-center justify-center font-bold">+</button>
-                    </div>
-                  ) : (
-                    <Button onClick={() => addToCart(genericAlt)} variant="outline" className="w-full h-10 sm:h-16 rounded-full font-black uppercase text-[9px] sm:text-xs border-2 border-accent text-accent bg-white">Add Generic</Button>
-                  )}
-                </div>
-              </Card>
-            ) : (
-              <div className="flex flex-col items-center justify-center p-4 text-center bg-gray-50/50 rounded-[24px] sm:rounded-[40px] border border-dashed">
-                <Info className="w-6 h-6 text-gray-200 mb-2" />
-                <p className="text-[8px] font-black text-gray-300 uppercase tracking-widest">Generic Match Not Indexed</p>
-              </div>
-            )}
-          </div>
+          {genericAlt ? (
+            <div className="grid grid-cols-2 gap-2 sm:gap-6 items-stretch">
+              <ProductComparisonCard product={staticProduct} live={liveData} />
+              <ProductComparisonCard product={genericAlt} live={altLiveData} isAlt />
+            </div>
+          ) : (
+            <div className="max-w-md mx-auto">
+              <ProductComparisonCard product={staticProduct} live={liveData} />
+            </div>
+          )}
         </div>
 
         {/* 3. CLINICAL DATA SECTION */}
-        <section className="bg-white rounded-[32px] sm:rounded-[48px] p-4 sm:p-14 shadow-2xl border border-gray-50">
+        <section className="bg-white rounded-[32px] sm:rounded-[48px] p-6 sm:p-14 shadow-xl border border-gray-100 overflow-hidden">
           <Tabs defaultValue="clinical" className="w-full">
             <TabsList className="bg-gray-100 p-1 rounded-full h-12 sm:h-16 w-full max-w-[600px] flex mx-auto mb-8 sm:mb-12">
-              <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] uppercase tracking-widest">Clinical Data</TabsTrigger>
-              <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] uppercase tracking-widest">Safety Advice</TabsTrigger>
+              <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] uppercase tracking-widest">Clinical</TabsTrigger>
+              <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] uppercase tracking-widest">Safety</TabsTrigger>
               <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] uppercase tracking-widest">Interactions</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="clinical" className="space-y-8">
+            <TabsContent value="clinical" className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
                <div className="max-w-4xl mx-auto divide-y divide-gray-100">
                   <div className="pb-8 space-y-3">
                      <div className="flex items-center gap-3"><ClipboardList className="w-4 h-4 text-primary" /><h3 className="text-sm sm:text-lg font-black uppercase text-gray-900 tracking-tight">Primary Treatment</h3></div>
@@ -223,7 +229,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                </div>
             </TabsContent>
 
-            <TabsContent value="safety" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TabsContent value="safety" className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
                <div className="bg-orange-50/50 p-6 rounded-[32px] border border-orange-100 flex gap-4">
                  <div className="w-10 h-10 sm:w-14 h-14 bg-white rounded-xl sm:rounded-[20px] shadow-sm flex items-center justify-center shrink-0 border"><AlertTriangle className="w-5 h-5 sm:w-7 sm:h-7 text-orange-600" /></div>
                  <div><h4 className="text-[8px] sm:text-[10px] font-black uppercase text-orange-600 mb-1">Patient Safety</h4><p className="text-[11px] sm:text-[13px] font-bold text-orange-900/70 leading-relaxed uppercase">{staticProduct.safetyAdvice || "Consult clinical supervisor before use."}</p></div>
@@ -234,17 +240,50 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                </div>
             </TabsContent>
 
-            <TabsContent value="interactions" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InteractionCard icon={Beer} title="Alcohol Interaction" description={staticProduct.alcoholInteraction} />
-              <InteractionCard icon={Baby} title="Pregnancy Protocol" description={staticProduct.pregnancyInteraction} />
-              <InteractionCard icon={Milk} title="Lactation Caution" description={staticProduct.lactationInteraction} />
-              <InteractionCard icon={Car} title="Driving Safety" description={staticProduct.drivingInteraction} />
-              <InteractionCard icon={Package} title="Kidney Safety" description={staticProduct.kidneyInteraction} />
-              <InteractionCard icon={ShieldAlert} title="Liver Protocol" description={staticProduct.liverInteraction} />
+            <TabsContent value="interactions" className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
+              {[
+                { icon: Beer, title: "Alcohol Interaction", text: staticProduct.alcoholInteraction },
+                { icon: Baby, title: "Pregnancy Protocol", text: staticProduct.pregnancyInteraction },
+                { icon: Milk, title: "Lactation Caution", text: staticProduct.lactationInteraction },
+                { icon: Car, title: "Driving Safety", text: staticProduct.drivingInteraction },
+                { icon: Package, title: "Kidney Safety", text: staticProduct.kidneyInteraction },
+                { icon: ShieldAlert, title: "Liver Protocol", text: staticProduct.liverInteraction }
+              ].map((item, i) => (
+                <div key={i} className="bg-white p-5 rounded-[24px] border border-gray-100 flex items-start gap-4 hover:shadow-lg transition-all">
+                  <div className="w-10 h-10 bg-primary/5 rounded-[12px] flex items-center justify-center text-primary shrink-0"><item.icon className="w-5 h-5" /></div>
+                  <div className="flex flex-col">
+                    <h4 className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">{item.title}</h4>
+                    <p className="text-[11px] font-bold text-gray-700 leading-relaxed uppercase">{item.text || "Standard Clinical Protocol"}</p>
+                  </div>
+                </div>
+              ))}
             </TabsContent>
           </Tabs>
         </section>
       </main>
     </div>
+  );
+}
+
+function Beer(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17 11h1a3 3 0 0 1 0 6h-1" />
+      <path d="M9 12v6" />
+      <path d="M13 12v6" />
+      <path d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 0 1 0-5c.78 0 1.5.5 2.5.5s1.44-.5 3-.5 2.22.5 3 .5a2.5 2.5 0 0 1 0 5c-.78 0-1.5-.5-2.5-.5Z" />
+      <path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8" />
+    </svg>
   );
 }
