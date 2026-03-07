@@ -2,7 +2,7 @@
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore } from 'firebase/firestore';
+import { Firestore, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 
@@ -43,7 +43,7 @@ export interface FirebaseServicesAndUser {
 }
 
 // Return type for useUser() - specific to user auth state
-export interface UserHookResult { // Renamed from UserAuthHookResult for consistency if desired, or keep as UserAuthHookResult
+export interface UserHookResult { 
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
@@ -88,6 +88,41 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     );
     return () => unsubscribe(); // Cleanup
   }, [auth]); // Depends on the auth instance
+
+  /**
+   * CLOUD SYNC TRIGGER: Ensures every Auth user has a Firestore profile.
+   * Auto-creates a document if it's missing for an existing Auth user.
+   */
+  useEffect(() => {
+    const syncUserProfile = async () => {
+      if (userAuthState.user && firestore) {
+        const { user } = userAuthState;
+        const profileRef = doc(firestore, 'userProfiles', user.uid);
+        
+        try {
+          const snap = await getDoc(profileRef);
+          if (!snap.exists()) {
+            // Auto-provision clinical profile
+            await setDoc(profileRef, {
+              id: user.uid,
+              firebaseAuthId: user.uid,
+              email: user.email || '',
+              phone: user.phoneNumber || '',
+              name: user.displayName || 'SahiMed Patient',
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            }, { merge: true });
+          }
+        } catch (e) {
+          console.error("Profile sync failure:", e);
+        }
+      }
+    };
+
+    if (!userAuthState.isUserLoading) {
+      syncUserProfile();
+    }
+  }, [userAuthState.user, userAuthState.isUserLoading, firestore]);
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {
@@ -170,7 +205,7 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
  * This provides the User object, loading status, and any auth errors.
  * @returns {UserHookResult} Object with user, isUserLoading, userError.
  */
-export const useUser = (): UserHookResult => { // Renamed from useAuthUser
+export const useUser = (): UserHookResult => { 
   const { user, isUserLoading, userError } = useFirebase(); // Leverages the main hook
   return { user, isUserLoading, userError };
 };

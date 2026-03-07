@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
@@ -1593,8 +1592,8 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
   const filteredUsers = users?.filter(user => {
     const searchLower = searchTerm.toLowerCase();
     const nameMatch = (user.name || user.fullName || user.displayName || '').toLowerCase().includes(searchLower);
-    const phoneMatch = (user.phone || user.phoneNumber || '').includes(searchTerm);
-    const matchesSearch = !searchTerm || nameMatch || phoneMatch;
+    const identifierMatch = (user.phone || user.email || '').includes(searchTerm);
+    const matchesSearch = !searchTerm || nameMatch || identifierMatch;
 
     const joinedDate = user.createdAt?.toDate ? user.createdAt.toDate() : new Date(user.createdAt || 0);
     const start = startDate ? new Date(startDate) : null;
@@ -1616,7 +1615,7 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input 
-            placeholder="Search by Name or Mobile..." 
+            placeholder="Search by Name or Mobile/Email..." 
             value={searchTerm} 
             onChange={e => setSearchTerm(e.target.value)} 
             className="pl-10 rounded-2xl h-12 bg-gray-50 border-none font-bold text-xs" 
@@ -1648,9 +1647,9 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
               <tr>
                 <th className="px-10 py-8">Patient Name</th>
-                <th className="px-10 py-8">Mobile Number</th>
+                <th className="px-10 py-8">Mobile Number / Email</th>
                 <th className="px-10 py-8">Joined On</th>
-                <th className="px-10 py-8">Last Order</th>
+                <th className="px-10 py-8">Last Activity</th>
                 <th className="px-10 py-8 text-right">Actions</th>
               </tr>
             </thead>
@@ -1662,7 +1661,7 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
               ) : (!filteredUsers || filteredUsers.length === 0) ? (
                 <tr>
                   <td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">
-                    {searchTerm || startDate || endDate ? 'No patients matching criteria' : 'Initial load completed. Zero patients found.'}
+                    {searchTerm || startDate || endDate ? 'No patients matching criteria' : 'Waiting for nationwide clinical handshake...'}
                   </td>
                 </tr>
               ) : filteredUsers?.map(patient => (
@@ -1675,7 +1674,7 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
                       <span className="font-black text-sm uppercase">{patient.name || patient.fullName || <span className="text-red-500 font-black">NO NAME</span>}</span>
                     </div>
                   </td>
-                  <td className="px-10 py-8 font-bold text-sm text-gray-600">{patient.phone || patient.phoneNumber || <span className="text-red-500 font-black">NO PHONE</span>}</td>
+                  <td className="px-10 py-8 font-bold text-sm text-gray-600">{patient.phone || patient.email || <span className="text-red-500 font-black">NO IDENTIFIER</span>}</td>
                   <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">
                     {patient.createdAt ? (patient.createdAt.toDate ? format(patient.createdAt.toDate(), 'MMM dd, yyyy') : format(new Date(patient.createdAt), 'MMM dd, yyyy')) : 'N/A'}
                   </td>
