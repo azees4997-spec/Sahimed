@@ -715,6 +715,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = `SahiMed_Catalogue_Master_${format(new Date(), 'yyyyMMdd')}.csv`; a.click();
+    toast({ title: "Catalog Exported" });
   };
 
   const handlePurgeCatalog = async () => {
@@ -833,6 +834,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Product Master" subtitle="Unified Hybrid Logic" onBack={onBack}>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Download className="w-4 h-4" /> Export All</Button>
           <Button variant="destructive" onClick={handlePurgeCatalog} disabled={!!purgeProgress} className="rounded-full h-12 px-6 font-black text-[10px] uppercase gap-2">
             {purgeProgress ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bomb className="w-4 h-4" />} Purge All
           </Button>
@@ -1322,7 +1324,49 @@ function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
           </table>
         </div>
       </Card>
+
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden shadow-3xl">
+          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Coupon Config</DialogTitle></div>
+          <div className="p-8"><PromoCodeForm db={db} initialData={editingPromo} onSuccess={() => setIsFormOpen(false)} /></div>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const { toast } = useToast();
+  const [form, setForm] = useState({
+    code: initialData?.code || '',
+    description: initialData?.description || '',
+    discountType: initialData?.discountType || 'fixed',
+    discountValue: initialData?.discountValue || 0,
+    minOrderValue: initialData?.minOrderValue || 0,
+    maxDiscount: initialData?.maxDiscount || 0,
+    isActive: initialData?.isActive ?? true
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = { ...form, updatedAt: serverTimestamp() };
+    initialData?.id ? updateDocumentNonBlocking(doc(db, 'promocodes', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'promocodes'), { ...payload, createdAt: serverTimestamp() });
+    toast({ title: initialData?.id ? "Campaign Updated" : "Campaign Launched" });
+    onSuccess();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-2 gap-6">
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Promo Code</Label><Input value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase()})} required className="rounded-2xl h-14 bg-gray-50 border-none font-black text-primary" /></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Discount Type</Label><Select value={form.discountType} onValueChange={v => setForm({...form, discountType: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger><SelectContent className="rounded-2xl"><SelectItem value="fixed">Fixed (₹)</SelectItem><SelectItem value="percentage">Percentage (%)</SelectItem></SelectContent></Select></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Value ({form.discountType === 'fixed' ? '₹' : '%'})</Label><Input type="number" value={form.discountValue} onChange={e => setForm({...form, discountValue: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Min Purchase (₹)</Label><Input type="number" value={form.minOrderValue} onChange={e => setForm({...form, minOrderValue: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+        <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase">Internal Description</Label><Input value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+        <div className="flex items-center space-x-2 pt-2"><Checkbox id="promo-active" checked={form.isActive} onCheckedChange={c => setForm({...form, isActive: !!c})} /><Label htmlFor="promo-active" className="text-[10px] font-black uppercase cursor-pointer">Live & Discoverable</Label></div>
+      </div>
+      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase bg-primary text-white">Commit Campaign</Button>
+    </form>
   );
 }
 
@@ -1356,7 +1400,47 @@ function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onB
           </table>
         </div>
       </Card>
+
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden shadow-3xl">
+          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Fee Structure</DialogTitle></div>
+          <div className="p-8"><FeeForm db={db} initialData={editingFee} onSuccess={() => setIsFormOpen(false)} /></div>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const { toast } = useToast();
+  const [form, setForm] = useState({
+    name: initialData?.name || '',
+    originalAmount: initialData?.originalAmount || 0,
+    discountedAmount: initialData?.discountedAmount || 0,
+    type: initialData?.type || 'fixed',
+    minPurchase: initialData?.minPurchase || 0,
+    isActive: initialData?.isActive ?? true
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = { ...form, updatedAt: serverTimestamp() };
+    initialData?.id ? updateDocumentNonBlocking(doc(db, 'fees', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'fees'), { ...payload, createdAt: serverTimestamp() });
+    toast({ title: "Clinical Fee Synced" });
+    onSuccess();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Fee Label</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required placeholder="e.g. Clinical Logistics" className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <div className="grid grid-cols-2 gap-6">
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Pricing Mode</Label><Select value={form.type} onValueChange={v => setForm({...form, type: v as any})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger><SelectContent className="rounded-2xl"><SelectItem value="fixed">Fixed (₹)</SelectItem><SelectItem value="percentage">Percentage (%)</SelectItem></SelectContent></Select></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Charge Amount</Label><Input type="number" value={form.discountedAmount} onChange={e => setForm({...form, discountedAmount: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Free Above (₹)</Label><Input type="number" value={form.minPurchase} onChange={e => setForm({...form, minPurchase: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+        <div className="flex items-center space-x-2 pt-8"><Checkbox id="fee-active" checked={form.isActive} onCheckedChange={c => setForm({...form, isActive: !!c})} /><Label htmlFor="fee-active" className="text-[10px] font-black uppercase cursor-pointer">Active in Cart</Label></div>
+      </div>
+      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase bg-primary text-white">Update Logistics Policy</Button>
+    </form>
   );
 }
 
