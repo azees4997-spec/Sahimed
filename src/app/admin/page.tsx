@@ -1582,21 +1582,25 @@ function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, o
   );
 }
 
+/**
+ * UPGRADED PATIENT REGISTRY: Direct Auth-Synchronized Dashboard
+ * Displays every registered user with precision Auth Metadata.
+ */
 function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  // Primary data source update: Unified Patient Registry
+  // Primary data source: Auth-Synchronized Clinical Handshake
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles'), orderBy('createdAt', 'desc')) : null, [db, isVerified]);
   const { data: users, isLoading } = useCollection(usersQuery);
 
   const filteredUsers = users?.filter(patient => {
     const searchLower = searchTerm.toLowerCase();
-    // Multi-field Intelligence Search
-    const nameMatch = (patient.name || 'SAHIMED PATIENT').toLowerCase().includes(searchLower);
-    const identifierMatch = (patient.phone || patient.email || '').toLowerCase().includes(searchLower);
-    const matchesSearch = !searchTerm || nameMatch || identifierMatch;
+    const nameStr = (patient.name || '').toLowerCase();
+    const identifierStr = (patient.phone || patient.email || '').toLowerCase();
+    
+    const matchesSearch = !searchTerm || nameStr.includes(searchLower) || identifierStr.includes(searchLower);
 
     const joinedDate = patient.createdAt?.toDate ? patient.createdAt.toDate() : new Date(patient.createdAt || 0);
     const start = startDate ? new Date(startDate) : null;
@@ -1612,7 +1616,7 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Patient Registry" subtitle="Global Clinical Growth Monitoring" onBack={onBack} />
+      <SectionHeader title="Patient Registry" subtitle="Direct Auth-Synchronized Dashboard" onBack={onBack} />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
         <div className="relative">
@@ -1664,12 +1668,12 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
               ) : (!filteredUsers || filteredUsers.length === 0) ? (
                 <tr>
                   <td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">
-                    {searchTerm || startDate || endDate ? 'No patients matching criteria' : 'Waiting for nationwide clinical handshake...'}
+                    {searchTerm || startDate || endDate ? 'No matching patients found' : 'Waiting for nationwide Auth handshake...'}
                   </td>
                 </tr>
               ) : filteredUsers?.map(patient => {
-                const name = patient.name || <span className="text-orange-500 font-black">SAHIMED PATIENT (UNVERIFIED)</span>;
-                const identifier = patient.phone || patient.email || <span className="text-red-500 font-black">NO IDENTIFIER</span>;
+                const identifier = patient.phone || patient.email || patient.firebaseAuthId || 'UNIDENTIFIED';
+                const name = patient.name || identifier; // Placeholder if name missing
                 
                 return (
                   <tr key={patient.id} className="hover:bg-gray-50/50 transition-colors group">
@@ -1678,15 +1682,15 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-[10px]">
                           {typeof name === 'string' ? name.charAt(0).toUpperCase() : 'P'}
                         </div>
-                        <span className="font-black text-sm uppercase">{name}</span>
+                        <span className={cn("font-black text-sm uppercase", !patient.name && "text-gray-400")}>{name}</span>
                       </div>
                     </td>
-                    <td className="px-10 py-8 font-bold text-sm text-gray-600">{identifier}</td>
+                    <td className="px-10 py-8 font-bold text-sm text-primary">{identifier}</td>
                     <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">
-                      {patient.createdAt ? (patient.createdAt.toDate ? format(patient.createdAt.toDate(), 'MMM dd, yyyy') : format(new Date(patient.createdAt), 'MMM dd, yyyy')) : 'N/A'}
+                      {patient.authCreated || 'N/A'}
                     </td>
                     <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">
-                      {patient.updatedAt ? (patient.updatedAt.toDate ? format(patient.updatedAt.toDate(), 'MMM dd, yyyy HH:mm') : format(new Date(patient.updatedAt), 'MMM dd, yyyy HH:mm')) : 'No Activity'}
+                      {patient.authLastSignIn || 'No recent activity'}
                     </td>
                     <td className="px-10 py-8 text-right">
                       <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/5 hover:text-primary"><Eye className="w-4 h-4" /></Button>

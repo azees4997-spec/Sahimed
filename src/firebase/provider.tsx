@@ -82,8 +82,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   }, [auth]);
 
   /**
-   * REAL-TIME DATA BRIDGE: Ensures every Auth user has a Firestore profile.
-   * This hook auto-provisions clinical documents for registry visibility.
+   * REAL-TIME DATA BRIDGE: Direct Auth Integration
+   * This hook ensures every Auth user has a corresponding Firestore profile.
+   * It syncs Auth Metadata (Created, Signed In) to Firestore for the Patient Registry.
    */
   useEffect(() => {
     const syncUserProfile = async () => {
@@ -93,26 +94,27 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         
         try {
           const snap = await getDoc(profileRef);
-          const identifier = user.phoneNumber || user.email || 'NO_IDENTIFIER';
           
+          // Capture raw Auth metadata for Registry visibility
           const baseData = {
             id: user.uid,
             firebaseAuthId: user.uid,
-            // Store primary identifier for registry mapping
             email: user.email || null,
             phone: user.phoneNumber || null,
-            updatedAt: serverTimestamp() // Tracks real-time activity
+            authCreated: user.metadata.creationTime || null,
+            authLastSignIn: user.metadata.lastSignInTime || null,
+            updatedAt: serverTimestamp() 
           };
 
           if (!snap.exists()) {
-            // Shadow Document creation for unverified patients
+            // First-time sync for shadow document creation
             await setDoc(profileRef, {
               ...baseData,
-              name: user.displayName || null, // UI will fallback to UNVERIFIED if null
+              name: user.displayName || null, 
               createdAt: serverTimestamp() 
             }, { merge: true });
           } else {
-            // Heartbeat update
+            // Heartbeat update for Last Activity tracking
             await setDoc(profileRef, baseData, { merge: true });
           }
         } catch (e) {
