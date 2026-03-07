@@ -22,7 +22,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const [isLoadingLive, setIsLoadingLive] = useState(true);
   const quantity = getItemQuantity(product.id);
 
-  // UNIVERSAL SKU FETCHING: Real-time inventory and pricing sync for ALL items
+  // UNIVERSAL SKU FETCHING: Re-establish real-time listener for ALL items (Branded & Generic)
   useEffect(() => {
     const sku = product.sku || product.id;
     if (!db || !sku) {
@@ -66,7 +66,7 @@ export default function ProductCard({ product }: { product: Product }) {
     e.stopPropagation();
     if (isOutOfStock || isLoadingLive) return;
     addToCart(product);
-    toast({ title: "Added to Bag", description: `${product.name} ready for checkout.` });
+    toast({ title: "Added to Clinical Bag" });
   };
 
   const handleNotify = (e: React.MouseEvent) => {
@@ -83,7 +83,7 @@ export default function ProductCard({ product }: { product: Product }) {
       timestamp: serverTimestamp()
     };
     addDocumentNonBlocking(collection(db, 'stockEnquiries'), enquiryData);
-    toast({ title: "Notification Set", description: "We will alert you when stock returns." });
+    toast({ title: "Clinical Notification Set" });
   };
 
   const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
@@ -97,7 +97,7 @@ export default function ProductCard({ product }: { product: Product }) {
     )}>
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 p-4 space-y-3">
         
-        {/* 1. Medicine Image (Centered) */}
+        {/* 1. Medicine Pack Image */}
         <div className="relative aspect-square w-full bg-gray-50 rounded-xl overflow-hidden border border-gray-50 flex items-center justify-center p-3">
           <Image 
             src={safeImageUrl} 
@@ -112,7 +112,7 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        {/* 2. Clinical Attributes */}
+        {/* 2. Clinical Identity Attributes */}
         <div className="space-y-1">
           <h3 className="font-black text-gray-900 text-[13px] uppercase tracking-tight leading-tight line-clamp-2 min-h-[2.4rem]">
             {product.name}
@@ -125,8 +125,8 @@ export default function ProductCard({ product }: { product: Product }) {
           </p>
         </div>
 
-        {/* 3. Pricing Section (Dynamic) */}
-        <div className="pt-2 border-t border-dashed space-y-0.5">
+        {/* 3. Pricing Section (Dynamic Firestore) */}
+        <div className="pt-2 border-t border-dashed space-y-0.5 mt-auto">
           <div className="flex items-baseline gap-2">
             <p className="text-lg font-black text-accent tracking-tighter">
               {isLoadingLive ? (
@@ -137,21 +137,21 @@ export default function ProductCard({ product }: { product: Product }) {
               <span className="text-[10px] text-red-400 line-through font-bold">₹{currentMrp}</span>
             )}
           </div>
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
+          <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight">
             {isLoadingLive ? "Checking Price..." : `₹${unitCost} per unit`}
           </p>
         </div>
 
-        {/* 4. Savings % (Dynamic) */}
+        {/* 4. Real-time Savings % */}
         {!isLoadingLive && savingsPercent > 0 && !isOutOfStock && (
-          <div className="bg-accent/10 text-accent text-[9px] font-black uppercase px-3 py-1.5 rounded-lg text-center border border-accent/5 mt-auto">
+          <div className="bg-accent/10 text-accent text-[9px] font-black uppercase px-3 py-1.5 rounded-lg text-center border border-accent/5">
             SWITCH & SAVE {savingsPercent}%
           </div>
         )}
       </Link>
       
-      {/* 5. Action Handlers */}
-      <div className="p-4 pt-0 mt-auto">
+      {/* 5. Action Handlers (Availability Logic) */}
+      <div className="p-4 pt-0">
         {isLoadingLive ? (
           <Button disabled className="rounded-full h-10 w-full bg-gray-50 text-gray-400 border-none font-black text-[9px] uppercase tracking-widest gap-2">
             <Loader2 className="w-3 h-3 animate-spin" /> Checking Stock...
