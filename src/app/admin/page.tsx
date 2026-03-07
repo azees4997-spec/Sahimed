@@ -301,7 +301,11 @@ function SectionHeader({ title, subtitle, onBack, children }: { title: string, s
   return (
     <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
       <div className="flex items-center gap-4">
-        <button onClick={onBack} className="rounded-full bg-white shadow-sm h-12 w-12 hover:scale-110 transition-transform flex items-center justify-center"><ChevronRight className="w-5 h-5 rotate-180" /></button>
+        {onBack && (
+          <button onClick={onBack} className="rounded-full bg-white shadow-sm h-12 w-12 hover:scale-110 transition-transform flex items-center justify-center">
+            <ChevronRight className="w-5 h-5 rotate-180" />
+          </button>
+        )}
         <div className="space-y-1">
           <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">{title}</h2>
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{subtitle}</p>
@@ -1685,27 +1689,6 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
           </table>
         </div>
       </Card>
-    </div>
-  );
-}
-
-function SectionHeader({ title, subtitle, onBack, children }: { title: string, subtitle: string, onBack: () => void, children?: React.ReactNode }) {
-  return (
-    <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
-      <div className="flex items-center gap-4">
-        {onBack && (
-          <button onClick={onBack} className="rounded-full bg-white shadow-sm h-12 w-12 hover:scale-110 transition-transform flex items-center justify-center">
-            <ChevronRight className="w-5 h-5 rotate-180" />
-          </button>
-        )}
-        <div className="space-y-1">
-          <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">{title}</h2>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{subtitle}</p>
-        </div>
-      </div>
-      <div className="flex flex-wrap justify-center gap-3">
-        {children}
-      </div>
     </div>
   );
 }
