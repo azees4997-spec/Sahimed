@@ -4,14 +4,14 @@
 import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShoppingBag, ArrowRight, Plus, Minus, Ticket, ChevronRight, FileWarning, Camera, ClipboardCheck, Tag } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, Plus, Minus, Ticket, ChevronRight, FileWarning, Camera, ClipboardCheck, Tag, PartyPopper, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function CartPage() {
   const { 
@@ -22,6 +22,16 @@ export default function CartPage() {
   const { toast } = useToast();
   const [isPromoDialogOpen, setIsPromoDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Trigger celebration when a promo is newly applied
+  useEffect(() => {
+    if (appliedPromo) {
+      setShowCelebration(true);
+      const timer = setTimeout(() => setShowCelebration(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [appliedPromo]);
 
   const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
   const applicableFees = activeFees.filter(f => totalPrice >= (f.minPurchase || 0));
@@ -60,6 +70,15 @@ export default function CartPage() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleApplyPromo = (promo: any) => {
+    applyPromo(promo);
+    setIsPromoDialogOpen(false);
+    toast({
+      title: "Coupon Applied!",
+      description: `You just saved ₹${promo.discountType === 'fixed' ? promo.discountValue : (totalPrice * (promo.discountValue / 100)).toFixed(0)} extra!`,
+    });
   };
 
   if (cart.length === 0) {
@@ -134,11 +153,17 @@ export default function CartPage() {
             <div className="space-y-6 sticky top-24">
               {/* PROMO SECTION */}
               <div 
-                className="bg-white p-6 rounded-[40px] shadow-sm border flex items-center justify-between group cursor-pointer hover:shadow-lg transition-all" 
+                className={cn(
+                  "p-6 rounded-[40px] shadow-sm border flex items-center justify-between group cursor-pointer transition-all",
+                  appliedPromo ? "bg-primary/5 border-primary/20 hover:shadow-xl" : "bg-white border-gray-100 hover:shadow-lg"
+                )} 
                 onClick={() => setIsPromoDialogOpen(true)}
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
+                  <div className={cn(
+                    "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                    appliedPromo ? "bg-primary text-white" : "bg-purple-50 text-purple-600"
+                  )}>
                     <Ticket className="w-5 h-5" />
                   </div>
                   <div>
@@ -164,10 +189,27 @@ export default function CartPage() {
                 </div>
               </div>
 
+              {/* CELEBRATION BANNER */}
+              {appliedPromo && showCelebration && (
+                <div className="bg-accent text-white p-4 rounded-[32px] shadow-2xl flex items-center justify-center gap-3 animate-spring overflow-hidden relative">
+                  <div className="absolute inset-0 bg-white/10 animate-pulse pointer-events-none" />
+                  <PartyPopper className="w-5 h-5 animate-bounce shrink-0" />
+                  <div className="text-center">
+                    <p className="text-[10px] font-black uppercase tracking-tight leading-none">Coupon Celebration!</p>
+                    <p className="text-[13px] font-black uppercase tracking-tighter mt-1">Extra ₹{promoDiscount.toFixed(0)} Saved!</p>
+                  </div>
+                  <Sparkles className="w-5 h-5 animate-pulse shrink-0" />
+                </div>
+              )}
+
               {/* BILL DETAILS */}
-              <div className="bg-white p-10 rounded-[50px] shadow-2xl border">
-                <h2 className="text-[11px] font-black mb-10 uppercase tracking-[0.3em] text-gray-400">Bill Details</h2>
-                <div className="space-y-6 mb-10">
+              <div className="bg-white p-10 rounded-[50px] shadow-2xl border relative overflow-hidden">
+                {appliedPromo && (
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl -mr-16 -mt-16" />
+                )}
+                
+                <h2 className="text-[11px] font-black mb-10 uppercase tracking-[0.3em] text-gray-400 relative z-10">Bill Details</h2>
+                <div className="space-y-6 mb-10 relative z-10">
                   <div className="flex justify-between text-[11px] font-black text-gray-500 uppercase">
                     <span>Cart Gross (MRP)</span>
                     <span className="text-red-500 line-through">₹{totalMrp}</span>
@@ -177,7 +219,7 @@ export default function CartPage() {
                     <span className="text-gray-900">₹{totalPrice}</span>
                   </div>
                   {appliedPromo && (
-                    <div className="flex justify-between text-[11px] font-black uppercase text-accent">
+                    <div className="flex justify-between text-[11px] font-black uppercase text-accent animate-in slide-in-from-left-2">
                       <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Coupon Discount</span>
                       <span>-₹{promoDiscount.toFixed(0)}</span>
                     </div>
@@ -199,12 +241,12 @@ export default function CartPage() {
                 </div>
                 {isPrescriptionReady ? (
                   <Link href="/checkout">
-                    <Button className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl bg-primary text-white">
+                    <Button className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 bg-primary text-white relative z-10">
                       Checkout Now <ArrowRight className="w-5 h-5 ml-4" />
                     </Button>
                   </Link>
                 ) : (
-                  <Button onClick={() => document.getElementById('cart-upload')?.click()} className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl bg-orange-600 text-white">
+                  <Button onClick={() => document.getElementById('cart-upload')?.click()} className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-orange-200 bg-orange-600 text-white relative z-10">
                     Upload Prescription <Camera className="w-5 h-5 ml-4" />
                   </Button>
                 )}
@@ -236,7 +278,7 @@ export default function CartPage() {
                       "p-6 rounded-[32px] border-2 transition-all flex flex-col gap-2 relative overflow-hidden group",
                       isApplicable ? "border-gray-100 hover:border-primary cursor-pointer bg-white" : "opacity-50 grayscale cursor-not-allowed border-dashed bg-gray-50"
                     )}
-                    onClick={() => isApplicable && (applyPromo(promo), setIsPromoDialogOpen(false))}
+                    onClick={() => isApplicable && handleApplyPromo(promo)}
                   >
                     <div className="flex justify-between items-center">
                       <Badge className="bg-purple-100 text-purple-600 font-black text-[9px] uppercase tracking-widest px-3 py-1 border-none">
