@@ -40,11 +40,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const productRef = useMemoFirebase(() => (!db || !id) ? null : doc(db, 'medicines', id), [db, id]);
   const { data: staticProduct, isLoading: productLoading } = useDoc(productRef);
 
-  // 2. Molecule Metadata for Header (Plain Composition Only)
-  const molRef = useMemoFirebase(() => (!db || !staticProduct?.moleculeId) ? null : doc(db, 'moleculeMaster', staticProduct.moleculeId), [db, staticProduct?.moleculeId]);
-  const { data: molData } = useDoc(molRef);
-
-  // 3. Dynamic Data for Current Selection (Branded)
+  // 2. Dynamic Data Handshake (Universal SKU Fetching)
   const [liveData, setLiveData] = useState<{ mrp: number, price: number, stock: number } | null>(null);
   const [isLiveLoading, setIsLiveLoading] = useState(true);
 
@@ -71,7 +67,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     }
   }, [db, staticProduct?.sku, staticProduct?.id]);
 
-  // 4. Alternatives Strategy (Generic Search)
+  // 3. Clinical Molecule Metadata
+  const molRef = useMemoFirebase(() => (!db || !staticProduct?.moleculeId) ? null : doc(db, 'moleculeMaster', staticProduct.moleculeId), [db, staticProduct?.moleculeId]);
+  const { data: molData } = useDoc(molRef);
+
+  // 4. Alternatives Logic (Generic Mapping)
   const alternativesQuery = useMemoFirebase(() => {
     if (!db || !staticProduct?.moleculeId || staticProduct?.isGeneric) return null;
     return query(collection(db, 'medicines'), where('moleculeId', '==', staticProduct.moleculeId), where('isGeneric', '==', true), limit(1));
@@ -80,7 +80,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { data: genericAlternatives } = useCollection(alternativesQuery);
   const genericAlt = genericAlternatives?.[0];
 
-  // 5. Dynamic Data for Recommended Choice (Generic)
+  // 5. Dynamic Data Handshake for Alternative Choice
   const [altLiveData, setAltLiveData] = useState<{ price: number, mrp: number, stock: number } | null>(null);
   const [isAltLiveLoading, setIsAltLiveLoading] = useState(true);
 
@@ -139,7 +139,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       )}>
         <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{label}</span>
         
-        {/* Medicine Pack Image */}
+        {/* Medicine Image */}
         <div className="relative aspect-square w-full bg-white rounded-xl mb-3 overflow-hidden border border-gray-50 flex items-center justify-center p-2">
           <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-1" />
           {pIsOutOfStock && !isLoading && (
@@ -149,6 +149,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           )}
         </div>
 
+        {/* 6-Attribute Clinical Clinical Sequence */}
         <div className="flex-1 space-y-1">
           <h3 className="font-black text-[11px] sm:text-[15px] text-gray-900 uppercase leading-tight line-clamp-2 min-h-[2.2rem]">
             {product.name}
@@ -191,7 +192,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           ) : qty > 0 ? (
             <div className="flex items-center gap-1 rounded-full p-1 bg-primary text-white h-9 sm:h-12 shadow-lg">
               <button onClick={() => updateQuantity(product.id, -1)} className="flex-1 h-full flex items-center justify-center font-bold">-</button>
-              <span className="text-[8px] sm:text-[10px] font-black flex-1 text-center uppercase">{qty} Bag</span>
+              <span className="text-[8px] sm:text-[10px] font-black flex-1 text-center uppercase">{qty}</span>
               <button onClick={() => updateQuantity(product.id, 1)} className="flex-1 h-full flex items-center justify-center font-bold">+</button>
             </div>
           ) : (
@@ -212,7 +213,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       <Navbar />
       <main className="max-w-[1200px] mx-auto px-3 sm:px-10 py-8">
         
-        {/* Clinical Composition Header (Plain Only) */}
+        {/* Top Header: Plain Clinical Composition Only */}
         <div className="text-center mb-8 space-y-3">
            <div className="inline-flex items-center gap-2 bg-primary/10 px-6 py-2.5 rounded-full border border-primary/20 shadow-sm">
               <Dna className="w-4 h-4 text-primary" />
@@ -229,7 +230,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            )}
         </div>
 
-        {/* 2-Card Horizontal Grid (Locked Side-by-Side) */}
+        {/* Strict 2-Card Horizontal Comparison (Forced Mobile Side-by-Side) */}
         <div className="mb-12">
           <div className="grid grid-cols-2 gap-2 sm:gap-10 items-stretch">
             <ComparisonCard 
@@ -251,13 +252,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             ) : !productLoading && (
               <div className="rounded-[20px] sm:rounded-[32px] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-4 text-center bg-gray-50/50 h-full">
                 <Package className="w-8 h-8 text-gray-300 mb-2" />
-                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-relaxed">No generic variant indexed</p>
+                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-relaxed">Generic Alternative Pending</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Clinical Tabs Section */}
+        {/* Clinical Tabs */}
         <section className="bg-white rounded-[40px] p-6 sm:p-16 shadow-2xl border border-gray-100 overflow-hidden">
           <Tabs defaultValue="clinical" className="w-full">
             <TabsList className="bg-gray-100 p-1 rounded-full h-12 sm:h-16 w-full max-w-[600px] flex mx-auto mb-10 sm:mb-16">
@@ -270,11 +271,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                <div className="max-w-4xl mx-auto divide-y divide-gray-100">
                   <div className="pb-8 space-y-3">
                      <div className="flex items-center gap-3"><ClipboardList className="w-5 h-5 text-primary" /><h3 className="text-sm sm:text-lg font-black uppercase text-gray-900 tracking-tight">Primary Treatment</h3></div>
-                     <p className="text-[11px] sm:text-[14px] font-bold text-gray-500 leading-relaxed uppercase">{staticProduct.treatment || "Bio-equivalent clinical protocol."}</p>
+                     <p className="text-[11px] sm:text-[14px] font-bold text-gray-500 leading-relaxed uppercase">{staticProduct.treatment || "Precision clinical protocol."}</p>
                   </div>
                   <div className="pt-8 space-y-3">
                      <div className="flex items-center gap-3"><Info className="w-5 h-5 text-primary" /><h3 className="text-sm sm:text-lg font-black uppercase text-gray-900 tracking-tight">Pharmacology</h3></div>
-                     <p className="text-[11px] sm:text-[14px] font-bold text-gray-500 leading-relaxed uppercase">{staticProduct.description || "Active pharmaceutical formulation."}</p>
+                     <p className="text-[11px] sm:text-[14px] font-bold text-gray-500 leading-relaxed uppercase">{staticProduct.description || "Active clinical formulation."}</p>
                   </div>
                </div>
             </TabsContent>
@@ -282,11 +283,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <TabsContent value="safety" className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
                <div className="bg-orange-50/50 p-6 rounded-[32px] border border-orange-100 flex gap-4">
                  <div className="w-12 h-12 sm:w-16 bg-white rounded-2xl shadow-sm flex items-center justify-center shrink-0 border"><AlertTriangle className="w-6 h-6 text-orange-600" /></div>
-                 <div><h4 className="text-[10px] sm:text-sm font-black uppercase text-orange-600 mb-1">Clinical Caution</h4><p className="text-[10px] sm:text-[13px] font-bold text-orange-900/70 leading-relaxed uppercase">{staticProduct.safetyAdvice || "Consult supervisor before use."}</p></div>
+                 <div><h4 className="text-[10px] sm:text-sm font-black uppercase text-orange-600 mb-1">Clinical Caution</h4><p className="text-[10px] sm:text-[13px] font-bold text-orange-900/70 leading-relaxed uppercase">{staticProduct.safetyAdvice || "Follow professional clinical guidance."}</p></div>
                </div>
                <div className="bg-blue-50/50 p-6 rounded-[32px] border border-blue-100 flex gap-4">
                  <div className="w-12 h-12 sm:w-16 bg-white rounded-2xl shadow-sm flex items-center justify-center shrink-0 border"><Stethoscope className="w-6 h-6 text-blue-600" /></div>
-                 <div><h4 className="text-[10px] sm:text-sm font-black uppercase text-blue-600 mb-1">Usage Protocol</h4><p className="text-[10px] sm:text-[13px] font-bold text-blue-900/70 leading-relaxed uppercase">{staticProduct.howToUse || "Follow professional clinical instructions."}</p></div>
+                 <div><h4 className="text-[10px] sm:text-sm font-black uppercase text-blue-600 mb-1">Usage Protocol</h4><p className="text-[10px] sm:text-[13px] font-bold text-blue-900/70 leading-relaxed uppercase">{staticProduct.howToUse || "Follow clinical instructions carefully."}</p></div>
                </div>
             </TabsContent>
 
@@ -303,7 +304,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-primary shrink-0"><item.icon className="w-5 h-5" /></div>
                   <div className="flex flex-col">
                     <h4 className="text-[9px] font-black uppercase tracking-[0.15em] text-gray-400 mb-0.5">{item.title}</h4>
-                    <p className="text-[10px] font-bold text-gray-700 leading-relaxed uppercase">{item.text || "Clinical Standards Apply"}</p>
+                    <p className="text-[10px] font-bold text-gray-700 leading-relaxed uppercase">{item.text || "Clinical standards apply"}</p>
                   </div>
                 </div>
               ))}
