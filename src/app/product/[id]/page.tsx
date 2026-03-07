@@ -53,7 +53,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   
   const db = useFirestore();
   const { toast } = useToast();
-  const { addToCart, updateQuantity, getItemQuantity } = useCart();
+  const { addToCart } = useCart();
 
   // Step 1: Fetch Static Clinical Details (Unified Hybrid - medicines collection)
   const productRef = useMemoFirebase(() => {
@@ -84,7 +84,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     }).catch(() => setLiveLoading(false));
   }, [db, id]);
 
-  // Step 3: Find Generic Alternative (Side-by-Side logic)
+  // Step 3: Branded-to-Generic Mapping Rule
+  // Only query for alternatives if the CURRENT product is Branded (isGeneric: false)
   const alternativesQuery = useMemoFirebase(() => {
     if (!db || !staticProduct?.moleculeId || staticProduct?.isGeneric) return null;
     return query(
@@ -97,6 +98,19 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const { data: genericAlternatives } = useCollection(alternativesQuery);
   const genericAlt = genericAlternatives?.[0];
+
+  // Step 4: Fetch Live Data for the Generic Alternative to calculate accurate savings
+  const [altLiveData, setAltLiveData] = useState<{ price: number } | null>(null);
+  useEffect(() => {
+    if (db && genericAlt?.id) {
+      const liveRef = doc(db, 'product_live_data', genericAlt.id);
+      getDoc(liveRef).then(snap => {
+        if (snap.exists()) {
+          setAltLiveData({ price: snap.data().sahimed_price || 0 });
+        }
+      });
+    }
+  }, [db, genericAlt?.id]);
 
   if (productLoading || !staticProduct) {
     return (
@@ -131,6 +145,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       </div>
     </div>
   );
+
+  // Savings Calculation Logic
+  const savingsPercent = (product.price > 0 && altLiveData?.price) 
+    ? Math.round(((product.price - altLiveData.price) / product.price) * 100)
+    : null;
 
   return (
     <div className="min-h-screen bg-[#F0F9FF] pb-32">
@@ -217,19 +236,27 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            </div>
         </div>
 
-        {/* Generic Savings Comparison */}
-        {genericAlt && (
+        {/* SIDE-BY-SIDE COMPARISON RULE */}
+        {/* Only show if VIEWED product is Branded (!isGeneric) AND a Generic Counterpart exists */}
+        {!product.isGeneric && genericAlt && (
           <div className="bg-white rounded-[40px] p-8 mb-12 border-2 border-dashed border-accent/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
               <Zap size={120} className="text-accent" />
             </div>
             <div className="flex flex-col md:flex-row items-center gap-10">
               <div className="flex-1 space-y-4 text-center md:text-left">
-                <Badge className="bg-accent text-white px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">Switch & Save</Badge>
+                <div className="flex items-center justify-center md:justify-start gap-3">
+                  <Badge className="bg-accent text-white px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">Switch & Save</Badge>
+                  {savingsPercent && (
+                    <Badge variant="outline" className="border-accent text-accent font-black text-[10px] uppercase px-4 py-1 animate-bounce">
+                      SAVE {savingsPercent}%
+                    </Badge>
+                  )}
+                </div>
                 <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Generic Alternative Available</h3>
                 <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest leading-relaxed">
-                  This product has a bio-equivalent generic version with the same clinical efficacy. 
-                  Switching could save you up to 80% on your clinical supplies.
+                  This branded product has a bio-equivalent generic version with the same clinical efficacy. 
+                  Switching provides the exact same pharmaceutical result at a significantly lower cost.
                 </p>
               </div>
               
@@ -244,11 +271,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[10px] font-black text-accent uppercase mb-1">Recommended Option</p>
+                  <p className="text-[10px] font-black text-accent uppercase mb-1">Recommended Choice</p>
                   <h4 className="font-black text-sm uppercase truncate mb-3">{genericAlt.name}</h4>
                   <Link href={`/product/${genericAlt.id}`}>
-                    <Button className="w-full h-10 rounded-full font-black text-[10px] uppercase bg-primary text-white shadow-lg">
-                      Compare Now
+                    <Button className="w-full h-10 rounded-full font-black text-[10px] uppercase bg-primary text-white shadow-lg group-hover:scale-105 transition-transform">
+                      View Generic Variant
                     </Button>
                   </Link>
                 </div>
