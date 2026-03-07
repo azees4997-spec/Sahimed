@@ -1579,25 +1579,106 @@ function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, o
 }
 
 function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles'), orderBy('createdAt', 'desc')) : null, [db, isVerified]);
   const { data: users, isLoading } = useCollection(usersQuery);
+
+  const filteredUsers = users?.filter(user => {
+    const searchLower = searchTerm.toLowerCase();
+    const nameMatch = user.name?.toLowerCase().includes(searchLower);
+    const phoneMatch = user.phone?.includes(searchTerm);
+    const matchesSearch = !searchTerm || nameMatch || phoneMatch;
+
+    const joinedDate = user.createdAt?.toDate ? user.createdAt.toDate() : new Date(user.createdAt);
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+    
+    if (start) start.setHours(0, 0, 0, 0);
+    if (end) end.setHours(23, 59, 59, 999);
+
+    const matchesDate = (!start || joinedDate >= start) && (!end || joinedDate <= end);
+
+    return matchesSearch && matchesDate;
+  });
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Patient Registry" subtitle="Manage customer profiles" onBack={onBack} />
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input 
+            placeholder="Search by Name or Mobile..." 
+            value={searchTerm} 
+            onChange={e => setSearchTerm(e.target.value)} 
+            className="pl-10 rounded-2xl h-12 bg-gray-50 border-none font-bold text-xs" 
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <CalendarIcon className="w-4 h-4 text-gray-400" />
+          <Input 
+            type="date" 
+            value={startDate} 
+            onChange={e => setStartDate(e.target.value)} 
+            className="rounded-2xl h-12 bg-gray-50 border-none font-bold text-xs" 
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <CalendarIcon className="w-4 h-4 text-gray-400" />
+          <Input 
+            type="date" 
+            value={endDate} 
+            onChange={e => setEndDate(e.target.value)} 
+            className="rounded-2xl h-12 bg-gray-50 border-none font-bold text-xs" 
+          />
+        </div>
+      </div>
+
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
-              <tr><th className="px-10 py-8">Patient Name</th><th className="px-10 py-8">Mobile Number</th><th className="px-10 py-8">Joined On</th><th className="px-10 py-8 text-right">Actions</th></tr>
+              <tr>
+                <th className="px-10 py-8">Patient Name</th>
+                <th className="px-10 py-8">Mobile Number</th>
+                <th className="px-10 py-8">Joined On</th>
+                <th className="px-10 py-8">Last Order</th>
+                <th className="px-10 py-8 text-right">Actions</th>
+              </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={4} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td></tr>) : users?.length === 0 ? (<tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No patients found</td></tr>) : users?.map(patient => (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td>
+                </tr>
+              ) : filteredUsers?.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No patients matching criteria</td>
+                </tr>
+              ) : filteredUsers?.map(patient => (
                 <tr key={patient.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="px-10 py-8 font-black text-sm uppercase">{patient.name || <span className="text-red-500 font-black">NO NAME</span>}</td>
+                  <td className="px-10 py-8">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-[10px]">
+                        {patient.name?.charAt(0).toUpperCase() || 'P'}
+                      </div>
+                      <span className="font-black text-sm uppercase">{patient.name || <span className="text-red-500 font-black">NO NAME</span>}</span>
+                    </div>
+                  </td>
                   <td className="px-10 py-8 font-bold text-sm text-gray-600">{patient.phone || <span className="text-red-500 font-black">NO PHONE</span>}</td>
-                  <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">{patient.createdAt ? format(new Date(patient.createdAt), 'MMM dd, yyyy') : 'N/A'}</td>
-                  <td className="px-10 py-8 text-right"><Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"><Eye className="w-4 h-4 text-gray-400" /></Button></td>
+                  <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">
+                    {patient.createdAt ? (patient.createdAt.toDate ? format(patient.createdAt.toDate(), 'MMM dd, yyyy') : format(new Date(patient.createdAt), 'MMM dd, yyyy')) : 'N/A'}
+                  </td>
+                  <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">
+                    {patient.updatedAt ? (patient.updatedAt.toDate ? format(patient.updatedAt.toDate(), 'MMM dd, yyyy') : format(new Date(patient.updatedAt), 'MMM dd, yyyy')) : 'No Orders'}
+                  </td>
+                  <td className="px-10 py-8 text-right">
+                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/5 hover:text-primary"><Eye className="w-4 h-4" /></Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1608,56 +1689,23 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
   );
 }
 
-function AlertsTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const alertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'systemAlerts'), orderBy('createdAt', 'desc')) : null, [db, isVerified]);
-  const { data: alerts, isLoading } = useCollection(alertsQuery);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingAlert, setEditingAlert] = useState<any>(null);
-
+function SectionHeader({ title, subtitle, onBack, children }: { title: string, subtitle: string, onBack: () => void, children?: React.ReactNode }) {
   return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Clinical Broadcasts" subtitle="System-wide patient alerts" onBack={onBack}>
-        <Button onClick={() => { setEditingAlert(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-red-600 text-white shadow-lg shadow-red-100">
-          <Plus className="w-4 h-4" /> Create Alert
-        </Button>
-      </SectionHeader>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {isLoading ? (<div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>) : alerts?.length === 0 ? (<div className="col-span-full py-20 text-center font-black text-gray-300 uppercase tracking-widest text-[10px]">No broadcasts active</div>) : alerts?.map(alert => (
-          <Card key={alert.id} className={cn("rounded-[32px] p-6 border-none shadow-sm", alert.isActive ? "bg-red-50/50 ring-2 ring-red-100" : "bg-white")}>
-            <div className="flex justify-between items-start mb-4"><Megaphone className={cn("w-6 h-6", alert.isActive ? "text-red-600" : "text-gray-300")} /><Badge className={cn("rounded-full text-[8px] font-black", alert.isActive ? "bg-red-600 text-white" : "bg-gray-100 text-gray-400")}>{alert.isActive ? 'LIVE' : 'OFF'}</Badge></div>
-            <h3 className="font-black text-sm uppercase tracking-tight text-gray-900 mb-2">{alert.title}</h3>
-            <p className="text-xs font-bold text-gray-500 line-clamp-2 uppercase mb-6">{alert.message}</p>
-            <div className="flex gap-2 justify-end border-t pt-4">
-              <Button variant="ghost" size="icon" onClick={() => { setEditingAlert(alert); setIsFormOpen(true); }}><Edit2 className="w-3.5 h-3.5" /></Button>
-              <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'systemAlerts', alert.id))} className="text-red-300"><Trash2 className="w-3.5 h-3.5" /></Button>
-            </div>
-          </Card>
-        ))}
+    <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+      <div className="flex items-center gap-4">
+        {onBack && (
+          <button onClick={onBack} className="rounded-full bg-white shadow-sm h-12 w-12 hover:scale-110 transition-transform flex items-center justify-center">
+            <ChevronRight className="w-5 h-5 rotate-180" />
+          </button>
+        )}
+        <div className="space-y-1">
+          <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">{title}</h2>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{subtitle}</p>
+        </div>
       </div>
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden shadow-3xl">
-          <div className="bg-red-600 p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Broadcast Message</DialogTitle></div>
-          <div className="p-8"><AlertForm db={db} initialData={editingAlert} onSuccess={() => setIsFormOpen(false)} /></div>
-        </DialogContent>
-      </Dialog>
+      <div className="flex flex-wrap justify-center gap-3">
+        {children}
+      </div>
     </div>
-  );
-}
-
-function AlertForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
-  const [form, setForm] = useState({ title: initialData?.title || '', message: initialData?.message || '', isActive: initialData?.isActive ?? true });
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload = { ...form, createdAt: initialData?.createdAt || serverTimestamp() };
-    initialData?.id ? updateDocumentNonBlocking(doc(db, 'systemAlerts', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'systemAlerts'), payload);
-    onSuccess();
-  };
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Broadcast Title</Label><Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Message</Label><Textarea value={form.message} onChange={e => setForm({...form, message: e.target.value})} required className="rounded-2xl min-h-[120px] bg-gray-50 border-none font-bold p-6" /></div>
-      <div className="flex items-center gap-2"><input type="checkbox" id="broadcast-active" checked={form.isActive} onChange={e => setForm({...form, isActive: e.target.checked})} className="w-5 h-5 accent-red-600" /><Label htmlFor="broadcast-active" className="text-[10px] font-black uppercase">Live</Label></div>
-      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase bg-red-600 text-white">Send Broadcast</Button>
-    </form>
   );
 }
