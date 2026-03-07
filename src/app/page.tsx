@@ -25,7 +25,7 @@ export default function Home() {
     Autoplay({ delay: 5000, stopOnInteraction: false })
   );
 
-  // Optimization: Increased limit to ensure 30 unique clinical items after SKU deduplication
+  // Optimization: 30 unique clinical items grid
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(60));
@@ -39,7 +39,6 @@ export default function Home() {
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
 
-  // DYNAMIC GRID: Show exactly 30 unique best sellers
   const uniqueMedicines = React.useMemo(() => {
     if (!medicines) return [];
     const seen = new Set();
@@ -52,18 +51,6 @@ export default function Home() {
   }, [medicines]);
 
   const heroBanners = PlaceHolderImages.filter(img => img.id.startsWith('hero-')).slice(0, 3);
-
-  const getIcon = (name: string) => {
-    const n = name.toLowerCase();
-    const props = { className: "w-5 h-5 sm:w-7 sm:h-7" };
-    if (n.includes('diabet')) return <Activity {...props} />;
-    if (n.includes('heart')) return <HeartPulse {...props} />;
-    if (n.includes('gastro')) return <Zap {...props} />;
-    if (n.includes('derma')) return <Sparkles {...props} />;
-    if (n.includes('liver')) return <ShieldPlus {...props} />;
-    if (n.includes('respi')) return <Wind {...props} />;
-    return <Activity {...props} />;
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F4F7F6] pharma-bg-pattern page-transition-wrapper">
@@ -136,14 +123,24 @@ export default function Home() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-6">
-                {categories?.map((cat: any) => (
-                  <Link key={cat.id} href={`/search?c=${cat.name}`} className="group flex flex-col items-center">
-                    <div className="w-full aspect-square bg-white rounded-[24px] flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-100 p-4 sm:p-6 group-hover:bg-primary group-hover:text-white transition-all duration-500 relative overflow-hidden">
-                      {cat.imageUrl && cat.imageUrl.startsWith('http') ? <Image src={cat.imageUrl} alt={cat.name} fill sizes="(max-width: 768px) 30vw, 15vw" className="object-contain p-2 group-hover:brightness-0 group-hover:invert transition-all" /> : getIcon(cat.name)}
-                    </div>
-                    <h3 className="font-black text-[8px] sm:text-[10px] text-gray-700 uppercase tracking-tighter truncate w-full text-center">{cat.name}</h3>
-                  </Link>
-                ))}
+                {categories?.map((cat: any) => {
+                  const categoryImage = cat.imageUrl || `https://picsum.photos/seed/cat-${cat.name.toLowerCase().replace(/\s/g, '-')}/300/300`;
+                  return (
+                    <Link key={cat.id} href={`/search?c=${cat.name}`} className="group flex flex-col items-center">
+                      <div className="w-full aspect-square bg-white rounded-[24px] flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-100 p-0 group-hover:shadow-xl transition-all duration-500 relative overflow-hidden">
+                        <Image 
+                          src={categoryImage} 
+                          alt={cat.name} 
+                          fill 
+                          sizes="(max-width: 768px) 30vw, 15vw" 
+                          className="object-cover group-hover:scale-110 transition-transform duration-700" 
+                        />
+                        <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors" />
+                      </div>
+                      <h3 className="font-black text-[8px] sm:text-[10px] text-gray-700 uppercase tracking-tighter truncate w-full text-center">{cat.name}</h3>
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </div>

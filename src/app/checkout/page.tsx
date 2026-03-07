@@ -46,7 +46,6 @@ export default function CheckoutPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Effect to load profile data or clear for guest
   useEffect(() => {
     const fetchProfile = async () => {
       if (user && !isSomeoneElse) {
@@ -109,11 +108,14 @@ export default function CheckoutPage() {
           try {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+            // High-precision reverse geocoding with fallback fields
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+              signal: AbortSignal.timeout(10000) // 10s timeout
+            });
             const data = await response.json();
             
             if (data && data.address) {
-              const neighborhood = data.address.suburb || data.address.neighbourhood || data.address.road || '';
+              const neighborhood = data.address.suburb || data.address.neighbourhood || data.address.residential || '';
               const city = data.address.city || data.address.town || data.address.village || '';
               const road = data.address.road || '';
               const state = data.address.state || '';
@@ -124,18 +126,27 @@ export default function CheckoutPage() {
                 pincode: data.address.postcode?.replace(/\s/g, '') || prev.pincode
               }));
               toast({ title: "Location Verified" });
+            } else {
+              toast({ variant: 'destructive', title: 'Location Unavailable', description: 'Could not resolve address details.' });
             }
           } catch (e) {
-            toast({ variant: 'destructive', title: 'Location Error' });
+            toast({ variant: 'destructive', title: 'Network Error', description: 'Check your internet connection.' });
           } finally {
             setIsLocating(false);
           }
         },
-        () => {
+        (error) => {
           setIsLocating(false);
-          toast({ variant: 'destructive', title: 'Permission Denied' });
-        }
+          let msg = "Permission Denied";
+          if (error.code === 2) msg = "Position Unavailable";
+          if (error.code === 3) msg = "Request Timed Out";
+          toast({ variant: 'destructive', title: 'GPS Error', description: msg });
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
+    } else {
+      setIsLocating(false);
+      toast({ variant: 'destructive', title: 'Incompatible', description: 'Browser does not support GPS.' });
     }
   };
 
@@ -158,7 +169,6 @@ export default function CheckoutPage() {
     setLoading(true);
     setOrderError(null);
     
-    // Re-calculate billing details for document persistence
     const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
     const applicableFees = activeFees.filter(f => totalPrice >= (f.minPurchase || 0));
     const feeTotal = applicableFees.reduce((acc, fee) => {
@@ -211,13 +221,10 @@ export default function CheckoutPage() {
     };
 
     try {
-      // Direct Firestore write to ensure document is created before redirect
       const orderRef = collection(db, 'userProfiles', user.uid, 'orders');
       const docRef = await addDoc(orderRef, orderData);
       
       if (!isSomeoneElse) {
-        // Use setDocumentNonBlocking with merge: true to handle case where profile doesn't exist yet
-        // This avoids the "Missing or insufficient permissions" error triggered by updateDoc on non-existent docs
         setDocumentNonBlocking(doc(db, 'userProfiles', user.uid), {
           name: orderInfo.patientName,
           phone: orderData.phoneNumber,
@@ -315,11 +322,11 @@ export default function CheckoutPage() {
                         value={orderInfo.phoneNumber} 
                         onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10)})} 
                         placeholder={orderInfo.phoneNumber ? "" : "10-digit Mobile"} 
-                        readOnly={!isSomeoneElse}
+                        readOnly={!isSomeoneElse && !!user?.phoneNumber}
                         className={cn(
                           "h-16 pl-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6 transition-all", 
                           errors.phoneNumber && "ring-2 ring-red-500",
-                          !isSomeoneElse && "opacity-60 cursor-not-allowed"
+                          (!isSomeoneElse && !!user?.phoneNumber) && "opacity-60 cursor-not-allowed"
                         )} 
                       />
                     </div>
