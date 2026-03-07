@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Package, Truck, CheckCircle2, MapPin, Clock, ArrowLeft, Loader2, Info } from 'lucide-react';
+import { Package, Truck, CheckCircle2, MapPin, Clock, ArrowLeft, Loader2, Info, Banknote } from 'lucide-react';
 import Link from 'next/link';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -58,11 +58,17 @@ export default function OrdersPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Badge className={`rounded-full px-4 py-1 text-[8px] font-black uppercase tracking-widest border-none ${
-                        order.status === 'Delivered' ? 'bg-green-600 text-white' : 'bg-blue-600 text-white'
-                      }`}>
-                        {order.status}
-                      </Badge>
+                      <div className="flex flex-col items-end gap-1">
+                        <Badge className={`rounded-full px-4 py-1 text-[8px] font-black uppercase tracking-widest border-none ${
+                          order.status === 'Delivered' ? 'bg-green-600 text-white' : 'bg-blue-600 text-white'
+                        }`}>
+                          {order.status}
+                        </Badge>
+                        <div className="flex items-center gap-1 text-[8px] font-black text-gray-400 uppercase">
+                          <Banknote className="w-2.5 h-2.5" />
+                          {order.paymentType || 'COD'}
+                        </div>
+                      </div>
                       <span className="text-[10px] font-bold text-gray-400">
                         {order.orderDate?.toDate ? order.orderDate.toDate().toLocaleDateString() : 'Pending'}
                       </span>
@@ -159,4 +165,3 @@ export default function OrdersPage() {
     </div>
   );
 }
-

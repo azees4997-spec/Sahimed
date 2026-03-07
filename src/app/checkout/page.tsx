@@ -9,7 +9,26 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { MapPin, ShieldCheck, Loader2, Phone, User, Home, Building2, Hash, ArrowRight, LocateFixed, AlertCircle, UserPlus, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { 
+  MapPin, 
+  ShieldCheck, 
+  Loader2, 
+  Phone, 
+  User, 
+  Home, 
+  Building2, 
+  Hash, 
+  ArrowRight, 
+  LocateFixed, 
+  AlertCircle, 
+  UserPlus, 
+  CheckCircle2, 
+  AlertTriangle,
+  Banknote,
+  CreditCard,
+  Check,
+  Zap
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
@@ -33,6 +52,7 @@ export default function CheckoutPage() {
   const [isLocating, setIsLocating] = useState(false);
   const [isSomeoneElse, setIsSomeoneElse] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'Online'>('COD');
   const { toast } = useToast();
   const router = useRouter();
 
@@ -200,8 +220,8 @@ export default function CheckoutPage() {
         savings: (totalMrp - totalPrice) + promoDiscount
       },
       status: 'Pending',
-      paymentStatus: 'Paid',
-      paymentType: 'Online',
+      paymentStatus: paymentMethod === 'COD' ? 'Pending' : 'Paid',
+      paymentType: paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online',
       patientName: orderInfo.patientName,
       phoneNumber: orderInfo.phoneNumber.startsWith('+91') ? orderInfo.phoneNumber : `+91${orderInfo.phoneNumber}`,
       prescriptionUrl: attachedPrescription || null,
@@ -359,6 +379,59 @@ export default function CheckoutPage() {
               </CardContent>
             </Card>
 
+            <Card className="rounded-[40px] border-none shadow-sm overflow-hidden bg-white">
+              <CardHeader className="bg-white p-8 border-b">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+                    <CreditCard className="w-4 h-4" />
+                  </div>
+                  <CardTitle className="text-xl font-black uppercase tracking-tight">Payment Method</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid grid-cols-1 gap-4">
+                  <div 
+                    className={cn(
+                      "p-6 rounded-[32px] border-2 cursor-pointer transition-all flex items-center justify-between group",
+                      paymentMethod === 'COD' ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200"
+                    )}
+                    onClick={() => setPaymentMethod('COD')}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={cn(
+                        "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
+                        paymentMethod === 'COD' ? "bg-primary text-white" : "bg-gray-100 text-gray-400"
+                      )}>
+                        <Banknote className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="font-black text-sm uppercase tracking-tight">Cash on Delivery</p>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Pay at your doorstep</p>
+                      </div>
+                    </div>
+                    <div className={cn(
+                      "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
+                      paymentMethod === 'COD' ? "border-primary bg-primary" : "border-gray-200"
+                    )}>
+                      {paymentMethod === 'COD' && <Check className="w-3 h-3 text-white" />}
+                    </div>
+                  </div>
+                  
+                  <div className="p-6 rounded-[32px] border-2 border-dashed border-gray-100 opacity-50 cursor-not-allowed flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-gray-50 text-gray-300 flex items-center justify-center">
+                        <Zap className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="font-black text-sm uppercase tracking-tight text-gray-400">Online Payment</p>
+                        <p className="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Coming Soon</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="bg-accent/5 p-8 rounded-[40px] border border-accent/10 flex items-center gap-6">
                <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-lg border border-accent/10 shrink-0">
                   <ShieldCheck className="w-8 h-8 text-accent" />
@@ -392,6 +465,10 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
                   <span>Gross Total</span>
                   <span>₹{totalPrice}</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                  <span className="text-gray-500">Payment Mode</span>
+                  <span className="text-primary font-black">{paymentMethod === 'COD' ? 'COD' : 'Online'}</span>
                 </div>
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
                   <span className="text-gray-500">Clinical Logistics</span>

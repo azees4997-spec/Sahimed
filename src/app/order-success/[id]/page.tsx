@@ -5,7 +5,7 @@ import { use, useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle2, ShoppingBag, ArrowRight, Package, ShieldCheck, ClipboardCheck } from 'lucide-react';
+import { CheckCircle2, ShoppingBag, ArrowRight, Package, ShieldCheck, ClipboardCheck, Banknote } from 'lucide-react';
 import Link from 'next/link';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -56,8 +56,11 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
                 <p className="font-black text-sm uppercase text-gray-900">Confirmed</p>
               </div>
               <div className="text-right">
-                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Estimated Delivery</p>
-                <p className="font-black text-sm uppercase text-accent">2-3 Working Days</p>
+                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Payment Method</p>
+                <div className="flex items-center justify-end gap-1.5">
+                  <Banknote className="w-3 h-3 text-accent" />
+                  <p className="font-black text-sm uppercase text-accent">{order?.paymentType || 'COD'}</p>
+                </div>
               </div>
             </div>
 
@@ -68,7 +71,7 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
                <div>
                   <p className="text-[10px] font-black uppercase text-gray-900 tracking-tight">Pharmacist Review</p>
                   <p className="text-[9px] font-bold text-gray-500 uppercase leading-relaxed mt-1">
-                    Our team is currently verifying your order. You will receive tracking details via SMS once dispatched.
+                    Our team is currently verifying your order. You will receive tracking details via SMS once dispatched. {order?.paymentType === 'Cash on Delivery' && "Please keep exact change ready for doorstep payment."}
                   </p>
                </div>
             </div>
