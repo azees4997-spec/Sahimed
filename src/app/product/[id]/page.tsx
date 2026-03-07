@@ -20,7 +20,8 @@ import {
   Package,
   ShoppingCart,
   Zap,
-  TrendingDown
+  TrendingDown,
+  Star
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -114,14 +115,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   }
 
   // TIERED PRICE RECOVERY for Switch & Save calculation
-  const brandedPrice = (liveData?.price && liveData.price > 0) ? liveData.price : staticProduct.price;
+  const brandedMrp = (liveData?.mrp && liveData.mrp > 0) ? liveData.mrp : (staticProduct.mrp || staticProduct.price + 50);
   const genericPrice = (altLiveData?.price && altLiveData.price > 0) ? altLiveData.price : (genericAlt?.price || 0);
   
-  const switchSavingsAmt = Math.max(0, brandedPrice - genericPrice);
-  const switchSavingsPct = brandedPrice > 0 ? Math.round((switchSavingsAmt / brandedPrice) * 100) : 0;
+  // LOGIC: Savings = Branded MRP - Generic Price
+  const switchSavingsAmt = Math.max(0, brandedMrp - genericPrice);
+  const switchSavingsPct = brandedMrp > 0 ? Math.round((switchSavingsAmt / brandedMrp) * 100) : 0;
 
   const ComparisonCard = ({ product, live, label, isAlt = false, isLoading = false }: { product: any, live: any, label: string, isAlt?: boolean, isLoading?: boolean }) => {
     const qty = getItemQuantity(product.id);
+    
+    // Tiered Recovery
     const pPrice = (live?.price && live.price > 0) ? live.price : product.price;
     const pMrp = (live?.mrp && live.mrp > 0) ? live.mrp : (product.mrp || product.price + 50);
     
@@ -164,7 +168,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <div className="pt-2 border-t border-dashed mt-2">
             <div className="flex items-baseline gap-1">
               <p className={cn("text-lg sm:text-2xl font-black tracking-tighter", pPrice > 0 ? "text-accent" : "text-gray-300")}>
-                {isLoading ? "..." : pPrice > 0 ? `₹${pPrice}` : "TBD"}
+                {isLoading ? "Checking..." : pPrice > 0 ? `₹${pPrice}` : "TBD"}
               </p>
               {!isLoading && pMrp > pPrice && pPrice > 0 && (
                 <span className="text-[8px] sm:text-[10px] text-red-400 line-through font-bold">₹{pMrp}</span>
@@ -172,27 +176,19 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
             {!isLoading && savingsAmt > 0 && (
               <p className="text-[7px] sm:text-[9px] font-black text-accent uppercase tracking-tighter mt-0.5">
-                You Save ₹{savingsAmt.toFixed(0)}
+                Saved ₹{savingsAmt.toFixed(0)}
               </p>
             )}
           </div>
         </div>
 
         <div className="mt-4">
-          {qty > 0 ? (
-            <div className="flex items-center gap-1 rounded-full p-1 bg-primary text-white h-9 sm:h-12 shadow-lg">
-              <button onClick={() => updateQuantity(product.id, -1)} className="flex-1 h-full flex items-center justify-center font-bold">-</button>
-              <span className="text-[8px] sm:text-[10px] font-black flex-1 text-center uppercase">{qty}</span>
-              <button onClick={() => updateQuantity(product.id, 1)} className="flex-1 h-full flex items-center justify-center font-bold">+</button>
-            </div>
-          ) : (
-            <Button 
-              onClick={() => addToCart({ ...product, price: pPrice, mrp: pMrp })} 
-              className={cn("w-full h-9 sm:h-12 rounded-full font-black uppercase text-[8px] sm:text-[10px] tracking-widest gap-2 shadow-xl", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
-            >
-              ADD <ShoppingCart className="w-3 sm:w-4 h-3 sm:h-4" />
-            </Button>
-          )}
+          <Button 
+            onClick={() => addToCart({ ...product, price: pPrice, mrp: pMrp })} 
+            className={cn("w-full h-9 sm:h-12 rounded-full font-black uppercase text-[8px] sm:text-[10px] tracking-widest gap-2 shadow-xl active:scale-95 transition-all", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
+          >
+            {qty > 0 ? `IN BAG (${qty})` : "ADD TO BAG"} <ShoppingCart className="w-3 sm:w-4 h-3 sm:h-4" />
+          </Button>
         </div>
       </Card>
     );
@@ -219,15 +215,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            )}
         </div>
 
-        {/* Switch & Save Grand Logic Banner */}
+        {/* Switch & Save Logic: Branded MRP vs Generic Price */}
         {!isLiveLoading && !isAltLiveLoading && genericAlt && switchSavingsAmt > 0 && (
           <div className="mb-8 animate-in slide-in-from-top-4 duration-700">
             <div className="bg-accent text-white p-4 rounded-[24px] shadow-xl flex items-center justify-center gap-4 text-center border-b-4 border-accent-foreground/20">
                <TrendingDown className="w-6 h-6 animate-bounce" />
                <div>
-                 <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">PRO TIP: SWITCH & SAVE</p>
+                 <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">CLINICAL SAVINGS OPPORTUNITY</p>
                  <h2 className="text-sm sm:text-lg font-black uppercase tracking-tighter">
-                   Switch to Generic & Save ₹{switchSavingsAmt.toFixed(0)} ({switchSavingsPct}%)
+                   Switch to Generic & Save ₹{switchSavingsAmt.toFixed(0)} ({switchSavingsPct}% off Branded MRP)
                  </h2>
                </div>
                <Zap className="w-6 h-6 fill-white" />
