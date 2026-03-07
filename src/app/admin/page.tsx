@@ -44,7 +44,8 @@ import {
   UploadCloud,
   Bomb,
   Stethoscope,
-  AlertTriangle
+  AlertTriangle,
+  Zap
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -968,15 +969,27 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Therapeutic Class (Category)</Label><Input value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Pack Size</Label><Input value={form.packSize} onChange={e => setForm({...form, packSize: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             
-            <div className="col-span-2 flex items-center space-x-2 pt-4">
-              <Checkbox 
-                id="rx-req" 
-                checked={form.prescriptionRequired} 
-                onCheckedChange={(checked) => setForm({...form, prescriptionRequired: !!checked})} 
-              />
-              <Label htmlFor="rx-req" className="text-[10px] font-black uppercase text-red-500 cursor-pointer flex items-center gap-2">
-                <AlertTriangle className="w-3 h-3" /> Prescription Required (RX)
-              </Label>
+            <div className="col-span-2 flex items-center space-x-10 pt-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="rx-req" 
+                  checked={form.prescriptionRequired} 
+                  onCheckedChange={(checked) => setForm({...form, prescriptionRequired: !!checked})} 
+                />
+                <Label htmlFor="rx-req" className="text-[10px] font-black uppercase text-red-500 cursor-pointer flex items-center gap-2">
+                  <AlertTriangle className="w-3 h-3" /> Prescription Required (RX)
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="is-generic" 
+                  checked={form.isGeneric} 
+                  onCheckedChange={(checked) => setForm({...form, isGeneric: !!checked})} 
+                />
+                <Label htmlFor="is-generic" className="text-[10px] font-black uppercase text-accent cursor-pointer flex items-center gap-2">
+                  <Zap className="w-3 h-3" /> Generic Variant
+                </Label>
+              </div>
             </div>
           </div>
         </TabsContent>

@@ -34,8 +34,8 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, getDoc, query, collection, where, limit } from 'firebase/firestore';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -71,7 +71,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     setLiveLoading(true);
     const liveRef = doc(db, 'product_live_data', id);
     
-    // Using targeted getDoc for precise PDP handshake as requested
     getDoc(liveRef).then(snap => {
       if (snap.exists()) {
         const d = snap.data();
@@ -84,6 +83,20 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       setLiveLoading(false);
     }).catch(() => setLiveLoading(false));
   }, [db, id]);
+
+  // Step 3: Find Generic Alternative (Side-by-Side logic)
+  const alternativesQuery = useMemoFirebase(() => {
+    if (!db || !staticProduct?.moleculeId || staticProduct?.isGeneric) return null;
+    return query(
+      collection(db, 'medicines'),
+      where('moleculeId', '==', staticProduct.moleculeId),
+      where('isGeneric', '==', true),
+      limit(1)
+    );
+  }, [db, staticProduct?.moleculeId, staticProduct?.isGeneric]);
+
+  const { data: genericAlternatives } = useCollection(alternativesQuery);
+  const genericAlt = genericAlternatives?.[0];
 
   if (productLoading || !staticProduct) {
     return (
@@ -203,6 +216,46 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </div>
            </div>
         </div>
+
+        {/* Generic Savings Comparison */}
+        {genericAlt && (
+          <div className="bg-white rounded-[40px] p-8 mb-12 border-2 border-dashed border-accent/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+              <Zap size={120} className="text-accent" />
+            </div>
+            <div className="flex flex-col md:flex-row items-center gap-10">
+              <div className="flex-1 space-y-4 text-center md:text-left">
+                <Badge className="bg-accent text-white px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">Switch & Save</Badge>
+                <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Generic Alternative Available</h3>
+                <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest leading-relaxed">
+                  This product has a bio-equivalent generic version with the same clinical efficacy. 
+                  Switching could save you up to 80% on your clinical supplies.
+                </p>
+              </div>
+              
+              <Card className="w-full md:w-auto min-w-[320px] rounded-[32px] border-none shadow-2xl bg-gray-50/50 p-6 flex items-center gap-6 group hover:scale-[1.02] transition-all">
+                <div className="w-20 h-20 bg-white rounded-2xl p-2 border flex items-center justify-center overflow-hidden shrink-0">
+                  <Image 
+                    src={genericAlt.imageUrl && genericAlt.imageUrl.startsWith('http') ? genericAlt.imageUrl : `https://picsum.photos/seed/${genericAlt.id}/300/300`} 
+                    alt={genericAlt.name} 
+                    width={80} 
+                    height={80} 
+                    className="object-contain" 
+                  />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[10px] font-black text-accent uppercase mb-1">Recommended Option</p>
+                  <h4 className="font-black text-sm uppercase truncate mb-3">{genericAlt.name}</h4>
+                  <Link href={`/product/${genericAlt.id}`}>
+                    <Button className="w-full h-10 rounded-full font-black text-[10px] uppercase bg-primary text-white shadow-lg">
+                      Compare Now
+                    </Button>
+                  </Link>
+                </div>
+              </Card>
+            </div>
+          </div>
+        )}
 
         <section className="bg-white rounded-[48px] p-6 sm:p-14 shadow-2xl border border-gray-50 overflow-hidden">
           <Tabs defaultValue="clinical" className="w-full">
