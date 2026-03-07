@@ -494,6 +494,52 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
   const [shippingData, setShippingData] = useState({ carrier: '', trackingId: '' });
   const { toast } = useToast();
 
+  const handleExport = () => {
+    if (!orders || orders.length === 0) return;
+
+    // Sorting by date descending (most recent first)
+    const sortedData = [...orders].sort((a, b) => {
+      const timeA = a.orderDate?.seconds || 0;
+      const timeB = b.orderDate?.seconds || 0;
+      return timeB - timeA;
+    });
+
+    const headers = ["Order ID", "Order Date", "Patient Name", "Phone", "Street", "Landmark", "Pincode", "Payment Type", "Status", "Grand Total", "Medicine Name", "Quantity", "Unit Price", "Item Total"];
+    
+    const rows = sortedData.flatMap(order => {
+      const dateStr = order.orderDate?.toDate ? format(order.orderDate.toDate(), 'yyyy-MM-dd HH:mm') : 'Pending';
+      const baseInfo = [
+        order.id,
+        dateStr,
+        order.patientName || 'N/A',
+        order.phoneNumber || 'N/A',
+        `"${(order.shippingDetails?.street || '').replace(/"/g, '""')}"`,
+        `"${(order.shippingDetails?.landmark || '').replace(/"/g, '""')}"`,
+        order.shippingDetails?.pincode || '',
+        order.paymentType || 'COD',
+        order.status || 'Pending',
+        Number(order.totalAmount || 0).toFixed(2)
+      ];
+
+      return (order.items || []).map((item: any) => [
+        ...baseInfo,
+        `"${(item.name || '').replace(/"/g, '""')}"`,
+        item.quantity || 0,
+        Number(item.unitPrice || 0).toFixed(2),
+        Number((item.quantity || 0) * (item.unitPrice || 0)).toFixed(2)
+      ].join(","));
+    });
+
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SahiMed_Fulfillment_Manifest_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`;
+    a.click();
+    toast({ title: "Manifest Exported", description: "Order & product manifest downloaded." });
+  };
+
   const handleStatusUpdate = (order: any, newStatus: string) => {
     if (newStatus === 'Shipping') {
       setSelectedOrder(order);
@@ -526,7 +572,11 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Fulfillment Hub" subtitle="Active order processing" onBack={onBack} />
+      <SectionHeader title="Fulfillment Hub" subtitle="Active order processing" onBack={onBack}>
+        <Button onClick={handleExport} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2">
+          <Download className="w-4 h-4" /> Download Manifest
+        </Button>
+      </SectionHeader>
       
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
