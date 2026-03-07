@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from 'next/link';
@@ -20,7 +21,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const [isLoadingLive, setIsLoadingLive] = useState(true);
   const quantity = getItemQuantity(product.id);
 
-  // UNIVERSAL REAL-TIME HANDSHAKE: Independent listener for every SKU
+  // GLOBAL REAL-TIME HANDSHAKE: Independent listener for every SKU
   useEffect(() => {
     const sku = product.sku || product.id;
     if (!db || !sku) {
@@ -54,7 +55,6 @@ export default function ProductCard({ product }: { product: Product }) {
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Inject live price into cart object
     addToCart({
       ...product,
       price: currentPrice > 0 ? currentPrice : product.price,
@@ -97,13 +97,17 @@ export default function ProductCard({ product }: { product: Product }) {
           </p>
         </div>
 
-        {/* 5 & 6. Pricing Section - Dynamic Sync */}
+        {/* 5 & 6. Pricing Section - Universal Real-Time Binding */}
         <div className="pt-2 border-t border-dashed space-y-0.5 mt-auto">
           <div className="flex items-baseline gap-2">
             <p className="text-lg font-black text-accent tracking-tighter">
               {isLoadingLive ? (
                 <span className="animate-pulse text-gray-300">...</span>
-              ) : `₹${currentPrice}`}
+              ) : currentPrice > 0 ? (
+                `₹${currentPrice}`
+              ) : (
+                <span className="text-gray-300">Checking...</span>
+              )}
             </p>
             {!isLoadingLive && currentMrp > currentPrice && currentPrice > 0 && (
               <span className="text-[10px] text-red-400 line-through font-bold">₹{currentMrp}</span>
@@ -112,7 +116,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
       </Link>
       
-      {/* 7. Purchase Logic - UNIVERSAL ADD TO BAG (Always Active) */}
+      {/* 7. Purchase Logic - Universal ADD (Always Active) */}
       <div className="p-4 pt-0">
         {quantity > 0 ? (
           <div className="flex items-center gap-1 rounded-full p-1 bg-primary shadow-lg w-full h-10">

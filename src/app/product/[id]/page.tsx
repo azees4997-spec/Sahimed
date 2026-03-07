@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { use, useState, useEffect } from 'react';
@@ -40,7 +41,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const productRef = useMemoFirebase(() => (!db || !id) ? null : doc(db, 'medicines', id), [db, id]);
   const { data: staticProduct, isLoading: productLoading } = useDoc(productRef);
 
-  // 2. Dynamic Price/Stock Sync for Branded Card (Universal Listener)
+  // 2. Universal Dynamic Price/Stock Sync for Branded Card
   const [liveData, setLiveData] = useState<{ mrp: number, price: number, stock: number } | null>(null);
   const [isLiveLoading, setIsLiveLoading] = useState(true);
 
@@ -80,7 +81,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { data: genericAlternatives } = useCollection(alternativesQuery);
   const genericAlt = genericAlternatives?.[0];
 
-  // 5. Dynamic Price/Stock Sync for Generic Card (Universal Listener)
+  // 5. Universal Dynamic Price/Stock Sync for Generic Card
   const [altLiveData, setAltLiveData] = useState<{ price: number, mrp: number, stock: number } | null>(null);
   const [isAltLiveLoading, setIsAltLiveLoading] = useState(true);
 
@@ -134,7 +135,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-1" />
         </div>
 
-        {/* standardized clinical attribute sequence */}
+        {/* Standardized clinical attribute sequence */}
         <div className="flex-1 space-y-1">
           {/* 2. Item Name */}
           <h3 className="font-black text-[11px] sm:text-[15px] text-gray-900 uppercase leading-tight line-clamp-2 min-h-[2.2rem]">
@@ -149,11 +150,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             {product.manufacturer}
           </p>
 
-          {/* 5 & 6. Sahimed Price & MRP */}
+          {/* 5 & 6. Sahimed Price & MRP - Universal Sync */}
           <div className="pt-2 border-t border-dashed mt-2">
             <div className="flex items-baseline gap-1">
               <p className={cn("text-lg sm:text-2xl font-black tracking-tighter", pPrice > 0 ? "text-accent" : "text-gray-300")}>
-                {isLoading ? <span className="animate-pulse">...</span> : `₹${pPrice}`}
+                {isLoading ? <span className="animate-pulse">...</span> : pPrice > 0 ? `₹${pPrice}` : "Checking..."}
               </p>
               {!isLoading && pMrp > pPrice && pPrice > 0 && (
                 <span className="text-[8px] sm:text-[10px] text-red-400 line-through font-bold">₹{pMrp}</span>
@@ -188,7 +189,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       <Navbar />
       <main className="max-w-[1200px] mx-auto px-3 sm:px-10 py-8">
         
-        {/* Top Header: Plain Clinical Composition badge */}
+        {/* Top Header: Plain Clinical Composition title */}
         <div className="text-center mb-8 space-y-3">
            <div className="inline-flex items-center gap-2 bg-primary/10 px-6 py-2.5 rounded-full border border-primary/20 shadow-sm">
               <Dna className="w-4 h-4 text-primary" />
@@ -205,7 +206,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            )}
         </div>
 
-        {/* Strict 2-Card Horizontal Comparison */}
+        {/* Strict 2-Card Horizontal Comparison Lockdown */}
         <div className="mb-12">
           <div className="grid grid-cols-2 gap-2 sm:gap-10 items-stretch">
             <ComparisonCard 
