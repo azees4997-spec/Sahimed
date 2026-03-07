@@ -32,7 +32,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp, doc, getDoc, addDoc } from 'firebase/firestore';
+import { collection, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 export default function CheckoutPage() {
@@ -241,8 +241,13 @@ export default function CheckoutPage() {
     };
 
     try {
-      const orderRef = collection(db, 'userProfiles', user.uid, 'orders');
-      const docRef = await addDoc(orderRef, orderData);
+      // PRE-GENERATE ID FOR INSTANT REDIRECT
+      const ordersColRef = collection(db, 'userProfiles', user.uid, 'orders');
+      const newOrderRef = doc(ordersColRef);
+      const orderId = newOrderRef.id;
+
+      // INITIATE NON-BLOCKING WRITE
+      setDocumentNonBlocking(newOrderRef, orderData, { merge: false });
       
       if (!isSomeoneElse) {
         setDocumentNonBlocking(doc(db, 'userProfiles', user.uid), {
@@ -253,11 +258,11 @@ export default function CheckoutPage() {
         }, { merge: true });
       }
 
+      // REDIRECT INSTANTLY
       clearCart();
-      router.push(`/order-success/${docRef.id}`);
+      router.push(`/order-success/${orderId}`);
     } catch (err) {
       setOrderError("Could not place order. Please check your internet connection.");
-    } finally {
       setLoading(false);
     }
   };
