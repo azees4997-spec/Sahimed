@@ -4,13 +4,13 @@
 import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Plus, Minus, Ticket, Check, X, PartyPopper, ChevronRight, FileWarning, Camera, RotateCcw, ClipboardCheck, Truck } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, Plus, Minus, Ticket, ChevronRight, FileWarning, Camera, ClipboardCheck, Tag } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useState } from 'react';
 
 export default function CartPage() {
@@ -35,6 +35,7 @@ export default function CartPage() {
     rawDiscount = appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue / 100));
   }
   const promoDiscount = (appliedPromo?.maxDiscount && appliedPromo.maxDiscount > 0) ? Math.min(rawDiscount, appliedPromo.maxDiscount) : rawDiscount;
+  
   const finalPayableBeforeDelivery = Math.max(0, totalPrice + feeTotal - promoDiscount);
   const deliveryFeeDoc = activeFees.find(f => f.name.toLowerCase().includes('delivery'));
   const deliveryCharge = finalPayableBeforeDelivery < (deliveryFeeDoc?.minPurchase || 500) ? (deliveryFeeDoc?.discountedAmount || 40) : 0;
@@ -99,7 +100,6 @@ export default function CartPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-4">
             {cart.map((item) => {
-              // Robust URL Validation for Cart Images
               const safeImageUrl = (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http'))
                 ? item.imageUrl
                 : `https://picsum.photos/seed/${item.id}/300/300`;
@@ -131,23 +131,141 @@ export default function CartPage() {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white p-10 rounded-[50px] shadow-2xl border sticky top-24">
-              <h2 className="text-[11px] font-black mb-10 uppercase tracking-[0.3em] text-gray-400">Bill Details</h2>
-              <div className="space-y-6 mb-10">
-                <div className="flex justify-between text-[11px] font-black text-gray-500 uppercase"><span>Cart Gross (MRP)</span><span className="text-red-500 line-through">₹{totalMrp}</span></div>
-                <div className="flex justify-between text-[11px] font-black uppercase"><span>Estimated Taxes</span><span className="text-gray-900">₹{(totalPrice * 0.12).toFixed(0)}</span></div>
-                <div className="flex justify-between text-[11px] font-black uppercase"><span>Delivery</span><span className={deliveryCharge === 0 ? "text-accent" : "text-gray-900"}>{deliveryCharge === 0 ? 'FREE' : `₹${deliveryCharge}`}</span></div>
-                <div className="pt-10 border-t border-dashed flex justify-between items-baseline"><span className="text-sm font-black uppercase text-gray-900">Total Payable</span><span className="text-4xl font-black text-primary tracking-tighter">₹{finalPayable.toFixed(0)}</span></div>
+            <div className="space-y-6 sticky top-24">
+              {/* PROMO SECTION */}
+              <div 
+                className="bg-white p-6 rounded-[40px] shadow-sm border flex items-center justify-between group cursor-pointer hover:shadow-lg transition-all" 
+                onClick={() => setIsPromoDialogOpen(true)}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
+                    <Ticket className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="font-black text-[10px] uppercase tracking-tight text-gray-900">
+                      {appliedPromo ? `Applied: ${appliedPromo.code}` : "Apply Coupon"}
+                    </p>
+                    <p className="text-[8px] font-bold uppercase text-gray-400">
+                      {appliedPromo ? appliedPromo.description : "Save more on this order"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {appliedPromo ? (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); applyPromo(null); }} 
+                      className="text-red-500 font-black text-[10px] uppercase tracking-widest hover:underline"
+                    >
+                      Remove
+                    </button>
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-primary transition-colors" />
+                  )}
+                </div>
               </div>
-              {isPrescriptionReady ? (
-                <Link href="/checkout"><Button className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl bg-primary text-white">Checkout Now <ArrowRight className="w-5 h-5 ml-4" /></Button></Link>
-              ) : (
-                <Button onClick={() => document.getElementById('cart-upload')?.click()} className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl bg-orange-600 text-white">Upload Prescription <Camera className="w-5 h-5 ml-4" /></Button>
-              )}
+
+              {/* BILL DETAILS */}
+              <div className="bg-white p-10 rounded-[50px] shadow-2xl border">
+                <h2 className="text-[11px] font-black mb-10 uppercase tracking-[0.3em] text-gray-400">Bill Details</h2>
+                <div className="space-y-6 mb-10">
+                  <div className="flex justify-between text-[11px] font-black text-gray-500 uppercase">
+                    <span>Cart Gross (MRP)</span>
+                    <span className="text-red-500 line-through">₹{totalMrp}</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] font-black uppercase">
+                    <span>Item Total</span>
+                    <span className="text-gray-900">₹{totalPrice}</span>
+                  </div>
+                  {appliedPromo && (
+                    <div className="flex justify-between text-[11px] font-black uppercase text-accent">
+                      <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Coupon Discount</span>
+                      <span>-₹{promoDiscount.toFixed(0)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-[11px] font-black uppercase">
+                    <span>Estimated Taxes</span>
+                    <span className="text-gray-900">₹{(totalPrice * 0.12).toFixed(0)}</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] font-black uppercase">
+                    <span>Delivery</span>
+                    <span className={deliveryCharge === 0 ? "text-accent font-black" : "text-gray-900"}>
+                      {deliveryCharge === 0 ? 'FREE' : `₹${deliveryCharge}`}
+                    </span>
+                  </div>
+                  <div className="pt-10 border-t border-dashed flex justify-between items-baseline">
+                    <span className="text-sm font-black uppercase text-gray-900">Total Payable</span>
+                    <span className="text-4xl font-black text-primary tracking-tighter">₹{finalPayable.toFixed(0)}</span>
+                  </div>
+                </div>
+                {isPrescriptionReady ? (
+                  <Link href="/checkout">
+                    <Button className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl bg-primary text-white">
+                      Checkout Now <ArrowRight className="w-5 h-5 ml-4" />
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button onClick={() => document.getElementById('cart-upload')?.click()} className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl bg-orange-600 text-white">
+                    Upload Prescription <Camera className="w-5 h-5 ml-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </main>
+
+      {/* PROMO DIALOG */}
+      <Dialog open={isPromoDialogOpen} onOpenChange={setIsPromoDialogOpen}>
+        <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden shadow-3xl">
+          <div className="bg-primary p-8 text-white">
+            <DialogTitle className="text-2xl font-black uppercase tracking-tight">Available Offers</DialogTitle>
+          </div>
+          <div className="p-8 space-y-4 max-h-[60vh] overflow-y-auto scrollbar-hide">
+            {availablePromos.length === 0 ? (
+              <div className="py-12 text-center">
+                <Ticket className="w-12 h-12 text-gray-100 mx-auto mb-4" />
+                <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">No active coupons available</p>
+              </div>
+            ) : (
+              availablePromos.map(promo => {
+                const isApplicable = totalPrice >= promo.minOrderValue;
+                return (
+                  <div 
+                    key={promo.id} 
+                    className={cn(
+                      "p-6 rounded-[32px] border-2 transition-all flex flex-col gap-2 relative overflow-hidden group",
+                      isApplicable ? "border-gray-100 hover:border-primary cursor-pointer bg-white" : "opacity-50 grayscale cursor-not-allowed border-dashed bg-gray-50"
+                    )}
+                    onClick={() => isApplicable && (applyPromo(promo), setIsPromoDialogOpen(false))}
+                  >
+                    <div className="flex justify-between items-center">
+                      <Badge className="bg-purple-100 text-purple-600 font-black text-[9px] uppercase tracking-widest px-3 py-1 border-none">
+                        {promo.code}
+                      </Badge>
+                      <span className="font-black text-sm text-primary">
+                        {promo.discountType === 'percentage' ? `${promo.discountValue}% OFF` : `₹${promo.discountValue} OFF`}
+                      </span>
+                    </div>
+                    <p className="text-[10px] font-bold text-gray-600 leading-relaxed uppercase">{promo.description}</p>
+                    {!isApplicable ? (
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="h-1 flex-1 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-orange-400" style={{ width: `${(totalPrice / promo.minOrderValue) * 100}%` }} />
+                        </div>
+                        <p className="text-[8px] font-black text-orange-500 uppercase tracking-tighter shrink-0">
+                          Add ₹{promo.minOrderValue - totalPrice} more
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-[8px] font-black text-accent uppercase tracking-widest mt-2 group-hover:animate-pulse">Tap to Apply</p>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
