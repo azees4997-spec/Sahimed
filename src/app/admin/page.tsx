@@ -39,10 +39,11 @@ import {
   Activity,
   ClipboardList,
   Star,
-  Image as ImageIcon,
+  ImageIcon,
   Link as LinkIcon,
   UploadCloud,
-  Bomb
+  Bomb,
+  Stethoscope
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -633,12 +634,20 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
 
 function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const medsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'medicines'), orderBy('name', 'asc')) : null, [db, isVerified]);
+  const molsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'moleculeMaster')) : null, [db, isVerified]);
   const { data: medicines, isLoading } = useCollection(medsQuery);
+  const { data: molecules } = useCollection(molsQuery);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [purgeProgress, setPurgeProgress] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const moleculeLookup = (molecules || []).reduce((acc: any, m: any) => {
+    acc[m.id] = m.molecule;
+    return acc;
+  }, {});
 
   const filtered = medicines?.filter(m => {
     const s = searchTerm.toLowerCase();
@@ -648,7 +657,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
   const handleExport = () => {
     if (!filtered) return;
     const headers = "Name,SKU,MoleculeMapping,Manufacturer,Price,MRP,Stock,Category,Generic,RX_Required,PackSize,Description,HowToUse,Treatment,SafetyAdvice,SideEffects,AlcoholInteraction,PregnancyInteraction,LactationInteraction,DrivingInteraction,KidneyInteraction,LiverInteraction,ImageURL1,ImageURL2,ImageURL3\n";
-    const rows = filtered.map(m => `"${m.name}","${m.sku || ''}","${m.moleculeId || ''}","${m.manufacturer}",${m.price},${m.mrp},${m.availableQuantity},"${m.category}",${m.isGeneric},${m.prescriptionRequired},"${m.packSize || ''}","${(m.description || '').replace(/"/g, '""')}","${(m.howToUse || '').replace(/"/g, '""')}","${(m.treatment || '').replace(/"/g, '""')}","${(m.safetyAdvice || '').replace(/"/g, '""')}","${(m.sideEffects || '').replace(/"/g, '""')}","${(m.alcoholInteraction || '').replace(/"/g, '""')}","${(m.pregnancyInteraction || '').replace(/"/g, '""')}","${(m.lactationInteraction || '').replace(/"/g, '""')}","${(m.drivingInteraction || '').replace(/"/g, '""')}","${(m.kidneyInteraction || '').replace(/"/g, '""')}","${(m.liverInteraction || '').replace(/"/g, '""')}","${m.imageUrls?.[0] || ''}","${m.imageUrls?.[1] || ''}","${m.imageUrls?.[2] || ''}"`).join("\n");
+    const rows = filtered.map(m => `"${m.name}","${m.sku || ''}","${m.moleculeId || ''}","${m.manufacturer}",${m.price || 0},${m.mrp || 0},${m.availableQuantity || 0},"${m.category}",${m.isGeneric},${m.prescriptionRequired},"${m.packSize || ''}","${(m.description || '').replace(/"/g, '""')}","${(m.howToUse || '').replace(/"/g, '""')}","${(m.treatment || '').replace(/"/g, '""')}","${(m.safetyAdvice || '').replace(/"/g, '""')}","${(m.sideEffects || '').replace(/"/g, '""')}","${(m.alcoholInteraction || '').replace(/"/g, '""')}","${(m.pregnancyInteraction || '').replace(/"/g, '""')}","${(m.lactationInteraction || '').replace(/"/g, '""')}","${(m.drivingInteraction || '').replace(/"/g, '""')}","${(m.kidneyInteraction || '').replace(/"/g, '""')}","${(m.liverInteraction || '').replace(/"/g, '""')}","${m.imageUrls?.[0] || ''}","${m.imageUrls?.[1] || ''}","${m.imageUrls?.[2] || ''}"`).join("\n");
     const blob = new Blob([headers + rows], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -662,7 +671,6 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
     let totalDeleted = 0;
     
     try {
-      // Clear static collection
       const collections = ['medicines', 'product_live_data'];
       for (const col of collections) {
         while (true) {
@@ -676,7 +684,6 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
           setPurgeProgress(`Purging ${col}: ${totalDeleted}...`);
         }
       }
-
       toast({ title: "System Reset Successful", description: "Catalog and Live Data cleared." });
     } catch (err) {
       toast({ variant: 'destructive', title: "Purge Interrupted" });
@@ -687,7 +694,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 
   const downloadTemplate = () => {
     const headers = "Name,SKU,MoleculeMapping,Manufacturer,Price,MRP,Stock,Category,Generic,RX_Required,PackSize,Description,HowToUse,Treatment,SafetyAdvice,SideEffects,AlcoholInteraction,PregnancyInteraction,LactationInteraction,DrivingInteraction,KidneyInteraction,LiverInteraction,ImageURL1,ImageURL2,ImageURL3\n";
-    const sample = `"Sample Product","SKU123","MOL_ID_HERE","SahiMed Labs",100,150,50,"Diabetes",true,false,"Strip of 10","Clinical Desc","1 daily","Control sugar","Safe","Nausea","None","Consult Dr","Safe","Safe","Safe","Safe","https://picsum.photos/seed/med1/300","",""`;
+    const sample = `"Sample Product","SKU123","MASTER_MOL_CODE","SahiMed Labs",100,150,50,"Diabetes",true,false,"Strip of 10","Clinical Desc","1 daily","Control sugar","Safe","Nausea","None","Consult Dr","Safe","Safe","Safe","Safe","https://picsum.photos/seed/med1/300","",""`;
     const blob = new Blob([headers + sample], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -723,7 +730,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
           const moleculeDocId = molLookup[molMappingCode] || molMappingCode || '';
           const images = [img1, img2, img3].filter(Boolean);
           
-          // PART 1: Static Repository
+          // Hybrid Logic: Static Repository (medicines)
           const staticRef = doc(db, 'medicines', sku);
           const staticPayload = { 
             name, sku, moleculeId: moleculeDocId, manufacturer, 
@@ -747,7 +754,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
             updatedAt: serverTimestamp()
           };
 
-          // PART 2: Live Data Layer (Prices and Stock)
+          // Hybrid Logic: Dynamic Inventory (product_live_data)
           const liveRef = doc(db, 'product_live_data', sku);
           const livePayload = {
             mrp: Number(mrp) || 0,
@@ -771,7 +778,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Product Master" subtitle="Hybrid Architecture Control" onBack={onBack}>
+      <SectionHeader title="Product Master" subtitle="Unified Hybrid Logic" onBack={onBack}>
         <div className="flex gap-2">
           <Button variant="destructive" onClick={handlePurgeCatalog} disabled={!!purgeProgress} className="rounded-full h-12 px-6 font-black text-[10px] uppercase gap-2">
             {purgeProgress ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bomb className="w-4 h-4" />} Purge All
@@ -815,6 +822,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
                         <div className="flex flex-col">
                           <span className="font-black text-sm uppercase">{med.name}</span>
                           <span className="text-[9px] text-gray-400 uppercase">{med.sku} • {med.manufacturer}</span>
+                          {med.moleculeId && <span className="text-[8px] font-black text-primary uppercase">MAPPED: {moleculeLookup[med.moleculeId] || med.moleculeId}</span>}
                         </div>
                       </div>
                     </td>
@@ -865,6 +873,22 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     availableQuantity: initialData?.availableQuantity || 0
   });
 
+  // Targeted fetch for live price/stock if editing existing item
+  useEffect(() => {
+    if (initialData?.sku) {
+      getDoc(doc(db, 'product_live_data', initialData.sku)).then(snap => {
+        if (snap.exists()) {
+          const d = snap.data();
+          setLiveData({
+            price: d.sahimed_price || 0,
+            mrp: d.mrp || 0,
+            availableQuantity: d.stock_quantity || 0
+          });
+        }
+      });
+    }
+  }, [initialData, db]);
+
   const [imageUrls, setImageUrls] = useState<string[]>(() => {
     const arr = initialData?.imageUrls || (initialData?.imageUrl ? [initialData.imageUrl] : []);
     const result = [...arr];
@@ -903,6 +927,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       return;
     }
 
+    // PART 1: Static Schema Persistence (medicines)
     const staticPayload = { 
       ...form, 
       imageUrls: finalImages,
@@ -910,6 +935,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       updatedAt: serverTimestamp() 
     };
 
+    // PART 2: Dynamic Live Persistence (product_live_data)
     const livePayload = {
       mrp: Number(liveData.mrp),
       sahimed_price: Number(liveData.price),
@@ -937,6 +963,8 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
             <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase">Medicine Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase">SKU / Item Code</Label><Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Manufacturer</Label><Input value={form.manufacturer} onChange={e => setForm({...form, manufacturer: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Therapeutic Class (Category)</Label><Input value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Pack Size</Label><Input value={form.packSize} onChange={e => setForm({...form, packSize: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
           </div>
         </TabsContent>
 
@@ -954,7 +982,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                 <div key={idx} className="bg-gray-50 rounded-[32px] p-6 border-2 border-dashed border-gray-200 flex flex-col items-center gap-4 relative">
                    <button type="button" onClick={() => setThumbnailIdx(idx)} className={cn("absolute top-4 right-4 p-2 rounded-full", thumbnailIdx === idx ? "bg-primary text-white" : "bg-white text-gray-300")}><Star className="w-4 h-4 fill-current" /></button>
                    <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center overflow-hidden border shadow-inner">
-                      {imageUrls[idx] ? <img src={imageUrls[idx]} className="w-full h-full object-contain" alt="" /> : <ImageIcon className="text-gray-200 w-8 h-8" />}
+                      {imageUrls[idx] ? <img src={imageUrls[idx]} className="w-full h-full object-contain" alt="" /> : <Package className="text-gray-200 w-8 h-8" />}
                    </div>
                    <div className="relative w-full">
                       <input type="file" accept="image/*" onChange={e => handleFileUpload(e, idx)} className="absolute inset-0 opacity-0 cursor-pointer" />
@@ -966,8 +994,16 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
         </TabsContent>
 
         <TabsContent value="clinical" className="space-y-6">
-          <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Molecule Mapping</Label><Select value={form.moleculeId} onValueChange={v => setForm({...form, moleculeId: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select Molecule" /></SelectTrigger><SelectContent className="rounded-2xl">{molecules?.map(m => <SelectItem key={m.id} value={m.id}>{m.molecule} ({m.form})</SelectItem>)}</SelectContent></Select></div>
-          <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Primary Treatment</Label><Textarea value={form.treatment} onChange={e => setForm({...form, treatment: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Molecule Mapping</Label><Select value={form.moleculeId} onValueChange={v => setForm({...form, moleculeId: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select Molecule" /></SelectTrigger><SelectContent className="rounded-2xl">{molecules?.map(m => <SelectItem key={m.id} value={m.id}>{m.molecule} ({m.masterId})</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Primary Treatment</Label><Input value={form.treatment} onChange={e => setForm({...form, treatment: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase">Clinical Description</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Expected Side Effects</Label><Textarea value={form.sideEffects} onChange={e => setForm({...form, sideEffects: e.target.value})} className="rounded-2xl bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Usage Instructions</Label><Textarea value={form.howToUse} onChange={e => setForm({...form, howToUse: e.target.value})} className="rounded-2xl bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase">General Safety Advice</Label><Textarea value={form.safetyAdvice} onChange={e => setForm({...form, safetyAdvice: e.target.value})} className="rounded-2xl bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Alcohol Interaction</Label><Input value={form.alcoholInteraction} onChange={e => setForm({...form, alcoholInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Kidney Safety</Label><Input value={form.kidneyInteraction} onChange={e => setForm({...form, kidneyInteraction: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+          </div>
         </TabsContent>
       </Tabs>
 

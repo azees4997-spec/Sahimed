@@ -13,7 +13,6 @@ import {
   Plus,
   Minus,
   ShieldCheck,
-  Phone,
   Beer,
   Baby,
   Milk,
@@ -23,7 +22,13 @@ import {
   ClipboardList,
   Loader2,
   Dna,
-  Search as SearchIcon
+  Search as SearchIcon,
+  Activity,
+  HeartPulse,
+  Zap,
+  Sparkles,
+  Wind,
+  ShieldPlus
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -49,14 +54,14 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { toast } = useToast();
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
 
-  // Step 1: Fetch Static Clinical Details (Permanent Catalog)
+  // Step 1: Fetch Static Clinical Details (Unified Hybrid - medicines collection)
   const productRef = useMemoFirebase(() => {
     if (!db || !id) return null;
     return doc(db, 'medicines', id);
   }, [db, id]);
   const { data: staticProduct, isLoading: productLoading } = useDoc(productRef);
 
-  // Step 2: Targeted Dynamic get() for Live Price and Stock
+  // Step 2: Targeted Fetch for Dynamic Triad (Live Price & Stock)
   const [liveData, setLiveData] = useState<{ mrp: number, price: number, stock: number } | null>(null);
   const [liveLoading, setLiveLoading] = useState(true);
 
@@ -65,8 +70,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     setLiveLoading(true);
     const liveRef = doc(db, 'product_live_data', id);
     
-    // Using targeted onSnapshot for the specific SKU to overlay dynamic state instantly
-    const unsubscribe = onSnapshot(liveRef, (snap) => {
+    // Using targeted getDoc for precise PDP handshake as requested
+    getDoc(liveRef).then(snap => {
       if (snap.exists()) {
         const d = snap.data();
         setLiveData({
@@ -76,9 +81,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         });
       }
       setLiveLoading(false);
-    });
-
-    return () => unsubscribe();
+    }).catch(() => setLiveLoading(false));
   }, [db, id]);
 
   if (productLoading || !staticProduct) {
@@ -90,7 +93,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     );
   }
 
-  // Final Consolidated Product Object
+  // Final Consolidated Hybrid Product Object
   const product = {
     ...staticProduct,
     price: liveData?.price || staticProduct.price || 0,
@@ -99,6 +102,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   };
 
   const isOutOfStock = product.availableQuantity <= 0;
+
+  // Robust URL Validation for PDP Image
+  const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
+    ? product.imageUrl
+    : `https://picsum.photos/seed/${product.id}/600/600`;
 
   const InteractionCard = ({ icon: Icon, title, description }: { icon: any, title: string, description?: string }) => (
     <div className="bg-white p-6 rounded-[32px] border border-gray-100 flex items-start gap-5 hover:shadow-xl transition-all">
@@ -129,7 +137,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <DialogTrigger asChild>
                   <div className="w-full h-full relative cursor-zoom-in">
                     <Image 
-                      src={product.imageUrl && product.imageUrl.startsWith('http') ? product.imageUrl : `https://picsum.photos/seed/${product.id}/600/600`} 
+                      src={safeImageUrl} 
                       alt={product.name} 
                       fill 
                       className="object-contain p-12 group-hover:scale-105 transition-transform duration-700" 
@@ -140,10 +148,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   </div>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl border-none p-0 overflow-hidden rounded-[48px] shadow-3xl bg-white">
-                   <div className="aspect-square relative"><Image src={product.imageUrl && product.imageUrl.startsWith('http') ? product.imageUrl : `https://picsum.photos/seed/${product.id}/600/600`} alt={product.name} fill className="object-contain p-12" /></div>
+                   <div className="aspect-square relative"><Image src={safeImageUrl} alt={product.name} fill className="object-contain p-12" /></div>
                 </DialogContent>
               </Dialog>
-              {isOutOfStock && <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-sm"><Badge variant="destructive" className="font-black text-xs px-6 py-2 rounded-full shadow-2xl">OUT OF STOCK</Badge></div>}
+              {isOutOfStock && !liveLoading && <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-sm"><Badge variant="destructive" className="font-black text-xs px-6 py-2 rounded-full shadow-2xl">OUT OF STOCK</Badge></div>}
            </Card>
 
            <div className="flex flex-col justify-center space-y-10">
@@ -225,6 +233,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <InteractionCard icon={Baby} title="Pregnancy Protocol" description={product.pregnancyInteraction} />
               <InteractionCard icon={Milk} title="Lactation Caution" description={product.lactationInteraction} />
               <InteractionCard icon={Car} title="Driving Safety" description={product.drivingInteraction} />
+              <InteractionCard icon={ShieldPlus} title="Kidney Safety" description={product.kidneyInteraction} />
+              <InteractionCard icon={ShieldAlert} title="Liver Protocol" description={product.liverInteraction} />
             </TabsContent>
           </Tabs>
         </section>

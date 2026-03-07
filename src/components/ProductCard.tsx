@@ -81,7 +81,9 @@ export default function ProductCard({ product }: { product: Product }) {
             </div>
           </DialogTrigger>
           <DialogContent className="max-w-2xl border-none p-0 bg-white rounded-[40px] overflow-hidden shadow-3xl">
-             <div className="relative aspect-square w-full flex items-center justify-center p-6"><Image src={safeImageUrl} alt={product.name} fill className="object-contain p-8" /></div>
+             <div className="relative aspect-square w-full flex items-center justify-center p-6">
+               <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-8" />
+             </div>
           </DialogContent>
         </Dialog>
       </div>

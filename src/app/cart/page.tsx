@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/dialog";
 import { useState } from 'react';
 
 export default function CartPage() {
@@ -99,10 +99,16 @@ export default function CartPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-4">
             {cart.map((item) => {
-              const safeImageUrl = item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http') ? item.imageUrl : `https://picsum.photos/seed/${item.id}/300/300`;
+              // Robust URL Validation for Cart Images
+              const safeImageUrl = (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http'))
+                ? item.imageUrl
+                : `https://picsum.photos/seed/${item.id}/300/300`;
+                
               return (
                 <div key={item.id} className="bg-white p-6 rounded-[40px] shadow-sm border flex items-center gap-6 group hover:shadow-2xl transition-all">
-                  <div className="relative w-20 h-20 bg-gray-50 rounded-[32px] overflow-hidden shrink-0 border"><Image src={safeImageUrl} alt={item.name} fill className="object-contain p-2" /></div>
+                  <div className="relative w-20 h-20 bg-gray-50 rounded-[32px] overflow-hidden shrink-0 border">
+                    <Image src={safeImageUrl} alt={item.name} fill className="object-contain p-2" />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-black text-gray-900 truncate text-sm uppercase tracking-tight">{item.name}</h3>
                     <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate mb-4">{item.saltComposition}</p>
