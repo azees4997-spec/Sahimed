@@ -28,7 +28,8 @@ import {
   Zap,
   Sparkles,
   Wind,
-  ShieldPlus
+  ShieldPlus,
+  AlertTriangle
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -127,6 +128,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <Dna className="w-4 h-4 text-primary" />
               <span className="text-xs font-black text-primary uppercase tracking-[0.2em]">Active Formula</span>
            </div>
+           
+           {product.prescriptionRequired && (
+             <div className="flex justify-center">
+               <Badge className="bg-red-50 text-red-600 border-red-100 rounded-full font-black text-[10px] px-6 py-2 uppercase tracking-[0.2em] animate-pulse flex items-center gap-2">
+                 <AlertTriangle className="w-3 h-3" /> Prescription Required
+               </Badge>
+             </div>
+           )}
+
            <h2 className="text-2xl sm:text-4xl font-black text-gray-900 uppercase tracking-tighter leading-tight">{product.name}</h2>
            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.3em]">Precision Clinical Profile • {product.sku}</p>
         </div>

@@ -43,7 +43,8 @@ import {
   Link as LinkIcon,
   UploadCloud,
   Bomb,
-  Stethoscope
+  Stethoscope,
+  AlertTriangle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,7 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Dialog, 
   DialogContent, 
@@ -965,6 +967,17 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Manufacturer</Label><Input value={form.manufacturer} onChange={e => setForm({...form, manufacturer: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Therapeutic Class (Category)</Label><Input value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Pack Size</Label><Input value={form.packSize} onChange={e => setForm({...form, packSize: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            
+            <div className="col-span-2 flex items-center space-x-2 pt-4">
+              <Checkbox 
+                id="rx-req" 
+                checked={form.prescriptionRequired} 
+                onCheckedChange={(checked) => setForm({...form, prescriptionRequired: !!checked})} 
+              />
+              <Label htmlFor="rx-req" className="text-[10px] font-black uppercase text-red-500 cursor-pointer flex items-center gap-2">
+                <AlertTriangle className="w-3 h-3" /> Prescription Required (RX)
+              </Label>
+            </div>
           </div>
         </TabsContent>
 
@@ -1180,7 +1193,7 @@ function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
               <tr><th className="px-10 py-8">Code</th><th className="px-10 py-8">Value</th><th className="px-10 py-8">Min. Purchase</th><th className="px-10 py-8">Status</th><th className="px-10 py-8 text-right">Actions</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {!promos || promos.length === 0 ? (<tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300">No active campaigns</td></tr>) : promos?.map(promo => (
+              {! promos || promos.length === 0 ? (<tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300">No active campaigns</td></tr>) : promos?.map(promo => (
                 <tr key={promo.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-10 py-8 font-black text-sm uppercase text-primary">{promo.code}</td>
                   <td className="px-10 py-8 font-black text-accent">{promo.discountValue}{promo.discountType === 'percentage' ? '%' : '₹'}</td>

@@ -3,7 +3,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Plus, Minus, BellRing, ShoppingCart, Search as SearchIcon } from 'lucide-react';
+import { Plus, Minus, BellRing, ShoppingCart, Search as SearchIcon, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product, useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
@@ -77,6 +77,15 @@ export default function ProductCard({ product }: { product: Product }) {
               <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
                  <SearchIcon className="w-6 h-6 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
               </div>
+              
+              {product.prescriptionRequired && !isOutOfStock && (
+                <div className="absolute top-3 left-3">
+                  <Badge className="bg-red-500 text-white text-[7px] font-black uppercase px-2 py-0.5 rounded-md border-none shadow-lg flex items-center gap-1">
+                    Rx
+                  </Badge>
+                </div>
+              )}
+
               {isOutOfStock && <div className="absolute inset-0 flex items-center justify-center p-2 bg-white/40 backdrop-blur-sm"><Badge variant="destructive" className="font-black text-[8px] uppercase tracking-widest rounded-full bg-gray-900/90 border-none">Out of Stock</Badge></div>}
             </div>
           </DialogTrigger>
