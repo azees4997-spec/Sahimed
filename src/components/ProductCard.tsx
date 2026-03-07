@@ -1,4 +1,3 @@
-
 "use client"
 
 import Image from 'next/image';
@@ -83,6 +82,11 @@ export default function ProductCard({ product }: { product: Product }) {
 
   const displayComposition = product.saltComposition || molecule?.molecule || 'N/A';
 
+  // URL Validation for next/image
+  const safeImageUrl = product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http')
+    ? product.imageUrl
+    : 'https://picsum.photos/seed/medicine/300/300';
+
   return (
     <div
       className={cn(
@@ -96,7 +100,7 @@ export default function ProductCard({ product }: { product: Product }) {
           <DialogTrigger asChild>
             <div className="w-full h-full relative cursor-zoom-in group/img">
               <Image
-                src={product.imageUrl}
+                src={safeImageUrl}
                 alt={product.name}
                 fill
                 className={cn(
@@ -123,7 +127,7 @@ export default function ProductCard({ product }: { product: Product }) {
                <DialogTitle>{product.name}</DialogTitle>
              </DialogHeader>
              <div className="relative aspect-square w-full bg-white flex items-center justify-center p-6">
-                <Image src={product.imageUrl} alt={product.name} fill className="object-contain p-8" />
+                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-8" />
              </div>
           </DialogContent>
         </Dialog>

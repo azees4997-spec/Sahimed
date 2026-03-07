@@ -1,4 +1,3 @@
-
 "use client"
 
 import Navbar from '@/components/Navbar';
@@ -241,55 +240,61 @@ export default function CartPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-6">
             <div className="space-y-4">
-              {cart.map((item) => (
-                <div key={item.id} className="bg-white p-6 rounded-[40px] shadow-sm border border-gray-100 flex items-center gap-6 group hover:shadow-2xl hover:border-primary/5 transition-all duration-500 animate-in slide-in-from-bottom-4">
-                  <Link href={`/product/${item.id}`} className="relative w-24 h-24 bg-gray-50 rounded-[32px] overflow-hidden shrink-0 active:scale-95 transition-transform border border-gray-100/50">
-                    <Image src={item.imageUrl} alt={item.name} fill className="object-contain p-3 group-hover:scale-110 transition-transform duration-500" />
-                  </Link>
-                  
-                  <div className="flex-1 min-w-0 py-2">
-                    <Link href={`/product/${item.id}`} className="group/title">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-black text-gray-900 truncate group-hover/title:text-primary transition-colors text-sm uppercase tracking-tight">{item.name}</h3>
-                        {item.prescriptionRequired && (
-                          <Badge variant="outline" className="text-[7px] font-black uppercase text-orange-500 border-orange-200">RX Required</Badge>
-                        )}
-                      </div>
-                    </Link>
-                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate mb-4">{item.saltComposition}</p>
-                    
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1.5 border border-gray-200">
-                        <button 
-                          onClick={() => updateQuantity(item.id, -1)}
-                          className="w-10 h-10 rounded-full flex items-center justify-center bg-primary text-white hover:bg-primary/90 transition-all shadow-lg active:scale-90"
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="text-sm font-black text-gray-900 w-8 text-center">{item.quantity}</span>
-                        <button 
-                          onClick={() => updateQuantity(item.id, 1)}
-                          className="w-10 h-10 rounded-full flex items-center justify-center bg-primary text-white hover:bg-primary/90 transition-all shadow-lg active:scale-90"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
+              {cart.map((item) => {
+                const safeImageUrl = item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http')
+                  ? item.imageUrl
+                  : 'https://picsum.photos/seed/medicine/300/300';
 
-                      <button 
-                        onClick={() => removeFromCart(item.id)}
-                        className="w-10 h-10 rounded-full bg-red-50 text-red-400 hover:text-red-600 hover:bg-red-100 transition-all flex items-center justify-center active:scale-90 shadow-sm"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                return (
+                  <div key={item.id} className="bg-white p-6 rounded-[40px] shadow-sm border border-gray-100 flex items-center gap-6 group hover:shadow-2xl hover:border-primary/5 transition-all duration-500 animate-in slide-in-from-bottom-4">
+                    <Link href={`/product/${item.id}`} className="relative w-24 h-24 bg-gray-50 rounded-[32px] overflow-hidden shrink-0 active:scale-95 transition-transform border border-gray-100/50">
+                      <Image src={safeImageUrl} alt={item.name} fill className="object-contain p-3 group-hover:scale-110 transition-transform duration-500" />
+                    </Link>
+                    
+                    <div className="flex-1 min-w-0 py-2">
+                      <Link href={`/product/${item.id}`} className="group/title">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-black text-gray-900 truncate group-hover/title:text-primary transition-colors text-sm uppercase tracking-tight">{item.name}</h3>
+                          {item.prescriptionRequired && (
+                            <Badge variant="outline" className="text-[7px] font-black uppercase text-orange-500 border-orange-200">RX Required</Badge>
+                          )}
+                        </div>
+                      </Link>
+                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate mb-4">{item.saltComposition}</p>
+                      
+                      <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1.5 border border-gray-200">
+                          <button 
+                            onClick={() => updateQuantity(item.id, -1)}
+                            className="w-10 h-10 rounded-full flex items-center justify-center bg-primary text-white hover:bg-primary/90 transition-all shadow-lg active:scale-90"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                          <span className="text-sm font-black text-gray-900 w-8 text-center">{item.quantity}</span>
+                          <button 
+                            onClick={() => updateQuantity(item.id, 1)}
+                            className="w-10 h-10 rounded-full flex items-center justify-center bg-primary text-white hover:bg-primary/90 transition-all shadow-lg active:scale-90"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <button 
+                          onClick={() => removeFromCart(item.id)}
+                          className="w-10 h-10 rounded-full bg-red-50 text-red-400 hover:text-red-600 hover:bg-red-100 transition-all flex items-center justify-center active:scale-90 shadow-sm"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0 px-4">
+                      <p className="text-xl font-black text-gray-900">₹{item.price * item.quantity}</p>
+                      <p className="text-[9px] text-[#E11D48] uppercase tracking-widest font-black line-through">₹{(item.mrp || item.price + 50) * item.quantity}</p>
                     </div>
                   </div>
-
-                  <div className="text-right shrink-0 px-4">
-                    <p className="text-xl font-black text-gray-900">₹{item.price * item.quantity}</p>
-                    <p className="text-[9px] text-[#E11D48] uppercase tracking-widest font-black line-through">₹{(item.mrp || item.price + 50) * item.quantity}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="mt-8">

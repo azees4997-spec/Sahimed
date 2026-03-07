@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { use, useState, useEffect } from 'react';
@@ -264,6 +263,11 @@ function ComparisonCard({ product, type, isOutOfStock, onAdd, quantity, updateQt
 
   const displayComposition = product.saltComposition || molecule?.molecule || 'N/A';
 
+  // URL Validation for next/image
+  const safeImageUrl = product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http')
+    ? product.imageUrl
+    : 'https://picsum.photos/seed/medicine/300/300';
+
   return (
     <div className="flex-1 flex flex-col group">
       <Card className={cn(
@@ -281,7 +285,7 @@ function ComparisonCard({ product, type, isOutOfStock, onAdd, quantity, updateQt
            <Dialog>
              <DialogTrigger asChild>
                 <div className="w-full h-full relative cursor-zoom-in group/img">
-                   <Image src={product.imageUrl} alt={product.name} fill className="object-contain p-3 group-hover/img:scale-105 transition-transform duration-700" />
+                   <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-3 group-hover/img:scale-105 transition-transform duration-700" />
                    <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
                       <SearchIcon className="w-6 h-6 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
                    </div>
@@ -290,7 +294,7 @@ function ComparisonCard({ product, type, isOutOfStock, onAdd, quantity, updateQt
              <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-white rounded-[40px] overflow-hidden shadow-3xl">
                 <DialogHeader className="sr-only"><DialogTitle>{product.name}</DialogTitle></DialogHeader>
                 <div className="relative aspect-square w-full">
-                   <Image src={product.imageUrl} alt={product.name} fill className="object-contain p-8" />
+                   <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-8" />
                 </div>
              </DialogContent>
            </Dialog>
