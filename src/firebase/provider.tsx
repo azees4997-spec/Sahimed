@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -42,13 +43,6 @@ export interface FirebaseServicesAndUser {
   userError: Error | null;
 }
 
-// Return type for useUser() - specific to user auth state
-export interface UserHookResult { 
-  user: User | null;
-  isUserLoading: boolean;
-  userError: Error | null;
-}
-
 // React Context
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
@@ -69,29 +63,27 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   // Effect to subscribe to Firebase auth state changes
   useEffect(() => {
-    if (!auth) { // If no Auth service instance, cannot determine user state
+    if (!auth) { 
       setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service not provided.") });
       return;
     }
 
-    setUserAuthState({ user: null, isUserLoading: true, userError: null }); // Reset on auth instance change
-
     const unsubscribe = onAuthStateChanged(
       auth,
-      (firebaseUser) => { // Auth state determined
+      (firebaseUser) => {
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
       },
-      (error) => { // Auth listener error
+      (error) => {
         console.error("FirebaseProvider: onAuthStateChanged error:", error);
         setUserAuthState({ user: null, isUserLoading: false, userError: error });
       }
     );
-    return () => unsubscribe(); // Cleanup
-  }, [auth]); // Depends on the auth instance
+    return () => unsubscribe();
+  }, [auth]);
 
   /**
    * CLOUD SYNC TRIGGER: Ensures every Auth user has a Firestore profile.
-   * Auto-creates a document if it's missing for an existing Auth user.
+   * Auto-creates or updates clinical profile on every session.
    */
   useEffect(() => {
     const syncUserProfile = async () => {
@@ -101,17 +93,24 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         
         try {
           const snap = await getDoc(profileRef);
+          const baseData = {
+            id: user.uid,
+            firebaseAuthId: user.uid,
+            email: user.email || '',
+            phone: user.phoneNumber || '',
+            updatedAt: serverTimestamp() // Tracks "Last Activity"
+          };
+
           if (!snap.exists()) {
-            // Auto-provision clinical profile
+            // New user handshake: Provision clinical profile
             await setDoc(profileRef, {
-              id: user.uid,
-              firebaseAuthId: user.uid,
-              email: user.email || '',
-              phone: user.phoneNumber || '',
-              name: user.displayName || 'SahiMed Patient',
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp()
+              ...baseData,
+              name: user.displayName || 'SAHIMED PATIENT',
+              createdAt: serverTimestamp() // Tracks "Joined On"
             }, { merge: true });
+          } else {
+            // Existing user: Update heartbeat/activity
+            await setDoc(profileRef, baseData, { merge: true });
           }
         } catch (e) {
           console.error("Profile sync failure:", e);
@@ -124,7 +123,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     }
   }, [userAuthState.user, userAuthState.isUserLoading, firestore]);
 
-  // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {
     const servicesAvailable = !!(firebaseApp && firestore && auth);
     return {
@@ -146,21 +144,12 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   );
 };
 
-/**
- * Hook to access core Firebase services and user authentication state.
- * Throws error if core services are not available or used outside provider.
- */
 export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
-
-  if (context === undefined) {
-    throw new Error('useFirebase must be used within a FirebaseProvider.');
-  }
-
+  if (context === undefined) throw new Error('useFirebase must be used within a FirebaseProvider.');
   if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth) {
-    throw new Error('Firebase core services not available. Check FirebaseProvider props.');
+    throw new Error('Firebase core services not available.');
   }
-
   return {
     firebaseApp: context.firebaseApp,
     firestore: context.firestore,
@@ -171,41 +160,18 @@ export const useFirebase = (): FirebaseServicesAndUser => {
   };
 };
 
-/** Hook to access Firebase Auth instance. */
-export const useAuth = (): Auth => {
-  const { auth } = useFirebase();
-  return auth;
-};
+export const useAuth = (): Auth => useFirebase().auth;
+export const useFirestore = (): Firestore => useFirebase().firestore;
+export const useFirebaseApp = (): FirebaseApp => useFirebase().firebaseApp;
 
-/** Hook to access Firestore instance. */
-export const useFirestore = (): Firestore => {
-  const { firestore } = useFirebase();
-  return firestore;
-};
-
-/** Hook to access Firebase App instance. */
-export const useFirebaseApp = (): FirebaseApp => {
-  const { firebaseApp } = useFirebase();
-  return firebaseApp;
-};
-
-type MemoFirebase <T> = T & {__memo?: boolean};
-
-export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | (MemoFirebase<T>) {
+export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T & {__memo?: boolean} {
   const memoized = useMemo(factory, deps);
-  
-  if(typeof memoized !== 'object' || memoized === null) return memoized;
-  (memoized as MemoFirebase<T>).__memo = true;
-  
-  return memoized;
+  if(typeof memoized !== 'object' || memoized === null) return memoized as any;
+  (memoized as any).__memo = true;
+  return memoized as any;
 }
 
-/**
- * Hook specifically for accessing the authenticated user's state.
- * This provides the User object, loading status, and any auth errors.
- * @returns {UserHookResult} Object with user, isUserLoading, userError.
- */
-export const useUser = (): UserHookResult => { 
-  const { user, isUserLoading, userError } = useFirebase(); // Leverages the main hook
+export const useUser = () => { 
+  const { user, isUserLoading, userError } = useFirebase();
   return { user, isUserLoading, userError };
 };

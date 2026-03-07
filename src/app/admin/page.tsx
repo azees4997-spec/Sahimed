@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
@@ -1589,13 +1590,13 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles'), orderBy('createdAt', 'desc')) : null, [db, isVerified]);
   const { data: users, isLoading } = useCollection(usersQuery);
 
-  const filteredUsers = users?.filter(user => {
+  const filteredUsers = users?.filter(patient => {
     const searchLower = searchTerm.toLowerCase();
-    const nameMatch = (user.name || user.fullName || user.displayName || '').toLowerCase().includes(searchLower);
-    const identifierMatch = (user.phone || user.email || '').includes(searchTerm);
+    const nameMatch = (patient.name || patient.fullName || 'SAHIMED PATIENT').toLowerCase().includes(searchLower);
+    const identifierMatch = (patient.phone || patient.email || '').toLowerCase().includes(searchLower);
     const matchesSearch = !searchTerm || nameMatch || identifierMatch;
 
-    const joinedDate = user.createdAt?.toDate ? user.createdAt.toDate() : new Date(user.createdAt || 0);
+    const joinedDate = patient.createdAt?.toDate ? patient.createdAt.toDate() : new Date(patient.createdAt || 0);
     const start = startDate ? new Date(startDate) : null;
     const end = endDate ? new Date(endDate) : null;
     
@@ -1609,20 +1610,20 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Patient Registry" subtitle="Manage customer profiles" onBack={onBack} />
+      <SectionHeader title="Patient Registry" subtitle="Global Clinical Growth Monitoring" onBack={onBack} />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input 
-            placeholder="Search by Name or Mobile/Email..." 
+            placeholder="Search Name, Mobile, or Email..." 
             value={searchTerm} 
             onChange={e => setSearchTerm(e.target.value)} 
             className="pl-10 rounded-2xl h-12 bg-gray-50 border-none font-bold text-xs" 
           />
         </div>
         <div className="flex items-center gap-2">
-          <CalendarIcon className="w-4 h-4 text-gray-400" />
+          <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Growth Start</span>
           <Input 
             type="date" 
             value={startDate} 
@@ -1631,7 +1632,7 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
           />
         </div>
         <div className="flex items-center gap-2">
-          <CalendarIcon className="w-4 h-4 text-gray-400" />
+          <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Growth End</span>
           <Input 
             type="date" 
             value={endDate} 
@@ -1671,7 +1672,7 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-[10px]">
                         {(patient.name || patient.fullName || 'P').charAt(0).toUpperCase()}
                       </div>
-                      <span className="font-black text-sm uppercase">{patient.name || patient.fullName || <span className="text-red-500 font-black">NO NAME</span>}</span>
+                      <span className="font-black text-sm uppercase">{patient.name || patient.fullName || 'SAHIMED PATIENT'}</span>
                     </div>
                   </td>
                   <td className="px-10 py-8 font-bold text-sm text-gray-600">{patient.phone || patient.email || <span className="text-red-500 font-black">NO IDENTIFIER</span>}</td>
@@ -1679,7 +1680,7 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
                     {patient.createdAt ? (patient.createdAt.toDate ? format(patient.createdAt.toDate(), 'MMM dd, yyyy') : format(new Date(patient.createdAt), 'MMM dd, yyyy')) : 'N/A'}
                   </td>
                   <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">
-                    {patient.updatedAt ? (patient.updatedAt.toDate ? format(patient.updatedAt.toDate(), 'MMM dd, yyyy') : format(new Date(patient.updatedAt), 'MMM dd, yyyy')) : 'No Activity'}
+                    {patient.updatedAt ? (patient.updatedAt.toDate ? format(patient.updatedAt.toDate(), 'MMM dd, yyyy HH:mm') : format(new Date(patient.updatedAt), 'MMM dd, yyyy HH:mm')) : 'No Activity'}
                   </td>
                   <td className="px-10 py-8 text-right">
                     <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/5 hover:text-primary"><Eye className="w-4 h-4" /></Button>
