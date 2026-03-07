@@ -29,6 +29,24 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
   const { user } = useUser();
   const db = useFirestore();
 
+  // --- ACOUSTIC SUCCESS CHIME ---
+  useEffect(() => {
+    // Professional Swiggy-like notification chime
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
+    audio.volume = 0.4;
+    
+    // Play sound immediately on mount
+    audio.play().catch(e => {
+      // Browsers may block auto-play if no user interaction occurred
+      console.log("Clinical chime standby: waiting for session interaction.");
+    });
+
+    // Haptic feedback for mobile devices
+    if (typeof navigator !== 'undefined' && "vibrate" in navigator) {
+      navigator.vibrate([100, 50, 100]); // Short pulse sequence
+    }
+  }, []);
+
   const orderRef = useMemoFirebase(() => {
     if (!db || !user || !orderId) return null;
     return doc(db, 'userProfiles', user.uid, 'orders', orderId);
@@ -38,7 +56,6 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
 
   const breakdown = order?.billingBreakdown;
   const totalSaved = breakdown?.savings || 0;
-  const mrpSavings = (breakdown?.grossMrp || 0) - (order?.totalAmount || 0) + (breakdown?.campaignDiscount || 0);
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] page-transition-wrapper flex flex-col">
