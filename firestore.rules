@@ -69,6 +69,11 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /product_live_data/{sku} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /categories/{categoryId} {
       allow read: if true;
       allow create, update, delete: if isAdmin();
@@ -96,7 +101,7 @@ service cloud.firestore {
 
     match /stockEnquiries/{enquiryId} {
       allow create: if isSignedIn();
-      allow get, list, delete: if isAdmin();
+      allow read, write: if isAdmin();
     }
 
     match /adminProfiles/{adminId} {
