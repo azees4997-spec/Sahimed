@@ -52,10 +52,10 @@ export default function ProductCard({ product }: { product: Product }) {
     toast({ title: "Notification Set" });
   };
 
-  // Robust URL Validation for next/image construction
-  const safeImageUrl = product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http')
+  // Robust URL Validation for next/image construction to prevent crash
+  const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
     ? product.imageUrl
-    : `https://picsum.photos/seed/${product.id}/300/300`;
+    : `https://picsum.photos/seed/${product.id || 'fallback'}/300/300`;
 
   const mrp = product.mrp || product.price + (product.price * 0.2);
   const savingsPercent = Math.round(((mrp - product.price) / mrp) * 100);

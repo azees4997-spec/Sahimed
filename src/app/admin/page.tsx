@@ -69,7 +69,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/ "@/components/ui/select";
+} from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { 
   useUser, 
@@ -640,7 +640,10 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
   const [purgeProgress, setPurgeProgress] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const filtered = medicines?.filter(m => m.name?.toLowerCase().includes(searchTerm.toLowerCase()) || m.sku?.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filtered = medicines?.filter(m => {
+    const s = searchTerm.toLowerCase();
+    return (m.name || '').toLowerCase().includes(s) || (m.sku || '').toLowerCase().includes(s);
+  });
 
   const handleExport = () => {
     if (!filtered) return;
@@ -983,7 +986,10 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
   const [editingMol, setEditingMol] = useState<any>(null);
   const { toast } = useToast();
 
-  const filtered = molecules?.filter(m => m.molecule?.toLowerCase().includes(searchTerm.toLowerCase()) || m.masterId?.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filtered = molecules?.filter(m => {
+    const s = searchTerm.toLowerCase();
+    return (m.molecule || '').toLowerCase().includes(s) || (m.masterId || '').toLowerCase().includes(s);
+  });
 
   const handleExport = () => {
     if (!filtered) return;
