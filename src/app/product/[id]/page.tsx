@@ -55,7 +55,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { toast } = useToast();
   const { addToCart } = useCart();
 
-  // Step 1: Fetch Static Clinical Details (Unified Hybrid - medicines collection)
+  // Step 1: Fetch Static Clinical Details
   const productRef = useMemoFirebase(() => {
     if (!db || !id) return null;
     return doc(db, 'medicines', id);
@@ -106,13 +106,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const genericAlt = genericAlternatives?.[0];
 
   // Step 5: Fetch Live Data for the Generic Alternative
-  const [altLiveData, setAltLiveData] = useState<{ price: number } | null>(null);
+  const [altLiveData, setAltLiveData] = useState<{ price: number, mrp: number } | null>(null);
   useEffect(() => {
     if (db && genericAlt?.id) {
       const liveRef = doc(db, 'product_live_data', genericAlt.id);
       getDoc(liveRef).then(snap => {
         if (snap.exists()) {
-          setAltLiveData({ price: snap.data().sahimed_price || 0 });
+          const d = snap.data();
+          setAltLiveData({ 
+            price: d.sahimed_price || 0,
+            mrp: d.mrp || 0
+          });
         }
       });
     }
@@ -158,15 +162,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 py-6 sm:py-10">
         <div className="text-center mb-10 space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
-           {/* Plain Composition Header */}
+           {/* Plain Composition Header - STRICTLY ONLY COMPOSITION */}
            <div className="inline-flex items-center gap-2 bg-primary/10 px-6 py-2 rounded-full border border-primary/20">
               <Dna className="w-4 h-4 text-primary" />
               <span className="text-[10px] font-black text-primary uppercase tracking-widest">
-                {moleculeData?.molecule || product.saltComposition || "Composition Registry"}
+                {moleculeData?.molecule || product.saltComposition || "Clinical Formula"}
               </span>
            </div>
            
-           {/* Prescription Warning: Above Name */}
+           {/* Prescription Warning */}
            {product.prescriptionRequired && (
              <div className="flex justify-center">
                <Badge className="bg-red-50 text-red-600 border-red-100 rounded-full font-black text-[10px] px-6 py-2 uppercase tracking-[0.2em] animate-pulse flex items-center gap-2">
@@ -242,48 +246,89 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            </div>
         </div>
 
-        {/* CROSS-PLATFORM SIDE-BY-SIDE COMPARISON */}
+        {/* FORCED HORIZONTAL SIDE-BY-SIDE COMPARISON */}
         {!product.isGeneric && genericAlt && (
           <div className="bg-white rounded-[40px] p-6 sm:p-10 mb-12 border-2 border-dashed border-accent/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
               <Zap size={120} className="text-accent" />
             </div>
-            <div className="flex flex-row items-center justify-between gap-4 sm:gap-10">
-              <div className="flex-1 space-y-2 sm:space-y-4 text-left">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="bg-accent text-white px-3 sm:px-4 py-1 rounded-full font-black text-[8px] sm:text-[10px] uppercase tracking-widest">Switch & Save</Badge>
-                  {savingsPercent && (
-                    <Badge variant="outline" className="border-accent text-accent font-black text-[8px] sm:text-[10px] uppercase px-2 sm:px-4 py-1 animate-bounce">
-                      SAVE {savingsPercent}%
-                    </Badge>
-                  )}
-                </div>
-                <h3 className="text-sm sm:text-2xl font-black text-gray-900 uppercase tracking-tight leading-tight">Generic Alternative Available</h3>
-                <p className="hidden sm:block text-[11px] font-bold text-gray-500 uppercase tracking-widest leading-relaxed">
-                  Same clinical efficacy at a significantly lower cost.
-                </p>
+            
+            <div className="mb-8 text-center sm:text-left">
+              <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start mb-2">
+                <Badge className="bg-accent text-white px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest shadow-lg">Switch & Save</Badge>
+                {savingsPercent && (
+                  <Badge variant="outline" className="border-accent text-accent font-black text-[10px] uppercase px-4 py-1 animate-bounce">
+                    SAVE {savingsPercent}%
+                  </Badge>
+                )}
               </div>
+              <h3 className="text-xl sm:text-2xl font-black text-gray-900 uppercase tracking-tight">Generic Alternative Identified</h3>
+            </div>
+
+            {/* THE FLEX-ROW OVERRIDE: 50/50 SPLIT */}
+            <div className="flex flex-row items-stretch gap-4 sm:gap-8 overflow-x-auto sm:overflow-x-visible pb-4 sm:pb-0 scrollbar-hide">
               
-              <Card className="shrink-0 w-[160px] sm:w-[320px] rounded-[24px] sm:rounded-[32px] border-none shadow-xl bg-gray-50/50 p-3 sm:p-6 flex flex-col sm:flex-row items-center gap-3 sm:gap-6 group hover:scale-[1.02] transition-all">
-                <div className="w-12 h-12 sm:w-20 sm:h-20 bg-white rounded-xl p-1 sm:p-2 border flex items-center justify-center overflow-hidden shrink-0">
-                  <Image 
-                    src={(genericAlt.imageUrl && typeof genericAlt.imageUrl === 'string' && genericAlt.imageUrl.startsWith('http')) ? genericAlt.imageUrl : `https://picsum.photos/seed/${genericAlt.id}/300/300`} 
-                    alt={genericAlt.name} 
-                    width={80} 
-                    height={80} 
-                    className="object-contain" 
-                  />
+              {/* CURRENT BRANDED CARD */}
+              <Card className="basis-1/2 min-w-[260px] sm:min-w-0 rounded-[32px] border-none bg-gray-50 p-6 flex flex-col gap-4 shadow-inner relative opacity-80">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Current Selection</span>
+                  <Badge variant="outline" className="text-[7px] font-black uppercase">BRANDED</Badge>
                 </div>
-                <div className="flex-1 text-center sm:text-left min-w-0">
-                  <p className="text-[7px] sm:text-[9px] font-black text-accent uppercase mb-0.5">Recommended Choice</p>
-                  <h4 className="font-black text-[9px] sm:text-sm uppercase truncate mb-2">{genericAlt.name}</h4>
-                  <Link href={`/product/${genericAlt.id}`} className="w-full">
-                    <Button className="w-full h-7 sm:h-10 rounded-full font-black text-[7px] sm:text-[10px] uppercase bg-primary text-white shadow-lg group-hover:scale-105 transition-transform px-2">
-                      View Generic
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-white rounded-2xl p-2 border flex items-center justify-center shrink-0">
+                    <Image src={safeImageUrl} alt={product.name} width={64} height={64} className="object-contain" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-black text-xs uppercase truncate">{product.name}</h4>
+                    <p className="text-[8px] text-gray-400 font-bold uppercase truncate">{product.manufacturer}</p>
+                  </div>
+                </div>
+                <div className="mt-auto pt-4 border-t border-dashed">
+                  <p className="text-[8px] text-gray-400 font-black uppercase mb-1">Branded Price</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-lg font-black text-gray-900">₹{product.price}</span>
+                    <span className="text-[10px] text-red-400 line-through">MRP ₹{product.mrp}</span>
+                  </div>
+                </div>
+              </Card>
+
+              {/* RECOMMENDED GENERIC CARD */}
+              <Card className="basis-1/2 min-w-[260px] sm:min-w-0 rounded-[32px] border-none bg-accent/5 p-6 flex flex-col gap-4 shadow-xl border border-accent/10 hover:scale-[1.02] transition-all group">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[8px] font-black text-accent uppercase tracking-widest">Recommended Choice</span>
+                  <Badge className="bg-accent text-white text-[7px] font-black uppercase">GENERIC</Badge>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-white rounded-2xl p-2 border border-accent/20 flex items-center justify-center shrink-0 shadow-lg">
+                    <Image 
+                      src={(genericAlt.imageUrl && typeof genericAlt.imageUrl === 'string' && genericAlt.imageUrl.startsWith('http')) ? genericAlt.imageUrl : `https://picsum.photos/seed/${genericAlt.id}/300/300`} 
+                      alt={genericAlt.name} 
+                      width={64} 
+                      height={64} 
+                      className="object-contain" 
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-black text-xs uppercase truncate text-accent">{genericAlt.name}</h4>
+                    <p className="text-[8px] text-gray-400 font-bold uppercase truncate">{genericAlt.manufacturer}</p>
+                  </div>
+                </div>
+                <div className="mt-auto pt-4 border-t border-dashed border-accent/20 flex items-end justify-between">
+                  <div>
+                    <p className="text-[8px] text-accent font-black uppercase mb-1">Generic Price</p>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-black text-accent">₹{altLiveData?.price || '...'}</span>
+                      <span className="text-[10px] text-gray-400 line-through">MRP ₹{altLiveData?.mrp || '...'}</span>
+                    </div>
+                  </div>
+                  <Link href={`/product/${genericAlt.id}`}>
+                    <Button className="rounded-full h-10 px-6 font-black text-[10px] uppercase bg-primary text-white shadow-lg group-hover:scale-105 transition-transform">
+                      VIEW & SAVE
                     </Button>
                   </Link>
                 </div>
               </Card>
+
             </div>
           </div>
         )}
