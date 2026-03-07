@@ -21,7 +21,6 @@ import {
   ShoppingCart,
   Zap,
   TrendingDown,
-  Star,
   Maximize2
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -121,15 +120,19 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     return (<div className="min-h-screen bg-[#F8F8F8]"><Navbar /><main className="max-w-7xl mx-auto px-4 py-12"><Skeleton className="h-[400px] rounded-[40px]" /></main></div>);
   }
 
-  // TIERED PRICE RECOVERY
+  // --- PDP LOGIC MODES ---
+  const isBranded = !staticProduct.isGeneric;
+  const hasGenericAlt = !!genericAlt;
+  const showComparison = isBranded && hasGenericAlt;
+
+  // Tiered Price Recovery for Savings Banner
   const brandedMrp = (liveData?.mrp && liveData.mrp > 0) ? liveData.mrp : (staticProduct.mrp || staticProduct.price + 50);
   const genericPrice = (altLiveData?.price && altLiveData.price > 0) ? altLiveData.price : (genericAlt?.price || 0);
   
-  // LOGIC: Savings = Branded MRP - Generic Price
   const switchSavingsAmt = Math.max(0, brandedMrp - genericPrice);
   const switchSavingsPct = brandedMrp > 0 ? Math.round((switchSavingsAmt / brandedMrp) * 100) : 0;
 
-  const ComparisonCard = ({ product, live, label, isAlt = false, isLoading = false }: { product: any, live: any, label: string, isAlt?: boolean, isLoading?: boolean }) => {
+  const ProductInfoCard = ({ product, live, label, isAlt = false, isLoading = false }: { product: any, live: any, label: string, isAlt?: boolean, isLoading?: boolean }) => {
     const qty = getItemQuantity(product.id);
     
     // Tiered Recovery
@@ -139,7 +142,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     const savingsAmt = Math.max(0, pMrp - pPrice);
     const savingsPct = pMrp > 0 ? Math.round((savingsAmt / pMrp) * 100) : 0;
 
-    // Unit Price Calculation
+    // Unit Price Calculation (Parsing from pack size e.g. "Strip of 10")
     const unitMatch = product.packSize?.match(/(\d+)/);
     const unitCount = (unitMatch && parseInt(unitMatch[1]) > 0) ? parseInt(unitMatch[1]) : 1;
     const unitPrice = pPrice / unitCount;
@@ -151,7 +154,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     return (
       <Card className={cn(
         "rounded-[20px] sm:rounded-[32px] p-2.5 sm:p-6 flex flex-col h-full border shadow-sm transition-all overflow-hidden relative",
-        isAlt ? "bg-accent/5 border-dashed border-accent/20" : "bg-white border-gray-100"
+        isAlt ? "bg-accent/5 border-dashed border-accent/20" : "bg-white border-gray-100",
+        !showComparison && "max-w-md mx-auto w-full"
       )}>
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest block">{label}</span>
@@ -162,10 +166,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           )}
         </div>
         
-        {/* Medicine Image with Viewer */}
         <Dialog>
           <DialogTrigger asChild>
-            <div className="relative aspect-square w-full max-h-[100px] sm:max-h-none bg-white rounded-xl mb-2 overflow-hidden border border-gray-50 flex items-center justify-center p-2 cursor-zoom-in group/img">
+            <div className="relative aspect-square w-full max-h-[120px] sm:max-h-none bg-white rounded-xl mb-2 overflow-hidden border border-gray-50 flex items-center justify-center p-2 cursor-zoom-in group/img">
               <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-1 transition-transform group-hover/img:scale-105" />
               <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
                  <Maximize2 className="w-4 h-4 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
@@ -214,7 +217,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <div className="mt-3">
           <Button 
             onClick={() => addToCart({ ...product, price: pPrice, mrp: pMrp })} 
-            className={cn("w-full h-8 sm:h-12 rounded-full font-black uppercase text-[8px] sm:text-[10px] tracking-widest gap-2 shadow-lg active:scale-95 transition-all", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
+            className={cn("w-full h-9 sm:h-12 rounded-full font-black uppercase text-[8px] sm:text-[10px] tracking-widest gap-2 shadow-lg active:scale-95 transition-all", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
           >
             {qty > 0 ? `IN BAG (${qty})` : "ADD TO BAG"} <ShoppingCart className="w-3 sm:w-4 h-3 sm:h-4" />
           </Button>
@@ -226,9 +229,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   return (
     <div className="min-h-screen bg-[#F4F7F6] pb-32 pharma-bg-pattern page-transition-wrapper">
       <Navbar />
-      <main className="max-w-[1200px] mx-auto px-3 sm:px-10 py-4 sm:py-8">
+      <main className="max-w-[1200px] mx-auto px-3 sm:px-10 py-4 sm:py-6">
         
-        {/* COMPACT MOBILE HEADER */}
+        {/* COMPACT CLINICAL HEADER */}
         <div className="flex flex-row items-center justify-center mb-4 gap-2">
            <div className="inline-flex items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10 shadow-sm">
               <Dna className="w-3.5 h-3.5 text-primary" />
@@ -243,7 +246,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            )}
         </div>
 
-        {!isLiveLoading && !isAltLiveLoading && genericAlt && switchSavingsAmt > 0 && (
+        {/* SWITCH & SAVE BANNER (Only for Branded with Alternative) */}
+        {showComparison && !isLiveLoading && !isAltLiveLoading && switchSavingsAmt > 0 && (
           <div className="mb-4 animate-in slide-in-from-top-4 duration-700">
             <div className="bg-accent text-white py-2 px-4 rounded-[16px] shadow-lg flex items-center justify-center gap-2 text-center border-b-2 border-accent-foreground/10">
                <TrendingDown className="w-4 h-4" />
@@ -255,32 +259,37 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         )}
 
+        {/* DYNAMIC CARD AREA */}
         <div className="mb-8">
-          <div className="grid grid-cols-2 gap-2 sm:gap-10 items-stretch">
-            <ComparisonCard 
-              product={staticProduct} 
-              live={liveData} 
-              label="CURRENT SELECTION" 
-              isLoading={isLiveLoading}
-            />
-            
-            {genericAlt ? (
-              <ComparisonCard 
+          {showComparison ? (
+            <div className="grid grid-cols-2 gap-2 sm:gap-10 items-stretch">
+              <ProductInfoCard 
+                product={staticProduct} 
+                live={liveData} 
+                label="CURRENT SELECTION" 
+                isLoading={isLiveLoading}
+              />
+              <ProductInfoCard 
                 product={genericAlt} 
                 live={altLiveData} 
                 label="RECOMMENDED CHOICE" 
                 isAlt 
                 isLoading={isAltLiveLoading}
               />
-            ) : !productLoading && (
-              <div className="rounded-[20px] sm:rounded-[32px] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-4 text-center bg-gray-50/50 h-full">
-                <Package className="w-8 h-8 text-gray-300 mb-2" />
-                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-relaxed">Generic Alternative Pending</p>
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <ProductInfoCard 
+                product={staticProduct} 
+                live={liveData} 
+                label={isBranded ? "BRANDED SELECTION" : "GENERIC CHOICE"} 
+                isLoading={isLiveLoading}
+              />
+            </div>
+          )}
         </div>
 
+        {/* CLINICAL DATA TABS */}
         <section className="bg-white rounded-[32px] sm:rounded-[40px] p-6 sm:p-16 shadow-xl border border-gray-100 overflow-hidden">
           <Tabs defaultValue="clinical" className="w-full">
             <TabsList className="bg-gray-100 p-1 rounded-full h-10 sm:h-16 w-full max-w-[600px] flex mx-auto mb-8 sm:mb-16">
