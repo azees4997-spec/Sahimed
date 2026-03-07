@@ -20,8 +20,9 @@ import {
   Zap,
   AlertTriangle,
   Package,
-  TrendingDown,
-  Loader2
+  Loader2,
+  ShoppingCart,
+  TrendingDown
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -46,7 +47,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const molRef = useMemoFirebase(() => (!db || !staticProduct?.moleculeId) ? null : doc(db, 'moleculeMaster', staticProduct.moleculeId), [db, staticProduct?.moleculeId]);
   const { data: molData } = useDoc(molRef);
 
-  // 3. Fetch Live Price & Stock
+  // 3. Fetch Live Price & Stock for Main Product
   const [liveData, setLiveData] = useState<{ mrp: number, price: number, stock: number } | null>(null);
   const [isLiveLoading, setIsLiveLoading] = useState(true);
 
@@ -56,14 +57,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       getDoc(doc(db, 'product_live_data', staticProduct.sku)).then(snap => {
         if (snap.exists()) {
           const d = snap.data();
-          setLiveData({ mrp: d.mrp || 0, price: d.sahimed_price || 0, stock: d.stock_quantity ?? 0 });
+          setLiveData({ 
+            mrp: Number(d.mrp) || 0, 
+            price: Number(d.sahimed_price) || 0, 
+            stock: Number(d.stock_quantity) ?? 0 
+          });
         }
         setIsLiveLoading(false);
       });
     }
   }, [db, staticProduct?.sku]);
 
-  // 4. Alternatives Logic
+  // 4. Alternatives Logic (Branded to Generic Mapping)
   const alternativesQuery = useMemoFirebase(() => {
     if (!db || !staticProduct?.moleculeId || staticProduct?.isGeneric) return null;
     return query(collection(db, 'medicines'), where('moleculeId', '==', staticProduct.moleculeId), where('isGeneric', '==', true), limit(1));
@@ -78,7 +83,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       getDoc(doc(db, 'product_live_data', genericAlt.sku)).then(snap => {
         if (snap.exists()) {
           const d = snap.data();
-          setAltLiveData({ price: d.sahimed_price || 0, mrp: d.mrp || 0, stock: d.stock_quantity ?? 0 });
+          setAltLiveData({ 
+            price: Number(d.sahimed_price) || 0, 
+            mrp: Number(d.mrp) || 0, 
+            stock: Number(d.stock_quantity) ?? 0 
+          });
         }
       });
     }
@@ -90,72 +99,71 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const currentPrice = liveData?.price || 0;
   const altPrice = altLiveData?.price || 0;
-  const quantity = getItemQuantity(staticProduct.id);
 
   const savingsPercentage = (currentPrice > 0 && altPrice > 0) 
     ? Math.round(((currentPrice - altPrice) / currentPrice) * 100) 
     : 0;
 
-  const ProductComparisonCard = ({ product, live, isAlt = false }: { product: any, live: any, isAlt?: boolean }) => {
+  const ProductComparisonCard = ({ product, live, label, isAlt = false }: { product: any, live: any, label: string, isAlt?: boolean }) => {
     const qty = getItemQuantity(product.id);
     const pPrice = live?.price || 0;
     const pPackNum = parseInt(product.packSize?.match(/\d+/)?.[0] || "1");
     const pUnitCost = pPrice > 0 ? (pPrice / pPackNum).toFixed(2) : "0.00";
-    const pIsOutOfStock = live ? live.stock === 0 : false;
+    const pIsOutOfStock = live ? live.stock <= 0 : false;
 
     return (
       <Card className={cn(
-        "rounded-2xl sm:rounded-[32px] p-3 sm:p-8 flex flex-col h-full border shadow-sm transition-all",
+        "rounded-[20px] sm:rounded-[32px] p-2.5 sm:p-6 flex flex-col h-full border shadow-sm transition-all relative overflow-hidden",
         isAlt ? "bg-accent/5 border-dashed border-accent/20" : "bg-white border-gray-100"
       )}>
-        <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 block">
-          {isAlt ? 'RECOMMENDED CHOICE' : 'CURRENT SELECTION'}
+        <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">
+          {label}
         </span>
         
-        <div className="flex-1 space-y-1.5 sm:space-y-4">
-          <h3 className="font-black text-[11px] sm:text-lg text-gray-900 uppercase leading-tight line-clamp-2 min-h-[1.8rem] sm:min-h-[2.5rem]">
+        <div className="flex-1 space-y-1 sm:space-y-3">
+          <h3 className="font-black text-[11px] sm:text-base text-gray-900 uppercase leading-tight line-clamp-2 min-h-[1.8rem] sm:min-h-[2.5rem]">
             {product.name}
           </h3>
           
           <div className="space-y-0.5">
-            <p className="text-[8px] sm:text-xs font-bold text-gray-500 uppercase">{product.packSize || "N/A"}</p>
+            <p className="text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase">{product.packSize || "N/A"}</p>
             <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase truncate">{product.manufacturer}</p>
           </div>
 
-          <div className="pt-2 sm:pt-4 border-t border-dashed">
+          <div className="pt-1.5 sm:pt-3 border-t border-dashed">
             <div className="flex items-baseline gap-1">
-              <p className={cn("text-sm sm:text-3xl font-black tracking-tighter", isAlt ? "text-accent" : "text-primary")}>
+              <p className={cn("text-[13px] sm:text-2xl font-black tracking-tighter", isAlt ? "text-accent" : "text-primary")}>
                 ₹{isLiveLoading ? '...' : pPrice}
               </p>
               {live?.mrp > pPrice && (
-                <span className="text-[8px] sm:text-xs text-red-400 line-through font-bold">₹{live.mrp}</span>
+                <span className="text-[8px] sm:text-[10px] text-red-400 line-through font-bold">₹{live.mrp}</span>
               )}
             </div>
-            <p className="text-[7px] sm:text-xs text-gray-400 font-bold">₹{pUnitCost} per unit</p>
+            <p className="text-[7px] sm:text-[10px] text-gray-400 font-bold">₹{pUnitCost} per unit</p>
           </div>
         </div>
 
-        <div className="mt-4 space-y-2">
+        <div className="mt-3 space-y-1.5">
           {isAlt && savingsPercentage > 0 && (
-            <div className="bg-accent text-white py-1 rounded-lg text-center shadow-lg animate-in zoom-in-95">
-              <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-tight">SAVE {savingsPercentage}% NOW</p>
+            <div className="bg-accent text-white py-1 rounded-lg text-center shadow-lg">
+              <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight">SAVE {savingsPercentage}%</p>
             </div>
           )}
           
           {pIsOutOfStock ? (
-            <Button disabled className="w-full h-8 sm:h-14 rounded-full font-black uppercase text-[8px] sm:text-xs tracking-widest">Out of Stock</Button>
+            <Button disabled className="w-full h-7 sm:h-12 rounded-full font-black uppercase text-[7px] sm:text-[10px] tracking-widest bg-gray-100 text-gray-400">Out of Stock</Button>
           ) : qty > 0 ? (
-            <div className="flex items-center gap-1 rounded-full p-0.5 sm:p-1 bg-primary text-white h-8 sm:h-14">
+            <div className="flex items-center gap-1 rounded-full p-0.5 sm:p-1 bg-primary text-white h-7 sm:h-12">
               <button onClick={() => updateQuantity(product.id, -1)} className="flex-1 h-full flex items-center justify-center font-bold text-xs">-</button>
-              <span className="text-[9px] sm:text-sm font-black flex-1 text-center">{qty}</span>
+              <span className="text-[8px] sm:text-[11px] font-black flex-1 text-center">{qty}</span>
               <button onClick={() => updateQuantity(product.id, 1)} className="flex-1 h-full flex items-center justify-center font-bold text-xs">+</button>
             </div>
           ) : (
             <Button 
               onClick={() => addToCart(product)} 
-              className={cn("w-full h-8 sm:h-14 rounded-full font-black uppercase text-[8px] sm:text-xs tracking-widest shadow-lg", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
+              className={cn("w-full h-7 sm:h-12 rounded-full font-black uppercase text-[7px] sm:text-[10px] tracking-widest gap-1.5 shadow-lg", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
             >
-              {isAlt ? 'Add Generic' : 'Add to Bag'}
+              Add <ShoppingCart className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
             </Button>
           )}
         </div>
@@ -168,8 +176,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       <Navbar />
       <main className="max-w-7xl mx-auto px-3 sm:px-10 py-6">
         
-        {/* 1. CLEAN CLINICAL HEADER */}
-        <div className="text-center mb-8 space-y-3">
+        {/* 1. CLEAN CLINICAL HEADER - PLAIN COMPOSITION ONLY */}
+        <div className="text-center mb-6 sm:mb-10 space-y-3">
            <div className="inline-flex items-center gap-2 bg-primary/10 px-5 py-2 rounded-full border border-primary/20 shadow-sm">
               <Dna className="w-3.5 h-3.5 text-primary" />
               <span className="text-[10px] sm:text-xs font-black text-primary uppercase tracking-[0.1em]">
@@ -185,21 +193,34 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            )}
         </div>
 
-        {/* 2. STRICT 2-CARD COMPARISON GRID (ANTI-BLEED) */}
-        <div className="max-w-[1200px] mx-auto mb-12">
+        {/* 2. STRICT SIDE-BY-SIDE GRID (ANTI-STACKING ON MOBILE) */}
+        <div className="max-w-[1200px] mx-auto mb-10 sm:mb-16">
           {genericAlt ? (
             <div className="grid grid-cols-2 gap-2 sm:gap-6 items-stretch">
-              <ProductComparisonCard product={staticProduct} live={liveData} />
-              <ProductComparisonCard product={genericAlt} live={altLiveData} isAlt />
+              <ProductComparisonCard 
+                product={staticProduct} 
+                live={liveData} 
+                label="CURRENT SELECTION" 
+              />
+              <ProductComparisonCard 
+                product={genericAlt} 
+                live={altLiveData} 
+                label="RECOMMENDED CHOICE" 
+                isAlt 
+              />
             </div>
           ) : (
             <div className="max-w-md mx-auto">
-              <ProductComparisonCard product={staticProduct} live={liveData} />
+              <ProductComparisonCard 
+                product={staticProduct} 
+                live={liveData} 
+                label="PRODUCT PROFILE" 
+              />
             </div>
           )}
         </div>
 
-        {/* 3. CLINICAL DATA SECTION */}
+        {/* 3. CLINICAL DATA TABS */}
         <section className="bg-white rounded-[32px] sm:rounded-[48px] p-6 sm:p-14 shadow-xl border border-gray-100 overflow-hidden">
           <Tabs defaultValue="clinical" className="w-full">
             <TabsList className="bg-gray-100 p-1 rounded-full h-12 sm:h-16 w-full max-w-[600px] flex mx-auto mb-8 sm:mb-12">
