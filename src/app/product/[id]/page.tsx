@@ -194,6 +194,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <span className="text-[8px] sm:text-[10px] text-red-400 line-through font-bold">₹{pMrp}</span>
               )}
             </div>
+            {/* SAVINGS DETAILS NEAR PRICE/MRP */}
+            {savingsAmt > 0 && (
+              <p className="text-[8px] sm:text-[10px] font-black text-accent uppercase tracking-tighter">
+                Save ₹{savingsAmt.toFixed(0)} ({savingsPct}%)
+              </p>
+            )}
             <p className="text-[7px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-tighter">
               ₹{unitPrice.toFixed(2)} per unit
             </p>

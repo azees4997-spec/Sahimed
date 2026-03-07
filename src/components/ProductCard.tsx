@@ -109,7 +109,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </div>
           {savingsAmt > 0 && (
             <p className="text-[8px] font-black text-accent uppercase tracking-tighter">
-              Save ₹{savingsAmt.toFixed(0)}
+              Save ₹{savingsAmt.toFixed(0)} ({savingsPct}%)
             </p>
           )}
         </div>
