@@ -29,7 +29,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Dialog, 
   DialogContent, 
-  DialogTrigger 
+  DialogTrigger,
+  DialogTitle
 } from "@/components/ui/dialog";
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, query, collection, where, limit, onSnapshot } from 'firebase/firestore';
@@ -140,7 +141,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
     // Unit Price Calculation
     const unitMatch = product.packSize?.match(/(\d+)/);
-    const unitCount = unitMatch ? parseInt(unitMatch[1]) : 1;
+    const unitCount = (unitMatch && parseInt(unitMatch[1]) > 0) ? parseInt(unitMatch[1]) : 1;
     const unitPrice = pPrice / unitCount;
 
     const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
@@ -176,7 +177,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-10" />
                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full border border-gray-100 shadow-xl flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <p className="font-black text-[10px] uppercase tracking-widest text-gray-900">{product.name}</p>
+                  <DialogTitle className="font-black text-[10px] uppercase tracking-widest text-gray-900">{product.name}</DialogTitle>
                </div>
             </div>
           </DialogContent>
