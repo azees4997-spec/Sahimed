@@ -1587,12 +1587,14 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  // Primary data source update: Unified Patient Registry
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles'), orderBy('createdAt', 'desc')) : null, [db, isVerified]);
   const { data: users, isLoading } = useCollection(usersQuery);
 
   const filteredUsers = users?.filter(patient => {
     const searchLower = searchTerm.toLowerCase();
-    const nameMatch = (patient.name || patient.fullName || 'SAHIMED PATIENT').toLowerCase().includes(searchLower);
+    // Multi-field Intelligence Search
+    const nameMatch = (patient.name || 'SAHIMED PATIENT').toLowerCase().includes(searchLower);
     const identifierMatch = (patient.phone || patient.email || '').toLowerCase().includes(searchLower);
     const matchesSearch = !searchTerm || nameMatch || identifierMatch;
 
@@ -1665,28 +1667,33 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
                     {searchTerm || startDate || endDate ? 'No patients matching criteria' : 'Waiting for nationwide clinical handshake...'}
                   </td>
                 </tr>
-              ) : filteredUsers?.map(patient => (
-                <tr key={patient.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="px-10 py-8">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-[10px]">
-                        {(patient.name || patient.fullName || 'P').charAt(0).toUpperCase()}
+              ) : filteredUsers?.map(patient => {
+                const name = patient.name || <span className="text-orange-500 font-black">SAHIMED PATIENT (UNVERIFIED)</span>;
+                const identifier = patient.phone || patient.email || <span className="text-red-500 font-black">NO IDENTIFIER</span>;
+                
+                return (
+                  <tr key={patient.id} className="hover:bg-gray-50/50 transition-colors group">
+                    <td className="px-10 py-8">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-[10px]">
+                          {typeof name === 'string' ? name.charAt(0).toUpperCase() : 'P'}
+                        </div>
+                        <span className="font-black text-sm uppercase">{name}</span>
                       </div>
-                      <span className="font-black text-sm uppercase">{patient.name || patient.fullName || 'SAHIMED PATIENT'}</span>
-                    </div>
-                  </td>
-                  <td className="px-10 py-8 font-bold text-sm text-gray-600">{patient.phone || patient.email || <span className="text-red-500 font-black">NO IDENTIFIER</span>}</td>
-                  <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">
-                    {patient.createdAt ? (patient.createdAt.toDate ? format(patient.createdAt.toDate(), 'MMM dd, yyyy') : format(new Date(patient.createdAt), 'MMM dd, yyyy')) : 'N/A'}
-                  </td>
-                  <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">
-                    {patient.updatedAt ? (patient.updatedAt.toDate ? format(patient.updatedAt.toDate(), 'MMM dd, yyyy HH:mm') : format(new Date(patient.updatedAt), 'MMM dd, yyyy HH:mm')) : 'No Activity'}
-                  </td>
-                  <td className="px-10 py-8 text-right">
-                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/5 hover:text-primary"><Eye className="w-4 h-4" /></Button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-10 py-8 font-bold text-sm text-gray-600">{identifier}</td>
+                    <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">
+                      {patient.createdAt ? (patient.createdAt.toDate ? format(patient.createdAt.toDate(), 'MMM dd, yyyy') : format(new Date(patient.createdAt), 'MMM dd, yyyy')) : 'N/A'}
+                    </td>
+                    <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">
+                      {patient.updatedAt ? (patient.updatedAt.toDate ? format(patient.updatedAt.toDate(), 'MMM dd, yyyy HH:mm') : format(new Date(patient.updatedAt), 'MMM dd, yyyy HH:mm')) : 'No Activity'}
+                    </td>
+                    <td className="px-10 py-8 text-right">
+                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/5 hover:text-primary"><Eye className="w-4 h-4" /></Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

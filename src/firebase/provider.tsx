@@ -82,8 +82,8 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   }, [auth]);
 
   /**
-   * CLOUD SYNC TRIGGER: Ensures every Auth user has a Firestore profile.
-   * Auto-creates or updates clinical profile on every session.
+   * REAL-TIME DATA BRIDGE: Ensures every Auth user has a Firestore profile.
+   * This hook auto-provisions clinical documents for registry visibility.
    */
   useEffect(() => {
     const syncUserProfile = async () => {
@@ -93,27 +93,30 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         
         try {
           const snap = await getDoc(profileRef);
+          const identifier = user.phoneNumber || user.email || 'NO_IDENTIFIER';
+          
           const baseData = {
             id: user.uid,
             firebaseAuthId: user.uid,
-            email: user.email || '',
-            phone: user.phoneNumber || '',
-            updatedAt: serverTimestamp() // Tracks "Last Activity"
+            // Store primary identifier for registry mapping
+            email: user.email || null,
+            phone: user.phoneNumber || null,
+            updatedAt: serverTimestamp() // Tracks real-time activity
           };
 
           if (!snap.exists()) {
-            // New user handshake: Provision clinical profile
+            // Shadow Document creation for unverified patients
             await setDoc(profileRef, {
               ...baseData,
-              name: user.displayName || 'SAHIMED PATIENT',
-              createdAt: serverTimestamp() // Tracks "Joined On"
+              name: user.displayName || null, // UI will fallback to UNVERIFIED if null
+              createdAt: serverTimestamp() 
             }, { merge: true });
           } else {
-            // Existing user: Update heartbeat/activity
+            // Heartbeat update
             await setDoc(profileRef, baseData, { merge: true });
           }
         } catch (e) {
-          console.error("Profile sync failure:", e);
+          console.error("Clinical Bridge Sync Failure:", e);
         }
       }
     };
