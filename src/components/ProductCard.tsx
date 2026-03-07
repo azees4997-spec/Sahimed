@@ -82,7 +82,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
   const displayComposition = product.saltComposition || molecule?.molecule || 'N/A';
 
-  // URL Validation for next/image
+  // Robust URL Validation for next/image
   const safeImageUrl = product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http')
     ? product.imageUrl
     : 'https://picsum.photos/seed/medicine/300/300';

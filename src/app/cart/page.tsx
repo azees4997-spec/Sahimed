@@ -194,7 +194,12 @@ export default function CartPage() {
             {attachedPrescription ? (
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl border-2 border-white overflow-hidden shadow-md relative group">
-                  <Image src={attachedPrescription} alt="Attachment" fill className="object-cover" />
+                  <Image 
+                    src={attachedPrescription.startsWith('data:') ? attachedPrescription : 'https://picsum.photos/seed/scan/300/400'} 
+                    alt="Attachment" 
+                    fill 
+                    className="object-cover" 
+                  />
                   <button 
                     onClick={() => setAttachedPrescription(null)}
                     className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -241,6 +246,7 @@ export default function CartPage() {
           <div className="lg:col-span-2 space-y-6">
             <div className="space-y-4">
               {cart.map((item) => {
+                // Robust URL Validation for cart items
                 const safeImageUrl = item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http')
                   ? item.imageUrl
                   : 'https://picsum.photos/seed/medicine/300/300';

@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
@@ -108,6 +107,29 @@ import { format } from "date-fns";
 type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'promocodes' | 'fees' | 'categories' | 'customers' | 'stockAlerts' | 'itemMaster' | 'moleculeMaster';
 
 const ORDER_STATUSES = ['Pending', 'Packed', 'Shipping', 'Delivered', 'Cancelled'];
+
+// --- SHARED UI ---
+
+function SectionHeader({ title, subtitle, onBack, children }: { title: string, subtitle: string, onBack: () => void, children?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+      <div className="flex items-center gap-4">
+        {onBack && (
+          <button onClick={onBack} className="rounded-full bg-white shadow-sm h-12 w-12 hover:scale-110 transition-transform flex items-center justify-center">
+            <ChevronRight className="w-5 h-5 rotate-180" />
+          </button>
+        )}
+        <div className="space-y-1">
+          <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">{title}</h2>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{subtitle}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap justify-center gap-3">
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminConsole() {
   const { user, isUserLoading } = useUser();
@@ -295,29 +317,6 @@ export default function AdminConsole() {
   );
 }
 
-// --- SHARED UI ---
-
-function SectionHeader({ title, subtitle, onBack, children }: { title: string, subtitle: string, onBack: () => void, children?: React.ReactNode }) {
-  return (
-    <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
-      <div className="flex items-center gap-4">
-        {onBack && (
-          <button onClick={onBack} className="rounded-full bg-white shadow-sm h-12 w-12 hover:scale-110 transition-transform flex items-center justify-center">
-            <ChevronRight className="w-5 h-5 rotate-180" />
-          </button>
-        )}
-        <div className="space-y-1">
-          <h2 className="text-3xl font-black uppercase text-gray-900 tracking-tight">{title}</h2>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{subtitle}</p>
-        </div>
-      </div>
-      <div className="flex flex-wrap justify-center gap-3">
-        {children}
-      </div>
-    </div>
-  );
-}
-
 // --- OVERVIEW COMPONENT ---
 
 function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab) => void, isVerified: boolean }) {
@@ -406,7 +405,7 @@ function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
                 <tr key={cat.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-10 py-8">
                     <div className="w-12 h-12 rounded-2xl bg-gray-50 border p-2 overflow-hidden flex items-center justify-center">
-                      {cat.imageUrl ? <img src={cat.imageUrl} className="w-full h-full object-contain" /> : <Activity className="text-gray-300 w-6 h-6" />}
+                      {cat.imageUrl ? <img src={cat.imageUrl} className="w-full h-full object-contain" alt="" /> : <Activity className="text-gray-300 w-6 h-6" />}
                     </div>
                   </td>
                   <td className="px-10 py-8 font-black text-sm uppercase">{cat.name}</td>
@@ -474,7 +473,7 @@ function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: a
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="flex flex-col items-center gap-6 mb-8">
         <div className="w-24 h-24 bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden relative group">
-          {form.imageUrl ? <img src={form.imageUrl} className="w-full h-full object-contain p-4" /> : <Activity className="text-gray-200 w-10 h-10" />}
+          {form.imageUrl ? <img src={form.imageUrl} className="w-full h-full object-contain p-4" alt="" /> : <Activity className="text-gray-200 w-10 h-10" />}
           {uploading && <div className="absolute inset-0 bg-white/80 flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>}
         </div>
         <div className="relative">
@@ -671,58 +670,96 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 
   const downloadTemplate = () => {
     const headers = "Name,SKU,MoleculeMapping,Manufacturer,Price,MRP,Stock,Category,Generic,RX_Required,PackSize,Description,HowToUse,Treatment,SafetyAdvice,SideEffects,AlcoholInteraction,PregnancyInteraction,LactationInteraction,DrivingInteraction,KidneyInteraction,LiverInteraction,ImageURL1,ImageURL2,ImageURL3\n";
-    const sample = `"Sample Product","SKU123","MOL_ID_HERE","SahiMed Labs",100,150,50,"Diabetes",true,false,"Strip of 10","Clinical Desc","1 daily","Control sugar","Safe","Nausea","None","Consult Dr","Safe","Safe","Safe","Safe","https://picsum.photos/300","",""`;
+    const sample = `"Sample Product","SKU123","MOL_ID_HERE","SahiMed Labs",100,150,50,"Diabetes",true,false,"Strip of 10","Clinical Desc","1 daily","Control sugar","Safe","Nausea","None","Consult Dr","Safe","Safe","Safe","Safe","https://picsum.photos/seed/med1/300","",""`;
     const blob = new Blob([headers + sample], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = `SahiMed_Catalogue_Template.csv`; a.click();
   };
 
-  const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const text = event.target?.result as string;
-      const lines = text.split("\n").slice(1); // skip headers
-      const batch = writeBatch(db);
-      let count = 0;
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        const [name, sku, molId, manufacturer, price, mrp, stock, category, generic, rx, pack, desc, how, treat, safety, side, alc, preg, lact, driv, kid, liv, img1, img2, img3] = line.split(",").map(s => s.replace(/"/g, '').trim());
-        const ref = doc(collection(db, 'medicines'));
-        const images = [img1, img2, img3].filter(Boolean);
-        batch.set(ref, { 
-          name, sku, moleculeId: molId, manufacturer, 
-          price: Number(price) || 0, 
-          mrp: Number(mrp) || 0, 
-          availableQuantity: Number(stock) || 0, 
-          category,
-          isGeneric: generic?.toLowerCase() === 'true',
-          prescriptionRequired: rx?.toLowerCase() === 'true',
-          packSize: pack,
-          description: desc,
-          howToUse: how,
-          treatment: treat,
-          safetyAdvice: safety,
-          sideEffects: side,
-          alcoholInteraction: alc,
-          pregnancyInteraction: preg,
-          lactationInteraction: lact,
-          drivingInteraction: driv,
-          kidneyInteraction: kid,
-          liverInteraction: liv,
-          imageUrls: images,
-          imageUrl: images[0] || '',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-        count++;
-      }
-      await batch.commit();
-      toast({ title: "Bulk Upload Success", description: `${count} clinical entries added.` });
-    };
-    reader.readAsText(file);
+
+    try {
+      // 1. Fetch Lookups for Clinical ID Mapping and Upsert
+      const molSnap = await getDocs(collection(db, 'moleculeMaster'));
+      const molLookup: Record<string, string> = {};
+      molSnap.forEach(d => {
+        const data = d.data();
+        if (data.masterId) molLookup[data.masterId] = d.id;
+      });
+
+      const medSnap = await getDocs(collection(db, 'medicines'));
+      const medLookup: Record<string, string> = {};
+      medSnap.forEach(d => {
+        const data = d.data();
+        if (data.sku) medLookup[data.sku] = d.id;
+      });
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const text = event.target?.result as string;
+        const lines = text.split("\n").slice(1);
+        const batch = writeBatch(db);
+        let count = 0;
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          
+          // Safer CSV parsing
+          const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, '').trim());
+          const [name, sku, molMappingCode, manufacturer, price, mrp, stock, category, generic, rx, pack, desc, how, treat, safety, side, alc, preg, lact, driv, kid, liv, img1, img2, img3] = parts;
+
+          if (!sku) continue;
+
+          // Clinical ID Mapping Lookup
+          const moleculeDocId = molLookup[molMappingCode] || molMappingCode || '';
+
+          // Upsert Logic: Check for existing SKU
+          const existingId = medLookup[sku];
+          const ref = existingId ? doc(db, 'medicines', existingId) : doc(collection(db, 'medicines'));
+          
+          const images = [img1, img2, img3].filter(Boolean);
+          const payload: any = { 
+            name, sku, moleculeId: moleculeDocId, manufacturer, 
+            price: Number(price) || 0, 
+            mrp: Number(mrp) || 0, 
+            availableQuantity: Number(stock) || 0, 
+            category,
+            isGeneric: generic?.toLowerCase() === 'true',
+            prescriptionRequired: rx?.toLowerCase() === 'true',
+            packSize: pack,
+            description: desc,
+            howToUse: how,
+            treatment: treat,
+            safetyAdvice: safety,
+            sideEffects: side,
+            alcoholInteraction: alc,
+            pregnancyInteraction: preg,
+            lactationInteraction: lact,
+            drivingInteraction: driv,
+            kidneyInteraction: kid,
+            liverInteraction: liv,
+            imageUrls: images,
+            imageUrl: images[0] || '',
+            updatedAt: serverTimestamp()
+          };
+
+          if (!existingId) {
+            payload.createdAt = serverTimestamp();
+          }
+
+          batch.set(ref, payload, { merge: true });
+          count++;
+        }
+        await batch.commit();
+        toast({ title: "Bulk Upload Success", description: `${count} clinical entries processed (Upsert active).` });
+      };
+      reader.readAsText(file);
+    } catch (err) {
+      toast({ variant: 'destructive', title: "Import Error", description: "Could not initialize clinical handshake." });
+    }
   };
 
   return (
@@ -759,7 +796,21 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
                 const stock = med.availableQuantity !== undefined ? `${med.availableQuantity} PCS` : <span className="text-red-500 font-black">NO STOCK DATA</span>;
                 return (
                   <tr key={med.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-10 py-8"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border"><img src={med.imageUrl} alt="" className="w-full h-full object-contain" /></div><div className="flex flex-col"><span className="font-black text-sm uppercase">{med.name}</span><span className="text-[9px] text-gray-400 uppercase">{med.sku} • {med.manufacturer}</span></div></div></td>
+                    <td className="px-10 py-8">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border flex items-center justify-center">
+                          {med.imageUrl ? (
+                            <img src={med.imageUrl} alt="" className="w-full h-full object-contain" />
+                          ) : (
+                            <Package className="w-6 h-6 text-gray-200" />
+                          )}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-black text-sm uppercase">{med.name}</span>
+                          <span className="text-[9px] text-gray-400 uppercase">{med.sku} • {med.manufacturer}</span>
+                        </div>
+                      </div>
+                    </td>
                     <td className="px-10 py-8"><div className="flex flex-col"><span className="font-black text-accent text-lg">₹{price}</span><span className="text-[9px] text-red-600 line-through font-bold">MRP ₹{med.mrp || 0}</span></div></td>
                     <td className="px-10 py-8 font-black text-[10px] uppercase text-gray-700">{stock}</td>
                     <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => { setEditingItem(med); setIsFormOpen(true); }} className="h-10 w-10 rounded-xl"><Edit2 className="w-4 h-4 text-gray-400" /></Button><Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'medicines', med.id))} className="h-10 w-10 rounded-xl"><Trash2 className="w-4 h-4 text-red-300" /></Button></div></td>
@@ -900,7 +951,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                       <Star className="w-4 h-4 fill-current" />
                    </button>
                    <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center overflow-hidden border shadow-inner">
-                      {imageUrls[idx] ? <img src={imageUrls[idx]} className="w-full h-full object-contain" /> : <ImageIcon className="text-gray-200 w-10 h-10" />}
+                      {imageUrls[idx] ? <img src={imageUrls[idx]} className="w-full h-full object-contain" alt="" /> : <ImageIcon className="text-gray-200 w-10 h-10" />}
                    </div>
                    <div className="w-full space-y-3">
                       <div className="relative">
@@ -1216,7 +1267,16 @@ function DigitizationTerminal({ db, enquiry, onClose }: { db: any, enquiry: any,
                   <div className="absolute top-16 left-0 right-0 bg-white rounded-2xl shadow-2xl border z-20 overflow-hidden">
                     {searchedMeds.map(m => (
                       <button key={m.id} onClick={() => addToDraftOrder(m)} className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors border-b last:border-none text-left">
-                        <div className="flex flex-col items-start"><p className="text-sm font-black uppercase">{m.name}</p><p className="text-[9px] text-gray-400">{m.saltComposition}</p></div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center p-1 border">
+                            {m.imageUrl ? (
+                              <img src={m.imageUrl} alt="" className="w-full h-full object-contain" />
+                            ) : (
+                              <Package className="w-4 h-4 text-gray-300" />
+                            )}
+                          </div>
+                          <div className="flex flex-col items-start"><p className="text-sm font-black uppercase">{m.name}</p><p className="text-[9px] text-gray-400">{m.saltComposition}</p></div>
+                        </div>
                         <PlusCircle className="w-5 h-5 text-primary" />
                       </button>
                     ))}
@@ -1445,7 +1505,13 @@ function PromoForm({ db, initialData, onSuccess }: { db: any, initialData?: any,
               <div className="absolute top-full left-0 right-0 z-50 bg-white border rounded-2xl shadow-2xl overflow-hidden mt-2">
                 {searchedMeds.map(m => (
                   <button key={m.id} type="button" onClick={() => setForm({...form, targetId: m.id})} className="w-full p-4 flex items-center gap-3 hover:bg-gray-50 border-b last:border-none text-left">
-                    <div className="w-8 h-8 bg-gray-100 rounded p-1"><img src={m.imageUrl} className="w-full h-full object-contain" /></div>
+                    <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center p-1 border">
+                      {m.imageUrl ? (
+                        <img src={m.imageUrl} className="w-full h-full object-contain" alt="" />
+                      ) : (
+                        <Package className="w-4 h-4 text-gray-300" />
+                      )}
+                    </div>
                     <span className="font-bold text-xs uppercase">{m.name}</span>
                   </button>
                 ))}
@@ -1598,7 +1664,7 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
   const filteredUsers = users?.filter(patient => {
     const searchLower = searchTerm.toLowerCase();
     const nameStr = (patient.name || '').toLowerCase();
-    const identifierStr = (patient.phone || patient.email || '').toLowerCase();
+    const identifierStr = String(patient.phone || patient.email || patient.firebaseAuthId || '').toLowerCase();
     
     const matchesSearch = !searchTerm || nameStr.includes(searchLower) || identifierStr.includes(searchLower);
 
