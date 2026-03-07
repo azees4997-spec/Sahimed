@@ -21,10 +21,16 @@ import {
   ShoppingCart,
   Zap,
   TrendingDown,
-  Star
+  Star,
+  Maximize2
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogTrigger 
+} from "@/components/ui/dialog";
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, query, collection, where, limit, onSnapshot } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -155,9 +161,26 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           )}
         </div>
         
-        <div className="relative aspect-square w-full max-h-[100px] sm:max-h-none bg-white rounded-xl mb-2 overflow-hidden border border-gray-50 flex items-center justify-center p-2">
-          <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-1" />
-        </div>
+        {/* Medicine Image with Viewer */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <div className="relative aspect-square w-full max-h-[100px] sm:max-h-none bg-white rounded-xl mb-2 overflow-hidden border border-gray-50 flex items-center justify-center p-2 cursor-zoom-in group/img">
+              <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-1 transition-transform group-hover/img:scale-105" />
+              <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
+                 <Maximize2 className="w-4 h-4 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
+              </div>
+            </div>
+          </DialogTrigger>
+          <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-transparent shadow-none">
+            <div className="relative aspect-square w-full bg-white rounded-[40px] overflow-hidden p-8 flex items-center justify-center shadow-3xl">
+               <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-10" />
+               <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full border border-gray-100 shadow-xl flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  <p className="font-black text-[10px] uppercase tracking-widest text-gray-900">{product.name}</p>
+               </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <div className="flex-1 space-y-0.5">
           <h3 className="font-black text-[11px] sm:text-[15px] text-gray-900 uppercase leading-tight line-clamp-2 min-h-[2.2rem]">
@@ -204,26 +227,27 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       <Navbar />
       <main className="max-w-[1200px] mx-auto px-3 sm:px-10 py-4 sm:py-8">
         
-        <div className="flex flex-col items-center mb-4 space-y-2">
-           <div className="inline-flex items-center gap-2 bg-primary/5 px-4 py-1.5 rounded-full border border-primary/10 shadow-sm">
+        {/* COMPACT MOBILE HEADER */}
+        <div className="flex flex-row items-center justify-center mb-4 gap-2">
+           <div className="inline-flex items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10 shadow-sm">
               <Dna className="w-3.5 h-3.5 text-primary" />
-              <span className="text-[10px] sm:text-base font-black text-primary uppercase tracking-[0.15em]">
+              <span className="text-[10px] sm:text-base font-black text-primary uppercase tracking-[0.1em]">
                 {molData?.molecule || staticProduct.name}
               </span>
            </div>
            {staticProduct.prescriptionRequired && (
-             <Badge className="bg-red-50 text-red-600 border-red-100 rounded-full font-black text-[8px] px-3 py-1 uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
-               <AlertTriangle className="w-3 h-3" /> Prescription Required
+             <Badge className="bg-red-50 text-red-600 border-red-100 rounded-full font-black text-[8px] px-2.5 py-1.5 uppercase tracking-widest flex items-center gap-1.5 shadow-sm shrink-0">
+               <AlertTriangle className="w-3 h-3" /> RX
              </Badge>
            )}
         </div>
 
         {!isLiveLoading && !isAltLiveLoading && genericAlt && switchSavingsAmt > 0 && (
           <div className="mb-4 animate-in slide-in-from-top-4 duration-700">
-            <div className="bg-accent text-white py-2 px-4 rounded-[16px] shadow-lg flex items-center justify-center gap-3 text-center border-b-2 border-accent-foreground/10">
+            <div className="bg-accent text-white py-2 px-4 rounded-[16px] shadow-lg flex items-center justify-center gap-2 text-center border-b-2 border-accent-foreground/10">
                <TrendingDown className="w-4 h-4" />
-               <h2 className="text-[10px] sm:text-lg font-black uppercase tracking-tight">
-                 Switch to Generic & Save ₹{switchSavingsAmt.toFixed(0)} ({switchSavingsPct}% OFF)
+               <h2 className="text-[9px] sm:text-lg font-black uppercase tracking-tight">
+                 Switch to Generic & Save ₹{switchSavingsAmt.toFixed(0)} ({switchSavingsPct}% OFF Branded MRP)
                </h2>
                <Zap className="w-4 h-4 fill-white" />
             </div>
