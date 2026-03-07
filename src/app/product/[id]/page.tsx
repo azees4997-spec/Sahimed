@@ -84,8 +84,14 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     }).catch(() => setLiveLoading(false));
   }, [db, id]);
 
-  // Step 3: Branded-to-Generic Mapping Rule
-  // Only query for alternatives if the CURRENT product is Branded (isGeneric: false)
+  // Step 3: Molecule Plain Composition Lookup
+  const moleculeRef = useMemoFirebase(() => {
+    if (!db || !staticProduct?.moleculeId) return null;
+    return doc(db, 'moleculeMaster', staticProduct.moleculeId);
+  }, [db, staticProduct?.moleculeId]);
+  const { data: moleculeData } = useDoc(moleculeRef);
+
+  // Step 4: Branded-to-Generic Mapping Rule
   const alternativesQuery = useMemoFirebase(() => {
     if (!db || !staticProduct?.moleculeId || staticProduct?.isGeneric) return null;
     return query(
@@ -99,7 +105,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { data: genericAlternatives } = useCollection(alternativesQuery);
   const genericAlt = genericAlternatives?.[0];
 
-  // Step 4: Fetch Live Data for the Generic Alternative to calculate accurate savings
+  // Step 5: Fetch Live Data for the Generic Alternative
   const [altLiveData, setAltLiveData] = useState<{ price: number } | null>(null);
   useEffect(() => {
     if (db && genericAlt?.id) {
@@ -121,7 +127,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     );
   }
 
-  // Final Consolidated Hybrid Product Object
   const product = {
     ...staticProduct,
     price: liveData?.price || staticProduct.price || 0,
@@ -130,8 +135,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   };
 
   const isOutOfStock = product.availableQuantity <= 0;
-
-  // Robust URL Validation for PDP Image
   const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
     ? product.imageUrl
     : `https://picsum.photos/seed/${product.id}/600/600`;
@@ -146,7 +149,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     </div>
   );
 
-  // Savings Calculation Logic
   const savingsPercent = (product.price > 0 && altLiveData?.price) 
     ? Math.round(((product.price - altLiveData.price) / product.price) * 100)
     : null;
@@ -156,11 +158,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 py-6 sm:py-10">
         <div className="text-center mb-10 space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
+           {/* Plain Composition Header */}
            <div className="inline-flex items-center gap-2 bg-primary/10 px-6 py-2 rounded-full border border-primary/20">
               <Dna className="w-4 h-4 text-primary" />
-              <span className="text-xs font-black text-primary uppercase tracking-[0.2em]">Active Formula</span>
+              <span className="text-[10px] font-black text-primary uppercase tracking-widest">
+                {moleculeData?.molecule || product.saltComposition || "Composition Registry"}
+              </span>
            </div>
            
+           {/* Prescription Warning: Above Name */}
            {product.prescriptionRequired && (
              <div className="flex justify-center">
                <Badge className="bg-red-50 text-red-600 border-red-100 rounded-full font-black text-[10px] px-6 py-2 uppercase tracking-[0.2em] animate-pulse flex items-center gap-2">
@@ -170,7 +176,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            )}
 
            <h2 className="text-2xl sm:text-4xl font-black text-gray-900 uppercase tracking-tighter leading-tight">{product.name}</h2>
-           <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.3em]">Precision Clinical Profile • {product.sku}</p>
+           <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.3em]">SKU Profile: {product.sku}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
@@ -203,23 +209,23 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     <span className="text-5xl font-black text-accent tracking-tighter">₹{product.price}</span>
                     <span className="text-xl text-red-500 font-bold line-through">MRP ₹{product.mrp}</span>
                  </div>
-                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Inclusive of all clinical taxes</p>
+                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Inclusive of clinical distribution taxes</p>
               </div>
 
               <div className="space-y-6 bg-white p-8 rounded-[40px] border shadow-sm">
                  <div className="flex justify-between items-center pb-6 border-b">
                     <div className="flex flex-col">
-                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Marketer</span>
+                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Pharmacist Notes</span>
                        <span className="font-black text-sm uppercase">{product.manufacturer}</span>
                     </div>
                     <div className="flex flex-col text-right">
-                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Pack Size</span>
+                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Standard Pack</span>
                        <span className="font-black text-sm uppercase">{product.packSize || "N/A"}</span>
                     </div>
                  </div>
                  
                  {liveLoading ? (
-                   <Button disabled className="w-full h-20 rounded-full bg-gray-100 text-gray-400 animate-pulse uppercase font-black text-xs">Syncing Live Data...</Button>
+                   <Button disabled className="w-full h-20 rounded-full bg-gray-100 text-gray-400 animate-pulse uppercase font-black text-xs">Syncing Dynamic Triad...</Button>
                  ) : isOutOfStock ? (
                    <Button variant="outline" className="w-full h-20 rounded-full border-2 border-orange-200 text-orange-600 font-black uppercase text-xs tracking-widest bg-orange-50">Notify Availability</Button>
                  ) : (
@@ -231,51 +237,49 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               <div className="flex items-center gap-4 p-6 bg-accent/5 rounded-[32px] border border-accent/10">
                  <ShieldCheck className="w-8 h-8 text-accent shrink-0" />
-                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-relaxed">Genuine Clinical Supply • Verified Logistics • 24/7 Support</p>
+                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-relaxed">Verified Bio-Equivalent Source • Precision Supply Chain</p>
               </div>
            </div>
         </div>
 
-        {/* SIDE-BY-SIDE COMPARISON RULE */}
-        {/* Only show if VIEWED product is Branded (!isGeneric) AND a Generic Counterpart exists */}
+        {/* CROSS-PLATFORM SIDE-BY-SIDE COMPARISON */}
         {!product.isGeneric && genericAlt && (
-          <div className="bg-white rounded-[40px] p-8 mb-12 border-2 border-dashed border-accent/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="bg-white rounded-[40px] p-6 sm:p-10 mb-12 border-2 border-dashed border-accent/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
               <Zap size={120} className="text-accent" />
             </div>
-            <div className="flex flex-col md:flex-row items-center gap-10">
-              <div className="flex-1 space-y-4 text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start gap-3">
-                  <Badge className="bg-accent text-white px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">Switch & Save</Badge>
+            <div className="flex flex-row items-center justify-between gap-4 sm:gap-10">
+              <div className="flex-1 space-y-2 sm:space-y-4 text-left">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="bg-accent text-white px-3 sm:px-4 py-1 rounded-full font-black text-[8px] sm:text-[10px] uppercase tracking-widest">Switch & Save</Badge>
                   {savingsPercent && (
-                    <Badge variant="outline" className="border-accent text-accent font-black text-[10px] uppercase px-4 py-1 animate-bounce">
+                    <Badge variant="outline" className="border-accent text-accent font-black text-[8px] sm:text-[10px] uppercase px-2 sm:px-4 py-1 animate-bounce">
                       SAVE {savingsPercent}%
                     </Badge>
                   )}
                 </div>
-                <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Generic Alternative Available</h3>
-                <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest leading-relaxed">
-                  This branded product has a bio-equivalent generic version with the same clinical efficacy. 
-                  Switching provides the exact same pharmaceutical result at a significantly lower cost.
+                <h3 className="text-sm sm:text-2xl font-black text-gray-900 uppercase tracking-tight leading-tight">Generic Alternative Available</h3>
+                <p className="hidden sm:block text-[11px] font-bold text-gray-500 uppercase tracking-widest leading-relaxed">
+                  Same clinical efficacy at a significantly lower cost.
                 </p>
               </div>
               
-              <Card className="w-full md:w-auto min-w-[320px] rounded-[32px] border-none shadow-2xl bg-gray-50/50 p-6 flex items-center gap-6 group hover:scale-[1.02] transition-all">
-                <div className="w-20 h-20 bg-white rounded-2xl p-2 border flex items-center justify-center overflow-hidden shrink-0">
+              <Card className="shrink-0 w-[160px] sm:w-[320px] rounded-[24px] sm:rounded-[32px] border-none shadow-xl bg-gray-50/50 p-3 sm:p-6 flex flex-col sm:flex-row items-center gap-3 sm:gap-6 group hover:scale-[1.02] transition-all">
+                <div className="w-12 h-12 sm:w-20 sm:h-20 bg-white rounded-xl p-1 sm:p-2 border flex items-center justify-center overflow-hidden shrink-0">
                   <Image 
-                    src={genericAlt.imageUrl && genericAlt.imageUrl.startsWith('http') ? genericAlt.imageUrl : `https://picsum.photos/seed/${genericAlt.id}/300/300`} 
+                    src={(genericAlt.imageUrl && typeof genericAlt.imageUrl === 'string' && genericAlt.imageUrl.startsWith('http')) ? genericAlt.imageUrl : `https://picsum.photos/seed/${genericAlt.id}/300/300`} 
                     alt={genericAlt.name} 
                     width={80} 
                     height={80} 
                     className="object-contain" 
                   />
                 </div>
-                <div className="flex-1">
-                  <p className="text-[10px] font-black text-accent uppercase mb-1">Recommended Choice</p>
-                  <h4 className="font-black text-sm uppercase truncate mb-3">{genericAlt.name}</h4>
-                  <Link href={`/product/${genericAlt.id}`}>
-                    <Button className="w-full h-10 rounded-full font-black text-[10px] uppercase bg-primary text-white shadow-lg group-hover:scale-105 transition-transform">
-                      View Generic Variant
+                <div className="flex-1 text-center sm:text-left min-w-0">
+                  <p className="text-[7px] sm:text-[9px] font-black text-accent uppercase mb-0.5">Recommended Choice</p>
+                  <h4 className="font-black text-[9px] sm:text-sm uppercase truncate mb-2">{genericAlt.name}</h4>
+                  <Link href={`/product/${genericAlt.id}`} className="w-full">
+                    <Button className="w-full h-7 sm:h-10 rounded-full font-black text-[7px] sm:text-[10px] uppercase bg-primary text-white shadow-lg group-hover:scale-105 transition-transform px-2">
+                      View Generic
                     </Button>
                   </Link>
                 </div>
