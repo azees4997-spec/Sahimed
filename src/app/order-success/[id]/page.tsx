@@ -5,10 +5,23 @@ import { use, useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle2, ShoppingBag, ArrowRight, Package, ShieldCheck, ClipboardCheck, Banknote } from 'lucide-react';
+import { 
+  CheckCircle2, 
+  ShoppingBag, 
+  ArrowRight, 
+  Package, 
+  ShieldCheck, 
+  ClipboardCheck, 
+  Banknote,
+  PartyPopper,
+  TrendingDown,
+  Tag,
+  Zap
+} from 'lucide-react';
 import Link from 'next/link';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 export default function OrderSuccessPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -21,7 +34,11 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
     return doc(db, 'userProfiles', user.uid, 'orders', orderId);
   }, [db, user, orderId]);
 
-  const { data: order } = useDoc(orderRef);
+  const { data: order, isLoading } = useDoc(orderRef);
+
+  const breakdown = order?.billingBreakdown;
+  const totalSaved = breakdown?.savings || 0;
+  const mrpSavings = (breakdown?.grossMrp || 0) - (order?.totalAmount || 0) + (breakdown?.campaignDiscount || 0);
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] page-transition-wrapper flex flex-col">
@@ -36,9 +53,42 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
         </div>
 
         <div className="space-y-4 mb-12">
-          <h1 className="text-4xl font-black text-gray-900 uppercase tracking-tighter">Order Placed Successfully!</h1>
-          <p className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.3em]">Your clinical needs are being processed</p>
+          <h1 className="text-4xl font-black text-gray-900 uppercase tracking-tighter">Order Confirmed!</h1>
+          <p className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.3em]">sahi dawa sahi daam pe</p>
         </div>
+
+        {totalSaved > 0 && (
+          <Card className="rounded-[40px] border-2 border-accent/20 bg-accent/5 overflow-hidden mb-8 animate-in slide-in-from-bottom-4 duration-500">
+            <CardContent className="p-8">
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <div className="bg-accent text-white p-2 rounded-xl animate-spring">
+                  <PartyPopper className="w-5 h-5" />
+                </div>
+                <h2 className="text-sm font-black uppercase text-accent tracking-widest">Clinical Savings Celebration</h2>
+              </div>
+              
+              <div className="flex flex-col items-center gap-1 mb-8">
+                <span className="text-[10px] font-black text-accent/60 uppercase tracking-[0.2em]">You Saved Total</span>
+                <p className="text-5xl font-black text-accent tracking-tighter animate-pulse">₹{totalSaved.toFixed(0)}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t border-accent/10 pt-6">
+                <div className="text-left space-y-1">
+                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <TrendingDown className="w-3 h-3 text-accent" /> Optimized MRP
+                  </p>
+                  <p className="font-black text-xs text-gray-900">₹{((breakdown?.grossMrp || 0) - (order?.totalAmount || 0) + (breakdown?.campaignDiscount || 0)).toFixed(0)}</p>
+                </div>
+                <div className="text-right space-y-1">
+                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest flex items-center justify-end gap-1.5">
+                    <Tag className="w-3 h-3 text-accent" /> Coupon Bonus
+                  </p>
+                  <p className="font-black text-xs text-gray-900">₹{breakdown?.campaignDiscount || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="rounded-[40px] border-none shadow-xl bg-white overflow-hidden mb-12 animate-in slide-in-from-bottom-8 duration-700">
           <CardContent className="p-10 space-y-8">
@@ -52,8 +102,8 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
 
             <div className="grid grid-cols-2 gap-6 pt-6 border-t border-dashed">
               <div className="text-left">
-                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Status</p>
-                <p className="font-black text-sm uppercase text-gray-900">Confirmed</p>
+                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Final Payable</p>
+                <p className="font-black text-sm uppercase text-gray-900">₹{order?.totalAmount || 0}</p>
               </div>
               <div className="text-right">
                 <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Payment Method</p>
@@ -85,7 +135,7 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
             </Button>
           </Link>
           <Link href="/" className="w-full sm:w-auto">
-            <Button className="w-full rounded-full h-16 px-12 font-black uppercase text-[11px] tracking-widest shadow-2xl shadow-primary/30 gap-3 active:scale-95 transition-all">
+            <Button className="w-full rounded-full h-16 px-12 font-black uppercase text-[11px] tracking-widest shadow-2xl shadow-primary/30 gap-3 active:scale-95 transition-all bg-primary text-white">
               Continue Shopping
               <ArrowRight className="w-4 h-4" />
             </Button>
