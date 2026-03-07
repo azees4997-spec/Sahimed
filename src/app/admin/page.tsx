@@ -605,7 +605,7 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                  <h4 className="text-[10px] font-black uppercase text-gray-400 flex items-center gap-2">
                    <ClipboardList className="w-3 h-3" /> Attached Prescription
                  </h4>
-                 <div className="rounded-[32px] border-2 border-gray-100 overflow-hidden aspect-[3/4] bg-gray-50 relative group">
+                 <div className="rounded-[32px] border-gray-100 overflow-hidden aspect-[3/4] bg-gray-50 relative group">
                    <img src={selectedOrder.prescriptionUrl} className="w-full h-full object-contain" alt="Clinical Attachment" />
                    <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-all" />
                  </div>
@@ -1592,11 +1592,11 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
 
   const filteredUsers = users?.filter(user => {
     const searchLower = searchTerm.toLowerCase();
-    const nameMatch = user.name?.toLowerCase().includes(searchLower);
-    const phoneMatch = user.phone?.includes(searchTerm);
+    const nameMatch = (user.name || user.fullName || user.displayName || '').toLowerCase().includes(searchLower);
+    const phoneMatch = (user.phone || user.phoneNumber || '').includes(searchTerm);
     const matchesSearch = !searchTerm || nameMatch || phoneMatch;
 
-    const joinedDate = user.createdAt?.toDate ? user.createdAt.toDate() : new Date(user.createdAt);
+    const joinedDate = user.createdAt?.toDate ? user.createdAt.toDate() : new Date(user.createdAt || 0);
     const start = startDate ? new Date(startDate) : null;
     const end = endDate ? new Date(endDate) : null;
     
@@ -1659,26 +1659,28 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
                 <tr>
                   <td colSpan={5} className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></td>
                 </tr>
-              ) : filteredUsers?.length === 0 ? (
+              ) : (!filteredUsers || filteredUsers.length === 0) ? (
                 <tr>
-                  <td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">No patients matching criteria</td>
+                  <td colSpan={5} className="p-20 text-center font-bold text-gray-300 uppercase tracking-widest">
+                    {searchTerm || startDate || endDate ? 'No patients matching criteria' : 'Initial load completed. Zero patients found.'}
+                  </td>
                 </tr>
               ) : filteredUsers?.map(patient => (
                 <tr key={patient.id} className="hover:bg-gray-50/50 transition-colors group">
                   <td className="px-10 py-8">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-[10px]">
-                        {patient.name?.charAt(0).toUpperCase() || 'P'}
+                        {(patient.name || patient.fullName || 'P').charAt(0).toUpperCase()}
                       </div>
-                      <span className="font-black text-sm uppercase">{patient.name || <span className="text-red-500 font-black">NO NAME</span>}</span>
+                      <span className="font-black text-sm uppercase">{patient.name || patient.fullName || <span className="text-red-500 font-black">NO NAME</span>}</span>
                     </div>
                   </td>
-                  <td className="px-10 py-8 font-bold text-sm text-gray-600">{patient.phone || <span className="text-red-500 font-black">NO PHONE</span>}</td>
+                  <td className="px-10 py-8 font-bold text-sm text-gray-600">{patient.phone || patient.phoneNumber || <span className="text-red-500 font-black">NO PHONE</span>}</td>
                   <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">
                     {patient.createdAt ? (patient.createdAt.toDate ? format(patient.createdAt.toDate(), 'MMM dd, yyyy') : format(new Date(patient.createdAt), 'MMM dd, yyyy')) : 'N/A'}
                   </td>
                   <td className="px-10 py-8 text-[10px] font-black uppercase text-gray-400">
-                    {patient.updatedAt ? (patient.updatedAt.toDate ? format(patient.updatedAt.toDate(), 'MMM dd, yyyy') : format(new Date(patient.updatedAt), 'MMM dd, yyyy')) : 'No Orders'}
+                    {patient.updatedAt ? (patient.updatedAt.toDate ? format(patient.updatedAt.toDate(), 'MMM dd, yyyy') : format(new Date(patient.updatedAt), 'MMM dd, yyyy')) : 'No Activity'}
                   </td>
                   <td className="px-10 py-8 text-right">
                     <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/5 hover:text-primary"><Eye className="w-4 h-4" /></Button>
@@ -1690,5 +1692,82 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
         </div>
       </Card>
     </div>
+  );
+}
+
+function AlertsTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
+  const alertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'systemAlerts'), orderBy('createdAt', 'desc')) : null, [db, isVerified]);
+  const { data: alerts, isLoading } = useCollection(alertsQuery);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingAlert, setEditingAlert] = useState<any>(null);
+
+  return (
+    <div className="space-y-8 animate-in slide-in-from-bottom-2">
+      <SectionHeader title="Clinical Alerts" subtitle="System broadcasts" onBack={onBack}>
+        <Button onClick={() => { setEditingAlert(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-red-600 text-white shadow-lg">
+          <Plus className="w-4 h-4" /> New Alert
+        </Button>
+      </SectionHeader>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {isLoading ? (
+          <div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>
+        ) : (!alerts || alerts.length === 0) ? (
+          <div className="col-span-full py-20 text-center font-bold text-gray-300">No alerts broadcasted</div>
+        ) : alerts.map(alert => (
+          <Card key={alert.id} className={cn("rounded-[40px] border-none shadow-sm overflow-hidden", alert.isActive ? "bg-white" : "bg-gray-50 opacity-60")}>
+            <div className="p-8 space-y-4">
+              <div className="flex justify-between items-start">
+                <Badge className={cn("rounded-full font-black text-[8px] uppercase px-3", alert.isActive ? "bg-red-100 text-red-600" : "bg-gray-200 text-gray-500")}>
+                  {alert.isActive ? 'Live' : 'Inactive'}
+                </Badge>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" onClick={() => { setEditingAlert(alert); setIsFormOpen(true); }} className="h-8 w-8 rounded-lg"><Edit2 className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'systemAlerts', alert.id))} className="h-8 w-8 rounded-lg text-red-300"><Trash2 className="w-3.5 h-3.5" /></Button>
+                </div>
+              </div>
+              <h3 className="font-black text-sm uppercase leading-tight">{alert.title}</h3>
+              <p className="text-[11px] font-bold text-gray-500 leading-relaxed">{alert.message}</p>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[40px] max-md border-none p-0 overflow-hidden shadow-3xl">
+          <div className="bg-red-600 p-8 text-white"><DialogTitle className="text-2xl font-black uppercase tracking-tight">Alert Composer</DialogTitle></div>
+          <div className="p-8">
+            <AlertForm db={db} initialData={editingAlert} onSuccess={() => setIsFormOpen(false)} />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function AlertForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const [form, setForm] = useState({ 
+    title: initialData?.title || '', 
+    message: initialData?.message || '', 
+    isActive: initialData?.isActive ?? true 
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = { ...form, createdAt: initialData?.createdAt || serverTimestamp(), updatedAt: serverTimestamp() };
+    initialData?.id ? updateDocumentNonBlocking(doc(db, 'systemAlerts', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'systemAlerts'), payload);
+    onSuccess();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Alert Headline</Label><Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Message</Label><Textarea value={form.message} onChange={e => setForm({...form, message: e.target.value})} required className="rounded-2xl h-32 bg-gray-50 border-none font-bold" /></div>
+      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl">
+        <input type="checkbox" id="alert-active" checked={form.isActive} onChange={e => setForm({...form, isActive: e.target.checked})} className="w-5 h-5 accent-red-600" />
+        <Label htmlFor="alert-active" className="text-[10px] font-black uppercase">Active Broadcast</Label>
+      </div>
+      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase tracking-widest bg-red-600 text-white shadow-xl shadow-red-100">Broadcast Alert</Button>
+    </form>
   );
 }
