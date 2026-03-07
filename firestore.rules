@@ -1,4 +1,3 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -7,7 +6,7 @@ service cloud.firestore {
      * SAHIMED PHARMACY SECURITY RULES
      * 
      * Enforces strict User-Ownership for sensitive patient data while allowing
-     * public access to the clinical catalog, promotional hubs, and system alerts.
+     * public access to the clinical catalog, pricing data, and system alerts.
      */
 
     // --- GLOBAL HELPER FUNCTIONS ---
@@ -69,6 +68,7 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // Explicit public read for inventory and live pricing
     match /product_live_data/{sku} {
       allow read: if true;
       allow write: if isAdmin();

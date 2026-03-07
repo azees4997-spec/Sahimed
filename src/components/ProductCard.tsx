@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from 'next/link';
@@ -25,13 +24,15 @@ export default function ProductCard({ product }: { product: Product }) {
 
   // REAL-TIME DYNAMIC DATA SYNC
   useEffect(() => {
-    if (!db || !product.sku) {
+    // Robust SKU/ID handshake for Unified Hybrid logic
+    const sku = product.sku || product.id;
+    if (!db || !sku) {
       setIsLoadingLive(false);
       return;
     }
 
     // Subscribe to live price/stock updates for this SKU
-    const liveRef = doc(db, 'product_live_data', product.sku);
+    const liveRef = doc(db, 'product_live_data', sku);
     const unsubscribe = onSnapshot(liveRef, (snap) => {
       if (snap.exists()) {
         const d = snap.data();
@@ -41,6 +42,7 @@ export default function ProductCard({ product }: { product: Product }) {
           stock: Number(d.stock_quantity) ?? 0 
         });
       } else {
+        // Fallback to zero if document missing, but stop loading
         setLiveData({ price: 0, mrp: 0, stock: 0 });
       }
       setIsLoadingLive(false);
@@ -50,7 +52,7 @@ export default function ProductCard({ product }: { product: Product }) {
     });
 
     return () => unsubscribe();
-  }, [db, product.sku]);
+  }, [db, product.sku, product.id]);
 
   const currentPrice = liveData?.price || 0;
   const currentMrp = liveData?.mrp || 0;

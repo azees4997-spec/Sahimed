@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { use, useState, useEffect } from 'react';
@@ -19,8 +18,8 @@ import {
   AlertTriangle,
   Package,
   ShoppingCart,
-  Beer,
-  Loader2
+  Loader2,
+  Beer
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -51,8 +50,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [isLiveLoading, setIsLiveLoading] = useState(true);
 
   useEffect(() => {
-    if (db && staticProduct?.sku) {
-      const liveRef = doc(db, 'product_live_data', staticProduct.sku);
+    const sku = staticProduct?.sku || staticProduct?.id;
+    if (db && sku) {
+      const liveRef = doc(db, 'product_live_data', sku);
       const unsubscribe = onSnapshot(liveRef, (snap) => {
         if (snap.exists()) {
           const d = snap.data();
@@ -66,12 +66,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         }
         setIsLiveLoading(false);
       }, (err) => {
-        console.error("Live Data Error:", err);
         setIsLiveLoading(false);
       });
       return () => unsubscribe();
     }
-  }, [db, staticProduct?.sku]);
+  }, [db, staticProduct?.sku, staticProduct?.id]);
 
   // 4. Alternatives Strategy (Generic Search)
   const alternativesQuery = useMemoFirebase(() => {
@@ -87,8 +86,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [isAltLiveLoading, setIsAltLiveLoading] = useState(true);
 
   useEffect(() => {
-    if (db && genericAlt?.sku) {
-      const liveRef = doc(db, 'product_live_data', genericAlt.sku);
+    const altSku = genericAlt?.sku || genericAlt?.id;
+    if (db && altSku) {
+      const liveRef = doc(db, 'product_live_data', altSku);
       const unsubscribe = onSnapshot(liveRef, (snap) => {
         if (snap.exists()) {
           const d = snap.data();
@@ -102,14 +102,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         }
         setIsAltLiveLoading(false);
       }, (err) => {
-        console.error("Alt Live Data Error:", err);
         setIsAltLiveLoading(false);
       });
       return () => unsubscribe();
     } else if (genericAlt === null || (!productLoading && !genericAlt)) {
       setIsAltLiveLoading(false);
     }
-  }, [db, genericAlt?.sku, productLoading]);
+  }, [db, genericAlt?.sku, genericAlt?.id, productLoading]);
 
   if (productLoading || !staticProduct) {
     return (<div className="min-h-screen bg-[#F8F8F8]"><Navbar /><main className="max-w-7xl mx-auto px-4 py-12"><Skeleton className="h-[400px] rounded-[40px]" /></main></div>);
@@ -128,25 +127,26 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       : `https://picsum.photos/seed/${product.id}/300/300`;
 
     const savings = (pMrp > pPrice && pMrp > 0) ? Math.round(((pMrp - pPrice) / pMrp) * 100) : 0;
+    const totalSavings = pMrp - pPrice;
 
     return (
       <Card className={cn(
-        "rounded-[24px] p-3 sm:p-5 flex flex-col h-full border shadow-sm transition-all overflow-hidden relative",
+        "rounded-[24px] p-2 sm:p-5 flex flex-col h-full border shadow-sm transition-all overflow-hidden relative",
         isAlt ? "bg-accent/5 border-dashed border-accent/20" : "bg-white border-gray-100"
       )}>
         <span className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{label}</span>
         
-        <div className="relative aspect-square w-full bg-white rounded-xl mb-3 overflow-hidden border border-gray-50 flex items-center justify-center p-2">
+        <div className="relative aspect-square w-full bg-white rounded-xl mb-2 overflow-hidden border border-gray-50 flex items-center justify-center p-1">
           <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-1" />
           {pIsOutOfStock && !isLoading && (
             <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
-              <span className="bg-white/90 px-3 py-1 rounded-full border border-orange-100 text-[8px] font-black text-orange-600 uppercase tracking-widest">Out of Stock</span>
+              <span className="bg-white/90 px-2 py-1 rounded-full border border-orange-100 text-[7px] font-black text-orange-600 uppercase tracking-widest">Out of Stock</span>
             </div>
           )}
         </div>
 
         <div className="flex-1 space-y-1 sm:space-y-3">
-          <h3 className="font-black text-[11px] sm:text-sm text-gray-900 uppercase leading-tight line-clamp-2 min-h-[2.2rem] sm:min-h-[2.8rem]">
+          <h3 className="font-black text-[11px] sm:text-sm text-gray-900 uppercase leading-tight line-clamp-2 min-h-[2rem] sm:min-h-[2.8rem]">
             {product.name}
           </h3>
           
@@ -158,7 +158,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             {product.manufacturer}
           </p>
 
-          <div className="pt-2 border-t border-dashed">
+          <div className="pt-1.5 border-t border-dashed">
             <div className="flex items-baseline gap-1">
               <p className={cn("text-sm sm:text-xl font-black tracking-tighter", isAlt ? "text-accent" : "text-primary")}>
                 {isLoading ? <span className="animate-pulse">...</span> : `₹${pPrice}`}
@@ -174,8 +174,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         </div>
 
         {!isLoading && savings > 0 && !pIsOutOfStock && (
-          <div className="mt-3 bg-accent text-white py-1 rounded-lg text-center shadow-md">
-            <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-tight">SAVE {savings}%</p>
+          <div className="mt-2 bg-accent text-white py-1 rounded-lg text-center shadow-md">
+            <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-tight">SAVE {savings}% (₹{totalSavings.toFixed(0)})</p>
           </div>
         )}
 
@@ -227,9 +227,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            )}
         </div>
 
-        {/* 2. STRICT SIDE-BY-SIDE GRID (MOBILE OPTIMIZED) */}
-        <div className="mb-10 sm:mb-20">
-          <div className="grid grid-cols-2 gap-2 sm:gap-8 items-stretch">
+        {/* 2. STRICT SIDE-BY-SIDE GRID (NON-BLEEDING MOBILE) */}
+        <div className="mb-10 sm:mb-20 px-1 sm:px-0">
+          <div className="grid grid-cols-2 gap-2 sm:gap-8 items-stretch w-full">
             <ComparisonCard 
               product={staticProduct} 
               live={liveData} 
