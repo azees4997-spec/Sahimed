@@ -269,7 +269,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="flex flex-row items-stretch gap-4 sm:gap-8 overflow-x-auto sm:overflow-x-visible pb-4 sm:pb-0 scrollbar-hide">
               
               {/* CURRENT BRANDED CARD */}
-              <Card className="basis-1/2 min-w-[260px] sm:min-w-0 rounded-[32px] border-none bg-gray-50 p-6 flex flex-col gap-4 shadow-inner relative opacity-80">
+              <Card className="basis-1/2 min-w-[280px] sm:min-w-0 flex-shrink-0 sm:flex-shrink rounded-[32px] border-none bg-gray-50 p-6 flex flex-col gap-4 shadow-inner relative opacity-80">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Current Selection</span>
                   <Badge variant="outline" className="text-[7px] font-black uppercase">BRANDED</Badge>
@@ -293,7 +293,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </Card>
 
               {/* RECOMMENDED GENERIC CARD */}
-              <Card className="basis-1/2 min-w-[260px] sm:min-w-0 rounded-[32px] border-none bg-accent/5 p-6 flex flex-col gap-4 shadow-xl border border-accent/10 hover:scale-[1.02] transition-all group">
+              <Card className="basis-1/2 min-w-[280px] sm:min-w-0 flex-shrink-0 sm:flex-shrink rounded-[32px] border-none bg-accent/5 p-6 flex flex-col gap-4 shadow-xl border border-accent/10 hover:scale-[1.02] transition-all group">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[8px] font-black text-accent uppercase tracking-widest">Recommended Choice</span>
                   <Badge className="bg-accent text-white text-[7px] font-black uppercase">GENERIC</Badge>
