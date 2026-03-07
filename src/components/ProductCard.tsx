@@ -2,19 +2,17 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { BellRing, ShoppingCart, Plus, Minus, Loader2 } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product, useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore } from '@/firebase';
-import { doc, collection, serverTimestamp, onSnapshot } from 'firebase/firestore';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useFirestore } from '@/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
-  const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   
@@ -52,11 +50,8 @@ export default function ProductCard({ product }: { product: Product }) {
 
   const currentPrice = liveData?.price || 0;
   const currentMrp = liveData?.mrp || 0;
-  const isOutOfStock = liveData ? liveData.stock <= 0 : false;
   
   // Clinical Precision Calculations
-  const packNum = parseInt(product.packSize?.match(/\d+/)?.[0] || "1");
-  const unitCost = currentPrice > 0 ? (currentPrice / packNum).toFixed(2) : "0.00";
   const savingsPercent = (currentMrp > currentPrice && currentMrp > 0) 
     ? Math.round(((currentMrp - currentPrice) / currentMrp) * 100) 
     : 0;
@@ -64,26 +59,8 @@ export default function ProductCard({ product }: { product: Product }) {
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isOutOfStock || isLoadingLive) return;
     addToCart(product);
     toast({ title: "Added to Bag" });
-  };
-
-  const handleNotify = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!user) {
-      toast({ title: "Login Required", description: "Sign in to receive notifications." });
-      return;
-    }
-    const enquiryData = {
-      medicineId: product.id,
-      medicineName: product.name,
-      userId: user.uid,
-      timestamp: serverTimestamp()
-    };
-    addDocumentNonBlocking(collection(db, 'stockEnquiries'), enquiryData);
-    toast({ title: "Notification Set" });
   };
 
   const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
@@ -91,13 +68,10 @@ export default function ProductCard({ product }: { product: Product }) {
     : `https://picsum.photos/seed/${product.id}/300/300`;
 
   return (
-    <div className={cn(
-      "bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full group",
-      isOutOfStock && !isLoadingLive && "opacity-90"
-    )}>
+    <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full group">
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 p-4 space-y-3">
         
-        {/* Medicine Pack Photo - Static Binding */}
+        {/* Medicine Pack Photo */}
         <div className="relative aspect-square w-full bg-gray-50 rounded-xl overflow-hidden border border-gray-50 flex items-center justify-center p-3">
           <Image 
             src={safeImageUrl} 
@@ -105,14 +79,9 @@ export default function ProductCard({ product }: { product: Product }) {
             fill 
             className="object-contain p-2 group-hover:scale-110 transition-transform duration-700" 
           />
-          {isOutOfStock && !isLoadingLive && (
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
-              <span className="bg-white/90 px-3 py-1 rounded-full border border-orange-100 text-[8px] font-black text-orange-600 uppercase tracking-widest shadow-sm">Out of Stock</span>
-            </div>
-          )}
         </div>
 
-        {/* Clinical Identity Sequence - Static Binding */}
+        {/* Clinical Identity Sequence */}
         <div className="space-y-1">
           <h3 className="font-black text-gray-900 text-[13px] uppercase tracking-tight leading-tight line-clamp-2 min-h-[2.4rem]">
             {product.name}
@@ -137,32 +106,21 @@ export default function ProductCard({ product }: { product: Product }) {
               <span className="text-[10px] text-red-400 line-through font-bold">₹{currentMrp}</span>
             )}
           </div>
-          <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight">
-            {isLoadingLive ? "Checking..." : `₹${unitCost} per unit`}
-          </p>
         </div>
 
         {/* Savings Engine */}
-        {!isLoadingLive && savingsPercent > 0 && !isOutOfStock && (
+        {!isLoadingLive && savingsPercent > 0 && (
           <div className="bg-accent/10 text-accent text-[9px] font-black uppercase px-3 py-1.5 rounded-lg text-center border border-accent/5">
             SAVE {savingsPercent}% TODAY
           </div>
         )}
       </Link>
       
-      {/* Purchase Logic - UNIVERSAL stock_quantity Trigger */}
+      {/* Purchase Logic - UNIVERSAL ADD TO BAG */}
       <div className="p-4 pt-0">
         {isLoadingLive ? (
           <Button disabled className="rounded-full h-10 w-full bg-gray-50 text-gray-400 border-none font-black text-[9px] uppercase tracking-widest gap-2">
             <Loader2 className="w-3 h-3 animate-spin" /> Checking...
-          </Button>
-        ) : isOutOfStock ? (
-          <Button 
-            onClick={handleNotify} 
-            variant="outline" 
-            className="rounded-full h-10 w-full border-orange-200 bg-orange-50 text-orange-600 font-black text-[10px] uppercase tracking-widest gap-2 shadow-sm hover:bg-orange-100 transition-colors"
-          >
-            <BellRing className="w-4 h-4" /> Notify Me
           </Button>
         ) : quantity > 0 ? (
           <div className="flex items-center gap-1 rounded-full p-1 bg-primary shadow-lg w-full h-10">

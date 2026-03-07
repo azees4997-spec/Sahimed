@@ -67,7 +67,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     }
   }, [db, staticProduct?.sku, staticProduct?.id]);
 
-  // 3. Clinical Molecule Metadata (Plain Composition)
+  // 3. Clinical Molecule Metadata
   const molRef = useMemoFirebase(() => (!db || !staticProduct?.moleculeId) ? null : doc(db, 'moleculeMaster', staticProduct.moleculeId), [db, staticProduct?.moleculeId]);
   const { data: molData } = useDoc(molRef);
 
@@ -117,9 +117,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     const qty = getItemQuantity(product.id);
     const pPrice = live?.price || 0;
     const pMrp = live?.mrp || 0;
-    const pPackNum = parseInt(product.packSize?.match(/\d+/)?.[0] || "1");
-    const pUnitCost = pPrice > 0 ? (pPrice / pPackNum).toFixed(2) : "0.00";
-    const pIsOutOfStock = live ? live.stock <= 0 : false;
     
     const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
       ? product.imageUrl
@@ -142,11 +139,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         {/* centered medicine pack photo */}
         <div className="relative aspect-square w-full bg-white rounded-xl mb-3 overflow-hidden border border-gray-50 flex items-center justify-center p-2">
           <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-1" />
-          {pIsOutOfStock && !isLoading && (
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
-              <span className="bg-white/90 px-2 py-1 rounded-full border border-orange-100 text-[7px] font-black text-orange-600 uppercase tracking-widest">Out of Stock</span>
-            </div>
-          )}
         </div>
 
         {/* standardized clinical attribute sequence */}
@@ -170,9 +162,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <span className="text-[8px] sm:text-[10px] text-red-400 line-through font-bold">₹{pMrp}</span>
               )}
             </div>
-            <p className="text-[8px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-tight">
-              {isLoading ? "Checking..." : `₹${pUnitCost} per unit`}
-            </p>
           </div>
         </div>
 
@@ -187,8 +176,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <Button disabled className="w-full h-9 sm:h-12 rounded-full bg-gray-50 text-gray-400 font-black text-[7px] sm:text-[9px] uppercase tracking-widest gap-2">
               <Loader2 className="w-3 h-3 animate-spin" /> Checking...
             </Button>
-          ) : pIsOutOfStock ? (
-            <Button disabled className="w-full h-9 sm:h-12 rounded-full font-black uppercase text-[8px] sm:text-[10px] tracking-widest bg-gray-100 text-gray-400">Out of Stock</Button>
           ) : qty > 0 ? (
             <div className="flex items-center gap-1 rounded-full p-1 bg-primary text-white h-9 sm:h-12 shadow-lg">
               <button onClick={() => updateQuantity(product.id, -1)} className="flex-1 h-full flex items-center justify-center font-bold">-</button>
@@ -230,7 +217,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            )}
         </div>
 
-        {/* Strict 2-Card Horizontal Comparison (Side-by-Side Mobile lockdown) */}
+        {/* Strict 2-Card Horizontal Comparison */}
         <div className="mb-12">
           <div className="grid grid-cols-2 gap-2 sm:gap-10 items-stretch">
             <ComparisonCard 
