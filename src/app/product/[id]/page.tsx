@@ -116,8 +116,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const ComparisonCard = ({ product, live, label, isAlt = false, isLoading = false }: { product: any, live: any, label: string, isAlt?: boolean, isLoading?: boolean }) => {
     const qty = getItemQuantity(product.id);
-    const pPrice = live?.price || 0;
-    const pMrp = live?.mrp || 0;
+    
+    // TIERED PRICE SELECTION: Priority Live > Priority Static
+    const pPrice = (live?.price && live.price > 0) ? live.price : product.price;
+    const pMrp = (live?.mrp && live.mrp > 0) ? live.mrp : (product.mrp || product.price + 50);
     
     const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
       ? product.imageUrl
@@ -150,11 +152,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             {product.manufacturer}
           </p>
 
-          {/* 5 & 6. Sahimed Price & MRP - Universal Sync */}
+          {/* 5 & 6. Sahimed Price & MRP - Tiered Handshake */}
           <div className="pt-2 border-t border-dashed mt-2">
             <div className="flex items-baseline gap-1">
               <p className={cn("text-lg sm:text-2xl font-black tracking-tighter", pPrice > 0 ? "text-accent" : "text-gray-300")}>
-                {isLoading ? <span className="animate-pulse">...</span> : pPrice > 0 ? `₹${pPrice}` : "Checking..."}
+                {isLoading ? <span className="animate-pulse">...</span> : pPrice > 0 ? `₹${pPrice}` : "Price TBD"}
               </p>
               {!isLoading && pMrp > pPrice && pPrice > 0 && (
                 <span className="text-[8px] sm:text-[10px] text-red-400 line-through font-bold">₹{pMrp}</span>
@@ -173,7 +175,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
           ) : (
             <Button 
-              onClick={() => addToCart({ ...product, price: pPrice > 0 ? pPrice : product.price, mrp: pMrp > 0 ? pMrp : product.mrp })} 
+              onClick={() => addToCart({ ...product, price: pPrice, mrp: pMrp })} 
               className={cn("w-full h-9 sm:h-12 rounded-full font-black uppercase text-[8px] sm:text-[10px] tracking-widest gap-2 shadow-xl", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
             >
               ADD <ShoppingCart className="w-3 sm:w-4 h-3 sm:h-4" />

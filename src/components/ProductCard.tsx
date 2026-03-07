@@ -49,16 +49,17 @@ export default function ProductCard({ product }: { product: Product }) {
     return () => unsubscribe();
   }, [db, product.sku, product.id]);
 
-  const currentPrice = liveData?.price || 0;
-  const currentMrp = liveData?.mrp || 0;
+  // HIGH-PRECISION PRICE RECOVERY: Priority 1: Live, Priority 2: Static
+  const currentPrice = (liveData?.price && liveData.price > 0) ? liveData.price : product.price;
+  const currentMrp = (liveData?.mrp && liveData.mrp > 0) ? liveData.mrp : (product.mrp || product.price + 50);
   
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addToCart({
       ...product,
-      price: currentPrice > 0 ? currentPrice : product.price,
-      mrp: currentMrp > 0 ? currentMrp : product.mrp
+      price: currentPrice,
+      mrp: currentMrp
     });
     toast({ title: "Added to Bag" });
   };
@@ -97,7 +98,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </p>
         </div>
 
-        {/* 5 & 6. Pricing Section - Universal Real-Time Binding */}
+        {/* 5 & 6. Pricing Section - Universal Handshake + Static Fallback */}
         <div className="pt-2 border-t border-dashed space-y-0.5 mt-auto">
           <div className="flex items-baseline gap-2">
             <p className="text-lg font-black text-accent tracking-tighter">
@@ -106,7 +107,7 @@ export default function ProductCard({ product }: { product: Product }) {
               ) : currentPrice > 0 ? (
                 `₹${currentPrice}`
               ) : (
-                <span className="text-gray-300">Checking...</span>
+                <span className="text-gray-300">Price TBD</span>
               )}
             </p>
             {!isLoadingLive && currentMrp > currentPrice && currentPrice > 0 && (
