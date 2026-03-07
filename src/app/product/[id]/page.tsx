@@ -19,7 +19,8 @@ import {
   AlertTriangle,
   Package,
   ShoppingCart,
-  Loader2
+  Zap,
+  TrendingDown
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,7 +38,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { toast } = useToast();
   const { addToCart, getItemQuantity, updateQuantity } = useCart();
 
-  // 1. Fetch Static Clinical Profile (Branded Selection)
+  // 1. Fetch Static Clinical Profile
   const productRef = useMemoFirebase(() => (!db || !id) ? null : doc(db, 'medicines', id), [db, id]);
   const { data: staticProduct, isLoading: productLoading } = useDoc(productRef);
 
@@ -57,16 +58,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             price: Number(d.sahimed_price) || 0, 
             stock: Number(d.stock_quantity) ?? 0 
           });
-        } else {
-          setLiveData({ mrp: 0, price: 0, stock: 0 });
         }
         setIsLiveLoading(false);
       }, (err) => {
         setIsLiveLoading(false);
       });
       return () => unsubscribe();
+    } else if (!productLoading && !staticProduct) {
+      setIsLiveLoading(false);
     }
-  }, [db, staticProduct?.sku, staticProduct?.id]);
+  }, [db, staticProduct?.sku, staticProduct?.id, productLoading]);
 
   // 3. Clinical Molecule Metadata
   const molRef = useMemoFirebase(() => (!db || !staticProduct?.moleculeId) ? null : doc(db, 'moleculeMaster', staticProduct.moleculeId), [db, staticProduct?.moleculeId]);
@@ -97,8 +98,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             mrp: Number(d.mrp) || 0, 
             stock: Number(d.stock_quantity) ?? 0 
           });
-        } else {
-          setAltLiveData({ price: 0, mrp: 0, stock: 0 });
         }
         setIsAltLiveLoading(false);
       }, (err) => {
@@ -114,13 +113,21 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     return (<div className="min-h-screen bg-[#F8F8F8]"><Navbar /><main className="max-w-7xl mx-auto px-4 py-12"><Skeleton className="h-[400px] rounded-[40px]" /></main></div>);
   }
 
+  // TIERED PRICE RECOVERY for Switch & Save calculation
+  const brandedPrice = (liveData?.price && liveData.price > 0) ? liveData.price : staticProduct.price;
+  const genericPrice = (altLiveData?.price && altLiveData.price > 0) ? altLiveData.price : (genericAlt?.price || 0);
+  
+  const switchSavingsAmt = Math.max(0, brandedPrice - genericPrice);
+  const switchSavingsPct = brandedPrice > 0 ? Math.round((switchSavingsAmt / brandedPrice) * 100) : 0;
+
   const ComparisonCard = ({ product, live, label, isAlt = false, isLoading = false }: { product: any, live: any, label: string, isAlt?: boolean, isLoading?: boolean }) => {
     const qty = getItemQuantity(product.id);
-    
-    // TIERED PRICE SELECTION: Priority Live > Priority Static
     const pPrice = (live?.price && live.price > 0) ? live.price : product.price;
     const pMrp = (live?.mrp && live.mrp > 0) ? live.mrp : (product.mrp || product.price + 50);
     
+    const savingsAmt = Math.max(0, pMrp - pPrice);
+    const savingsPct = pMrp > 0 ? Math.round((savingsAmt / pMrp) * 100) : 0;
+
     const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
       ? product.imageUrl
       : `https://picsum.photos/seed/${product.id}/300/300`;
@@ -130,42 +137,47 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         "rounded-[20px] sm:rounded-[32px] p-3 sm:p-6 flex flex-col h-full border shadow-sm transition-all overflow-hidden relative",
         isAlt ? "bg-accent/5 border-dashed border-accent/20" : "bg-white border-gray-100"
       )}>
-        <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{label}</span>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest block">{label}</span>
+          {!isLoading && savingsPct > 0 && (
+            <Badge className="bg-accent text-white text-[7px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+              SAVE {savingsPct}%
+            </Badge>
+          )}
+        </div>
         
-        {/* 1. Medicine Pack Photo */}
         <div className="relative aspect-square w-full bg-white rounded-xl mb-3 overflow-hidden border border-gray-50 flex items-center justify-center p-2">
           <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-1" />
         </div>
 
-        {/* Standardized clinical attribute sequence */}
         <div className="flex-1 space-y-1">
-          {/* 2. Item Name */}
           <h3 className="font-black text-[11px] sm:text-[15px] text-gray-900 uppercase leading-tight line-clamp-2 min-h-[2.2rem]">
             {product.name}
           </h3>
-          {/* 3. Pack Size */}
           <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-tighter">
             {product.packSize || "N/A"}
           </p>
-          {/* 4. Manufacturer */}
           <p className="text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase truncate">
             {product.manufacturer}
           </p>
 
-          {/* 5 & 6. Sahimed Price & MRP - Tiered Handshake */}
           <div className="pt-2 border-t border-dashed mt-2">
             <div className="flex items-baseline gap-1">
               <p className={cn("text-lg sm:text-2xl font-black tracking-tighter", pPrice > 0 ? "text-accent" : "text-gray-300")}>
-                {isLoading ? <span className="animate-pulse">...</span> : pPrice > 0 ? `₹${pPrice}` : "Price TBD"}
+                {isLoading ? "..." : pPrice > 0 ? `₹${pPrice}` : "TBD"}
               </p>
               {!isLoading && pMrp > pPrice && pPrice > 0 && (
                 <span className="text-[8px] sm:text-[10px] text-red-400 line-through font-bold">₹{pMrp}</span>
               )}
             </div>
+            {!isLoading && savingsAmt > 0 && (
+              <p className="text-[7px] sm:text-[9px] font-black text-accent uppercase tracking-tighter mt-0.5">
+                You Save ₹{savingsAmt.toFixed(0)}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* 7. ADD Button (Always Active) */}
         <div className="mt-4">
           {qty > 0 ? (
             <div className="flex items-center gap-1 rounded-full p-1 bg-primary text-white h-9 sm:h-12 shadow-lg">
@@ -191,7 +203,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       <Navbar />
       <main className="max-w-[1200px] mx-auto px-3 sm:px-10 py-8">
         
-        {/* Top Header: Plain Clinical Composition title */}
         <div className="text-center mb-8 space-y-3">
            <div className="inline-flex items-center gap-2 bg-primary/10 px-6 py-2.5 rounded-full border border-primary/20 shadow-sm">
               <Dna className="w-4 h-4 text-primary" />
@@ -208,7 +219,22 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            )}
         </div>
 
-        {/* Strict 2-Card Horizontal Comparison Lockdown */}
+        {/* Switch & Save Grand Logic Banner */}
+        {!isLiveLoading && !isAltLiveLoading && genericAlt && switchSavingsAmt > 0 && (
+          <div className="mb-8 animate-in slide-in-from-top-4 duration-700">
+            <div className="bg-accent text-white p-4 rounded-[24px] shadow-xl flex items-center justify-center gap-4 text-center border-b-4 border-accent-foreground/20">
+               <TrendingDown className="w-6 h-6 animate-bounce" />
+               <div>
+                 <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">PRO TIP: SWITCH & SAVE</p>
+                 <h2 className="text-sm sm:text-lg font-black uppercase tracking-tighter">
+                   Switch to Generic & Save ₹{switchSavingsAmt.toFixed(0)} ({switchSavingsPct}%)
+                 </h2>
+               </div>
+               <Zap className="w-6 h-6 fill-white" />
+            </div>
+          </div>
+        )}
+
         <div className="mb-12">
           <div className="grid grid-cols-2 gap-2 sm:gap-10 items-stretch">
             <ComparisonCard 
@@ -235,7 +261,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        {/* Clinical Tabs */}
         <section className="bg-white rounded-[40px] p-6 sm:p-16 shadow-2xl border border-gray-100 overflow-hidden">
           <Tabs defaultValue="clinical" className="w-full">
             <TabsList className="bg-gray-100 p-1 rounded-full h-12 sm:h-16 w-full max-w-[600px] flex mx-auto mb-10 sm:mb-16">

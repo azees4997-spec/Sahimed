@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, Plus, Minus, Loader2 } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Loader2, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product, useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +11,7 @@ import { useFirestore } from '@/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
@@ -21,7 +22,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const [isLoadingLive, setIsLoadingLive] = useState(true);
   const quantity = getItemQuantity(product.id);
 
-  // GLOBAL REAL-TIME HANDSHAKE: Independent listener for every SKU
+  // Universal real-time sync for all SKU views
   useEffect(() => {
     const sku = product.sku || product.id;
     if (!db || !sku) {
@@ -38,8 +39,6 @@ export default function ProductCard({ product }: { product: Product }) {
           mrp: Number(d.mrp) || 0, 
           stock: Number(d.stock_quantity) ?? 0 
         });
-      } else {
-        setLiveData({ price: 0, mrp: 0, stock: 0 });
       }
       setIsLoadingLive(false);
     }, (err) => {
@@ -49,10 +48,13 @@ export default function ProductCard({ product }: { product: Product }) {
     return () => unsubscribe();
   }, [db, product.sku, product.id]);
 
-  // HIGH-PRECISION PRICE RECOVERY: Priority 1: Live, Priority 2: Static
+  // Tiered Price Selection
   const currentPrice = (liveData?.price && liveData.price > 0) ? liveData.price : product.price;
   const currentMrp = (liveData?.mrp && liveData.mrp > 0) ? liveData.mrp : (product.mrp || product.price + 50);
   
+  const savingsAmt = Math.max(0, currentMrp - currentPrice);
+  const savingsPct = currentMrp > 0 ? Math.round((savingsAmt / currentMrp) * 100) : 0;
+
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -69,10 +71,16 @@ export default function ProductCard({ product }: { product: Product }) {
     : `https://picsum.photos/seed/${product.id}/300/300`;
 
   return (
-    <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full group">
+    <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full group relative">
+      {!isLoadingLive && savingsPct > 0 && (
+        <div className="absolute top-3 left-3 z-10">
+          <Badge className="bg-accent text-white font-black text-[8px] uppercase tracking-tighter px-2 py-0.5 rounded-md shadow-lg border-none">
+            {savingsPct}% OFF
+          </Badge>
+        </div>
+      )}
+
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 p-4 space-y-3">
-        
-        {/* 1. Medicine Pack Photo */}
         <div className="relative aspect-square w-full bg-gray-50 rounded-xl overflow-hidden border border-gray-50 flex items-center justify-center p-3">
           <Image 
             src={safeImageUrl} 
@@ -82,42 +90,35 @@ export default function ProductCard({ product }: { product: Product }) {
           />
         </div>
 
-        {/* Clinical Identity Sequence */}
         <div className="space-y-1">
-          {/* 2. Item Name */}
           <h3 className="font-black text-gray-900 text-[13px] uppercase tracking-tight leading-tight line-clamp-2 min-h-[2.4rem]">
             {product.name}
           </h3>
-          {/* 3. Pack Size */}
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
             {product.packSize || 'N/A'}
           </p>
-          {/* 4. Manufacturer */}
           <p className="text-[10px] font-bold text-gray-500 uppercase truncate">
-            {product.manufacturer || 'PHARMA CORP'}
+            {product.manufacturer}
           </p>
         </div>
 
-        {/* 5 & 6. Pricing Section - Universal Handshake + Static Fallback */}
         <div className="pt-2 border-t border-dashed space-y-0.5 mt-auto">
           <div className="flex items-baseline gap-2">
             <p className="text-lg font-black text-accent tracking-tighter">
-              {isLoadingLive ? (
-                <span className="animate-pulse text-gray-300">...</span>
-              ) : currentPrice > 0 ? (
-                `₹${currentPrice}`
-              ) : (
-                <span className="text-gray-300">Price TBD</span>
-              )}
+              {isLoadingLive ? "..." : currentPrice > 0 ? `₹${currentPrice}` : "TBD"}
             </p>
             {!isLoadingLive && currentMrp > currentPrice && currentPrice > 0 && (
               <span className="text-[10px] text-red-400 line-through font-bold">₹{currentMrp}</span>
             )}
           </div>
+          {!isLoadingLive && savingsAmt > 0 && (
+            <p className="text-[8px] font-black text-accent uppercase tracking-tighter">
+              Save ₹{savingsAmt.toFixed(0)}
+            </p>
+          )}
         </div>
       </Link>
       
-      {/* 7. Purchase Logic - Universal ADD (Always Active) */}
       <div className="p-4 pt-0">
         {quantity > 0 ? (
           <div className="flex items-center gap-1 rounded-full p-1 bg-primary shadow-lg w-full h-10">
@@ -138,12 +139,12 @@ export default function ProductCard({ product }: { product: Product }) {
             </button>
           </div>
         ) : (
-          <Button 
+          <button 
             onClick={handleAdd} 
-            className="rounded-full h-10 w-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all"
+            className="rounded-full h-10 w-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all"
           >
             ADD TO BAG <ShoppingCart className="w-4 h-4" />
-          </Button>
+          </button>
         )}
       </div>
     </div>
