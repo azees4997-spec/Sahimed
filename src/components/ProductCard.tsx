@@ -1,23 +1,16 @@
 
 "use client"
 
-import Image from 'next/image';
 import Link from 'next/link';
-import { Plus, Minus, BellRing, ShoppingCart, Search as SearchIcon, AlertTriangle } from 'lucide-react';
+import { Plus, Minus, BellRing, ShoppingCart, Search as SearchIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product, useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { useState, useEffect } from 'react';
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
@@ -25,8 +18,26 @@ export default function ProductCard({ product }: { product: Product }) {
   const db = useFirestore();
   const { toast } = useToast();
   
+  const [liveData, setLiveData] = useState<{ price: number, mrp: number, stock: number } | null>(null);
   const quantity = getItemQuantity(product.id);
-  const isOutOfStock = (product.availableQuantity || 0) <= 0;
+
+  // Dynamic Data Sync
+  useEffect(() => {
+    if (db && product.sku) {
+      const liveRef = doc(db, 'product_live_data', product.sku);
+      getDoc(liveRef).then(snap => {
+        if (snap.exists()) {
+          const d = snap.data();
+          setLiveData({ price: d.sahimed_price || 0, mrp: d.mrp || 0, stock: d.stock_quantity || 0 });
+        }
+      });
+    }
+  }, [db, product.sku]);
+
+  const currentPrice = liveData?.price || product.price || 0;
+  const isOutOfStock = (liveData?.stock ?? product.availableQuantity ?? 0) <= 0;
+  const packNum = parseInt(product.packSize?.match(/\d+/)?.[0] || "1");
+  const unitCost = (currentPrice / packNum).toFixed(2);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -52,80 +63,57 @@ export default function ProductCard({ product }: { product: Product }) {
     toast({ title: "Notification Set" });
   };
 
-  // Robust URL Validation for next/image construction to prevent crash
-  const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
-    ? product.imageUrl
-    : `https://picsum.photos/seed/${product.id || 'fallback'}/300/300`;
-
-  const mrp = product.mrp || product.price + (product.price * 0.2);
-  const savingsPercent = Math.round(((mrp - product.price) / mrp) * 100);
-
   return (
-    <div className={cn("group bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col h-full", isOutOfStock && "opacity-90")}>
-      <div className="relative aspect-square w-full overflow-hidden bg-white border-b">
-        <Dialog>
-          <DialogTrigger asChild>
-            <div className="w-full h-full relative cursor-zoom-in group/img">
-              <Image
-                src={safeImageUrl}
-                alt={product.name}
-                fill
-                className={cn("object-contain p-3 group-hover/img:scale-105 transition-transform duration-700", isOutOfStock && "grayscale opacity-40")}
-                sizes="(max-width: 768px) 50vw, 300px"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
-                 <SearchIcon className="w-6 h-6 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
-              </div>
-              
-              {product.prescriptionRequired && !isOutOfStock && (
-                <div className="absolute top-3 left-3">
-                  <Badge className="bg-red-500 text-white text-[7px] font-black uppercase px-2 py-0.5 rounded-md border-none shadow-lg flex items-center gap-1">
-                    Rx
-                  </Badge>
-                </div>
-              )}
+    <div className={cn("bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full", isOutOfStock && "opacity-90")}>
+      <Link href={`/product/${product.id}`} className="flex flex-col flex-1 p-4 sm:p-6 space-y-4">
+        {/* 1. Item Name */}
+        <h3 className="font-black text-gray-900 text-xs sm:text-sm uppercase tracking-tight leading-tight line-clamp-2 min-h-[2.5rem]">
+          {product.name}
+        </h3>
 
-              {isOutOfStock && <div className="absolute inset-0 flex items-center justify-center p-2 bg-white/40 backdrop-blur-sm"><Badge variant="destructive" className="font-black text-[8px] uppercase tracking-widest rounded-full bg-gray-900/90 border-none">Out of Stock</Badge></div>}
-            </div>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl border-none p-0 bg-white rounded-[40px] overflow-hidden shadow-3xl">
-             <div className="relative aspect-square w-full flex items-center justify-center p-6">
-               <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-8" />
-             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-      
-      <div className="p-4 flex flex-col flex-1">
-        <Link href={`/product/${product.id}`} className="mb-3 block group/title">
-          <h3 className="font-black text-gray-900 text-sm uppercase tracking-tight group-hover/title:text-primary transition-colors leading-tight line-clamp-2 min-h-[2.5rem]">{product.name}</h3>
-          <p className="text-[10px] font-bold text-gray-400 uppercase truncate">{product.saltComposition || 'Clinical Formula'}</p>
-        </Link>
+        {/* 2. Pack */}
+        <p className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">
+          {product.packSize || 'N/A'}
+        </p>
 
-        <div className="mt-auto space-y-4 pt-4 border-t border-dashed">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[10px] text-red-500 font-bold line-through">MRP ₹{Math.round(mrp)}</span>
-            <div className="flex items-center justify-between">
-              <span className="text-xl font-black text-accent tracking-tighter">₹{product.price}</span>
-              {savingsPercent > 0 && !isOutOfStock && <div className="bg-accent/10 text-accent text-[8px] font-black uppercase px-2 py-1 rounded">SAVE {savingsPercent}%</div>}
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between gap-2">
-            {isOutOfStock ? (
-              <Button onClick={handleNotify} variant="outline" className="rounded-full h-10 w-full border-orange-200 bg-orange-50 text-orange-600 font-black text-[9px] uppercase tracking-widest gap-2 transition-all"><BellRing className="w-3.5 h-3.5" /> Notify Me</Button>
-            ) : quantity > 0 ? (
-              <div className="flex items-center gap-1 rounded-full p-1 bg-primary shadow-xl w-full animate-in zoom-in duration-300">
-                <button onClick={(e) => { e.preventDefault(); updateQuantity(product.id, -1); }} className="h-8 w-8 flex items-center justify-center rounded-full bg-white/10 text-white"><Minus className="w-4 h-4" /></button>
-                <span className="text-xs font-black text-white flex-1 text-center">{quantity} Units</span>
-                <button onClick={(e) => { e.preventDefault(); updateQuantity(product.id, 1); }} className="h-8 w-8 flex items-center justify-center rounded-full bg-white/10 text-white"><Plus className="w-4 h-4" /></button>
-              </div>
-            ) : (
-              <Button onClick={handleAdd} className="rounded-full h-10 w-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest gap-2 shadow-lg active:scale-95 transition-all">ADD TO BAG <ShoppingCart className="w-4 h-4" /></Button>
-            )}
-          </div>
+        {/* 3. Marketing Company */}
+        <p className="text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase truncate">
+          {product.manufacturer || 'SUN PHARMA'}
+        </p>
+
+        {/* 4. Sahimed Price */}
+        <div className="pt-2 border-t border-dashed">
+          <p className="text-lg sm:text-xl font-black text-accent tracking-tighter">₹{currentPrice}</p>
+          {/* 5. Unit Cost */}
+          <p className="text-[8px] sm:text-[10px] text-gray-400 font-bold">₹{unitCost} per unit</p>
         </div>
+
+        {/* 6. Save % Footer (Conditional) */}
+        {product.mrp > product.price && !isOutOfStock && (
+          <div className="mt-auto pt-2">
+            <div className="bg-accent/10 text-accent text-[7px] sm:text-[9px] font-black uppercase px-2 py-1.5 rounded-lg text-center">
+              SWITCH & SAVE {Math.round(((product.mrp - product.price) / product.mrp) * 100)}%
+            </div>
+          </div>
+        )}
+      </Link>
+      
+      <div className="p-4 pt-0">
+        {isOutOfStock ? (
+          <Button onClick={handleNotify} variant="outline" className="rounded-full h-10 w-full border-orange-200 bg-orange-50 text-orange-600 font-black text-[9px] uppercase tracking-widest gap-2">
+            <BellRing className="w-3.5 h-3.5" /> Notify Me
+          </Button>
+        ) : quantity > 0 ? (
+          <div className="flex items-center gap-1 rounded-full p-1 bg-primary shadow-xl w-full">
+            <button onClick={(e) => { e.preventDefault(); updateQuantity(product.id, -1); }} className="h-8 w-8 flex items-center justify-center rounded-full bg-white/10 text-white"><Minus className="w-4 h-4" /></button>
+            <span className="text-[10px] font-black text-white flex-1 text-center">{quantity} Units</span>
+            <button onClick={(e) => { e.preventDefault(); updateQuantity(product.id, 1); }} className="h-8 w-8 flex items-center justify-center rounded-full bg-white/10 text-white"><Plus className="w-4 h-4" /></button>
+          </div>
+        ) : (
+          <Button onClick={handleAdd} className="rounded-full h-10 w-full bg-primary hover:bg-primary/90 text-white font-black text-[9px] uppercase tracking-widest gap-2 shadow-lg active:scale-95 transition-all">
+            ADD TO BAG <ShoppingCart className="w-4 h-4" />
+          </Button>
+        )}
       </div>
     </div>
   );
