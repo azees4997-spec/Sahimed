@@ -126,7 +126,14 @@ export default function Home() {
               <Link href="/search" className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline">View All</Link>
             </div>
             {catsLoading ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-6">{[...Array(6)].map((_, i) => (<Skeleton key={i} className="aspect-square rounded-[24px]" />))}</div>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="flex flex-col items-center gap-3">
+                    <Skeleton className="w-full aspect-square rounded-[24px]" />
+                    <Skeleton className="h-3 w-16 rounded-full" />
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-6">
                 {categories?.map((cat: any) => (
@@ -149,7 +156,18 @@ export default function Home() {
               <Link href="/search" className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-full">All Products <ChevronRight className="w-3 h-3" /></Link>
             </div>
             {medsLoading ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-6">{[...Array(4)].map((_, i) => (<Skeleton key={i} className="aspect-[5/4] rounded-[24px]" />))}</div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-[24px] border border-gray-100 p-4 space-y-4">
+                    <Skeleton className="aspect-square w-full rounded-xl" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-3/4 rounded-full" />
+                      <Skeleton className="h-3 w-1/2 rounded-full" />
+                    </div>
+                    <Skeleton className="h-10 w-full rounded-full" />
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">{uniqueMedicines.map((p: any) => (<ProductCard key={p.id} product={p} />))}</div>
             )}
