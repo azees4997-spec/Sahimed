@@ -40,7 +40,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const productRef = useMemoFirebase(() => (!db || !id) ? null : doc(db, 'medicines', id), [db, id]);
   const { data: staticProduct, isLoading: productLoading } = useDoc(productRef);
 
-  // 2. Dynamic Price/Stock Sync for Branded Card
+  // 2. Dynamic Price/Stock Sync for Branded Card (Universal Listener)
   const [liveData, setLiveData] = useState<{ mrp: number, price: number, stock: number } | null>(null);
   const [isLiveLoading, setIsLiveLoading] = useState(true);
 
@@ -80,7 +80,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { data: genericAlternatives } = useCollection(alternativesQuery);
   const genericAlt = genericAlternatives?.[0];
 
-  // 5. Dynamic Price/Stock Sync for Generic Card
+  // 5. Dynamic Price/Stock Sync for Generic Card (Universal Listener)
   const [altLiveData, setAltLiveData] = useState<{ price: number, mrp: number, stock: number } | null>(null);
   const [isAltLiveLoading, setIsAltLiveLoading] = useState(true);
 
@@ -113,7 +113,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     return (<div className="min-h-screen bg-[#F8F8F8]"><Navbar /><main className="max-w-7xl mx-auto px-4 py-12"><Skeleton className="h-[400px] rounded-[40px]" /></main></div>);
   }
 
-  const ComparisonCard = ({ product, live, label, isAlt = false, isLoading = false, comparePrice = 0 }: { product: any, live: any, label: string, isAlt?: boolean, isLoading?: boolean, comparePrice?: number }) => {
+  const ComparisonCard = ({ product, live, label, isAlt = false, isLoading = false }: { product: any, live: any, label: string, isAlt?: boolean, isLoading?: boolean }) => {
     const qty = getItemQuantity(product.id);
     const pPrice = live?.price || 0;
     const pMrp = live?.mrp || 0;
@@ -122,13 +122,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       ? product.imageUrl
       : `https://picsum.photos/seed/${product.id}/300/300`;
 
-    let savingsPercent = 0;
-    let savingsAmount = 0;
-    if (isAlt && comparePrice > pPrice && pPrice > 0) {
-      savingsAmount = comparePrice - pPrice;
-      savingsPercent = Math.round((savingsAmount / comparePrice) * 100);
-    }
-
     return (
       <Card className={cn(
         "rounded-[20px] sm:rounded-[32px] p-3 sm:p-6 flex flex-col h-full border shadow-sm transition-all overflow-hidden relative",
@@ -136,23 +129,27 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       )}>
         <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{label}</span>
         
-        {/* centered medicine pack photo */}
+        {/* 1. Medicine Pack Photo */}
         <div className="relative aspect-square w-full bg-white rounded-xl mb-3 overflow-hidden border border-gray-50 flex items-center justify-center p-2">
           <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-1" />
         </div>
 
         {/* standardized clinical attribute sequence */}
         <div className="flex-1 space-y-1">
+          {/* 2. Item Name */}
           <h3 className="font-black text-[11px] sm:text-[15px] text-gray-900 uppercase leading-tight line-clamp-2 min-h-[2.2rem]">
             {product.name}
           </h3>
+          {/* 3. Pack Size */}
           <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-tighter">
             {product.packSize || "N/A"}
           </p>
+          {/* 4. Manufacturer */}
           <p className="text-[8px] sm:text-[10px] font-bold text-gray-500 uppercase truncate">
             {product.manufacturer}
           </p>
 
+          {/* 5 & 6. Sahimed Price & MRP */}
           <div className="pt-2 border-t border-dashed mt-2">
             <div className="flex items-baseline gap-1">
               <p className={cn("text-lg sm:text-2xl font-black tracking-tighter", pPrice > 0 ? "text-accent" : "text-gray-300")}>
@@ -165,18 +162,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        {!isLoading && savingsPercent > 0 && (
-          <div className="mt-3 bg-accent text-white py-1.5 rounded-lg text-center shadow-md">
-            <p className="text-[7px] sm:text-[9px] font-black uppercase tracking-tight">SAVE {savingsPercent}% (₹{savingsAmount.toFixed(0)})</p>
-          </div>
-        )}
-
+        {/* 7. ADD Button (Always Active) */}
         <div className="mt-4">
-          {isLoading ? (
-            <Button disabled className="w-full h-9 sm:h-12 rounded-full bg-gray-50 text-gray-400 font-black text-[7px] sm:text-[9px] uppercase tracking-widest gap-2">
-              <Loader2 className="w-3 h-3 animate-spin" /> Checking...
-            </Button>
-          ) : qty > 0 ? (
+          {qty > 0 ? (
             <div className="flex items-center gap-1 rounded-full p-1 bg-primary text-white h-9 sm:h-12 shadow-lg">
               <button onClick={() => updateQuantity(product.id, -1)} className="flex-1 h-full flex items-center justify-center font-bold">-</button>
               <span className="text-[8px] sm:text-[10px] font-black flex-1 text-center uppercase">{qty}</span>
@@ -184,7 +172,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
           ) : (
             <Button 
-              onClick={() => addToCart(product)} 
+              onClick={() => addToCart({ ...product, price: pPrice > 0 ? pPrice : product.price, mrp: pMrp > 0 ? pMrp : product.mrp })} 
               className={cn("w-full h-9 sm:h-12 rounded-full font-black uppercase text-[8px] sm:text-[10px] tracking-widest gap-2 shadow-xl", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
             >
               ADD <ShoppingCart className="w-3 sm:w-4 h-3 sm:h-4" />
@@ -205,7 +193,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            <div className="inline-flex items-center gap-2 bg-primary/10 px-6 py-2.5 rounded-full border border-primary/20 shadow-sm">
               <Dna className="w-4 h-4 text-primary" />
               <span className="text-xs sm:text-base font-black text-primary uppercase tracking-[0.2em]">
-                {molData?.molecule || staticProduct.name.split(' ')[0]}
+                {molData?.molecule || staticProduct.name}
               </span>
            </div>
            {staticProduct.prescriptionRequired && (
@@ -234,7 +222,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 label="RECOMMENDED CHOICE" 
                 isAlt 
                 isLoading={isAltLiveLoading}
-                comparePrice={liveData?.price || 0}
               />
             ) : !productLoading && (
               <div className="rounded-[20px] sm:rounded-[32px] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-4 text-center bg-gray-50/50 h-full">

@@ -51,15 +51,15 @@ export default function ProductCard({ product }: { product: Product }) {
   const currentPrice = liveData?.price || 0;
   const currentMrp = liveData?.mrp || 0;
   
-  // Clinical Precision Calculations
-  const savingsPercent = (currentMrp > currentPrice && currentMrp > 0) 
-    ? Math.round(((currentMrp - currentPrice) / currentMrp) * 100) 
-    : 0;
-
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product);
+    // Inject live price into cart object
+    addToCart({
+      ...product,
+      price: currentPrice > 0 ? currentPrice : product.price,
+      mrp: currentMrp > 0 ? currentMrp : product.mrp
+    });
     toast({ title: "Added to Bag" });
   };
 
@@ -71,7 +71,7 @@ export default function ProductCard({ product }: { product: Product }) {
     <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full group">
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 p-4 space-y-3">
         
-        {/* Medicine Pack Photo */}
+        {/* 1. Medicine Pack Photo */}
         <div className="relative aspect-square w-full bg-gray-50 rounded-xl overflow-hidden border border-gray-50 flex items-center justify-center p-3">
           <Image 
             src={safeImageUrl} 
@@ -83,18 +83,21 @@ export default function ProductCard({ product }: { product: Product }) {
 
         {/* Clinical Identity Sequence */}
         <div className="space-y-1">
+          {/* 2. Item Name */}
           <h3 className="font-black text-gray-900 text-[13px] uppercase tracking-tight leading-tight line-clamp-2 min-h-[2.4rem]">
             {product.name}
           </h3>
+          {/* 3. Pack Size */}
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
             {product.packSize || 'N/A'}
           </p>
+          {/* 4. Manufacturer */}
           <p className="text-[10px] font-bold text-gray-500 uppercase truncate">
             {product.manufacturer || 'PHARMA CORP'}
           </p>
         </div>
 
-        {/* Pricing Section - Dynamic Sync */}
+        {/* 5 & 6. Pricing Section - Dynamic Sync */}
         <div className="pt-2 border-t border-dashed space-y-0.5 mt-auto">
           <div className="flex items-baseline gap-2">
             <p className="text-lg font-black text-accent tracking-tighter">
@@ -102,27 +105,16 @@ export default function ProductCard({ product }: { product: Product }) {
                 <span className="animate-pulse text-gray-300">...</span>
               ) : `₹${currentPrice}`}
             </p>
-            {!isLoadingLive && savingsPercent > 0 && (
+            {!isLoadingLive && currentMrp > currentPrice && currentPrice > 0 && (
               <span className="text-[10px] text-red-400 line-through font-bold">₹{currentMrp}</span>
             )}
           </div>
         </div>
-
-        {/* Savings Engine */}
-        {!isLoadingLive && savingsPercent > 0 && (
-          <div className="bg-accent/10 text-accent text-[9px] font-black uppercase px-3 py-1.5 rounded-lg text-center border border-accent/5">
-            SAVE {savingsPercent}% TODAY
-          </div>
-        )}
       </Link>
       
-      {/* Purchase Logic - UNIVERSAL ADD TO BAG */}
+      {/* 7. Purchase Logic - UNIVERSAL ADD TO BAG (Always Active) */}
       <div className="p-4 pt-0">
-        {isLoadingLive ? (
-          <Button disabled className="rounded-full h-10 w-full bg-gray-50 text-gray-400 border-none font-black text-[9px] uppercase tracking-widest gap-2">
-            <Loader2 className="w-3 h-3 animate-spin" /> Checking...
-          </Button>
-        ) : quantity > 0 ? (
+        {quantity > 0 ? (
           <div className="flex items-center gap-1 rounded-full p-1 bg-primary shadow-lg w-full h-10">
             <button 
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateQuantity(product.id, -1); }} 
