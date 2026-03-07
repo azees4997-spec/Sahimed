@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from 'next/link';
@@ -22,16 +23,14 @@ export default function ProductCard({ product }: { product: Product }) {
   const [isLoadingLive, setIsLoadingLive] = useState(true);
   const quantity = getItemQuantity(product.id);
 
-  // REAL-TIME DYNAMIC DATA SYNC
+  // UNIVERSAL SKU FETCHING: Re-establish Firestore connection for every card
   useEffect(() => {
-    // Robust SKU/ID handshake for Unified Hybrid logic
     const sku = product.sku || product.id;
     if (!db || !sku) {
       setIsLoadingLive(false);
       return;
     }
 
-    // Subscribe to live price/stock updates for this SKU
     const liveRef = doc(db, 'product_live_data', sku);
     const unsubscribe = onSnapshot(liveRef, (snap) => {
       if (snap.exists()) {
@@ -42,12 +41,10 @@ export default function ProductCard({ product }: { product: Product }) {
           stock: Number(d.stock_quantity) ?? 0 
         });
       } else {
-        // Fallback to zero if document missing, but stop loading
         setLiveData({ price: 0, mrp: 0, stock: 0 });
       }
       setIsLoadingLive(false);
     }, (err) => {
-      console.error("Pricing Sync Error:", err);
       setIsLoadingLive(false);
     });
 
