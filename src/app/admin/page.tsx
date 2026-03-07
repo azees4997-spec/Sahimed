@@ -559,7 +559,7 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                       </div>
                     </td>
                     <td className="px-8 py-6 max-w-[250px]"><p className="text-[10px] font-bold text-gray-600 line-clamp-1">{address}</p></td>
-                    <td className="px-8 py-6 font-black text-accent">₹{order.totalAmount || 0}</td>
+                    <td className="px-8 py-6 font-black text-accent">₹{Number(order.totalAmount || 0).toFixed(2)}</td>
                     <td className="px-8 py-6">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild><Button variant="outline" className="h-8 rounded-full px-4 text-[9px] font-black uppercase border-2 gap-2">{order.status || 'Pending'} <ChevronDown className="w-3 h-3" /></Button></DropdownMenuTrigger>
@@ -601,7 +601,7 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
              <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
                 <h4 className="text-[10px] font-black uppercase text-gray-400 mb-2">Items Breakdown</h4>
                 {selectedOrder?.items?.map((it: any, i: number) => (
-                  <div key={i} className="flex justify-between items-center"><p className="text-[11px] font-black uppercase">{it.name} x {it.quantity}</p><span className="font-black text-xs">₹{it.unitPrice * it.quantity}</span></div>
+                  <div key={i} className="flex justify-between items-center"><p className="text-[11px] font-black uppercase">{it.name} x {it.quantity}</p><span className="font-black text-xs">₹{(it.unitPrice * it.quantity).toFixed(2)}</span></div>
                 )) || <p className="text-center text-[10px] font-black text-gray-300">0 ITEMS</p>}
              </div>
              
@@ -612,7 +612,7 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                </div>
                <div className="text-right">
                  <span className="font-black text-[10px] uppercase text-gray-400">Total Payable</span>
-                 <p className="text-3xl font-black text-accent">₹{selectedOrder?.totalAmount || 0}</p>
+                 <p className="text-3xl font-black text-accent">₹{Number(selectedOrder?.totalAmount || 0).toFixed(2)}</p>
                </div>
              </div>
           </div>
@@ -801,7 +801,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
         </div>
       </SectionHeader>
 
-      <div className="relative"><Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" /><Input placeholder="Search static catalog..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm uppercase" /></div>
+      <div className="relative">< Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" /><Input placeholder="Search static catalog..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm uppercase" /></div>
 
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
@@ -1209,8 +1209,8 @@ function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
               {! promos || promos.length === 0 ? (<tr><td colSpan={5} className="p-20 text-center font-bold text-gray-300">No active campaigns</td></tr>) : promos?.map(promo => (
                 <tr key={promo.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-10 py-8 font-black text-sm uppercase text-primary">{promo.code}</td>
-                  <td className="px-10 py-8 font-black text-accent">{promo.discountValue}{promo.discountType === 'percentage' ? '%' : '₹'}</td>
-                  <td className="px-10 py-8 font-black text-gray-600">₹{promo.minOrderValue || 0}</td>
+                  <td className="px-10 py-8 font-black text-accent">{Number(promo.discountValue).toFixed(2)}{promo.discountType === 'percentage' ? '%' : '₹'}</td>
+                  <td className="px-10 py-8 font-black text-gray-600">₹{Number(promo.minOrderValue || 0).toFixed(2)}</td>
                   <td className="px-10 py-8"><Badge className={cn("rounded-full font-black text-[8px]", promo.isActive ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400")}>{promo.isActive ? 'ACTIVE' : 'DISABLED'}</Badge></td>
                   <td className="px-10 py-8 text-right"><Button variant="ghost" size="icon" onClick={() => { setEditingPromo(promo); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button></td>
                 </tr>
@@ -1244,7 +1244,7 @@ function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onB
               {!fees || fees.length === 0 ? (<tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300">No fees configured</td></tr>) : fees?.map(fee => (
                 <tr key={fee.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-10 py-8 font-black text-sm uppercase">{fee.name}</td>
-                  <td className="px-10 py-8 font-black text-gray-900">₹{fee.discountedAmount}{fee.type === 'percentage' ? '%' : ''}</td>
+                  <td className="px-10 py-8 font-black text-gray-900">₹{Number(fee.discountedAmount).toFixed(2)}{fee.type === 'percentage' ? '%' : ''}</td>
                   <td className="px-10 py-8"><Badge className={cn("rounded-full font-black text-[8px]", fee.isActive ? "bg-accent text-white" : "bg-gray-100 text-gray-400")}>{fee.isActive ? 'ENABLED' : 'PAUSED'}</Badge></td>
                   <td className="px-10 py-8 text-right"><Button variant="ghost" size="icon" onClick={() => { setEditingFee(fee); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button></td>
                 </tr>

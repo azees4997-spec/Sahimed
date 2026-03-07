@@ -86,7 +86,7 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
               
               <div className="flex flex-col items-center gap-1 mb-8">
                 <span className="text-[10px] font-black text-accent/60 uppercase tracking-[0.2em]">You Saved Total</span>
-                <p className="text-5xl font-black text-accent tracking-tighter animate-pulse">₹{totalSaved.toFixed(0)}</p>
+                <p className="text-5xl font-black text-accent tracking-tighter animate-pulse">₹{Number(totalSaved).toFixed(2)}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4 border-t border-accent/10 pt-6">
@@ -94,13 +94,13 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
                   <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
                     <TrendingDown className="w-3 h-3 text-accent" /> Optimized MRP
                   </p>
-                  <p className="font-black text-xs text-gray-900">₹{((breakdown?.grossMrp || 0) - (order?.totalAmount || 0) + (breakdown?.campaignDiscount || 0)).toFixed(0)}</p>
+                  <p className="font-black text-xs text-gray-900">₹{((breakdown?.grossMrp || 0) - (order?.totalAmount || 0) + (breakdown?.campaignDiscount || 0)).toFixed(2)}</p>
                 </div>
                 <div className="text-right space-y-1">
                   <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest flex items-center justify-end gap-1.5">
                     <Tag className="w-3 h-3 text-accent" /> Coupon Bonus
                   </p>
-                  <p className="font-black text-xs text-gray-900">₹{breakdown?.campaignDiscount || 0}</p>
+                  <p className="font-black text-xs text-gray-900">₹{Number(breakdown?.campaignDiscount || 0).toFixed(2)}</p>
                 </div>
               </div>
             </CardContent>
@@ -120,7 +120,7 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
             <div className="grid grid-cols-2 gap-6 pt-6 border-t border-dashed">
               <div className="text-left">
                 <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Final Payable</p>
-                <p className="font-black text-sm uppercase text-gray-900">₹{order?.totalAmount || 0}</p>
+                <p className="font-black text-sm uppercase text-gray-900">₹{Number(order?.totalAmount || 0).toFixed(2)}</p>
               </div>
               <div className="text-right">
                 <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Payment Method</p>

@@ -87,12 +87,12 @@ export default function OrdersPage() {
                             <span className="font-bold text-gray-900">{item.name}</span>
                             <span className="text-[9px] text-gray-400 uppercase">Qty: {item.quantity}</span>
                           </div>
-                          <span className="font-black text-gray-900">₹{item.unitPrice * item.quantity}</span>
+                          <span className="font-black text-gray-900">₹{(item.unitPrice * item.quantity).toFixed(2)}</span>
                         </div>
                       ))}
                       <div className="pt-3 border-t flex justify-between items-baseline">
                         <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Total Value</span>
-                        <span className="text-xl font-black text-primary">₹{order.totalAmount}</span>
+                        <span className="text-xl font-black text-primary">₹{Number(order.totalAmount || 0).toFixed(2)}</span>
                       </div>
                     </div>
 

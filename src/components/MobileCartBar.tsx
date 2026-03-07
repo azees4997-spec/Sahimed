@@ -24,7 +24,7 @@ export default function MobileCartBar() {
             </div>
             <div>
               <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/60 mb-0.5">{totalItems} ITEMS</p>
-              <p className="font-black text-lg tracking-tight">₹{totalPrice}</p>
+              <p className="font-black text-lg tracking-tight">₹{Number(totalPrice).toFixed(2)}</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5 bg-white text-primary rounded-full px-4 py-2 font-black text-[9px] uppercase tracking-widest shadow-lg">

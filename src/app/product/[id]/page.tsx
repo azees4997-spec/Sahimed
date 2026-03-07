@@ -196,16 +196,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <div className="pt-1.5 border-t border-dashed mt-1.5">
             <div className="flex items-baseline gap-1">
               <p className="text-lg sm:text-2xl font-black tracking-tighter text-accent">
-                ₹{pPrice}
+                ₹{Number(pPrice).toFixed(2)}
               </p>
               {pMrp > pPrice && (
-                <span className="text-[8px] sm:text-[10px] text-red-400 line-through font-bold">₹{pMrp}</span>
+                <span className="text-[8px] sm:text-[10px] text-red-400 line-through font-bold">₹{Number(pMrp).toFixed(2)}</span>
               )}
             </div>
             {/* DYNAMIC SAVINGS DISPLAY: Shows comparison-aware savings */}
             {displaySavingsAmt > 0 && (
               <p className="text-[8px] sm:text-[10px] font-black text-accent uppercase tracking-tighter">
-                Save ₹{displaySavingsAmt.toFixed(0)} ({displaySavingsPct}%)
+                Save ₹{Number(displaySavingsAmt).toFixed(2)} ({displaySavingsPct}%)
               </p>
             )}
             <p className="text-[7px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-tighter">
@@ -252,7 +252,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="bg-accent text-white py-2 px-4 rounded-[16px] shadow-lg flex items-center justify-center gap-2 text-center border-b-2 border-accent-foreground/10">
                <TrendingDown className="w-4 h-4" />
                <h2 className="text-[9px] sm:text-lg font-black uppercase tracking-tight">
-                 Switch to Generic & Save ₹{switchSavingsAmt.toFixed(0)} ({switchSavingsPct}% off Branded MRP)
+                 Switch to Generic & Save ₹{Number(switchSavingsAmt).toFixed(2)} ({switchSavingsPct}% off Branded MRP)
                </h2>
                <Zap className="w-4 h-4 fill-white" />
             </div>

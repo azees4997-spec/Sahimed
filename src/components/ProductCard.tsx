@@ -101,15 +101,15 @@ export default function ProductCard({ product }: { product: Product }) {
         <div className="pt-2 border-t border-dashed space-y-0.5 mt-auto">
           <div className="flex items-baseline gap-2">
             <p className="text-lg font-black text-accent tracking-tighter">
-              ₹{currentPrice}
+              ₹{Number(currentPrice).toFixed(2)}
             </p>
             {currentMrp > currentPrice && (
-              <span className="text-[10px] text-red-400 line-through font-bold">₹{currentMrp}</span>
+              <span className="text-[10px] text-red-400 line-through font-bold">₹{Number(currentMrp).toFixed(2)}</span>
             )}
           </div>
           {savingsAmt > 0 && (
             <p className="text-[8px] font-black text-accent uppercase tracking-tighter">
-              Save ₹{savingsAmt.toFixed(0)} ({savingsPct}%)
+              Save ₹{Number(savingsAmt).toFixed(2)} ({savingsPct}%)
             </p>
           )}
         </div>

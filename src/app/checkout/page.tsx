@@ -461,7 +461,7 @@ export default function CheckoutPage() {
                         <span className="text-gray-900 font-black text-[11px] uppercase truncate max-w-[140px]">{item.name}</span>
                         <span className="text-[8px] text-gray-400 font-black uppercase tracking-widest">Qty: {item.quantity}</span>
                      </div>
-                     <span className="font-black text-primary text-sm">₹{item.price * item.quantity}</span>
+                     <span className="font-black text-primary text-sm">₹{(item.price * item.quantity).toFixed(2)}</span>
                    </div>
                  ))}
               </div>
@@ -469,7 +469,7 @@ export default function CheckoutPage() {
               <div className="space-y-4 mb-10 pt-6 border-t border-dashed relative z-10">
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
                   <span>Gross Total</span>
-                  <span>₹{totalPrice}</span>
+                  <span>₹{totalPrice.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
                   <span className="text-gray-500">Payment Mode</span>
@@ -481,7 +481,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="pt-8 border-t border-gray-100 flex justify-between items-baseline">
                   <span className="text-sm font-black text-gray-900 uppercase tracking-widest">Payable Amount</span>
-                  <span className="text-4xl font-black text-primary tracking-tighter">₹{totalPrice}</span>
+                  <span className="text-4xl font-black text-primary tracking-tighter">₹{totalPrice.toFixed(2)}</span>
                 </div>
               </div>
 

@@ -259,7 +259,7 @@ export default function Navbar() {
                             <p className="font-black text-[10px] sm:text-[11px] uppercase text-gray-900 truncate tracking-tight">{p.name}</p>
                             <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">{p.saltComposition}</p>
                           </div>
-                          <div className="text-primary font-black text-[8px] sm:text-[10px] bg-primary/5 px-2.5 py-1 rounded-full shrink-0">₹{p.price}</div>
+                          <div className="text-primary font-black text-[8px] sm:text-[10px] bg-primary/5 px-2.5 py-1 rounded-full shrink-0">₹{Number(p.price).toFixed(2)}</div>
                         </button>
                       ))}
                     </div>

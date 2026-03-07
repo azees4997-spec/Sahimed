@@ -77,7 +77,7 @@ export default function CartPage() {
     setIsPromoDialogOpen(false);
     toast({
       title: "Coupon Applied!",
-      description: `You just saved ₹${promo.discountType === 'fixed' ? promo.discountValue : (totalPrice * (promo.discountValue / 100)).toFixed(0)} extra!`,
+      description: `You just saved ₹${(promo.discountType === 'fixed' ? promo.discountValue : (totalPrice * (promo.discountValue / 100))).toFixed(2)} extra!`,
     });
   };
 
@@ -141,8 +141,8 @@ export default function CartPage() {
                     </div>
                   </div>
                   <div className="text-right shrink-0 px-4">
-                    <p className="text-lg font-black text-gray-900">₹{item.price * item.quantity}</p>
-                    <p className="text-[9px] text-red-500 font-black line-through">₹{(item.mrp || item.price + 50) * item.quantity}</p>
+                    <p className="text-lg font-black text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="text-[9px] text-red-500 font-black line-through">₹{((item.mrp || item.price + 50) * item.quantity).toFixed(2)}</p>
                   </div>
                 </div>
               );
@@ -164,7 +164,7 @@ export default function CartPage() {
                     "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
                     appliedPromo ? "bg-primary text-white" : "bg-purple-50 text-purple-600"
                   )}>
-                    <Ticket className="w-5 h-5" />
+                    < Ticket className="w-5 h-5" />
                   </div>
                   <div>
                     <p className="font-black text-[10px] uppercase tracking-tight text-gray-900">
@@ -196,7 +196,7 @@ export default function CartPage() {
                   <PartyPopper className="w-5 h-5 animate-bounce shrink-0" />
                   <div className="text-center">
                     <p className="text-[10px] font-black uppercase tracking-tight leading-none">Coupon Celebration!</p>
-                    <p className="text-[13px] font-black uppercase tracking-tighter mt-1">Extra ₹{promoDiscount.toFixed(0)} Saved!</p>
+                    <p className="text-[13px] font-black uppercase tracking-tighter mt-1">Extra ₹{promoDiscount.toFixed(2)} Saved!</p>
                   </div>
                   <Sparkles className="w-5 h-5 animate-pulse shrink-0" />
                 </div>
@@ -212,31 +212,31 @@ export default function CartPage() {
                 <div className="space-y-6 mb-10 relative z-10">
                   <div className="flex justify-between text-[11px] font-black text-gray-500 uppercase">
                     <span>Cart Gross (MRP)</span>
-                    <span className="text-red-500 line-through">₹{totalMrp}</span>
+                    <span className="text-red-500 line-through">₹{totalMrp.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-[11px] font-black uppercase">
                     <span>Item Total</span>
-                    <span className="text-gray-900">₹{totalPrice}</span>
+                    <span className="text-gray-900">₹{totalPrice.toFixed(2)}</span>
                   </div>
                   {appliedPromo && (
                     <div className="flex justify-between text-[11px] font-black uppercase text-accent animate-in slide-in-from-left-2">
                       <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Coupon Discount</span>
-                      <span>-₹{promoDiscount.toFixed(0)}</span>
+                      <span>-₹{promoDiscount.toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-[11px] font-black uppercase">
                     <span>Estimated Taxes</span>
-                    <span className="text-gray-900">₹{(totalPrice * 0.12).toFixed(0)}</span>
+                    <span className="text-gray-900">₹{(totalPrice * 0.12).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-[11px] font-black uppercase">
                     <span>Delivery</span>
                     <span className={deliveryCharge === 0 ? "text-accent font-black" : "text-gray-900"}>
-                      {deliveryCharge === 0 ? 'FREE' : `₹${deliveryCharge}`}
+                      {deliveryCharge === 0 ? 'FREE' : `₹${deliveryCharge.toFixed(2)}`}
                     </span>
                   </div>
                   <div className="pt-10 border-t border-dashed flex justify-between items-baseline">
                     <span className="text-sm font-black uppercase text-gray-900">Total Payable</span>
-                    <span className="text-4xl font-black text-primary tracking-tighter">₹{finalPayable.toFixed(0)}</span>
+                    <span className="text-4xl font-black text-primary tracking-tighter">₹{finalPayable.toFixed(2)}</span>
                   </div>
                 </div>
                 {isPrescriptionReady ? (
@@ -285,7 +285,7 @@ export default function CartPage() {
                         {promo.code}
                       </Badge>
                       <span className="font-black text-sm text-primary">
-                        {promo.discountType === 'percentage' ? `${promo.discountValue}% OFF` : `₹${promo.discountValue} OFF`}
+                        {promo.discountType === 'percentage' ? `${promo.discountValue}% OFF` : `₹${promo.discountValue.toFixed(2)} OFF`}
                       </span>
                     </div>
                     <p className="text-[10px] font-bold text-gray-600 leading-relaxed uppercase">{promo.description}</p>
@@ -295,7 +295,7 @@ export default function CartPage() {
                           <div className="h-full bg-orange-400" style={{ width: `${(totalPrice / promo.minOrderValue) * 100}%` }} />
                         </div>
                         <p className="text-[8px] font-black text-orange-500 uppercase tracking-tighter shrink-0">
-                          Add ₹{promo.minOrderValue - totalPrice} more
+                          Add ₹{(promo.minOrderValue - totalPrice).toFixed(2)} more
                         </p>
                       </div>
                     ) : (
