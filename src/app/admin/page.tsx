@@ -1112,10 +1112,63 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
     const a = document.createElement('a'); a.href = url; a.download = `SahiMed_Registry_Master_${format(new Date(), 'yyyyMMdd')}.csv`; a.click();
   };
 
+  const downloadTemplate = () => {
+    const headers = "Molecule,MasterID,Form\n";
+    const sample = `"Atorvastatin","MOL_ATOR_20","Tablet"\n"Metformin","MOL_MET_500","Tablet"`;
+    const blob = new Blob([headers + sample], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `SahiMed_Formula_Template.csv`; a.click();
+  };
+
+  const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const text = event.target?.result as string;
+        const lines = text.split("\n").slice(1);
+        const batch = writeBatch(db);
+        let count = 0;
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, '').trim());
+          const [molecule, masterId, form] = parts;
+
+          if (!molecule || !masterId) continue;
+
+          // Using a new doc reference for each molecule
+          const molRef = doc(collection(db, 'moleculeMaster'));
+          batch.set(molRef, {
+            molecule,
+            masterId,
+            form: form || 'Tablet',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+          count++;
+        }
+        await batch.commit();
+        toast({ title: "Bulk Upload Success", description: `${count} formulas indexed in registry.` });
+      };
+      reader.readAsText(file);
+    } catch (err) {
+      toast({ variant: 'destructive', title: "Import Error" });
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Formula Registry" subtitle="Clinical molecule masters" onBack={onBack}>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={downloadTemplate} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><FileDown className="w-4 h-4" /> Template</Button>
+          <div className="relative">
+            <input type="file" accept=".csv" onChange={handleBulkUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+            <Button variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Upload className="w-4 h-4" /> Bulk Import</Button>
+          </div>
           <Button variant="outline" onClick={handleExport} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Download className="w-4 h-4" /> Export</Button>
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild><Button onClick={() => setEditingMol(null)} className="rounded-full h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-2 bg-primary text-white shadow-lg"><Plus className="w-4 h-4" /> New Formula</Button></DialogTrigger>
