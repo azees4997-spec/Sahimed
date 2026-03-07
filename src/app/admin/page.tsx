@@ -55,7 +55,9 @@ import {
   Image as ImageIcon,
   Link as LinkIcon,
   UploadCloud,
-  UserCheck
+  UserCheck,
+  Zap,
+  Bomb
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -668,6 +670,32 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
     a.href = url; a.download = `SahiMed_Catalogue_Master_${format(new Date(), 'yyyyMMdd')}.csv`; a.click();
   };
 
+  const handlePurgeCatalog = async () => {
+    if (!confirm("CRITICAL WARNING: This will permanently delete ALL medicines from the database. This action is irreversible. Proceed?")) return;
+    
+    try {
+      const snap = await getDocs(collection(db, 'medicines'));
+      if (snap.empty) {
+        toast({ title: "Purge Cancelled", description: "Catalog is already empty." });
+        return;
+      }
+
+      const batchSize = 500;
+      const docs = snap.docs;
+      
+      for (let i = 0; i < docs.length; i += batchSize) {
+        const batch = writeBatch(db);
+        const chunk = docs.slice(i, i + batchSize);
+        chunk.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      }
+
+      toast({ title: "System Reset Successful", description: `${docs.length} entries removed. Storefront is now clean.` });
+    } catch (err) {
+      toast({ variant: 'destructive', title: "Purge Interrupted", description: "Insufficient authority or network timeout." });
+    }
+  };
+
   const downloadTemplate = () => {
     const headers = "Name,SKU,MoleculeMapping,Manufacturer,Price,MRP,Stock,Category,Generic,RX_Required,PackSize,Description,HowToUse,Treatment,SafetyAdvice,SideEffects,AlcoholInteraction,PregnancyInteraction,LactationInteraction,DrivingInteraction,KidneyInteraction,LiverInteraction,ImageURL1,ImageURL2,ImageURL3\n";
     const sample = `"Sample Product","SKU123","MOL_ID_HERE","SahiMed Labs",100,150,50,"Diabetes",true,false,"Strip of 10","Clinical Desc","1 daily","Control sugar","Safe","Nausea","None","Consult Dr","Safe","Safe","Safe","Safe","https://picsum.photos/seed/med1/300","",""`;
@@ -707,16 +735,12 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
         for (const line of lines) {
           if (!line.trim()) continue;
           
-          // Safer CSV parsing
           const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, '').trim());
           const [name, sku, molMappingCode, manufacturer, price, mrp, stock, category, generic, rx, pack, desc, how, treat, safety, side, alc, preg, lact, driv, kid, liv, img1, img2, img3] = parts;
 
           if (!sku) continue;
 
-          // Clinical ID Mapping Lookup
           const moleculeDocId = molLookup[molMappingCode] || molMappingCode || '';
-
-          // Upsert Logic: Check for existing SKU
           const existingId = medLookup[sku];
           const ref = existingId ? doc(db, 'medicines', existingId) : doc(collection(db, 'medicines'));
           
@@ -754,11 +778,11 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
           count++;
         }
         await batch.commit();
-        toast({ title: "Bulk Upload Success", description: `${count} clinical entries processed (Upsert active).` });
+        toast({ title: "Bulk Upload Success", description: `${count} entries processed.` });
       };
       reader.readAsText(file);
     } catch (err) {
-      toast({ variant: 'destructive', title: "Import Error", description: "Could not initialize clinical handshake." });
+      toast({ variant: 'destructive', title: "Import Error", description: "Handshake failed." });
     }
   };
 
@@ -766,6 +790,9 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Product Master" subtitle="Global Clinical Catalogue" onBack={onBack}>
         <div className="flex gap-2">
+          <Button variant="destructive" onClick={handlePurgeCatalog} className="rounded-full h-12 px-6 font-black text-[10px] uppercase gap-2 bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100">
+            <Bomb className="w-4 h-4" /> Purge Catalog
+          </Button>
           <Button variant="outline" onClick={downloadTemplate} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><FileDown className="w-4 h-4" /> Template</Button>
           <Button variant="outline" onClick={handleExport} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Download className="w-4 h-4" /> Export</Button>
           <div className="relative">
@@ -1648,16 +1675,11 @@ function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, o
   );
 }
 
-/**
- * UPGRADED PATIENT REGISTRY: Direct Auth-Synchronized Dashboard
- * Displays every registered user with precision Auth Metadata.
- */
 function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  // Primary data source: Auth-Synchronized Clinical Handshake
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles'), orderBy('createdAt', 'desc')) : null, [db, isVerified]);
   const { data: users, isLoading } = useCollection(usersQuery);
 
@@ -1739,7 +1761,7 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
                 </tr>
               ) : filteredUsers?.map(patient => {
                 const identifier = patient.phone || patient.email || patient.firebaseAuthId || 'UNIDENTIFIED';
-                const name = patient.name || identifier; // Placeholder if name missing
+                const name = patient.name || identifier;
                 
                 return (
                   <tr key={patient.id} className="hover:bg-gray-50/50 transition-colors group">
