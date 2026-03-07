@@ -21,7 +21,9 @@ import {
   ClipboardList,
   Receipt,
   Phone,
-  Tag
+  Tag,
+  ImageIcon,
+  Maximize2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -30,9 +32,11 @@ import {
   Dialog, 
   DialogContent, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogTrigger
 } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 export default function OrdersPage() {
   const { user } = useUser();
@@ -124,6 +128,12 @@ export default function OrdersPage() {
                       <MapPin className="w-3.5 h-3.5 text-gray-400" />
                       <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest truncate max-w-[200px]">{order.shippingDetails?.street || 'Verified Address'}</span>
                     </div>
+                    {order.prescriptionUrl && (
+                      <div className="flex items-center gap-2 text-primary">
+                        <ImageIcon className="w-3.5 h-3.5" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Prescription Attached</span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -185,6 +195,38 @@ export default function OrdersPage() {
                 </div>
               </div>
             </div>
+
+            {/* Prescription Attachment Section */}
+            {selectedOrder?.prescriptionUrl && (
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                  <ImageIcon className="w-3 h-3" /> Clinical Documentation
+                </h4>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="relative aspect-[16/9] w-full bg-gray-50 rounded-[32px] overflow-hidden border-2 border-dashed border-gray-200 cursor-zoom-in group">
+                      <img 
+                        src={selectedOrder.prescriptionUrl} 
+                        className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500" 
+                        alt="Prescription Attachment" 
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center">
+                        <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                          <Maximize2 className="w-3 h-3 text-primary" />
+                          <span className="text-[8px] font-black uppercase tracking-widest">Click to Expand</span>
+                        </div>
+                      </div>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-[95vw] sm:max-w-3xl border-none p-0 bg-transparent shadow-none">
+                    <DialogTitle className="sr-only">Prescription View</DialogTitle>
+                    <div className="relative aspect-[3/4] w-full bg-white rounded-[40px] overflow-hidden p-4">
+                      <img src={selectedOrder.prescriptionUrl} className="w-full h-full object-contain" alt="Full Clinical Document" />
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
 
             {/* Items Breakup */}
             <div className="space-y-4">
