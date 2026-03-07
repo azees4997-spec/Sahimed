@@ -18,6 +18,7 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CATEGORIES as LOCAL_CATEGORIES } from '@/lib/data';
 
 export default function Home() {
   const db = useFirestore();
@@ -49,6 +50,17 @@ export default function Home() {
       return true;
     }).slice(0, 30); 
   }, [medicines]);
+
+  // Performance Optimization: Use local data as initial seed to prevent white-space while Firestore loads
+  const displayCategories = React.useMemo(() => {
+    if (categories && categories.length > 0) return categories;
+    // Fallback to local clinical list if Firestore is still loading or empty
+    return LOCAL_CATEGORIES.map((cat, idx) => ({
+      id: `local-${idx}`,
+      name: cat.name,
+      imageUrl: `https://picsum.photos/seed/cat-${cat.name.toLowerCase().replace(/\s/g, '-')}/300/300`
+    }));
+  }, [categories]);
 
   const heroBanners = PlaceHolderImages.filter(img => img.id.startsWith('hero-')).slice(0, 3);
 
@@ -112,37 +124,27 @@ export default function Home() {
               <h2 className="text-[11px] sm:text-[12px] font-black text-gray-900 uppercase tracking-[0.3em]">Health Categories</h2>
               <Link href="/search" className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline">View All</Link>
             </div>
-            {catsLoading ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-6">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="flex flex-col items-center gap-3">
-                    <Skeleton className="w-full aspect-square rounded-[24px]" />
-                    <Skeleton className="h-3 w-16 rounded-full" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-6">
-                {categories?.map((cat: any) => {
-                  const categoryImage = cat.imageUrl || `https://picsum.photos/seed/cat-${cat.name.toLowerCase().replace(/\s/g, '-')}/300/300`;
-                  return (
-                    <Link key={cat.id} href={`/search?c=${cat.name}`} className="group flex flex-col items-center">
-                      <div className="w-full aspect-square bg-white rounded-[24px] flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-100 p-0 group-hover:shadow-xl transition-all duration-500 relative overflow-hidden">
-                        <Image 
-                          src={categoryImage} 
-                          alt={cat.name} 
-                          fill 
-                          sizes="(max-width: 768px) 30vw, 15vw" 
-                          className="object-cover group-hover:scale-110 transition-transform duration-700" 
-                        />
-                        <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors" />
-                      </div>
-                      <h3 className="font-black text-[8px] sm:text-[10px] text-gray-700 uppercase tracking-tighter truncate w-full text-center">{cat.name}</h3>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+            
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-6">
+              {displayCategories.map((cat: any) => {
+                const categoryImage = cat.imageUrl || `https://picsum.photos/seed/cat-${cat.name.toLowerCase().replace(/\s/g, '-')}/300/300`;
+                return (
+                  <Link key={cat.id} href={`/search?c=${cat.name}`} className="group flex flex-col items-center">
+                    <div className="w-full aspect-square bg-white rounded-[24px] flex items-center justify-center text-primary mb-2 shadow-sm border border-gray-100 p-0 group-hover:shadow-xl transition-all duration-500 relative overflow-hidden">
+                      <Image 
+                        src={categoryImage} 
+                        alt={cat.name} 
+                        fill 
+                        sizes="(max-width: 768px) 30vw, 15vw" 
+                        className="object-cover group-hover:scale-110 transition-transform duration-700" 
+                      />
+                      <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors" />
+                    </div>
+                    <h3 className="font-black text-[8px] sm:text-[10px] text-gray-700 uppercase tracking-tighter truncate w-full text-center">{cat.name}</h3>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </section>
 
