@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useSearchParams } from 'next/navigation';
@@ -8,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Filter, Search as SearchIcon, SlidersHorizontal, Info } from 'lucide-react';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
-import { Suspense } from 'react';
+import { Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -31,13 +30,26 @@ function SearchResults() {
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
 
-  const filtered = (medicines || []).filter(p => {
-    const nameMatch = p.name?.toLowerCase().includes(q);
-    const saltMatch = p.saltComposition?.toLowerCase().includes(q);
-    const matchesQuery = !q || nameMatch || saltMatch;
-    const matchesCategory = !c || p.category === c;
-    return matchesQuery && matchesCategory;
-  });
+  const filtered = useMemo(() => {
+    if (!medicines) return [];
+    
+    // Deduplicate by SKU first
+    const seen = new Set();
+    const unique = medicines.filter(m => {
+      const sku = m.sku || m.id;
+      if (seen.has(sku)) return false;
+      seen.add(sku);
+      return true;
+    });
+
+    return unique.filter(p => {
+      const nameMatch = p.name?.toLowerCase().includes(q);
+      const saltMatch = p.saltComposition?.toLowerCase().includes(q);
+      const matchesQuery = !q || nameMatch || saltMatch;
+      const matchesCategory = !c || p.category === c;
+      return matchesQuery && matchesCategory;
+    });
+  }, [medicines, q, c]);
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] page-transition-wrapper">

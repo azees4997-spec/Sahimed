@@ -24,6 +24,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
   // UNIVERSAL SKU FETCHING: Real-time inventory and pricing sync
   useEffect(() => {
+    // Treat SKU/Item Code as the unique identity key for live data
     const sku = product.sku || product.id;
     if (!db || !sku) {
       setIsLoadingLive(false);
@@ -54,7 +55,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const currentMrp = liveData?.mrp || 0;
   const isOutOfStock = liveData ? liveData.stock <= 0 : false;
   
-  // High-Precision Clinical Calculations
+  // Clinical Calculations
   const packNum = parseInt(product.packSize?.match(/\d+/)?.[0] || "1");
   const unitCost = currentPrice > 0 ? (currentPrice / packNum).toFixed(2) : "0.00";
   const savingsPercent = (currentMrp > currentPrice && currentMrp > 0) 
@@ -97,7 +98,7 @@ export default function ProductCard({ product }: { product: Product }) {
     )}>
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 p-4 space-y-3">
         
-        {/* 1. Medicine Image (Static) */}
+        {/* 1. Medicine Image (Centered) */}
         <div className="relative aspect-square w-full bg-gray-50 rounded-xl overflow-hidden border border-gray-50 flex items-center justify-center p-3">
           <Image 
             src={safeImageUrl} 
@@ -112,7 +113,7 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        {/* 2. Clinical Attributes (Static Metadata) */}
+        {/* 2. Clinical Attributes */}
         <div className="space-y-1">
           <h3 className="font-black text-gray-900 text-[13px] uppercase tracking-tight leading-tight line-clamp-2 min-h-[2.4rem]">
             {product.name}
@@ -125,7 +126,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </p>
         </div>
 
-        {/* 3. Pricing Section (Dynamic Firestore Sync) */}
+        {/* 3. Pricing Section (Dynamic) */}
         <div className="pt-2 border-t border-dashed space-y-0.5">
           <div className="flex items-baseline gap-2">
             <p className="text-lg font-black text-accent tracking-tighter">
@@ -150,7 +151,7 @@ export default function ProductCard({ product }: { product: Product }) {
         )}
       </Link>
       
-      {/* 5. Action Handlers (Stock Dependent) */}
+      {/* 5. Action Handlers */}
       <div className="p-4 pt-0 mt-auto">
         {isLoadingLive ? (
           <Button disabled className="rounded-full h-10 w-full bg-gray-50 text-gray-400 border-none font-black text-[9px] uppercase tracking-widest gap-2">

@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from 'react';
@@ -27,7 +26,7 @@ export default function Home() {
 
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(20));
+    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(100));
   }, [db]);
 
   const categoriesQuery = useMemoFirebase(() => {
@@ -37,6 +36,18 @@ export default function Home() {
 
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
+
+  // Eliminate duplicate SKU/Item Code rendering
+  const uniqueMedicines = React.useMemo(() => {
+    if (!medicines) return [];
+    const seen = new Set();
+    return medicines.filter(m => {
+      const sku = m.sku || m.id;
+      if (seen.has(sku)) return false;
+      seen.add(sku);
+      return true;
+    }).slice(0, 20); // Maintain best sellers limit
+  }, [medicines]);
 
   const heroBanners = PlaceHolderImages.filter(img => img.id.startsWith('hero-')).slice(0, 3);
 
@@ -137,7 +148,7 @@ export default function Home() {
             {medsLoading ? (
               <div className="grid grid-cols-2 gap-3 sm:gap-6">{[...Array(4)].map((_, i) => (<Skeleton key={i} className="aspect-[5/4] rounded-[24px]" />))}</div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">{medicines?.slice(0, 8).map((p: any) => (<ProductCard key={p.id} product={p} />))}</div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">{uniqueMedicines.map((p: any) => (<ProductCard key={p.id} product={p} />))}</div>
             )}
           </div>
         </section>
