@@ -22,9 +22,8 @@ export default function ProductCard({ product }: { product: Product }) {
   const [isLoadingLive, setIsLoadingLive] = useState(true);
   const quantity = getItemQuantity(product.id);
 
-  // UNIVERSAL SKU FETCHING: Real-time inventory and pricing sync
+  // UNIVERSAL SKU FETCHING: Real-time inventory and pricing sync for ALL items
   useEffect(() => {
-    // Treat SKU/Item Code as the unique identity key for live data
     const sku = product.sku || product.id;
     if (!db || !sku) {
       setIsLoadingLive(false);

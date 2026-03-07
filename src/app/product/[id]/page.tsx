@@ -44,7 +44,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const molRef = useMemoFirebase(() => (!db || !staticProduct?.moleculeId) ? null : doc(db, 'moleculeMaster', staticProduct.moleculeId), [db, staticProduct?.moleculeId]);
   const { data: molData } = useDoc(molRef);
 
-  // 3. Dynamic Data for Current Selection
+  // 3. Dynamic Data for Current Selection (Branded)
   const [liveData, setLiveData] = useState<{ mrp: number, price: number, stock: number } | null>(null);
   const [isLiveLoading, setIsLiveLoading] = useState(true);
 
@@ -80,7 +80,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { data: genericAlternatives } = useCollection(alternativesQuery);
   const genericAlt = genericAlternatives?.[0];
 
-  // 5. Dynamic Data for Recommended Choice
+  // 5. Dynamic Data for Recommended Choice (Generic)
   const [altLiveData, setAltLiveData] = useState<{ price: number, mrp: number, stock: number } | null>(null);
   const [isAltLiveLoading, setIsAltLiveLoading] = useState(true);
 
