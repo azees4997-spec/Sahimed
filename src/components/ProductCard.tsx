@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from 'next/link';
@@ -23,7 +22,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const [isLoadingLive, setIsLoadingLive] = useState(true);
   const quantity = getItemQuantity(product.id);
 
-  // UNIVERSAL SKU FETCHING: Re-establish Firestore connection for every card
+  // UNIVERSAL SKU FETCHING: Real-time inventory and pricing sync
   useEffect(() => {
     const sku = product.sku || product.id;
     if (!db || !sku) {
@@ -113,7 +112,7 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        {/* 2. Clinical Attributes (Static + Dynamic Sync) */}
+        {/* 2. Clinical Attributes (Static Metadata) */}
         <div className="space-y-1">
           <h3 className="font-black text-gray-900 text-[13px] uppercase tracking-tight leading-tight line-clamp-2 min-h-[2.4rem]">
             {product.name}
@@ -126,7 +125,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </p>
         </div>
 
-        {/* 3. Pricing Section (Dynamic) */}
+        {/* 3. Pricing Section (Dynamic Firestore Sync) */}
         <div className="pt-2 border-t border-dashed space-y-0.5">
           <div className="flex items-baseline gap-2">
             <p className="text-lg font-black text-accent tracking-tighter">
@@ -151,7 +150,7 @@ export default function ProductCard({ product }: { product: Product }) {
         )}
       </Link>
       
-      {/* 5. Action Handlers */}
+      {/* 5. Action Handlers (Stock Dependent) */}
       <div className="p-4 pt-0 mt-auto">
         {isLoadingLive ? (
           <Button disabled className="rounded-full h-10 w-full bg-gray-50 text-gray-400 border-none font-black text-[9px] uppercase tracking-widest gap-2">

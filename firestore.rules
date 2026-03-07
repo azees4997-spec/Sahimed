@@ -69,6 +69,7 @@ service cloud.firestore {
     }
 
     // Explicit public read for inventory and live pricing
+    // REQUIRED for storefront real-time sync
     match /product_live_data/{sku} {
       allow read: if true;
       allow write: if isAdmin();
