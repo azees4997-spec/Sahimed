@@ -18,7 +18,7 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CATEGORIES as LOCAL_CATEGORIES } from '@/lib/data';
+import { CATEGORIES as LOCAL_CATEGORIES, PRODUCTS as LOCAL_PRODUCTS } from '@/lib/data';
 
 export default function Home() {
   const db = useFirestore();
@@ -26,7 +26,7 @@ export default function Home() {
     Autoplay({ delay: 5000, stopOnInteraction: false })
   );
 
-  // Optimization: 30 unique clinical items grid
+  // Optimization: Background Fetch 60 items to ensure 30 unique ones
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(60));
@@ -40,23 +40,26 @@ export default function Home() {
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
 
-  const uniqueMedicines = React.useMemo(() => {
-    if (!medicines) return [];
-    const seen = new Set();
-    return medicines.filter(m => {
-      const sku = m.sku || m.id;
-      if (seen.has(sku)) return false;
-      seen.add(sku);
-      return true;
-    }).slice(0, 30); 
+  // Performance Hack: Seed Best Sellers instantly with local data to prevent slow loading
+  const displayMedicines = React.useMemo(() => {
+    if (medicines && medicines.length > 0) {
+      const seen = new Set();
+      return medicines.filter(m => {
+        const sku = m.sku || m.id;
+        if (seen.has(sku)) return false;
+        seen.add(sku);
+        return true;
+      }).slice(0, 30);
+    }
+    // Fallback to local clinical seed for instant Home Page render
+    return LOCAL_PRODUCTS.slice(0, 30);
   }, [medicines]);
 
-  // Performance Optimization: Use local data as initial seed to prevent white-space while Firestore loads
+  // Performance Hack: Seed Categories instantly
   const displayCategories = React.useMemo(() => {
     if (categories && categories.length > 0) return categories;
-    // Fallback to local clinical list if Firestore is still loading or empty
     return LOCAL_CATEGORIES.map((cat, idx) => ({
-      id: `local-${idx}`,
+      id: `local-cat-${idx}`,
       name: cat.name,
       imageUrl: `https://picsum.photos/seed/cat-${cat.name.toLowerCase().replace(/\s/g, '-')}/300/300`
     }));
@@ -154,22 +157,9 @@ export default function Home() {
               <div className="space-y-1"><h2 className="text-[12px] sm:text-[13px] font-black text-gray-900 uppercase tracking-[0.3em]">Best Sellers</h2><p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Targeted Clinical Stock</p></div>
               <Link href="/search" className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-full">All Products <ChevronRight className="w-3 h-3" /></Link>
             </div>
-            {medsLoading ? (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-[24px] border border-gray-100 p-4 space-y-4">
-                    <Skeleton className="aspect-square w-full rounded-xl" />
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-3/4 rounded-full" />
-                      <Skeleton className="h-3 w-1/2 rounded-full" />
-                    </div>
-                    <Skeleton className="h-10 w-full rounded-full" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">{uniqueMedicines.map((p: any) => (<ProductCard key={p.id} product={p} />))}</div>
-            )}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+              {displayMedicines.map((p: any) => (<ProductCard key={p.id} product={p} />))}
+            </div>
           </div>
         </section>
       </main>
