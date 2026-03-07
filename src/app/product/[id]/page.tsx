@@ -36,11 +36,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { toast } = useToast();
   const { addToCart, getItemQuantity, updateQuantity } = useCart();
 
-  // 1. Fetch Static Clinical Profile
+  // 1. Fetch Static Clinical Profile (Branded Selection)
   const productRef = useMemoFirebase(() => (!db || !id) ? null : doc(db, 'medicines', id), [db, id]);
   const { data: staticProduct, isLoading: productLoading } = useDoc(productRef);
 
-  // 2. Dynamic Data Handshake (Universal SKU Fetching)
+  // 2. Dynamic Price/Stock Sync for Branded Card
   const [liveData, setLiveData] = useState<{ mrp: number, price: number, stock: number } | null>(null);
   const [isLiveLoading, setIsLiveLoading] = useState(true);
 
@@ -67,11 +67,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     }
   }, [db, staticProduct?.sku, staticProduct?.id]);
 
-  // 3. Clinical Molecule Metadata
+  // 3. Clinical Molecule Metadata (Plain Composition)
   const molRef = useMemoFirebase(() => (!db || !staticProduct?.moleculeId) ? null : doc(db, 'moleculeMaster', staticProduct.moleculeId), [db, staticProduct?.moleculeId]);
   const { data: molData } = useDoc(molRef);
 
-  // 4. Alternatives Logic (Generic Mapping)
+  // 4. Alternatives Logic (Generic Selection)
   const alternativesQuery = useMemoFirebase(() => {
     if (!db || !staticProduct?.moleculeId || staticProduct?.isGeneric) return null;
     return query(collection(db, 'medicines'), where('moleculeId', '==', staticProduct.moleculeId), where('isGeneric', '==', true), limit(1));
@@ -80,7 +80,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { data: genericAlternatives } = useCollection(alternativesQuery);
   const genericAlt = genericAlternatives?.[0];
 
-  // 5. Dynamic Data Handshake for Alternative Choice
+  // 5. Dynamic Price/Stock Sync for Generic Card
   const [altLiveData, setAltLiveData] = useState<{ price: number, mrp: number, stock: number } | null>(null);
   const [isAltLiveLoading, setIsAltLiveLoading] = useState(true);
 
@@ -139,7 +139,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       )}>
         <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{label}</span>
         
-        {/* Medicine Image */}
+        {/* centered medicine pack photo */}
         <div className="relative aspect-square w-full bg-white rounded-xl mb-3 overflow-hidden border border-gray-50 flex items-center justify-center p-2">
           <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-1" />
           {pIsOutOfStock && !isLoading && (
@@ -149,7 +149,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           )}
         </div>
 
-        {/* 6-Attribute Clinical Clinical Sequence */}
+        {/* standardized clinical attribute sequence */}
         <div className="flex-1 space-y-1">
           <h3 className="font-black text-[11px] sm:text-[15px] text-gray-900 uppercase leading-tight line-clamp-2 min-h-[2.2rem]">
             {product.name}
@@ -213,7 +213,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       <Navbar />
       <main className="max-w-[1200px] mx-auto px-3 sm:px-10 py-8">
         
-        {/* Top Header: Plain Clinical Composition Only */}
+        {/* Top Header: Plain Clinical Composition badge */}
         <div className="text-center mb-8 space-y-3">
            <div className="inline-flex items-center gap-2 bg-primary/10 px-6 py-2.5 rounded-full border border-primary/20 shadow-sm">
               <Dna className="w-4 h-4 text-primary" />
@@ -230,7 +230,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            )}
         </div>
 
-        {/* Strict 2-Card Horizontal Comparison (Forced Mobile Side-by-Side) */}
+        {/* Strict 2-Card Horizontal Comparison (Side-by-Side Mobile lockdown) */}
         <div className="mb-12">
           <div className="grid grid-cols-2 gap-2 sm:gap-10 items-stretch">
             <ComparisonCard 

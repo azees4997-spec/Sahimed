@@ -22,7 +22,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const [isLoadingLive, setIsLoadingLive] = useState(true);
   const quantity = getItemQuantity(product.id);
 
-  // UNIVERSAL REAL-TIME LISTENER: Direct handshake for every SKU rendered
+  // UNIVERSAL REAL-TIME HANDSHAKE: Independent listener for every SKU
   useEffect(() => {
     const sku = product.sku || product.id;
     if (!db || !sku) {
@@ -97,7 +97,7 @@ export default function ProductCard({ product }: { product: Product }) {
     )}>
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 p-4 space-y-3">
         
-        {/* 1. Centered Medicine Pack Photo */}
+        {/* Medicine Pack Photo - Static Binding */}
         <div className="relative aspect-square w-full bg-gray-50 rounded-xl overflow-hidden border border-gray-50 flex items-center justify-center p-3">
           <Image 
             src={safeImageUrl} 
@@ -112,7 +112,7 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        {/* 2. Clinical Identity Sequence */}
+        {/* Clinical Identity Sequence - Static Binding */}
         <div className="space-y-1">
           <h3 className="font-black text-gray-900 text-[13px] uppercase tracking-tight leading-tight line-clamp-2 min-h-[2.4rem]">
             {product.name}
@@ -125,7 +125,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </p>
         </div>
 
-        {/* 3. Pricing Section (Dynamic Sync) */}
+        {/* Pricing Section - Dynamic Sync */}
         <div className="pt-2 border-t border-dashed space-y-0.5 mt-auto">
           <div className="flex items-baseline gap-2">
             <p className="text-lg font-black text-accent tracking-tighter">
@@ -138,11 +138,11 @@ export default function ProductCard({ product }: { product: Product }) {
             )}
           </div>
           <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight">
-            {isLoadingLive ? "Checking Price..." : `₹${unitCost} per unit`}
+            {isLoadingLive ? "Checking..." : `₹${unitCost} per unit`}
           </p>
         </div>
 
-        {/* 4. Switch & Save Engine */}
+        {/* Savings Engine */}
         {!isLoadingLive && savingsPercent > 0 && !isOutOfStock && (
           <div className="bg-accent/10 text-accent text-[9px] font-black uppercase px-3 py-1.5 rounded-lg text-center border border-accent/5">
             SAVE {savingsPercent}% TODAY
@@ -150,7 +150,7 @@ export default function ProductCard({ product }: { product: Product }) {
         )}
       </Link>
       
-      {/* 5. Purchase Logic (Global stock_quantity > 0 Trigger) */}
+      {/* Purchase Logic - UNIVERSAL stock_quantity Trigger */}
       <div className="p-4 pt-0">
         {isLoadingLive ? (
           <Button disabled className="rounded-full h-10 w-full bg-gray-50 text-gray-400 border-none font-black text-[9px] uppercase tracking-widest gap-2">
