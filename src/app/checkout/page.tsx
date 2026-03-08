@@ -340,16 +340,13 @@ export default function CheckoutPage() {
                       <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Number <span className="text-red-500">*</span></Label>
                     </div>
                     <div className="relative">
-                      <div className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center gap-2 pr-4 border-r border-gray-200">
-                        <span className="text-sm font-bold text-gray-400">+91</span>
-                      </div>
                       <Input 
                         value={orderInfo.phoneNumber} 
                         onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10)})} 
-                        placeholder={orderInfo.phoneNumber ? "" : "10-digit Mobile"} 
+                        placeholder="" 
                         readOnly={!isSomeoneElse && !!user?.phoneNumber}
                         className={cn(
-                          "h-16 pl-24 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6 transition-all", 
+                          "h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6 transition-all", 
                           errors.phoneNumber && "ring-2 ring-red-500",
                           (!isSomeoneElse && !!user?.phoneNumber) && "opacity-60 cursor-not-allowed"
                         )} 
