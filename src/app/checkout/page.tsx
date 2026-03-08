@@ -343,7 +343,7 @@ export default function CheckoutPage() {
                       <Input 
                         value={orderInfo.phoneNumber} 
                         onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10)})} 
-                        placeholder="" 
+                        placeholder="Enter mobile number" 
                         readOnly={!isSomeoneElse && !!user?.phoneNumber}
                         className={cn(
                           "h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6 transition-all", 
@@ -464,15 +464,15 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-4 mb-10 pt-6 border-t border-dashed relative z-10">
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
+                <div className="flex justify-between text-10 font-black uppercase tracking-widest text-gray-400">
                   <span>Gross Total</span>
                   <span>₹{totalPrice.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                <div className="flex justify-between text-10 font-black uppercase tracking-widest">
                   <span className="text-gray-500">Payment Mode</span>
                   <span className="text-primary font-black">{paymentMethod === 'COD' ? 'COD' : 'Online'}</span>
                 </div>
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                <div className="flex justify-between text-10 font-black uppercase tracking-widest">
                   <span className="text-gray-500">Clinical Logistics</span>
                   <span className="text-accent">FREE</span>
                 </div>
