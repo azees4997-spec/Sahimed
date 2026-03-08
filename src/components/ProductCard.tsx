@@ -69,7 +69,7 @@ export default function ProductCard({ product }: { product: Product }) {
     <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full group relative">
       {savingsPct > 0 && (
         <div className="absolute top-3 left-3 z-10 animate-in fade-in zoom-in duration-500">
-          <Badge className="bg-accent text-white font-black text-[8px] uppercase tracking-tighter px-2 py-0.5 rounded-md shadow-lg border-none">
+          <Badge className="bg-accent text-white font-black text-[10px] uppercase tracking-tighter px-3 py-1 rounded-full shadow-xl border-none ring-2 ring-white">
             {savingsPct}% OFF
           </Badge>
         </div>
@@ -98,7 +98,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </p>
         </div>
 
-        <div className="pt-2 border-t border-dashed space-y-0.5 mt-auto">
+        <div className="pt-2 border-t border-dashed space-y-1 mt-auto">
           <div className="flex items-baseline gap-2">
             <p className="text-lg font-black text-accent tracking-tighter">
               ₹{Number(currentPrice).toFixed(2)}
@@ -108,9 +108,12 @@ export default function ProductCard({ product }: { product: Product }) {
             )}
           </div>
           {savingsAmt > 0 && (
-            <p className="text-[8px] font-black text-accent uppercase tracking-tighter">
-              Save ₹{Number(savingsAmt).toFixed(2)} ({savingsPct}%)
-            </p>
+            <div className="flex items-center gap-1.5 bg-accent/5 w-fit px-2 py-0.5 rounded-md border border-accent/10 animate-pulse">
+              <Zap className="w-2.5 h-2.5 text-accent fill-current" />
+              <p className="text-[9px] font-black text-accent uppercase tracking-tighter">
+                Save ₹{Number(savingsAmt).toFixed(2)}
+              </p>
+            </div>
           )}
         </div>
       </Link>
