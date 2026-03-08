@@ -349,7 +349,7 @@ export default function CheckoutPage() {
                         placeholder={orderInfo.phoneNumber ? "" : "10-digit Mobile"} 
                         readOnly={!isSomeoneElse && !!user?.phoneNumber}
                         className={cn(
-                          "h-16 pl-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6 transition-all", 
+                          "h-16 pl-24 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6 transition-all", 
                           errors.phoneNumber && "ring-2 ring-red-500",
                           (!isSomeoneElse && !!user?.phoneNumber) && "opacity-60 cursor-not-allowed"
                         )} 
