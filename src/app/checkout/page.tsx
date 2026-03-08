@@ -245,7 +245,7 @@ export default function CheckoutPage() {
                   onClick={() => setIsAddressModalOpen(true)}
                   className="text-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-1.5 hover:underline"
                 >
-                  <Plus className="w-3 h-3" /> Add New Address
+                  <Plus className="w-3" /> Add New Address
                 </button>
               </div>
 
@@ -368,33 +368,33 @@ export default function CheckoutPage() {
       <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
         <DialogContent className="max-w-md w-[94vw] sm:w-full rounded-[28px] border-none p-0 overflow-hidden shadow-3xl bg-white mx-auto animate-in zoom-in-95 duration-300">
           <div className="max-h-[95vh] overflow-y-auto scrollbar-hide">
-            <div className="p-4 md:p-8 space-y-4">
+            <div className="p-4 space-y-3">
               <div className="space-y-0.5">
-                <DialogTitle className="text-xl font-black text-gray-900 uppercase tracking-tight">Delivery Details</DialogTitle>
-                <p className="text-[9px] font-bold text-primary uppercase tracking-widest opacity-80">For clinical logistics communication</p>
+                <DialogTitle className="text-lg font-black text-gray-900 uppercase tracking-tight">Delivery Details</DialogTitle>
+                <p className="text-[8px] font-bold text-primary uppercase tracking-widest opacity-80">For clinical logistics communication</p>
               </div>
 
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <Input 
                   placeholder="Recipient Name" 
                   value={orderInfo.patientName} 
                   onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})}
-                  className="h-11 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 focus-visible:border-primary transition-all px-4"
+                  className="h-10 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 focus-visible:border-primary transition-all px-4"
                 />
 
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-2">
                   <Input 
                     placeholder="Pin Code" 
                     value={orderInfo.pincode} 
                     onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})}
-                    className="h-11 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
+                    className="h-10 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
                   />
                   <Button 
                     onClick={handleLocateMe}
                     variant="outline" 
-                    className="h-11 rounded-xl border-primary text-primary hover:bg-primary/5 font-black text-[9px] uppercase gap-1.5 bg-white transition-all active:scale-95 shadow-sm"
+                    className="h-10 rounded-xl border-primary text-primary hover:bg-primary/5 font-black text-[8px] uppercase gap-1.5 bg-white transition-all active:scale-95 shadow-sm"
                   >
-                    {isLocating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Target className="w-3.5 h-3.5" />}
+                    {isLocating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Target className="w-3 h-3" />}
                     PICK GPS
                   </Button>
                 </div>
@@ -403,28 +403,28 @@ export default function CheckoutPage() {
                   placeholder="House number, floor" 
                   value={orderInfo.houseNumber} 
                   onChange={e => setOrderInfo({...orderInfo, houseNumber: e.target.value})}
-                  className="h-11 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
+                  className="h-10 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
                 />
 
                 <Input 
                   placeholder="Building name, locality" 
                   value={orderInfo.buildingLocality} 
                   onChange={e => setOrderInfo({...orderInfo, buildingLocality: e.target.value})}
-                  className="h-11 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
+                  className="h-10 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
                 />
 
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-2">
                   <Input 
                     placeholder="City" 
                     value={orderInfo.city} 
                     onChange={e => setOrderInfo({...orderInfo, city: e.target.value})}
-                    className="h-11 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
+                    className="h-10 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
                   />
                   <Input 
                     placeholder="State" 
                     value={orderInfo.state} 
                     onChange={e => setOrderInfo({...orderInfo, state: e.target.value})}
-                    className="h-11 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
+                    className="h-10 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
                   />
                 </div>
 
@@ -432,22 +432,22 @@ export default function CheckoutPage() {
                   placeholder="Contact Number" 
                   value={orderInfo.phoneNumber} 
                   onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10)})}
-                  className="h-11 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
+                  className="h-10 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
                 />
 
-                <div className="bg-[#FFFCE6] p-3 rounded-xl border border-[#F5E1A4]">
-                  <p className="text-[8px] font-black text-[#856404] leading-tight uppercase tracking-wider text-center">
+                <div className="bg-[#FFFCE6] p-2 rounded-xl border border-[#F5E1A4]">
+                  <p className="text-[7px] font-black text-[#856404] leading-tight uppercase tracking-wider text-center">
                     DELIVERY AGENT WILL CALL ON THIS NUMBER
                   </p>
                 </div>
 
-                <div className="flex gap-2 pt-1">
+                <div className="flex gap-2 pt-0.5">
                   {['Home', 'Office', 'Other'].map(t => (
                     <button 
                       key={t}
                       onClick={() => setOrderInfo({...orderInfo, tag: t})}
                       className={cn(
-                        "flex-1 h-10 rounded-full text-[9px] font-black uppercase tracking-widest border-[1.5px] transition-all shadow-sm",
+                        "flex-1 h-9 rounded-full text-[8px] font-black uppercase tracking-widest border-[1.5px] transition-all shadow-sm",
                         orderInfo.tag === t ? "border-primary text-primary bg-primary/5" : "border-gray-100 text-gray-400 bg-white hover:bg-gray-50"
                       )}
                     >
@@ -458,7 +458,7 @@ export default function CheckoutPage() {
 
                 <Button 
                   onClick={() => setIsAddressModalOpen(false)}
-                  className="w-full h-14 rounded-2xl bg-primary text-white font-black uppercase tracking-[0.15em] text-[10px] mt-2 shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
+                  className="w-full h-12 rounded-2xl bg-primary text-white font-black uppercase tracking-[0.15em] text-[9px] mt-1 shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
                 >
                   SAVE DELIVERY POINT
                 </Button>
