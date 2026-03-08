@@ -1,7 +1,8 @@
+
 "use client"
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -11,15 +12,19 @@ import { useAuth } from '@/firebase';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
-export default function LoginPage() {
+function LoginForm() {
   const [step, setStep] = useState(1); 
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  
   const router = useRouter();
+  const searchParams = useSearchParams();
   const auth = useAuth();
   const { toast } = useToast();
+
+  const redirectPath = searchParams.get('redirect') || '/';
 
   useEffect(() => {
     if (typeof window !== 'undefined' && !(window as any).recaptchaVerifier) {
@@ -71,7 +76,7 @@ export default function LoginPage() {
       if (confirmationResult) {
         await confirmationResult.confirm(otp);
         toast({ title: 'Welcome!', description: 'Your session is now active.' });
-        router.push('/');
+        router.push(redirectPath);
       }
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Invalid Code', description: 'The OTP entered is incorrect.' });
@@ -155,5 +160,13 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#F8F8F8]"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

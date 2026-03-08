@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useState, useEffect } from 'react';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
   const { 
@@ -19,6 +21,8 @@ export default function CartPage() {
     availablePromos, appliedPromo, applyPromo, attachedPrescription, setAttachedPrescription 
   } = useCart();
   
+  const { user } = useUser();
+  const router = useRouter();
   const { toast } = useToast();
   const [isPromoDialogOpen, setIsPromoDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -79,6 +83,14 @@ export default function CartPage() {
       title: "Coupon Applied!",
       description: `You just saved ₹${(promo.discountType === 'fixed' ? promo.discountValue : (totalPrice * (promo.discountValue / 100))).toFixed(2)} extra!`,
     });
+  };
+
+  const handleCheckoutClick = () => {
+    if (user) {
+      router.push('/checkout');
+    } else {
+      router.push('/login?redirect=/checkout');
+    }
   };
 
   if (cart.length === 0) {
@@ -240,11 +252,9 @@ export default function CartPage() {
                   </div>
                 </div>
                 {isPrescriptionReady ? (
-                  <Link href="/checkout">
-                    <Button className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 bg-primary text-white relative z-10">
-                      Checkout Now <ArrowRight className="w-5 h-5 ml-4" />
-                    </Button>
-                  </Link>
+                  <Button onClick={handleCheckoutClick} className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 bg-primary text-white relative z-10">
+                    Checkout Now <ArrowRight className="w-5 h-5 ml-4" />
+                  </Button>
                 ) : (
                   <Button onClick={() => document.getElementById('cart-upload')?.click()} className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-orange-200 bg-orange-600 text-white relative z-10">
                     Upload Prescription <Camera className="w-5 h-5 ml-4" />
