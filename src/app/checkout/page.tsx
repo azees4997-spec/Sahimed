@@ -27,12 +27,14 @@ import {
   Banknote,
   CreditCard,
   Check,
-  Zap
+  Zap,
+  Briefcase,
+  Navigation
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp, doc, getDoc } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp, doc, getDoc, query, orderBy } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 export default function CheckoutPage() {
@@ -53,6 +55,8 @@ export default function CheckoutPage() {
   const [isSomeoneElse, setIsSomeoneElse] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'COD' | 'Online'>('COD');
+  const [detectedAddress, setDetectedAddress] = useState<any>(null);
+  const [currentPos, setCurrentPos] = useState<{lat: number, lng: number} | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -61,54 +65,88 @@ export default function CheckoutPage() {
     phoneNumber: '',
     street: homepageLocation || '',
     landmark: '',
-    pincode: ''
+    pincode: '',
+    lat: 0,
+    lng: 0,
+    tag: 'Other'
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (user && !isSomeoneElse) {
-        let profileName = user.displayName || '';
-        let profilePhone = user.phoneNumber?.replace('+91', '') || '';
-        let profileStreet = homepageLocation || '';
-        let profileLandmark = '';
-        let profilePincode = '';
+  // --- Fetch Addresses ---
+  const addressesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'addresses'), orderBy('updatedAt', 'desc')) : null, [db, user]);
+  const { data: savedAddresses } = useCollection(addressesQuery);
 
-        try {
-          const profileDoc = await getDoc(doc(db, 'userProfiles', user.uid));
-          if (profileDoc.exists()) {
-            const data = profileDoc.data();
-            profileName = data.name || profileName;
-            profilePhone = data.phone?.replace('+91', '') || profilePhone;
-            profileStreet = data.address?.street || profileStreet;
-            profileLandmark = data.address?.landmark || profileLandmark;
-            profilePincode = data.address?.pincode || profilePincode;
-          }
-        } catch (e) {
-          console.error("Profile sync error", e);
+  // --- HA VERSINE DISTANCE CALCULATION ---
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371e3; // metres
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // in metres
+  };
+
+  useEffect(() => {
+    const initCheckout = async () => {
+      if (user) {
+        // 1. Load Profile Basics
+        const profileDoc = await getDoc(doc(db, 'userProfiles', user.uid));
+        if (profileDoc.exists()) {
+          const data = profileDoc.data();
+          setOrderInfo(prev => ({
+            ...prev,
+            patientName: data.name || user.displayName || '',
+            phoneNumber: (data.phone || user.phoneNumber || '').replace('+91', '')
+          }));
         }
 
-        setOrderInfo({
-          patientName: profileName,
-          phoneNumber: profilePhone,
-          street: profileStreet,
-          landmark: profileLandmark,
-          pincode: profilePincode
-        });
-      } else if (isSomeoneElse) {
-        setOrderInfo({
-          patientName: '',
-          phoneNumber: '',
-          street: '',
-          landmark: '',
-          pincode: ''
-        });
+        // 2. Proximity Detection Logic
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition((pos) => {
+            const { latitude, longitude } = pos.coords;
+            setCurrentPos({ lat: latitude, lng: longitude });
+            
+            if (savedAddresses && savedAddresses.length > 0) {
+              let closest = null;
+              let minDistance = Infinity;
+
+              savedAddresses.forEach(addr => {
+                if (addr.lat && addr.lng) {
+                  const dist = calculateDistance(latitude, longitude, addr.lat, addr.lng);
+                  if (dist < minDistance) {
+                    minDistance = dist;
+                    closest = addr;
+                  }
+                }
+              });
+
+              // Threshold: 500 meters (Standard delivery proximity)
+              if (closest && minDistance < 500) {
+                setDetectedAddress(closest);
+                setOrderInfo(prev => ({
+                  ...prev,
+                  street: closest.street,
+                  landmark: closest.landmark || '',
+                  pincode: closest.pincode,
+                  lat: closest.lat,
+                  lng: closest.lng,
+                  tag: closest.tag
+                }));
+                toast({ title: `Detected Near ${closest.tag}` });
+              }
+            }
+          });
+        }
       }
     };
 
-    fetchProfile();
-  }, [user, isSomeoneElse, db, homepageLocation]);
+    initCheckout();
+  }, [user, db, savedAddresses]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -128,67 +166,38 @@ export default function CheckoutPage() {
           try {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            // High-precision reverse geocoding with fallback fields
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
-              signal: AbortSignal.timeout(10000) // 10s timeout
-            });
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
             const data = await response.json();
             
             if (data && data.address) {
-              const neighborhood = data.address.suburb || data.address.neighbourhood || data.address.residential || '';
-              const city = data.address.city || data.address.town || data.address.village || '';
-              const road = data.address.road || '';
-              const state = data.address.state || '';
-              
               setOrderInfo(prev => ({
                 ...prev,
-                street: `${road ? road + ', ' : ''}${neighborhood}${city ? ', ' + city : ''}${state ? ', ' + state : ''}`,
-                pincode: data.address.postcode?.replace(/\s/g, '') || prev.pincode
+                street: data.display_name,
+                pincode: data.address.postcode?.replace(/\s/g, '') || prev.pincode,
+                lat,
+                lng
               }));
-              toast({ title: "Location Verified" });
-            } else {
-              toast({ variant: 'destructive', title: 'Location Unavailable', description: 'Could not resolve address details.' });
+              toast({ title: "Live Position Locked" });
             }
           } catch (e) {
-            toast({ variant: 'destructive', title: 'Network Error', description: 'Check your internet connection.' });
+            toast({ variant: 'destructive', title: 'GPS Sync Failed' });
           } finally {
             setIsLocating(false);
           }
         },
-        (error) => {
-          setIsLocating(false);
-          let msg = "Permission Denied";
-          if (error.code === 2) msg = "Position Unavailable";
-          if (error.code === 3) msg = "Request Timed Out";
-          toast({ variant: 'destructive', title: 'GPS Error', description: msg });
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        () => setIsLocating(false),
+        { enableHighAccuracy: true }
       );
-    } else {
-      setIsLocating(false);
-      toast({ variant: 'destructive', title: 'Incompatible', description: 'Browser does not support GPS.' });
     }
   };
 
   const handlePlaceOrder = async () => {
-    if (!user) {
-      router.push('/login?redirect=/checkout');
-      return;
-    }
-
-    if (!validate()) {
-      setOrderError("Please fill all required delivery fields.");
-      return;
-    }
-
-    if (cart.length === 0) {
-      setOrderError("Your bag is currently empty.");
-      return;
-    }
+    if (!user) return;
+    if (!validate()) return;
 
     setLoading(true);
-    setOrderError(null);
     
+    // Financial calculations
     const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
     const applicableFees = activeFees.filter(f => totalPrice >= (f.minPurchase || 0));
     const feeTotal = applicableFees.reduce((acc, fee) => {
@@ -203,67 +212,63 @@ export default function CheckoutPage() {
     }
 
     const deliveryFeeDoc = activeFees.find(f => f.name.toLowerCase().includes('delivery'));
-    const FREE_DELIVERY_THRESHOLD = deliveryFeeDoc?.minPurchase || 500;
-    const finalBeforeDelivery = Math.max(0, totalPrice + feeTotal - promoDiscount);
-    const deliveryCharge = finalBeforeDelivery < FREE_DELIVERY_THRESHOLD ? (deliveryFeeDoc?.discountedAmount || 40) : 0;
-    const finalAmount = finalBeforeDelivery + deliveryCharge;
+    const finalAmount = Math.max(0, totalPrice + feeTotal - promoDiscount) + (totalPrice < (deliveryFeeDoc?.minPurchase || 500) ? (deliveryFeeDoc?.discountedAmount || 40) : 0);
 
     const orderData = {
       userId: user.uid,
       orderDate: serverTimestamp(),
       totalAmount: finalAmount,
-      billingBreakdown: {
-        grossMrp: totalMrp,
-        campaignDiscount: promoDiscount,
-        serviceFees: feeTotal,
-        deliveryCharge: deliveryCharge,
-        savings: (totalMrp - totalPrice) + promoDiscount
-      },
       status: 'Pending',
-      paymentStatus: paymentMethod === 'COD' ? 'Pending' : 'Paid',
       paymentType: paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online',
       patientName: orderInfo.patientName,
-      phoneNumber: orderInfo.phoneNumber.startsWith('+91') ? orderInfo.phoneNumber : `+91${orderInfo.phoneNumber}`,
+      phoneNumber: `+91${orderInfo.phoneNumber}`,
       prescriptionUrl: attachedPrescription || null,
-      orderingForSelf: !isSomeoneElse,
       shippingDetails: {
         street: orderInfo.street,
         landmark: orderInfo.landmark,
-        pincode: orderInfo.pincode
+        pincode: orderInfo.pincode,
+        lat: orderInfo.lat,
+        lng: orderInfo.lng,
+        tag: orderInfo.tag
       },
       items: cart.map(item => ({
         medicineId: item.id,
         quantity: item.quantity,
         unitPrice: item.price,
-        name: item.name,
-        imageUrl: item.imageUrl
+        name: item.name
       }))
     };
 
     try {
-      // PRE-GENERATE ID FOR INSTANT REDIRECT
-      const ordersColRef = collection(db, 'userProfiles', user.uid, 'orders');
-      const newOrderRef = doc(ordersColRef);
-      const orderId = newOrderRef.id;
-
-      // INITIATE NON-BLOCKING WRITE
+      const newOrderRef = doc(collection(db, 'userProfiles', user.uid, 'orders'));
       setDocumentNonBlocking(newOrderRef, orderData, { merge: false });
       
-      if (!isSomeoneElse) {
-        setDocumentNonBlocking(doc(db, 'userProfiles', user.uid), {
-          name: orderInfo.patientName,
-          phone: orderData.phoneNumber,
-          address: orderData.shippingDetails,
+      // Smart Auto-Save: If this was a manual entry far from others, save it to the registry
+      if (!detectedAddress && orderInfo.lat !== 0) {
+        addDocumentNonBlocking(collection(db, 'userProfiles', user.uid, 'addresses'), {
+          street: orderInfo.street,
+          landmark: orderInfo.landmark,
+          pincode: orderInfo.pincode,
+          lat: orderInfo.lat,
+          lng: orderInfo.lng,
+          tag: 'Other',
+          createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
-        }, { merge: true });
+        });
       }
 
-      // REDIRECT INSTANTLY
       clearCart();
-      router.push(`/order-success/${orderId}`);
+      router.push(`/order-success/${newOrderRef.id}`);
     } catch (err) {
-      setOrderError("Could not place order. Please check your internet connection.");
       setLoading(false);
+    }
+  };
+
+  const getTagIcon = (tag: string) => {
+    switch (tag) {
+      case 'Home': return <Home className="w-4 h-4" />;
+      case 'Office': return <Briefcase className="w-4 h-4" />;
+      default: return <MapPin className="w-4 h-4" />;
     }
   };
 
@@ -274,110 +279,92 @@ export default function CheckoutPage() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-12">
            <h1 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tighter">Secure Checkout</h1>
            <div className="bg-primary/5 px-4 py-1.5 rounded-full border border-primary/10 w-fit">
-              <span className="text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-widest">Final Step</span>
+              <span className="text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-widest">Clinical Protocol</span>
            </div>
         </div>
-        
-        {orderError && (
-          <div className="mb-8 p-6 bg-red-50 border-2 border-red-100 rounded-[32px] flex items-center gap-4 animate-in slide-in-from-top-4">
-            <AlertTriangle className="w-6 h-6 text-red-600" />
-            <p className="text-sm font-black uppercase text-red-900 tracking-tight">{orderError}</p>
-          </div>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
-            <Card className="rounded-[32px] sm:rounded-[40px] border-none shadow-sm overflow-hidden bg-white">
-              <CardHeader className="bg-white p-6 sm:p-8 border-b space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0">
-                      <MapPin className="w-4 h-4" />
-                    </div>
-                    <CardTitle className="text-lg sm:text-xl font-black uppercase tracking-tight">Delivery Provision</CardTitle>
-                  </div>
-                  <button 
-                    onClick={handleLocateMe} 
-                    disabled={isLocating} 
-                    className="w-fit rounded-full h-9 sm:h-10 px-4 font-black text-[8px] sm:text-[9px] uppercase tracking-widest gap-2 bg-primary/5 text-primary hover:bg-primary/10 active:scale-95 transition-all flex items-center"
-                  >
-                    {isLocating ? <Loader2 className="animate-spin w-3 h-3" /> : <LocateFixed className="w-3 h-3" />}
-                    Verify My GPS
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between bg-gray-50 p-3 sm:p-4 rounded-2xl border border-gray-100">
-                   <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                      <div className={cn("w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-colors shrink-0", isSomeoneElse ? "bg-orange-100 text-orange-600" : "bg-green-100 text-green-600")}>
-                         {isSomeoneElse ? <UserPlus className="w-4 h-4 sm:w-5 h-5" /> : <ShieldCheck className="w-4 h-4 sm:w-5 h-5" />}
+            {/* SAVED ADDRESSES SELECTOR */}
+            {savedAddresses && savedAddresses.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4">Saved Locations</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {savedAddresses.map((addr) => (
+                    <div 
+                      key={addr.id}
+                      onClick={() => {
+                        setOrderInfo({...orderInfo, street: addr.street, landmark: addr.landmark || '', pincode: addr.pincode, lat: addr.lat, lng: addr.lng, tag: addr.tag});
+                        setDetectedAddress(addr);
+                      }}
+                      className={cn(
+                        "p-5 rounded-[24px] border-2 cursor-pointer transition-all flex items-center gap-4 bg-white",
+                        orderInfo.street === addr.street ? "border-primary bg-primary/5 shadow-lg" : "border-transparent hover:border-gray-200"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                        orderInfo.street === addr.street ? "bg-primary text-white" : "bg-gray-50 text-gray-400"
+                      )}>
+                        {getTagIcon(addr.tag)}
                       </div>
                       <div className="min-w-0">
-                         <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-tight text-gray-900 truncate">Ordering for someone else?</p>
-                         <p className="text-[7px] sm:text-[8px] font-bold uppercase text-gray-400 truncate">Toggle for recipient mode</p>
+                        <p className="font-black text-[10px] uppercase tracking-widest leading-none mb-1">{addr.tag}</p>
+                        <p className="text-[11px] font-bold text-gray-600 truncate uppercase">{addr.street}</p>
                       </div>
-                   </div>
-                   <Switch 
-                    checked={isSomeoneElse} 
-                    onCheckedChange={setIsSomeoneElse} 
-                    className="data-[state=checked]:bg-orange-500 shrink-0"
-                   />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* LOCATION DETECTION ALERT */}
+            {!detectedAddress && currentPos && (
+              <div className="bg-blue-50 border-2 border-blue-100 p-6 rounded-[32px] flex flex-col sm:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-4">
+                <div className="flex items-center gap-4 text-center sm:text-left">
+                  <div className="w-12 h-12 bg-white text-blue-600 rounded-2xl flex items-center justify-center shadow-lg"><Navigation className="w-6 h-6" /></div>
+                  <div>
+                    <p className="font-black text-xs uppercase text-blue-900">New Location Detected</p>
+                    <p className="text-[9px] font-bold text-blue-700/70 uppercase">You are far from your saved points. Set current GPS?</p>
+                  </div>
+                </div>
+                <Button onClick={handleLocateMe} className="rounded-full bg-blue-600 text-white font-black uppercase text-[10px] h-12 px-8 shadow-xl shadow-blue-200">
+                  {isLocating ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <LocateFixed className="w-4 h-4 mr-2" />}
+                  Use Detected Point
+                </Button>
+              </div>
+            )}
+
+            <Card className="rounded-[32px] sm:rounded-[40px] border-none shadow-sm overflow-hidden bg-white">
+              <CardHeader className="bg-white p-6 sm:p-8 border-b">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <CardTitle className="text-lg font-black uppercase tracking-tight">Delivery Logistics</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-6 sm:p-8 space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 ml-1">
-                      <User className="w-3.5 h-3.5 text-primary" />
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Recipient Name <span className="text-red-500">*</span></Label>
-                    </div>
-                    <Input 
-                      value={orderInfo.patientName} 
-                      onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})} 
-                      placeholder="Full Name" 
-                      className={cn("h-14 sm:h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.patientName && "ring-2 ring-red-500")} 
-                    />
-                    {errors.patientName && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.patientName}</p>}
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Recipient Name</Label>
+                    <Input value={orderInfo.patientName} onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 ml-1">
-                      <Phone className="w-3.5 h-3.5 text-primary" />
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Number <span className="text-red-500">*</span></Label>
-                    </div>
-                    <div className="relative">
-                      <Input 
-                        value={orderInfo.phoneNumber} 
-                        onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10)})} 
-                        placeholder="Enter mobile number" 
-                        className={cn(
-                          "h-14 sm:h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6 transition-all", 
-                          errors.phoneNumber && "ring-2 ring-red-500"
-                        )} 
-                      />
-                    </div>
-                    {errors.phoneNumber && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.phoneNumber}</p>}
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Contact (Mobile)</Label>
+                    <Input value={orderInfo.phoneNumber} onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10)})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
                   </div>
                   <div className="md:col-span-2 space-y-3">
-                    <div className="flex items-center gap-2 ml-1">
-                      <Home className="w-3.5 h-3.5 text-primary" />
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Clinical Delivery Address <span className="text-red-500">*</span></Label>
-                    </div>
-                    <Input value={orderInfo.street} onChange={e => setOrderInfo({...orderInfo, street: e.target.value})} placeholder="House No, Street Name, Area" className={cn("h-14 sm:h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.street && "ring-2 ring-red-500")} />
-                    {errors.street && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.street}</p>}
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Full Delivery Address</Label>
+                    <Input value={orderInfo.street} onChange={e => setOrderInfo({...orderInfo, street: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 ml-1">
-                      <Building2 className="w-3.5 h-3.5 text-primary" />
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Landmark (Optional)</Label>
-                    </div>
-                    <Input value={orderInfo.landmark} onChange={e => setOrderInfo({...orderInfo, landmark: e.target.value})} placeholder="Nearby clinical landmark" className="h-14 sm:h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6" />
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Landmark</Label>
+                    <Input value={orderInfo.landmark} onChange={e => setOrderInfo({...orderInfo, landmark: e.target.value})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 ml-1">
-                      <Hash className="w-3.5 h-3.5 text-primary" />
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pincode <span className="text-red-500">*</span></Label>
-                    </div>
-                    <Input value={orderInfo.pincode} onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})} placeholder="6-digit PIN" maxLength={6} className={cn("h-14 sm:h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.pincode && "ring-2 ring-red-500")} />
-                    {errors.pincode && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.pincode}</p>}
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Pincode</Label>
+                    <Input value={orderInfo.pincode} onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})} className="h-14 rounded-2xl bg-gray-50 border-none font-bold" />
                   </div>
                 </div>
               </CardContent>
@@ -386,115 +373,58 @@ export default function CheckoutPage() {
             <Card className="rounded-[32px] sm:rounded-[40px] border-none shadow-sm overflow-hidden bg-white">
               <CardHeader className="bg-white p-6 sm:p-8 border-b">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0">
                     <CreditCard className="w-4 h-4" />
                   </div>
-                  <CardTitle className="text-lg sm:text-xl font-black uppercase tracking-tight">Payment Method</CardTitle>
+                  <CardTitle className="text-lg font-black uppercase tracking-tight">Payment Selection</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-6 sm:p-8">
-                <div className="grid grid-cols-1 gap-4">
-                  <div 
-                    className={cn(
-                      "p-5 sm:p-6 rounded-[24px] sm:rounded-[32px] border-2 cursor-pointer transition-all flex items-center justify-between group",
-                      paymentMethod === 'COD' ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200"
-                    )}
-                    onClick={() => setPaymentMethod('COD')}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={cn(
-                        "w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-colors shrink-0",
-                        paymentMethod === 'COD' ? "bg-primary text-white" : "bg-gray-100 text-gray-400"
-                      )}>
-                        <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />
-                      </div>
-                      <div>
-                        <p className="font-black text-xs sm:text-sm uppercase tracking-tight">Cash on Delivery</p>
-                        <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest">Pay at your doorstep</p>
-                      </div>
+                <div 
+                  className={cn(
+                    "p-6 rounded-[32px] border-2 cursor-pointer transition-all flex items-center justify-between",
+                    paymentMethod === 'COD' ? "border-primary bg-primary/5" : "border-gray-100"
+                  )}
+                  onClick={() => setPaymentMethod('COD')}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", paymentMethod === 'COD' ? "bg-primary text-white" : "bg-gray-50 text-gray-400")}>
+                      <Banknote className="w-6 h-6" />
                     </div>
-                    <div className={cn(
-                      "w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0",
-                      paymentMethod === 'COD' ? "border-primary bg-primary" : "border-gray-200"
-                    )}>
-                      {paymentMethod === 'COD' && <Check className="w-3 h-3 text-white" />}
+                    <div>
+                      <p className="font-black text-sm uppercase">Cash on Delivery</p>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Pay at doorstep</p>
                     </div>
                   </div>
-                  
-                  <div className="p-5 sm:p-6 rounded-[24px] sm:rounded-[32px] border-2 border-dashed border-gray-100 opacity-50 cursor-not-allowed flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gray-50 text-gray-300 flex items-center justify-center shrink-0">
-                        <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
-                      </div>
-                      <div>
-                        <p className="font-black text-xs sm:text-sm uppercase tracking-tight text-gray-400">Online Payment</p>
-                        <p className="text-[8px] sm:text-[9px] font-bold text-gray-300 uppercase tracking-widest">Coming Soon</p>
-                      </div>
-                    </div>
+                  <div className={cn("w-6 h-6 rounded-full border-2 flex items-center justify-center", paymentMethod === 'COD' ? "bg-primary border-primary" : "border-gray-200")}>
+                    {paymentMethod === 'COD' && <Check className="w-3 h-3 text-white" />}
                   </div>
                 </div>
               </CardContent>
             </Card>
-
-            <div className="bg-accent/5 p-6 sm:p-8 rounded-[32px] sm:rounded-[40px] border border-accent/10 flex items-center gap-4 sm:gap-6">
-               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-lg border border-accent/10 shrink-0">
-                  <ShieldCheck className="w-6 h-6 sm:w-8 sm:h-8 text-accent" />
-               </div>
-               <div>
-                  <h3 className="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-tight">Verified Clinical Checkout</h3>
-                  <p className="text-[8px] sm:text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Every order is audited for delivery accuracy and clinical protocol compliance.</p>
-               </div>
-            </div>
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white p-8 sm:p-10 rounded-[40px] sm:rounded-[50px] shadow-2xl border border-gray-50 sticky top-24 overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16" />
-              
-              <h2 className="text-[10px] sm:text-[11px] font-black mb-8 sm:mb-10 text-gray-400 uppercase tracking-[0.3em] relative z-10">Clinical Bag Summary</h2>
-              
-              <div className="space-y-4 sm:space-y-6 mb-8 sm:mb-10 max-h-[30vh] overflow-y-auto scrollbar-hide relative z-10">
-                 {cart.map(item => (
-                   <div key={item.id} className="flex justify-between items-center bg-gray-50 p-3 sm:p-4 rounded-xl sm:rounded-2xl group transition-all">
-                     <div className="flex flex-col min-w-0">
-                        <span className="text-gray-900 font-black text-[10px] sm:text-[11px] uppercase truncate pr-2">{item.name}</span>
-                        <span className="text-[8px] text-gray-400 font-black uppercase tracking-widest">Qty: {item.quantity}</span>
-                     </div>
-                     <span className="font-black text-primary text-xs sm:text-sm shrink-0">₹{(item.price * item.quantity).toFixed(2)}</span>
-                   </div>
-                 ))}
-              </div>
-
-              <div className="space-y-3 sm:space-y-4 mb-8 sm:mb-10 pt-6 border-t border-dashed relative z-10">
-                <div className="flex justify-between text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">
+            <div className="bg-white p-8 rounded-[40px] shadow-2xl border border-gray-50 sticky top-24">
+              <h2 className="text-[10px] font-black mb-8 text-gray-400 uppercase tracking-[0.3em]">Summary</h2>
+              <div className="space-y-4 mb-8 pt-6 border-t border-dashed">
+                <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
                   <span>Gross Total</span>
                   <span>₹{totalPrice.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
-                  <span className="text-gray-500">Payment Mode</span>
-                  <span className="text-primary font-black">{paymentMethod === 'COD' ? 'COD' : 'Online'}</span>
+                <div className="flex justify-between text-[10px] font-black uppercase text-accent">
+                  <span>Clinical Savings</span>
+                  <span>-₹{appliedPromo ? (appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))).toFixed(2) : '0.00'}</span>
                 </div>
-                <div className="flex justify-between text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
-                  <span className="text-gray-500">Clinical Logistics</span>
-                  <span className="text-accent">FREE</span>
-                </div>
-                <div className="pt-6 sm:pt-8 border-t border-gray-100 flex justify-between items-baseline">
-                  <span className="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest">Payable</span>
-                  <span className="text-2xl sm:text-4xl font-black text-primary tracking-tighter">₹{totalPrice.toFixed(2)}</span>
+                <div className="pt-6 border-t border-gray-100 flex justify-between items-baseline">
+                  <span className="text-sm font-black text-gray-900 uppercase tracking-widest">Payable</span>
+                  <span className="text-3xl font-black text-primary tracking-tighter">₹{totalPrice.toFixed(2)}</span>
                 </div>
               </div>
-
-              <Button onClick={handlePlaceOrder} disabled={loading || cart.length === 0} className="w-full h-16 sm:h-20 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-[1.02] transition-all gap-3 sm:gap-4 relative z-10 bg-primary text-white">
-                {loading ? <Loader2 className="animate-spin" /> : (user ? "Finalize Order" : "SignIn to Complete")}
-                <ArrowRight className="w-4 h-4 sm:w-5 h-5" />
+              <Button onClick={handlePlaceOrder} disabled={loading} className="w-full h-18 rounded-full text-xs font-black uppercase tracking-widest shadow-2xl shadow-primary/30 gap-3">
+                {loading ? <Loader2 className="animate-spin" /> : "Finalize Order"}
+                <ArrowRight className="w-4 h-4" />
               </Button>
-              
-              {!isSomeoneElse && (
-                <div className="mt-4 sm:mt-6 flex items-center justify-center gap-2 bg-green-50 p-2 sm:p-3 rounded-xl border border-green-100 animate-in slide-in-from-bottom-2">
-                   <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-green-600" />
-                   <span className="text-[7px] sm:text-[8px] font-black text-green-600 uppercase tracking-widest">Saving to Clinical Profile</span>
-                </div>
-              )}
             </div>
           </div>
         </div>

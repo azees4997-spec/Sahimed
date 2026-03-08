@@ -20,7 +20,12 @@ import {
   Building2,
   Hash,
   Save,
-  Edit2
+  Edit2,
+  Home,
+  Briefcase,
+  MoreHorizontal,
+  Trash2,
+  LocateFixed
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -32,10 +37,17 @@ import {
   DialogTitle, 
   DialogTrigger 
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Link from 'next/link';
-import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
+import { useUser, useAuth, useFirestore, useDoc, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -49,26 +61,25 @@ export default function ProfilePage() {
   
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
 
-  // --- Fetch Saved Profile for Address Data ---
+  // --- Fetch Saved Profile ---
   const profileRef = useMemoFirebase(() => (db && user) ? doc(db, 'userProfiles', user.uid) : null, [db, user]);
   const { data: profile } = useDoc(profileRef);
 
+  // --- Fetch Addresses Subcollection ---
+  const addressesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'addresses'), orderBy('createdAt', 'desc')) : null, [db, user]);
+  const { data: addresses, isLoading: addressesLoading } = useCollection(addressesQuery);
+
   const [addressForm, setAddressForm] = useState({
+    id: '',
+    tag: 'Home',
     street: '',
     landmark: '',
-    pincode: ''
+    pincode: '',
+    lat: 0,
+    lng: 0
   });
-
-  useEffect(() => {
-    if (profile?.address) {
-      setAddressForm({
-        street: profile.address.street || '',
-        landmark: profile.address.landmark || '',
-        pincode: profile.address.pincode || ''
-      });
-    }
-  }, [profile]);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -96,6 +107,39 @@ export default function ProfilePage() {
     }
   };
 
+  const handleLocate = () => {
+    setIsLocating(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`);
+            const data = await response.json();
+            if (data && data.address) {
+              setAddressForm(prev => ({
+                ...prev,
+                lat: latitude,
+                lng: longitude,
+                street: data.display_name,
+                pincode: data.address.postcode?.replace(/\s/g, '') || prev.pincode
+              }));
+              toast({ title: "Coordinates Locked" });
+            }
+          } catch (e) {
+            toast({ variant: 'destructive', title: "Geocoding Failed" });
+          } finally {
+            setIsLocating(false);
+          }
+        },
+        () => {
+          setIsLocating(false);
+          toast({ variant: 'destructive', title: "GPS Denied" });
+        }
+      );
+    }
+  };
+
   const handleSaveAddress = () => {
     if (!user || !db) return;
     if (!addressForm.street || !addressForm.pincode) {
@@ -103,22 +147,38 @@ export default function ProfilePage() {
       return;
     }
 
-    setDocumentNonBlocking(doc(db, 'userProfiles', user.uid), {
-      address: {
-        street: addressForm.street,
-        landmark: addressForm.landmark,
-        pincode: addressForm.pincode
-      },
+    const payload = {
+      tag: addressForm.tag,
+      street: addressForm.street,
+      landmark: addressForm.landmark,
+      pincode: addressForm.pincode,
+      lat: addressForm.lat,
+      lng: addressForm.lng,
       updatedAt: serverTimestamp()
-    }, { merge: true });
+    };
+
+    if (addressForm.id) {
+      setDocumentNonBlocking(doc(db, 'userProfiles', user.uid, 'addresses', addressForm.id), payload, { merge: true });
+    } else {
+      addDocumentNonBlocking(collection(db, 'userProfiles', user.uid, 'addresses'), { ...payload, createdAt: serverTimestamp() });
+    }
 
     setIsAddressDialogOpen(false);
-    toast({ title: "Address Secured", description: "Your clinical delivery point is updated." });
+    toast({ title: "Address Secured" });
+    setAddressForm({ id: '', tag: 'Home', street: '', landmark: '', pincode: '', lat: 0, lng: 0 });
   };
 
   const handleLogout = async () => {
     await signOut(auth);
     router.push('/login');
+  };
+
+  const getTagIcon = (tag: string) => {
+    switch (tag) {
+      case 'Home': return <Home className="w-4 h-4" />;
+      case 'Office': return <Briefcase className="w-4 h-4" />;
+      default: return <MoreHorizontal className="w-4 h-4" />;
+    }
   };
 
   if (isUserLoading) {
@@ -200,20 +260,39 @@ export default function ProfilePage() {
 
               <div className="space-y-5">
                 <div className="flex items-center justify-between px-6">
-                  <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Delivery Address</h2>
+                  <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Clinical Delivery Points</h2>
                   <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
                     <DialogTrigger asChild>
-                      <button className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5 hover:underline">
-                        <Edit2 className="w-3 h-3" /> {profile?.address ? 'Update' : 'Add New'}
+                      <button onClick={() => setAddressForm({ id: '', tag: 'Home', street: '', landmark: '', pincode: '', lat: 0, lng: 0 })} className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5 hover:underline">
+                        <Edit2 className="w-3 h-3" /> Add New
                       </button>
                     </DialogTrigger>
                     <DialogContent className="max-w-md rounded-[40px] border-none p-0 overflow-hidden shadow-3xl">
                       <div className="bg-primary p-8 text-white">
-                        <DialogTitle className="text-2xl font-black uppercase tracking-tight">Clinical Delivery Point</DialogTitle>
+                        <DialogTitle className="text-2xl font-black uppercase tracking-tight">Add Delivery Point</DialogTitle>
                       </div>
                       <div className="p-8 space-y-6">
                         <div className="space-y-3">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Street Address</Label>
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Tag As</Label>
+                          <Select value={addressForm.tag} onValueChange={(v) => setAddressForm({...addressForm, tag: v})}>
+                            <SelectTrigger className="h-14 rounded-2xl bg-gray-50 border-none font-bold">
+                              <SelectValue placeholder="Select Tag" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-2xl border-none shadow-2xl">
+                              <SelectItem value="Home" className="font-bold">Home</SelectItem>
+                              <SelectItem value="Office" className="font-bold">Office</SelectItem>
+                              <SelectItem value="Other" className="font-bold">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center px-1">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Street Address</Label>
+                            <button onClick={handleLocate} className="text-[8px] font-black text-primary uppercase tracking-widest flex items-center gap-1">
+                              {isLocating ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <LocateFixed className="w-2.5 h-2.5" />}
+                              Autofill
+                            </button>
+                          </div>
                           <Input 
                             value={addressForm.street} 
                             onChange={e => setAddressForm({...addressForm, street: e.target.value})}
@@ -247,33 +326,37 @@ export default function ProfilePage() {
                   </Dialog>
                 </div>
                 
-                <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16" />
-                  {profile?.address ? (
-                    <div className="space-y-4 relative z-10">
-                      <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0">
-                          <MapPin className="w-5 h-5" />
+                <div className="space-y-4">
+                  {addressesLoading ? (
+                    <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+                  ) : (!addresses || addresses.length === 0) ? (
+                    <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm text-center">
+                      <MapPin className="w-8 h-8 text-gray-100 mx-auto mb-3" />
+                      <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No addresses saved</p>
+                    </div>
+                  ) : addresses.map((addr) => (
+                    <div key={addr.id} className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all">
+                      <div className="flex items-start justify-between relative z-10">
+                        <div className="flex items-start gap-4">
+                          <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0">
+                            {getTagIcon(addr.tag)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-black text-[10px] uppercase text-primary tracking-widest">{addr.tag}</span>
+                              {addr.lat !== 0 && <span className="w-1 h-1 rounded-full bg-green-500" title="GPS Verified" />}
+                            </div>
+                            <p className="text-xs font-bold text-gray-900 leading-relaxed line-clamp-2 uppercase">{addr.street}</p>
+                            <p className="text-[9px] font-black text-gray-400 uppercase mt-1">PIN: {addr.pincode}</p>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-black text-gray-900 uppercase leading-relaxed line-clamp-2">{profile.address.street}</p>
-                          {profile.address.landmark && (
-                            <p className="text-[10px] font-bold text-gray-400 uppercase mt-1 flex items-center gap-1.5">
-                              <Building2 className="w-3 h-3" /> {profile.address.landmark}
-                            </p>
-                          )}
-                          <p className="text-[10px] font-black text-primary uppercase mt-2 flex items-center gap-1.5">
-                            <Hash className="w-3 h-3" /> PIN: {profile.address.pincode}
-                          </p>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => { setAddressForm(addr); setIsAddressDialogOpen(true); }} className="h-8 w-8 rounded-full text-gray-300 hover:text-primary"><Edit2 className="w-3.5 h-3.5" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'userProfiles', user.uid, 'addresses', addr.id))} className="h-8 w-8 rounded-full text-gray-300 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></Button>
                         </div>
                       </div>
                     </div>
-                  ) : (
-                    <div className="text-center py-4 relative z-10">
-                      <MapPin className="w-8 h-8 text-gray-100 mx-auto mb-3" />
-                      <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No address saved</p>
-                    </div>
-                  )}
+                  ))}
                 </div>
               </div>
            </div>
