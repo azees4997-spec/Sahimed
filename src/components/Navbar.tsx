@@ -2,7 +2,7 @@
 "use client"
 
 import Link from 'next/link';
-import { ShoppingCart, User, MapPin, ChevronDown, LocateFixed, Loader2, Search as SearchIcon, X, Info } from 'lucide-react';
+import { ShoppingCart, User, MapPin, ChevronDown, LocateFixed, Loader2, Search as SearchIcon, X, Info, Dna } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,27 +29,41 @@ export default function Navbar() {
   
   const db = useFirestore();
 
-  // Performance: Reduced pre-fetch to 100 items
+  // Performance: Sync medicines and molecule registry for intelligent client-side discovery
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'medicines'), limit(100));
+    return query(collection(db, 'medicines'), limit(150));
+  }, [db]);
+
+  const moleculesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'moleculeMaster'));
   }, [db]);
   
   const { data: allMedicines, isLoading: medsLoading } = useCollection(medicinesQuery);
+  const { data: allMolecules } = useCollection(moleculesQuery);
   const [suggestions, setSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
-    // TRIGGER: Only search after 3 characters to optimize performance
+    // TRIGGER: Static lookup logic for min 3 letters of name or composition
     if (search.trim().length >= 3 && allMedicines) {
       setIsProcessing(true);
       const searchLower = search.toLowerCase();
       
+      // Build clinical lookup map for composition search
+      const moleculeMap = (allMolecules || []).reduce((acc: any, m: any) => {
+        acc[m.id] = m.molecule?.toLowerCase() || '';
+        return acc;
+      }, {});
+      
       const timer = setTimeout(() => {
         const filtered = allMedicines
-          .filter(p => 
-            (p.name?.toLowerCase().includes(searchLower)) || 
-            (p.saltComposition?.toLowerCase().includes(searchLower))
-          )
+          .filter(p => {
+            const nameMatch = p.name?.toLowerCase().includes(searchLower);
+            const saltMatch = p.saltComposition?.toLowerCase().includes(searchLower);
+            const moleculeMatch = p.moleculeId && moleculeMap[p.moleculeId]?.includes(searchLower);
+            return nameMatch || saltMatch || moleculeMatch;
+          })
           .sort((a, b) => {
             const aNameStart = a.name?.toLowerCase().startsWith(searchLower);
             const bNameStart = b.name?.toLowerCase().startsWith(searchLower);
@@ -68,7 +82,7 @@ export default function Navbar() {
       setSuggestions([]);
       setIsProcessing(false);
     }
-  }, [search, allMedicines]);
+  }, [search, allMedicines, allMolecules]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -215,7 +229,7 @@ export default function Navbar() {
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder="Search medicines (min. 3 letters)..."
+                  placeholder="Search name or composition (min. 3 letters)..."
                   className="w-full pl-10 sm:pl-12 pr-12 rounded-2xl sm:rounded-3xl border-[2px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 bg-white h-10 sm:h-12 font-black text-[10px] sm:text-xs shadow-md"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -241,27 +255,32 @@ export default function Navbar() {
                 <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] sm:rounded-[32px] shadow-3xl border-none overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-300">
                   {suggestions.length > 0 ? (
                     <div className="max-h-[350px] overflow-y-auto scrollbar-hide">
-                      {suggestions.map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => {
-                            setSearch('');
-                            setSuggestions([]);
-                            setIsSearchExpanded(false);
-                            router.push(`/product/${p.id}`);
-                          }}
-                          className="w-full p-4 sm:p-5 flex items-center gap-3 sm:gap-4 hover:bg-primary/5 transition-all border-b last:border-none text-left active:scale-[0.98]"
-                        >
-                          <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gray-50 rounded-xl flex-shrink-0 border border-gray-100 p-1">
-                            <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-black text-[10px] sm:text-[11px] uppercase text-gray-900 truncate tracking-tight">{p.name}</p>
-                            <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">{p.saltComposition}</p>
-                          </div>
-                          <div className="text-primary font-black text-[8px] sm:text-[10px] bg-primary/5 px-2.5 py-1 rounded-full shrink-0">₹{Number(p.price).toFixed(2)}</div>
-                        </button>
-                      ))}
+                      {suggestions.map((p) => {
+                        const composition = p.saltComposition || allMolecules?.find(m => m.id === p.moleculeId)?.molecule;
+                        return (
+                          <button
+                            key={p.id}
+                            onClick={() => {
+                              setSearch('');
+                              setSuggestions([]);
+                              setIsSearchExpanded(false);
+                              router.push(`/product/${p.id}`);
+                            }}
+                            className="w-full p-4 sm:p-5 flex items-center gap-3 sm:gap-4 hover:bg-primary/5 transition-all border-b last:border-none text-left active:scale-[0.98]"
+                          >
+                            <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gray-50 rounded-xl flex-shrink-0 border border-gray-100 p-1">
+                              <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-black text-[10px] sm:text-[11px] uppercase text-gray-900 truncate tracking-tight">{p.name}</p>
+                              <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">
+                                {composition || 'Clinical Formula'}
+                              </p>
+                            </div>
+                            <div className="text-primary font-black text-[8px] sm:text-[10px] bg-primary/5 px-2.5 py-1 rounded-full shrink-0">₹{Number(p.price).toFixed(2)}</div>
+                          </button>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="p-8 text-center">
