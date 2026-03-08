@@ -87,7 +87,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
 
         <div className="space-y-1">
-          <h3 className="font-black text-gray-900 text-[13px] uppercase tracking-tight leading-tight line-clamp-2 min-h-[2.4rem]">
+          <h3 className="font-black text-gray-900 text-[12px] uppercase tracking-tighter leading-[1.2] line-clamp-2 min-h-[28px]">
             {product.name}
           </h3>
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
