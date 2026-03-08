@@ -271,10 +271,10 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-[#F8F8F8] pb-32 sm:pb-8 page-transition-wrapper">
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 py-8 md:py-16">
-        <div className="flex items-center gap-4 mb-12">
-           <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Secure Checkout</h1>
-           <div className="bg-primary/5 px-4 py-1 rounded-full border border-primary/10">
-              <span className="text-[10px] font-black text-primary uppercase tracking-widest">Final Step</span>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-12">
+           <h1 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tighter">Secure Checkout</h1>
+           <div className="bg-primary/5 px-4 py-1.5 rounded-full border border-primary/10 w-fit">
+              <span className="text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-widest">Final Step</span>
            </div>
         </div>
         
@@ -287,40 +287,44 @@ export default function CheckoutPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
-            <Card className="rounded-[40px] border-none shadow-sm overflow-hidden bg-white">
-              <CardHeader className="bg-white p-8 border-b space-y-6">
-                <div className="flex flex-row items-center justify-between">
+            <Card className="rounded-[32px] sm:rounded-[40px] border-none shadow-sm overflow-hidden bg-white">
+              <CardHeader className="bg-white p-6 sm:p-8 border-b space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0">
                       <MapPin className="w-4 h-4" />
                     </div>
-                    <CardTitle className="text-xl font-black uppercase tracking-tight">Delivery Provision</CardTitle>
+                    <CardTitle className="text-lg sm:text-xl font-black uppercase tracking-tight">Delivery Provision</CardTitle>
                   </div>
-                  <button onClick={handleLocateMe} disabled={isLocating} className="rounded-full h-10 px-4 font-black text-[9px] uppercase tracking-widest gap-2 bg-primary/5 text-primary hover:bg-primary/10 active:scale-95 transition-all">
+                  <button 
+                    onClick={handleLocateMe} 
+                    disabled={isLocating} 
+                    className="w-fit rounded-full h-9 sm:h-10 px-4 font-black text-[8px] sm:text-[9px] uppercase tracking-widest gap-2 bg-primary/5 text-primary hover:bg-primary/10 active:scale-95 transition-all flex items-center"
+                  >
                     {isLocating ? <Loader2 className="animate-spin w-3 h-3" /> : <LocateFixed className="w-3 h-3" />}
                     Verify My GPS
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                   <div className="flex items-center gap-3">
-                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-colors", isSomeoneElse ? "bg-orange-100 text-orange-600" : "bg-green-100 text-green-600")}>
-                         {isSomeoneElse ? <UserPlus className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+                <div className="flex items-center justify-between bg-gray-50 p-3 sm:p-4 rounded-2xl border border-gray-100">
+                   <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                      <div className={cn("w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-colors shrink-0", isSomeoneElse ? "bg-orange-100 text-orange-600" : "bg-green-100 text-green-600")}>
+                         {isSomeoneElse ? <UserPlus className="w-4 h-4 sm:w-5 h-5" /> : <ShieldCheck className="w-4 h-4 sm:w-5 h-5" />}
                       </div>
-                      <div>
-                         <p className="text-[10px] font-black uppercase tracking-tight text-gray-900">Ordering for someone else?</p>
-                         <p className="text-[8px] font-bold uppercase text-gray-400">Toggle for recipient mode</p>
+                      <div className="min-w-0">
+                         <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-tight text-gray-900 truncate">Ordering for someone else?</p>
+                         <p className="text-[7px] sm:text-[8px] font-bold uppercase text-gray-400 truncate">Toggle for recipient mode</p>
                       </div>
                    </div>
                    <Switch 
                     checked={isSomeoneElse} 
                     onCheckedChange={setIsSomeoneElse} 
-                    className="data-[state=checked]:bg-orange-500"
+                    className="data-[state=checked]:bg-orange-500 shrink-0"
                    />
                 </div>
               </CardHeader>
-              <CardContent className="p-8 space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <CardContent className="p-6 sm:p-8 space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 ml-1">
                       <User className="w-3.5 h-3.5 text-primary" />
@@ -330,7 +334,7 @@ export default function CheckoutPage() {
                       value={orderInfo.patientName} 
                       onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})} 
                       placeholder="Full Name" 
-                      className={cn("h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.patientName && "ring-2 ring-red-500")} 
+                      className={cn("h-14 sm:h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.patientName && "ring-2 ring-red-500")} 
                     />
                     {errors.patientName && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.patientName}</p>}
                   </div>
@@ -345,7 +349,7 @@ export default function CheckoutPage() {
                         onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10)})} 
                         placeholder="Enter mobile number" 
                         className={cn(
-                          "h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6 transition-all", 
+                          "h-14 sm:h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6 transition-all", 
                           errors.phoneNumber && "ring-2 ring-red-500"
                         )} 
                       />
@@ -357,7 +361,7 @@ export default function CheckoutPage() {
                       <Home className="w-3.5 h-3.5 text-primary" />
                       <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Clinical Delivery Address <span className="text-red-500">*</span></Label>
                     </div>
-                    <Input value={orderInfo.street} onChange={e => setOrderInfo({...orderInfo, street: e.target.value})} placeholder="House No, Street Name, Area" className={cn("h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.street && "ring-2 ring-red-500")} />
+                    <Input value={orderInfo.street} onChange={e => setOrderInfo({...orderInfo, street: e.target.value})} placeholder="House No, Street Name, Area" className={cn("h-14 sm:h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.street && "ring-2 ring-red-500")} />
                     {errors.street && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.street}</p>}
                   </div>
                   <div className="space-y-3">
@@ -365,66 +369,66 @@ export default function CheckoutPage() {
                       <Building2 className="w-3.5 h-3.5 text-primary" />
                       <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Landmark (Optional)</Label>
                     </div>
-                    <Input value={orderInfo.landmark} onChange={e => setOrderInfo({...orderInfo, landmark: e.target.value})} placeholder="Nearby clinical landmark" className="h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6" />
+                    <Input value={orderInfo.landmark} onChange={e => setOrderInfo({...orderInfo, landmark: e.target.value})} placeholder="Nearby clinical landmark" className="h-14 sm:h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6" />
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 ml-1">
                       <Hash className="w-3.5 h-3.5 text-primary" />
                       <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pincode <span className="text-red-500">*</span></Label>
                     </div>
-                    <Input value={orderInfo.pincode} onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})} placeholder="6-digit PIN" maxLength={6} className={cn("h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.pincode && "ring-2 ring-red-500")} />
+                    <Input value={orderInfo.pincode} onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})} placeholder="6-digit PIN" maxLength={6} className={cn("h-14 sm:h-16 rounded-2xl bg-gray-50 border-none font-bold shadow-inner px-6", errors.pincode && "ring-2 ring-red-500")} />
                     {errors.pincode && <p className="text-[9px] text-red-500 font-bold uppercase ml-2">{errors.pincode}</p>}
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="rounded-[40px] border-none shadow-sm overflow-hidden bg-white">
-              <CardHeader className="bg-white p-8 border-b">
+            <Card className="rounded-[32px] sm:rounded-[40px] border-none shadow-sm overflow-hidden bg-white">
+              <CardHeader className="bg-white p-6 sm:p-8 border-b">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0">
                     <CreditCard className="w-4 h-4" />
                   </div>
-                  <CardTitle className="text-xl font-black uppercase tracking-tight">Payment Method</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl font-black uppercase tracking-tight">Payment Method</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="p-8">
+              <CardContent className="p-6 sm:p-8">
                 <div className="grid grid-cols-1 gap-4">
                   <div 
                     className={cn(
-                      "p-6 rounded-[32px] border-2 cursor-pointer transition-all flex items-center justify-between group",
+                      "p-5 sm:p-6 rounded-[24px] sm:rounded-[32px] border-2 cursor-pointer transition-all flex items-center justify-between group",
                       paymentMethod === 'COD' ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200"
                     )}
                     onClick={() => setPaymentMethod('COD')}
                   >
                     <div className="flex items-center gap-4">
                       <div className={cn(
-                        "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-colors shrink-0",
                         paymentMethod === 'COD' ? "bg-primary text-white" : "bg-gray-100 text-gray-400"
                       )}>
-                        <Banknote className="w-6 h-6" />
+                        <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
                       <div>
-                        <p className="font-black text-sm uppercase tracking-tight">Cash on Delivery</p>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Pay at your doorstep</p>
+                        <p className="font-black text-xs sm:text-sm uppercase tracking-tight">Cash on Delivery</p>
+                        <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest">Pay at your doorstep</p>
                       </div>
                     </div>
                     <div className={cn(
-                      "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
+                      "w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0",
                       paymentMethod === 'COD' ? "border-primary bg-primary" : "border-gray-200"
                     )}>
                       {paymentMethod === 'COD' && <Check className="w-3 h-3 text-white" />}
                     </div>
                   </div>
                   
-                  <div className="p-6 rounded-[32px] border-2 border-dashed border-gray-100 opacity-50 cursor-not-allowed flex items-center justify-between">
+                  <div className="p-5 sm:p-6 rounded-[24px] sm:rounded-[32px] border-2 border-dashed border-gray-100 opacity-50 cursor-not-allowed flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-gray-50 text-gray-300 flex items-center justify-center">
-                        <Zap className="w-6 h-6" />
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gray-50 text-gray-300 flex items-center justify-center shrink-0">
+                        <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
                       <div>
-                        <p className="font-black text-sm uppercase tracking-tight text-gray-400">Online Payment</p>
-                        <p className="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Coming Soon</p>
+                        <p className="font-black text-xs sm:text-sm uppercase tracking-tight text-gray-400">Online Payment</p>
+                        <p className="text-[8px] sm:text-[9px] font-bold text-gray-300 uppercase tracking-widest">Coming Soon</p>
                       </div>
                     </div>
                   </div>
@@ -432,63 +436,63 @@ export default function CheckoutPage() {
               </CardContent>
             </Card>
 
-            <div className="bg-accent/5 p-8 rounded-[40px] border border-accent/10 flex items-center gap-6">
-               <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-lg border border-accent/10 shrink-0">
-                  <ShieldCheck className="w-8 h-8 text-accent" />
+            <div className="bg-accent/5 p-6 sm:p-8 rounded-[32px] sm:rounded-[40px] border border-accent/10 flex items-center gap-4 sm:gap-6">
+               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-lg border border-accent/10 shrink-0">
+                  <ShieldCheck className="w-6 h-6 sm:w-8 sm:h-8 text-accent" />
                </div>
                <div>
-                  <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Verified Clinical Checkout</h3>
-                  <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Every order is audited for delivery accuracy and clinical protocol compliance.</p>
+                  <h3 className="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-tight">Verified Clinical Checkout</h3>
+                  <p className="text-[8px] sm:text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Every order is audited for delivery accuracy and clinical protocol compliance.</p>
                </div>
             </div>
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white p-10 rounded-[50px] shadow-2xl border border-gray-50 sticky top-24 overflow-hidden relative">
+            <div className="bg-white p-8 sm:p-10 rounded-[40px] sm:rounded-[50px] shadow-2xl border border-gray-50 sticky top-24 overflow-hidden relative">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16" />
               
-              <h2 className="text-[11px] font-black mb-10 text-gray-400 uppercase tracking-[0.3em] relative z-10">Clinical Bag Summary</h2>
+              <h2 className="text-[10px] sm:text-[11px] font-black mb-8 sm:mb-10 text-gray-400 uppercase tracking-[0.3em] relative z-10">Clinical Bag Summary</h2>
               
-              <div className="space-y-6 mb-10 max-h-[30vh] overflow-y-auto scrollbar-hide relative z-10">
+              <div className="space-y-4 sm:space-y-6 mb-8 sm:mb-10 max-h-[30vh] overflow-y-auto scrollbar-hide relative z-10">
                  {cart.map(item => (
-                   <div key={item.id} className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl group transition-all">
-                     <div className="flex flex-col">
-                        <span className="text-gray-900 font-black text-[11px] uppercase truncate max-w-[140px]">{item.name}</span>
+                   <div key={item.id} className="flex justify-between items-center bg-gray-50 p-3 sm:p-4 rounded-xl sm:rounded-2xl group transition-all">
+                     <div className="flex flex-col min-w-0">
+                        <span className="text-gray-900 font-black text-[10px] sm:text-[11px] uppercase truncate pr-2">{item.name}</span>
                         <span className="text-[8px] text-gray-400 font-black uppercase tracking-widest">Qty: {item.quantity}</span>
                      </div>
-                     <span className="font-black text-primary text-sm">₹{(item.price * item.quantity).toFixed(2)}</span>
+                     <span className="font-black text-primary text-xs sm:text-sm shrink-0">₹{(item.price * item.quantity).toFixed(2)}</span>
                    </div>
                  ))}
               </div>
 
-              <div className="space-y-4 mb-10 pt-6 border-t border-dashed relative z-10">
-                <div className="flex justify-between text-10 font-black uppercase tracking-widest text-gray-400">
+              <div className="space-y-3 sm:space-y-4 mb-8 sm:mb-10 pt-6 border-t border-dashed relative z-10">
+                <div className="flex justify-between text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">
                   <span>Gross Total</span>
                   <span>₹{totalPrice.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-10 font-black uppercase tracking-widest">
+                <div className="flex justify-between text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
                   <span className="text-gray-500">Payment Mode</span>
                   <span className="text-primary font-black">{paymentMethod === 'COD' ? 'COD' : 'Online'}</span>
                 </div>
-                <div className="flex justify-between text-10 font-black uppercase tracking-widest">
+                <div className="flex justify-between text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
                   <span className="text-gray-500">Clinical Logistics</span>
                   <span className="text-accent">FREE</span>
                 </div>
-                <div className="pt-8 border-t border-gray-100 flex justify-between items-baseline">
-                  <span className="text-sm font-black text-gray-900 uppercase tracking-widest">Payable Amount</span>
-                  <span className="text-4xl font-black text-primary tracking-tighter">₹{totalPrice.toFixed(2)}</span>
+                <div className="pt-6 sm:pt-8 border-t border-gray-100 flex justify-between items-baseline">
+                  <span className="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest">Payable</span>
+                  <span className="text-2xl sm:text-4xl font-black text-primary tracking-tighter">₹{totalPrice.toFixed(2)}</span>
                 </div>
               </div>
 
-              <Button onClick={handlePlaceOrder} disabled={loading || cart.length === 0} className="w-full h-20 rounded-full text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-[1.02] transition-all gap-4 relative z-10 bg-primary text-white">
+              <Button onClick={handlePlaceOrder} disabled={loading || cart.length === 0} className="w-full h-16 sm:h-20 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-[1.02] transition-all gap-3 sm:gap-4 relative z-10 bg-primary text-white">
                 {loading ? <Loader2 className="animate-spin" /> : (user ? "Finalize Order" : "SignIn to Complete")}
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4 sm:w-5 h-5" />
               </Button>
               
               {!isSomeoneElse && (
-                <div className="mt-6 flex items-center justify-center gap-2 bg-green-50 p-3 rounded-xl border border-green-100 animate-in slide-in-from-bottom-2">
-                   <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
-                   <span className="text-[8px] font-black text-green-600 uppercase tracking-widest">Saving to Clinical Profile</span>
+                <div className="mt-4 sm:mt-6 flex items-center justify-center gap-2 bg-green-50 p-2 sm:p-3 rounded-xl border border-green-100 animate-in slide-in-from-bottom-2">
+                   <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-green-600" />
+                   <span className="text-[7px] sm:text-[8px] font-black text-green-600 uppercase tracking-widest">Saving to Clinical Profile</span>
                 </div>
               )}
             </div>
