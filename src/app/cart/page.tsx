@@ -1,4 +1,3 @@
-
 "use client"
 
 import Navbar from '@/components/Navbar';
@@ -109,26 +108,36 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-[#F8F8F8] pb-20">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter mb-10">Shopping Bag ({totalItems})</h1>
+      <main className="max-w-7xl mx-auto px-4 py-6 sm:py-10">
+        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tighter mb-6 sm:mb-10">Shopping Bag ({totalItems})</h1>
 
         {requiresPrescription && (
-          <div className={cn("border-2 p-6 rounded-[40px] mb-8 flex items-center gap-6 shadow-lg", attachedPrescription ? "bg-green-50 border-green-100" : "bg-orange-50 border-orange-100")}>
-            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", attachedPrescription ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600")}>
-               {attachedPrescription ? <ClipboardCheck className="w-6 h-6" /> : <FileWarning className="w-6 h-6" />}
+          <div className={cn(
+            "border-2 p-4 sm:p-6 rounded-[32px] sm:rounded-[40px] mb-8 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 shadow-lg relative overflow-hidden",
+            attachedPrescription ? "bg-green-50 border-green-100" : "bg-orange-50 border-orange-100"
+          )}>
+            <div className={cn(
+              "w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0",
+              attachedPrescription ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"
+            )}>
+               {attachedPrescription ? <ClipboardCheck className="w-5 h-5 sm:w-6 sm:h-6" /> : <FileWarning className="w-5 h-5 sm:w-6 sm:h-6" />}
             </div>
-            <div className="flex-1">
-              <p className="font-black text-sm uppercase tracking-tight">{attachedPrescription ? "Prescription Attached" : "Prescription Required"}</p>
-              <p className="text-[9px] font-bold uppercase tracking-widest mt-1 opacity-70">Clinical verification will occur during fulfillment.</p>
+            <div className="flex-1 text-center sm:text-left">
+              <p className="font-black text-xs sm:text-sm uppercase tracking-tight">{attachedPrescription ? "Prescription Attached" : "Prescription Required"}</p>
+              <p className="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest mt-1 opacity-70 leading-relaxed">Clinical verification will occur during fulfillment.</p>
             </div>
             <input type="file" id="cart-upload" className="hidden" accept="image/*" onChange={handleFileChange} />
-            <Button onClick={() => document.getElementById('cart-upload')?.click()} variant="outline" className="rounded-full font-black uppercase text-[10px] h-12 gap-2">
-              <Camera className="w-4 h-4" /> {attachedPrescription ? "Change" : "Upload Now"}
+            <Button 
+              onClick={() => document.getElementById('cart-upload')?.click()} 
+              variant="outline" 
+              className="w-full sm:w-auto rounded-full font-black uppercase text-[9px] sm:text-[10px] h-10 sm:h-12 gap-2 border-2"
+            >
+              <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {attachedPrescription ? "Change" : "Upload Now"}
             </Button>
           </div>
         )}
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
           <div className="lg:col-span-2 space-y-4">
             {cart.map((item) => {
               const safeImageUrl = (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http'))
@@ -136,25 +145,35 @@ export default function CartPage() {
                 : `https://picsum.photos/seed/${item.id}/300/300`;
                 
               return (
-                <div key={item.id} className="bg-white p-6 rounded-[40px] shadow-sm border flex items-center gap-6 group hover:shadow-2xl transition-all">
-                  <div className="relative w-20 h-20 bg-gray-50 rounded-[32px] overflow-hidden shrink-0 border">
+                <div key={item.id} className="bg-white p-4 sm:p-6 rounded-[32px] sm:rounded-[40px] shadow-sm border border-gray-100 flex gap-4 sm:gap-6 items-start group hover:shadow-xl transition-all">
+                  <div className="relative w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-2xl sm:rounded-[32px] overflow-hidden shrink-0 border border-gray-100">
                     <Image src={safeImageUrl} alt={item.name} fill className="object-contain p-2" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-black text-gray-900 truncate text-sm uppercase tracking-tight">{item.name}</h3>
-                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate mb-4">{item.saltComposition}</p>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1 border">
-                        <button onClick={() => updateQuantity(item.id, -1)} className="w-8 h-8 rounded-full flex items-center justify-center bg-primary text-white"><Minus className="w-3.5 h-3.5" /></button>
-                        <span className="text-xs font-black w-6 text-center">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, 1)} className="w-8 h-8 rounded-full flex items-center justify-center bg-primary text-white"><Plus className="w-3.5 h-3.5" /></button>
+                  
+                  <div className="flex-1 min-w-0 flex flex-col sm:flex-row justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-black text-gray-900 text-xs sm:text-sm uppercase tracking-tight line-clamp-2">{item.name}</h3>
+                      <p className="text-[8px] sm:text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate mt-1 mb-3">{item.saltComposition}</p>
+                      
+                      <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1 border w-fit">
+                        <button onClick={() => updateQuantity(item.id, -1)} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-primary text-white tap-highlight"><Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" /></button>
+                        <span className="text-[10px] sm:text-xs font-black w-6 text-center">{item.quantity}</span>
+                        <button onClick={() => updateQuantity(item.id, 1)} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-primary text-white tap-highlight"><Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" /></button>
                       </div>
-                      <button onClick={() => removeFromCart(item.id)} className="text-red-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
                     </div>
-                  </div>
-                  <div className="text-right shrink-0 px-4">
-                    <p className="text-lg font-black text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</p>
-                    <p className="text-[9px] text-red-500 font-black line-through">₹{((item.mrp || item.price + 50) * item.quantity).toFixed(2)}</p>
+
+                    <div className="flex flex-col items-end justify-between sm:text-right shrink-0">
+                      <div className="space-y-0.5">
+                        <p className="text-sm sm:text-lg font-black text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</p>
+                        <p className="text-[8px] sm:text-[10px] text-red-500 font-black line-through">₹{((item.mrp || item.price + 50) * item.quantity).toFixed(2)}</p>
+                      </div>
+                      <button 
+                        onClick={() => removeFromCart(item.id)} 
+                        className="mt-2 text-gray-300 hover:text-red-500 transition-colors p-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -215,49 +234,49 @@ export default function CartPage() {
               )}
 
               {/* BILL DETAILS */}
-              <div className="bg-white p-10 rounded-[50px] shadow-2xl border relative overflow-hidden">
+              <div className="bg-white p-8 sm:p-10 rounded-[40px] sm:rounded-[50px] shadow-2xl border relative overflow-hidden">
                 {appliedPromo && (
                   <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl -mr-16 -mt-16" />
                 )}
                 
-                <h2 className="text-[11px] font-black mb-10 uppercase tracking-[0.3em] text-gray-400 relative z-10">Bill Details</h2>
-                <div className="space-y-6 mb-10 relative z-10">
-                  <div className="flex justify-between text-[11px] font-black text-gray-500 uppercase">
+                <h2 className="text-[10px] sm:text-[11px] font-black mb-8 sm:mb-10 uppercase tracking-[0.3em] text-gray-400 relative z-10">Bill Details</h2>
+                <div className="space-y-5 sm:space-y-6 mb-8 sm:mb-10 relative z-10">
+                  <div className="flex justify-between text-[10px] sm:text-[11px] font-black text-gray-500 uppercase">
                     <span>Cart Gross (MRP)</span>
                     <span className="text-red-500 line-through">₹{totalMrp.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-[11px] font-black uppercase">
+                  <div className="flex justify-between text-[10px] sm:text-[11px] font-black uppercase">
                     <span>Item Total</span>
                     <span className="text-gray-900">₹{totalPrice.toFixed(2)}</span>
                   </div>
                   {appliedPromo && (
-                    <div className="flex justify-between text-[11px] font-black uppercase text-accent animate-in slide-in-from-left-2">
+                    <div className="flex justify-between text-[10px] sm:text-[11px] font-black uppercase text-accent animate-in slide-in-from-left-2">
                       <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Coupon Discount</span>
                       <span>-₹{promoDiscount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-[11px] font-black uppercase">
+                  <div className="flex justify-between text-[10px] sm:text-[11px] font-black uppercase">
                     <span>Estimated Taxes</span>
                     <span className="text-gray-900">₹{(totalPrice * 0.12).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-[11px] font-black uppercase">
+                  <div className="flex justify-between text-[10px] sm:text-[11px] font-black uppercase">
                     <span>Delivery</span>
                     <span className={deliveryCharge === 0 ? "text-accent font-black" : "text-gray-900"}>
                       {deliveryCharge === 0 ? 'FREE' : `₹${deliveryCharge.toFixed(2)}`}
                     </span>
                   </div>
-                  <div className="pt-10 border-t border-dashed flex justify-between items-baseline">
-                    <span className="text-sm font-black uppercase text-gray-900">Total Payable</span>
-                    <span className="text-4xl font-black text-primary tracking-tighter">₹{finalPayable.toFixed(2)}</span>
+                  <div className="pt-8 sm:pt-10 border-t border-dashed flex justify-between items-baseline">
+                    <span className="text-xs sm:text-sm font-black uppercase text-gray-900">Total Payable</span>
+                    <span className="text-3xl sm:text-4xl font-black text-primary tracking-tighter">₹{finalPayable.toFixed(2)}</span>
                   </div>
                 </div>
                 {isPrescriptionReady ? (
-                  <Button onClick={handleCheckoutClick} className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 bg-primary text-white relative z-10">
-                    Checkout Now <ArrowRight className="w-5 h-5 ml-4" />
+                  <Button onClick={handleCheckoutClick} className="w-full rounded-full h-16 sm:h-20 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 bg-primary text-white relative z-10">
+                    Checkout Now <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-4" />
                   </Button>
                 ) : (
-                  <Button onClick={() => document.getElementById('cart-upload')?.click()} className="w-full rounded-full h-20 text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-orange-200 bg-orange-600 text-white relative z-10">
-                    Upload Prescription <Camera className="w-5 h-5 ml-4" />
+                  <Button onClick={() => document.getElementById('cart-upload')?.click()} className="w-full rounded-full h-16 sm:h-20 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-orange-200 bg-orange-600 text-white relative z-10">
+                    Upload Prescription <Camera className="w-4 h-4 sm:w-5 sm:h-5 ml-4" />
                   </Button>
                 )}
               </div>
