@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -237,19 +238,19 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
           <div className="lg:col-span-2 space-y-8">
             
-            {/* ADDRESS LIST SECTION (IMAGE 1 STYLE) */}
+            {/* ADDRESS LIST SECTION */}
             <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
-                <h3 className="text-sm font-black text-gray-900">Address List</h3>
+                <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Address List</h3>
                 <button 
                   onClick={() => setIsAddressModalOpen(true)}
-                  className="text-[#FF5A5F] font-black text-xs flex items-center gap-1 hover:opacity-80"
+                  className="text-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-1.5 hover:underline"
                 >
-                  + Add New Address
+                  <Plus className="w-3 h-3" /> Add New Address
                 </button>
               </div>
 
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {savedAddresses && savedAddresses.length > 0 ? (
                   savedAddresses.map((addr) => (
                     <div 
@@ -266,21 +267,21 @@ export default function CheckoutPage() {
                         toast({ title: `Location Locked: ${addr.tag}` });
                       }}
                       className={cn(
-                        "p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between bg-white shadow-sm",
-                        orderInfo.buildingLocality === addr.street ? "border-[#FF5A5F] bg-red-50/30" : "border-transparent hover:border-gray-100"
+                        "p-5 rounded-[24px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white shadow-sm hover:shadow-md",
+                        orderInfo.buildingLocality === addr.street ? "border-primary bg-primary/5" : "border-transparent hover:border-gray-100"
                       )}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", orderInfo.buildingLocality === addr.street ? "bg-[#FF5A5F] text-white" : "bg-gray-50 text-gray-400")}>
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", orderInfo.buildingLocality === addr.street ? "bg-primary text-white" : "bg-gray-50 text-gray-400")}>
                           {addr.tag === 'Home' ? <Home className="w-5 h-5" /> : addr.tag === 'Office' ? <Briefcase className="w-5 h-5" /> : <MapPin className="w-5 h-5" />}
                         </div>
-                        <div>
-                          <p className="font-black text-xs uppercase text-gray-900">{addr.tag}</p>
-                          <p className="text-[11px] font-bold text-gray-500 line-clamp-1 uppercase">{addr.street}</p>
+                        <div className="min-w-0">
+                          <p className="font-black text-[10px] uppercase text-gray-900 tracking-tight">{addr.tag}</p>
+                          <p className="text-[11px] font-bold text-gray-500 line-clamp-1 uppercase leading-tight mt-0.5">{addr.street}</p>
                         </div>
                       </div>
                       {orderInfo.buildingLocality === addr.street && (
-                        <div className="w-5 h-5 bg-[#FF5A5F] rounded-full flex items-center justify-center">
+                        <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0 ml-2">
                           <Check className="w-3 h-3 text-white" />
                         </div>
                       )}
@@ -289,11 +290,11 @@ export default function CheckoutPage() {
                 ) : (
                   <div 
                     onClick={() => setIsAddressModalOpen(true)}
-                    className="p-10 rounded-3xl border-2 border-dashed border-gray-200 bg-white text-center cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="p-10 rounded-[32px] border-2 border-dashed border-gray-200 bg-white text-center cursor-pointer hover:bg-gray-50 transition-colors col-span-full"
                   >
                     <MapPin className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">No saved locations found</p>
-                    <p className="text-[10px] font-bold text-[#FF5A5F] mt-2">+ Tap to add delivery point</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No saved locations found</p>
+                    <p className="text-[10px] font-bold text-primary mt-2 uppercase tracking-widest">+ Tap to add delivery point</p>
                   </div>
                 )}
               </div>
@@ -308,62 +309,55 @@ export default function CheckoutPage() {
                 <div 
                   className={cn(
                     "p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between",
-                    paymentMethod === 'COD' ? "border-[#FF5A5F] bg-red-50/30" : "border-gray-50 hover:border-gray-100"
+                    paymentMethod === 'COD' ? "border-primary bg-primary/5" : "border-gray-50 hover:border-gray-100"
                   )}
                   onClick={() => setPaymentMethod('COD')}
                 >
                   <div className="flex items-center gap-4">
-                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", paymentMethod === 'COD' ? "bg-[#FF5A5F] text-white" : "bg-gray-50 text-gray-400")}>
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", paymentMethod === 'COD' ? "bg-primary text-white" : "bg-gray-50 text-gray-400")}>
                       <Banknote className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="font-black text-xs uppercase">Cash on Delivery</p>
+                      <p className="font-black text-xs uppercase tracking-tight">Cash on Delivery</p>
                       <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Collect at doorstep</p>
                     </div>
                   </div>
-                  {paymentMethod === 'COD' && <div className="w-5 h-5 bg-[#FF5A5F] rounded-full flex items-center justify-center"><Check className="w-3 h-3 text-white" /></div>}
+                  {paymentMethod === 'COD' && <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center"><Check className="w-3 h-3 text-white" /></div>}
                 </div>
               </CardContent>
             </Card>
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white p-8 rounded-[40px] shadow-2xl border border-gray-50 sticky top-24">
+            <div className="bg-white p-8 rounded-[40px] shadow-2xl border border-gray-50 sticky top-24 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <h2 className="text-[10px] font-black mb-8 text-gray-400 uppercase tracking-[0.3em]">Checkout Summary</h2>
               
-              {isSomeoneElse && (
-                <div className="mb-6 p-4 bg-orange-50 rounded-2xl border border-orange-100">
-                  <p className="text-[9px] font-black text-orange-600 uppercase mb-1">Recipient Mode</p>
-                  <p className="text-xs font-bold text-gray-900 uppercase">{orderInfo.patientName || 'Family Member'}</p>
-                </div>
-              )}
-
               <div className="space-y-4 mb-8 pt-6 border-t border-dashed">
                 <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
                   <span>Order Value</span>
                   <span>₹{totalPrice.toFixed(2)}</span>
                 </div>
                 {appliedPromo && (
-                  <div className="flex justify-between text-[10px] font-black uppercase text-[#FF5A5F]">
+                  <div className="flex justify-between text-[10px] font-black uppercase text-accent">
                     <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Campaign Savings</span>
                     <span>-₹{(appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-[10px] font-black uppercase text-gray-900">
                   <span>Logistics Charge</span>
-                  <span className="text-[#FF5A5F]">FREE</span>
+                  <span className="text-accent font-black">FREE</span>
                 </div>
                 <div className="pt-6 border-t border-gray-100 flex justify-between items-baseline">
                   <span className="text-sm font-black text-gray-900 uppercase tracking-widest">Payable</span>
-                  <span className="text-3xl font-black text-[#FF5A5F] tracking-tighter">₹{totalPrice.toFixed(2)}</span>
+                  <span className="text-3xl font-black text-primary tracking-tighter">₹{totalPrice.toFixed(2)}</span>
                 </div>
               </div>
-              <Button onClick={handlePlaceOrder} disabled={loading} className="w-full h-18 rounded-full text-xs font-black uppercase tracking-widest shadow-2xl bg-[#FF5A5F] hover:opacity-90 gap-3 text-white">
+              <Button onClick={handlePlaceOrder} disabled={loading} className="w-full h-18 rounded-full text-xs font-black uppercase tracking-widest shadow-2xl bg-primary hover:bg-primary/90 gap-3 text-white transition-all active:scale-95">
                 {loading ? <Loader2 className="animate-spin" /> : "Verify & Place Order"}
                 <ArrowRight className="w-4 h-4" />
               </Button>
               <div className="mt-6 flex items-center justify-center gap-3">
-                 <ShieldCheck className="w-4 h-4 text-green-500" />
+                 <ShieldCheck className="w-4 h-4 text-accent" />
                  <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Licensed Pharmacy Network</span>
               </div>
             </div>
@@ -371,13 +365,13 @@ export default function CheckoutPage() {
         </div>
       </main>
 
-      {/* DELIVERY DETAILS MODAL (IMAGE 2 STYLE) */}
+      {/* DELIVERY DETAILS MODAL */}
       <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
-        <DialogContent className="max-w-md rounded-[32px] border-none p-0 overflow-hidden shadow-3xl bg-white">
+        <DialogContent className="max-w-md rounded-[32px] border-none p-0 overflow-hidden shadow-3xl bg-white mx-4 sm:mx-auto">
           <div className="p-6 md:p-8 space-y-6">
             <div className="space-y-1">
               <DialogTitle className="text-xl font-black text-gray-900 uppercase tracking-tight">Delivery Details</DialogTitle>
-              <p className="text-[11px] font-bold text-[#008080] uppercase tracking-wide">For all delivery related communication</p>
+              <p className="text-[11px] font-bold text-primary uppercase tracking-wide">For all delivery related communication</p>
             </div>
 
             <div className="space-y-4">
@@ -386,7 +380,7 @@ export default function CheckoutPage() {
                   placeholder="Your Name" 
                   value={orderInfo.patientName} 
                   onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})}
-                  className="h-12 rounded-xl bg-white border border-gray-200 font-medium placeholder:text-gray-300 text-sm"
+                  className="h-12 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary"
                 />
               </div>
 
@@ -395,15 +389,15 @@ export default function CheckoutPage() {
                   placeholder="Pin Code" 
                   value={orderInfo.pincode} 
                   onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})}
-                  className="h-12 rounded-xl bg-white border border-gray-200 font-medium placeholder:text-gray-300 text-sm"
+                  className="h-12 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary"
                 />
                 <Button 
                   onClick={handleLocateMe}
                   variant="outline" 
-                  className="h-12 rounded-xl border-[#FF5A5F] text-[#FF5A5F] hover:bg-red-50 font-black text-[10px] uppercase gap-2 bg-red-50/10"
+                  className="h-12 rounded-xl border-primary text-primary hover:bg-primary/5 font-black text-[10px] uppercase gap-2 bg-primary/5 transition-all active:scale-95"
                 >
                   {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Target className="w-3.5 h-3.5" />}
-                  Pick My Location
+                  Pick Location
                 </Button>
               </div>
 
@@ -411,39 +405,39 @@ export default function CheckoutPage() {
                 placeholder="House number, floor" 
                 value={orderInfo.houseNumber} 
                 onChange={e => setOrderInfo({...orderInfo, houseNumber: e.target.value})}
-                className="h-12 rounded-xl bg-white border border-gray-200 font-medium placeholder:text-gray-300 text-sm"
+                className="h-12 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary"
               />
 
               <Input 
                 placeholder="Building name, locality" 
                 value={orderInfo.buildingLocality} 
                 onChange={e => setOrderInfo({...orderInfo, buildingLocality: e.target.value})}
-                className="h-12 rounded-xl bg-white border border-gray-200 font-medium placeholder:text-gray-300 text-sm"
+                className="h-12 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary"
               />
 
               <Input 
                 placeholder="City" 
                 value={orderInfo.city} 
                 onChange={e => setOrderInfo({...orderInfo, city: e.target.value})}
-                className="h-12 rounded-xl bg-white border border-gray-200 font-medium placeholder:text-gray-300 text-sm"
+                className="h-12 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary"
               />
 
               <Input 
                 placeholder="State" 
                 value={orderInfo.state} 
                 onChange={e => setOrderInfo({...orderInfo, state: e.target.value})}
-                className="h-12 rounded-xl bg-white border border-gray-200 font-medium placeholder:text-gray-300 text-sm"
+                className="h-12 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary"
               />
 
               <Input 
                 placeholder="Phone Number" 
                 value={orderInfo.phoneNumber} 
                 onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10)})}
-                className="h-12 rounded-xl bg-white border border-gray-200 font-medium placeholder:text-gray-300 text-sm"
+                className="h-12 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary"
               />
 
-              <div className="bg-[#FFF9E1] p-4 rounded-xl border border-[#FBECC8]">
-                <p className="text-[10px] font-bold text-gray-700 leading-relaxed">
+              <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                <p className="text-[10px] font-bold text-yellow-800 leading-relaxed uppercase">
                   Delivery agent will call on this number at time of delivery
                 </p>
               </div>
@@ -455,7 +449,7 @@ export default function CheckoutPage() {
                     onClick={() => setOrderInfo({...orderInfo, tag: t})}
                     className={cn(
                       "flex-1 h-10 rounded-full text-[9px] font-black uppercase tracking-widest border-2 transition-all",
-                      orderInfo.tag === t ? "border-[#FF5A5F] text-[#FF5A5F] bg-red-50" : "border-gray-100 text-gray-400 hover:bg-gray-50"
+                      orderInfo.tag === t ? "border-primary text-primary bg-primary/5" : "border-gray-100 text-gray-400 hover:bg-gray-50"
                     )}
                   >
                     {t}
@@ -465,9 +459,9 @@ export default function CheckoutPage() {
 
               <Button 
                 onClick={() => setIsAddressModalOpen(false)}
-                className="w-full h-14 rounded-full bg-[#FF5A5F] text-white font-black uppercase tracking-widest text-xs mt-4 shadow-xl shadow-red-100 hover:opacity-90"
+                className="w-full h-14 rounded-full bg-primary text-white font-black uppercase tracking-widest text-xs mt-4 shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
               >
-                Save
+                Save Delivery Point
               </Button>
             </div>
           </div>
