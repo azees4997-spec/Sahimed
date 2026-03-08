@@ -632,7 +632,11 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
           <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
              <div className="grid grid-cols-2 gap-8">
                 <div><h4 className="text-[10px] font-black uppercase text-gray-400 mb-2">Patient</h4><p className="font-black text-sm">{selectedOrder?.patientName}</p><p className="text-xs text-gray-500">{selectedOrder?.phoneNumber}</p></div>
-                <div><h4 className="text-[10px] font-black uppercase text-gray-400 mb-2">Address</h4><p className="text-[11px] font-bold leading-relaxed">{selectedOrder?.shippingDetails?.street}</p></div>
+                <div>
+                  <h4 className="text-[10px] font-black uppercase text-gray-400 mb-2">Address</h4>
+                  <p className="text-[11px] font-bold leading-relaxed">{selectedOrder?.shippingDetails?.street}</p>
+                  <p className="text-[10px] font-black text-primary uppercase mt-1">PIN: {selectedOrder?.shippingDetails?.pincode}</p>
+                </div>
              </div>
 
              {selectedOrder?.prescriptionUrl && (
