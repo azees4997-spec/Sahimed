@@ -148,6 +148,35 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleSaveNewAddress = async () => {
+    if (!user || !db) return;
+    
+    if (!orderInfo.buildingLocality.trim() || !orderInfo.pincode.trim()) {
+      toast({ variant: 'destructive', title: "Incomplete Address", description: "Building name and Pincode are required." });
+      return;
+    }
+
+    const fullStreet = `${orderInfo.houseNumber ? orderInfo.houseNumber + ', ' : ''}${orderInfo.buildingLocality}${orderInfo.city ? ', ' + orderInfo.city : ''}${orderInfo.state ? ', ' + orderInfo.state : ''}`;
+
+    const payload = {
+      street: fullStreet,
+      pincode: orderInfo.pincode,
+      lat: orderInfo.lat,
+      lng: orderInfo.lng,
+      tag: orderInfo.tag,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    try {
+      addDocumentNonBlocking(collection(db, 'userProfiles', user.uid, 'addresses'), payload);
+      setIsAddressModalOpen(false);
+      toast({ title: "Address Secured", description: `Saved to your ${orderInfo.tag} registry.` });
+    } catch (err) {
+      toast({ variant: 'destructive', title: "Save Error" });
+    }
+  };
+
   const handlePlaceOrder = async () => {
     if (!user) return;
     if (!validate()) return;
@@ -169,7 +198,7 @@ export default function CheckoutPage() {
     const deliveryFeeDoc = activeFees.find(f => f.name.toLowerCase().includes('delivery'));
     const finalAmount = Math.max(0, totalPrice + feeTotal - promoDiscount) + (totalPrice < (deliveryFeeDoc?.minPurchase || 500) ? (deliveryFeeDoc?.discountedAmount || 40) : 0);
 
-    const fullStreet = `${orderInfo.houseNumber}, ${orderInfo.buildingLocality}, ${orderInfo.city}, ${orderInfo.state}`;
+    const fullStreet = `${orderInfo.houseNumber ? orderInfo.houseNumber + ', ' : ''}${orderInfo.buildingLocality}${orderInfo.city ? ', ' + orderInfo.city : ''}${orderInfo.state ? ', ' + orderInfo.state : ''}`;
 
     const orderData = {
       userId: user.uid,
@@ -205,7 +234,7 @@ export default function CheckoutPage() {
       const newOrderRef = doc(collection(db, 'userProfiles', user.uid, 'orders'));
       setDocumentNonBlocking(newOrderRef, orderData, { merge: false });
       
-      // Auto-save address to registry
+      // Auto-save address to registry if not already existing
       addDocumentNonBlocking(collection(db, 'userProfiles', user.uid, 'addresses'), {
         street: fullStreet,
         pincode: orderInfo.pincode,
@@ -242,7 +271,10 @@ export default function CheckoutPage() {
               <div className="flex items-center justify-between px-2">
                 <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Address List</h3>
                 <button 
-                  onClick={() => setIsAddressModalOpen(true)}
+                  onClick={() => {
+                    setOrderInfo(prev => ({ ...prev, houseNumber: '', buildingLocality: '', city: '', state: '', pincode: '', tag: 'Home' }));
+                    setIsAddressModalOpen(true);
+                  }}
                   className="text-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-1.5 hover:underline"
                 >
                   <Plus className="w-3" /> Add New Address
@@ -366,7 +398,7 @@ export default function CheckoutPage() {
 
       {/* DELIVERY DETAILS MODAL - OPTIMIZED FOR SINGLE SCREEN MOBILE VIEW */}
       <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
-        <DialogContent className="max-w-md w-[94vw] sm:w-full rounded-[28px] border-none p-0 overflow-hidden shadow-3xl bg-white mx-auto animate-in zoom-in-95 duration-300">
+        <DialogContent className="max-w-md w-[94vw] sm:w-full rounded-[28px] border-none p-0 overflow-hidden shadow-3xl bg-white mx-auto animate-in zoom-in-95 duration-300 z-[110]">
           <div className="max-h-[95vh] overflow-y-auto scrollbar-hide">
             <div className="p-4 space-y-3">
               <div className="space-y-0.5">
@@ -457,7 +489,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <Button 
-                  onClick={() => setIsAddressModalOpen(false)}
+                  onClick={handleSaveNewAddress}
                   className="w-full h-12 rounded-2xl bg-primary text-white font-black uppercase tracking-[0.15em] text-[9px] mt-1 shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
                 >
                   SAVE DELIVERY POINT
