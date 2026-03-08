@@ -59,6 +59,7 @@ export default function CheckoutPage() {
   const [isSomeoneElse, setIsSomeoneElse] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<'COD' | 'Online'>('COD');
   const [detectedAddress, setDetectedAddress] = useState<any>(null);
   const [currentPos, setCurrentPos] = useState<{lat: number, lng: number} | null>(null);
@@ -155,6 +156,26 @@ export default function CheckoutPage() {
     initCheckout();
   }, [user, db, savedAddresses, isSomeoneElse]);
 
+  // --- Autocomplete Suggestions Logic ---
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (searchQuery.trim().length >= 3) {
+        try {
+          const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5&addressdetails=1&countrycodes=in`);
+          const data = await response.json();
+          setLocationSuggestions(data);
+        } catch (e) {
+          console.error("Suggestions fetch error", e);
+        }
+      } else {
+        setLocationSuggestions([]);
+      }
+    };
+
+    const timer = setTimeout(fetchSuggestions, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!orderInfo.patientName.trim()) newErrors.patientName = "Recipient name is required";
@@ -213,6 +234,8 @@ export default function CheckoutPage() {
           lat: parseFloat(place.lat),
           lng: parseFloat(place.lon)
         }));
+        setLocationSuggestions([]);
+        setSearchQuery('');
         toast({ title: "Location Verified" });
       } else {
         toast({ variant: 'destructive', title: 'Address Not Found', description: 'Try searching with landmark or pincode.' });
@@ -352,9 +375,9 @@ export default function CheckoutPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between px-4">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Delivery Provision</h3>
-                <Button onClick={() => setOrderInfo({...orderInfo, street: '', landmark: '', pincode: '', lat: 0, lng: 0})} variant="ghost" className="h-auto p-0 text-primary font-black text-[10px] uppercase tracking-widest gap-1.5">
+                <button onClick={() => setOrderInfo({...orderInfo, street: '', landmark: '', pincode: '', lat: 0, lng: 0})} className="text-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-1.5 hover:underline">
                   <Plus className="w-3.5 h-3.5" /> Add New Address
-                </Button>
+                </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {savedAddresses?.map((addr) => (
@@ -435,14 +458,43 @@ export default function CheckoutPage() {
                         {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                       </button>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                       <Input 
-                         placeholder="Search Landmark or Area..." 
-                         value={searchQuery}
-                         onChange={e => setSearchQuery(e.target.value)}
-                         onKeyDown={e => e.key === 'Enter' && handleSearchAddress()}
-                         className="h-10 rounded-xl bg-gray-100 border-none text-[10px] font-bold"
-                       />
+                    <div className="flex flex-col sm:flex-row gap-3 relative">
+                       <div className="flex-1 relative">
+                          <Input 
+                            placeholder="Search Landmark or Area (min. 3 letters)..." 
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleSearchAddress()}
+                            className="h-10 rounded-xl bg-gray-100 border-none text-[10px] font-bold"
+                          />
+                          {locationSuggestions.length > 0 && (
+                            <div className="absolute top-[calc(100%+8px)] left-0 right-0 z-[120] bg-white rounded-2xl shadow-3xl border border-gray-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+                              <div className="max-h-[280px] overflow-y-auto scrollbar-hide">
+                                {locationSuggestions.map((place, idx) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() => {
+                                      setOrderInfo(prev => ({
+                                        ...prev,
+                                        street: place.display_name,
+                                        pincode: place.address.postcode?.replace(/\s/g, '') || prev.pincode,
+                                        lat: parseFloat(place.lat),
+                                        lng: parseFloat(place.lon)
+                                      }));
+                                      setSearchQuery('');
+                                      setLocationSuggestions([]);
+                                      toast({ title: "Location verified" });
+                                    }}
+                                    className="w-full p-4 text-left hover:bg-primary/5 border-b last:border-none transition-all group"
+                                  >
+                                    <p className="text-[10px] font-black uppercase text-gray-900 line-clamp-1 group-hover:text-primary transition-colors">{place.display_name}</p>
+                                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{place.address.suburb || place.address.neighbourhood || 'Clinical Logistics Point'}</p>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                       </div>
                        <Button onClick={handleSearchAddress} className="h-10 rounded-xl px-6 font-black text-[9px] uppercase tracking-widest shrink-0">Search Location</Button>
                     </div>
                   </div>
