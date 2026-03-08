@@ -710,15 +710,66 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
     return (m.name || '').toLowerCase().includes(s) || (m.sku || '').toLowerCase().includes(s);
   });
 
-  const handleExport = () => {
-    if (!filtered) return;
-    const headers = "Name,SKU,MoleculeMapping,Manufacturer,Price,MRP,Stock,Category,Generic,RX_Required,PackSize,Description,HowToUse,Treatment,SafetyAdvice,SideEffects,AlcoholInteraction,PregnancyInteraction,LactationInteraction,DrivingInteraction,KidneyInteraction,LiverInteraction,ImageURL1,ImageURL2,ImageURL3\n";
-    const rows = filtered.map(m => `"${m.name}","${m.sku || ''}","${m.moleculeId || ''}","${m.manufacturer}",${m.price || 0},${m.mrp || 0},${m.availableQuantity || 0},"${m.category}",${m.isGeneric},${m.prescriptionRequired},"${m.packSize || ''}","${(m.description || '').replace(/"/g, '""')}","${(m.howToUse || '').replace(/"/g, '""')}","${(m.treatment || '').replace(/"/g, '""')}","${(m.safetyAdvice || '').replace(/"/g, '""')}","${(m.sideEffects || '').replace(/"/g, '""')}","${(m.alcoholInteraction || '').replace(/"/g, '""')}","${(m.pregnancyInteraction || '').replace(/"/g, '""')}","${(m.lactationInteraction || '').replace(/"/g, '""')}","${(m.drivingInteraction || '').replace(/"/g, '""')}","${(m.kidneyInteraction || '').replace(/"/g, '""')}","${(m.liverInteraction || '').replace(/"/g, '""')}","${m.imageUrls?.[0] || ''}","${m.imageUrls?.[1] || ''}","${m.imageUrls?.[2] || ''}"`).join("\n");
-    const blob = new Blob([headers + rows], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `SahiMed_Catalogue_Master_${format(new Date(), 'yyyyMMdd')}.csv`; a.click();
-    toast({ title: "Catalog Exported" });
+  const handleExport = async () => {
+    if (!filtered || filtered.length === 0) return;
+    
+    toast({ title: "Preparing Export", description: "Syncing live prices and stock..." });
+    
+    try {
+      // Fetch all live data to ensure CSV has correct price/stock
+      const liveSnap = await getDocs(collection(db, 'product_live_data'));
+      const liveMap: Record<string, any> = {};
+      liveSnap.forEach(doc => {
+        liveMap[doc.id] = doc.data();
+      });
+
+      const headers = "Name,SKU,MoleculeMapping,Manufacturer,Price,MRP,Stock,Category,Generic,RX_Required,PackSize,Description,HowToUse,Treatment,SafetyAdvice,SideEffects,AlcoholInteraction,PregnancyInteraction,LactationInteraction,DrivingInteraction,KidneyInteraction,LiverInteraction,ImageURL1,ImageURL2,ImageURL3\n";
+      
+      const rows = filtered.map(m => {
+        const live = liveMap[m.sku || m.id] || {};
+        const price = live.sahimed_price ?? m.price ?? 0;
+        const mrp = live.mrp ?? m.mrp ?? 0;
+        const stock = live.stock_quantity ?? m.availableQuantity ?? 0;
+
+        return [
+          `"${m.name}"`,
+          `"${m.sku || ''}"`,
+          `"${m.moleculeId || ''}"`,
+          `"${m.manufacturer}"`,
+          price,
+          mrp,
+          stock,
+          `"${m.category}"`,
+          m.isGeneric,
+          m.prescriptionRequired,
+          `"${m.packSize || ''}"`,
+          `"${(m.description || '').replace(/"/g, '""')}"`,
+          `"${(m.howToUse || '').replace(/"/g, '""')}"`,
+          `"${(m.treatment || '').replace(/"/g, '""')}"`,
+          `"${(m.safetyAdvice || '').replace(/"/g, '""')}"`,
+          `"${(m.sideEffects || '').replace(/"/g, '""')}"`,
+          `"${(m.alcoholInteraction || '').replace(/"/g, '""')}"`,
+          `"${(m.pregnancyInteraction || '').replace(/"/g, '""')}"`,
+          `"${(m.lactationInteraction || '').replace(/"/g, '""')}"`,
+          `"${(m.drivingInteraction || '').replace(/"/g, '""')}"`,
+          `"${(m.kidneyInteraction || '').replace(/"/g, '""')}"`,
+          `"${(m.liverInteraction || '').replace(/"/g, '""')}"`,
+          `"${m.imageUrls?.[0] || ''}"`,
+          `"${m.imageUrls?.[1] || ''}"`,
+          `"${m.imageUrls?.[2] || ''}"`
+        ].join(",");
+      }).join("\n");
+
+      const blob = new Blob([headers + rows], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; 
+      a.download = `SahiMed_Catalogue_Master_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`; 
+      a.click();
+      toast({ title: "Catalog Exported", description: "CSV file generated with live data." });
+    } catch (err) {
+      toast({ variant: 'destructive', title: "Export Failed" });
+    }
   };
 
   const handlePurgeCatalog = async () => {
@@ -837,7 +888,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Product Master" subtitle="Unified Hybrid Logic" onBack={onBack}>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExport} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Download className="w-4 h-4" /> Export All</Button>
+          <Button variant="outline" onClick={handleExport} className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Download className="w-4 h-4" /> Export CSV</Button>
           <Button variant="destructive" onClick={handlePurgeCatalog} disabled={!!purgeProgress} className="rounded-full h-12 px-6 font-black text-[10px] uppercase gap-2">
             {purgeProgress ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bomb className="w-4 h-4" />} Purge All
           </Button>
