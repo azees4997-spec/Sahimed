@@ -163,7 +163,7 @@ export default function CheckoutPage() {
 
     let promoDiscount = 0;
     if (appliedPromo) {
-      const raw = appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue / 100));
+      const raw = appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100));
       promoDiscount = (appliedPromo.maxDiscount && appliedPromo.maxDiscount > 0) ? Math.min(raw, appliedPromo.maxDiscount) : raw;
     }
 
@@ -339,7 +339,7 @@ export default function CheckoutPage() {
                 </div>
                 {appliedPromo && (
                   <div className="flex justify-between text-[10px] font-black uppercase text-accent">
-                    <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Campaign Savings</span>
+                    <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Offer Applied</span>
                     <span>-₹{(appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))).toFixed(2)}</span>
                   </div>
                 )}
@@ -367,102 +367,104 @@ export default function CheckoutPage() {
 
       {/* DELIVERY DETAILS MODAL */}
       <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
-        <DialogContent className="max-w-md rounded-[32px] border-none p-0 overflow-hidden shadow-3xl bg-white mx-4 sm:mx-auto">
-          <div className="p-6 md:p-8 space-y-6">
-            <div className="space-y-1">
-              <DialogTitle className="text-xl font-black text-gray-900 uppercase tracking-tight">Delivery Details</DialogTitle>
-              <p className="text-[11px] font-bold text-primary uppercase tracking-wide">For all delivery related communication</p>
-            </div>
-
-            <div className="space-y-4">
+        <DialogContent className="max-w-md w-[92vw] sm:w-full rounded-[32px] border-none p-0 overflow-hidden shadow-3xl bg-white mx-auto animate-in zoom-in-95 duration-300">
+          <div className="max-h-[90vh] overflow-y-auto scrollbar-hide">
+            <div className="p-6 md:p-10 space-y-8">
               <div className="space-y-1.5">
-                <Input 
-                  placeholder="Your Name" 
-                  value={orderInfo.patientName} 
-                  onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})}
-                  className="h-12 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary"
-                />
+                <DialogTitle className="text-2xl font-black text-gray-900 uppercase tracking-tight">Delivery Details</DialogTitle>
+                <p className="text-[11px] font-bold text-primary uppercase tracking-widest opacity-80">For all delivery related communication</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-5">
+                <div className="space-y-1">
+                  <Input 
+                    placeholder="Your Name" 
+                    value={orderInfo.patientName} 
+                    onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})}
+                    className="h-14 rounded-2xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary focus-visible:ring-offset-0 focus-visible:border-primary transition-all"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Input 
+                    placeholder="Pin Code" 
+                    value={orderInfo.pincode} 
+                    onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})}
+                    className="h-14 rounded-2xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary focus-visible:ring-offset-0"
+                  />
+                  <Button 
+                    onClick={handleLocateMe}
+                    variant="outline" 
+                    className="h-14 rounded-2xl border-primary text-primary hover:bg-primary/5 font-black text-[10px] uppercase gap-2 bg-white transition-all active:scale-95 shadow-sm"
+                  >
+                    {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Target className="w-4 h-4" />}
+                    PICK LOCATION
+                  </Button>
+                </div>
+
                 <Input 
-                  placeholder="Pin Code" 
-                  value={orderInfo.pincode} 
-                  onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})}
-                  className="h-12 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary"
+                  placeholder="House number, floor" 
+                  value={orderInfo.houseNumber} 
+                  onChange={e => setOrderInfo({...orderInfo, houseNumber: e.target.value})}
+                  className="h-14 rounded-2xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary focus-visible:ring-offset-0"
                 />
+
+                <Input 
+                  placeholder="Building name, locality" 
+                  value={orderInfo.buildingLocality} 
+                  onChange={e => setOrderInfo({...orderInfo, buildingLocality: e.target.value})}
+                  className="h-14 rounded-2xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary focus-visible:ring-offset-0"
+                />
+
+                <Input 
+                  placeholder="City" 
+                  value={orderInfo.city} 
+                  onChange={e => setOrderInfo({...orderInfo, city: e.target.value})}
+                  className="h-14 rounded-2xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary focus-visible:ring-offset-0"
+                />
+
+                <Input 
+                  placeholder="State" 
+                  value={orderInfo.state} 
+                  onChange={e => setOrderInfo({...orderInfo, state: e.target.value})}
+                  className="h-14 rounded-2xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary focus-visible:ring-offset-0"
+                />
+
+                <Input 
+                  placeholder="Phone Number" 
+                  value={orderInfo.phoneNumber} 
+                  onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10)})}
+                  className="h-14 rounded-2xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary focus-visible:ring-offset-0"
+                />
+
+                <div className="bg-[#FFFCE6] p-5 rounded-2xl border border-[#F5E1A4]">
+                  <p className="text-[10px] font-black text-[#856404] leading-relaxed uppercase tracking-wider text-center">
+                    DELIVERY AGENT WILL CALL ON THIS NUMBER AT TIME OF DELIVERY
+                  </p>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  {['Home', 'Office', 'Other'].map(t => (
+                    <button 
+                      key={t}
+                      onClick={() => setOrderInfo({...orderInfo, tag: t})}
+                      className={cn(
+                        "flex-1 h-12 rounded-full text-[10px] font-black uppercase tracking-widest border-2 transition-all shadow-sm",
+                        orderInfo.tag === t ? "border-primary text-primary bg-primary/5" : "border-gray-100 text-gray-400 bg-white hover:bg-gray-50"
+                      )}
+                    >
+                      {t.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+
                 <Button 
-                  onClick={handleLocateMe}
-                  variant="outline" 
-                  className="h-12 rounded-xl border-primary text-primary hover:bg-primary/5 font-black text-[10px] uppercase gap-2 bg-primary/5 transition-all active:scale-95"
+                  onClick={() => setIsAddressModalOpen(false)}
+                  className="w-full h-16 rounded-full bg-primary text-white font-black uppercase tracking-[0.2em] text-[11px] mt-4 shadow-2xl shadow-primary/30 hover:bg-primary/90 transition-all active:scale-95"
                 >
-                  {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Target className="w-3.5 h-3.5" />}
-                  Pick Location
+                  SAVE DELIVERY POINT
                 </Button>
               </div>
-
-              <Input 
-                placeholder="House number, floor" 
-                value={orderInfo.houseNumber} 
-                onChange={e => setOrderInfo({...orderInfo, houseNumber: e.target.value})}
-                className="h-12 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary"
-              />
-
-              <Input 
-                placeholder="Building name, locality" 
-                value={orderInfo.buildingLocality} 
-                onChange={e => setOrderInfo({...orderInfo, buildingLocality: e.target.value})}
-                className="h-12 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary"
-              />
-
-              <Input 
-                placeholder="City" 
-                value={orderInfo.city} 
-                onChange={e => setOrderInfo({...orderInfo, city: e.target.value})}
-                className="h-12 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary"
-              />
-
-              <Input 
-                placeholder="State" 
-                value={orderInfo.state} 
-                onChange={e => setOrderInfo({...orderInfo, state: e.target.value})}
-                className="h-12 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary"
-              />
-
-              <Input 
-                placeholder="Phone Number" 
-                value={orderInfo.phoneNumber} 
-                onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10)})}
-                className="h-12 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-sm focus-visible:ring-primary"
-              />
-
-              <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
-                <p className="text-[10px] font-bold text-yellow-800 leading-relaxed uppercase">
-                  Delivery agent will call on this number at time of delivery
-                </p>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                {['Home', 'Office', 'Other'].map(t => (
-                  <button 
-                    key={t}
-                    onClick={() => setOrderInfo({...orderInfo, tag: t})}
-                    className={cn(
-                      "flex-1 h-10 rounded-full text-[9px] font-black uppercase tracking-widest border-2 transition-all",
-                      orderInfo.tag === t ? "border-primary text-primary bg-primary/5" : "border-gray-100 text-gray-400 hover:bg-gray-50"
-                    )}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-
-              <Button 
-                onClick={() => setIsAddressModalOpen(false)}
-                className="w-full h-14 rounded-full bg-primary text-white font-black uppercase tracking-widest text-xs mt-4 shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
-              >
-                Save Delivery Point
-              </Button>
             </div>
           </div>
         </DialogContent>
