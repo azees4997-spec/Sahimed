@@ -34,11 +34,12 @@ import {
   UserCheck,
   Tag,
   X,
-  Target
+  Target,
+  Trash2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp, doc, getDoc, query, orderBy } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -177,6 +178,13 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleDeleteAddress = (e: React.MouseEvent, addrId: string) => {
+    e.stopPropagation();
+    if (!user || !db) return;
+    deleteDocumentNonBlocking(doc(db, 'userProfiles', user.uid, 'addresses', addrId));
+    toast({ title: "Address Removed" });
+  };
+
   const handlePlaceOrder = async () => {
     if (!user) return;
     if (!validate()) return;
@@ -234,16 +242,8 @@ export default function CheckoutPage() {
       const newOrderRef = doc(collection(db, 'userProfiles', user.uid, 'orders'));
       setDocumentNonBlocking(newOrderRef, orderData, { merge: false });
       
-      // Auto-save address to registry if not already existing
-      addDocumentNonBlocking(collection(db, 'userProfiles', user.uid, 'addresses'), {
-        street: fullStreet,
-        pincode: orderInfo.pincode,
-        lat: orderInfo.lat,
-        lng: orderInfo.lng,
-        tag: orderInfo.tag,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
+      // Removed auto-save from here to prevent duplicates. 
+      // Addresses should only be saved explicitly via the "Add Address" flow.
 
       clearCart();
       router.push(`/order-success/${newOrderRef.id}`);
@@ -298,7 +298,7 @@ export default function CheckoutPage() {
                         toast({ title: `Location Locked: ${addr.tag}` });
                       }}
                       className={cn(
-                        "p-5 rounded-[24px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white shadow-sm hover:shadow-md",
+                        "p-5 rounded-[24px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white shadow-sm hover:shadow-md group",
                         orderInfo.buildingLocality === addr.street ? "border-primary bg-primary/5" : "border-transparent hover:border-gray-100"
                       )}
                     >
@@ -311,11 +311,19 @@ export default function CheckoutPage() {
                           <p className="text-[11px] font-bold text-gray-500 line-clamp-1 uppercase leading-tight mt-0.5">{addr.street}</p>
                         </div>
                       </div>
-                      {orderInfo.buildingLocality === addr.street && (
-                        <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0 ml-2">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {orderInfo.buildingLocality === addr.street && (
+                          <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0">
+                            <Check className="w-3 h-3 text-white" />
+                          </div>
+                        )}
+                        <button 
+                          onClick={(e) => handleDeleteAddress(e, addr.id)}
+                          className="p-2 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   ))
                 ) : (
