@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -32,7 +31,8 @@ import {
   Navigation,
   Search,
   Plus,
-  UserCheck
+  UserCheck,
+  Tag
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
