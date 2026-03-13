@@ -35,11 +35,12 @@ export default function Navbar() {
       setIsProcessing(true);
       const term = search.trim();
       
-      // Standardize high-probability variants to minimize read calls
+      // Standardize high-probability variants
+      // vProper now preserves dashes correctly: "d-veniz" -> "D-Veniz"
       const vUpper = term.toUpperCase();
-      const vProper = term.split(/[\s-]+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      const vProper = term.replace(/(^|[\s-])\S/g, (match) => match.toUpperCase());
 
-      // READ REDUCTION: Only query Title Case and UPPER CASE (Reduced from 5 variants to 2)
+      // READ REDUCTION: Only query Title Case and UPPER CASE
       const variants = Array.from(new Set([vProper, vUpper])).filter(v => v.length >= 2);
       
       const fetchSuggestions = async () => {
@@ -297,6 +298,9 @@ export default function Navbar() {
                         <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Clinical Matches</p>
                       </div>
                       {suggestions.map((p) => {
+                        // Priority: Explicit composition -> Mapping from salt lookup -> Category
+                        const displayComposition = p.saltComposition || p.category || 'Clinical Formula';
+                        
                         return (
                           <button
                             key={p.id}
@@ -318,7 +322,7 @@ export default function Navbar() {
                             <div className="flex-1 min-w-0">
                               <p className="font-black text-[10px] sm:text-[11px] uppercase text-gray-900 truncate tracking-tight">{p.name}</p>
                               <p className="text-[8px] sm:text-[9px] font-bold text-primary uppercase tracking-widest truncate">
-                                {p.saltComposition || 'Clinical Formula'}
+                                {displayComposition}
                               </p>
                             </div>
                           </button>
