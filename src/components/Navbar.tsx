@@ -29,30 +29,27 @@ export default function Navbar() {
   const suggestionRef = useRef<HTMLDivElement>(null);
   const db = useFirestore();
 
-  // Optimized Search Suggestions: Dual-path lookup for Names and Salts
+  // Optimized Search Suggestions: High-efficiency dual-path lookup with strict read limits
   useEffect(() => {
     if (search.trim().length >= 2 && db) {
       setIsProcessing(true);
       const term = search.trim();
       
-      // Multi-case variants to ensure prefix matching across different DB naming styles
-      const vRaw = term;
+      // Standardize high-probability variants to minimize read calls
       const vUpper = term.toUpperCase();
-      const vSentence = term.charAt(0).toUpperCase() + term.slice(1);
-      // Proper handling for dash-separated clinical brands (e.g., D-Veniz)
       const vProper = term.split(/[\s-]+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-      const vDashAware = term.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('-');
 
-      const variants = Array.from(new Set([vRaw, vUpper, vSentence, vProper, vDashAware])).filter(v => v.length >= 2);
+      // READ REDUCTION: Only query Title Case and UPPER CASE (Reduced from 5 variants to 2)
+      const variants = Array.from(new Set([vProper, vUpper])).filter(v => v.length >= 2);
       
       const fetchSuggestions = async () => {
         try {
-          // 1. DIRECT PRODUCT NAME QUERIES
+          // 1. DIRECT PRODUCT NAME QUERIES (Strict limit of 5 per path)
           const nameQueries = variants.map(v => 
             query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(5))
           );
 
-          // 2. CLINICAL SALT (MOLECULE) QUERIES
+          // 2. CLINICAL SALT (MOLECULE) QUERIES (Strict limit of 5 per path)
           const saltQueries = variants.map(v => 
             query(collection(db, 'moleculeMaster'), where('molecule', '>=', v), where('molecule', '<=', v + '\uf8ff'), limit(5))
           );
@@ -86,29 +83,30 @@ export default function Navbar() {
           });
 
           if (moleculeIds.length > 0) {
-            // Fetch products associated with these clinical salts
+            // READ REDUCTION: Strictly limit salt-based product lookup to 5 results
             const medicinesBySaltQuery = query(
               collection(db, 'medicines'), 
-              where('moleculeId', 'in', moleculeIds.slice(0, 10)), 
-              limit(10)
+              where('moleculeId', 'in', moleculeIds.slice(0, 5)), 
+              limit(5)
             );
             const medBySaltSnap = await getDocs(medicinesBySaltQuery);
             
             medBySaltSnap.forEach(doc => {
               const data = doc.data();
-              // Prioritize molecule name for the search card display
-              resultsMap.set(doc.id, { 
-                id: doc.id, 
-                ...data, 
-                saltComposition: moleculeNameMap.get(data.moleculeId) || data.saltComposition 
-              });
+              if (!resultsMap.has(doc.id)) {
+                resultsMap.set(doc.id, { 
+                  id: doc.id, 
+                  ...data, 
+                  saltComposition: moleculeNameMap.get(data.moleculeId) || data.saltComposition 
+                });
+              }
             });
           }
 
-          // Enforce 5-item suggestion limit as requested
+          // FINAL LIMIT: Return exactly 5 suggestions to the UI
           setSuggestions(Array.from(resultsMap.values()).slice(0, 5));
         } catch (error) {
-          console.warn("Search discovery engine encountered a delay:", error);
+          console.warn("Search discovery encountered a delay:", error);
         } finally {
           setIsProcessing(false);
         }
