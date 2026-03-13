@@ -495,29 +495,82 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
 // --- ITEM MASTER ---
 
 function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  // FETCH TRIGGER: Only triggered when the Product Master tab is active.
-  const medsQuery = useMemoFirebase(() => {
-    if (!db || !isVerified) return null;
-    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(2)); // Strict limit(2) as requested
-  }, [db, isVerified]);
-
-  const molsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'moleculeMaster'), limit(50)) : null, [db, isVerified]);
-  const { data: medicines, isLoading } = useCollection(medsQuery);
-  const { data: molecules } = useCollection(molsQuery);
-  
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const { toast } = useToast();
 
-  const moleculeLookup = (molecules || []).reduce((acc: any, m: any) => { acc[m.id] = m.molecule; return acc; }, {});
-  const filtered = medicines?.filter(m => {
-    const s = searchTerm.toLowerCase();
-    return (m.name || '').toLowerCase().includes(s) || (m.sku || '').toLowerCase().includes(s);
-  });
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 500);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
+  // FETCH TRIGGER: Targeted query responding to search or default limit(2)
+  const medsQuery = useMemoFirebase(() => {
+    if (!db || !isVerified) return null;
+    if (debouncedSearch.trim()) {
+      const term = debouncedSearch.trim().charAt(0).toUpperCase() + debouncedSearch.trim().slice(1);
+      return query(collection(db, 'medicines'), where('name', '>=', term), where('name', '<=', term + '\uf8ff'), limit(2));
+    }
+    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(2));
+  }, [db, isVerified, debouncedSearch]);
+
+  const { data: medicines, isLoading } = useCollection(medsQuery);
+
+  const handleExport = async () => {
+    if (!db) return;
+    const snap = await getDocs(query(collection(db, 'medicines'), limit(500)));
+    const headers = ["Name", "SKU", "Manufacturer", "Category", "isGeneric", "RxRequired", "PackSize", "MoleculeID", "Treatment", "Description"];
+    const rows = snap.docs.map(doc => {
+      const d = doc.data();
+      return [`"${d.name || ''}"`, `"${d.sku || ''}"`, `"${d.manufacturer || ''}"`, `"${d.category || ''}"`, d.isGeneric, d.prescriptionRequired, `"${d.packSize || ''}"`, `"${d.moleculeId || ''}"`, `"${d.treatment || ''}"`, `"${d.description || ''}"`].join(",");
+    });
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `SahiMed_Catalog_Export.csv`; a.click();
+    toast({ title: "Catalog Exported" });
+  };
+
+  const handleDownloadTemplate = () => {
+    const headers = ["Name", "SKU", "Manufacturer", "Category", "isGeneric", "RxRequired", "PackSize", "MRP", "Price", "Stock", "MoleculeID", "Treatment", "Description"];
+    const sample = ["Example Med 500mg", "SKU123", "Pharma Ltd", "Diabetes", "true", "false", "Strip of 10", "500", "450", "100", "mol_id", "Fever", "Standard usage instructions"];
+    const csv = [headers.join(","), sample.join(",")].join("\n");
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `SahiMed_Import_Template.csv`; a.click();
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      const rows = text.split('\n').slice(1);
+      let count = 0;
+      for (const row of rows) {
+        if (!row.trim()) continue;
+        const [name, sku, mfr, cat, gen, rx, pack, mrp, price, stock, mol, treat, desc] = row.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
+        if (!sku) continue;
+        const staticPayload = { name, sku, manufacturer: mfr, category: cat, isGeneric: gen === 'true', prescriptionRequired: rx === 'true', packSize: pack, moleculeId: mol, treatment: treat, description: desc, updatedAt: serverTimestamp() };
+        const livePayload = { mrp: Number(mrp), sahimed_price: Number(price), stock_quantity: Number(stock), updatedAt: serverTimestamp() };
+        setDocumentNonBlocking(doc(db, 'medicines', sku), staticPayload, { merge: true });
+        setDocumentNonBlocking(doc(db, 'product_live_data', sku), livePayload, { merge: true });
+        count++;
+      }
+      toast({ title: "Bulk Sync Complete", description: `${count} items processed.` });
+    };
+    reader.readAsText(file);
+  };
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Product Master" subtitle="Targeted Management (Limit: 2)" onBack={onBack}>
+        <input type="file" id="bulk-import" className="hidden" accept=".csv" onChange={handleImport} />
+        <Button onClick={handleDownloadTemplate} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><FileDown className="w-4 h-4" /> Get Template</Button>
+        <Button onClick={handleExport} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Download className="w-4 h-4" /> Export</Button>
+        <Button onClick={() => document.getElementById('bulk-import')?.click()} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] uppercase border-2 gap-2"><Upload className="w-4 h-4" /> Import</Button>
         <Button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] uppercase bg-primary text-white"><Plus className="w-4 h-4" /> New Product</Button>
       </SectionHeader>
 
@@ -530,7 +583,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
               <tr><th className="px-10 py-8">Clinical Item</th><th className="px-10 py-8">Category</th><th className="px-10 py-8 text-right">Manage</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={3} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : filtered?.length === 0 ? (<tr><td colSpan={3} className="p-20 text-center font-bold text-gray-300">No entries found</td></tr>) : filtered?.map(med => (
+              {isLoading ? (<tr><td colSpan={3} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : medicines?.length === 0 ? (<tr><td colSpan={3} className="p-20 text-center font-bold text-gray-300">No entries found</td></tr>) : medicines?.map(med => (
                 <tr key={med.id} className="hover:bg-gray-50/50">
                   <td className="px-10 py-8"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border flex items-center justify-center overflow-hidden">{med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-6 h-6 text-gray-200" />}</div><div className="flex flex-col"><span className="font-black text-sm uppercase">{med.name}</span><span className="text-[9px] text-gray-400 uppercase">{med.sku} • {med.manufacturer}</span></div></div></td>
                   <td className="px-10 py-8"><Badge variant="outline" className="font-black text-[8px] uppercase">{med.category}</Badge></td>
@@ -610,8 +663,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     e.preventDefault();
     const finalImages = imageUrls.filter(Boolean);
     
-    // Determine the document ID for the medicine
-    // If we are editing, use the existing ID. If new, use SKU.
+    // CRITICAL: Use existing ID if updating to prevent duplication
     const docId = initialData?.id || form.sku;
     if (!docId) {
       toast({ variant: 'destructive', title: "Identity Error", description: "SKU is required for new products." });
@@ -621,14 +673,10 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     const staticPayload = { ...form, imageUrls: finalImages, imageUrl: finalImages[thumbnailIdx] || finalImages[0] || '', updatedAt: serverTimestamp() };
     const livePayload = { mrp: Number(liveData.mrp), sahimed_price: Number(liveData.price), stock_quantity: Number(liveData.availableQuantity), updatedAt: serverTimestamp() };
     
-    // Update or Create the medicine document using the confirmed docId
     setDocumentNonBlocking(doc(db, 'medicines', docId), staticPayload, { merge: true });
-    
-    // Live data is always indexed by SKU
     if (form.sku) {
       setDocumentNonBlocking(doc(db, 'product_live_data', form.sku), livePayload, { merge: true });
     }
-    
     onSuccess();
   };
 
