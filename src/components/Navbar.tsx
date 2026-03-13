@@ -29,30 +29,33 @@ export default function Navbar() {
   const suggestionRef = useRef<HTMLDivElement>(null);
   const db = useFirestore();
 
-  // Suggestions Logic: Dual-path search (Name & Composition)
+  // Optimized Search Suggestions: Multi-variant Prefix Matching
   useEffect(() => {
-    if (search.trim().length >= 3 && db) {
+    if (search.trim().length >= 2 && db) {
       setIsProcessing(true);
       const term = search.trim();
       
-      // Firestore prefix search requires consistent casing
-      // We'll prepare multiple case variants to ensure results
-      const termTitle = term.charAt(0).toUpperCase() + term.slice(1).toLowerCase();
-      const termUpper = term.toUpperCase();
+      // Generate multiple case variants to bypass Firestore case-sensitivity
+      const vRaw = term;
+      const vUpper = term.toUpperCase();
+      const vSentence = term.charAt(0).toUpperCase() + term.slice(1);
+      // Properly handle dashes and spaces for clinical terms (e.g., d-veniz -> D-Veniz)
+      const vProper = term.split(/[\s-]+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      const vDashAware = term.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('-');
+
+      const variants = Array.from(new Set([vRaw, vUpper, vSentence, vProper, vDashAware])).filter(v => v.length >= 2);
       
       const fetchSuggestions = async () => {
         try {
-          // Prepare parallel queries for Name and Composition across Title and Upper case
-          const queries = [
-            query(collection(db, 'medicines'), where('name', '>=', termTitle), where('name', '<=', termTitle + '\uf8ff'), limit(5)),
-            query(collection(db, 'medicines'), where('name', '>=', termUpper), where('name', '<=', termUpper + '\uf8ff'), limit(5)),
-            query(collection(db, 'medicines'), where('saltComposition', '>=', termTitle), where('saltComposition', '<=', termTitle + '\uf8ff'), limit(5)),
-            query(collection(db, 'medicines'), where('saltComposition', '>=', termUpper), where('saltComposition', '<=', termUpper + '\uf8ff'), limit(5))
-          ];
+          // Parallel search across both Medicine Name and Salt Composition
+          const allQueries = variants.flatMap(v => [
+            query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(5)),
+            query(collection(db, 'medicines'), where('saltComposition', '>=', v), where('saltComposition', '<=', v + '\uf8ff'), limit(5))
+          ]);
 
-          const snapshots = await Promise.all(queries.map(q => getDocs(q)));
+          const snapshots = await Promise.all(allQueries.map(q => getDocs(q)));
 
-          // Merge and de-duplicate results
+          // Merge and de-duplicate results by document ID
           const resultsMap = new Map();
           snapshots.forEach(snap => {
             snap.forEach(doc => {
@@ -62,13 +65,13 @@ export default function Navbar() {
 
           setSuggestions(Array.from(resultsMap.values()).slice(0, 10));
         } catch (error) {
-          console.warn("Clinical search lookup failed:", error);
+          console.warn("Search discovery encountered a delay:", error);
         } finally {
           setIsProcessing(false);
         }
       };
 
-      const timer = setTimeout(fetchSuggestions, 300);
+      const timer = setTimeout(fetchSuggestions, 250);
       return () => clearTimeout(timer);
     } else {
       setSuggestions([]);
@@ -245,12 +248,12 @@ export default function Navbar() {
                 </div>
               </div>
 
-              {search.trim().length >= 3 && (
+              {search.trim().length >= 2 && (
                 <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] sm:rounded-[32px] shadow-3xl border border-gray-100 overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-300">
                   {suggestions.length > 0 ? (
                     <div className="max-h-[350px] overflow-y-auto scrollbar-hide">
                       <div className="px-4 py-2 bg-gray-50 border-b">
-                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Suggested Matches</p>
+                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Clinical Matches</p>
                       </div>
                       {suggestions.map((p) => {
                         return (
@@ -284,7 +287,7 @@ export default function Navbar() {
                   ) : !isProcessing ? (
                     <div className="p-8 text-center flex flex-col items-center gap-2">
                        <Info className="w-5 h-5 text-gray-200" />
-                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No matching medicines found for "{search}"</p>
+                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No clinical matches for "{search}"</p>
                     </div>
                   ) : (
                     <div className="p-8 text-center flex flex-col items-center gap-3">
