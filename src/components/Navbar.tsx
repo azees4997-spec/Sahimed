@@ -33,38 +33,34 @@ export default function Navbar() {
   useEffect(() => {
     if (search.trim().length >= 3 && db) {
       setIsProcessing(true);
-      const searchLower = search.trim();
-      const term = searchLower.charAt(0).toUpperCase() + searchLower.slice(1);
+      const term = search.trim();
+      
+      // Firestore prefix search requires consistent casing
+      // We'll prepare multiple case variants to ensure results
+      const termTitle = term.charAt(0).toUpperCase() + term.slice(1).toLowerCase();
+      const termUpper = term.toUpperCase();
       
       const fetchSuggestions = async () => {
         try {
-          // Path 1: Search by Medicine Name
-          const nameQuery = query(
-            collection(db, 'medicines'),
-            where('name', '>=', term),
-            where('name', '<=', term + '\uf8ff'),
-            limit(5)
-          );
-          
-          // Path 2: Search by Salt Composition
-          const compQuery = query(
-            collection(db, 'medicines'),
-            where('saltComposition', '>=', term),
-            where('saltComposition', '<=', term + '\uf8ff'),
-            limit(5)
-          );
+          // Prepare parallel queries for Name and Composition across Title and Upper case
+          const queries = [
+            query(collection(db, 'medicines'), where('name', '>=', termTitle), where('name', '<=', termTitle + '\uf8ff'), limit(5)),
+            query(collection(db, 'medicines'), where('name', '>=', termUpper), where('name', '<=', termUpper + '\uf8ff'), limit(5)),
+            query(collection(db, 'medicines'), where('saltComposition', '>=', termTitle), where('saltComposition', '<=', termTitle + '\uf8ff'), limit(5)),
+            query(collection(db, 'medicines'), where('saltComposition', '>=', termUpper), where('saltComposition', '<=', termUpper + '\uf8ff'), limit(5))
+          ];
 
-          const [nameSnap, compSnap] = await Promise.all([
-            getDocs(nameQuery),
-            getDocs(compQuery)
-          ]);
+          const snapshots = await Promise.all(queries.map(q => getDocs(q)));
 
           // Merge and de-duplicate results
           const resultsMap = new Map();
-          nameSnap.forEach(doc => resultsMap.set(doc.id, { id: doc.id, ...doc.data() }));
-          compSnap.forEach(doc => resultsMap.set(doc.id, { id: doc.id, ...doc.data() }));
+          snapshots.forEach(snap => {
+            snap.forEach(doc => {
+              resultsMap.set(doc.id, { id: doc.id, ...doc.data() });
+            });
+          });
 
-          setSuggestions(Array.from(resultsMap.values()).slice(0, 8));
+          setSuggestions(Array.from(resultsMap.values()).slice(0, 10));
         } catch (error) {
           console.warn("Clinical search lookup failed:", error);
         } finally {
@@ -94,9 +90,11 @@ export default function Navbar() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (search.trim()) {
+      const q = search.trim();
       setSuggestions([]);
+      setSearch('');
       setIsSearchExpanded(false);
-      router.push(`/search?q=${encodeURIComponent(search)}`);
+      router.push(`/search?q=${encodeURIComponent(q)}`);
     }
   };
 
@@ -248,9 +246,12 @@ export default function Navbar() {
               </div>
 
               {search.trim().length >= 3 && (
-                <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] sm:rounded-[32px] shadow-3xl border-none overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] sm:rounded-[32px] shadow-3xl border border-gray-100 overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-300">
                   {suggestions.length > 0 ? (
                     <div className="max-h-[350px] overflow-y-auto scrollbar-hide">
+                      <div className="px-4 py-2 bg-gray-50 border-b">
+                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Suggested Matches</p>
+                      </div>
                       {suggestions.map((p) => {
                         return (
                           <button
@@ -263,12 +264,16 @@ export default function Navbar() {
                             }}
                             className="w-full p-4 sm:p-5 flex items-center gap-3 sm:gap-4 hover:bg-primary/5 transition-all border-b last:border-none text-left active:scale-[0.98]"
                           >
-                            <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gray-50 rounded-xl flex-shrink-0 border border-gray-100 p-1">
-                              <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain" />
+                            <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gray-50 rounded-xl flex-shrink-0 border border-gray-100 p-1 flex items-center justify-center">
+                              {p.imageUrl ? (
+                                <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain" />
+                              ) : (
+                                <Dna className="w-5 h-5 text-gray-300" />
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-black text-[10px] sm:text-[11px] uppercase text-gray-900 truncate tracking-tight">{p.name}</p>
-                              <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">
+                              <p className="text-[8px] sm:text-[9px] font-bold text-primary uppercase tracking-widest truncate">
                                 {p.saltComposition || 'Clinical Formula'}
                               </p>
                             </div>
@@ -277,10 +282,16 @@ export default function Navbar() {
                       })}
                     </div>
                   ) : !isProcessing ? (
-                    <div className="p-8 text-center">
-                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No results for "{search}"</p>
+                    <div className="p-8 text-center flex flex-col items-center gap-2">
+                       <Info className="w-5 h-5 text-gray-200" />
+                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No matching medicines found for "{search}"</p>
                     </div>
-                  ) : null}
+                  ) : (
+                    <div className="p-8 text-center flex flex-col items-center gap-3">
+                       <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Scanning clinical vault...</p>
+                    </div>
+                  )}
                 </div>
               )}
             </form>
