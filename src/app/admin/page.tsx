@@ -686,7 +686,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
         </div>
       </Card>
 
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+      <Dialog open={isFormOpen} onOpenChange={isFormOpen => setIsFormOpen(isFormOpen)}>
         <DialogContent className="rounded-[40px] max-w-5xl border-none p-0 overflow-hidden">
           <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase">Product Profile</DialogTitle></div>
           <div className="p-8 max-h-[80vh] overflow-y-auto scrollbar-hide"><ItemForm db={db} initialData={editingItem} onSuccess={() => setIsFormOpen(false)} /></div>
@@ -754,6 +754,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     e.preventDefault();
     const finalImages = imageUrls.filter(Boolean);
     
+    // CRITICAL: Explicitly use existing document ID if available to prevent duplicates
     const docId = initialData?.id || form.sku;
     if (!docId) {
       toast({ variant: 'destructive', title: "Identity Error", description: "SKU is required for new products." });
@@ -763,6 +764,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     const staticPayload = { ...form, imageUrls: finalImages, imageUrl: finalImages[thumbnailIdx] || finalImages[0] || '', updatedAt: serverTimestamp() };
     const livePayload = { mrp: Number(liveData.mrp), sahimed_price: Number(liveData.price), stock_quantity: Number(liveData.availableQuantity), updatedAt: serverTimestamp() };
     
+    // Target the specific document ID to ensure update vs create
     setDocumentNonBlocking(doc(db, 'medicines', docId), staticPayload, { merge: true });
     if (form.sku) {
       setDocumentNonBlocking(doc(db, 'product_live_data', form.sku), livePayload, { merge: true });
@@ -850,7 +852,11 @@ function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
   const { storage } = initializeFirebase();
   const { toast } = useToast();
-  const [form, setForm] = useState({ name: initialData?.name || '', description: initialData?.description || '', imageUrl: initialData?.imageUrl || '' });
+  const [form, setForm] = useState({ 
+    name: initialData?.name || '', 
+    description: initialData?.description || '', 
+    imageUrl: initialData?.imageUrl || '' 
+  });
   const [uploading, setUploading] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -860,24 +866,73 @@ function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: a
       const storageRef = ref(storage, `categories/${Date.now()}_${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(snapshot.ref);
-      setForm({ ...form, imageUrl: url });
+      
+      // Update form state with the newly uploaded image string
+      setForm(prev => ({ ...prev, imageUrl: url }));
       toast({ title: "Icon Uploaded" });
-    } catch (err) { toast({ variant: 'destructive', title: "Upload Failed" }); } finally { setUploading(false); }
+    } catch (err) { 
+      toast({ variant: 'destructive', title: "Upload Failed" }); 
+    } finally { 
+      setUploading(false); 
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...form, createdAt: initialData?.createdAt || serverTimestamp(), updatedAt: serverTimestamp() };
-    initialData?.id ? updateDocumentNonBlocking(doc(db, 'categories', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'categories'), payload);
+    // Ensure payload includes imageUrl for persistence in Firestore
+    const payload = { 
+      ...form, 
+      createdAt: initialData?.createdAt || serverTimestamp(), 
+      updatedAt: serverTimestamp() 
+    };
+    
+    if (initialData?.id) {
+      updateDocumentNonBlocking(doc(db, 'categories', initialData.id), payload);
+    } else {
+      addDocumentNonBlocking(collection(db, 'categories'), payload);
+    }
+    
+    toast({ title: "Category Synced" });
     onSuccess();
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="flex flex-col items-center gap-6 mb-8"><div className="w-24 h-24 bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden relative">{form.imageUrl ? <img src={form.imageUrl} className="w-full h-full object-contain p-4" alt="" /> : <Activity className="text-gray-200 w-10 h-10" />}{uploading && <div className="absolute inset-0 bg-white/80 flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>}</div><div className="relative"><input type="file" accept="image/*" onChange={handleFileUpload} className="absolute inset-0 opacity-0 cursor-pointer" disabled={uploading} /><Button variant="outline" type="button" className="rounded-full h-10 px-6 font-black uppercase text-[9px] gap-2 border-2"><UploadCloud className="w-3.5 h-3.5" /> {form.imageUrl ? 'Change Icon' : 'Upload Icon'}</Button></div></div>
-      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Category Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400">Description</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold p-6" /></div>
-      <Button type="submit" className="w-full h-16 rounded-full font-black uppercase bg-primary text-white">Save Category</Button>
+      <div className="flex flex-col items-center gap-6 mb-8">
+        <div className="w-24 h-24 bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden relative">
+          {form.imageUrl ? (
+            <img src={form.imageUrl} className="w-full h-full object-contain p-4" alt="Category Icon" />
+          ) : (
+            <Activity className="text-gray-200 w-10 h-10" />
+          )}
+          {uploading && (
+            <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+              <Loader2 className="animate-spin text-primary" />
+            </div>
+          )}
+        </div>
+        <div className="relative">
+          <input type="file" accept="image/*" onChange={handleFileUpload} className="absolute inset-0 opacity-0 cursor-pointer" disabled={uploading} />
+          <Button variant="outline" type="button" className="rounded-full h-10 px-6 font-black uppercase text-[9px] gap-2 border-2">
+            <UploadCloud className="w-3.5 h-3.5" /> 
+            {form.imageUrl ? 'Change Icon' : 'Upload Icon'}
+          </Button>
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase text-gray-400">Category Name</Label>
+        <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+      </div>
+      
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase text-gray-400">Description</Label>
+        <Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold p-6" />
+      </div>
+      
+      <Button type="submit" disabled={uploading} className="w-full h-16 rounded-full font-black uppercase bg-primary text-white shadow-xl shadow-primary/20">
+        Save Category Profile
+      </Button>
     </form>
   );
 }
