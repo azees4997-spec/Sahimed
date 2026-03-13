@@ -4,7 +4,7 @@ import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Trash2, ShoppingBag, ArrowRight, Plus, Minus, Ticket, ChevronRight, FileWarning, Camera, ClipboardCheck, Tag, PartyPopper, Sparkles } from 'lucide-react';
-import Image from 'next/image';
+import Image from 'image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -49,10 +49,7 @@ export default function CartPage() {
   }
   const promoDiscount = (appliedPromo?.maxDiscount && appliedPromo.maxDiscount > 0) ? Math.min(rawDiscount, appliedPromo.maxDiscount) : rawDiscount;
   
-  const finalPayableBeforeDelivery = Math.max(0, totalPrice + feeTotal - promoDiscount);
-  const deliveryFeeDoc = activeFees.find(f => f.name.toLowerCase().includes('delivery'));
-  const deliveryCharge = finalPayableBeforeDelivery < (deliveryFeeDoc?.minPurchase || 500) ? (deliveryFeeDoc?.discountedAmount || 40) : 0;
-  const finalPayable = finalPayableBeforeDelivery + deliveryCharge;
+  const finalPayable = Math.max(0, totalPrice + feeTotal - promoDiscount);
 
   const requiresPrescription = cart.some(item => item.prescriptionRequired);
   const isPrescriptionReady = !requiresPrescription || !!attachedPrescription;
@@ -255,16 +252,12 @@ export default function CartPage() {
                       <span>-₹{promoDiscount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-[10px] sm:text-[11px] font-black uppercase">
-                    <span>Estimated Taxes</span>
-                    <span className="text-gray-900">₹{(totalPrice * 0.12).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-[10px] sm:text-[11px] font-black uppercase">
-                    <span>Delivery</span>
-                    <span className={deliveryCharge === 0 ? "text-accent font-black" : "text-gray-900"}>
-                      {deliveryCharge === 0 ? 'FREE' : `₹${deliveryCharge.toFixed(2)}`}
-                    </span>
-                  </div>
+                  {feeTotal > 0 && (
+                    <div className="flex justify-between text-[10px] sm:text-[11px] font-black uppercase">
+                      <span>Clinical Fees</span>
+                      <span className="text-gray-900">₹{feeTotal.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="pt-8 sm:pt-10 border-t border-dashed flex justify-between items-baseline">
                     <span className="text-xs sm:text-sm font-black uppercase text-gray-900">Total Payable</span>
                     <span className="text-3xl sm:text-4xl font-black text-primary tracking-tighter">₹{finalPayable.toFixed(2)}</span>

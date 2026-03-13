@@ -195,8 +195,7 @@ export default function CheckoutPage() {
       promoDiscount = (appliedPromo.maxDiscount && appliedPromo.maxDiscount > 0) ? Math.min(raw, appliedPromo.maxDiscount) : raw;
     }
 
-    const deliveryFeeDoc = activeFees.find(f => f.name.toLowerCase().includes('delivery'));
-    const finalAmount = Math.max(0, totalPrice + feeTotal - promoDiscount) + (totalPrice < (deliveryFeeDoc?.minPurchase || 500) ? (deliveryFeeDoc?.discountedAmount || 40) : 0);
+    const finalAmount = Math.max(0, totalPrice + feeTotal - promoDiscount);
 
     const fullStreet = `${orderInfo.houseNumber ? orderInfo.houseNumber + ', ' : ''}${orderInfo.buildingLocality}${orderInfo.city ? ', ' + orderInfo.city : ''}${orderInfo.state ? ', ' + orderInfo.state : ''}`;
 
@@ -315,7 +314,7 @@ export default function CheckoutPage() {
                     className="p-10 rounded-[32px] border-2 border-dashed border-gray-200 bg-white text-center cursor-pointer hover:bg-gray-50 transition-colors col-span-full"
                   >
                     <MapPin className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No saved locations found</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest" >No saved locations found</p>
                     <p className="text-[10px] font-bold text-primary mt-2 uppercase tracking-widest">+ Tap to add delivery point</p>
                   </div>
                 )}
@@ -365,13 +364,9 @@ export default function CheckoutPage() {
                     <span>-₹{(appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))).toFixed(2)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-[10px] font-black uppercase text-gray-900">
-                  <span>Logistics Charge</span>
-                  <span className="text-accent font-black">FREE</span>
-                </div>
                 <div className="pt-6 border-t border-gray-100 flex justify-between items-baseline">
                   <span className="text-sm font-black text-gray-900 uppercase tracking-widest">Payable</span>
-                  <span className="text-3xl font-black text-primary tracking-tighter">₹{totalPrice.toFixed(2)}</span>
+                  <span className="text-3xl font-black text-primary tracking-tighter">₹{(totalPrice - (appliedPromo ? (appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))) : 0)).toFixed(2)}</span>
                 </div>
               </div>
               <Button onClick={handlePlaceOrder} disabled={loading} className="w-full h-18 rounded-full text-xs font-black uppercase tracking-widest shadow-2xl bg-primary hover:bg-primary/90 gap-3 text-white transition-all active:scale-95">
@@ -387,7 +382,7 @@ export default function CheckoutPage() {
         </div>
       </main>
 
-      {/* DELIVERY DETAILS MODAL - OPTIMIZED FOR SINGLE SCREEN MOBILE VIEW */}
+      {/* DELIVERY DETAILS MODAL */}
       <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
         <DialogContent className="max-w-md w-[94vw] sm:w-full rounded-[28px] border-none p-0 overflow-hidden shadow-3xl bg-white mx-auto animate-in zoom-in-95 duration-300 z-[110]">
           <div className="max-h-[95vh] overflow-y-auto scrollbar-hide">
