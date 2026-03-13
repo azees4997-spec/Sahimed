@@ -867,7 +867,6 @@ function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: a
       const snapshot = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(snapshot.ref);
       
-      // Update form state with the newly uploaded image string
       setForm(prev => ({ ...prev, imageUrl: url }));
       toast({ title: "Icon Uploaded" });
     } catch (err) { 
@@ -879,7 +878,6 @@ function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: a
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Ensure payload includes imageUrl for persistence in Firestore
     const payload = { 
       ...form, 
       createdAt: initialData?.createdAt || serverTimestamp(), 
@@ -898,25 +896,44 @@ function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: a
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="flex flex-col items-center gap-6 mb-8">
-        <div className="w-24 h-24 bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden relative">
-          {form.imageUrl ? (
-            <img src={form.imageUrl} className="w-full h-full object-contain p-4" alt="Category Icon" />
-          ) : (
-            <Activity className="text-gray-200 w-10 h-10" />
-          )}
-          {uploading && (
-            <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-              <Loader2 className="animate-spin text-primary" />
-            </div>
-          )}
+      <div className="space-y-4">
+        <div className="flex flex-col items-center gap-4 mb-2">
+          <div className="w-24 h-24 bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden relative">
+            {form.imageUrl ? (
+              <img src={form.imageUrl} className="w-full h-full object-contain p-4" alt="Category Icon" />
+            ) : (
+              <Activity className="text-gray-200 w-10 h-10" />
+            )}
+            {uploading && (
+              <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                <Loader2 className="animate-spin text-primary" />
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <input type="file" accept="image/*" id="cat-image-file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+            <Button variant="outline" type="button" onClick={() => document.getElementById('cat-image-file')?.click()} className="rounded-full h-10 px-6 font-black uppercase text-[9px] gap-2 border-2">
+              <UploadCloud className="w-3.5 h-3.5" /> 
+              Upload Icon
+            </Button>
+          </div>
         </div>
-        <div className="relative">
-          <input type="file" accept="image/*" onChange={handleFileUpload} className="absolute inset-0 opacity-0 cursor-pointer" disabled={uploading} />
-          <Button variant="outline" type="button" className="rounded-full h-10 px-6 font-black uppercase text-[9px] gap-2 border-2">
-            <UploadCloud className="w-3.5 h-3.5" /> 
-            {form.imageUrl ? 'Change Icon' : 'Upload Icon'}
-          </Button>
+
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Direct Image URL (Link)</Label>
+          <div className="flex gap-2">
+            <Input 
+              value={form.imageUrl} 
+              onChange={e => setForm({...form, imageUrl: e.target.value})}
+              placeholder="Paste image address (https://...)"
+              className="rounded-2xl h-14 bg-gray-50 border-none font-bold text-xs"
+            />
+            {form.imageUrl && (
+              <Button variant="ghost" size="icon" type="button" onClick={() => setForm({...form, imageUrl: ''})} className="shrink-0 h-14 w-12 text-red-400">
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
       
@@ -1197,6 +1214,111 @@ function AlertsTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, o
         ))}
       </div>
     </div>
+  );
+}
+
+function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const { storage } = initializeFirebase();
+  const { toast } = useToast();
+  const [form, setForm] = useState({ 
+    name: initialData?.name || '', 
+    description: initialData?.description || '', 
+    imageUrl: initialData?.imageUrl || '' 
+  });
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    setUploading(true);
+    try {
+      const storageRef = ref(storage, `categories/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      
+      setForm(prev => ({ ...prev, imageUrl: url }));
+      toast({ title: "Icon Uploaded" });
+    } catch (err) { 
+      toast({ variant: 'destructive', title: "Upload Failed" }); 
+    } finally { 
+      setUploading(false); 
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = { 
+      ...form, 
+      createdAt: initialData?.createdAt || serverTimestamp(), 
+      updatedAt: serverTimestamp() 
+    };
+    
+    if (initialData?.id) {
+      updateDocumentNonBlocking(doc(db, 'categories', initialData.id), payload);
+    } else {
+      addDocumentNonBlocking(collection(db, 'categories'), payload);
+    }
+    
+    toast({ title: "Category Synced" });
+    onSuccess();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <div className="flex flex-col items-center gap-4 mb-2">
+          <div className="w-24 h-24 bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden relative">
+            {form.imageUrl ? (
+              <img src={form.imageUrl} className="w-full h-full object-contain p-4" alt="Category Icon" />
+            ) : (
+              <Activity className="text-gray-200 w-10 h-10" />
+            )}
+            {uploading && (
+              <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                <Loader2 className="animate-spin text-primary" />
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <input type="file" accept="image/*" id="cat-image-file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+            <Button variant="outline" type="button" onClick={() => document.getElementById('cat-image-file')?.click()} className="rounded-full h-10 px-6 font-black uppercase text-[9px] gap-2 border-2">
+              <UploadCloud className="w-3.5 h-3.5" /> 
+              Upload Icon
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Direct Image URL (Link)</Label>
+          <div className="flex gap-2">
+            <Input 
+              value={form.imageUrl} 
+              onChange={e => setForm({...form, imageUrl: e.target.value})}
+              placeholder="Paste image address (https://...)"
+              className="rounded-2xl h-14 bg-gray-50 border-none font-bold text-xs"
+            />
+            {form.imageUrl && (
+              <Button variant="ghost" size="icon" type="button" onClick={() => setForm({...form, imageUrl: ''})} className="shrink-0 h-14 w-12 text-red-400">
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase text-gray-400">Category Name</Label>
+        <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+      </div>
+      
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase text-gray-400">Description</Label>
+        <Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold p-6" />
+      </div>
+      
+      <Button type="submit" disabled={uploading} className="w-full h-16 rounded-full font-black uppercase bg-primary text-white shadow-xl shadow-primary/20">
+        Save Category Profile
+      </Button>
+    </form>
   );
 }
 
