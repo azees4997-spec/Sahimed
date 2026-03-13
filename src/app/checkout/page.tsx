@@ -103,6 +103,7 @@ export default function CheckoutPage() {
       setSelectedAddressId(defaultAddr.id);
       setOrderInfo(prev => ({
         ...prev,
+        houseNumber: defaultAddr.houseNumber || '',
         buildingLocality: defaultAddr.street,
         pincode: defaultAddr.pincode,
         lat: defaultAddr.lat || 0,
@@ -124,8 +125,13 @@ export default function CheckoutPage() {
       return false;
     }
     
+    if (!orderInfo.houseNumber.trim()) {
+      toast({ variant: 'destructive', title: "House No. Missing", description: "House or Building number is mandatory." });
+      return false;
+    }
+
     if (!orderInfo.buildingLocality.trim()) {
-      toast({ variant: 'destructive', title: "Address Required", description: "Please select or add a delivery point." });
+      toast({ variant: 'destructive', title: "Locality Required", description: "Please enter your street or area name." });
       return false;
     }
     if (!orderInfo.pincode.trim() || orderInfo.pincode.length !== 6) {
@@ -173,14 +179,15 @@ export default function CheckoutPage() {
   const handleSaveNewAddress = async () => {
     if (!user || !db) return;
     
-    if (!orderInfo.buildingLocality.trim() || !orderInfo.pincode.trim()) {
-      toast({ variant: 'destructive', title: "Incomplete Address", description: "Locality and Pincode are required." });
+    if (!orderInfo.houseNumber.trim() || !orderInfo.buildingLocality.trim() || !orderInfo.pincode.trim()) {
+      toast({ variant: 'destructive', title: "Incomplete Address", description: "House No, Locality and Pincode are mandatory." });
       return;
     }
 
-    const fullStreet = `${orderInfo.houseNumber ? orderInfo.houseNumber + ', ' : ''}${orderInfo.buildingLocality}${orderInfo.city ? ', ' + orderInfo.city : ''}${orderInfo.state ? ', ' + orderInfo.state : ''}`;
+    const fullStreet = `${orderInfo.buildingLocality}${orderInfo.city ? ', ' + orderInfo.city : ''}${orderInfo.state ? ', ' + orderInfo.state : ''}`;
 
     const payload = {
+      houseNumber: orderInfo.houseNumber,
       street: fullStreet,
       pincode: orderInfo.pincode,
       lat: orderInfo.lat,
@@ -234,6 +241,7 @@ export default function CheckoutPage() {
       phoneNumber: `+91${cleanPhone}`,
       prescriptionUrl: attachedPrescription || null,
       shippingDetails: {
+        houseNumber: orderInfo.houseNumber,
         street: orderInfo.buildingLocality,
         pincode: orderInfo.pincode,
         lat: orderInfo.lat,
@@ -307,6 +315,7 @@ export default function CheckoutPage() {
                         setSelectedAddressId(addr.id);
                         setOrderInfo(prev => ({
                           ...prev,
+                          houseNumber: addr.houseNumber || '',
                           buildingLocality: addr.street,
                           pincode: addr.pincode,
                           lat: addr.lat || 0,
@@ -326,7 +335,9 @@ export default function CheckoutPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-black text-[10px] uppercase text-gray-900 tracking-tight">{addr.tag}</p>
-                          <p className="text-[11px] font-bold text-gray-500 line-clamp-2 uppercase leading-relaxed mt-1">{addr.street}</p>
+                          <p className="text-[11px] font-bold text-gray-500 line-clamp-2 uppercase leading-relaxed mt-1">
+                            {addr.houseNumber ? `${addr.houseNumber}, ` : ''}{addr.street}
+                          </p>
                           <p className="text-[9px] font-black text-gray-400 uppercase mt-1">PIN: {addr.pincode}</p>
                         </div>
                       </div>
@@ -439,6 +450,17 @@ export default function CheckoutPage() {
             </div>
 
             <div className="p-8 space-y-8">
+              {/* PICK LOCATION BUTTON AT THE TOP */}
+              <Button 
+                onClick={handleLocateMe}
+                variant="outline" 
+                type="button"
+                className="h-14 w-full rounded-xl border-2 border-primary/20 text-primary hover:bg-primary/5 font-black text-[10px] uppercase gap-3 transition-all active:scale-95 mb-2"
+              >
+                {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Target className="w-4 h-4" />}
+                Autofill Current Location
+              </Button>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Name *</Label>
@@ -475,7 +497,7 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Locality *</Label>
+                <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Locality / Street *</Label>
                 <Input 
                   placeholder="Street name, Area" 
                   value={orderInfo.buildingLocality} 
@@ -484,7 +506,7 @@ export default function CheckoutPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 items-end">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 items-end">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Pincode *</Label>
                   <Input 
@@ -494,17 +516,6 @@ export default function CheckoutPage() {
                     onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '')})}
                     className="h-14 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-4"
                   />
-                </div>
-                <div className="col-span-1">
-                  <Button 
-                    onClick={handleLocateMe}
-                    variant="outline" 
-                    type="button"
-                    className="h-14 w-full rounded-xl border border-primary/20 text-primary hover:bg-primary/5 font-black text-[8px] uppercase gap-2 transition-all active:scale-95"
-                  >
-                    {isLocating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Target className="w-3 h-3" />}
-                    Pick Current Location
-                  </Button>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">City *</Label>
