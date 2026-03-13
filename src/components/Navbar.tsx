@@ -35,22 +35,23 @@ export default function Navbar() {
       setIsProcessing(true);
       const term = search.trim();
       
-      // Standardize high-probability variants
-      // vProper now preserves dashes correctly: "d-veniz" -> "D-Veniz"
+      // Standardize high-probability variants for Firestore prefix search
+      // Dash-aware logic: "d-veniz" -> "D-Veniz"
       const vUpper = term.toUpperCase();
       const vProper = term.replace(/(^|[\s-])\S/g, (match) => match.toUpperCase());
+      const vRaw = term;
 
-      // READ REDUCTION: Only query Title Case and UPPER CASE
-      const variants = Array.from(new Set([vProper, vUpper])).filter(v => v.length >= 2);
+      // READ REDUCTION: Only query essential variants to save reads
+      const variants = Array.from(new Set([vProper, vUpper, vRaw])).filter(v => v.length >= 2);
       
       const fetchSuggestions = async () => {
         try {
-          // 1. DIRECT PRODUCT NAME QUERIES (Strict limit of 5 per path)
+          // 1. DIRECT PRODUCT NAME QUERIES (Strict limit of 5 per variant)
           const nameQueries = variants.map(v => 
             query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(5))
           );
 
-          // 2. CLINICAL SALT (MOLECULE) QUERIES (Strict limit of 5 per path)
+          // 2. CLINICAL SALT (MOLECULE) QUERIES (Strict limit of 5 per variant)
           const saltQueries = variants.map(v => 
             query(collection(db, 'moleculeMaster'), where('molecule', '>=', v), where('molecule', '<=', v + '\uf8ff'), limit(5))
           );
@@ -84,7 +85,7 @@ export default function Navbar() {
           });
 
           if (moleculeIds.length > 0) {
-            // READ REDUCTION: Strictly limit salt-based product lookup to 5 results
+            // READ REDUCTION: Strictly limit salt-based product lookup
             const medicinesBySaltQuery = query(
               collection(db, 'medicines'), 
               where('moleculeId', 'in', moleculeIds.slice(0, 5)), 
@@ -95,19 +96,21 @@ export default function Navbar() {
             medBySaltSnap.forEach(doc => {
               const data = doc.data();
               if (!resultsMap.has(doc.id)) {
+                const moleculeName = moleculeNameMap.get(data.moleculeId);
                 resultsMap.set(doc.id, { 
                   id: doc.id, 
                   ...data, 
-                  saltComposition: moleculeNameMap.get(data.moleculeId) || data.saltComposition 
+                  // Inject the actual clinical salt name if missing in the medicine doc
+                  saltComposition: data.saltComposition || moleculeName || data.category || 'Clinical Formula' 
                 });
               }
             });
           }
 
-          // FINAL LIMIT: Return exactly 5 suggestions to the UI
+          // FINAL LIMIT: Return exactly 5 unique suggestions to the UI as requested
           setSuggestions(Array.from(resultsMap.values()).slice(0, 5));
         } catch (error) {
-          console.warn("Search discovery encountered a delay:", error);
+          console.warn("Clinical discovery delay:", error);
         } finally {
           setIsProcessing(false);
         }
@@ -304,6 +307,7 @@ export default function Navbar() {
                         return (
                           <button
                             key={p.id}
+                            type="button"
                             onClick={() => {
                               setSearch('');
                               setSuggestions([]);
