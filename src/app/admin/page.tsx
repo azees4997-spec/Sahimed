@@ -46,7 +46,9 @@ import {
   Stethoscope,
   AlertTriangle,
   Zap,
-  Filter
+  Filter,
+  Calendar,
+  X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -94,7 +96,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format } from "date-fns";
+import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 
 // --- SHARED UI ---
 
@@ -361,12 +363,12 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
 
 function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   
-  // Robust fetch: uses a simple query to handle potentially missing collectionGroup indices
-  // Local sorting ensures the user sees recent orders even without manual indexing
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !isVerified) return null;
-    return query(collectionGroup(db, 'orders'), limit(100));
+    return query(collectionGroup(db, 'orders'), limit(500));
   }, [db, isVerified]);
 
   const { data: rawOrders, isLoading } = useCollection(ordersQuery);
@@ -374,15 +376,37 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
 
   const orders = useMemo(() => {
     if (!rawOrders) return null;
-    const sorted = [...rawOrders].sort((a, b) => {
+    let filtered = [...rawOrders];
+
+    // Status Filter
+    if (statusFilter !== 'ALL') {
+      filtered = filtered.filter(o => (o.status || 'Pending').toUpperCase() === statusFilter);
+    }
+
+    // Date Range Filter
+    if (startDate) {
+      const start = startOfDay(new Date(startDate));
+      filtered = filtered.filter(o => {
+        const orderDate = o.orderDate?.toDate ? o.orderDate.toDate() : null;
+        return orderDate && (orderDate >= start);
+      });
+    }
+
+    if (endDate) {
+      const end = endOfDay(new Date(endDate));
+      filtered = filtered.filter(o => {
+        const orderDate = o.orderDate?.toDate ? o.orderDate.toDate() : null;
+        return orderDate && (orderDate <= end);
+      });
+    }
+
+    // Sorting
+    return filtered.sort((a, b) => {
       const timeA = a.orderDate?.seconds || 0;
       const timeB = b.orderDate?.seconds || 0;
       return timeB - timeA;
     });
-
-    if (statusFilter === 'ALL') return sorted;
-    return sorted.filter(o => (o.status || 'Pending').toUpperCase() === statusFilter);
-  }, [rawOrders, statusFilter]);
+  }, [rawOrders, statusFilter, startDate, endDate]);
 
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isShippingDialogOpen, setIsShippingDialogOpen] = useState(false);
@@ -457,6 +481,11 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
     toast({ title: "Shipping Linked" });
   };
 
+  const clearDateFilter = () => {
+    setStartDate('');
+    setEndDate('');
+  };
+
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Fulfillment Hub" subtitle="Active order processing" onBack={onBack}>
@@ -465,19 +494,46 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
         </Button>
       </SectionHeader>
 
-      <div className="bg-white p-1 rounded-full border flex w-fit gap-1 mb-8">
-        {['ALL', 'PENDING', 'SHIPPING', 'DELIVERED'].map((status) => (
-          <button
-            key={status}
-            onClick={() => setStatusFilter(status)}
-            className={cn(
-              "px-8 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
-              statusFilter === status ? "bg-primary text-white shadow-lg scale-105" : "text-gray-400 hover:bg-gray-50"
-            )}
-          >
-            {status}
-          </button>
-        ))}
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+        <div className="bg-white p-1 rounded-full border flex w-fit gap-1">
+          {['ALL', 'PENDING', 'SHIPPING', 'DELIVERED'].map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={cn(
+                "px-8 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
+                statusFilter === status ? "bg-primary text-white shadow-lg scale-105" : "text-gray-400 hover:bg-gray-50"
+              )}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3 bg-white p-2 rounded-3xl border shadow-sm">
+          <div className="flex items-center gap-2 px-3">
+            <Calendar className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[9px] font-black uppercase text-gray-400">Timeline:</span>
+          </div>
+          <Input 
+            type="date" 
+            value={startDate} 
+            onChange={e => setStartDate(e.target.value)} 
+            className="h-10 w-36 rounded-xl border-none bg-gray-50 font-bold text-[10px] uppercase px-3"
+          />
+          <span className="text-gray-300 font-bold">→</span>
+          <Input 
+            type="date" 
+            value={endDate} 
+            onChange={e => setEndDate(e.target.value)} 
+            className="h-10 w-36 rounded-xl border-none bg-gray-50 font-bold text-[10px] uppercase px-3"
+          />
+          {(startDate || endDate) && (
+            <Button variant="ghost" size="icon" onClick={clearDateFilter} className="h-8 w-8 rounded-full text-red-400 hover:text-red-600 hover:bg-red-50">
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
       
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
@@ -486,10 +542,10 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
             <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 border-b">
               <tr>
                 <th className="px-8 py-6">Order ID</th>
+                <th className="px-8 py-6">Clinical Date</th>
                 <th className="px-8 py-6">Contact / Mobile</th>
                 <th className="px-8 py-6">Address</th>
                 <th className="px-8 py-6">Amount</th>
-                <th className="px-8 py-6">Status</th>
                 <th className="px-8 py-6 text-right">Action</th>
               </tr>
             </thead>
@@ -497,13 +553,16 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
               {isLoading ? (
                 <tr><td colSpan={6} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
               ) : (!orders || orders.length === 0) ? (
-                <tr><td colSpan={6} className="p-20 text-center font-bold text-gray-400 uppercase tracking-widest text-[10px]">No orders found in this status</td></tr>
+                <tr><td colSpan={6} className="p-20 text-center font-bold text-gray-400 uppercase tracking-widest text-[10px]">No matches found in clinical timeline</td></tr>
               ) : orders.map(order => {
                 const mobile = order?.phoneNumber || <span className="text-red-500 font-black">NO PHONE</span>;
                 const address = order?.shippingDetails?.street || <span className="text-red-500 font-black">MISSING ADDRESS</span>;
+                const orderDate = order.orderDate?.toDate ? format(order.orderDate.toDate(), 'dd MMM yyyy') : 'N/A';
+                
                 return (
                   <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-8 py-6 font-black text-xs uppercase">#{order.id.substring(0,8)}</td>
+                    <td className="px-8 py-6"><span className="text-[10px] font-black uppercase bg-primary/5 text-primary px-3 py-1 rounded-full">{orderDate}</span></td>
                     <td className="px-8 py-6">
                       <div className="flex flex-col">
                         <span className="font-bold text-xs">{order.patientName || 'Patient'}</span>
@@ -512,14 +571,6 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                     </td>
                     <td className="px-8 py-6 max-w-[250px]"><p className="text-[10px] font-bold text-gray-600 line-clamp-1">{address}</p></td>
                     <td className="px-8 py-6 font-black text-accent">₹{Number(order.totalAmount || 0).toFixed(2)}</td>
-                    <td className="px-8 py-6">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild><Button variant="outline" className="h-8 rounded-full px-4 text-[9px] font-black uppercase border-2 gap-2">{order.status || 'Pending'} <ChevronDown className="w-3 h-3" /></Button></DropdownMenuTrigger>
-                        <DropdownMenuContent className="rounded-2xl border-none shadow-2xl p-2">
-                          {ORDER_STATUSES.map(s => <DropdownMenuItem key={s} onClick={() => handleStatusUpdate(order, s)} className="rounded-xl font-bold text-[10px] uppercase h-10 px-4">{s}</DropdownMenuItem>)}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
                     <td className="px-8 py-6 text-right"><Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)} className="h-9 w-9 rounded-xl text-primary"><Eye className="w-4 h-4" /></Button></td>
                   </tr>
                 );
