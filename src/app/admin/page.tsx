@@ -307,10 +307,9 @@ export default function AdminConsole() {
   );
 }
 
-// --- OVERVIEW DASHBOARD (No-Fetch Optimized) ---
+// --- OVERVIEW DASHBOARD ---
 
 function OverviewTab({ setTab }: { setTab: (t: AdminTab) => void }) {
-  // NAVIGATION TILES: No clinical queries are triggered on the overview dashboard to save reads.
   const stats = [
     { label: 'INQUIRIES', icon: FileText, desc: 'Prescription Digitization', tab: 'enquiries', color: 'text-blue-600' },
     { label: 'ORDERS', icon: ShoppingBag, desc: 'Fulfillment & Logistics', tab: 'fulfillment', color: 'text-blue-500' },
@@ -347,10 +346,9 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   
-  // FETCH TRIGGER: Only triggered when the Fulfillment tab is active.
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !isVerified) return null;
-    return query(collectionGroup(db, 'orders'), limit(100)); // Strict limit for targeted sessions
+    return query(collectionGroup(db, 'orders'), limit(100)); 
   }, [db, isVerified]);
 
   const { data: rawOrders, isLoading } = useCollection(ordersQuery);
@@ -414,13 +412,6 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
     if (!order?.userId || !order?.id) return;
     updateDocumentNonBlocking(doc(db, 'userProfiles', order.userId, 'orders', order.id), { status: newStatus });
     toast({ title: "Status Updated" });
-  };
-
-  const finalizeShipping = () => {
-    if (!selectedOrder) return;
-    updateDocumentNonBlocking(doc(db, 'userProfiles', selectedOrder.userId, 'orders', selectedOrder.id), { status: 'Shipping', carrier: shippingData.carrier, trackingId: shippingData.trackingId });
-    setIsShippingDialogOpen(false);
-    toast({ title: "Shipping Linked" });
   };
 
   return (
@@ -499,6 +490,12 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  
+  // SUGGESTION STATES
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const suggestionRef = useRef<HTMLDivElement>(null);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -506,12 +503,64 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
     return () => clearTimeout(t);
   }, [searchTerm]);
 
+  // SPECIAL CHARACTER & DASH-AWARE DISCOVERY
+  useEffect(() => {
+    if (searchTerm.trim().length >= 2 && db) {
+      setIsSearching(true);
+      const term = searchTerm.trim();
+      
+      // Standardize high-probability variants for prefix search
+      const vUpper = term.toUpperCase();
+      const vProper = term.replace(/(^|[\s-])\S/g, (match) => match.toUpperCase());
+      const vRaw = term;
+      const variants = Array.from(new Set([vProper, vUpper, vRaw])).filter(v => v.length >= 2);
+      
+      const fetchSuggestions = async () => {
+        try {
+          const queries = variants.map(v => 
+            query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(5))
+          );
+          const snaps = await Promise.all(queries.map(q => getDocs(q)));
+          const resultsMap = new Map();
+          snaps.forEach(snap => {
+            snap.forEach(doc => {
+              resultsMap.set(doc.id, { id: doc.id, ...doc.data() });
+            });
+          });
+          setSuggestions(Array.from(resultsMap.values()).slice(0, 5));
+        } catch (error) {
+          console.warn("Suggestion link error:", error);
+        } finally {
+          setIsSearching(false);
+        }
+      };
+
+      const timer = setTimeout(fetchSuggestions, 300);
+      return () => clearTimeout(timer);
+    } else {
+      setSuggestions([]);
+      setIsSearching(false);
+    }
+  }, [searchTerm, db]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node)) {
+        setSuggestions([]);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // FETCH TRIGGER: Targeted query responding to search or default limit(2)
   const medsQuery = useMemoFirebase(() => {
     if (!db || !isVerified) return null;
     if (debouncedSearch.trim()) {
-      const term = debouncedSearch.trim().charAt(0).toUpperCase() + debouncedSearch.trim().slice(1);
-      return query(collection(db, 'medicines'), where('name', '>=', term), where('name', '<=', term + '\uf8ff'), limit(2));
+      // Use dash-aware Title Case for the primary table query
+      const term = debouncedSearch.trim();
+      const vProper = term.replace(/(^|[\s-])\S/g, (match) => match.toUpperCase());
+      return query(collection(db, 'medicines'), where('name', '>=', vProper), where('name', '<=', vProper + '\uf8ff'), limit(2));
     }
     return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(2));
   }, [db, isVerified, debouncedSearch]);
@@ -574,7 +623,49 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
         <Button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] uppercase bg-primary text-white"><Plus className="w-4 h-4" /> New Product</Button>
       </SectionHeader>
 
-      <div className="relative"><Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" /><Input placeholder="Search within limited set..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm uppercase" /></div>
+      <div className="relative" ref={suggestionRef}>
+        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" />
+        <Input 
+          placeholder="Search items (e.g. d-veniz)..." 
+          value={searchTerm} 
+          onChange={e => setSearchTerm(e.target.value)} 
+          className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm uppercase" 
+        />
+        {isSearching && (
+          <div className="absolute right-6 top-1/2 -translate-y-1/2">
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          </div>
+        )}
+
+        {suggestions.length > 0 && (
+          <div className="absolute top-[calc(100%+12px)] left-0 right-0 bg-white rounded-[32px] shadow-2xl border border-gray-100 overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="px-6 py-3 bg-gray-50 border-b">
+              <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Clinical Selection</p>
+            </div>
+            <div className="max-h-[300px] overflow-y-auto scrollbar-hide">
+              {suggestions.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setSearchTerm(item.name);
+                    setSuggestions([]);
+                  }}
+                  className="w-full p-5 flex items-center gap-4 hover:bg-primary/5 transition-all border-b last:border-none text-left active:scale-[0.98]"
+                >
+                  <div className="w-10 h-10 bg-gray-50 rounded-xl flex-shrink-0 border border-gray-100 p-1 flex items-center justify-center overflow-hidden">
+                    {item.imageUrl ? <img src={item.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-5 h-5 text-gray-200" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-[11px] uppercase text-gray-900 truncate tracking-tight">{item.name}</p>
+                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest truncate">{item.sku} • {item.manufacturer}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-200" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
@@ -663,7 +754,6 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     e.preventDefault();
     const finalImages = imageUrls.filter(Boolean);
     
-    // CRITICAL: Use existing ID if updating to prevent duplication
     const docId = initialData?.id || form.sku;
     if (!docId) {
       toast({ variant: 'destructive', title: "Identity Error", description: "SKU is required for new products." });
