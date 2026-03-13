@@ -3,7 +3,7 @@
 import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShoppingBag, ArrowRight, Plus, Minus, Ticket, ChevronRight, FileWarning, Camera, ClipboardCheck, Tag, PartyPopper, Sparkles } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, Plus, Minus, Ticket, ChevronRight, FileWarning, Camera, ClipboardCheck, Tag, PartyPopper, Sparkles, Zap } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -50,6 +50,10 @@ export default function CartPage() {
   const promoDiscount = (appliedPromo?.maxDiscount && appliedPromo.maxDiscount > 0) ? Math.min(rawDiscount, appliedPromo.maxDiscount) : rawDiscount;
   
   const finalPayable = Math.max(0, totalPrice + feeTotal - promoDiscount);
+  
+  // Savings Calculation
+  const itemSavings = totalMrp - totalPrice;
+  const totalSavings = itemSavings + promoDiscount;
 
   const requiresPrescription = cart.some(item => item.prescriptionRequired);
   const isPrescriptionReady = !requiresPrescription || !!attachedPrescription;
@@ -258,6 +262,15 @@ export default function CartPage() {
                       <span className="text-gray-900">₹{feeTotal.toFixed(2)}</span>
                     </div>
                   )}
+                  
+                  {/* TOTAL SAVINGS DISPLAY */}
+                  {totalSavings > 0 && (
+                    <div className="pt-2 flex justify-between text-[10px] sm:text-[11px] font-black uppercase text-accent bg-accent/5 p-3 rounded-xl border border-accent/10">
+                      <span className="flex items-center gap-1.5"><Zap className="w-3 h-3 fill-current" /> Total Savings</span>
+                      <span>₹{totalSavings.toFixed(2)}</span>
+                    </div>
+                  )}
+
                   <div className="pt-8 sm:pt-10 border-t border-dashed flex justify-between items-baseline">
                     <span className="text-xs sm:text-sm font-black uppercase text-gray-900">Total Payable</span>
                     <span className="text-3xl sm:text-4xl font-black text-primary tracking-tighter">₹{finalPayable.toFixed(2)}</span>
