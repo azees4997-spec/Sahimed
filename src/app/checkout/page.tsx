@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -7,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { 
   MapPin, 
   ShieldCheck, 
@@ -15,40 +15,28 @@ import {
   Phone, 
   User, 
   Home, 
-  Building2, 
-  Hash, 
   ArrowRight, 
-  LocateFixed, 
-  AlertCircle, 
-  UserPlus, 
-  CheckCircle2, 
-  AlertTriangle,
-  Banknote,
-  CreditCard,
   Check,
-  Zap,
   Briefcase,
-  Navigation,
-  Search,
   Plus,
-  UserCheck,
   Tag,
   X,
-  Target
+  Target,
+  Banknote,
+  Navigation
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp, doc, getDoc, query, orderBy } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 export default function CheckoutPage() {
   const { 
     cart, 
     totalPrice, 
     clearCart, 
-    location: homepageLocation, 
     attachedPrescription,
     activeFees,
     appliedPromo
@@ -58,8 +46,8 @@ export default function CheckoutPage() {
   const db = useFirestore();
   const [loading, setLoading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
-  const [isSomeoneElse, setIsSomeoneElse] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'COD' | 'Online'>('COD');
   
   const { toast } = useToast();
@@ -78,39 +66,62 @@ export default function CheckoutPage() {
     tag: 'Home'
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // --- Fetch Addresses ---
+  // --- Fetch Saved Addresses ---
   const addressesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'addresses'), orderBy('updatedAt', 'desc')) : null, [db, user]);
   const { data: savedAddresses } = useCollection(addressesQuery);
 
+  // Initial user data sync
   useEffect(() => {
-    const initCheckout = async () => {
-      if (user) {
+    const initProfile = async () => {
+      if (user && db) {
         const profileDoc = await getDoc(doc(db, 'userProfiles', user.uid));
         if (profileDoc.exists()) {
           const data = profileDoc.data();
-          if (!isSomeoneElse) {
-            setOrderInfo(prev => ({
-              ...prev,
-              patientName: data.name || user.displayName || '',
-              phoneNumber: (data.phone || user.phoneNumber || '').replace('+91', '')
-            }));
-          }
+          setOrderInfo(prev => ({
+            ...prev,
+            patientName: data.name || user.displayName || '',
+            phoneNumber: (data.phone || user.phoneNumber || '').replace('+91', '')
+          }));
         }
       }
     };
-    initCheckout();
-  }, [user, db, isSomeoneElse]);
+    initProfile();
+  }, [user, db]);
+
+  // Default address auto-selection
+  useEffect(() => {
+    if (savedAddresses && savedAddresses.length > 0 && !selectedAddressId) {
+      const defaultAddr = savedAddresses[0];
+      setSelectedAddressId(defaultAddr.id);
+      setOrderInfo(prev => ({
+        ...prev,
+        buildingLocality: defaultAddr.street,
+        pincode: defaultAddr.pincode,
+        lat: defaultAddr.lat || 0,
+        lng: defaultAddr.lng || 0,
+        tag: defaultAddr.tag
+      }));
+    }
+  }, [savedAddresses]);
 
   const validate = () => {
-    const newErrors: Record<string, string> = {};
-    if (!orderInfo.patientName.trim()) newErrors.patientName = "Name is required";
-    if (!orderInfo.phoneNumber.trim()) newErrors.phoneNumber = "Phone is required";
-    if (!orderInfo.buildingLocality.trim()) newErrors.buildingLocality = "Address is required";
-    if (!orderInfo.pincode.trim() || orderInfo.pincode.length !== 6) newErrors.pincode = "Invalid PIN";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (!orderInfo.patientName.trim()) {
+      toast({ variant: 'destructive', title: "Name Missing", description: "Recipient name is required." });
+      return false;
+    }
+    if (!orderInfo.phoneNumber.trim() || orderInfo.phoneNumber.length < 10) {
+      toast({ variant: 'destructive', title: "Contact Error", description: "Please enter a valid 10-digit mobile number." });
+      return false;
+    }
+    if (!orderInfo.buildingLocality.trim()) {
+      toast({ variant: 'destructive', title: "Address Required", description: "Please select or add a delivery point." });
+      return false;
+    }
+    if (!orderInfo.pincode.trim() || orderInfo.pincode.length !== 6) {
+      toast({ variant: 'destructive', title: "Pincode Required", description: "A valid 6-digit pincode is mandatory." });
+      return false;
+    }
+    return true;
   };
 
   const handleLocateMe = () => {
@@ -178,7 +189,7 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
-    if (!user) return;
+    if (!user || !db) return;
     if (!validate()) return;
 
     setLoading(true);
@@ -196,8 +207,7 @@ export default function CheckoutPage() {
     }
 
     const finalAmount = Math.max(0, totalPrice + feeTotal - promoDiscount);
-
-    const fullStreet = `${orderInfo.houseNumber ? orderInfo.houseNumber + ', ' : ''}${orderInfo.buildingLocality}${orderInfo.city ? ', ' + orderInfo.city : ''}${orderInfo.state ? ', ' + orderInfo.state : ''}`;
+    const fullStreet = orderInfo.buildingLocality; // Assuming selection sets full path
 
     const orderData = {
       userId: user.uid,
@@ -207,7 +217,6 @@ export default function CheckoutPage() {
       paymentType: paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online',
       patientName: orderInfo.patientName,
       phoneNumber: `+91${orderInfo.phoneNumber}`,
-      isSomeoneElse,
       prescriptionUrl: attachedPrescription || null,
       shippingDetails: {
         street: fullStreet,
@@ -233,10 +242,16 @@ export default function CheckoutPage() {
       const newOrderRef = doc(collection(db, 'userProfiles', user.uid, 'orders'));
       setDocumentNonBlocking(newOrderRef, orderData, { merge: false });
       
-      clearCart();
-      router.push(`/order-success/${newOrderRef.id}`);
+      toast({ title: "Order Processed", description: "Redirecting to success page..." });
+      
+      // Delay slightly to ensure background processes are initiated
+      setTimeout(() => {
+        clearCart();
+        router.push(`/order-success/${newOrderRef.id}`);
+      }, 500);
     } catch (err) {
       setLoading(false);
+      toast({ variant: 'destructive', title: "Order Failed", description: "Failed to sync order with clinical hub." });
     }
   };
 
@@ -252,12 +267,12 @@ export default function CheckoutPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-10">
             
             {/* ADDRESS LIST SECTION */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-center justify-between px-2">
-                <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Address List</h3>
+                <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Saved Delivery Points</h3>
                 <button 
                   onClick={() => {
                     setOrderInfo(prev => ({ ...prev, houseNumber: '', buildingLocality: '', city: '', state: '', pincode: '', tag: 'Home' }));
@@ -269,12 +284,13 @@ export default function CheckoutPage() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {savedAddresses && savedAddresses.length > 0 ? (
                   savedAddresses.map((addr) => (
                     <div 
                       key={addr.id}
                       onClick={() => {
+                        setSelectedAddressId(addr.id);
                         setOrderInfo(prev => ({
                           ...prev,
                           buildingLocality: addr.street,
@@ -286,34 +302,38 @@ export default function CheckoutPage() {
                         toast({ title: `Location Locked: ${addr.tag}` });
                       }}
                       className={cn(
-                        "p-5 rounded-[24px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white shadow-sm hover:shadow-md group",
-                        orderInfo.buildingLocality === addr.street ? "border-primary bg-primary/5" : "border-transparent hover:border-gray-100"
+                        "p-6 rounded-[32px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white shadow-sm hover:shadow-md group",
+                        selectedAddressId === addr.id ? "border-primary bg-primary/5 shadow-lg scale-[1.02]" : "border-transparent hover:border-gray-100"
                       )}
                     >
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", orderInfo.buildingLocality === addr.street ? "bg-primary text-white" : "bg-gray-50 text-gray-400")}>
-                          {addr.tag === 'Home' ? <Home className="w-5 h-5" /> : addr.tag === 'Office' ? <Briefcase className="w-5 h-5" /> : <MapPin className="w-5 h-5" />}
+                      <div className="flex items-center gap-5 min-w-0">
+                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm", selectedAddressId === addr.id ? "bg-primary text-white" : "bg-gray-50 text-gray-400")}>
+                          {addr.tag === 'Home' ? <Home className="w-6 h-6" /> : addr.tag === 'Office' ? <Briefcase className="w-6 h-6" /> : <MapPin className="w-6 h-6" />}
                         </div>
                         <div className="min-w-0">
                           <p className="font-black text-[10px] uppercase text-gray-900 tracking-tight">{addr.tag}</p>
-                          <p className="text-[11px] font-bold text-gray-500 line-clamp-1 uppercase leading-tight mt-0.5">{addr.street}</p>
+                          <p className="text-[11px] font-bold text-gray-500 line-clamp-2 uppercase leading-relaxed mt-1">{addr.street}</p>
+                          <p className="text-[9px] font-black text-gray-400 uppercase mt-1">PIN: {addr.pincode}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {orderInfo.buildingLocality === addr.street && (
-                          <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0">
-                            <Check className="w-3 h-3 text-white" />
-                          </div>
-                        )}
+                      <div className="shrink-0 ml-4">
+                        <div className={cn(
+                          "w-6 h-6 rounded-full flex items-center justify-center transition-all",
+                          selectedAddressId === addr.id ? "bg-primary scale-110" : "bg-gray-100 group-hover:bg-gray-200"
+                        )}>
+                          <Check className={cn("w-3.5 h-3.5", selectedAddressId === addr.id ? "text-white" : "text-transparent")} />
+                        </div>
                       </div>
                     </div>
                   ))
                 ) : (
                   <div 
                     onClick={() => setIsAddressModalOpen(true)}
-                    className="p-10 rounded-[32px] border-2 border-dashed border-gray-200 bg-white text-center cursor-pointer hover:bg-gray-50 transition-colors col-span-full"
+                    className="p-12 rounded-[40px] border-2 border-dashed border-gray-200 bg-white text-center cursor-pointer hover:bg-gray-50 transition-colors col-span-full group"
                   >
-                    <MapPin className="w-8 h-8 text-gray-200 mx-auto mb-3" />
+                    <div className="w-16 h-16 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-inner">
+                      <MapPin className="w-8 h-8 text-gray-200" />
+                    </div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest" >No saved locations found</p>
                     <p className="text-[10px] font-bold text-primary mt-2 uppercase tracking-widest">+ Tap to add delivery point</p>
                   </div>
@@ -322,60 +342,72 @@ export default function CheckoutPage() {
             </div>
 
             {/* PAYMENT MODE SELECTOR */}
-            <Card className="rounded-[32px] border-none shadow-sm overflow-hidden bg-white">
-              <CardHeader className="bg-white p-6 border-b">
-                <CardTitle className="text-lg font-black uppercase tracking-tight">Payment Method</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div 
-                  className={cn(
-                    "p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between",
-                    paymentMethod === 'COD' ? "border-primary bg-primary/5" : "border-gray-50 hover:border-gray-100"
-                  )}
-                  onClick={() => setPaymentMethod('COD')}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", paymentMethod === 'COD' ? "bg-primary text-white" : "bg-gray-50 text-gray-400")}>
-                      <Banknote className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="font-black text-xs uppercase tracking-tight">Cash on Delivery</p>
-                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Collect at doorstep</p>
-                    </div>
+            <div className="space-y-6">
+              <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight px-2">Select Payment</h3>
+              <div 
+                className={cn(
+                  "p-6 rounded-[32px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white shadow-sm",
+                  paymentMethod === 'COD' ? "border-primary bg-primary/5" : "border-transparent hover:border-gray-100"
+                )}
+                onClick={() => setPaymentMethod('COD')}
+              >
+                <div className="flex items-center gap-5">
+                  <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm", paymentMethod === 'COD' ? "bg-primary text-white" : "bg-gray-50 text-gray-400")}>
+                    <Banknote className="w-6 h-6" />
                   </div>
-                  {paymentMethod === 'COD' && <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center"><Check className="w-3 h-3 text-white" /></div>}
+                  <div>
+                    <p className="font-black text-xs uppercase tracking-tight">Cash on Delivery</p>
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Collect at doorstep during fulfillment</p>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+                <div className={cn("w-6 h-6 rounded-full flex items-center justify-center", paymentMethod === 'COD' ? "bg-primary" : "bg-gray-100")}>
+                  <Check className={cn("w-3.5 h-3.5", paymentMethod === 'COD' ? "text-white" : "text-transparent")} />
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white p-8 rounded-[40px] shadow-2xl border border-gray-50 sticky top-24 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <h2 className="text-[10px] font-black mb-8 text-gray-400 uppercase tracking-[0.3em]">Checkout Summary</h2>
+            <div className="bg-white p-8 sm:p-10 rounded-[48px] shadow-2xl border border-gray-50 sticky top-24 animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl" />
               
-              <div className="space-y-4 mb-8 pt-6 border-t border-dashed">
-                <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
+              <h2 className="text-[10px] font-black mb-8 text-gray-400 uppercase tracking-[0.3em] relative z-10">Order Summary</h2>
+              
+              <div className="space-y-5 mb-10 pt-6 border-t border-dashed relative z-10">
+                <div className="flex justify-between text-[11px] font-black uppercase text-gray-500">
                   <span>Order Value</span>
                   <span>₹{totalPrice.toFixed(2)}</span>
                 </div>
                 {appliedPromo && (
-                  <div className="flex justify-between text-[10px] font-black uppercase text-accent">
+                  <div className="flex justify-between text-[11px] font-black uppercase text-accent animate-in slide-in-from-left-2">
                     <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Offer Applied</span>
                     <span>-₹{(appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))).toFixed(2)}</span>
                   </div>
                 )}
-                <div className="pt-6 border-t border-gray-100 flex justify-between items-baseline">
-                  <span className="text-sm font-black text-gray-900 uppercase tracking-widest">Payable</span>
-                  <span className="text-3xl font-black text-primary tracking-tighter">₹{(totalPrice - (appliedPromo ? (appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))) : 0)).toFixed(2)}</span>
+                <div className="pt-8 border-t border-gray-100 flex justify-between items-baseline">
+                  <span className="text-xs font-black text-gray-900 uppercase tracking-widest">Total Payable</span>
+                  <span className="text-4xl font-black text-primary tracking-tighter">₹{(totalPrice - (appliedPromo ? (appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))) : 0)).toFixed(2)}</span>
                 </div>
               </div>
-              <Button onClick={handlePlaceOrder} disabled={loading} className="w-full h-18 rounded-full text-xs font-black uppercase tracking-widest shadow-2xl bg-primary hover:bg-primary/90 gap-3 text-white transition-all active:scale-95">
-                {loading ? <Loader2 className="animate-spin" /> : "Verify & Place Order"}
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-              <div className="mt-6 flex items-center justify-center gap-3">
-                 <ShieldCheck className="w-4 h-4 text-accent" />
-                 <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Licensed Pharmacy Network</span>
+
+              <div className="space-y-4 relative z-10">
+                <Button 
+                  onClick={handlePlaceOrder} 
+                  disabled={loading} 
+                  className="w-full h-20 rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 gap-4 text-white transition-all active:scale-95 group"
+                >
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                    <>
+                      Verify & Place Order
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </Button>
+                
+                <div className="flex items-center justify-center gap-3 py-2">
+                   <ShieldCheck className="w-4 h-4 text-accent" />
+                   <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Secured Clinical Checkout</span>
+                </div>
               </div>
             </div>
           </div>
@@ -384,89 +416,82 @@ export default function CheckoutPage() {
 
       {/* DELIVERY DETAILS MODAL */}
       <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
-        <DialogContent className="max-w-md w-[94vw] sm:w-full rounded-[28px] border-none p-0 overflow-hidden shadow-3xl bg-white mx-auto animate-in zoom-in-95 duration-300 z-[110]">
-          <div className="max-h-[95vh] overflow-y-auto scrollbar-hide">
-            <div className="p-4 space-y-3">
-              <div className="space-y-0.5">
-                <DialogTitle className="text-lg font-black text-gray-900 uppercase tracking-tight">Delivery Details</DialogTitle>
-                <p className="text-[8px] font-bold text-primary uppercase tracking-widest opacity-80">For clinical logistics communication</p>
-              </div>
+        <DialogContent className="max-w-md w-[94vw] sm:w-full rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white mx-auto animate-in zoom-in-95 duration-300 z-[110]">
+          <div className="max-h-[90vh] overflow-y-auto scrollbar-hide">
+            <div className="bg-primary p-8 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-xl" />
+              <DialogTitle className="text-2xl font-black uppercase tracking-tight">New Delivery Point</DialogTitle>
+              <p className="text-[9px] font-black text-white/60 uppercase tracking-[0.2em] mt-1">Clinical Logistics Path</p>
+            </div>
 
-              <div className="space-y-2">
-                <Input 
-                  placeholder="Recipient Name" 
-                  value={orderInfo.patientName} 
-                  onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})}
-                  className="h-10 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 focus-visible:border-primary transition-all px-4"
-                />
-
-                <div className="grid grid-cols-2 gap-2">
+            <div className="p-8 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Recipient Name</Label>
                   <Input 
-                    placeholder="Pin Code" 
-                    value={orderInfo.pincode} 
-                    onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})}
-                    className="h-10 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
-                  />
-                  <Button 
-                    onClick={handleLocateMe}
-                    variant="outline" 
-                    className="h-10 rounded-xl border-primary text-primary hover:bg-primary/5 font-black text-[8px] uppercase gap-1.5 bg-white transition-all active:scale-95 shadow-sm"
-                  >
-                    {isLocating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Target className="w-3 h-3" />}
-                    PICK GPS
-                  </Button>
-                </div>
-
-                <Input 
-                  placeholder="House number, floor" 
-                  value={orderInfo.houseNumber} 
-                  onChange={e => setOrderInfo({...orderInfo, houseNumber: e.target.value})}
-                  className="h-10 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
-                />
-
-                <Input 
-                  placeholder="Building name, locality" 
-                  value={orderInfo.buildingLocality} 
-                  onChange={e => setOrderInfo({...orderInfo, buildingLocality: e.target.value})}
-                  className="h-10 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
-                />
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Input 
-                    placeholder="City" 
-                    value={orderInfo.city} 
-                    onChange={e => setOrderInfo({...orderInfo, city: e.target.value})}
-                    className="h-10 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
-                  />
-                  <Input 
-                    placeholder="State" 
-                    value={orderInfo.state} 
-                    onChange={e => setOrderInfo({...orderInfo, state: e.target.value})}
-                    className="h-10 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
+                    placeholder="e.g. Rahul Sharma" 
+                    value={orderInfo.patientName} 
+                    onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})}
+                    className="h-14 rounded-2xl bg-gray-50 border-none font-bold text-sm px-6"
                   />
                 </div>
 
-                <Input 
-                  placeholder="Contact Number" 
-                  value={orderInfo.phoneNumber} 
-                  onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10)})}
-                  className="h-10 rounded-xl bg-gray-50 border border-gray-100 font-bold placeholder:text-gray-300 text-xs focus-visible:ring-primary focus-visible:ring-offset-0 px-4"
-                />
-
-                <div className="bg-[#FFFCE6] p-2 rounded-xl border border-[#F5E1A4]">
-                  <p className="text-[7px] font-black text-[#856404] leading-tight uppercase tracking-wider text-center">
-                    DELIVERY AGENT WILL CALL ON THIS NUMBER
-                  </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Pin Code</Label>
+                    <Input 
+                      placeholder="6-digits" 
+                      value={orderInfo.pincode} 
+                      maxLength={6}
+                      onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '')})}
+                      className="h-14 rounded-2xl bg-gray-50 border-none font-bold text-sm px-6"
+                    />
+                  </div>
+                  <div className="flex flex-col justify-end">
+                    <Button 
+                      onClick={handleLocateMe}
+                      variant="outline" 
+                      className="h-14 rounded-2xl border-2 border-primary/20 text-primary hover:bg-primary/5 font-black text-[9px] uppercase gap-2 transition-all active:scale-95"
+                    >
+                      {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Target className="w-4 h-4" />}
+                      GPS SYNC
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="flex gap-2 pt-0.5">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Building name, locality</Label>
+                  <Input 
+                    placeholder="Apartment name or Street" 
+                    value={orderInfo.buildingLocality} 
+                    onChange={e => setOrderInfo({...orderInfo, buildingLocality: e.target.value})}
+                    className="h-14 rounded-2xl bg-gray-50 border-none font-bold text-sm px-6"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Contact Number</Label>
+                  <div className="relative">
+                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 border-r pr-3">+91</div>
+                    <Input 
+                      placeholder="Mobile number" 
+                      value={orderInfo.phoneNumber} 
+                      maxLength={10}
+                      onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '')})}
+                      className="h-14 pl-16 rounded-2xl bg-gray-50 border-none font-bold text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
                   {['Home', 'Office', 'Other'].map(t => (
                     <button 
                       key={t}
+                      type="button"
                       onClick={() => setOrderInfo({...orderInfo, tag: t})}
                       className={cn(
-                        "flex-1 h-9 rounded-full text-[8px] font-black uppercase tracking-widest border-[1.5px] transition-all shadow-sm",
-                        orderInfo.tag === t ? "border-primary text-primary bg-primary/5" : "border-gray-100 text-gray-400 bg-white hover:bg-gray-50"
+                        "flex-1 h-12 rounded-2xl text-[9px] font-black uppercase tracking-widest border-2 transition-all",
+                        orderInfo.tag === t ? "border-primary text-primary bg-primary/5" : "border-gray-50 text-gray-400 bg-white hover:bg-gray-50"
                       )}
                     >
                       {t}
@@ -476,9 +501,9 @@ export default function CheckoutPage() {
 
                 <Button 
                   onClick={handleSaveNewAddress}
-                  className="w-full h-12 rounded-2xl bg-primary text-white font-black uppercase tracking-[0.15em] text-[9px] mt-1 shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
+                  className="w-full h-18 rounded-full bg-primary text-white font-black uppercase tracking-[0.2em] text-[10px] mt-4 shadow-2xl shadow-primary/30 hover:bg-primary/90 transition-all active:scale-95"
                 >
-                  SAVE DELIVERY POINT
+                  Confirm Delivery Point
                 </Button>
               </div>
             </div>
