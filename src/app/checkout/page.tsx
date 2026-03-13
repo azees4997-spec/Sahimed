@@ -70,19 +70,25 @@ export default function CheckoutPage() {
   const addressesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'addresses'), orderBy('updatedAt', 'desc')) : null, [db, user]);
   const { data: savedAddresses } = useCollection(addressesQuery);
 
-  // Initial user data sync
+  // Robust profile sync for name and phone
   useEffect(() => {
     const initProfile = async () => {
       if (user && db) {
         const profileDoc = await getDoc(doc(db, 'userProfiles', user.uid));
+        let pName = user.displayName || '';
+        let pPhone = (user.phoneNumber || '').replace('+91', '');
+        
         if (profileDoc.exists()) {
           const data = profileDoc.data();
-          setOrderInfo(prev => ({
-            ...prev,
-            patientName: data.name || user.displayName || '',
-            phoneNumber: (data.phone || user.phoneNumber || '').replace('+91', '')
-          }));
+          pName = data.name || pName;
+          pPhone = (data.phone || pPhone || '').replace('+91', '');
         }
+        
+        setOrderInfo(prev => ({
+          ...prev,
+          patientName: pName,
+          phoneNumber: pPhone
+        }));
       }
     };
     initProfile();
@@ -109,10 +115,14 @@ export default function CheckoutPage() {
       toast({ variant: 'destructive', title: "Name Missing", description: "Recipient name is required." });
       return false;
     }
-    if (!orderInfo.phoneNumber.trim() || orderInfo.phoneNumber.length < 10) {
+    
+    // Clean phone number for validation (remove any non-digits)
+    const cleanPhone = orderInfo.phoneNumber.replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length < 10) {
       toast({ variant: 'destructive', title: "Contact Error", description: "Please enter a valid 10-digit mobile number." });
       return false;
     }
+    
     if (!orderInfo.buildingLocality.trim()) {
       toast({ variant: 'destructive', title: "Address Required", description: "Please select or add a delivery point." });
       return false;
@@ -207,7 +217,7 @@ export default function CheckoutPage() {
     }
 
     const finalAmount = Math.max(0, totalPrice + feeTotal - promoDiscount);
-    const fullStreet = orderInfo.buildingLocality; // Assuming selection sets full path
+    const cleanPhone = orderInfo.phoneNumber.replace(/\D/g, '');
 
     const orderData = {
       userId: user.uid,
@@ -216,10 +226,10 @@ export default function CheckoutPage() {
       status: 'Pending',
       paymentType: paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online',
       patientName: orderInfo.patientName,
-      phoneNumber: `+91${orderInfo.phoneNumber}`,
+      phoneNumber: `+91${cleanPhone}`,
       prescriptionUrl: attachedPrescription || null,
       shippingDetails: {
-        street: fullStreet,
+        street: orderInfo.buildingLocality,
         pincode: orderInfo.pincode,
         lat: orderInfo.lat,
         lng: orderInfo.lng,
@@ -244,11 +254,10 @@ export default function CheckoutPage() {
       
       toast({ title: "Order Processed", description: "Redirecting to success page..." });
       
-      // Delay slightly to ensure background processes are initiated
       setTimeout(() => {
         clearCart();
         router.push(`/order-success/${newOrderRef.id}`);
-      }, 500);
+      }, 800);
     } catch (err) {
       setLoading(false);
       toast({ variant: 'destructive', title: "Order Failed", description: "Failed to sync order with clinical hub." });
@@ -394,7 +403,7 @@ export default function CheckoutPage() {
                 <Button 
                   onClick={handlePlaceOrder} 
                   disabled={loading} 
-                  className="w-full h-20 rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 gap-4 text-white transition-all active:scale-95 group"
+                  className="w-full h-20 rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 gap-4 text-white transition-all active:scale-95 group"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                     <>
