@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
@@ -306,15 +307,15 @@ export default function AdminConsole() {
 // --- OVERVIEW COMPONENT ---
 
 function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab) => void, isVerified: boolean }) {
-  const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines')), [db]);
-  const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster')), [db]);
-  const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles')) : null, [db, isVerified]);
-  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
-  const promosQuery = useMemoFirebase(() => query(collection(db, 'promocodes')), [db]);
-  const feesQuery = useMemoFirebase(() => query(collection(db, 'fees')), [db]);
-  const alertsQuery = useMemoFirebase(() => query(collection(db, 'systemAlerts')), [db]);
-  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
-  const catsQuery = useMemoFirebase(() => query(collection(db, 'categories')), [db]);
+  const medsQuery = useMemoFirebase(() => query(collection(db, 'medicines'), limit(10)), [db]);
+  const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster'), limit(10)), [db]);
+  const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles'), limit(10)) : null, [db, isVerified]);
+  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), limit(10)) : null, [db, isVerified]);
+  const promosQuery = useMemoFirebase(() => query(collection(db, 'promocodes'), limit(10)), [db]);
+  const feesQuery = useMemoFirebase(() => query(collection(db, 'fees'), limit(10)), [db]);
+  const alertsQuery = useMemoFirebase(() => query(collection(db, 'systemAlerts'), limit(10)), [db]);
+  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions'), limit(10)) : null, [db, isVerified]);
+  const catsQuery = useMemoFirebase(() => query(collection(db, 'categories'), limit(10)), [db]);
 
   const { data: medicines } = useCollection(medsQuery);
   const { data: formulas } = useCollection(molsQuery);
@@ -358,7 +359,7 @@ function OverviewTab({ db, setTab, isVerified }: { db: any, setTab: (t: AdminTab
 // --- CATEGORIES HUB ---
 
 function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const catsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db, isVerified]);
+  const catsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'categories'), orderBy('name', 'asc'), limit(50)) : null, [db, isVerified]);
   const { data: categories, isLoading } = useCollection(catsQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCat, setEditingCat] = useState<any>(null);
@@ -486,7 +487,7 @@ function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: a
 // --- FULFILLMENT HUB ---
 
 function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders')) : null, [db, isVerified]);
+  const ordersQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'orders'), orderBy('orderDate', 'desc'), limit(50)) : null, [db, isVerified]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isShippingDialogOpen, setIsShippingDialogOpen] = useState(false);
@@ -689,8 +690,8 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
 // --- ITEM MASTER ---
 
 function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const medsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'medicines'), orderBy('name', 'asc')) : null, [db, isVerified]);
-  const molsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'moleculeMaster')) : null, [db, isVerified]);
+  const medsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(50)) : null, [db, isVerified]);
+  const molsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'moleculeMaster'), limit(100)) : null, [db, isVerified]);
   const { data: medicines, isLoading } = useCollection(medsQuery);
   const { data: molecules } = useCollection(molsQuery);
   
@@ -949,7 +950,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 }
 
 function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
-  const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc')), [db]);
+  const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc'), limit(100)), [db]);
   const { data: molecules } = useCollection(molsQuery);
   const { storage } = initializeFirebase();
   const { toast } = useToast();
@@ -1127,7 +1128,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
 
         <TabsContent value="clinical" className="space-y-6">
           <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Molecule Mapping</Label><Select value={form.moleculeId} onValueChange={v => setForm({...form, moleculeId: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select Molecule" /></SelectTrigger><SelectContent className="rounded-2xl">{molecules?.map(m => <SelectItem key={m.id} value={m.id}>{m.molecule} ({m.masterId})</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Molecule Mapping</Label><Select value={form.moleculeId} onValueChange={v => setForm({...form, moleculeId: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select Molecule" /></SelectTrigger><SelectContent className="rounded-2xl">{molecules?.map(m => <SelectItem key={m.id} value={m.id}>{m.molecule} ({m.masterId})</SelectItem>)}</Select></div>
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Primary Treatment</Label><Input value={form.treatment} onChange={e => setForm({...form, treatment: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase">Clinical Description</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Expected Side Effects</Label><Textarea value={form.sideEffects} onChange={e => setForm({...form, sideEffects: e.target.value})} className="rounded-2xl bg-gray-50 border-none font-bold" /></div>
@@ -1147,7 +1148,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
 // --- FORMULATION ---
 
 function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const molsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc')) : null, [db, isVerified]);
+  const molsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc'), limit(100)) : null, [db, isVerified]);
   const { data: molecules, isLoading } = useCollection(molsQuery);
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -1291,7 +1292,7 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
 // --- ENQUIRIES HUB ---
 
 function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions')) : null, [db, isVerified]);
+  const presQuery = useMemoFirebase(() => isVerified ? query(collectionGroup(db, 'prescriptions'), limit(50)) : null, [db, isVerified]);
   const { data: enquiries, isLoading } = useCollection(presQuery);
   const [selectedEnquiry, setSelectedEnquiry] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<'PENDING' | 'OPEN' | 'COMPLETED'>('PENDING');
@@ -1348,7 +1349,7 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
 }
 
 function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const promosQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'promocodes'), orderBy('code', 'asc')) : null, [db, isVerified]);
+  const promosQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'promocodes'), orderBy('code', 'asc'), limit(50)) : null, [db, isVerified]);
   const { data: promos, isLoading } = useCollection(promosQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPromo, setEditingPromo] = useState<any>(null);
@@ -1425,7 +1426,7 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
 }
 
 function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const feesQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'fees'), orderBy('name', 'asc')) : null, [db, isVerified]);
+  const feesQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'fees'), orderBy('name', 'asc'), limit(50)) : null, [db, isVerified]);
   const { data: fees, isLoading } = useCollection(feesQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingFee, setEditingFee] = useState<any>(null);
@@ -1499,7 +1500,7 @@ function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, o
 }
 
 function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles'), orderBy('createdAt', 'desc')) : null, [db, isVerified]);
+  const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles'), orderBy('createdAt', 'desc'), limit(50)) : null, [db, isVerified]);
   const { data: users, isLoading } = useCollection(usersQuery);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -1538,7 +1539,7 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
 }
 
 function AlertsTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const alertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'systemAlerts'), orderBy('createdAt', 'desc')) : null, [db, isVerified]);
+  const alertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'systemAlerts'), orderBy('createdAt', 'desc'), limit(50)) : null, [db, isVerified]);
   const { data: alerts, isLoading } = useCollection(alertsQuery);
 
   return (

@@ -26,10 +26,10 @@ export default function Home() {
     Autoplay({ delay: 5000, stopOnInteraction: false })
   );
 
-  // Optimization: Background Fetch 60 items to ensure 30 unique ones
+  // Optimization: Strictly fetch only 12 items for the homepage to minimize read consumption
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(60));
+    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(12));
   }, [db]);
 
   const categoriesQuery = useMemoFirebase(() => {
@@ -40,22 +40,11 @@ export default function Home() {
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
 
-  // Performance Hack: Seed Best Sellers instantly with local data to prevent slow loading
   const displayMedicines = React.useMemo(() => {
-    if (medicines && medicines.length > 0) {
-      const seen = new Set();
-      return medicines.filter(m => {
-        const sku = m.sku || m.id;
-        if (seen.has(sku)) return false;
-        seen.add(sku);
-        return true;
-      }).slice(0, 30);
-    }
-    // Fallback to local clinical seed for instant Home Page render
-    return LOCAL_PRODUCTS.slice(0, 30);
+    if (medicines && medicines.length > 0) return medicines;
+    return LOCAL_PRODUCTS.slice(0, 12);
   }, [medicines]);
 
-  // Performance Hack: Seed Categories instantly
   const displayCategories = React.useMemo(() => {
     if (categories && categories.length > 0) return categories;
     return LOCAL_CATEGORIES.map((cat, idx) => ({

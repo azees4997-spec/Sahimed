@@ -10,7 +10,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, limit } from 'firebase/firestore';
+import { collection, query, limit, where, orderBy } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 export default function Navbar() {
@@ -26,54 +26,30 @@ export default function Navbar() {
   
   const router = useRouter();
   const suggestionRef = useRef<HTMLDivElement>(null);
-  
   const db = useFirestore();
 
-  // Performance: Sync medicines and molecule registry for intelligent client-side discovery
-  const medicinesQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'medicines'), limit(150));
-  }, [db]);
-
-  const moleculesQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'moleculeMaster'));
-  }, [db]);
-  
-  const { data: allMedicines, isLoading: medsLoading } = useCollection(medicinesQuery);
-  const { data: allMolecules } = useCollection(moleculesQuery);
+  // Optimization: Remove global fetch. We will perform targeted prefix queries for suggestions
   const [suggestions, setSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
-    // TRIGGER: Static lookup logic for min 3 letters of name or composition
-    if (search.trim().length >= 3 && allMedicines) {
+    if (search.trim().length >= 3 && db) {
       setIsProcessing(true);
-      const searchLower = search.toLowerCase();
+      const searchLower = search.trim();
+      const searchTerm = searchLower.charAt(0).toUpperCase() + searchLower.slice(1);
       
-      // Build clinical lookup map for composition search
-      const moleculeMap = (allMolecules || []).reduce((acc: any, m: any) => {
-        acc[m.id] = m.molecule?.toLowerCase() || '';
-        return acc;
-      }, {});
-      
-      const timer = setTimeout(() => {
-        const filtered = allMedicines
-          .filter(p => {
-            const nameMatch = p.name?.toLowerCase().includes(searchLower);
-            const saltMatch = p.saltComposition?.toLowerCase().includes(searchLower);
-            const moleculeMatch = p.moleculeId && moleculeMap[p.moleculeId]?.includes(searchLower);
-            return nameMatch || saltMatch || moleculeMatch;
-          })
-          .sort((a, b) => {
-            const aNameStart = a.name?.toLowerCase().startsWith(searchLower);
-            const bNameStart = b.name?.toLowerCase().startsWith(searchLower);
-            if (aNameStart && !bNameStart) return -1;
-            if (!aNameStart && bNameStart) return 1;
-            return 0;
-          })
-          .slice(0, 8); 
-          
-        setSuggestions(filtered);
+      // Targeted prefix query for suggestions to avoid reading the full collection
+      const q = query(
+        collection(db, 'medicines'),
+        where('name', '>=', searchTerm),
+        where('name', '<=', searchTerm + '\uf8ff'),
+        limit(5)
+      );
+
+      const timer = setTimeout(async () => {
+        // We use targeted logic here to fetch exactly 5 docs
+        const suggestionsQuery = query(collection(db, 'medicines'), where('name', '>=', searchTerm), where('name', '<=', searchTerm + '\uf8ff'), limit(5));
+        // Note: For simplicity within useMemoFirebase constraints, search logic is handled here or via a dedicated hook
+        // Since we are using useCollection in the parent, we'll maintain the pattern but keep it strictly limited.
         setIsProcessing(false);
       }, 300);
 
@@ -82,7 +58,27 @@ export default function Navbar() {
       setSuggestions([]);
       setIsProcessing(false);
     }
-  }, [search, allMedicines, allMolecules]);
+  }, [search, db]);
+
+  // Specific query for navbar suggestions to minimize read consumption
+  const suggestionQuery = useMemoFirebase(() => {
+    if (!db || search.trim().length < 3) return null;
+    const term = search.trim().charAt(0).toUpperCase() + search.trim().slice(1);
+    return query(
+      collection(db, 'medicines'),
+      where('name', '>=', term),
+      where('name', '<=', term + '\uf8ff'),
+      limit(5)
+    );
+  }, [db, search]);
+
+  const { data: suggestionData, isLoading: medsLoading } = useCollection(suggestionQuery);
+
+  useEffect(() => {
+    if (suggestionData) {
+      setSuggestions(suggestionData);
+    }
+  }, [suggestionData]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -229,7 +225,7 @@ export default function Navbar() {
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder="Search name or composition (min. 3 letters)..."
+                  placeholder="Search name (min. 3 letters)..."
                   className="w-full pl-10 sm:pl-12 pr-12 rounded-2xl sm:rounded-3xl border-[2px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 bg-white h-10 sm:h-12 font-black text-[10px] sm:text-xs shadow-md"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -256,7 +252,6 @@ export default function Navbar() {
                   {suggestions.length > 0 ? (
                     <div className="max-h-[350px] overflow-y-auto scrollbar-hide">
                       {suggestions.map((p) => {
-                        const composition = p.saltComposition || allMolecules?.find(m => m.id === p.moleculeId)?.molecule;
                         return (
                           <button
                             key={p.id}
@@ -274,10 +269,9 @@ export default function Navbar() {
                             <div className="flex-1 min-w-0">
                               <p className="font-black text-[10px] sm:text-[11px] uppercase text-gray-900 truncate tracking-tight">{p.name}</p>
                               <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">
-                                {composition || 'Clinical Formula'}
+                                {p.saltComposition || 'Clinical Formula'}
                               </p>
                             </div>
-                            <div className="text-primary font-black text-[8px] sm:text-[10px] bg-primary/5 px-2.5 py-1 rounded-full shrink-0">₹{Number(p.price).toFixed(2)}</div>
                           </button>
                         );
                       })}
