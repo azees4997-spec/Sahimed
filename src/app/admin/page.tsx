@@ -1128,7 +1128,19 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
 
         <TabsContent value="clinical" className="space-y-6">
           <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Molecule Mapping</Label><Select value={form.moleculeId} onValueChange={v => setForm({...form, moleculeId: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select Molecule" /></SelectTrigger><SelectContent className="rounded-2xl">{molecules?.map(m => <SelectItem key={m.id} value={m.id}>{m.molecule} ({m.masterId})</SelectItem>)}</Select></div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase">Molecule Mapping</Label>
+              <Select value={form.moleculeId} onValueChange={v => setForm({...form, moleculeId: v})}>
+                <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold">
+                  <SelectValue placeholder="Select Molecule" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl">
+                  {molecules?.map(m => (
+                    <SelectItem key={m.id} value={m.id}>{m.molecule} ({m.masterId})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Primary Treatment</Label><Input value={form.treatment} onChange={e => setForm({...form, treatment: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase">Clinical Description</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Expected Side Effects</Label><Textarea value={form.sideEffects} onChange={e => setForm({...form, sideEffects: e.target.value})} className="rounded-2xl bg-gray-50 border-none font-bold" /></div>
