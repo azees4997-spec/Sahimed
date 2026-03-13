@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, limit, where, orderBy } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import { collection, query, limit, where, getDocs } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 export default function Navbar() {
@@ -23,62 +23,62 @@ export default function Navbar() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   
   const router = useRouter();
   const suggestionRef = useRef<HTMLDivElement>(null);
   const db = useFirestore();
 
-  // Optimization: Remove global fetch. We will perform targeted prefix queries for suggestions
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-
+  // Suggestions Logic: Dual-path search (Name & Composition)
   useEffect(() => {
     if (search.trim().length >= 3 && db) {
       setIsProcessing(true);
       const searchLower = search.trim();
-      const searchTerm = searchLower.charAt(0).toUpperCase() + searchLower.slice(1);
+      const term = searchLower.charAt(0).toUpperCase() + searchLower.slice(1);
       
-      // Targeted prefix query for suggestions to avoid reading the full collection
-      const q = query(
-        collection(db, 'medicines'),
-        where('name', '>=', searchTerm),
-        where('name', '<=', searchTerm + '\uf8ff'),
-        limit(5)
-      );
+      const fetchSuggestions = async () => {
+        try {
+          // Path 1: Search by Medicine Name
+          const nameQuery = query(
+            collection(db, 'medicines'),
+            where('name', '>=', term),
+            where('name', '<=', term + '\uf8ff'),
+            limit(5)
+          );
+          
+          // Path 2: Search by Salt Composition
+          const compQuery = query(
+            collection(db, 'medicines'),
+            where('saltComposition', '>=', term),
+            where('saltComposition', '<=', term + '\uf8ff'),
+            limit(5)
+          );
 
-      const timer = setTimeout(async () => {
-        // We use targeted logic here to fetch exactly 5 docs
-        const suggestionsQuery = query(collection(db, 'medicines'), where('name', '>=', searchTerm), where('name', '<=', searchTerm + '\uf8ff'), limit(5));
-        // Note: For simplicity within useMemoFirebase constraints, search logic is handled here or via a dedicated hook
-        // Since we are using useCollection in the parent, we'll maintain the pattern but keep it strictly limited.
-        setIsProcessing(false);
-      }, 300);
+          const [nameSnap, compSnap] = await Promise.all([
+            getDocs(nameQuery),
+            getDocs(compQuery)
+          ]);
 
+          // Merge and de-duplicate results
+          const resultsMap = new Map();
+          nameSnap.forEach(doc => resultsMap.set(doc.id, { id: doc.id, ...doc.data() }));
+          compSnap.forEach(doc => resultsMap.set(doc.id, { id: doc.id, ...doc.data() }));
+
+          setSuggestions(Array.from(resultsMap.values()).slice(0, 8));
+        } catch (error) {
+          console.warn("Clinical search lookup failed:", error);
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+
+      const timer = setTimeout(fetchSuggestions, 300);
       return () => clearTimeout(timer);
     } else {
       setSuggestions([]);
       setIsProcessing(false);
     }
   }, [search, db]);
-
-  // Specific query for navbar suggestions to minimize read consumption
-  const suggestionQuery = useMemoFirebase(() => {
-    if (!db || search.trim().length < 3) return null;
-    const term = search.trim().charAt(0).toUpperCase() + search.trim().slice(1);
-    return query(
-      collection(db, 'medicines'),
-      where('name', '>=', term),
-      where('name', '<=', term + '\uf8ff'),
-      limit(5)
-    );
-  }, [db, search]);
-
-  const { data: suggestionData, isLoading: medsLoading } = useCollection(suggestionQuery);
-
-  useEffect(() => {
-    if (suggestionData) {
-      setSuggestions(suggestionData);
-    }
-  }, [suggestionData]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -225,7 +225,7 @@ export default function Navbar() {
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder="Search name (min. 3 letters)..."
+                  placeholder="Search name or composition..."
                   className="w-full pl-10 sm:pl-12 pr-12 rounded-2xl sm:rounded-3xl border-[2px] border-primary focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 bg-white h-10 sm:h-12 font-black text-[10px] sm:text-xs shadow-md"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -234,7 +234,7 @@ export default function Navbar() {
                 <SearchIcon className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-primary w-4 sm:w-5 h-4 sm:h-5" />
                 
                 <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                  {(isProcessing || medsLoading) && (
+                  {isProcessing && (
                      <Loader2 className="w-3 h-3 text-primary animate-spin" />
                   )}
                   <Button 
@@ -247,7 +247,7 @@ export default function Navbar() {
                 </div>
               </div>
 
-              {search.trim().length >= 3 && !isProcessing && (
+              {search.trim().length >= 3 && (
                 <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] sm:rounded-[32px] shadow-3xl border-none overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-300">
                   {suggestions.length > 0 ? (
                     <div className="max-h-[350px] overflow-y-auto scrollbar-hide">
@@ -276,11 +276,11 @@ export default function Navbar() {
                         );
                       })}
                     </div>
-                  ) : (
+                  ) : !isProcessing ? (
                     <div className="p-8 text-center">
                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No results for "{search}"</p>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               )}
             </form>
