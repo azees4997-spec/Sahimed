@@ -29,17 +29,17 @@ export default function Navbar() {
   const suggestionRef = useRef<HTMLDivElement>(null);
   const db = useFirestore();
 
-  // Optimized Search Suggestions: Multi-variant Prefix Matching
+  // Optimized Search Suggestions: Dual-path lookup for Names and Salts
   useEffect(() => {
     if (search.trim().length >= 2 && db) {
       setIsProcessing(true);
       const term = search.trim();
       
-      // Generate multiple case variants to bypass Firestore case-sensitivity
+      // Multi-case variants to ensure prefix matching across different DB naming styles
       const vRaw = term;
       const vUpper = term.toUpperCase();
       const vSentence = term.charAt(0).toUpperCase() + term.slice(1);
-      // Properly handle dashes and spaces for clinical terms (e.g., d-veniz -> D-Veniz)
+      // Proper handling for dash-separated clinical brands (e.g., D-Veniz)
       const vProper = term.split(/[\s-]+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
       const vDashAware = term.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('-');
 
@@ -47,31 +47,74 @@ export default function Navbar() {
       
       const fetchSuggestions = async () => {
         try {
-          // Parallel search across both Medicine Name and Salt Composition
-          const allQueries = variants.flatMap(v => [
-            query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(5)),
-            query(collection(db, 'medicines'), where('saltComposition', '>=', v), where('saltComposition', '<=', v + '\uf8ff'), limit(5))
+          // 1. DIRECT PRODUCT NAME QUERIES
+          const nameQueries = variants.map(v => 
+            query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(5))
+          );
+
+          // 2. CLINICAL SALT (MOLECULE) QUERIES
+          const saltQueries = variants.map(v => 
+            query(collection(db, 'moleculeMaster'), where('molecule', '>=', v), where('molecule', '<=', v + '\uf8ff'), limit(5))
+          );
+
+          // Parallel execution for lowest latency
+          const [nameSnaps, saltSnaps] = await Promise.all([
+            Promise.all(nameQueries.map(q => getDocs(q))),
+            Promise.all(saltQueries.map(q => getDocs(q)))
           ]);
 
-          const snapshots = await Promise.all(allQueries.map(q => getDocs(q)));
-
-          // Merge and de-duplicate results by document ID
           const resultsMap = new Map();
-          snapshots.forEach(snap => {
+          
+          // Process Name Matches
+          nameSnaps.forEach(snap => {
             snap.forEach(doc => {
               resultsMap.set(doc.id, { id: doc.id, ...doc.data() });
             });
           });
 
-          setSuggestions(Array.from(resultsMap.values()).slice(0, 10));
+          // Process Salt Matches (Finding medicines linked to these molecules)
+          const moleculeIds: string[] = [];
+          const moleculeNameMap = new Map<string, string>();
+          
+          saltSnaps.forEach(snap => {
+            snap.forEach(doc => {
+              if (!moleculeNameMap.has(doc.id)) {
+                moleculeIds.push(doc.id);
+                moleculeNameMap.set(doc.id, doc.data().molecule);
+              }
+            });
+          });
+
+          if (moleculeIds.length > 0) {
+            // Fetch products associated with these clinical salts
+            const medicinesBySaltQuery = query(
+              collection(db, 'medicines'), 
+              where('moleculeId', 'in', moleculeIds.slice(0, 10)), 
+              limit(10)
+            );
+            const medBySaltSnap = await getDocs(medicinesBySaltQuery);
+            
+            medBySaltSnap.forEach(doc => {
+              const data = doc.data();
+              // Prioritize molecule name for the search card display
+              resultsMap.set(doc.id, { 
+                id: doc.id, 
+                ...data, 
+                saltComposition: moleculeNameMap.get(data.moleculeId) || data.saltComposition 
+              });
+            });
+          }
+
+          // Enforce 5-item suggestion limit as requested
+          setSuggestions(Array.from(resultsMap.values()).slice(0, 5));
         } catch (error) {
-          console.warn("Search discovery encountered a delay:", error);
+          console.warn("Search discovery engine encountered a delay:", error);
         } finally {
           setIsProcessing(false);
         }
       };
 
-      const timer = setTimeout(fetchSuggestions, 250);
+      const timer = setTimeout(fetchSuggestions, 300);
       return () => clearTimeout(timer);
     } else {
       setSuggestions([]);
