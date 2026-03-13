@@ -65,7 +65,8 @@ export default function CheckoutPage() {
     pincode: '',
     lat: 0,
     lng: 0,
-    tag: 'Home'
+    tag: 'Home',
+    otherTag: ''
   });
 
   // --- Fetch Saved Addresses ---
@@ -108,7 +109,8 @@ export default function CheckoutPage() {
         pincode: defaultAddr.pincode,
         lat: defaultAddr.lat || 0,
         lng: defaultAddr.lng || 0,
-        tag: defaultAddr.tag
+        tag: defaultAddr.tag,
+        otherTag: defaultAddr.tag !== 'Home' && defaultAddr.tag !== 'Office' ? defaultAddr.tag : ''
       }));
     }
   }, [savedAddresses]);
@@ -185,6 +187,7 @@ export default function CheckoutPage() {
     }
 
     const fullStreet = `${orderInfo.buildingLocality}${orderInfo.city ? ', ' + orderInfo.city : ''}${orderInfo.state ? ', ' + orderInfo.state : ''}`;
+    const finalTag = orderInfo.tag === 'Other' ? (orderInfo.otherTag || 'Other') : orderInfo.tag;
 
     const payload = {
       houseNumber: orderInfo.houseNumber,
@@ -192,7 +195,7 @@ export default function CheckoutPage() {
       pincode: orderInfo.pincode,
       lat: orderInfo.lat,
       lng: orderInfo.lng,
-      tag: orderInfo.tag,
+      tag: finalTag,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
@@ -200,7 +203,7 @@ export default function CheckoutPage() {
     try {
       addDocumentNonBlocking(collection(db, 'userProfiles', user.uid, 'addresses'), payload);
       setIsAddressModalOpen(false);
-      toast({ title: "Address Secured", description: `Saved to your ${orderInfo.tag} registry.` });
+      toast({ title: "Address Secured", description: `Saved to your ${finalTag} registry.` });
     } catch (err) {
       toast({ variant: 'destructive', title: "Save Error" });
     }
@@ -230,6 +233,7 @@ export default function CheckoutPage() {
 
     const finalAmount = Math.max(0, totalPrice + feeTotal - promoDiscount);
     const cleanPhone = orderInfo.phoneNumber.replace(/\D/g, '');
+    const finalTag = orderInfo.tag === 'Other' ? (orderInfo.otherTag || 'Other') : orderInfo.tag;
 
     const orderData = {
       userId: user.uid,
@@ -246,7 +250,7 @@ export default function CheckoutPage() {
         pincode: orderInfo.pincode,
         lat: orderInfo.lat,
         lng: orderInfo.lng,
-        tag: orderInfo.tag
+        tag: finalTag
       },
       items: cart.map(item => ({
         medicineId: item.id,
@@ -297,7 +301,7 @@ export default function CheckoutPage() {
                 <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Saved Delivery Points</h3>
                 <button 
                   onClick={() => {
-                    setOrderInfo({ patientName: orderInfo.patientName, phoneNumber: orderInfo.phoneNumber, houseNumber: '', buildingLocality: '', city: '', state: '', pincode: '', lat: 0, lng: 0, tag: 'Home' });
+                    setOrderInfo({ patientName: orderInfo.patientName, phoneNumber: orderInfo.phoneNumber, houseNumber: '', buildingLocality: '', city: '', state: '', pincode: '', lat: 0, lng: 0, tag: 'Home', otherTag: '' });
                     setIsAddressModalOpen(true);
                   }}
                   className="text-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-1.5 hover:underline"
@@ -441,129 +445,141 @@ export default function CheckoutPage() {
 
       {/* DELIVERY DETAILS MODAL */}
       <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
-        <DialogContent className="max-w-2xl w-[94vw] sm:w-full rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white mx-auto animate-in zoom-in-95 duration-300 z-[110]">
-          <div className="max-h-[90vh] overflow-y-auto scrollbar-hide">
-            <div className="bg-primary p-8 text-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-xl" />
-              <DialogTitle className="text-2xl font-black uppercase tracking-tight">Delivery Point</DialogTitle>
-              <p className="text-[9px] font-black text-white/60 uppercase tracking-[0.2em] mt-1">Clinical Logistics Path</p>
+        <DialogContent className="max-w-xl w-[96vw] sm:w-full rounded-[32px] border-none p-0 overflow-hidden shadow-3xl bg-white mx-auto z-[110]">
+          <div className="max-h-[92vh] overflow-y-auto scrollbar-hide">
+            <div className="bg-primary p-5 text-white relative overflow-hidden shrink-0">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl" />
+              <DialogTitle className="text-xl font-black uppercase tracking-tight">Delivery Point</DialogTitle>
+              <p className="text-[8px] font-black text-white/60 uppercase tracking-[0.2em] mt-0.5">Clinical Logistics Path</p>
             </div>
 
-            <div className="p-8 space-y-8">
-              {/* PICK LOCATION BUTTON AT THE TOP */}
+            <div className="p-5 space-y-4">
+              {/* PICK LOCATION BUTTON AT THE TOP - Simplified styling to prevent hover issues */}
               <Button 
                 onClick={handleLocateMe}
                 variant="outline" 
                 type="button"
-                className="h-14 w-full rounded-xl border-2 border-primary/20 text-primary hover:bg-primary/5 font-black text-[10px] uppercase gap-3 transition-all active:scale-95 mb-2"
+                className="h-12 w-full rounded-xl border-2 border-primary/20 text-primary bg-white hover:bg-primary/5 font-black text-[10px] uppercase gap-3 transition-none active:scale-95"
               >
                 {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Target className="w-4 h-4" />}
                 Autofill Current Location
               </Button>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Name *</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Name *</Label>
                   <Input 
                     placeholder="e.g. Rahul Sharma" 
                     value={orderInfo.patientName} 
                     onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})}
-                    className="h-14 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-6"
+                    className="h-12 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-4"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Phone number *</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Phone number *</Label>
                   <div className="relative">
-                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 border-r pr-3">+91</div>
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 border-r pr-2.5">+91</div>
                     <Input 
                       placeholder="Mobile number" 
                       value={orderInfo.phoneNumber} 
                       maxLength={10}
                       onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '')})}
-                      className="h-14 pl-16 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm"
+                      className="h-12 pl-14 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">House No. / Building *</Label>
+              <div className="space-y-1.5">
+                <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">House No. / Building *</Label>
                 <Input 
                   placeholder="Apartment name, Flat number" 
                   value={orderInfo.houseNumber} 
                   onChange={e => setOrderInfo({...orderInfo, houseNumber: e.target.value})}
-                  className="h-14 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-6"
+                  className="h-12 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-4"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Locality / Street *</Label>
+              <div className="space-y-1.5">
+                <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Locality / Street *</Label>
                 <Input 
                   placeholder="Street name, Area" 
                   value={orderInfo.buildingLocality} 
                   onChange={e => setOrderInfo({...orderInfo, buildingLocality: e.target.value})}
-                  className="h-14 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-6"
+                  className="h-12 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-4"
                 />
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 items-end">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Pincode *</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Pincode *</Label>
                   <Input 
                     placeholder="6-digits" 
                     value={orderInfo.pincode} 
                     maxLength={6}
                     onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '')})}
-                    className="h-14 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-4"
+                    className="h-12 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-3"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">City *</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">City *</Label>
                   <Input 
                     placeholder="City" 
                     value={orderInfo.city} 
                     onChange={e => setOrderInfo({...orderInfo, city: e.target.value})}
-                    className="h-14 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-4"
+                    className="h-12 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-3"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">State *</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">State *</Label>
                   <Input 
                     placeholder="State" 
                     value={orderInfo.state} 
                     onChange={e => setOrderInfo({...orderInfo, state: e.target.value})}
-                    className="h-14 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-4"
+                    className="h-12 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-3"
                   />
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Address Type</Label>
+              <div className="space-y-3">
+                <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Address Type</Label>
                 <RadioGroup 
                   value={orderInfo.tag} 
                   onValueChange={(v) => setOrderInfo({...orderInfo, tag: v})}
-                  className="flex gap-6 items-center pt-1"
+                  className="flex flex-wrap gap-4 items-center pt-0.5"
                 >
                   {['Home', 'Office', 'Other'].map(t => (
                     <div key={t} className="flex items-center space-x-2">
-                      <RadioGroupItem value={t} id={`type-${t}`} className="border-primary text-primary h-5 w-5" />
-                      <Label htmlFor={`type-${t}`} className="text-sm font-bold uppercase tracking-tight cursor-pointer">{t}</Label>
+                      <RadioGroupItem value={t} id={`type-${t}`} className="border-primary text-primary h-4 w-4" />
+                      <Label htmlFor={`type-${t}`} className="text-xs font-bold uppercase tracking-tight cursor-pointer">{t}</Label>
                     </div>
                   ))}
                 </RadioGroup>
+                
+                {/* CONDITIONAL "OTHER" INPUT */}
+                {orderInfo.tag === 'Other' && (
+                  <div className="pt-2 animate-in fade-in slide-in-from-top-1">
+                    <Input 
+                      placeholder="Mention name (e.g. Clinic, Hostel)" 
+                      value={orderInfo.otherTag} 
+                      onChange={e => setOrderInfo({...orderInfo, otherTag: e.target.value})}
+                      className="h-11 rounded-xl bg-gray-50 border border-primary/20 font-bold text-xs px-4"
+                    />
+                  </div>
+                )}
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-3 pt-2">
                 <Button 
                   onClick={handleSaveNewAddress}
-                  className="flex-1 h-14 rounded-xl bg-primary text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
+                  className="flex-1 h-12 rounded-xl bg-primary text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all"
                 >
                   SAVE
                 </Button>
                 <Button 
                   onClick={() => setIsAddressModalOpen(false)}
                   variant="outline"
-                  className="flex-1 h-14 rounded-xl border border-gray-200 text-gray-500 font-black uppercase tracking-widest text-[10px] hover:bg-gray-50 transition-all active:scale-95"
+                  className="flex-1 h-12 rounded-xl border border-gray-200 text-gray-500 font-black uppercase tracking-widest text-[10px] hover:bg-gray-50 active:scale-95 transition-all"
                 >
                   CANCEL
                 </Button>
