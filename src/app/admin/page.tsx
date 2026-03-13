@@ -609,11 +609,26 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const finalImages = imageUrls.filter(Boolean);
-    const sku = form.sku || initialData?.sku; if (!sku) return;
+    
+    // Determine the document ID for the medicine
+    // If we are editing, use the existing ID. If new, use SKU.
+    const docId = initialData?.id || form.sku;
+    if (!docId) {
+      toast({ variant: 'destructive', title: "Identity Error", description: "SKU is required for new products." });
+      return;
+    }
+
     const staticPayload = { ...form, imageUrls: finalImages, imageUrl: finalImages[thumbnailIdx] || finalImages[0] || '', updatedAt: serverTimestamp() };
     const livePayload = { mrp: Number(liveData.mrp), sahimed_price: Number(liveData.price), stock_quantity: Number(liveData.availableQuantity), updatedAt: serverTimestamp() };
-    setDocumentNonBlocking(doc(db, 'medicines', sku), staticPayload, { merge: true });
-    setDocumentNonBlocking(doc(db, 'product_live_data', sku), livePayload, { merge: true });
+    
+    // Update or Create the medicine document using the confirmed docId
+    setDocumentNonBlocking(doc(db, 'medicines', docId), staticPayload, { merge: true });
+    
+    // Live data is always indexed by SKU
+    if (form.sku) {
+      setDocumentNonBlocking(doc(db, 'product_live_data', form.sku), livePayload, { merge: true });
+    }
+    
     onSuccess();
   };
 
