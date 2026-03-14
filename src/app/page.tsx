@@ -147,17 +147,16 @@ export default function Home() {
                             </div>
                           </div>
                         ) : (
-                          /* CUSTOM BANNER: FULL WIDTH IMAGE ONLY (Resolves Overlap) */
+                          /* CUSTOM BANNER: FULL WIDTH IMAGE ONLY (Resolves Overlap & Cutting) */
                           <Link href="/search" className="block w-full h-full relative">
                             <Image 
                               src={banner.imageUrl} 
                               alt={banner.title || "Promotion"} 
                               fill 
                               sizes="100vw"
-                              className="object-cover object-center transition-transform duration-[2000ms] group-hover:scale-105"
+                              className="object-contain object-center transition-all duration-500"
                               priority={index === 0}
                             />
-                            {/* We skip text/logo overlays for custom banners as they are usually pre-designed images */}
                           </Link>
                         )}
                       </div>
