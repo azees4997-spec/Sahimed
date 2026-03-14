@@ -749,7 +749,10 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       const url = await getDownloadURL(snapshot.ref);
       const newUrls = [...imageUrls]; newUrls[index] = url; setImageUrls(newUrls);
       toast({ title: "Image Uploaded" });
-    } catch (err) { toast({ variant: 'destructive', title: "Upload Failed" }); } finally { setUploading(false); }
+    } catch (err: any) { 
+      console.error("Clinical asset upload failed:", err);
+      toast({ variant: 'destructive', title: "Upload Failed", description: err.message || "Could not reach storage." }); 
+    } finally { setUploading(false); }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -871,8 +874,9 @@ function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: a
       
       setForm(prev => ({ ...prev, imageUrl: url }));
       toast({ title: "Icon Uploaded" });
-    } catch (err) { 
-      toast({ variant: 'destructive', title: "Upload Failed" }); 
+    } catch (err: any) { 
+      console.error("Clinical category upload failed:", err);
+      toast({ variant: 'destructive', title: "Upload Failed", description: err.message || "Check storage availability." }); 
     } finally { 
       setUploading(false); 
     }
@@ -1284,12 +1288,16 @@ function BannerForm({ db, initialData, onSuccess }: { db: any, initialData?: any
     const file = e.target.files?.[0]; if (!file) return;
     setUploading(true);
     try {
+      // organize storage path
       const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(snapshot.ref);
       setForm(prev => ({ ...prev, imageUrl: url }));
       toast({ title: "Banner Image Uploaded" });
-    } catch (err) { toast({ variant: 'destructive', title: "Upload Failed" }); } finally { setUploading(false); }
+    } catch (err: any) { 
+      console.error("Banner upload sequence failed:", err);
+      toast({ variant: 'destructive', title: "Upload Failed", description: err.message || "Could not reach clinical storage hub." }); 
+    } finally { setUploading(false); }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -1310,11 +1318,22 @@ function BannerForm({ db, initialData, onSuccess }: { db: any, initialData?: any
           {form.imageUrl ? <img src={form.imageUrl} className="w-full h-full object-cover" alt="" /> : <ImageIcon className="text-gray-200 w-10 h-10" />}
           {uploading && <div className="absolute inset-0 bg-white/80 flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>}
         </div>
-        <div className="flex justify-center">
-          <input type="file" accept="image/*" id="banner-upload" className="hidden" onChange={handleFileUpload} />
-          <Button type="button" variant="outline" onClick={() => document.getElementById('banner-upload')?.click()} className="rounded-full h-12 px-10 font-black uppercase text-[10px] tracking-widest border-2 gap-3 shadow-sm active:scale-95 transition-transform">
-            <UploadCloud className="w-4 h-4" /> Upload Visual Asset
-          </Button>
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-center">
+            <input type="file" accept="image/*" id="banner-upload" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+            <Button type="button" variant="outline" onClick={() => document.getElementById('banner-upload')?.click()} className="rounded-full h-12 px-10 font-black uppercase text-[10px] tracking-widest border-2 gap-3 shadow-sm active:scale-95 transition-transform">
+              <UploadCloud className="w-4 h-4" /> {uploading ? "Uploading..." : "Upload Visual Asset"}
+            </Button>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Direct Image URL (Link)</Label>
+            <Input 
+              value={form.imageUrl} 
+              onChange={e => setForm({...form, imageUrl: e.target.value})}
+              placeholder="Paste image address (https://...)"
+              className="rounded-xl h-14 bg-gray-50 border-none font-bold text-xs"
+            />
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
