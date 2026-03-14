@@ -101,6 +101,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Storefront Banners: Publicly readable for the hero carousel
     match /banners/{bannerId} {
       allow read: if true;
       allow write: if isAdmin();
