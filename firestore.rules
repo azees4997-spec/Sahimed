@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -96,6 +97,11 @@ service cloud.firestore {
     }
 
     match /systemAlerts/{alertId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /banners/{bannerId} {
       allow read: if true;
       allow write: if isAdmin();
     }

@@ -302,6 +302,7 @@ export default function AdminConsole() {
         {activeTab === 'stockAlerts' && <AlertsTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
         {activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
         {activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+        {activeTab === 'banners' && <BannersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
       </main>
     </div>
   );
@@ -315,6 +316,7 @@ function OverviewTab({ setTab }: { setTab: (t: AdminTab) => void }) {
     { label: 'ORDERS', icon: ShoppingBag, desc: 'Fulfillment & Logistics', tab: 'fulfillment', color: 'text-blue-500' },
     { label: 'COUPONS', icon: Ticket, desc: 'Marketing Campaigns', tab: 'promocodes', color: 'text-purple-500' },
     { label: 'FEES', icon: Receipt, desc: 'Billing Adjustments', tab: 'fees', color: 'text-orange-500' },
+    { label: 'BANNERS', icon: ImageIcon, desc: 'Storefront Promotions', tab: 'banners', color: 'text-yellow-500' },
     { label: 'CATEGORIES', icon: Tag, desc: 'Therapeutic Taxonomy', tab: 'categories', color: 'text-pink-500' },
     { label: 'CUSTOMERS', icon: Users, desc: 'Patient Registry', tab: 'customers', color: 'text-indigo-500' },
     { label: 'ALERTS', icon: Megaphone, desc: 'System Broadcasts', tab: 'stockAlerts', color: 'text-red-500' },
@@ -1217,4 +1219,119 @@ function AlertsTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, o
   );
 }
 
-type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'promocodes' | 'fees' | 'categories' | 'customers' | 'stockAlerts' | 'itemMaster' | 'moleculeMaster';
+// --- BANNERS HUB ---
+
+function BannersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
+  const bannersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'banners'), orderBy('order', 'asc')) : null, [db, isVerified]);
+  const { data: banners, isLoading } = useCollection(bannersQuery);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingBanner, setEditingBanner] = useState<any>(null);
+
+  return (
+    <div className="space-y-8 animate-in slide-in-from-bottom-2">
+      <SectionHeader title="Storefront Banners" subtitle="Manage carousel promotions" onBack={onBack}>
+        <Button onClick={() => { setEditingBanner(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] uppercase bg-primary text-white"><Plus className="w-4 h-4" /> Add Banner</Button>
+      </SectionHeader>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {isLoading ? (<div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>) : banners?.length === 0 ? (
+          <div className="col-span-full py-20 text-center bg-white rounded-[40px] border-none shadow-sm">
+            <ImageIcon className="w-12 h-12 text-gray-100 mx-auto mb-4" />
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No custom banners found. Using fallbacks.</p>
+          </div>
+        ) : banners?.map(banner => (
+          <Card key={banner.id} className="rounded-[32px] overflow-hidden border-none shadow-sm bg-white group">
+            <div className="aspect-[24/9] relative bg-gray-50">
+              {banner.imageUrl && <img src={banner.imageUrl} className="w-full h-full object-cover" alt="" />}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <Button variant="secondary" size="icon" onClick={() => { setEditingBanner(banner); setIsFormOpen(true); }} className="rounded-full"><Edit2 className="w-4 h-4" /></Button>
+                <Button variant="destructive" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'banners', banner.id))} className="rounded-full"><Trash2 className="w-4 h-4" /></Button>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <Badge className={cn("text-[8px] font-black uppercase tracking-widest", banner.isActive ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400")}>{banner.isActive ? 'ACTIVE' : 'INACTIVE'}</Badge>
+                <span className="text-[10px] font-black text-gray-300">Order: {banner.order}</span>
+              </div>
+              <h3 className="font-black text-xs uppercase truncate text-gray-900 tracking-tight">{banner.title || 'No Title'}</h3>
+            </div>
+          </Card>
+        ))}
+      </div>
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden">
+          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black uppercase">Banner Configuration</DialogTitle></div>
+          <div className="p-8"><BannerForm db={db} initialData={editingBanner} onSuccess={() => setIsFormOpen(false)} /></div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function BannerForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const { storage } = initializeFirebase();
+  const { toast } = useToast();
+  const [form, setForm] = useState({
+    title: initialData?.title || 'UPTO 81% DISCOUNT',
+    subtitle: initialData?.subtitle || 'On All Medicines & Health Products',
+    hindiTagline: initialData?.hindiTagline || 'सही दवा, सही दाम',
+    imageUrl: initialData?.imageUrl || '',
+    isActive: initialData?.isActive ?? true,
+    order: initialData?.order || 0
+  });
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    setUploading(true);
+    try {
+      const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      setForm(prev => ({ ...prev, imageUrl: url }));
+      toast({ title: "Banner Image Uploaded" });
+    } catch (err) { toast({ variant: 'destructive', title: "Upload Failed" }); } finally { setUploading(false); }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = { ...form, updatedAt: serverTimestamp() };
+    if (initialData?.id) {
+      updateDocumentNonBlocking(doc(db, 'banners', initialData.id), payload);
+    } else {
+      addDocumentNonBlocking(collection(db, 'banners'), { ...payload, createdAt: serverTimestamp() });
+    }
+    toast({ title: "Banner Saved" }); onSuccess();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <div className="aspect-[24/9] bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden relative shadow-inner">
+          {form.imageUrl ? <img src={form.imageUrl} className="w-full h-full object-cover" alt="" /> : <ImageIcon className="text-gray-200 w-10 h-10" />}
+          {uploading && <div className="absolute inset-0 bg-white/80 flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>}
+        </div>
+        <div className="flex justify-center">
+          <input type="file" accept="image/*" id="banner-upload" className="hidden" onChange={handleFileUpload} />
+          <Button type="button" variant="outline" onClick={() => document.getElementById('banner-upload')?.click()} className="rounded-full h-12 px-10 font-black uppercase text-[10px] tracking-widest border-2 gap-3 shadow-sm active:scale-95 transition-transform">
+            <UploadCloud className="w-4 h-4" /> Upload Visual Asset
+          </Button>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Main Title (Left)</Label><Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="rounded-xl h-14 bg-gray-50 border-none font-bold" placeholder="e.g. UPTO 81% DISCOUNT" /></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Subtitle (Left)</Label><Input value={form.subtitle} onChange={e => setForm({...form, subtitle: e.target.value})} className="rounded-xl h-14 bg-gray-50 border-none font-bold" placeholder="On All Medicines..." /></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Hindi Tagline (Bottom)</Label><Input value={form.hindiTagline} onChange={e => setForm({...form, hindiTagline: e.target.value})} className="rounded-xl h-14 bg-gray-50 border-none font-bold" placeholder="सही दवा, सही दाम" /></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Display Order</Label><Input type="number" value={form.order} onChange={e => setForm({...form, order: Number(e.target.value)})} className="rounded-xl h-14 bg-gray-50 border-none font-bold" /></div>
+      </div>
+      <div className="bg-primary/5 p-4 rounded-2xl flex items-center space-x-3 border border-primary/10">
+        <Checkbox id="banner-active" checked={form.isActive} onCheckedChange={c => setForm({...form, isActive: !!c})} className="h-5 w-5" />
+        <Label htmlFor="banner-active" className="text-[10px] font-black uppercase tracking-widest cursor-pointer text-gray-700">Visible on storefront</Label>
+      </div>
+      <Button type="submit" disabled={uploading || !form.imageUrl} className="w-full h-20 rounded-full font-black uppercase tracking-[0.2em] bg-primary text-white shadow-2xl shadow-primary/20 active:scale-[0.98] transition-all">
+        {initialData?.id ? 'Commit Updates' : 'Sync Visual Promotion'}
+      </Button>
+    </form>
+  );
+}
+
+type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'promocodes' | 'fees' | 'categories' | 'customers' | 'stockAlerts' | 'itemMaster' | 'moleculeMaster' | 'banners';

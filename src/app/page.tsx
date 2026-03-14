@@ -9,7 +9,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
-import { collection, query, limit, orderBy } from 'firebase/firestore';
+import { collection, query, limit, orderBy, where } from 'firebase/firestore';
 import {
   Carousel,
   CarouselContent,
@@ -36,8 +36,26 @@ export default function Home() {
     return query(collection(db, 'categories'), orderBy('name', 'asc'), limit(12));
   }, [db]);
 
+  const bannersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'banners'), where('isActive', '==', true), orderBy('order', 'asc'), limit(5));
+  }, [db]);
+
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
+  const { data: dbBanners, isLoading: bannersLoading } = useCollection(bannersQuery);
+
+  const displayBanners = React.useMemo(() => {
+    if (dbBanners && dbBanners.length > 0) return dbBanners;
+    // Fallback to static high-end design if no dynamic banners exist
+    return PlaceHolderImages.filter(img => img.id.startsWith('hero-')).slice(0, 3).map((b, idx) => ({
+      id: b.id,
+      imageUrl: b.imageUrl,
+      title: "UPTO 81% DISCOUNT",
+      subtitle: "On All Medicines & Health Products",
+      hindiTagline: "सही दवा, सही दाम"
+    }));
+  }, [dbBanners]);
 
   const displayMedicines = React.useMemo(() => {
     if (medicines && medicines.length > 0) return medicines;
@@ -53,8 +71,6 @@ export default function Home() {
     }));
   }, [categories]);
 
-  const heroBanners = PlaceHolderImages.filter(img => img.id.startsWith('hero-')).slice(0, 3);
-
   return (
     <div className="min-h-screen flex flex-col bg-[#F4F7F6] pharma-bg-pattern page-transition-wrapper">
       <Navbar />
@@ -65,7 +81,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-10">
             <Carousel className="w-full" opts={{ loop: true, align: 'start' }} plugins={[autoplayRef.current]}>
               <CarouselContent>
-                {heroBanners.map((banner, index) => (
+                {displayBanners.map((banner, index) => (
                   <CarouselItem key={banner.id}>
                     <div className="relative rounded-[32px] sm:rounded-[48px] overflow-hidden aspect-[16/9] sm:aspect-[24/9] bg-white shadow-2xl border flex group">
                       
@@ -80,11 +96,11 @@ export default function Home() {
                           </div>
                           
                           <div className="space-y-1 sm:space-y-2">
-                            <h1 className="text-3xl sm:text-[84px] font-black uppercase tracking-tighter leading-[0.85] text-[#FF4D00] drop-shadow-sm">
-                              UPTO 81%<br/>DISCOUNT
+                            <h1 className="text-3xl sm:text-[84px] font-black uppercase tracking-tighter leading-[0.85] text-[#FF4D00] drop-shadow-sm whitespace-pre-line">
+                              {banner.title}
                             </h1>
                             <p className="text-[10px] sm:text-2xl font-black text-[#1E3A8A] uppercase tracking-tight leading-tight">
-                              On All Medicines &<br/>Health Products
+                              {banner.subtitle}
                             </p>
                           </div>
 
@@ -102,7 +118,7 @@ export default function Home() {
                       <div className="absolute top-0 right-0 bottom-0 w-1/2 sm:w-[65%] z-10">
                         <Image 
                           src={banner.imageUrl} 
-                          alt={banner.description} 
+                          alt={banner.title} 
                           fill 
                           sizes="(max-width: 768px) 50vw, 65vw"
                           className="object-cover object-center group-hover:scale-105 transition-transform duration-[2000ms]"
@@ -114,7 +130,7 @@ export default function Home() {
                       {/* Global Hindi Tagline: Bottom Anchored */}
                       <div className="absolute bottom-4 sm:bottom-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center">
                         <span className="text-[#1E3A8A] font-black text-xs sm:text-3xl uppercase tracking-widest whitespace-nowrap drop-shadow-sm">
-                          सही दवा, सही दाम
+                          {banner.hindiTagline}
                         </span>
                         <div className="w-12 sm:w-20 h-1 bg-primary rounded-full mt-1 opacity-20" />
                       </div>

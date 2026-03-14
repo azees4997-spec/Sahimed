@@ -121,6 +121,24 @@
         "validUntil": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "code", "discountType", "discountValue", "applyTo", "isActive"]
+    },
+    "Banner": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Banner",
+      "type": "object",
+      "description": "Storefront promotional banners.",
+      "properties": {
+        "id": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "hindiTagline": { "type": "string" },
+        "order": { "type": "number" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "imageUrl", "isActive"]
     }
   },
   "auth": {
@@ -190,6 +208,14 @@
           "entityName": "StockEnquiry",
           "schema": { "type": "object", "properties": { "medicineId": { "type": "string" }, "userId": { "type": "string" } } },
           "description": "Requests for out-of-stock items."
+        }
+      },
+      {
+        "path": "/banners/{bannerId}",
+        "definition": {
+          "entityName": "Banner",
+          "schema": { "$ref": "#/backend/entities/Banner" },
+          "description": "Storefront promotional banners."
         }
       }
     ]
