@@ -36,9 +36,10 @@ export default function Home() {
     return query(collection(db, 'categories'), orderBy('name', 'asc'), limit(12));
   }, [db]);
 
+  // SIMPLIFIED QUERY: Removed 'where' to avoid composite index requirements during development
   const bannersQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'banners'), where('isActive', '==', true), orderBy('order', 'asc'), limit(5));
+    return query(collection(db, 'banners'), orderBy('order', 'asc'), limit(5));
   }, [db]);
 
   const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
@@ -46,8 +47,13 @@ export default function Home() {
   const { data: dbBanners, isLoading: bannersLoading } = useCollection(bannersQuery);
 
   const displayBanners = React.useMemo(() => {
-    if (dbBanners && dbBanners.length > 0) return dbBanners;
-    // Fallback to static high-end design if no dynamic banners exist
+    // 1. If we have database banners, filter for active ones and return
+    if (dbBanners && dbBanners.length > 0) {
+      const activeBanners = dbBanners.filter(b => b.isActive !== false);
+      if (activeBanners.length > 0) return activeBanners;
+    }
+    
+    // 2. Fallback to premium static design if no dynamic banners exist or are still loading
     return PlaceHolderImages.filter(img => img.id.startsWith('hero-')).slice(0, 3).map((b, idx) => ({
       id: b.id,
       imageUrl: b.imageUrl,
@@ -118,7 +124,7 @@ export default function Home() {
                       <div className="absolute top-0 right-0 bottom-0 w-1/2 sm:w-[65%] z-10">
                         <Image 
                           src={banner.imageUrl} 
-                          alt={banner.title} 
+                          alt={banner.title || "Promotion"} 
                           fill 
                           sizes="(max-width: 768px) 50vw, 65vw"
                           className="object-cover object-center group-hover:scale-105 transition-transform duration-[2000ms]"
