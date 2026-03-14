@@ -23,10 +23,9 @@ import { CATEGORIES as LOCAL_CATEGORIES, PRODUCTS as LOCAL_PRODUCTS } from '@/li
 export default function Home() {
   const db = useFirestore();
   const autoplayRef = React.useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: false })
+    Autoplay({ delay: 6000, stopOnInteraction: false })
   );
 
-  // Optimization: Strictly fetch only 12 items for the homepage to minimize read consumption
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(12));
@@ -62,27 +61,62 @@ export default function Home() {
       <main className="flex-1 relative overflow-hidden pb-12">
         <div className="absolute top-40 right-10 opacity-5 pointer-events-none rotate-12 hidden lg:block"><Dna size={400} /></div>
 
-        <section className="py-2 sm:py-4 relative z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-12">
+        <section className="py-2 sm:py-6 relative z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-10">
             <Carousel className="w-full" opts={{ loop: true, align: 'start' }} plugins={[autoplayRef.current]}>
               <CarouselContent>
                 {heroBanners.map((banner, index) => (
                   <CarouselItem key={banner.id}>
-                    <div className="relative rounded-[32px] sm:rounded-[40px] overflow-hidden aspect-[16/9] sm:aspect-[24/8] bg-primary shadow-2xl border group">
-                      <Image 
-                        src={banner.imageUrl && banner.imageUrl.startsWith('http') ? banner.imageUrl : `https://picsum.photos/seed/hero${index}/1200/400`} 
-                        alt={banner.description} 
-                        fill 
-                        sizes="100vw"
-                        className="object-cover opacity-60 group-hover:scale-105 transition-transform duration-1000"
-                        priority={index === 0}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent flex items-end p-6 sm:p-16">
-                        <div className="max-w-2xl text-white space-y-3 sm:space-y-6">
-                          <span className="bg-accent text-white text-[8px] sm:text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-[0.2em] shadow-lg inline-block">CLINICAL PRECISION</span>
-                          <h1 className="text-lg sm:text-5xl font-black uppercase tracking-tighter leading-tight">{banner.description}</h1>
-                          <Link href="/search"><Button size="lg" className="rounded-full bg-white text-primary h-10 sm:h-16 px-6 sm:px-16 text-[9px] sm:text-[13px] font-black uppercase tracking-widest hover:bg-gray-100 shadow-2xl">Explore Store</Button></Link>
+                    <div className="relative rounded-[32px] sm:rounded-[48px] overflow-hidden aspect-[16/9] sm:aspect-[24/9] bg-white shadow-2xl border flex group">
+                      
+                      {/* Banner Left: Premium Typography */}
+                      <div className="relative z-20 flex-1 flex flex-col justify-center p-6 sm:p-16">
+                        <div className="max-w-2xl space-y-3 sm:space-y-6">
+                          <div className="flex items-center gap-2 mb-2">
+                             <div className="bg-primary p-1.5 sm:p-2 rounded-xl shadow-lg shadow-primary/20">
+                               <div className="text-white font-black text-[10px] sm:text-sm">SM</div>
+                             </div>
+                             <span className="text-primary font-black text-xl sm:text-4xl tracking-tighter uppercase">SahiMed</span>
+                          </div>
+                          
+                          <div className="space-y-1 sm:space-y-2">
+                            <h1 className="text-3xl sm:text-[84px] font-black uppercase tracking-tighter leading-[0.85] text-[#FF4D00] drop-shadow-sm">
+                              UPTO 81%<br/>DISCOUNT
+                            </h1>
+                            <p className="text-[10px] sm:text-2xl font-black text-[#1E3A8A] uppercase tracking-tight leading-tight">
+                              On All Medicines &<br/>Health Products
+                            </p>
+                          </div>
+
+                          <div className="pt-4">
+                            <Link href="/search">
+                              <Button size="lg" className="rounded-full bg-primary text-white h-10 sm:h-16 px-8 sm:px-12 text-[10px] sm:text-[13px] font-black uppercase tracking-widest hover:bg-primary/90 shadow-2xl shadow-primary/20">
+                                Explore Store
+                              </Button>
+                            </Link>
+                          </div>
                         </div>
+                      </div>
+
+                      {/* Banner Right: Clinical Image with Masking */}
+                      <div className="absolute top-0 right-0 bottom-0 w-1/2 sm:w-[65%] z-10">
+                        <Image 
+                          src={banner.imageUrl} 
+                          alt={banner.description} 
+                          fill 
+                          sizes="(max-width: 768px) 50vw, 65vw"
+                          className="object-cover object-center group-hover:scale-105 transition-transform duration-[2000ms]"
+                          priority={index === 0}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/20 to-transparent" />
+                      </div>
+
+                      {/* Global Hindi Tagline: Bottom Anchored */}
+                      <div className="absolute bottom-4 sm:bottom-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center">
+                        <span className="text-[#1E3A8A] font-black text-xs sm:text-3xl uppercase tracking-widest whitespace-nowrap drop-shadow-sm">
+                          सही दवा, सही दाम
+                        </span>
+                        <div className="w-12 sm:w-20 h-1 bg-primary rounded-full mt-1 opacity-20" />
                       </div>
                     </div>
                   </CarouselItem>
