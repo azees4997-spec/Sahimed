@@ -87,62 +87,83 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-10">
             <Carousel className="w-full" opts={{ loop: true, align: 'start' }} plugins={[autoplayRef.current]}>
               <CarouselContent>
-                {displayBanners.map((banner, index) => (
-                  <CarouselItem key={banner.id}>
-                    <div className="relative rounded-[32px] sm:rounded-[48px] overflow-hidden aspect-[16/9] sm:aspect-[24/9] bg-white shadow-2xl border flex group">
-                      
-                      {/* Banner Left: Premium Typography */}
-                      <div className="relative z-20 flex-1 flex flex-col justify-center p-6 sm:p-16">
-                        <div className="max-w-2xl space-y-3 sm:space-y-6">
-                          <div className="flex items-center gap-2 mb-2">
-                             <div className="bg-primary p-1.5 sm:p-2 rounded-xl shadow-lg shadow-primary/20">
-                               <div className="text-white font-black text-[10px] sm:text-sm">SM</div>
-                             </div>
-                             <span className="text-primary font-black text-xl sm:text-4xl tracking-tighter uppercase">SahiMed</span>
-                          </div>
-                          
-                          <div className="space-y-1 sm:space-y-2">
-                            <h1 className="text-3xl sm:text-[84px] font-black uppercase tracking-tighter leading-[0.85] text-[#FF4D00] drop-shadow-sm whitespace-pre-line">
-                              {banner.title}
-                            </h1>
-                            <p className="text-[10px] sm:text-2xl font-black text-[#1E3A8A] uppercase tracking-tight leading-tight">
-                              {banner.subtitle}
-                            </p>
-                          </div>
+                {displayBanners.map((banner, index) => {
+                  const isFallback = banner.id.startsWith('hero-');
+                  
+                  return (
+                    <CarouselItem key={banner.id}>
+                      <div className="relative rounded-[32px] sm:rounded-[48px] overflow-hidden aspect-[16/9] sm:aspect-[24/9] bg-white shadow-2xl border group">
+                        
+                        {isFallback ? (
+                          <div className="flex h-full w-full relative">
+                            {/* Banner Left: Premium Typography (Only for Fallbacks) */}
+                            <div className="relative z-20 flex-1 flex flex-col justify-center p-6 sm:p-16">
+                              <div className="max-w-2xl space-y-3 sm:space-y-6">
+                                <div className="flex items-center gap-2 mb-2">
+                                   <div className="bg-primary p-1.5 sm:p-2 rounded-xl shadow-lg shadow-primary/20">
+                                     <div className="text-white font-black text-[10px] sm:text-sm">SM</div>
+                                   </div>
+                                   <span className="text-primary font-black text-xl sm:text-4xl tracking-tighter uppercase">SahiMed</span>
+                                </div>
+                                
+                                <div className="space-y-1 sm:space-y-2">
+                                  <h1 className="text-3xl sm:text-[84px] font-black uppercase tracking-tighter leading-[0.85] text-[#FF4D00] drop-shadow-sm whitespace-pre-line">
+                                    {banner.title}
+                                  </h1>
+                                  <p className="text-[10px] sm:text-2xl font-black text-[#1E3A8A] uppercase tracking-tight leading-tight">
+                                    {banner.subtitle}
+                                  </p>
+                                </div>
 
-                          <div className="pt-4">
-                            <Link href="/search">
-                              <Button size="lg" className="rounded-full bg-primary text-white h-10 sm:h-16 px-8 sm:px-12 text-[10px] sm:text-[13px] font-black uppercase tracking-widest hover:bg-primary/90 shadow-2xl shadow-primary/20">
-                                Explore Store
-                              </Button>
-                            </Link>
+                                <div className="pt-4">
+                                  <Link href="/search">
+                                    <Button size="lg" className="rounded-full bg-primary text-white h-10 sm:h-16 px-8 sm:px-12 text-[10px] sm:text-[13px] font-black uppercase tracking-widest hover:bg-primary/90 shadow-2xl shadow-primary/20">
+                                      Explore Store
+                                    </Button>
+                                  </Link>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Banner Right: Clinical Image with Masking */}
+                            <div className="absolute top-0 right-0 bottom-0 w-1/2 sm:w-[65%] z-10">
+                              <Image 
+                                src={banner.imageUrl} 
+                                alt={banner.title || "Promotion"} 
+                                fill 
+                                sizes="(max-width: 768px) 50vw, 65vw"
+                                className="object-cover object-center group-hover:scale-105 transition-transform duration-[2000ms]"
+                                priority={index === 0}
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-r from-white via-white/20 to-transparent" />
+                            </div>
+
+                            {/* Global Hindi Tagline: Bottom Anchored */}
+                            <div className="absolute bottom-4 sm:bottom-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center">
+                              <span className="text-[#1E3A8A] font-black text-xs sm:text-3xl uppercase tracking-widest whitespace-nowrap drop-shadow-sm">
+                                {banner.hindiTagline}
+                              </span>
+                              <div className="w-12 sm:w-20 h-1 bg-primary rounded-full mt-1 opacity-20" />
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          /* CUSTOM BANNER: FULL WIDTH IMAGE ONLY (Resolves Overlap) */
+                          <Link href="/search" className="block w-full h-full relative">
+                            <Image 
+                              src={banner.imageUrl} 
+                              alt={banner.title || "Promotion"} 
+                              fill 
+                              sizes="100vw"
+                              className="object-cover object-center transition-transform duration-[2000ms] group-hover:scale-105"
+                              priority={index === 0}
+                            />
+                            {/* We skip text/logo overlays for custom banners as they are usually pre-designed images */}
+                          </Link>
+                        )}
                       </div>
-
-                      {/* Banner Right: Clinical Image with Masking */}
-                      <div className="absolute top-0 right-0 bottom-0 w-1/2 sm:w-[65%] z-10">
-                        <Image 
-                          src={banner.imageUrl} 
-                          alt={banner.title || "Promotion"} 
-                          fill 
-                          sizes="(max-width: 768px) 50vw, 65vw"
-                          className="object-cover object-center group-hover:scale-105 transition-transform duration-[2000ms]"
-                          priority={index === 0}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/20 to-transparent" />
-                      </div>
-
-                      {/* Global Hindi Tagline: Bottom Anchored */}
-                      <div className="absolute bottom-4 sm:bottom-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center">
-                        <span className="text-[#1E3A8A] font-black text-xs sm:text-3xl uppercase tracking-widest whitespace-nowrap drop-shadow-sm">
-                          {banner.hindiTagline}
-                        </span>
-                        <div className="w-12 sm:w-20 h-1 bg-primary rounded-full mt-1 opacity-20" />
-                      </div>
-                    </div>
-                  </CarouselItem>
-                ))}
+                    </CarouselItem>
+                  );
+                })}
               </CarouselContent>
             </Carousel>
           </div>
