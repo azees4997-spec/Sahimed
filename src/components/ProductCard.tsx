@@ -21,7 +21,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const [liveData, setLiveData] = useState<{ price: number, mrp: number, stock: number } | null>(null);
   const quantity = getItemQuantity(product.id);
 
-  // Universal real-time sync for all SKU views - Handled in background
+  // Universal real-time sync for all SKU views
   useEffect(() => {
     const sku = product.sku || product.id;
     if (!db || !sku) return;
@@ -43,7 +43,7 @@ export default function ProductCard({ product }: { product: Product }) {
     return () => unsubscribe();
   }, [db, product.sku, product.id]);
 
-  // Tiered Price Selection: Prioritize Live, Instant Fallback to Static
+  // Tiered Price Selection
   const currentPrice = (liveData?.price && liveData.price > 0) ? liveData.price : product.price;
   const currentMrp = (liveData?.mrp && liveData.mrp > 0) ? liveData.mrp : (product.mrp || product.price + 50);
   
@@ -66,83 +66,76 @@ export default function ProductCard({ product }: { product: Product }) {
     : `https://picsum.photos/seed/${product.id}/300/300`;
 
   return (
-    <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full group relative">
+    <div className="bg-white rounded-[12px] border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group relative">
+      {/* Discount Badge - Top Right per reference */}
       {savingsPct > 0 && (
-        <div className="absolute top-3 left-3 z-10 animate-in fade-in zoom-in duration-500">
-          <Badge className="bg-accent text-white font-black text-[10px] uppercase tracking-tighter px-3 py-1 rounded-full shadow-xl border-none ring-2 ring-white">
+        <div className="absolute top-0 right-0 z-10">
+          <div className="bg-[#4CAF50] text-white font-bold text-[9px] px-2 py-1 rounded-bl-lg">
             {savingsPct}% OFF
-          </Badge>
+          </div>
         </div>
       )}
 
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 p-4 space-y-3">
-        <div className="relative aspect-square w-full bg-gray-50 rounded-xl overflow-hidden border border-gray-50 flex items-center justify-center p-3">
+        <div className="relative aspect-square w-full bg-white flex items-center justify-center">
           <Image 
             src={safeImageUrl} 
             alt={product.name} 
             fill 
-            sizes="(max-width: 768px) 50vw, 25vw"
-            className="object-contain p-2 group-hover:scale-110 transition-transform duration-700" 
+            sizes="(max-width: 768px) 50vw, 20vw"
+            className="object-contain p-2" 
           />
         </div>
 
         <div className="space-y-1">
-          <h3 className="font-black text-gray-900 text-[12px] uppercase tracking-tighter leading-[1.2] line-clamp-2 min-h-[28px]">
+          <h3 className="font-bold text-gray-900 text-[13px] leading-[1.3] line-clamp-2 min-h-[34px]">
             {product.name}
           </h3>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-            {product.packSize || 'N/A'}
-          </p>
-          <p className="text-[10px] font-bold text-gray-500 uppercase truncate">
+          <p className="text-[11px] font-bold text-[#3F51B5] truncate">
             {product.manufacturer}
+          </p>
+          <p className="text-[11px] font-medium text-gray-400">
+            {product.packSize || 'N/A'}
           </p>
         </div>
 
-        <div className="pt-2 border-t border-dashed space-y-1 mt-auto">
-          <div className="flex items-baseline gap-2">
-            <p className="text-lg font-black text-accent tracking-tighter">
-              ₹{Number(currentPrice).toFixed(2)}
+        <div className="pt-2 mt-auto">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-bold text-gray-900">
+              ₹{Number(currentPrice).toFixed(1)}
             </p>
             {currentMrp > currentPrice && (
-              <span className="text-[10px] text-red-400 line-through font-bold">₹{Number(currentMrp).toFixed(2)}</span>
+              <span className="text-[11px] text-gray-400 line-through">₹{Number(currentMrp).toFixed(1)}</span>
             )}
           </div>
-          {savingsAmt > 0 && (
-            <div className="flex items-center gap-1.5 bg-accent/5 w-fit px-2 py-0.5 rounded-md border border-accent/10 animate-pulse">
-              <Zap className="w-2.5 h-2.5 text-accent fill-current" />
-              <p className="text-[9px] font-black text-accent uppercase tracking-tighter">
-                Save ₹{Number(savingsAmt).toFixed(2)}
-              </p>
-            </div>
-          )}
         </div>
       </Link>
       
       <div className="p-4 pt-0">
         {quantity > 0 ? (
-          <div className="flex items-center gap-1 rounded-full p-1 bg-primary shadow-lg w-full h-10">
+          <div className="flex items-center gap-1 rounded-md border border-primary p-1 bg-white w-full h-10">
             <button 
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateQuantity(product.id, -1); }} 
-              className="h-full flex-1 flex items-center justify-center rounded-full text-white hover:bg-white/10 transition-colors"
+              className="h-full flex-1 flex items-center justify-center text-primary hover:bg-primary/5 transition-colors"
             >
-              <Minus className="w-3.5 h-3.5 font-black" />
+              <Minus className="w-3 h-3" />
             </button>
-            <span className="text-[10px] font-black text-white flex-[1.5] text-center uppercase tracking-widest">
+            <span className="text-xs font-bold text-gray-900 flex-[1.5] text-center">
               {quantity} In Bag
             </span>
             <button 
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateQuantity(product.id, 1); }} 
-              className="h-full flex-1 flex items-center justify-center rounded-full text-white hover:bg-white/10 transition-colors"
+              className="h-full flex-1 flex items-center justify-center text-primary hover:bg-primary/5 transition-colors"
             >
-              <Plus className="w-3.5 h-3.5 font-black" />
+              <Plus className="w-3 h-3" />
             </button>
           </div>
         ) : (
           <button 
             onClick={handleAdd} 
-            className="rounded-full h-10 w-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all"
+            className="rounded-md h-10 w-full border border-[#FFCDD2] bg-[#FFEBEE]/30 hover:bg-[#FFEBEE]/60 text-[#D32F2F] font-bold text-xs transition-all active:scale-95"
           >
-            ADD TO BAG <ShoppingCart className="w-4 h-4" />
+            Add to Cart
           </button>
         )}
       </div>

@@ -36,7 +36,6 @@ export default function Home() {
     return query(collection(db, 'categories'), orderBy('name', 'asc'), limit(12));
   }, [db]);
 
-  // SIMPLIFIED QUERY: Removed 'where' to avoid composite index requirements during development
   const bannersQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'banners'), orderBy('order', 'asc'), limit(5));
@@ -47,13 +46,11 @@ export default function Home() {
   const { data: dbBanners, isLoading: bannersLoading } = useCollection(bannersQuery);
 
   const displayBanners = React.useMemo(() => {
-    // 1. If we have database banners, filter for active ones and return
     if (dbBanners && dbBanners.length > 0) {
       const activeBanners = dbBanners.filter(b => b.isActive !== false);
       if (activeBanners.length > 0) return activeBanners;
     }
     
-    // 2. Fallback to premium static design if no dynamic banners exist or are still loading
     return PlaceHolderImages.filter(img => img.id.startsWith('hero-')).slice(0, 3).map((b, idx) => ({
       id: b.id,
       imageUrl: b.imageUrl,
@@ -96,7 +93,6 @@ export default function Home() {
                         
                         {isFallback ? (
                           <div className="flex h-full w-full relative">
-                            {/* Banner Left: Premium Typography (Only for Fallbacks) */}
                             <div className="relative z-20 flex-1 flex flex-col justify-center p-6 sm:p-16">
                               <div className="max-w-2xl space-y-3 sm:space-y-6">
                                 <div className="flex items-center gap-2 mb-2">
@@ -125,7 +121,6 @@ export default function Home() {
                               </div>
                             </div>
 
-                            {/* Banner Right: Clinical Image with Masking */}
                             <div className="absolute top-0 right-0 bottom-0 w-1/2 sm:w-[65%] z-10">
                               <Image 
                                 src={banner.imageUrl} 
@@ -138,7 +133,6 @@ export default function Home() {
                               <div className="absolute inset-0 bg-gradient-to-r from-white via-white/20 to-transparent" />
                             </div>
 
-                            {/* Global Hindi Tagline: Bottom Anchored */}
                             <div className="absolute bottom-4 sm:bottom-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center">
                               <span className="text-[#1E3A8A] font-black text-xs sm:text-3xl uppercase tracking-widest whitespace-nowrap drop-shadow-sm">
                                 {banner.hindiTagline}
@@ -147,7 +141,6 @@ export default function Home() {
                             </div>
                           </div>
                         ) : (
-                          /* CUSTOM BANNER: FULL WIDTH IMAGE ONLY (Resolves Overlap & Cutting) */
                           <Link href="/search" className="block w-full h-full relative">
                             <Image 
                               src={banner.imageUrl} 
@@ -168,11 +161,9 @@ export default function Home() {
           </div>
         </section>
 
-        {/* PAN-INDIA MOTIVATIONAL LINES (Value Bar) */}
         <section className="py-4 relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-12">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Card 1: Delivery */}
               <div className="bg-white/80 backdrop-blur-sm p-4 sm:p-6 rounded-full border border-gray-100 flex items-center gap-4 sm:gap-8 group transition-all">
                 <div className="w-12 h-12 sm:w-20 sm:h-20 bg-[#F0F4FF] rounded-full flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <Truck className="w-6 h-6 sm:w-10 sm:h-10 text-[#2563EB]" />
@@ -185,7 +176,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Card 2: Affordable */}
               <div className="bg-white/80 backdrop-blur-sm p-4 sm:p-6 rounded-full border border-gray-100 flex items-center gap-4 sm:gap-8 group transition-all">
                 <div className="w-12 h-12 sm:w-20 sm:h-20 bg-[#F0FFF4] rounded-full flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <Zap className="w-6 h-6 sm:w-10 sm:h-10 text-[#16A34A]" />
@@ -255,7 +245,7 @@ export default function Home() {
               <div className="space-y-1"><h2 className="text-[12px] sm:text-[13px] font-black text-gray-900 uppercase tracking-[0.3em]">Best Sellers</h2><p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Targeted Clinical Stock</p></div>
               <Link href="/search" className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-full">All Products <ChevronRight className="w-3 h-3" /></Link>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
               {displayMedicines.map((p: any) => (<ProductCard key={p.id} product={p} />))}
             </div>
           </div>
