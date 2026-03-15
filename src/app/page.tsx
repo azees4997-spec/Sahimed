@@ -21,7 +21,7 @@ export default function Home() {
 
   const categoriesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'categories'), orderBy('name', 'asc'), limit(10));
+    return query(collection(db, 'categories'), orderBy('name', 'asc'), limit(12));
   }, [db]);
 
   const { data: medicines } = useCollection(medicinesQuery);
@@ -85,15 +85,15 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Categories */}
+        {/* Categories - Expanded Grid */}
         <section className="space-y-4 pt-2">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-base font-black text-gray-900 uppercase tracking-tight">Shop by Category</h2>
             <Link href="/search" className="text-[11px] font-black text-[#F97316] uppercase tracking-widest">See All</Link>
           </div>
-          <div className="flex gap-5 overflow-x-auto scrollbar-hide pb-2 px-1">
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-y-6 gap-x-4 px-1">
             {displayCategories.map((cat: any, i) => (
-              <Link key={i} href={`/search?c=${cat.name}`} className="flex flex-col items-center gap-3 min-w-[80px] group">
+              <Link key={i} href={`/search?c=${cat.name}`} className="flex flex-col items-center gap-2 group">
                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm overflow-hidden group-active:scale-90 transition-transform">
                   <Image 
                     src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} 
@@ -103,7 +103,7 @@ export default function Home() {
                     className="object-cover w-full h-full"
                   />
                 </div>
-                <span className="text-[10px] font-black text-gray-600 uppercase tracking-tight text-center">{cat.name}</span>
+                <span className="text-[9px] sm:text-[10px] font-black text-gray-600 uppercase tracking-tight text-center leading-tight">{cat.name}</span>
               </Link>
             ))}
           </div>
@@ -138,14 +138,14 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Quality Medicines Card - Compact */}
-        <section className="bg-gray-100/50 p-6 rounded-[24px] text-center space-y-3 border border-gray-200/50">
-          <div className="w-12 h-12 bg-[#136A31]/10 text-[#136A31] rounded-full flex items-center justify-center mx-auto shadow-inner">
-            <ShieldCheck className="w-6 h-6" />
+        {/* Quality Medicines Card - Ultra Compact */}
+        <section className="bg-gray-100/50 p-3 rounded-[24px] text-center space-y-1.5 border border-gray-200/50">
+          <div className="w-8 h-8 bg-[#136A31]/10 text-[#136A31] rounded-full flex items-center justify-center mx-auto shadow-inner">
+            <ShieldCheck className="w-4 h-4" />
           </div>
-          <h2 className="text-base font-black text-gray-900 uppercase tracking-tight">Best Quality Medicines</h2>
-          <p className="text-[9px] font-bold text-gray-500 leading-relaxed max-w-xs mx-auto uppercase tracking-widest opacity-80">
-            You get nothing but the best – premium quality medicines you can trust. Sourced directly from certified facilities.
+          <h2 className="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-tight leading-none">Best Quality Medicines</h2>
+          <p className="text-[9px] font-bold text-gray-500 leading-normal max-w-xs mx-auto uppercase tracking-widest opacity-80">
+            You deserve the best – premium medicines from India’s leading brands
           </p>
         </section>
 
