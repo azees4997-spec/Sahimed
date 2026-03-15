@@ -18,6 +18,12 @@
       "description": "Expert Pharmacist Review for All Your Prescriptions",
       "imageUrl": "https://picsum.photos/seed/pharmacist-care/1200/800",
       "imageHint": "pharmacist at counter"
+    },
+    {
+      "id": "substitute-banner",
+      "description": "Save Upto 51% with Substitutes medicines",
+      "imageUrl": "https://picsum.photos/seed/doctor-banner/600/400",
+      "imageHint": "doctor medical"
     }
   ]
 }
