@@ -107,26 +107,19 @@ export default function Home() {
         </section>
 
         {/* Substitutes Information Section - Compact Redesign */}
-        <section className="bg-[#EBFBF5]/50 rounded-[32px] border border-[#DCFCE7] shadow-sm overflow-hidden flex flex-col md:flex-row items-stretch">
-          {/* Left: Visual Banner */}
-          <div className="md:w-1/3 relative min-h-[180px] bg-[#E0D7FF]/30 overflow-hidden">
-            <Image 
-              src="https://picsum.photos/seed/doctor-banner/600/400" 
-              alt="Save with Substitutes" 
-              fill 
-              className="object-cover"
-              data-ai-hint="doctor medical"
-            />
+        <section className="rounded-[32px] border border-[#DCFCE7] shadow-sm overflow-hidden flex flex-col md:flex-row items-stretch">
+          {/* Left: Visual Banner - Plain Green Gradient & 50% vertical size */}
+          <div className="md:w-1/3 relative min-h-[90px] bg-gradient-to-br from-[#136A31] to-[#2E8B57] overflow-hidden">
             {/* SAVINGS OVERLAY */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#136A31]/70 to-transparent p-6 flex flex-col justify-center">
+            <div className="absolute inset-0 p-4 flex flex-col justify-center">
               <div className="space-y-0.5">
-                <p className="text-[9px] font-black text-white/80 uppercase tracking-[0.2em]">Save Upto</p>
-                <h2 className="text-5xl font-black text-white tracking-tighter leading-none">60%</h2>
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center">
-                    <div className="w-1 h-1 bg-[#136A31] rounded-full" />
+                <p className="text-[8px] font-black text-white/80 uppercase tracking-[0.2em]">Save Upto</p>
+                <h2 className="text-3xl font-black text-white tracking-tighter leading-none">60%</h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="w-2.5 h-2.5 bg-white rounded-full flex items-center justify-center">
+                    <div className="w-0.5 h-0.5 bg-[#136A31] rounded-full" />
                   </div>
-                  <p className="text-[8px] font-black text-white uppercase tracking-widest">Clinical Substitutes</p>
+                  <p className="text-[7px] font-black text-white uppercase tracking-widest">Clinical Substitutes</p>
                 </div>
               </div>
             </div>
