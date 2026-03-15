@@ -141,7 +141,7 @@ export default function Home() {
                 </div>
                 <div className="space-y-0.5">
                   <p className="text-[10px] font-black uppercase text-gray-900 leading-none">Safe</p>
-                  <p className="text-[8px] font-bold text-gray-400 uppercase leading-none">WHO-GMP & FDA</p>
+                  <p className="text-[8px] font-bold text-gray-400 uppercase leading-none">GMP & FDA certified medicines</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -150,7 +150,7 @@ export default function Home() {
                 </div>
                 <div className="space-y-0.5">
                   <p className="text-[10px] font-black uppercase text-gray-900 leading-none">Identical</p>
-                  <p className="text-[8px] font-bold text-gray-400 uppercase leading-none">Same Molecule</p>
+                  <p className="text-[8px] font-bold text-gray-400 uppercase leading-none">Same composition & strength</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -167,7 +167,7 @@ export default function Home() {
             <div className="bg-white/60 p-3 rounded-[16px] flex items-center gap-3 border border-green-100/50 shadow-sm">
                <Star className="w-3.5 h-3.5 text-[#EAB308] fill-current shrink-0" />
                <p className="text-[9px] font-black text-gray-700 uppercase tracking-tight leading-none">
-                 Sourced from <span className="text-[#136A31]">India’s top 1% medicine manufacturers</span>
+                 Quality assured: <span className="text-[#136A31]">All substitutes are manufactured from India's leading manufacturers.</span>
                </p>
             </div>
           </div>
