@@ -74,13 +74,13 @@ export default function Home() {
               <div className="bg-[#136A31] p-2.5 rounded-xl text-white shadow-lg shrink-0">
                 <MessageCircle className="w-5 h-5" />
               </div>
-              <span className="text-[11px] font-black text-[#136A31] uppercase leading-tight whitespace-nowrap">Order via WhatsApp</span>
+              <span className="text-[13px] font-black text-[#136A31] uppercase leading-tight whitespace-nowrap">Order via WhatsApp</span>
             </Link>
             <Link href="tel:+91XXXXXXXXXX" className="flex items-center gap-3 bg-[#EBF4FF] p-5 rounded-[24px] group active:scale-95 transition-all shadow-sm overflow-hidden">
               <div className="bg-[#0061AF] p-2.5 rounded-xl text-white shadow-lg shrink-0">
                 <Phone className="w-5 h-5" />
               </div>
-              <span className="text-[11px] font-black text-[#0061AF] uppercase leading-tight whitespace-nowrap">Call For Medicines</span>
+              <span className="text-[13px] font-black text-[#0061AF] uppercase leading-tight whitespace-nowrap">Call For Medicines</span>
             </Link>
           </div>
         </section>
