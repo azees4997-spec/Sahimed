@@ -85,11 +85,11 @@ export default function Home() {
         <section className="space-y-4 pt-2">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-base font-black text-gray-900 uppercase tracking-tight">Shop by Category</h2>
-            <Link href="/search" className="text-[11px] font-black text-[#F97316] uppercase tracking-widest">See All</Link>
+            <Link href="/categories" className="text-[11px] font-black text-[#F97316] uppercase tracking-widest">See All</Link>
           </div>
           <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 px-1">
             {displayCategories.map((cat: any, i) => (
-              <Link key={i} href={`/search?c=${cat.name}`} className="flex flex-col items-center gap-2 group shrink-0">
+              <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-2 group shrink-0">
                 <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm overflow-hidden group-active:scale-90 transition-transform">
                   <Image 
                     src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} 

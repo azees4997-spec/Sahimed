@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from 'next/link';
@@ -12,7 +11,7 @@ export default function BottomNav() {
 
   const navItems = [
     { label: 'Home', icon: Home, path: '/' },
-    { label: 'Categories', icon: LayoutGrid, path: '/search' },
+    { label: 'Categories', icon: LayoutGrid, path: '/categories' },
     { label: 'Orders', icon: ClipboardList, path: '/orders' },
     { label: 'Profile', icon: User, path: '/profile' },
   ];
