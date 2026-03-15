@@ -66,17 +66,17 @@ export default function Home() {
 
           {/* Communications Row */}
           <div className="grid grid-cols-2 gap-4">
-            <Link href="https://wa.me/91XXXXXXXXXX" className="flex items-center gap-3 bg-[#EBFBF5] p-4 sm:p-5 rounded-[24px] group active:scale-95 transition-all shadow-sm overflow-hidden">
-              <div className="bg-[#136A31] p-2.5 rounded-xl text-white shadow-lg shrink-0">
-                <MessageCircle className="w-5 h-5" />
+            <Link href="https://wa.me/91XXXXXXXXXX" className="flex items-center gap-2 sm:gap-3 bg-[#EBFBF5] p-3 sm:p-5 rounded-[24px] group active:scale-95 transition-all shadow-sm overflow-hidden">
+              <div className="bg-[#136A31] p-2 rounded-xl text-white shadow-lg shrink-0">
+                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <span className="text-[11px] sm:text-[15px] font-black text-[#136A31] uppercase leading-tight whitespace-nowrap">Order via WhatsApp</span>
+              <span className="text-[10px] sm:text-[15px] font-black text-[#136A31] uppercase leading-tight whitespace-nowrap">Order via WhatsApp</span>
             </Link>
-            <Link href="tel:+91XXXXXXXXXX" className="flex items-center gap-3 bg-[#EBF4FF] p-4 sm:p-5 rounded-[24px] group active:scale-95 transition-all shadow-sm overflow-hidden">
-              <div className="bg-[#0061AF] p-2.5 rounded-xl text-white shadow-lg shrink-0">
-                <Phone className="w-5 h-5" />
+            <Link href="tel:+91XXXXXXXXXX" className="flex items-center gap-2 sm:gap-3 bg-[#EBF4FF] p-3 sm:p-5 rounded-[24px] group active:scale-95 transition-all shadow-sm overflow-hidden">
+              <div className="bg-[#0061AF] p-2 rounded-xl text-white shadow-lg shrink-0">
+                <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <span className="text-[11px] sm:text-[15px] font-black text-[#0061AF] uppercase leading-tight whitespace-nowrap">Call For Medicines</span>
+              <span className="text-[10px] sm:text-[15px] font-black text-[#0061AF] uppercase leading-tight whitespace-nowrap">Call For Medicines</span>
             </Link>
           </div>
         </section>
