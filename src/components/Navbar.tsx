@@ -19,26 +19,25 @@ export function SahiMedIcon({ className }: { className?: string }) {
       xmlns="http://www.w3.org/2000/svg" 
       className={cn("w-8 h-8", className)}
     >
-      {/* Left Orange Swirl */}
+      {/* Outer Orange Flame - Wrapping from Left */}
       <path 
-        d="M32 25C18 45 22 75 40 88C25 75 20 50 32 25Z" 
-        fill="#F97316" 
+        d="M20 55C20 30 40 20 50 20C35 35 32 55 32 75C32 90 45 100 55 100C30 100 20 85 20 55Z" 
+        fill="#F37021" 
       />
-      {/* Right Orange Swirl */}
+      {/* Outer Orange Flame - Wrapping from Right */}
       <path 
-        d="M68 25C82 45 78 75 60 88C75 75 80 50 68 25Z" 
-        fill="#F97316" 
+        d="M80 45C80 70 60 80 50 80C65 65 68 45 68 25C68 10 55 0 45 0C70 0 80 15 80 45Z" 
+        fill="#F37021" 
       />
-      {/* Central Blue S-Wave */}
+      {/* Central Blue S-Shape Core */}
       <path 
-        d="M50 12C35 32 35 58 50 72C65 86 65 100 50 108C75 95 75 72 50 58C25 44 25 25 50 12Z" 
-        fill="#0061AF" 
+        d="M50 10C35 30 35 55 50 65C65 75 65 95 50 110C80 90 80 65 65 55C50 45 50 25 50 10Z" 
+        fill="#005FAC" 
       />
-      {/* Silver/Light Detail */}
+      {/* Silver Metallic Strip Highlight */}
       <path 
-        d="M48 35C42 45 42 60 50 70C58 80 58 90 52 98C62 88 62 75 52 65C42 55 42 45 48 35Z" 
-        fill="white" 
-        fillOpacity="0.2"
+        d="M55 20C48 35 48 55 58 65C68 75 68 85 63 95C73 85 73 70 63 60C53 50 53 30 55 20Z" 
+        fill="#CBD5E1" 
       />
     </svg>
   );
@@ -92,17 +91,17 @@ export default function Navbar() {
         {/* Top Row: Logo & Location */}
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3">
-            <SahiMedIcon className="w-9 h-9" />
+            <SahiMedIcon className="w-10 h-10" />
             <div className="flex flex-col">
               <div className="flex items-center">
-                <span className="font-black text-2xl text-[#0061AF] tracking-tighter leading-none">Sahi</span>
+                <span className="font-black text-2xl text-[#005FAC] tracking-tighter leading-none">Sahi</span>
                 <span className="font-black text-2xl text-[#2E8B57] tracking-tighter leading-none">Med</span>
               </div>
-              <span className="text-[9px] font-black text-[#0061AF] uppercase tracking-widest mt-0.5">Sahi Dawai, Sahi Daam Pe</span>
+              <span className="text-[9px] font-black text-[#005FAC] uppercase tracking-widest mt-0.5">Sahi Dawai, Sahi Daam Pe</span>
             </div>
           </Link>
 
-          <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+          <Popover open={isPopoverOpen} onOpenChange={isPopoverOpen}>
             <PopoverTrigger asChild>
               <button className="flex items-center gap-1.5 text-[11px] font-bold text-gray-600 hover:text-primary transition-colors">
                 <MapPin className="w-3.5 h-3.5 text-[#F97316]" />
