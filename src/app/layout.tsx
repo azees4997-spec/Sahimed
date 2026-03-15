@@ -47,10 +47,10 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <CartProvider>
             <div className="flex flex-col min-h-screen">
-              <div className="flex-1 pb-16 sm:pb-0">
+              <main className="flex-1">
                 {children}
-              </div>
-              <Footer />
+                <Footer />
+              </main>
               <BottomNav />
               <MobileCartBar />
             </div>
