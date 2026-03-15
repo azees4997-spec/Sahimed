@@ -3,10 +3,9 @@
 import * as React from 'react';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
-import { Camera, MessageCircle, ShieldCheck, ChevronRight, Truck, Phone, FileText, Search } from 'lucide-react';
+import { MessageCircle, ShieldCheck, ChevronRight, Truck, Phone, FileText } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { collection, query, limit, orderBy } from 'firebase/firestore';
 import { CATEGORIES as LOCAL_CATEGORIES, PRODUCTS as LOCAL_PRODUCTS } from '@/lib/data';
@@ -31,10 +30,10 @@ export default function Home() {
   const displayCategories = categories?.length ? categories : LOCAL_CATEGORIES;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24">
+    <div className="min-h-screen bg-[#F8FAFC]">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 py-4 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 py-4 space-y-6 pb-6">
         
         {/* Hero Banner */}
         <section className="relative rounded-[24px] bg-gradient-to-br from-[#020617] to-[#0f172a] overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
@@ -70,46 +69,46 @@ export default function Home() {
 
           {/* Communications Row */}
           <div className="grid grid-cols-2 gap-4">
-            <Link href="https://wa.me/91XXXXXXXXXX" className="flex items-center gap-3 bg-[#EBFBF5] p-5 rounded-[24px] group active:scale-95 transition-all shadow-sm">
-              <div className="bg-[#136A31] p-2.5 rounded-xl text-white shadow-lg">
+            <Link href="https://wa.me/91XXXXXXXXXX" className="flex items-center gap-3 bg-[#EBFBF5] p-5 rounded-[24px] group active:scale-95 transition-all shadow-sm overflow-hidden">
+              <div className="bg-[#136A31] p-2.5 rounded-xl text-white shadow-lg shrink-0">
                 <MessageCircle className="w-5 h-5" />
               </div>
-              <span className="text-[11px] font-black text-[#136A31] uppercase leading-tight">Order via<br/>WhatsApp</span>
+              <span className="text-[11px] font-black text-[#136A31] uppercase leading-tight whitespace-nowrap">Order via WhatsApp</span>
             </Link>
-            <Link href="tel:+91XXXXXXXXXX" className="flex items-center gap-3 bg-[#EBF4FF] p-5 rounded-[24px] group active:scale-95 transition-all shadow-sm">
-              <div className="bg-primary p-2.5 rounded-xl text-white shadow-lg">
+            <Link href="tel:+91XXXXXXXXXX" className="flex items-center gap-3 bg-[#EBF4FF] p-5 rounded-[24px] group active:scale-95 transition-all shadow-sm overflow-hidden">
+              <div className="bg-primary p-2.5 rounded-xl text-white shadow-lg shrink-0">
                 <Phone className="w-5 h-5" />
               </div>
-              <span className="text-[11px] font-black text-primary uppercase leading-tight">Call For<br/>Medicines</span>
+              <span className="text-[11px] font-black text-primary uppercase leading-tight whitespace-nowrap">Call For Medicines</span>
             </Link>
           </div>
         </section>
 
-        {/* Categories - Expanded Grid */}
+        {/* Categories - Side Scroll */}
         <section className="space-y-4 pt-2">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-base font-black text-gray-900 uppercase tracking-tight">Shop by Category</h2>
             <Link href="/search" className="text-[11px] font-black text-[#F97316] uppercase tracking-widest">See All</Link>
           </div>
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-y-6 gap-x-4 px-1">
+          <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 px-1">
             {displayCategories.map((cat: any, i) => (
-              <Link key={i} href={`/search?c=${cat.name}`} className="flex flex-col items-center gap-2 group">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm overflow-hidden group-active:scale-90 transition-transform">
+              <Link key={i} href={`/search?c=${cat.name}`} className="flex flex-col items-center gap-2 group shrink-0">
+                <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm overflow-hidden group-active:scale-90 transition-transform">
                   <Image 
                     src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} 
                     alt={cat.name} 
-                    width={64} 
-                    height={64} 
+                    width={96} 
+                    height={96} 
                     className="object-cover w-full h-full"
                   />
                 </div>
-                <span className="text-[9px] sm:text-[10px] font-black text-gray-600 uppercase tracking-tight text-center leading-tight">{cat.name}</span>
+                <span className="text-[10px] font-black text-gray-600 uppercase tracking-tight text-center leading-tight">{cat.name}</span>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* Best Sellers */}
+        {/* Best Sellers - More Compact */}
         <section className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-base font-black text-gray-900 uppercase tracking-tight">Best Sellers</h2>
@@ -118,9 +117,9 @@ export default function Home() {
               <button className="p-1.5 rounded-full bg-white border border-gray-100 shadow-sm active:bg-gray-50"><ChevronRight className="w-4 h-4 text-gray-400" /></button>
             </div>
           </div>
-          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 px-1">
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-4 px-1">
             {displayMedicines.map((p: any) => (
-              <div key={p.id} className="min-w-[180px]">
+              <div key={p.id} className="min-w-[140px]">
                 <ProductCard product={p} />
               </div>
             ))}
