@@ -245,7 +245,7 @@ export default function Home() {
               <div className="space-y-1"><h2 className="text-[12px] sm:text-[13px] font-black text-gray-900 uppercase tracking-[0.3em]">Best Sellers</h2><p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Targeted Clinical Stock</p></div>
               <Link href="/search" className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-full">All Products <ChevronRight className="w-3 h-3" /></Link>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
               {displayMedicines.map((p: any) => (<ProductCard key={p.id} product={p} />))}
             </div>
           </div>

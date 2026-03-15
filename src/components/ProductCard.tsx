@@ -67,61 +67,61 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="bg-white rounded-[12px] border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group relative">
-      {/* Discount Badge - Top Right per reference */}
+      {/* Discount Badge - Enlarged per reference */}
       {savingsPct > 0 && (
         <div className="absolute top-0 right-0 z-10">
-          <div className="bg-[#4CAF50] text-white font-bold text-[9px] px-2 py-1 rounded-bl-lg">
+          <div className="bg-[#4CAF50] text-white font-black text-[11px] px-2.5 py-1 rounded-bl-lg shadow-sm">
             {savingsPct}% OFF
           </div>
         </div>
       )}
 
-      <Link href={`/product/${product.id}`} className="flex flex-col flex-1 p-4 space-y-3">
-        <div className="relative aspect-square w-full bg-white flex items-center justify-center">
+      <Link href={`/product/${product.id}`} className="flex flex-col flex-1 p-2.5 space-y-2">
+        <div className="relative aspect-[4/3] w-full bg-white flex items-center justify-center mb-1">
           <Image 
             src={safeImageUrl} 
             alt={product.name} 
             fill 
-            sizes="(max-width: 768px) 50vw, 20vw"
-            className="object-contain p-2" 
+            sizes="(max-width: 768px) 50vw, 15vw"
+            className="object-contain p-1" 
           />
         </div>
 
-        <div className="space-y-1">
-          <h3 className="font-bold text-gray-900 text-[13px] leading-[1.3] line-clamp-2 min-h-[34px]">
+        <div className="space-y-0.5">
+          <h3 className="font-bold text-gray-900 text-[12px] leading-[1.2] line-clamp-2 min-h-[28px]">
             {product.name}
           </h3>
-          <p className="text-[11px] font-bold text-[#3F51B5] truncate">
+          <p className="text-[10px] font-bold text-[#3F51B5] truncate">
             {product.manufacturer}
           </p>
-          <p className="text-[11px] font-medium text-gray-400">
+          <p className="text-[10px] font-medium text-gray-400">
             {product.packSize || 'N/A'}
           </p>
         </div>
 
-        <div className="pt-2 mt-auto">
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-bold text-gray-900">
+        <div className="pt-1 mt-auto">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="text-[13px] font-black text-gray-900">
               ₹{Number(currentPrice).toFixed(1)}
             </p>
             {currentMrp > currentPrice && (
-              <span className="text-[11px] text-gray-400 line-through">₹{Number(currentMrp).toFixed(1)}</span>
+              <span className="text-[10px] text-gray-400 line-through font-medium">₹{Number(currentMrp).toFixed(1)}</span>
             )}
           </div>
         </div>
       </Link>
       
-      <div className="p-4 pt-0">
+      <div className="p-2.5 pt-0">
         {quantity > 0 ? (
-          <div className="flex items-center gap-1 rounded-md border border-primary p-1 bg-white w-full h-10">
+          <div className="flex items-center gap-1 rounded-md border border-primary p-1 bg-white w-full h-9">
             <button 
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateQuantity(product.id, -1); }} 
               className="h-full flex-1 flex items-center justify-center text-primary hover:bg-primary/5 transition-colors"
             >
               <Minus className="w-3 h-3" />
             </button>
-            <span className="text-xs font-bold text-gray-900 flex-[1.5] text-center">
-              {quantity} In Bag
+            <span className="text-[10px] font-black text-gray-900 flex-[1.5] text-center">
+              {quantity} IN BAG
             </span>
             <button 
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateQuantity(product.id, 1); }} 
@@ -133,7 +133,7 @@ export default function ProductCard({ product }: { product: Product }) {
         ) : (
           <button 
             onClick={handleAdd} 
-            className="rounded-md h-10 w-full border border-[#FFCDD2] bg-[#FFEBEE]/30 hover:bg-[#FFEBEE]/60 text-[#D32F2F] font-bold text-xs transition-all active:scale-95"
+            className="rounded-md h-9 w-full border border-[#FFCDD2] bg-[#FFEBEE]/30 hover:bg-[#FFEBEE]/60 text-[#D32F2F] font-black text-[10px] uppercase tracking-wider transition-all active:scale-95"
           >
             Add to Cart
           </button>
