@@ -38,9 +38,6 @@ export default function Home() {
         
         {/* Hero Banner */}
         <section className="relative rounded-[24px] bg-gradient-to-br from-[#005FAC] to-[#004a8a] overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
-          <div className="absolute top-4 left-4">
-            <span className="bg-[#F97316] text-white text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-widest">Limited Offer</span>
-          </div>
           <div className="space-y-3 relative z-10">
             <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight uppercase tracking-tight">
               Affordable Medicines<br />Across India
