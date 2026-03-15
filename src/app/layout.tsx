@@ -1,3 +1,4 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
@@ -8,8 +9,8 @@ import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'SahiMed | sahi dawa sahi daam pe',
-  description: 'SahiMed Pharmacy - High-end healthcare solutions and medicine delivery at the right price.',
+  title: 'SahiMed | Sahi Dawai, Sahi Daam Pe',
+  description: 'SahiMed Pharmacy - High-end healthcare solutions and medicine delivery at the right price. Sahi Dawai, Sahi Daam Pe.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -27,7 +28,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#2563eb',
+  themeColor: '#0061AF',
 };
 
 export default function RootLayout({

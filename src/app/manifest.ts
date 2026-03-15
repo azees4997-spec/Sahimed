@@ -1,14 +1,15 @@
+
 import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'SahiMed Pharmacy',
     short_name: 'SahiMed',
-    description: 'SahiMed - sahi dawa sahi daam pe. Professional Healthcare Solutions & Medicine Delivery',
+    description: 'SahiMed - Sahi Dawai, Sahi Daam Pe. Professional Healthcare Solutions & Medicine Delivery',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
-    theme_color: '#136a31',
+    theme_color: '#0061AF',
     icons: [
       {
         src: '/icon-192x192.png',

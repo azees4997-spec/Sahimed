@@ -67,7 +67,7 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
 
         <div className="space-y-2 mb-8">
           <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Order Confirmed!</h1>
-          <p className="text-gray-400 font-bold text-[9px] uppercase tracking-[0.3em]">sahi dawa sahi daam pe</p>
+          <p className="text-[#0061AF] font-bold text-[10px] uppercase tracking-[0.3em]">Sahi Dawai, Sahi Daam Pe</p>
         </div>
 
         {totalSaved > 0 && (

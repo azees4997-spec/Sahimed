@@ -58,13 +58,13 @@ export default function Navbar() {
         {/* Top Row: Logo & Location */}
         <div className="flex justify-between items-center">
           <Link href="/" className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <div className="bg-primary p-1 rounded-lg">
-                <span className="text-white font-black text-[10px]">SM</span>
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center">
+                <span className="font-black text-2xl text-[#0061AF] tracking-tighter">Sahi</span>
+                <span className="font-black text-2xl text-[#2E8B57] tracking-tighter">Med</span>
               </div>
-              <span className="font-black text-xl text-[#1E293B] tracking-tighter">SahiMed</span>
             </div>
-            <span className="text-[8px] font-black text-primary uppercase tracking-widest mt-0.5">Sahi Dawa Sahi Daam pe</span>
+            <span className="text-[9px] font-black text-[#0061AF] uppercase tracking-widest mt-0.5">Sahi Dawai, Sahi Daam Pe</span>
           </Link>
 
           <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>

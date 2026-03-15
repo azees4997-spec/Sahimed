@@ -1,3 +1,4 @@
+
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -8,15 +9,16 @@ export default function Footer() {
   if (pathname.startsWith('/admin')) return null;
 
   return (
-    <footer className="bg-[#020617] text-white py-4 px-6 border-t-4 border-primary">
+    <footer className="bg-[#020617] text-white py-4 px-6 border-t-4 border-[#0061AF]">
       <div className="max-w-7xl mx-auto flex flex-col items-center gap-6">
         
         {/* Brand Info - Centered */}
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="bg-white p-1 rounded-lg">
-            <span className="text-black font-black text-[9px] px-1">SAHIMED</span>
+          <div className="bg-white px-3 py-1 rounded-lg">
+            <span className="font-black text-lg text-[#0061AF] tracking-tighter">Sahi</span>
+            <span className="font-black text-lg text-[#2E8B57] tracking-tighter">Med</span>
           </div>
-          <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">Sahi Dawa Sahi Daam pe</span>
+          <span className="text-[9px] font-black text-[#0061AF] uppercase tracking-[0.2em]">Sahi Dawai, Sahi Daam Pe</span>
           <p className="text-gray-400 text-[9px] font-medium leading-relaxed max-w-sm uppercase tracking-tight opacity-60">
             Providing high-quality affordable healthcare solutions for everyone across India.
           </p>
