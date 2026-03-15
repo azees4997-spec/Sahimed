@@ -37,7 +37,7 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 py-4 space-y-6 pb-6">
         
         {/* Hero Banner */}
-        <section className="relative rounded-[24px] bg-gradient-to-br from-[#020617] to-[#0f172a] overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
+        <section className="relative rounded-[24px] bg-gradient-to-br from-[#005FAC] to-[#004a8a] overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
           <div className="absolute top-4 left-4">
             <span className="bg-[#F97316] text-white text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-widest">Limited Offer</span>
           </div>
@@ -45,8 +45,8 @@ export default function Home() {
             <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight uppercase tracking-tight">
               Affordable Medicines<br />Across India
             </h1>
-            <div className="w-16 h-0.5 bg-[#0061AF]/30" />
-            <p className="text-gray-300 text-sm font-bold pt-1 uppercase tracking-widest opacity-80">Sahi Dawai, Sahi Daam Pe</p>
+            <div className="w-16 h-0.5 bg-white/20" />
+            <p className="text-white/90 text-sm font-bold pt-1 uppercase tracking-widest">Sahi Dawai, Sahi Daam Pe</p>
           </div>
           {/* Medical Bag Abstract Icon Overlay */}
           <div className="absolute right-[-30px] bottom-[-30px] opacity-10 rotate-12">
@@ -74,13 +74,13 @@ export default function Home() {
               <div className="bg-[#136A31] p-2.5 rounded-xl text-white shadow-lg shrink-0">
                 <MessageCircle className="w-5 h-5" />
               </div>
-              <span className="text-[13px] font-black text-[#136A31] uppercase leading-tight whitespace-nowrap">Order via WhatsApp</span>
+              <span className="text-[15px] font-black text-[#136A31] uppercase leading-tight whitespace-nowrap">Order via WhatsApp</span>
             </Link>
             <Link href="tel:+91XXXXXXXXXX" className="flex items-center gap-3 bg-[#EBF4FF] p-5 rounded-[24px] group active:scale-95 transition-all shadow-sm overflow-hidden">
               <div className="bg-[#0061AF] p-2.5 rounded-xl text-white shadow-lg shrink-0">
                 <Phone className="w-5 h-5" />
               </div>
-              <span className="text-[13px] font-black text-[#0061AF] uppercase leading-tight whitespace-nowrap">Call For Medicines</span>
+              <span className="text-[15px] font-black text-[#0061AF] uppercase leading-tight whitespace-nowrap">Call For Medicines</span>
             </Link>
           </div>
         </section>
