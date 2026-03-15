@@ -4,7 +4,7 @@
 import * as React from 'react';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
-import { Activity, HeartPulse, Zap, Sparkles, Camera, ChevronRight, Wind, ShieldPlus, Phone, Dna } from 'lucide-react';
+import { Activity, HeartPulse, Zap, Sparkles, Camera, ChevronRight, Wind, ShieldPlus, Phone, Dna, Truck } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -154,7 +154,7 @@ export default function Home() {
                               alt={banner.title || "Promotion"} 
                               fill 
                               sizes="100vw"
-                              className="object-contain object-center transition-all duration-500"
+                              className="object-cover object-center transition-all duration-500"
                               priority={index === 0}
                             />
                           </Link>
@@ -165,6 +165,37 @@ export default function Home() {
                 })}
               </CarouselContent>
             </Carousel>
+          </div>
+        </section>
+
+        {/* PAN-INDIA MOTIVATIONAL LINES */}
+        <section className="py-2 sm:py-4 relative z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white p-5 rounded-[32px] border-2 border-primary/5 shadow-xl flex items-center gap-5 group transition-all hover:border-primary/20">
+                <div className="w-14 h-14 bg-primary/10 rounded-[20px] flex items-center justify-center shrink-0 shadow-lg shadow-primary/5 group-hover:scale-110 transition-transform">
+                  <Truck className="w-7 h-7 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-black text-sm sm:text-base text-gray-900 uppercase tracking-tight leading-none">Pan-India Delivery</h3>
+                  <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-tight">
+                    Order online, get delivered fast to your doorstep anywhere in India.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-[32px] border-2 border-accent/5 shadow-xl flex items-center gap-5 group transition-all hover:border-accent/20">
+                <div className="w-14 h-14 bg-accent/10 rounded-[20px] flex items-center justify-center shrink-0 shadow-lg shadow-accent/5 group-hover:scale-110 transition-transform">
+                  <Zap className="w-7 h-7 text-accent" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-black text-sm sm:text-base text-accent uppercase tracking-tight leading-none">Affordable Medicines Pan-India</h3>
+                  <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-tight">
+                    Switch to Quality Generics & Save Big!
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
