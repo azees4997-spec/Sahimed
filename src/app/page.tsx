@@ -134,7 +134,7 @@ export default function Home() {
           </div>
           <div>
             <h3 className="text-sm font-black uppercase tracking-tight">FREE Delivery</h3>
-            <p className="text-[10px] font-bold opacity-90 uppercase tracking-widest">All over India, no minimum order!</p>
+            <p className="text-[10px] font-bold opacity-90 uppercase tracking-widest">On all orders above ₹1000 across India!</p>
           </div>
         </section>
 
