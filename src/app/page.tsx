@@ -168,29 +168,31 @@ export default function Home() {
           </div>
         </section>
 
-        {/* PAN-INDIA MOTIVATIONAL LINES */}
-        <section className="py-2 sm:py-4 relative z-10">
+        {/* PAN-INDIA MOTIVATIONAL LINES (Value Bar) */}
+        <section className="py-4 relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-12">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white p-5 rounded-[32px] border-2 border-primary/5 shadow-xl flex items-center gap-5 group transition-all hover:border-primary/20">
-                <div className="w-14 h-14 bg-primary/10 rounded-[20px] flex items-center justify-center shrink-0 shadow-lg shadow-primary/5 group-hover:scale-110 transition-transform">
-                  <Truck className="w-7 h-7 text-primary" />
+              {/* Card 1: Delivery */}
+              <div className="bg-white/80 backdrop-blur-sm p-4 sm:p-6 rounded-full border border-gray-100 flex items-center gap-4 sm:gap-8 group transition-all">
+                <div className="w-12 h-12 sm:w-20 sm:h-20 bg-[#F0F4FF] rounded-full flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <Truck className="w-6 h-6 sm:w-10 sm:h-10 text-[#2563EB]" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-black text-sm sm:text-base text-gray-900 uppercase tracking-tight leading-none">Pan-India Delivery</h3>
-                  <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-tight">
+                  <h3 className="font-black text-xs sm:text-lg text-[#1E293B] uppercase tracking-tighter leading-none">Pan-India Delivery</h3>
+                  <p className="text-[8px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-tight">
                     Order online, get delivered fast to your doorstep anywhere in India.
                   </p>
                 </div>
               </div>
 
-              <div className="bg-white p-5 rounded-[32px] border-2 border-accent/5 shadow-xl flex items-center gap-5 group transition-all hover:border-accent/20">
-                <div className="w-14 h-14 bg-accent/10 rounded-[20px] flex items-center justify-center shrink-0 shadow-lg shadow-accent/5 group-hover:scale-110 transition-transform">
-                  <Zap className="w-7 h-7 text-accent" />
+              {/* Card 2: Affordable */}
+              <div className="bg-white/80 backdrop-blur-sm p-4 sm:p-6 rounded-full border border-gray-100 flex items-center gap-4 sm:gap-8 group transition-all">
+                <div className="w-12 h-12 sm:w-20 sm:h-20 bg-[#F0FFF4] rounded-full flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <Zap className="w-6 h-6 sm:w-10 sm:h-10 text-[#16A34A]" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-black text-sm sm:text-base text-accent uppercase tracking-tight leading-none">Affordable Medicines Pan-India</h3>
-                  <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-tight">
+                  <h3 className="font-black text-xs sm:text-lg text-[#16A34A] uppercase tracking-tighter leading-none">Affordable Medicines Pan-India</h3>
+                  <p className="text-[8px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-tight">
                     Switch to Quality Generics & Save Big!
                   </p>
                 </div>
