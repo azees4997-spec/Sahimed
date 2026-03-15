@@ -1,43 +1,58 @@
+
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Footer() {
   const pathname = usePathname();
-  
-  // Do not show footer in admin area
   if (pathname.startsWith('/admin')) return null;
 
   return (
-    <footer className="bg-white border-t py-4 px-6 mt-auto pb-32 sm:pb-8">
-      <div className="max-w-7xl mx-auto flex flex-col items-center text-center space-y-4">
-        {/* Brand Section */}
-        <div className="flex items-center gap-3">
-           <div className="bg-primary p-1.5 rounded-[12px] shadow-lg shadow-primary/10">
-             <div className="text-white font-black text-[10px] tracking-tighter">SM</div>
-           </div>
-           <div className="flex flex-col items-start leading-none">
-             <span className="font-black text-xl text-primary tracking-tighter uppercase">SahiMed</span>
-             <span className="text-[6px] font-black text-primary/70 uppercase tracking-[0.38em] mt-0.5 text-left w-full whitespace-nowrap">sahi dawa sahi daam pe</span>
-           </div>
-        </div>
-        
-        {/* Copyright & Network Section */}
-        <div className="flex flex-col gap-1.5">
-          <p className="text-[10px] font-black text-gray-900 uppercase tracking-[0.15em] flex items-center justify-center gap-1.5">
-            <span className="text-lg font-light leading-none">©</span> 2026 SahiMed | All rights reserved
-          </p>
-          <div className="flex items-center justify-center gap-2 text-gray-400">
-            <ShieldCheck className="w-3 h-3 text-accent/60" />
-            <span className="text-[7px] font-black uppercase tracking-[0.3em]">Licensed Clinical Pharmacy Network</span>
+    <footer className="bg-[#020617] text-white py-12 px-6 mt-auto pb-32 sm:pb-12">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+          {/* Brand Col */}
+          <div className="space-y-6">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <div className="bg-white p-1 rounded-lg">
+                  <span className="text-black font-black text-[10px]">SM</span>
+                </div>
+                <span className="font-black text-2xl tracking-tighter uppercase">SahiMed</span>
+              </div>
+              <span className="text-[8px] font-black text-primary uppercase tracking-[0.3em] mt-1">Sahi Dawa Sahi Daam pe</span>
+            </div>
+            <p className="text-gray-400 text-xs font-medium leading-relaxed max-w-xs">
+              Providing high-quality affordable healthcare solutions for everyone across India.
+            </p>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h4 className="font-black text-sm uppercase tracking-widest mb-6">Quick Links</h4>
+            <ul className="space-y-4">
+              <li><Link href="/search" className="text-gray-400 hover:text-white text-xs font-bold transition-colors">Shop Generic</Link></li>
+              <li><Link href="#" className="text-gray-400 hover:text-white text-xs font-bold transition-colors">Health Articles</Link></li>
+              <li><Link href="#" className="text-gray-400 hover:text-white text-xs font-bold transition-colors">Offers</Link></li>
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div>
+            <h4 className="font-black text-sm uppercase tracking-widest mb-6">Support</h4>
+            <ul className="space-y-4">
+              <li><Link href="#" className="text-gray-400 hover:text-white text-xs font-bold transition-colors">Contact Us</Link></li>
+              <li><Link href="#" className="text-gray-400 hover:text-white text-xs font-bold transition-colors">FAQs</Link></li>
+              <li><Link href="#" className="text-gray-400 hover:text-white text-xs font-bold transition-colors">Shipping Policy</Link></li>
+              <li><Link href="#" className="text-gray-400 hover:text-white text-xs font-bold transition-colors">Privacy Policy</Link></li>
+            </ul>
           </div>
         </div>
 
-        {/* Clinical Disclaimer */}
-        <div className="pt-2 border-t border-gray-100 w-full max-w-xs">
-          <p className="text-[7px] font-bold text-gray-300 uppercase tracking-[0.2em] leading-relaxed">
-            Precision Pharmaceutical Logistics • Quality Healthcare Delivery
+        <div className="pt-12 border-t border-white/10 text-center">
+          <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+            © Copyright 2026 SAHIMED. ALL RIGHTS RESERVED.
           </p>
         </div>
       </div>

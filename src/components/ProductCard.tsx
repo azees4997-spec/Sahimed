@@ -3,15 +3,13 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, Plus, Minus, Loader2, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Minus, Plus, ShoppingCart } from 'lucide-react';
 import { Product, useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore } from '@/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
-import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
@@ -21,7 +19,6 @@ export default function ProductCard({ product }: { product: Product }) {
   const [liveData, setLiveData] = useState<{ price: number, mrp: number, stock: number } | null>(null);
   const quantity = getItemQuantity(product.id);
 
-  // Universal real-time sync for all SKU views
   useEffect(() => {
     const sku = product.sku || product.id;
     if (!db || !sku) return;
@@ -36,92 +33,67 @@ export default function ProductCard({ product }: { product: Product }) {
           stock: Number(d.stock_quantity) ?? 0 
         });
       }
-    }, (err) => {
-      console.warn("Live sync failure for SKU:", sku);
     });
 
     return () => unsubscribe();
   }, [db, product.sku, product.id]);
 
-  // Tiered Price Selection
   const currentPrice = (liveData?.price && liveData.price > 0) ? liveData.price : product.price;
   const currentMrp = (liveData?.mrp && liveData.mrp > 0) ? liveData.mrp : (product.mrp || product.price + 50);
   
-  const savingsAmt = Math.max(0, currentMrp - currentPrice);
-  const savingsPct = currentMrp > 0 ? Math.round((savingsAmt / currentMrp) * 100) : 0;
-
-  const handleAdd = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addToCart({
-      ...product,
-      price: currentPrice,
-      mrp: currentMrp
-    });
-    toast({ title: "Added to Bag" });
-  };
+  const savingsPct = currentMrp > 0 ? Math.round(((currentMrp - currentPrice) / currentMrp) * 100) : 0;
 
   const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
     ? product.imageUrl
     : `https://picsum.photos/seed/${product.id}/300/300`;
 
   return (
-    <div className="bg-white rounded-[12px] border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group relative">
-      {/* Discount Badge - Enlarged per reference */}
+    <div className="bg-white rounded-[20px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full group relative p-3">
       {savingsPct > 0 && (
-        <div className="absolute top-0 right-0 z-10">
-          <div className="bg-[#4CAF50] text-white font-black text-[11px] px-2.5 py-1 rounded-bl-lg shadow-sm">
-            {savingsPct}% OFF
+        <div className="absolute top-3 left-3 z-10">
+          <div className="bg-[#136A31] text-white font-black text-[8px] px-2 py-0.5 rounded uppercase tracking-tighter">
+            SAVE {savingsPct}%
           </div>
         </div>
       )}
 
-      <Link href={`/product/${product.id}`} className="flex flex-col flex-1 p-2.5 space-y-2">
-        <div className="relative aspect-[4/3] w-full bg-white flex items-center justify-center mb-1">
+      <Link href={`/product/${product.id}`} className="flex flex-col flex-1 space-y-3">
+        <div className="relative aspect-square w-full bg-[#F8FAFC] rounded-xl flex items-center justify-center overflow-hidden">
           <Image 
             src={safeImageUrl} 
             alt={product.name} 
             fill 
-            sizes="(max-width: 768px) 50vw, 15vw"
-            className="object-contain p-1" 
+            sizes="(max-width: 768px) 50vw, 20vw"
+            className="object-contain p-2 group-hover:scale-105 transition-transform" 
           />
         </div>
 
-        <div className="space-y-0.5">
-          <h3 className="font-bold text-gray-900 text-[12px] leading-[1.2] line-clamp-2 min-h-[28px]">
+        <div className="space-y-1">
+          <h3 className="font-black text-gray-900 text-[13px] leading-tight line-clamp-2 min-h-[32px] uppercase">
             {product.name}
           </h3>
-          <p className="text-[10px] font-bold text-[#3F51B5] truncate">
-            {product.manufacturer}
+          <p className="text-[10px] font-bold text-gray-400 uppercase">
+            {product.packSize || '10 Capsules'}
           </p>
-          <p className="text-[10px] font-medium text-gray-400">
-            {product.packSize || 'N/A'}
-          </p>
-        </div>
-
-        <div className="pt-1 mt-auto">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="text-[13px] font-black text-gray-900">
-              ₹{Number(currentPrice).toFixed(1)}
-            </p>
-            {currentMrp > currentPrice && (
-              <span className="text-[10px] text-gray-400 line-through font-medium">₹{Number(currentMrp).toFixed(1)}</span>
-            )}
+          
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-gray-400 line-through text-[11px] font-bold">₹{Math.round(currentMrp)}</span>
+            <span className="text-gray-900 font-black text-[15px]">₹{Math.round(currentPrice)}</span>
           </div>
         </div>
       </Link>
       
-      <div className="p-2.5 pt-0">
+      <div className="mt-4">
         {quantity > 0 ? (
-          <div className="flex items-center gap-1 rounded-md border border-primary p-1 bg-white w-full h-9">
+          <div className="flex items-center gap-1 rounded-lg border border-primary p-1 bg-white w-full h-10">
             <button 
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateQuantity(product.id, -1); }} 
               className="h-full flex-1 flex items-center justify-center text-primary hover:bg-primary/5 transition-colors"
             >
               <Minus className="w-3 h-3" />
             </button>
-            <span className="text-[10px] font-black text-gray-900 flex-[1.5] text-center">
-              {quantity} IN BAG
+            <span className="text-[11px] font-black text-gray-900 flex-[1.5] text-center">
+              {quantity}
             </span>
             <button 
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateQuantity(product.id, 1); }} 
@@ -132,10 +104,14 @@ export default function ProductCard({ product }: { product: Product }) {
           </div>
         ) : (
           <button 
-            onClick={handleAdd} 
-            className="rounded-md h-9 w-full border border-[#FFCDD2] bg-[#FFEBEE]/30 hover:bg-[#FFEBEE]/60 text-[#D32F2F] font-black text-[10px] uppercase tracking-wider transition-all active:scale-95"
+            onClick={(e) => {
+              e.preventDefault();
+              addToCart({ ...product, price: currentPrice, mrp: currentMrp });
+              toast({ title: "Added to Bag" });
+            }} 
+            className="rounded-lg h-10 w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-black text-[12px] uppercase tracking-wider transition-all active:scale-95"
           >
-            Add to Cart
+            Add
           </button>
         )}
       </div>
