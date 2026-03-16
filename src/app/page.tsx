@@ -9,7 +9,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { collection, query, limit, orderBy } from 'firebase/firestore';
-import { CATEGORIES as LOCAL_CATEGORIES, PRODUCTS as LOCAL_PRODUCTS } from '@/lib/data';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const db = useFirestore();
@@ -24,11 +24,8 @@ export default function Home() {
     return query(collection(db, 'categories'), orderBy('name', 'asc'), limit(12));
   }, [db]);
 
-  const { data: medicines } = useCollection(medicinesQuery);
-  const { data: categories } = useCollection(categoriesQuery);
-
-  const displayMedicines = medicines?.length ? medicines : LOCAL_PRODUCTS;
-  const displayCategories = categories?.length ? categories : LOCAL_CATEGORIES;
+  const { data: medicines, isLoading: isMedsLoading } = useCollection(medicinesQuery);
+  const { data: categories, isLoading: isCatsLoading } = useCollection(categoriesQuery);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
@@ -45,7 +42,6 @@ export default function Home() {
             <div className="w-16 h-0.5 bg-white/20" />
             <p className="text-white/90 text-sm font-bold pt-1 uppercase tracking-widest">Sahi Dawai, Sahi Daam Pe</p>
           </div>
-          {/* Medical Bag Abstract Icon Overlay */}
           <div className="absolute right-[-30px] bottom-[-30px] opacity-10 rotate-12">
             <ShieldCheck size={220} className="text-white" strokeWidth={1} />
           </div>
@@ -53,7 +49,6 @@ export default function Home() {
 
         {/* Action Stack */}
         <section className="space-y-4">
-          {/* Full Width Prescription Section */}
           <Link href="/prescription" className="flex items-center gap-5 bg-[#FFF0EB] p-6 rounded-[24px] group active:scale-95 transition-all shadow-sm">
             <div className="bg-[#F97316] p-3 rounded-2xl text-white shadow-xl">
               <FileText className="w-7 h-7" />
@@ -65,7 +60,6 @@ export default function Home() {
             <ChevronRight className="ml-auto w-5 h-5 text-[#F97316] opacity-40 group-hover:translate-x-1 transition-transform" />
           </Link>
 
-          {/* Communications Row */}
           <div className="grid grid-cols-2 gap-4">
             <Link href="https://wa.me/91XXXXXXXXXX" className="flex items-center gap-2 sm:gap-3 bg-[#EBFBF5] p-3 sm:p-5 rounded-[24px] group active:scale-95 transition-all shadow-sm overflow-hidden">
               <div className="bg-[#136A31] p-2 rounded-xl text-white shadow-lg shrink-0">
@@ -89,7 +83,9 @@ export default function Home() {
             <Link href="/categories" className="text-[11px] font-black text-[#F97316] uppercase tracking-widest">See All</Link>
           </div>
           <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 px-1">
-            {displayCategories.map((cat: any, i) => (
+            {isCatsLoading ? (
+              [...Array(6)].map((_, i) => <Skeleton key={i} className="w-24 h-24 rounded-full shrink-0" />)
+            ) : categories?.map((cat: any, i) => (
               <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-2 group shrink-0">
                 <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm overflow-hidden group-active:scale-90 transition-transform">
                   <Image 
@@ -106,11 +102,9 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Substitutes Information Section - Compact Redesign */}
+        {/* Substitutes Information Section */}
         <section className="rounded-[32px] border border-[#DCFCE7] shadow-sm overflow-hidden flex flex-col md:flex-row items-stretch">
-          {/* Left: Visual Banner - Plain Green Gradient & 50% vertical size */}
           <div className="md:w-1/3 relative min-h-[90px] bg-gradient-to-br from-[#136A31] to-[#2E8B57] overflow-hidden">
-            {/* SAVINGS OVERLAY */}
             <div className="absolute inset-0 p-4 flex flex-col justify-center">
               <div className="space-y-0.5">
                 <p className="text-[8px] font-black text-white/80 uppercase tracking-[0.2em]">Save Upto</p>
@@ -125,8 +119,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right: Information */}
-          <div className="md:w-2/3 p-5 sm:p-6 flex flex-col justify-center">
+          <div className="md:w-2/3 p-5 sm:p-6 flex flex-col justify-center bg-white">
             <div className="mb-5">
               <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight leading-none">
                 Smarter clinical choice
@@ -173,17 +166,15 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Best Sellers - More Compact */}
+        {/* Best Sellers */}
         <section className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-base font-black text-gray-900 uppercase tracking-tight">Best Sellers</h2>
-            <div className="flex gap-2">
-              <button className="p-1.5 rounded-full bg-white border border-gray-100 shadow-sm active:bg-gray-50"><ChevronRight className="w-4 h-4 rotate-180 text-gray-400" /></button>
-              <button className="p-1.5 rounded-full bg-white border border-gray-100 shadow-sm active:bg-gray-50"><ChevronRight className="w-4 h-4 text-gray-400" /></button>
-            </div>
           </div>
           <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-4 px-1">
-            {displayMedicines.map((p: any) => (
+            {isMedsLoading ? (
+              [...Array(4)].map((_, i) => <Skeleton key={i} className="min-w-[140px] aspect-[2/3] rounded-[16px]" />)
+            ) : medicines?.map((p: any) => (
               <div key={p.id} className="min-w-[140px]">
                 <ProductCard product={p} />
               </div>
@@ -202,7 +193,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Quality Medicines Card - Ultra Compact */}
+        {/* Quality Medicines Card */}
         <section className="bg-gray-100/50 p-3 rounded-[24px] text-center space-y-1.5 border border-gray-200/50">
           <div className="w-8 h-8 bg-[#2E8B57]/10 text-[#2E8B57] rounded-full flex items-center justify-center mx-auto shadow-inner">
             <ShieldCheck className="w-4 h-4" />

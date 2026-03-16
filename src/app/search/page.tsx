@@ -5,49 +5,78 @@ import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
-import { Filter, Search as SearchIcon, SlidersHorizontal, Info } from 'lucide-react';
+import { Filter, Search as SearchIcon, SlidersHorizontal, Info, Loader2 } from 'lucide-react';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
-import { collection, query, orderBy, where, limit, QueryConstraint } from 'firebase/firestore';
-import { Suspense, useMemo } from 'react';
+import { collection, query, orderBy, where, limit, QueryConstraint, getDocs } from 'firebase/firestore';
+import { Suspense, useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 
 function SearchResults() {
   const searchParams = useSearchParams();
-  const q = searchParams.get('q')?.trim() || '';
+  const rawQ = searchParams.get('q')?.trim() || '';
   const c = searchParams.get('c');
   const db = useFirestore();
 
-  // Optimization: Fetch only relevant results from Firestore instead of scanning the full collection
-  const medicinesQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    
-    const constraints: QueryConstraint[] = [];
-    
-    if (c) {
-      constraints.push(where('category', '==', c));
-    }
-    
-    // Firestore prefix search for name
-    if (q) {
-      // Standardize search query if needed (Firestore is case sensitive)
-      const searchTerm = q.charAt(0).toUpperCase() + q.slice(1);
-      constraints.push(where('name', '>=', searchTerm));
-      constraints.push(where('name', '<=', searchTerm + '\uf8ff'));
-    } else {
-      constraints.push(orderBy('name', 'asc'));
-    }
+  const [filteredMedicines, setFilteredMedicines] = useState<any[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
 
-    constraints.push(limit(24)); // Strict limit per page
-    return query(collection(db, 'medicines'), ...constraints);
-  }, [db, q, c]);
+  // Firestore optimization: Min 3 characters required for brand/salt search
+  useEffect(() => {
+    if (!db) return;
+
+    const performSearch = async () => {
+      setIsSearching(true);
+      try {
+        const constraints: QueryConstraint[] = [];
+        
+        if (c) {
+          constraints.push(where('category', '==', c));
+        }
+
+        // If query is short, don't perform brand/salt deep search
+        if (rawQ.length < 3 && !c) {
+          // Default listing if no active category and no valid query
+          const q = query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(24));
+          const snap = await getDocs(q);
+          setFilteredMedicines(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+          return;
+        }
+
+        // For valid queries (>= 3 chars), we fetch a segment and filter client-side 
+        // to handle the "Brand Name OR Salt Name" logic efficiently without multiple expensive reads
+        const baseQuery = c 
+          ? query(collection(db, 'medicines'), where('category', '==', c), limit(100))
+          : query(collection(db, 'medicines'), limit(100));
+        
+        const snap = await getDocs(baseQuery);
+        const allFetched = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        if (rawQ.length >= 3) {
+          const searchTerm = rawQ.toLowerCase();
+          const matches = allFetched.filter(m => 
+            (m.name || '').toLowerCase().includes(searchTerm) || 
+            (m.saltComposition || '').toLowerCase().includes(searchTerm)
+          );
+          setFilteredMedicines(matches);
+        } else {
+          setFilteredMedicines(allFetched.slice(0, 24));
+        }
+      } catch (err) {
+        console.error("Search error", err);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    performSearch();
+  }, [db, rawQ, c]);
 
   const categoriesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'categories'), orderBy('name', 'asc'), limit(20));
   }, [db]);
 
-  const { data: medicines, isLoading: medsLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
 
   return (
@@ -67,7 +96,7 @@ function SearchResults() {
                     {catsLoading ? (
                       <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8 w-full rounded-xl" />)}</div>
                     ) : categories?.map(cat => (
-                      <Link key={cat.id} href={`/search?c=${encodeURIComponent(cat.name)}${q ? `&q=${encodeURIComponent(q)}` : ''}`} className="block">
+                      <Link key={cat.id} href={`/search?c=${encodeURIComponent(cat.name)}${rawQ ? `&q=${encodeURIComponent(rawQ)}` : ''}`} className="block">
                         <div className={`px-3 py-2.5 rounded-xl flex items-center gap-3 transition-all ${c === cat.name ? 'bg-primary/5 border border-primary/10' : 'hover:bg-gray-50'}`}>
                           <div className={`w-1.5 h-1.5 rounded-full ${c === cat.name ? 'bg-primary animate-pulse' : 'bg-gray-200'}`} />
                           <span className={`text-[10px] uppercase tracking-tight ${c === cat.name ? 'font-black text-primary' : 'font-bold text-gray-600'}`}>{cat.name}</span>
@@ -83,18 +112,36 @@ function SearchResults() {
 
           <div className="flex-1">
             <div className="flex items-center justify-between mb-6 px-1">
-              <div><h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">{q ? `"${q}"` : c ? `${c}` : 'Full Catalog'}</h2><p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-1">{(medicines || []).length} products found</p></div>
+              <div>
+                <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">
+                  {rawQ ? `"${rawQ}"` : c ? `${c}` : 'Full Catalog'}
+                </h2>
+                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-1">
+                  {isSearching ? 'Analyzing clinical data...' : `${filteredMedicines?.length || 0} products found`}
+                </p>
+              </div>
               <Button variant="outline" className="md:hidden gap-2 rounded-full border-2 font-black uppercase text-[9px] h-10 px-5"><SlidersHorizontal className="w-3 h-3" /> Filters</Button>
             </div>
-            {medsLoading ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">{[...Array(6)].map((_, i) => (<Skeleton key={i} className="aspect-square rounded-[32px]" />))}</div>
-            ) : (medicines && medicines.length > 0) ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">{medicines.map(p => (<ProductCard key={p.id} product={p} />))}</div>
+
+            {isSearching ? (
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+                {[...Array(6)].map((_, i) => (<Skeleton key={i} className="aspect-square rounded-[32px]" />))}
+              </div>
+            ) : (filteredMedicines && filteredMedicines.length > 0) ? (
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+                {filteredMedicines.map(p => (<ProductCard key={p.id} product={p} />))}
+              </div>
             ) : (
               <div className="bg-white rounded-[40px] p-16 text-center border shadow-sm">
-                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6"><SearchIcon className="w-6 h-6 text-gray-300" /></div>
-                <h3 className="text-lg font-black mb-1.5 uppercase tracking-tight">No medicines found</h3>
-                <p className="text-gray-400 font-bold mb-8 text-[10px] uppercase tracking-widest">Try broader terms or browse by categories.</p>
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  {rawQ.length > 0 && rawQ.length < 3 ? <Info className="w-6 h-6 text-orange-400" /> : <SearchIcon className="w-6 h-6 text-gray-300" />}
+                </div>
+                <h3 className="text-lg font-black mb-1.5 uppercase tracking-tight">
+                  {rawQ.length > 0 && rawQ.length < 3 ? "Keep typing..." : "No medicines found"}
+                </h3>
+                <p className="text-gray-400 font-bold mb-8 text-[10px] uppercase tracking-widest">
+                  {rawQ.length > 0 && rawQ.length < 3 ? "Enter at least 3 characters for a clinical search." : "Try broader terms or browse by categories."}
+                </p>
                 <Button onClick={() => window.location.href = '/search'} className="rounded-full px-10 h-14 font-black uppercase tracking-widest shadow-xl">Clear Filters</Button>
               </div>
             )}
