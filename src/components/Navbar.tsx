@@ -88,36 +88,31 @@ export default function Navbar() {
     const fetchSuggestions = async () => {
       setIsSearching(true);
       const term = search.trim();
-      const termProper = term.charAt(0).toUpperCase() + term.slice(1).toLowerCase();
-      const termUpper = term.toUpperCase();
+      
+      // Dash-aware Title Case (e.g., "d-veniz" -> "D-Veniz")
+      const vProper = term.replace(/(^|[\s-])\S/g, (match) => match.toUpperCase());
+      const vUpper = term.toUpperCase();
+      const vRaw = term;
+      const variants = Array.from(new Set([vProper, vUpper, vRaw])).filter(v => v.length >= 3);
 
       try {
-        // We perform two targeted prefix queries to catch both Name and Salt
-        // while staying within clinical read optimization limits.
-        const nameQuery = query(
-          collection(db, 'medicines'),
-          where('name', '>=', termProper),
-          where('name', '<=', termProper + '\uf8ff'),
-          limit(5)
-        );
-
-        const saltQuery = query(
-          collection(db, 'medicines'),
-          where('saltComposition', '>=', termProper),
-          where('saltComposition', '<=', termProper + '\uf8ff'),
-          limit(5)
-        );
-
-        const [nameSnap, saltSnap] = await Promise.all([
-          getDocs(nameQuery),
-          getDocs(saltQuery)
+        // Parallel queries across multiple variants to handle hyphenated and all-caps clinical brands
+        // We also check saltComposition field directly
+        const queries = variants.flatMap(v => [
+          query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(5)),
+          query(collection(db, 'medicines'), where('saltComposition', '>=', v), where('saltComposition', '<=', v + '\uf8ff'), limit(5))
         ]);
 
-        const resultsMap = new Map();
-        nameSnap.forEach(doc => resultsMap.set(doc.id, { id: doc.id, ...doc.data() }));
-        saltSnap.forEach(doc => resultsMap.set(doc.id, { id: doc.id, ...doc.data() }));
+        const snaps = await Promise.all(queries.map(q => getDocs(q)));
 
-        setSuggestions(Array.from(resultsMap.values()));
+        const resultsMap = new Map();
+        snaps.forEach(snap => {
+          snap.forEach(doc => {
+            resultsMap.set(doc.id, { id: doc.id, ...doc.data() });
+          });
+        });
+
+        setSuggestions(Array.from(resultsMap.values()).slice(0, 8));
         setShowSuggestions(true);
       } catch (err) {
         console.error("Suggestion fetch failed", err);
