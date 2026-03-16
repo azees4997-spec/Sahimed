@@ -2,15 +2,17 @@
 "use client"
 
 import Link from 'next/link';
-import { Search as SearchIcon, MapPin, ChevronDown, LocateFixed, Loader2, ShoppingCart } from 'lucide-react';
+import { Search as SearchIcon, MapPin, ChevronDown, LocateFixed, Loader2, ShoppingCart, Package, ChevronRight } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { useFirestore } from '@/firebase';
+import { collection, query, where, limit, getDocs, orderBy } from 'firebase/firestore';
 
 export function SahiMedIcon({ className }: { className?: string }) {
   return (
@@ -45,15 +47,88 @@ export default function Navbar() {
   const [search, setSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const db = useFirestore();
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (search.trim().length >= 3) {
       router.push(`/search?q=${encodeURIComponent(search.trim())}`);
-      setSearch('');
+      setShowSuggestions(false);
     }
   };
+
+  const handleSuggestionClick = (term: string) => {
+    setSearch(term);
+    router.push(`/search?q=${encodeURIComponent(term)}`);
+    setShowSuggestions(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!db || search.trim().length < 3) {
+      setSuggestions([]);
+      setIsSearching(false);
+      return;
+    }
+
+    const fetchSuggestions = async () => {
+      setIsSearching(true);
+      const term = search.trim();
+      const termProper = term.charAt(0).toUpperCase() + term.slice(1).toLowerCase();
+      const termUpper = term.toUpperCase();
+
+      try {
+        // We perform two targeted prefix queries to catch both Name and Salt
+        // while staying within clinical read optimization limits.
+        const nameQuery = query(
+          collection(db, 'medicines'),
+          where('name', '>=', termProper),
+          where('name', '<=', termProper + '\uf8ff'),
+          limit(5)
+        );
+
+        const saltQuery = query(
+          collection(db, 'medicines'),
+          where('saltComposition', '>=', termProper),
+          where('saltComposition', '<=', termProper + '\uf8ff'),
+          limit(5)
+        );
+
+        const [nameSnap, saltSnap] = await Promise.all([
+          getDocs(nameQuery),
+          getDocs(saltQuery)
+        ]);
+
+        const resultsMap = new Map();
+        nameSnap.forEach(doc => resultsMap.set(doc.id, { id: doc.id, ...doc.data() }));
+        saltSnap.forEach(doc => resultsMap.set(doc.id, { id: doc.id, ...doc.data() }));
+
+        setSuggestions(Array.from(resultsMap.values()));
+        setShowSuggestions(true);
+      } catch (err) {
+        console.error("Suggestion fetch failed", err);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const timer = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(timer);
+  }, [search, db]);
 
   const handleGeoLocation = () => {
     setIsLocating(true);
@@ -135,18 +210,65 @@ export default function Navbar() {
         </div>
 
         {/* Search Row */}
-        <form onSubmit={handleSearch} className="relative">
-          <div className="relative group">
-            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              type="text"
-              placeholder="Search for medicines or generics (min 3 chars)"
-              className="w-full pl-11 pr-4 rounded-xl border-none bg-[#F1F5F9] h-11 text-[13px] font-medium placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-primary/20"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-        </form>
+        <div className="relative" ref={searchRef}>
+          <form onSubmit={handleSearch} className="relative">
+            <div className="relative group">
+              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Search for medicines or generics (min 3 chars)"
+                className="w-full pl-11 pr-12 rounded-xl border-none bg-[#F1F5F9] h-11 text-[13px] font-medium placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-primary/20"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onFocus={() => search.length >= 3 && setShowSuggestions(true)}
+              />
+              {isSearching && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                </div>
+              )}
+            </div>
+          </form>
+
+          {/* Suggestions Dropdown */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2">
+              <div className="px-4 py-2 bg-gray-50 border-b">
+                <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Clinical Matches</span>
+              </div>
+              <div className="max-h-[320px] overflow-y-auto scrollbar-hide">
+                {suggestions.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleSuggestionClick(item.name)}
+                    className="w-full px-4 py-3 flex items-center gap-4 hover:bg-primary/5 transition-all text-left border-b last:border-none group"
+                  >
+                    <div className="w-10 h-10 bg-gray-50 rounded-lg flex-shrink-0 border flex items-center justify-center overflow-hidden">
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt="" className="w-full h-full object-contain" />
+                      ) : (
+                        <Package className="w-5 h-5 text-gray-200" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-[11px] uppercase text-gray-900 truncate tracking-tight">{item.name}</p>
+                      <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest truncate mt-0.5">
+                        {item.saltComposition}
+                      </p>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-primary transition-transform group-hover:translate-x-1" />
+                  </button>
+                ))}
+              </div>
+              <button 
+                onClick={() => handleSearch()}
+                className="w-full p-3 text-center bg-primary/5 hover:bg-primary/10 transition-colors"
+              >
+                <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">View Full Catalog</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );
