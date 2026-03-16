@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from 'next/link';
@@ -101,7 +100,7 @@ export default function Navbar() {
             </div>
           </Link>
 
-          <Popover open={isPopoverOpen} onOpenChange={isPopoverOpen}>
+          <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
             <PopoverTrigger asChild>
               <button className="flex items-center gap-1.5 text-[11px] font-bold text-gray-600 hover:text-primary transition-colors">
                 <MapPin className="w-3.5 h-3.5 text-[#F97316]" />
