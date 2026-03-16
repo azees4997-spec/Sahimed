@@ -1,5 +1,4 @@
-
-'use client';
+"use client"
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -10,7 +9,7 @@ export default function Footer() {
   if (pathname.startsWith('/admin')) return null;
 
   return (
-    <footer className="bg-[#020617] text-white pt-6 pb-32 sm:pb-10 px-6 border-t-2 border-[#0061AF]">
+    <footer className="bg-[#020617] text-white pt-6 pb-32 sm:pb-10 px-6 border-t-2 border-[#0EA5E9]">
       <div className="max-w-7xl mx-auto flex flex-col items-center gap-4">
         
         {/* Brand Info - Centered */}
@@ -18,11 +17,11 @@ export default function Footer() {
           <div className="bg-white p-1.5 rounded-xl flex items-center gap-2 mb-1.5 shadow-lg shadow-black/20">
             <SahiMedIcon className="w-7 h-7" />
             <div className="flex items-center leading-none">
-              <span className="font-black text-xl text-[#0061AF] tracking-tighter">Sahi</span>
-              <span className="font-black text-xl text-[#2E8B57] tracking-tighter">Med</span>
+              <span className="font-black text-xl text-[#0EA5E9] tracking-tighter">Sahi</span>
+              <span className="font-black text-xl text-[#F97316] tracking-tighter">Med</span>
             </div>
           </div>
-          <span className="text-[10px] font-black text-[#0061AF] uppercase tracking-[0.2em]">Sahi Dawai, Sahi Daam Pe</span>
+          <span className="text-[10px] font-black text-[#0EA5E9] uppercase tracking-[0.2em]">Sahi Dawai, Sahi Daam Pe</span>
         </div>
 
         {/* Links Section - Horizontal Strip */}

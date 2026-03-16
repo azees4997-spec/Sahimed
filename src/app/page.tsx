@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from 'react';
@@ -33,8 +32,8 @@ export default function Home() {
       
       <main className="max-w-7xl mx-auto px-4 py-4 space-y-6 pb-6">
         
-        {/* Hero Banner */}
-        <section className="relative rounded-[24px] bg-gradient-to-br from-[#005FAC] to-[#004a8a] overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
+        {/* Hero Banner - SKY BLUE THEME */}
+        <section className="relative rounded-[24px] bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
           <div className="space-y-3 relative z-10">
             <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight uppercase tracking-tight">
               Affordable Medicines<br />Across India
@@ -68,10 +67,10 @@ export default function Home() {
               <span className="text-[10px] sm:text-[15px] font-black text-[#136A31] uppercase leading-tight whitespace-nowrap">Order via WhatsApp</span>
             </Link>
             <Link href="tel:+91XXXXXXXXXX" className="flex items-center gap-2 sm:gap-3 bg-[#EBF4FF] p-3 sm:p-5 rounded-[24px] group active:scale-95 transition-all shadow-sm overflow-hidden">
-              <div className="bg-[#0061AF] p-2 rounded-xl text-white shadow-lg shrink-0">
+              <div className="bg-[#0EA5E9] p-2 rounded-xl text-white shadow-lg shrink-0">
                 <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <span className="text-[10px] sm:text-[15px] font-black text-[#0061AF] uppercase leading-tight whitespace-nowrap">Call For Medicines</span>
+              <span className="text-[10px] sm:text-[15px] font-black text-[#0EA5E9] uppercase leading-tight whitespace-nowrap">Call For Medicines</span>
             </Link>
           </div>
         </section>
@@ -182,7 +181,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Free Delivery Banner */}
+        {/* Free Delivery Banner - ORANGE THEME */}
         <section className="bg-gradient-to-r from-[#F97316] to-[#EA580C] p-5 rounded-[24px] flex items-center gap-4 text-white shadow-xl shadow-orange-500/20 border-b-4 border-black/10">
           <div className="bg-white/20 p-2.5 rounded-xl">
             <Truck className="w-6 h-6" />
@@ -195,7 +194,7 @@ export default function Home() {
 
         {/* Quality Medicines Card */}
         <section className="bg-gray-100/50 p-3 rounded-[24px] text-center space-y-1.5 border border-gray-200/50">
-          <div className="w-8 h-8 bg-[#2E8B57]/10 text-[#2E8B57] rounded-full flex items-center justify-center mx-auto shadow-inner">
+          <div className="w-8 h-8 bg-[#0EA5E9]/10 text-[#0EA5E9] rounded-full flex items-center justify-center mx-auto shadow-inner">
             <ShieldCheck className="w-4 h-4" />
           </div>
           <h2 className="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-tight leading-none">Best Quality Medicines</h2>

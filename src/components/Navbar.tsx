@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from 'next/link';
@@ -24,15 +23,15 @@ export function SahiMedIcon({ className }: { className?: string }) {
     >
       <path 
         d="M20 55C20 30 40 20 50 20C35 35 32 55 32 75C32 90 45 100 55 100C30 100 20 85 20 55Z" 
-        fill="#F37021" 
+        fill="#F97316" 
       />
       <path 
         d="M80 45C80 70 60 80 50 80C65 65 68 45 68 25C68 10 55 0 45 0C70 0 80 15 80 45Z" 
-        fill="#F37021" 
+        fill="#F97316" 
       />
       <path 
         d="M50 10C35 30 35 55 50 65C65 75 65 95 50 110C80 90 80 65 65 55C50 45 50 25 50 10Z" 
-        fill="#005FAC" 
+        fill="#0EA5E9" 
       />
       <path 
         d="M55 20C48 35 48 55 58 65C68 75 68 85 63 95C73 85 73 70 63 60C53 50 53 30 55 20Z" 
@@ -96,8 +95,7 @@ export default function Navbar() {
       const variants = Array.from(new Set([vProper, vUpper, vRaw])).filter(v => v.length >= 3);
 
       try {
-        // Parallel queries across multiple variants to handle hyphenated and all-caps clinical brands
-        // We also check saltComposition field directly
+        // Parallel queries across multiple variants
         const queries = variants.flatMap(v => [
           query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(5)),
           query(collection(db, 'medicines'), where('saltComposition', '>=', v), where('saltComposition', '<=', v + '\uf8ff'), limit(5))
@@ -161,10 +159,10 @@ export default function Navbar() {
             <SahiMedIcon className="w-10 h-10" />
             <div className="flex flex-col">
               <div className="flex items-center">
-                <span className="font-black text-2xl text-[#005FAC] tracking-tighter leading-none">Sahi</span>
-                <span className="font-black text-2xl text-[#2E8B57] tracking-tighter leading-none">Med</span>
+                <span className="font-black text-2xl text-[#0EA5E9] tracking-tighter leading-none">Sahi</span>
+                <span className="font-black text-2xl text-[#F97316] tracking-tighter leading-none">Med</span>
               </div>
-              <span className="text-[9px] font-black text-[#005FAC] uppercase tracking-widest mt-0.5">Sahi Dawai, Sahi Daam Pe</span>
+              <span className="text-[9px] font-black text-[#0EA5E9] uppercase tracking-widest mt-0.5">Sahi Dawai, Sahi Daam Pe</span>
             </div>
           </Link>
 
