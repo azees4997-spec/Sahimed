@@ -96,9 +96,9 @@ export default function Home() {
             onMouseLeave={plugin.current.reset}
           >
             <CarouselContent>
-              {/* Slide 1: Affordable Medicines */}
+              {/* Slide 1: Affordable Medicines (Green) */}
               <CarouselItem>
-                <div className="relative rounded-[24px] bg-gradient-to-br from-[#10b981] to-[#059669] overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
+                <div className="relative rounded-[24px] bg-gradient-to-br from-primary to-primary/80 overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
                   <div className="space-y-3 relative z-10">
                     <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight uppercase tracking-tight">
                       Affordable Medicines<br />Across India
@@ -112,9 +112,9 @@ export default function Home() {
                 </div>
               </CarouselItem>
 
-              {/* Slide 2: Smarter Clinical Choice (Substitutes) */}
+              {/* Slide 2: Smarter Clinical Choice (Blue) */}
               <CarouselItem>
-                <div className="relative rounded-[24px] bg-gradient-to-br from-[#10b981] to-[#064e3b] overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
+                <div className="relative rounded-[24px] bg-gradient-to-br from-accent to-accent/80 overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
                     <div className="space-y-2 flex-1 text-center sm:text-left">
                       <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full border border-white/20">
@@ -127,18 +127,18 @@ export default function Home() {
                       <div className="flex flex-wrap justify-center sm:justify-start gap-3 pt-1">
                         <div className="flex items-center gap-1.5">
                           <ShieldPlus className="w-3.5 h-3.5 text-white/80" />
-                          <span className="text-[8px] font-bold text-white uppercase tracking-widest">GMP & FDA Certified medicines</span>
+                          <span className="text-[8px] font-bold text-white uppercase tracking-widest">GMP & FDA Certified</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <FlaskConical className="w-3.5 h-3.5 text-white/80" />
-                          <span className="text-[8px] font-bold text-white uppercase tracking-widest">Same composition & strength</span>
+                          <span className="text-[8px] font-bold text-white uppercase tracking-widest">Same composition</span>
                         </div>
                       </div>
                     </div>
                     <div className="hidden sm:flex flex-col items-center justify-center text-center p-4 bg-white/10 backdrop-blur rounded-[24px] border border-white/20 shrink-0">
                        <Star className="w-5 h-5 text-[#EAB308] fill-current mb-1.5" />
                        <p className="text-[8px] font-black text-white uppercase tracking-tighter leading-tight max-w-[120px]">
-                         All substitutes are from India's leading manufacturers.
+                         Verified clinical alternatives.
                        </p>
                     </div>
                   </div>
@@ -170,30 +170,30 @@ export default function Home() {
 
         {/* Action Row - 3 Column Grid */}
         <section className="grid grid-cols-3 gap-2 sm:gap-4">
-          <Link href="/prescription" className="flex flex-col items-center justify-center gap-2 bg-[#ecfdf5] p-3 sm:p-6 rounded-[20px] sm:rounded-[24px] group active:scale-95 transition-all shadow-sm text-center">
-            <div className="bg-[#10b981] p-2 sm:p-3 rounded-xl sm:rounded-2xl text-white shadow-lg">
+          <Link href="/prescription" className="flex flex-col items-center justify-center gap-2 bg-primary/5 p-3 sm:p-6 rounded-[20px] sm:rounded-[24px] group active:scale-95 transition-all shadow-sm text-center">
+            <div className="bg-primary p-2 sm:p-3 rounded-xl sm:rounded-2xl text-white shadow-lg">
               <FileText className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[8px] sm:text-[12px] font-black text-[#10b981] uppercase tracking-tight leading-tight">Upload<br/>Prescription</span>
+              <span className="text-[8px] sm:text-[12px] font-black text-primary uppercase tracking-tight leading-tight">Upload<br/>Prescription</span>
             </div>
           </Link>
 
-          <Link href="https://wa.me/91XXXXXXXXXX" className="flex flex-col items-center justify-center gap-2 bg-[#f0fdf4] p-3 sm:p-6 rounded-[20px] sm:rounded-[24px] group active:scale-95 transition-all shadow-sm text-center">
-            <div className="bg-[#10b981] p-2 sm:p-3 rounded-xl sm:rounded-2xl text-white shadow-lg">
+          <Link href="https://wa.me/91XXXXXXXXXX" className="flex flex-col items-center justify-center gap-2 bg-accent/5 p-3 sm:p-6 rounded-[20px] sm:rounded-[24px] group active:scale-95 transition-all shadow-sm text-center">
+            <div className="bg-accent p-2 sm:p-3 rounded-xl sm:rounded-2xl text-white shadow-lg">
               <MessageCircle className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[8px] sm:text-[12px] font-black text-[#10b981] uppercase tracking-tight leading-tight">Order via<br/>WhatsApp</span>
+              <span className="text-[8px] sm:text-[12px] font-black text-accent uppercase tracking-tight leading-tight">Order via<br/>WhatsApp</span>
             </div>
           </Link>
 
-          <Link href="tel:+91XXXXXXXXXX" className="flex flex-col items-center justify-center gap-2 bg-[#ecfdf5] p-3 sm:p-6 rounded-[20px] sm:rounded-[24px] group active:scale-95 transition-all shadow-sm text-center">
-            <div className="bg-[#10b981] p-2 sm:p-3 rounded-xl sm:rounded-2xl text-white shadow-lg">
+          <Link href="tel:+91XXXXXXXXXX" className="flex flex-col items-center justify-center gap-2 bg-primary/5 p-3 sm:p-6 rounded-[20px] sm:rounded-[24px] group active:scale-95 transition-all shadow-sm text-center">
+            <div className="bg-primary p-2 sm:p-3 rounded-xl sm:rounded-2xl text-white shadow-lg">
               <Phone className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[8px] sm:text-[12px] font-black text-[#10b981] uppercase tracking-tight leading-tight">Call For<br/>Medicines</span>
+              <span className="text-[8px] sm:text-[12px] font-black text-primary uppercase tracking-tight leading-tight">Call For<br/>Medicines</span>
             </div>
           </Link>
         </section>
@@ -202,7 +202,7 @@ export default function Home() {
         <section className="space-y-4 pt-2">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-base font-black text-gray-900 uppercase tracking-tight">Shop by Category</h2>
-            <Link href="/categories" className="text-[11px] font-black text-[#10b981] uppercase tracking-widest">See All</Link>
+            <Link href="/categories" className="text-[11px] font-black text-primary uppercase tracking-widest">See All</Link>
           </div>
           <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 px-1">
             {isCatsLoading ? (
@@ -224,8 +224,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Free Delivery Banner */}
-        <section className="bg-gradient-to-r from-[#064e3b] to-[#065f46] p-5 rounded-[24px] flex items-center gap-4 text-white shadow-xl shadow-emerald-900/20 border-b-4 border-black/10">
+        {/* Free Delivery Banner (Blue) */}
+        <section className="bg-gradient-to-r from-accent to-accent/80 p-5 rounded-[24px] flex items-center gap-4 text-white shadow-xl shadow-blue-900/10 border-b-4 border-black/10">
           <div className="bg-white/20 p-2.5 rounded-xl">
             <Truck className="w-6 h-6" />
           </div>
@@ -253,12 +253,12 @@ export default function Home() {
 
         {/* Quality Medicines Card */}
         <section className="bg-gray-100/50 p-3 rounded-[24px] text-center space-y-1.5 border border-gray-200/50">
-          <div className="w-8 h-8 bg-[#10b981]/10 text-[#10b981] rounded-full flex items-center justify-center mx-auto shadow-inner">
+          <div className="w-8 h-8 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto shadow-inner">
             <ShieldCheck className="w-4 h-4" />
           </div>
           <h2 className="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-tight leading-none">Best Quality Medicines</h2>
           <p className="text-[9px] font-bold text-gray-500 leading-normal max-w-xs mx-auto uppercase tracking-widest opacity-80">
-            You deserve the best – premium medicines from India’s leading brands
+            Premium medicines from India’s leading brands
           </p>
         </section>
 

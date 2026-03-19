@@ -23,15 +23,15 @@ export function SahiMedIcon({ className }: { className?: string }) {
     >
       <path 
         d="M20 55C20 30 40 20 50 20C35 35 32 55 32 75C32 90 45 100 55 100C30 100 20 85 20 55Z" 
-        fill="#064e3b" 
+        fill="#0c4a6e" /* Dark Pastel Blue */
       />
       <path 
         d="M80 45C80 70 60 80 50 80C65 65 68 45 68 25C68 10 55 0 45 0C70 0 80 15 80 45Z" 
-        fill="#064e3b" 
+        fill="#0c4a6e" 
       />
       <path 
         d="M50 10C35 30 35 55 50 65C65 75 65 95 50 110C80 90 80 65 65 55C50 45 50 25 50 10Z" 
-        fill="#10b981" 
+        fill="#10b981" /* Pastel Green */
       />
       <path 
         d="M55 20C48 35 48 55 58 65C68 75 68 85 63 95C73 85 73 70 63 60C53 50 53 30 55 20Z" 
@@ -153,9 +153,9 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-3">
             <SahiMedIcon className="w-10 h-10" />
             <div className="flex flex-col">
-              <div className="flex items-center">
-                <span className="font-black text-2xl text-[#10b981] tracking-tighter leading-none">Sahi</span>
-                <span className="font-black text-2xl text-[#064e3b] tracking-tighter leading-none">Med</span>
+              <div className="flex items-center leading-none">
+                <span className="font-black text-2xl text-primary tracking-tighter">Sahi</span>
+                <span className="font-black text-2xl text-accent tracking-tighter">Med</span>
               </div>
             </div>
           </Link>
@@ -164,7 +164,7 @@ export default function Navbar() {
             <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
               <PopoverTrigger asChild>
                 <button className="flex items-center gap-1.5 text-[11px] font-bold text-gray-600 hover:text-primary transition-colors">
-                  <MapPin className="w-3.5 h-3.5 text-[#10b981]" />
+                  <MapPin className="w-3.5 h-3.5 text-primary" />
                   <span className="max-w-[80px] sm:max-w-none truncate">{location}</span>
                   <ChevronDown className="w-3 h-3 opacity-40" />
                 </button>
@@ -201,7 +201,7 @@ export default function Navbar() {
               <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 type="text"
-                placeholder="Search for medicines or generics (min 3 chars)"
+                placeholder="Search for medicines or generics"
                 className="w-full pl-11 pr-12 rounded-xl border-none bg-[#F1F5F9] h-11 text-[13px] font-medium placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-primary/20"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
