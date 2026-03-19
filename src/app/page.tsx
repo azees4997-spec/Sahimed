@@ -199,6 +199,17 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Free Delivery Banner - ORANGE THEME */}
+        <section className="bg-gradient-to-r from-[#F97316] to-[#EA580C] p-5 rounded-[24px] flex items-center gap-4 text-white shadow-xl shadow-orange-500/20 border-b-4 border-black/10">
+          <div className="bg-white/20 p-2.5 rounded-xl">
+            <Truck className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-sm font-black uppercase tracking-tight">FREE Delivery</h3>
+            <p className="text-[10px] font-bold opacity-90 uppercase tracking-widest">On all orders above ₹1000 across India!</p>
+          </div>
+        </section>
+
         {/* Best Sellers */}
         <section className="space-y-4">
           <div className="flex items-center justify-between px-1">
@@ -212,17 +223,6 @@ export default function Home() {
                 <ProductCard product={p} />
               </div>
             ))}
-          </div>
-        </section>
-
-        {/* Free Delivery Banner - ORANGE THEME */}
-        <section className="bg-gradient-to-r from-[#F97316] to-[#EA580C] p-5 rounded-[24px] flex items-center gap-4 text-white shadow-xl shadow-orange-500/20 border-b-4 border-black/10">
-          <div className="bg-white/20 p-2.5 rounded-xl">
-            <Truck className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-tight">FREE Delivery</h3>
-            <p className="text-[10px] font-bold opacity-90 uppercase tracking-widest">On all orders above ₹1000 across India!</p>
           </div>
         </section>
 
