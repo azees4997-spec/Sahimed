@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from 'react';
@@ -46,33 +47,34 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Action Stack */}
-        <section className="space-y-4">
-          <Link href="/prescription" className="flex items-center gap-5 bg-[#FFF0EB] p-6 rounded-[24px] group active:scale-95 transition-all shadow-sm">
-            <div className="bg-[#F97316] p-3 rounded-2xl text-white shadow-xl">
-              <FileText className="w-7 h-7" />
+        {/* Action Row - 3 Column Grid */}
+        <section className="grid grid-cols-3 gap-2 sm:gap-4">
+          <Link href="/prescription" className="flex flex-col items-center justify-center gap-2 bg-[#FFF0EB] p-3 sm:p-6 rounded-[20px] sm:rounded-[24px] group active:scale-95 transition-all shadow-sm text-center">
+            <div className="bg-[#F97316] p-2 sm:p-3 rounded-xl sm:rounded-2xl text-white shadow-lg">
+              <FileText className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-black text-[#F97316] uppercase tracking-tight">Upload Prescription</span>
-              <span className="text-[10px] font-bold text-[#F97316]/70 uppercase tracking-widest mt-0.5">Quick clinical verification</span>
+              <span className="text-[8px] sm:text-[12px] font-black text-[#F97316] uppercase tracking-tight leading-tight">Upload<br/>Prescription</span>
             </div>
-            <ChevronRight className="ml-auto w-5 h-5 text-[#F97316] opacity-40 group-hover:translate-x-1 transition-transform" />
           </Link>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Link href="https://wa.me/91XXXXXXXXXX" className="flex items-center gap-2 sm:gap-3 bg-[#EBFBF5] p-3 sm:p-5 rounded-[24px] group active:scale-95 transition-all shadow-sm overflow-hidden">
-              <div className="bg-[#136A31] p-2 rounded-xl text-white shadow-lg shrink-0">
-                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-              <span className="text-[10px] sm:text-[15px] font-black text-[#136A31] uppercase leading-tight whitespace-nowrap">Order via WhatsApp</span>
-            </Link>
-            <Link href="tel:+91XXXXXXXXXX" className="flex items-center gap-2 sm:gap-3 bg-[#EBF4FF] p-3 sm:p-5 rounded-[24px] group active:scale-95 transition-all shadow-sm overflow-hidden">
-              <div className="bg-[#0EA5E9] p-2 rounded-xl text-white shadow-lg shrink-0">
-                <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-              <span className="text-[10px] sm:text-[15px] font-black text-[#0EA5E9] uppercase leading-tight whitespace-nowrap">Call For Medicines</span>
-            </Link>
-          </div>
+          <Link href="https://wa.me/91XXXXXXXXXX" className="flex flex-col items-center justify-center gap-2 bg-[#EBFBF5] p-3 sm:p-6 rounded-[20px] sm:rounded-[24px] group active:scale-95 transition-all shadow-sm text-center">
+            <div className="bg-[#136A31] p-2 sm:p-3 rounded-xl sm:rounded-2xl text-white shadow-lg">
+              <MessageCircle className="w-5 h-5 sm:w-7 sm:h-7" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[8px] sm:text-[12px] font-black text-[#136A31] uppercase tracking-tight leading-tight">Order via<br/>WhatsApp</span>
+            </div>
+          </Link>
+
+          <Link href="tel:+91XXXXXXXXXX" className="flex flex-col items-center justify-center gap-2 bg-[#EBF4FF] p-3 sm:p-6 rounded-[20px] sm:rounded-[24px] group active:scale-95 transition-all shadow-sm text-center">
+            <div className="bg-[#0EA5E9] p-2 sm:p-3 rounded-xl sm:rounded-2xl text-white shadow-lg">
+              <Phone className="w-5 h-5 sm:w-7 sm:h-7" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[8px] sm:text-[12px] font-black text-[#0EA5E9] uppercase tracking-tight leading-tight">Call For<br/>Medicines</span>
+            </div>
+          </Link>
         </section>
 
         {/* Categories - Side Scroll */}
@@ -83,7 +85,7 @@ export default function Home() {
           </div>
           <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 px-1">
             {isCatsLoading ? (
-              [...Array(6)].map((_, i) => <Skeleton key={i} className="w-24 h-24 rounded-full shrink-0" />)
+              [...Array(6)].map((_, i) => <Skeleton className="w-24 h-24 rounded-full shrink-0" key={i} />)
             ) : categories?.map((cat: any, i) => (
               <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-2 group shrink-0">
                 <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm overflow-hidden group-active:scale-90 transition-transform">
@@ -172,7 +174,7 @@ export default function Home() {
           </div>
           <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-4 px-1">
             {isMedsLoading ? (
-              [...Array(4)].map((_, i) => <Skeleton key={i} className="min-w-[140px] aspect-[2/3] rounded-[16px]" />)
+              [...Array(4)].map((_, i) => <Skeleton className="min-w-[140px] aspect-[2/3] rounded-[16px]" key={i} />)
             ) : medicines?.map((p: any) => (
               <div key={p.id} className="min-w-[140px]">
                 <ProductCard product={p} />
