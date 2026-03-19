@@ -15,13 +15,32 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  type CarouselApi,
 } from "@/components/ui/carousel";
+import { cn } from '@/lib/utils';
 
 export default function Home() {
   const db = useFirestore();
+  const [api, setApi] = React.useState<CarouselApi>();
+  const [current, setCurrent] = React.useState(0);
+  const [count, setCount] = React.useState(0);
+
   const plugin = React.useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
   );
+
+  React.useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    setCount(api.scrollSnapList().length);
+    setCurrent(api.selectedScrollSnap());
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap());
+    });
+  }, [api]);
 
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -45,6 +64,7 @@ export default function Home() {
         {/* Scrolling Hero Section */}
         <section className="relative w-full">
           <Carousel
+            setApi={setApi}
             plugins={[plugin.current]}
             className="w-full"
             onMouseEnter={plugin.current.stop}
@@ -104,6 +124,23 @@ export default function Home() {
               </CarouselItem>
             </CarouselContent>
           </Carousel>
+
+          {/* Dots Indicator */}
+          <div className="flex justify-center gap-2 mt-4">
+            {Array.from({ length: count }).map((_, index) => (
+              <button
+                key={index}
+                onClick={() => api?.scrollTo(index)}
+                className={cn(
+                  "h-1.5 rounded-full transition-all duration-300",
+                  current === index 
+                    ? "w-8 bg-primary shadow-sm" 
+                    : "w-1.5 bg-gray-200 hover:bg-gray-300"
+                )}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
         </section>
 
         {/* Action Row - 3 Column Grid */}
