@@ -23,15 +23,15 @@ export function SahiMedIcon({ className }: { className?: string }) {
     >
       <path 
         d="M20 55C20 30 40 20 50 20C35 35 32 55 32 75C32 90 45 100 55 100C30 100 20 85 20 55Z" 
-        fill="#009FB2" 
+        fill="#064e3b" 
       />
       <path 
         d="M80 45C80 70 60 80 50 80C65 65 68 45 68 25C68 10 55 0 45 0C70 0 80 15 80 45Z" 
-        fill="#009FB2" 
+        fill="#064e3b" 
       />
       <path 
         d="M50 10C35 30 35 55 50 65C65 75 65 95 50 110C80 90 80 65 65 55C50 45 50 25 50 10Z" 
-        fill="#00BDD6" 
+        fill="#10b981" 
       />
       <path 
         d="M55 20C48 35 48 55 58 65C68 75 68 85 63 95C73 85 73 70 63 60C53 50 53 30 55 20Z" 
@@ -87,22 +87,18 @@ export default function Navbar() {
     const fetchSuggestions = async () => {
       setIsSearching(true);
       const term = search.trim();
-      
-      // Dash-aware Title Case (e.g., "d-veniz" -> "D-Veniz")
       const vProper = term.replace(/(^|[\s-])\S/g, (match) => match.toUpperCase());
       const vUpper = term.toUpperCase();
       const vRaw = term;
       const variants = Array.from(new Set([vProper, vUpper, vRaw])).filter(v => v.length >= 3);
 
       try {
-        // Parallel queries across multiple variants
         const queries = variants.flatMap(v => [
           query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(5)),
           query(collection(db, 'medicines'), where('saltComposition', '>=', v), where('saltComposition', '<=', v + '\uf8ff'), limit(5))
         ]);
 
         const snaps = await Promise.all(queries.map(q => getDocs(q)));
-
         const resultsMap = new Map();
         snaps.forEach(snap => {
           snap.forEach(doc => {
@@ -153,14 +149,13 @@ export default function Navbar() {
   return (
     <nav className="bg-white border-b sticky top-0 z-[100] px-4 pt-4 pb-3">
       <div className="max-w-7xl mx-auto space-y-4">
-        {/* Top Row: Logo & Actions */}
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3">
             <SahiMedIcon className="w-10 h-10" />
             <div className="flex flex-col">
               <div className="flex items-center">
-                <span className="font-black text-2xl text-[#00BDD6] tracking-tighter leading-none">Sahi</span>
-                <span className="font-black text-2xl text-[#009FB2] tracking-tighter leading-none">Med</span>
+                <span className="font-black text-2xl text-[#10b981] tracking-tighter leading-none">Sahi</span>
+                <span className="font-black text-2xl text-[#064e3b] tracking-tighter leading-none">Med</span>
               </div>
             </div>
           </Link>
@@ -169,7 +164,7 @@ export default function Navbar() {
             <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
               <PopoverTrigger asChild>
                 <button className="flex items-center gap-1.5 text-[11px] font-bold text-gray-600 hover:text-primary transition-colors">
-                  <MapPin className="w-3.5 h-3.5 text-[#00BDD6]" />
+                  <MapPin className="w-3.5 h-3.5 text-[#10b981]" />
                   <span className="max-w-[80px] sm:max-w-none truncate">{location}</span>
                   <ChevronDown className="w-3 h-3 opacity-40" />
                 </button>
@@ -186,7 +181,6 @@ export default function Navbar() {
               </PopoverContent>
             </Popover>
 
-            {/* Desktop Cart Button */}
             <Link href="/cart" className="hidden sm:flex items-center gap-2 group">
               <div className="relative p-2 bg-gray-50 rounded-xl group-hover:bg-primary/10 transition-colors">
                 <ShoppingCart className="w-5 h-5 text-gray-600 group-hover:text-primary" />
@@ -201,7 +195,6 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Search Row */}
         <div className="relative" ref={searchRef}>
           <form onSubmit={handleSearch} className="relative">
             <div className="relative group">
@@ -222,7 +215,6 @@ export default function Navbar() {
             </div>
           </form>
 
-          {/* Suggestions Dropdown */}
           {showSuggestions && suggestions.length > 0 && (
             <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2">
               <div className="px-4 py-2 bg-gray-50 border-b">
