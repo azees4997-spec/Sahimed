@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from 'react';
@@ -30,7 +31,6 @@ export default function Home() {
     Autoplay({ delay: 4000, stopOnInteraction: true })
   );
 
-  // Automatic Location Capture (Swiggy/Blinkit style)
   React.useEffect(() => {
     const savedLoc = localStorage.getItem('hl_location');
     if (!savedLoc || savedLoc === 'Mumbai, MH') {
@@ -86,7 +86,6 @@ export default function Home() {
       
       <main className="max-w-7xl mx-auto px-4 py-4 space-y-6 pb-6">
         
-        {/* Scrolling Hero Section */}
         <section className="relative w-full">
           <Carousel
             setApi={setApi}
@@ -96,15 +95,14 @@ export default function Home() {
             onMouseLeave={plugin.current.reset}
           >
             <CarouselContent>
-              {/* Slide 1: Affordable Medicines (Green) */}
               <CarouselItem>
                 <div className="relative rounded-[24px] bg-gradient-to-br from-primary to-primary/80 overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
                   <div className="space-y-3 relative z-10">
-                    <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight uppercase tracking-tight">
-                      Affordable Medicines<br />Across India
+                    <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight tracking-tight">
+                      Affordable medicines<br />across India
                     </h1>
                     <div className="w-16 h-0.5 bg-white/20" />
-                    <p className="text-white/90 text-sm font-bold pt-1 uppercase tracking-widest">Sahi Dawai, Sahi Daam pe</p>
+                    <p className="text-white/90 text-sm font-bold pt-1 tracking-widest">Sahi Dawai, Sahi Daam pe</p>
                   </div>
                   <div className="absolute right-[-30px] bottom-[-30px] opacity-10 rotate-12">
                     <ShieldCheck size={220} className="text-white" strokeWidth={1} />
@@ -112,32 +110,31 @@ export default function Home() {
                 </div>
               </CarouselItem>
 
-              {/* Slide 2: Smarter Clinical Choice (Blue) */}
               <CarouselItem>
                 <div className="relative rounded-[24px] bg-gradient-to-br from-accent to-accent/80 overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
                     <div className="space-y-2 flex-1 text-center sm:text-left">
                       <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full border border-white/20">
                         <Zap className="w-3 h-3 text-[#EAB308] fill-current" />
-                        <span className="text-[9px] font-black text-white uppercase tracking-widest">Smarter clinical choice</span>
+                        <span className="text-[9px] font-black text-white tracking-widest">Smarter clinical choice</span>
                       </div>
-                      <h2 className="text-xl sm:text-3xl font-black text-white leading-tight uppercase tracking-tight">
-                        Save Upto 60%<br />on Clinical Substitutes
+                      <h2 className="text-xl sm:text-3xl font-black text-white leading-tight tracking-tight">
+                        Save upto 60%<br />on clinical substitutes
                       </h2>
                       <div className="flex flex-wrap justify-center sm:justify-start gap-3 pt-1">
                         <div className="flex items-center gap-1.5">
                           <ShieldPlus className="w-3.5 h-3.5 text-white/80" />
-                          <span className="text-[8px] font-bold text-white uppercase tracking-widest">GMP & FDA Certified</span>
+                          <span className="text-[8px] font-bold text-white tracking-widest">GMP & FDA Certified</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <FlaskConical className="w-3.5 h-3.5 text-white/80" />
-                          <span className="text-[8px] font-bold text-white uppercase tracking-widest">Same composition</span>
+                          <span className="text-[8px] font-bold text-white tracking-widest">Same composition</span>
                         </div>
                       </div>
                     </div>
                     <div className="hidden sm:flex flex-col items-center justify-center text-center p-4 bg-white/10 backdrop-blur rounded-[24px] border border-white/20 shrink-0">
                        <Star className="w-5 h-5 text-[#EAB308] fill-current mb-1.5" />
-                       <p className="text-[8px] font-black text-white uppercase tracking-tighter leading-tight max-w-[120px]">
+                       <p className="text-[8px] font-black text-white tracking-tighter leading-tight max-w-[120px]">
                          Verified clinical alternatives.
                        </p>
                     </div>
@@ -150,7 +147,6 @@ export default function Home() {
             </CarouselContent>
           </Carousel>
 
-          {/* Dots Indicator */}
           <div className="flex justify-center gap-2 mt-4">
             {Array.from({ length: count }).map((_, index) => (
               <button
@@ -168,14 +164,13 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Action Row - 3 Column Grid */}
         <section className="grid grid-cols-3 gap-2 sm:gap-4">
           <Link href="/prescription" className="flex flex-col items-center justify-center gap-2 bg-primary/5 p-3 sm:p-6 rounded-[20px] sm:rounded-[24px] group active:scale-95 transition-all shadow-sm text-center">
             <div className="bg-primary p-2 sm:p-3 rounded-xl sm:rounded-2xl text-white shadow-lg">
               <FileText className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[8px] sm:text-[12px] font-black text-primary uppercase tracking-tight leading-tight">Upload<br/>Prescription</span>
+              <span className="text-[8px] sm:text-[12px] font-black text-primary tracking-tight leading-tight">Upload<br/>prescription</span>
             </div>
           </Link>
 
@@ -184,7 +179,7 @@ export default function Home() {
               <MessageCircle className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[8px] sm:text-[12px] font-black text-accent uppercase tracking-tight leading-tight">Order via<br/>WhatsApp</span>
+              <span className="text-[8px] sm:text-[12px] font-black text-accent tracking-tight leading-tight">Order via<br/>WhatsApp</span>
             </div>
           </Link>
 
@@ -193,16 +188,15 @@ export default function Home() {
               <Phone className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[8px] sm:text-[12px] font-black text-primary uppercase tracking-tight leading-tight">Call For<br/>Medicines</span>
+              <span className="text-[8px] sm:text-[12px] font-black text-primary tracking-tight leading-tight">Call for<br/>medicines</span>
             </div>
           </Link>
         </section>
 
-        {/* Categories - Side Scroll */}
         <section className="space-y-4 pt-2">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-base font-black text-gray-900 uppercase tracking-tight">Shop by Category</h2>
-            <Link href="/categories" className="text-[11px] font-black text-primary uppercase tracking-widest">See All</Link>
+            <h2 className="text-base font-black text-gray-900 tracking-tight">Shop by category</h2>
+            <Link href="/categories" className="text-[11px] font-black text-primary tracking-widest">See all</Link>
           </div>
           <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 px-1">
             {isCatsLoading ? (
@@ -218,27 +212,25 @@ export default function Home() {
                     className="object-cover w-full h-full"
                   />
                 </div>
-                <span className="text-[10px] font-black text-gray-600 uppercase tracking-tight text-center leading-tight">{cat.name}</span>
+                <span className="text-[10px] font-black text-gray-600 tracking-tight text-center leading-tight">{cat.name}</span>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* Free Delivery Banner (Blue) */}
         <section className="bg-gradient-to-r from-accent to-accent/80 p-5 rounded-[24px] flex items-center gap-4 text-white shadow-xl shadow-blue-900/10 border-b-4 border-black/10">
           <div className="bg-white/20 p-2.5 rounded-xl">
             <Truck className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-sm font-black uppercase tracking-tight">FREE Delivery</h3>
-            <p className="text-[10px] font-bold opacity-90 uppercase tracking-widest">On all orders above ₹1000 across India!</p>
+            <h3 className="text-sm font-black tracking-tight">Free delivery</h3>
+            <p className="text-[10px] font-bold opacity-90 tracking-widest">On all orders above ₹1000 across India!</p>
           </div>
         </section>
 
-        {/* Best Sellers */}
         <section className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-base font-black text-gray-900 uppercase tracking-tight">Best Sellers</h2>
+            <h2 className="text-base font-black text-gray-900 tracking-tight">Best sellers</h2>
           </div>
           <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-4 px-1">
             {isMedsLoading ? (
@@ -251,13 +243,12 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Quality Medicines Card */}
         <section className="bg-gray-100/50 p-3 rounded-[24px] text-center space-y-1.5 border border-gray-200/50">
           <div className="w-8 h-8 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto shadow-inner">
             <ShieldCheck className="w-4 h-4" />
           </div>
-          <h2 className="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-tight leading-none">Best Quality Medicines</h2>
-          <p className="text-[9px] font-bold text-gray-500 leading-normal max-w-xs mx-auto uppercase tracking-widest opacity-80">
+          <h2 className="text-xs sm:text-sm font-black text-gray-900 tracking-tight leading-none">Best quality medicines</h2>
+          <p className="text-[9px] font-bold text-gray-500 leading-normal max-w-xs mx-auto tracking-widest opacity-80">
             Premium medicines from India’s leading brands
           </p>
         </section>

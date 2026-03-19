@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -68,11 +69,9 @@ export default function CheckoutPage() {
     otherTag: ''
   });
 
-  // --- Fetch Saved Addresses ---
   const addressesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'addresses'), orderBy('updatedAt', 'desc')) : null, [db, user]);
   const { data: savedAddresses } = useCollection(addressesQuery);
 
-  // Robust profile sync for name and phone
   useEffect(() => {
     const initProfile = async () => {
       if (user && db) {
@@ -96,7 +95,6 @@ export default function CheckoutPage() {
     initProfile();
   }, [user, db]);
 
-  // Default address auto-selection
   useEffect(() => {
     if (savedAddresses && savedAddresses.length > 0 && !selectedAddressId) {
       const defaultAddr = savedAddresses[0];
@@ -116,27 +114,27 @@ export default function CheckoutPage() {
 
   const validate = () => {
     if (!orderInfo.patientName.trim()) {
-      toast({ variant: 'destructive', title: "Name Missing", description: "Recipient name is required." });
+      toast({ variant: 'destructive', title: "Name missing", description: "Recipient name is required." });
       return false;
     }
     
     const cleanPhone = orderInfo.phoneNumber.replace(/\D/g, '');
     if (!cleanPhone || cleanPhone.length < 10) {
-      toast({ variant: 'destructive', title: "Contact Error", description: "Please enter a valid 10-digit mobile number." });
+      toast({ variant: 'destructive', title: "Contact error", description: "Please enter a valid 10-digit mobile number." });
       return false;
     }
     
     if (!orderInfo.houseNumber.trim()) {
-      toast({ variant: 'destructive', title: "House No. Missing", description: "House or Building number is mandatory." });
+      toast({ variant: 'destructive', title: "House no. missing", description: "House or Building number is mandatory." });
       return false;
     }
 
     if (!orderInfo.buildingLocality.trim()) {
-      toast({ variant: 'destructive', title: "Locality Required", description: "Please enter your street or area name." });
+      toast({ variant: 'destructive', title: "Locality required", description: "Please enter your street or area name." });
       return false;
     }
     if (!orderInfo.pincode.trim() || orderInfo.pincode.length !== 6) {
-      toast({ variant: 'destructive', title: "Pincode Required", description: "A valid 6-digit pincode is mandatory." });
+      toast({ variant: 'destructive', title: "Pincode required", description: "A valid 6-digit pincode is mandatory." });
       return false;
     }
     return true;
@@ -163,10 +161,10 @@ export default function CheckoutPage() {
                 lat,
                 lng
               }));
-              toast({ title: "Live Position Locked" });
+              toast({ title: "Live position locked" });
             }
           } catch (e) {
-            toast({ variant: 'destructive', title: 'GPS Sync Failed' });
+            toast({ variant: 'destructive', title: 'GPS sync failed' });
           } finally {
             setIsLocating(false);
           }
@@ -181,7 +179,7 @@ export default function CheckoutPage() {
     if (!user || !db) return;
     
     if (!orderInfo.houseNumber.trim() || !orderInfo.buildingLocality.trim() || !orderInfo.pincode.trim()) {
-      toast({ variant: 'destructive', title: "Incomplete Address", description: "House No, Locality and Pincode are mandatory." });
+      toast({ variant: 'destructive', title: "Incomplete address", description: "House No, Locality and Pincode are mandatory." });
       return;
     }
 
@@ -202,16 +200,16 @@ export default function CheckoutPage() {
     try {
       addDocumentNonBlocking(collection(db, 'userProfiles', user.uid, 'addresses'), payload);
       setIsAddressModalOpen(false);
-      toast({ title: "Address Secured", description: `Saved to your ${finalTag} registry.` });
+      toast({ title: "Address secured", description: `Saved to your ${finalTag} registry.` });
     } catch (err) {
-      toast({ variant: 'destructive', title: "Save Error" });
+      toast({ variant: 'destructive', title: "Save error" });
     }
   };
 
   const handlePlaceOrder = async () => {
     if (!user || !db) return;
     if (!selectedAddressId) {
-      toast({ variant: 'destructive', title: "No Address", description: "Please select or add a delivery point to proceed." });
+      toast({ variant: 'destructive', title: "No address", description: "Please select or add a delivery point to proceed." });
       return;
     }
     if (!validate()) return;
@@ -268,7 +266,7 @@ export default function CheckoutPage() {
       const newOrderRef = doc(collection(db, 'userProfiles', user.uid, 'orders'));
       setDocumentNonBlocking(newOrderRef, orderData, { merge: false });
       
-      toast({ title: "Order Processed", description: "Redirecting to success page..." });
+      toast({ title: "Order processed", description: "Redirecting to success page..." });
       
       setTimeout(() => {
         clearCart();
@@ -276,7 +274,7 @@ export default function CheckoutPage() {
       }, 800);
     } catch (err) {
       setLoading(false);
-      toast({ variant: 'destructive', title: "Order Failed", description: "Failed to sync order with clinical hub." });
+      toast({ variant: 'destructive', title: "Order failed", description: "Failed to sync order with clinical hub." });
     }
   };
 
@@ -286,26 +284,25 @@ export default function CheckoutPage() {
       <main className="max-w-7xl mx-auto px-4 py-6 md:py-16">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-12">
            <div className="space-y-1">
-             <h1 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tighter">Delivery Details</h1>
-             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Confirm Logistic Path</p>
+             <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tighter">Delivery details</h1>
+             <p className="text-[10px] font-black text-gray-400 tracking-widest leading-none">Confirm logistic path</p>
            </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
           <div className="lg:col-span-2 space-y-10">
             
-            {/* ADDRESS LIST SECTION */}
             <div className="space-y-6">
               <div className="flex items-center justify-between px-2">
-                <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Saved Delivery Points</h3>
+                <h3 className="text-sm font-black text-gray-900 tracking-tight">Saved delivery points</h3>
                 <button 
                   onClick={() => {
                     setOrderInfo({ patientName: orderInfo.patientName, phoneNumber: orderInfo.phoneNumber, houseNumber: '', buildingLocality: '', city: '', state: '', pincode: '', lat: 0, lng: 0, tag: 'Home', otherTag: '' });
                     setIsAddressModalOpen(true);
                   }}
-                  className="text-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-1.5 hover:underline"
+                  className="text-primary font-black text-[10px] tracking-widest flex items-center gap-1.5 hover:underline"
                 >
-                  <Plus className="w-3" /> Add New Address
+                  <Plus className="w-3" /> Add new address
                 </button>
               </div>
 
@@ -325,7 +322,7 @@ export default function CheckoutPage() {
                           lng: addr.lng || 0,
                           tag: addr.tag
                         }));
-                        toast({ title: `Location Locked: ${addr.tag}` });
+                        toast({ title: `Location locked: ${addr.tag}` });
                       }}
                       className={cn(
                         "p-6 rounded-[32px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white shadow-sm hover:shadow-md group",
@@ -337,11 +334,11 @@ export default function CheckoutPage() {
                           {addr.tag === 'Home' ? <Home className="w-6 h-6" /> : addr.tag === 'Office' ? <Briefcase className="w-6 h-6" /> : <MapPin className="w-6 h-6" />}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-black text-[10px] uppercase text-gray-900 tracking-tight">{addr.tag}</p>
-                          <p className="text-[11px] font-bold text-gray-500 line-clamp-2 uppercase leading-relaxed mt-1">
+                          <p className="font-black text-[10px] text-gray-900 tracking-tight">{addr.tag}</p>
+                          <p className="text-[11px] font-bold text-gray-500 line-clamp-2 leading-relaxed mt-1">
                             {addr.houseNumber ? `${addr.houseNumber}, ` : ''}{addr.street}
                           </p>
-                          <p className="text-[9px] font-black text-gray-400 uppercase mt-1">PIN: {addr.pincode}</p>
+                          <p className="text-[9px] font-black text-gray-400 mt-1">PIN: {addr.pincode}</p>
                         </div>
                       </div>
                       <div className="shrink-0 ml-4">
@@ -362,16 +359,15 @@ export default function CheckoutPage() {
                     <div className="w-16 h-16 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-inner">
                       <MapPin className="w-8 h-8 text-gray-200" />
                     </div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest" >No saved locations found</p>
-                    <p className="text-[10px] font-bold text-primary mt-2 uppercase tracking-widest">+ Tap to add delivery point</p>
+                    <p className="text-[10px] font-black text-gray-400 tracking-widest" >No saved locations found</p>
+                    <p className="text-[10px] font-bold text-primary mt-2 tracking-widest">+ Tap to add delivery point</p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* PAYMENT MODE SELECTOR */}
             <div className="space-y-6">
-              <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight px-2">Select Payment</h3>
+              <h3 className="text-sm font-black text-gray-900 tracking-tight px-2">Select payment</h3>
               <div 
                 className={cn(
                   "p-6 rounded-[32px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white shadow-sm",
@@ -384,8 +380,8 @@ export default function CheckoutPage() {
                     <Banknote className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="font-black text-xs uppercase tracking-tight">Cash on Delivery</p>
-                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Collect at doorstep during fulfillment</p>
+                    <p className="font-black text-xs tracking-tight">Cash on Delivery</p>
+                    <p className="text-[9px] font-bold text-gray-400 tracking-widest">Collect at doorstep during fulfillment</p>
                   </div>
                 </div>
                 <div className={cn("w-6 h-6 rounded-full flex items-center justify-center", paymentMethod === 'COD' ? "bg-primary" : "bg-gray-100")}>
@@ -399,21 +395,21 @@ export default function CheckoutPage() {
             <div className="bg-white p-8 sm:p-10 rounded-[48px] shadow-2xl border border-gray-50 sticky top-24 animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl" />
               
-              <h2 className="text-[10px] font-black mb-8 text-gray-400 uppercase tracking-[0.3em] relative z-10">Order Summary</h2>
+              <h2 className="text-[10px] font-black mb-8 text-gray-400 tracking-[0.3em] relative z-10">Order summary</h2>
               
               <div className="space-y-5 mb-10 pt-6 border-t border-dashed relative z-10">
-                <div className="flex justify-between text-[11px] font-black uppercase text-gray-500">
-                  <span>Order Value</span>
+                <div className="flex justify-between text-[11px] font-black text-gray-500">
+                  <span>Order value</span>
                   <span>₹{totalPrice.toFixed(2)}</span>
                 </div>
                 {appliedPromo && (
-                  <div className="flex justify-between text-[11px] font-black uppercase text-accent animate-in slide-in-from-left-2">
-                    <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Offer Applied</span>
+                  <div className="flex justify-between text-[11px] font-black text-accent animate-in slide-in-from-left-2">
+                    <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Offer applied</span>
                     <span>-₹{(appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="pt-8 border-t border-gray-100 flex justify-between items-baseline">
-                  <span className="text-xs font-black text-gray-900 uppercase tracking-widest">Total Payable</span>
+                  <span className="text-xs font-black text-gray-900 tracking-widest">Total payable</span>
                   <span className="text-4xl font-black text-primary tracking-tighter">₹{(totalPrice - (appliedPromo ? (appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))) : 0)).toFixed(2)}</span>
                 </div>
               </div>
@@ -422,11 +418,11 @@ export default function CheckoutPage() {
                 <Button 
                   onClick={handlePlaceOrder} 
                   disabled={loading} 
-                  className="w-full h-20 rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 gap-4 text-white transition-all active:scale-95 group"
+                  className="w-full h-20 rounded-full text-sm font-black tracking-[0.2em] shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 gap-4 text-white transition-all active:scale-95 group"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                     <>
-                      Verify & Place Order
+                      Verify & place order
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
@@ -434,7 +430,7 @@ export default function CheckoutPage() {
                 
                 <div className="flex items-center justify-center gap-3 py-2">
                    <ShieldCheck className="w-4 h-4 text-accent" />
-                   <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Secured Clinical Checkout</span>
+                   <span className="text-[8px] font-black text-gray-400 tracking-widest">Secured clinical checkout</span>
                 </div>
               </div>
             </div>
@@ -442,31 +438,29 @@ export default function CheckoutPage() {
         </div>
       </main>
 
-      {/* DELIVERY DETAILS MODAL */}
       <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
         <DialogContent className="max-w-xl w-[96vw] sm:w-full rounded-[32px] border-none p-0 overflow-hidden shadow-3xl bg-white mx-auto z-[110]">
           <div className="max-h-[92vh] overflow-y-auto scrollbar-hide">
             <div className="bg-primary p-5 text-white relative overflow-hidden shrink-0">
               <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl" />
-              <DialogTitle className="text-xl font-black uppercase tracking-tight">Delivery Point</DialogTitle>
-              <p className="text-[8px] font-black text-white/60 uppercase tracking-[0.2em] mt-0.5">Clinical Logistics Path</p>
+              <DialogTitle className="text-xl font-black tracking-tight">Delivery point</DialogTitle>
+              <p className="text-[8px] font-black text-white/60 tracking-[0.2em] mt-0.5">Clinical logistics path</p>
             </div>
 
             <div className="p-5 space-y-4">
-              {/* PICK LOCATION BUTTON AT THE TOP - Simplified styling to prevent hover issues */}
               <Button 
                 onClick={handleLocateMe}
                 variant="outline" 
                 type="button"
-                className="h-12 w-full rounded-xl border-2 border-primary/20 text-primary bg-white hover:bg-primary/5 font-black text-[10px] uppercase gap-3 transition-none active:scale-95"
+                className="h-12 w-full rounded-xl border-2 border-primary/20 text-primary bg-white hover:bg-primary/5 font-black text-[10px] gap-3 transition-none active:scale-95"
               >
                 {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Target className="w-4 h-4" />}
-                Autofill Current Location
+                Autofill current location
               </Button>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Name *</Label>
+                  <Label className="text-[9px] font-black text-gray-400 ml-1">Name *</Label>
                   <Input 
                     placeholder="e.g. Rahul Sharma" 
                     value={orderInfo.patientName} 
@@ -475,7 +469,7 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Phone number *</Label>
+                  <Label className="text-[9px] font-black text-gray-400 ml-1">Phone number *</Label>
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 border-r pr-2.5">+91</div>
                     <Input 
@@ -490,7 +484,7 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">House No. / Building *</Label>
+                <Label className="text-[9px] font-black text-gray-400 ml-1">House no. / building *</Label>
                 <Input 
                   placeholder="Apartment name, Flat number" 
                   value={orderInfo.houseNumber} 
@@ -500,7 +494,7 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Locality / Street *</Label>
+                <Label className="text-[9px] font-black text-gray-400 ml-1">Locality / street *</Label>
                 <Input 
                   placeholder="Street name, Area" 
                   value={orderInfo.buildingLocality} 
@@ -511,7 +505,7 @@ export default function CheckoutPage() {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Pincode *</Label>
+                  <Label className="text-[9px] font-black text-gray-400 ml-1">Pincode *</Label>
                   <Input 
                     placeholder="6-digits" 
                     value={orderInfo.pincode} 
@@ -521,7 +515,7 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">City *</Label>
+                  <Label className="text-[9px] font-black text-gray-400 ml-1">City *</Label>
                   <Input 
                     placeholder="City" 
                     value={orderInfo.city} 
@@ -530,7 +524,7 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">State *</Label>
+                  <Label className="text-[9px] font-black text-gray-400 ml-1">State *</Label>
                   <Input 
                     placeholder="State" 
                     value={orderInfo.state} 
@@ -541,7 +535,7 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-3">
-                <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Address Type</Label>
+                <Label className="text-[9px] font-black text-gray-400 ml-1">Address type</Label>
                 <RadioGroup 
                   value={orderInfo.tag} 
                   onValueChange={(v) => setOrderInfo({...orderInfo, tag: v})}
@@ -550,12 +544,11 @@ export default function CheckoutPage() {
                   {['Home', 'Office', 'Other'].map(t => (
                     <div key={t} className="flex items-center space-x-2">
                       <RadioGroupItem value={t} id={`type-${t}`} className="border-primary text-primary h-4 w-4" />
-                      <Label htmlFor={`type-${t}`} className="text-xs font-bold uppercase tracking-tight cursor-pointer">{t}</Label>
+                      <Label htmlFor={`type-${t}`} className="text-xs font-bold tracking-tight cursor-pointer">{t}</Label>
                     </div>
                   ))}
                 </RadioGroup>
                 
-                {/* CONDITIONAL "OTHER" INPUT */}
                 {orderInfo.tag === 'Other' && (
                   <div className="pt-2 animate-in fade-in slide-in-from-top-1">
                     <Input 
@@ -571,16 +564,16 @@ export default function CheckoutPage() {
               <div className="flex gap-3 pt-2">
                 <Button 
                   onClick={handleSaveNewAddress}
-                  className="flex-1 h-12 rounded-xl bg-primary text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all"
+                  className="flex-1 h-12 rounded-xl bg-primary text-white font-black tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all"
                 >
-                  SAVE
+                  Save
                 </Button>
                 <Button 
                   onClick={() => setIsAddressModalOpen(false)}
                   variant="outline"
-                  className="flex-1 h-12 rounded-xl border border-gray-200 text-gray-500 font-black uppercase tracking-widest text-[10px] hover:bg-gray-50 active:scale-95 transition-all"
+                  className="flex-1 h-12 rounded-xl border border-gray-200 text-gray-500 font-black tracking-widest text-[10px] hover:bg-gray-50 active:scale-95 transition-all"
                 >
-                  CANCEL
+                  Cancel
                 </Button>
               </div>
             </div>

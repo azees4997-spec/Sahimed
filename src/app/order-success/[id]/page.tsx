@@ -29,7 +29,6 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
   const { user } = useUser();
   const db = useFirestore();
 
-  // --- ACOUSTIC SUCCESS CHIME ---
   useEffect(() => {
     const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
     audio.volume = 0.4;
@@ -66,8 +65,8 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
         </div>
 
         <div className="space-y-2 mb-8">
-          <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Order Confirmed!</h1>
-          <p className="text-[#0061AF] font-bold text-[10px] uppercase tracking-[0.3em]">Sahi Dawai, Sahi Daam Pe</p>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tighter">Order confirmed!</h1>
+          <p className="text-[#0061AF] font-bold text-[10px] tracking-[0.3em]">Sahi dawai, sahi daam pe</p>
         </div>
 
         {totalSaved > 0 && (
@@ -75,21 +74,21 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
             <CardContent className="p-6">
               <div className="flex items-center justify-center gap-2 mb-4">
                 <PartyPopper className="w-4 h-4 text-accent animate-bounce" />
-                <h2 className="text-[10px] font-black uppercase text-accent tracking-widest">Clinical Savings Unlocked</h2>
+                <h2 className="text-[10px] font-black text-accent tracking-widest">Clinical savings unlocked</h2>
               </div>
               
               <div className="flex flex-col items-center gap-0.5 mb-4">
                 <p className="text-4xl font-black text-accent tracking-tighter animate-pulse">₹{Number(totalSaved).toFixed(2)}</p>
-                <span className="text-[8px] font-black text-accent/60 uppercase tracking-widest">Total Savings on this order</span>
+                <span className="text-[8px] font-black text-accent/60 tracking-widest">Total savings on this order</span>
               </div>
 
               <div className="flex justify-center gap-8 border-t border-accent/10 pt-4">
                 <div className="text-center space-y-0.5">
-                  <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">MRP Edge</p>
+                  <p className="text-[7px] font-black text-gray-400 tracking-widest">MRP edge</p>
                   <p className="font-black text-[11px] text-gray-900">₹{((breakdown?.grossMrp || 0) - (order?.totalAmount || 0) + (breakdown?.campaignDiscount || 0)).toFixed(2)}</p>
                 </div>
                 <div className="text-center space-y-0.5">
-                  <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Campaign</p>
+                  <p className="text-[7px] font-black text-gray-400 tracking-widest">Campaign</p>
                   <p className="font-black text-[11px] text-gray-900">₹{Number(breakdown?.campaignDiscount || 0).toFixed(2)}</p>
                 </div>
               </div>
@@ -102,21 +101,21 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
             <div className="bg-gray-50/50 p-6 flex flex-col items-center gap-3 border-b border-gray-100">
               <div className="bg-primary/10 px-4 py-1.5 rounded-full flex items-center gap-2">
                 <Package className="w-3 h-3 text-primary" />
-                <span className="text-[9px] font-black text-primary uppercase tracking-widest">Order ID: {orderId?.substring(0, 12).toUpperCase()}</span>
+                <span className="text-[9px] font-black text-primary tracking-widest">Order id: {orderId?.substring(0, 12).toUpperCase()}</span>
               </div>
             </div>
 
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-left">
-                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Final Payable</p>
-                  <p className="font-black text-lg uppercase text-gray-900 leading-none">₹{Number(order?.totalAmount || 0).toFixed(2)}</p>
+                  <p className="text-[8px] font-black text-gray-400 tracking-widest mb-1">Final payable</p>
+                  <p className="font-black text-lg text-gray-900 leading-none">₹{Number(order?.totalAmount || 0).toFixed(2)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Payment</p>
+                  <p className="text-[8px] font-black text-gray-400 tracking-widest mb-1">Payment</p>
                   <div className="flex items-center justify-end gap-1.5">
                     <Banknote className="w-3.5 h-3.5 text-accent" />
-                    <p className="font-black text-xs uppercase text-accent">{order?.paymentType || 'COD'}</p>
+                    <p className="font-black text-xs text-accent">{order?.paymentType || 'COD'}</p>
                   </div>
                 </div>
               </div>
@@ -124,8 +123,8 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
               <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 flex items-start gap-3 text-left">
                  <ClipboardCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                  <div>
-                    <p className="text-[9px] font-black uppercase text-gray-900 tracking-tight">Pharmacist Review In-Progress</p>
-                    <p className="text-[8px] font-bold text-gray-500 uppercase leading-relaxed mt-0.5">
+                    <p className="text-[9px] font-black text-gray-900 tracking-tight">Pharmacist review in-progress</p>
+                    <p className="text-[8px] font-bold text-gray-500 leading-relaxed mt-0.5">
                       Our clinical team is verifying your order. You will receive SMS updates once dispatched.
                     </p>
                  </div>
@@ -136,21 +135,21 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
 
         <div className="flex flex-col gap-3 justify-center items-center">
           <Link href="/" className="w-full">
-            <Button className="w-full rounded-full h-14 font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl shadow-primary/30 gap-3 active:scale-95 transition-all bg-primary text-white">
-              Continue Shopping
+            <Button className="w-full rounded-full h-14 font-black text-[10px] tracking-[0.2em] shadow-2xl shadow-primary/30 gap-3 active:scale-95 transition-all bg-primary text-white">
+              Continue shopping
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
           <Link href="/orders" className="w-full">
-            <Button variant="outline" className="w-full rounded-full h-14 font-black uppercase text-[10px] tracking-[0.2em] border-2 hover:bg-gray-50 active:scale-95 transition-all">
-              Track Order History
+            <Button variant="outline" className="w-full rounded-full h-14 font-black text-[10px] tracking-[0.2em] border-2 hover:bg-gray-50 active:scale-95 transition-all">
+              Track order history
             </Button>
           </Link>
         </div>
 
         <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-center gap-3">
            <ShieldCheck className="w-4 h-4 text-green-500" />
-           <p className="text-[8px] text-gray-400 font-black uppercase tracking-[0.2em]">Verified Secure Transaction</p>
+           <p className="text-[8px] text-gray-400 font-black tracking-[0.2em]">Verified secure transaction</p>
         </div>
       </main>
     </div>

@@ -57,13 +57,13 @@ export default function PrescriptionPage() {
 
   const handleSubmitEnquiry = async () => {
     if (!user) {
-      toast({ title: "Login Required", description: "Please sign in to submit your prescription." });
+      toast({ title: "Login required", description: "Please sign in to submit your prescription." });
       router.push('/login');
       return;
     }
 
     if (!image) {
-      toast({ variant: "destructive", title: "No Image", description: "Please scan your prescription." });
+      toast({ variant: "destructive", title: "No image", description: "Please scan your prescription." });
       return;
     }
 
@@ -84,10 +84,10 @@ export default function PrescriptionPage() {
       
       setTimeout(() => {
         setIsSuccess(true);
-        toast({ title: "Order Request Sent", description: "Our team is reviewing your prescription." });
+        toast({ title: "Order request sent", description: "Our team is reviewing your prescription." });
       }, 800);
     } catch (err) {
-      toast({ variant: "destructive", title: "Submission Failed" });
+      toast({ variant: "destructive", title: "Submission failed" });
     } finally {
       setSubmitting(false);
     }
@@ -99,19 +99,19 @@ export default function PrescriptionPage() {
         <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-8 shadow-xl">
           <CheckCircle2 className="w-12 h-12" />
         </div>
-        <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight mb-4">Request Sent</h1>
-        <p className="text-gray-500 font-medium max-w-sm mb-12 leading-relaxed uppercase text-[10px] tracking-widest">
+        <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-4">Request sent</h1>
+        <p className="text-gray-500 font-medium max-w-sm mb-12 leading-relaxed text-[10px] tracking-widest">
           We have received your prescription. You will receive an update once verified.
         </p>
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <Link href="/">
-            <Button className="w-full h-16 rounded-full font-black uppercase tracking-widest text-[11px] gap-3">
-              <Home className="w-4 h-4" /> Return Home
+            <Button className="w-full h-16 rounded-full font-black tracking-widest text-[11px] gap-3">
+              <Home className="w-4 h-4" /> Return home
             </Button>
           </Link>
           <Link href="/orders">
-            <Button variant="outline" className="w-full h-16 rounded-full font-black uppercase tracking-widest text-[11px] border-2">
-              Track Requests
+            <Button variant="outline" className="w-full h-16 rounded-full font-black tracking-widest text-[11px] border-2">
+              Track requests
             </Button>
           </Link>
         </div>
@@ -130,8 +130,8 @@ export default function PrescriptionPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-black font-headline text-gray-900 uppercase tracking-tight">Prescription Upload</h1>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Quick Order System</p>
+            <h1 className="text-3xl font-black font-headline text-gray-900 tracking-tight">Prescription upload</h1>
+            <p className="text-[10px] font-black text-gray-400 tracking-widest">Quick order system</p>
           </div>
         </div>
 
@@ -146,8 +146,8 @@ export default function PrescriptionPage() {
                   <>
                     <Image src={image} alt="Prescription" fill className="object-contain" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity gap-3">
-                       <Button variant="secondary" className="rounded-full font-black uppercase text-[10px] px-8 h-12 shadow-2xl">
-                         <RotateCcw className="w-4 h-4 mr-2" /> Retake Photo
+                       <Button variant="secondary" className="rounded-full font-black text-[10px] px-8 h-12 shadow-2xl">
+                         <RotateCcw className="w-4 h-4 mr-2" /> Retake photo
                        </Button>
                     </div>
                   </>
@@ -156,8 +156,8 @@ export default function PrescriptionPage() {
                     <div className="w-20 h-20 bg-primary/10 text-primary rounded-[32px] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-primary/5">
                       <Camera className="w-10 h-10" />
                     </div>
-                    <p className="font-black text-gray-900 uppercase tracking-tight text-xl mb-2">Scan Prescription</p>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">High quality photo required</p>
+                    <p className="font-black text-gray-900 tracking-tight text-xl mb-2">Scan prescription</p>
+                    <p className="text-[10px] text-gray-400 font-bold tracking-widest">High quality photo required</p>
                   </div>
                 )}
               </div>
@@ -171,7 +171,7 @@ export default function PrescriptionPage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2 ml-1">
                   <User className="w-3.5 h-3.5 text-primary" />
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ordering For (Customer Name)</Label>
+                  <Label className="text-[10px] font-black tracking-widest text-gray-400">Ordering for (Customer name)</Label>
                 </div>
                 <Input 
                   placeholder="e.g. Self or Family Member Name" 
@@ -184,7 +184,7 @@ export default function PrescriptionPage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2 ml-1">
                   <FileText className="w-3.5 h-3.5 text-primary" />
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Order Notes</Label>
+                  <Label className="text-[10px] font-black tracking-widest text-gray-400">Order notes</Label>
                 </div>
                 <Textarea 
                   placeholder="Any specific requirements or instructions..." 
@@ -198,15 +198,15 @@ export default function PrescriptionPage() {
                 <Button 
                   onClick={handleSubmitEnquiry} 
                   disabled={submitting || !image}
-                  className="w-full h-20 rounded-full font-black uppercase tracking-widest shadow-2xl shadow-primary/30 text-lg gap-4 active:scale-95 transition-all"
+                  className="w-full h-20 rounded-full font-black tracking-widest shadow-2xl shadow-primary/30 text-lg gap-4 active:scale-95 transition-all"
                 >
                   {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <ClipboardCheck className="w-6 h-6" />}
-                  {user ? "Submit Order Request" : "Login to Submit"}
+                  {user ? "Submit order request" : "Login to submit"}
                 </Button>
                 
                 <div className="flex items-center justify-center gap-2">
                    <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-                   <p className="text-[9px] text-gray-400 font-black uppercase tracking-[0.2em]">Secure Checkout Guaranteed</p>
+                   <p className="text-[9px] text-gray-400 font-black tracking-[0.2em]">Secure checkout guaranteed</p>
                 </div>
               </div>
             </div>

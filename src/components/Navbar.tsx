@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from 'next/link';
@@ -23,7 +24,7 @@ export function SahiMedIcon({ className }: { className?: string }) {
     >
       <path 
         d="M20 55C20 30 40 20 50 20C35 35 32 55 32 75C32 90 45 100 55 100C30 100 20 85 20 55Z" 
-        fill="#0c4a6e" /* Dark Pastel Blue */
+        fill="#0c4a6e"
       />
       <path 
         d="M80 45C80 70 60 80 50 80C65 65 68 45 68 25C68 10 55 0 45 0C70 0 80 15 80 45Z" 
@@ -31,7 +32,7 @@ export function SahiMedIcon({ className }: { className?: string }) {
       />
       <path 
         d="M50 10C35 30 35 55 50 65C65 75 65 95 50 110C80 90 80 65 65 55C50 45 50 25 50 10Z" 
-        fill="#10b981" /* Pastel Green */
+        fill="#10b981"
       />
       <path 
         d="M55 20C48 35 48 55 58 65C68 75 68 85 63 95C73 85 73 70 63 60C53 50 53 30 55 20Z" 
@@ -173,10 +174,10 @@ export default function Navbar() {
                 <Button 
                   onClick={handleGeoLocation} 
                   disabled={isLocating}
-                  className="w-full justify-start gap-3 h-12 rounded-xl bg-primary/5 text-primary hover:bg-primary/10 font-bold text-[11px] uppercase tracking-wider"
+                  className="w-full justify-start gap-3 h-12 rounded-xl bg-primary/5 text-primary hover:bg-primary/10 font-bold text-[11px] tracking-wider"
                 >
                   {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <LocateFixed className="w-4 h-4" />}
-                  Use GPS Location
+                  Use GPS location
                 </Button>
               </PopoverContent>
             </Popover>
@@ -190,7 +191,7 @@ export default function Navbar() {
                   </Badge>
                 )}
               </div>
-              <span className="text-[11px] font-black uppercase tracking-widest text-gray-400 group-hover:text-primary">Cart</span>
+              <span className="text-[11px] font-black tracking-widest text-gray-400 group-hover:text-primary">Cart</span>
             </Link>
           </div>
         </div>
@@ -218,7 +219,7 @@ export default function Navbar() {
           {showSuggestions && suggestions.length > 0 && (
             <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2">
               <div className="px-4 py-2 bg-gray-50 border-b">
-                <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Clinical Matches</span>
+                <span className="text-[8px] font-black text-gray-400 tracking-widest">Clinical matches</span>
               </div>
               <div className="max-h-[320px] overflow-y-auto scrollbar-hide">
                 {suggestions.map((item) => (
@@ -235,8 +236,8 @@ export default function Navbar() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-black text-[11px] uppercase text-gray-900 truncate tracking-tight">{item.name}</p>
-                      <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest truncate mt-0.5">
+                      <p className="font-black text-[11px] text-gray-900 truncate tracking-tight">{item.name}</p>
+                      <p className="text-[8px] font-bold text-gray-400 tracking-widest truncate mt-0.5">
                         {item.saltComposition}
                       </p>
                     </div>
@@ -248,7 +249,7 @@ export default function Navbar() {
                 onClick={() => handleSearch()}
                 className="w-full p-3 text-center bg-primary/5 hover:bg-primary/10 transition-colors"
               >
-                <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">View Full Catalog</span>
+                <span className="text-[9px] font-black text-primary tracking-[0.2em]">View full catalog</span>
               </button>
             </div>
           )}

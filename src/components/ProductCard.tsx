@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from 'next/link';
@@ -49,8 +50,8 @@ export default function ProductCard({ product }: { product: Product }) {
     <div className="bg-white rounded-[16px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full group relative p-2">
       {savingsPct > 0 && (
         <div className="absolute top-2 left-2 z-10">
-          <div className="bg-primary text-white font-black text-[7px] px-1.5 py-0.5 rounded uppercase tracking-tighter">
-            SAVE {savingsPct}%
+          <div className="bg-primary text-white font-black text-[7px] px-1.5 py-0.5 rounded tracking-tighter">
+            Save {savingsPct}%
           </div>
         </div>
       )}
@@ -67,10 +68,10 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
 
         <div className="space-y-0.5">
-          <h3 className="font-black text-gray-900 text-[11px] leading-tight line-clamp-2 min-h-[28px] uppercase">
+          <h3 className="font-black text-gray-900 text-[11px] leading-tight line-clamp-2 min-h-[28px]">
             {product.name}
           </h3>
-          <p className="text-[8px] font-bold text-gray-400 uppercase truncate">
+          <p className="text-[8px] font-bold text-gray-400 truncate">
             {product.packSize || '10 Capsules'}
           </p>
           
@@ -105,9 +106,9 @@ export default function ProductCard({ product }: { product: Product }) {
             onClick={(e) => {
               e.preventDefault();
               addToCart({ ...product, price: currentPrice, mrp: currentMrp });
-              toast({ title: "Added to Bag" });
+              toast({ title: "Added to bag" });
             }} 
-            className="rounded-md h-8 w-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-wider transition-all active:scale-95"
+            className="rounded-md h-8 w-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] tracking-wider transition-all active:scale-95"
           >
             Add
           </button>

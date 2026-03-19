@@ -63,11 +63,9 @@ export default function ProfilePage() {
   const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
 
-  // --- Fetch Saved Profile ---
   const profileRef = useMemoFirebase(() => (db && user) ? doc(db, 'userProfiles', user.uid) : null, [db, user]);
   const { data: profile } = useDoc(profileRef);
 
-  // --- Fetch Addresses Subcollection ---
   const addressesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'addresses'), orderBy('createdAt', 'desc')) : null, [db, user]);
   const { data: addresses, isLoading: addressesLoading } = useCollection(addressesQuery);
 
@@ -101,7 +99,7 @@ export default function ProfilePage() {
       setDeferredPrompt(null);
     } else {
       toast({ 
-        title: "PWA Installation", 
+        title: "PWA installation", 
         description: "Tap the Share icon and then 'Add to Home Screen'." 
       });
     }
@@ -124,17 +122,17 @@ export default function ProfilePage() {
                 street: data.display_name,
                 pincode: data.address.postcode?.replace(/\s/g, '') || prev.pincode
               }));
-              toast({ title: "Coordinates Locked" });
+              toast({ title: "Coordinates locked" });
             }
           } catch (e) {
-            toast({ variant: 'destructive', title: "Geocoding Failed" });
+            toast({ variant: 'destructive', title: "Geocoding failed" });
           } finally {
             setIsLocating(false);
           }
         },
         () => {
           setIsLocating(false);
-          toast({ variant: 'destructive', title: "GPS Denied" });
+          toast({ variant: 'destructive', title: "GPS denied" });
         }
       );
     }
@@ -143,7 +141,7 @@ export default function ProfilePage() {
   const handleSaveAddress = () => {
     if (!user || !db) return;
     if (!addressForm.street || !addressForm.pincode) {
-      toast({ variant: 'destructive', title: "Missing Data", description: "Street and Pincode are required." });
+      toast({ variant: 'destructive', title: "Missing data", description: "Street and Pincode are required." });
       return;
     }
 
@@ -164,7 +162,7 @@ export default function ProfilePage() {
     }
 
     setIsAddressDialogOpen(false);
-    toast({ title: "Address Secured" });
+    toast({ title: "Address secured" });
     setAddressForm({ id: '', tag: 'Home', street: '', landmark: '', pincode: '', lat: 0, lng: 0 });
   };
 
@@ -197,18 +195,18 @@ export default function ProfilePage() {
           <div className="w-20 h-20 bg-white rounded-[40px] shadow-2xl flex items-center justify-center mx-auto mb-10 border border-gray-50">
             <User className="w-10 h-10 text-gray-100" />
           </div>
-          <h1 className="text-3xl font-black uppercase tracking-tighter mb-4 text-gray-900">SahiMed Account</h1>
-          <p className="text-gray-400 font-bold text-[10px] uppercase tracking-widest mb-12 leading-relaxed max-w-[280px] mx-auto">
-            sahi dawa sahi daam pe. Manage your health journey in one secure hub.
+          <h1 className="text-3xl font-black tracking-tighter mb-4 text-gray-900">SahiMed account</h1>
+          <p className="text-gray-400 font-bold text-[10px] tracking-widest mb-12 leading-relaxed max-w-[280px] mx-auto">
+            Manage your health journey in one secure hub.
           </p>
           <Link href="/login" className="w-full">
-            <Button className="w-full h-18 rounded-full font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 text-xs gap-3">
-              <LogIn className="w-5 h-5" /> Sign In / Register
+            <Button className="w-full h-18 rounded-full font-black tracking-[0.2em] shadow-2xl shadow-primary/20 text-xs gap-3">
+              <LogIn className="w-5 h-5" /> Sign in / Register
             </Button>
           </Link>
           <div className="mt-16 flex items-center justify-center gap-3">
             <ShieldCheck className="w-4 h-4 text-green-500" />
-            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Secured SahiMed Portal</span>
+            <span className="text-[9px] font-black text-gray-400 tracking-widest">Secured SahiMed portal</span>
           </div>
         </main>
       </div>
@@ -225,20 +223,20 @@ export default function ProfilePage() {
              <User className="w-10 h-10 text-primary" />
           </div>
           <div className="text-center md:text-left">
-            <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-1 uppercase tracking-tighter">
-              {profile?.name || user?.email?.split('@')[0] || 'SahiMed Member'}
+            <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-1 tracking-tighter">
+              {profile?.name || user?.email?.split('@')[0] || 'SahiMed member'}
             </h1>
-            <p className="text-gray-400 font-black text-[10px] uppercase tracking-widest">
-              {user.phoneNumber || user.email || 'Verified Customer'}
+            <p className="text-gray-400 font-black text-[10px] tracking-widest">
+              {user.phoneNumber || user.email || 'Verified customer'}
             </p>
           </div>
           <div className="md:ml-auto">
             <Button 
               variant="ghost" 
               onClick={handleLogout}
-              className="rounded-full h-12 px-8 font-black text-[11px] uppercase tracking-[0.2em] text-red-500 hover:bg-red-50 gap-3"
+              className="rounded-full h-12 px-8 font-black text-[11px] tracking-[0.2em] text-red-500 hover:bg-red-50 gap-3"
             >
-              <LogOut className="w-4 h-4" /> Sign Out
+              <LogOut className="w-4 h-4" /> Sign out
             </Button>
           </div>
         </div>
@@ -246,12 +244,12 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
            <div className="space-y-8">
               <div className="space-y-5">
-                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 ml-6">Shopping History</h2>
+                <h2 className="text-[10px] font-black tracking-[0.3em] text-gray-400 ml-6">Shopping history</h2>
                 <Link href="/orders" className="block">
                   <div className="bg-white p-6 rounded-[32px] border border-gray-100 flex items-center justify-between group active:scale-[0.98] transition-all hover:shadow-xl">
                     <div className="flex items-center gap-5">
                       <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner"><Package className="w-5 h-5" /></div>
-                      <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Track Orders</h3>
+                      <h3 className="text-sm font-black text-gray-900 tracking-tight">Track orders</h3>
                     </div>
                     <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-primary transition-colors" />
                   </div>
@@ -260,23 +258,23 @@ export default function ProfilePage() {
 
               <div className="space-y-5">
                 <div className="flex items-center justify-between px-6">
-                  <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Clinical Delivery Points</h2>
+                  <h2 className="text-[10px] font-black tracking-[0.3em] text-gray-400">Clinical delivery points</h2>
                   <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
                     <DialogTrigger asChild>
-                      <button onClick={() => setAddressForm({ id: '', tag: 'Home', street: '', landmark: '', pincode: '', lat: 0, lng: 0 })} className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5 hover:underline">
-                        <Edit2 className="w-3 h-3" /> Add New
+                      <button onClick={() => setAddressForm({ id: '', tag: 'Home', street: '', landmark: '', pincode: '', lat: 0, lng: 0 })} className="text-[9px] font-black text-primary tracking-widest flex items-center gap-1.5 hover:underline">
+                        <Edit2 className="w-3 h-3" /> Add new
                       </button>
                     </DialogTrigger>
                     <DialogContent className="max-w-md rounded-[40px] border-none p-0 overflow-hidden shadow-3xl">
                       <div className="bg-primary p-8 text-white">
-                        <DialogTitle className="text-2xl font-black uppercase tracking-tight">Add Delivery Point</DialogTitle>
+                        <DialogTitle className="text-2xl font-black tracking-tight">Add delivery point</DialogTitle>
                       </div>
                       <div className="p-8 space-y-6">
                         <div className="space-y-3">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Tag As</Label>
+                          <Label className="text-[10px] font-black tracking-widest text-gray-400 ml-1">Tag as</Label>
                           <Select value={addressForm.tag} onValueChange={(v) => setAddressForm({...addressForm, tag: v})}>
                             <SelectTrigger className="h-14 rounded-2xl bg-gray-50 border-none font-bold">
-                              <SelectValue placeholder="Select Tag" />
+                              <SelectValue placeholder="Select tag" />
                             </SelectTrigger>
                             <SelectContent className="rounded-2xl border-none shadow-2xl">
                               <SelectItem value="Home" className="font-bold">Home</SelectItem>
@@ -287,8 +285,8 @@ export default function ProfilePage() {
                         </div>
                         <div className="space-y-3">
                           <div className="flex justify-between items-center px-1">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Street Address</Label>
-                            <button onClick={handleLocate} className="text-[8px] font-black text-primary uppercase tracking-widest flex items-center gap-1">
+                            <Label className="text-[10px] font-black tracking-widest text-gray-400">Street address</Label>
+                            <button onClick={handleLocate} className="text-[8px] font-black text-primary tracking-widest flex items-center gap-1">
                               {isLocating ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <LocateFixed className="w-2.5 h-2.5" />}
                               Autofill
                             </button>
@@ -301,7 +299,7 @@ export default function ProfilePage() {
                           />
                         </div>
                         <div className="space-y-3">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Landmark (Optional)</Label>
+                          <Label className="text-[10px] font-black tracking-widest text-gray-400 ml-1">Landmark (Optional)</Label>
                           <Input 
                             value={addressForm.landmark} 
                             onChange={e => setAddressForm({...addressForm, landmark: e.target.value})}
@@ -310,7 +308,7 @@ export default function ProfilePage() {
                           />
                         </div>
                         <div className="space-y-3">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Pincode</Label>
+                          <Label className="text-[10px] font-black tracking-widest text-gray-400 ml-1">Pincode</Label>
                           <Input 
                             value={addressForm.pincode} 
                             onChange={e => setAddressForm({...addressForm, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})}
@@ -318,8 +316,8 @@ export default function ProfilePage() {
                             className="h-14 rounded-2xl bg-gray-50 border-none font-bold"
                           />
                         </div>
-                        <Button onClick={handleSaveAddress} className="w-full h-16 rounded-full font-black uppercase text-xs tracking-widest gap-3 shadow-xl">
-                          <Save className="w-4 h-4" /> Save Address
+                        <Button onClick={handleSaveAddress} className="w-full h-16 rounded-full font-black text-xs tracking-widest gap-3 shadow-xl">
+                          <Save className="w-4 h-4" /> Save address
                         </Button>
                       </div>
                     </DialogContent>
@@ -332,7 +330,7 @@ export default function ProfilePage() {
                   ) : (!addresses || addresses.length === 0) ? (
                     <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm text-center">
                       <MapPin className="w-8 h-8 text-gray-100 mx-auto mb-3" />
-                      <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No addresses saved</p>
+                      <p className="text-[10px] font-black text-gray-300 tracking-widest">No addresses saved</p>
                     </div>
                   ) : addresses.map((addr) => (
                     <div key={addr.id} className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all">
@@ -343,11 +341,11 @@ export default function ProfilePage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-black text-[10px] uppercase text-primary tracking-widest">{addr.tag}</span>
+                              <span className="font-black text-[10px] text-primary tracking-widest">{addr.tag}</span>
                               {addr.lat !== 0 && <span className="w-1 h-1 rounded-full bg-green-500" title="GPS Verified" />}
                             </div>
-                            <p className="text-xs font-bold text-gray-900 leading-relaxed line-clamp-2 uppercase">{addr.street}</p>
-                            <p className="text-[9px] font-black text-gray-400 uppercase mt-1">PIN: {addr.pincode}</p>
+                            <p className="text-xs font-bold text-gray-900 leading-relaxed line-clamp-2">{addr.street}</p>
+                            <p className="text-[9px] font-black text-gray-400 mt-1">PIN: {addr.pincode}</p>
                           </div>
                         </div>
                         <div className="flex gap-1">
@@ -362,18 +360,18 @@ export default function ProfilePage() {
            </div>
 
            <div className="space-y-5">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 ml-6">SahiMed App</h2>
+              <h2 className="text-[10px] font-black tracking-[0.3em] text-gray-400 ml-6">SahiMed App</h2>
               <div 
                 onClick={handleInstallClick}
                 className="bg-primary/5 p-8 rounded-[48px] border border-primary/10 flex flex-col items-center text-center gap-5 cursor-pointer hover:bg-primary/10 transition-all group shadow-sm hover:shadow-xl"
               >
                 <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform"><SmartphoneNfc className="w-7 h-7 text-primary" /></div>
                 <div>
-                  <h3 className="text-base font-black text-gray-900 uppercase tracking-tight">Get SahiMed on Mobile</h3>
-                  <p className="text-[10px] text-gray-500 font-bold mt-2 max-w-[220px] uppercase leading-relaxed">Install for a faster, professional clinical shopping experience.</p>
+                  <h3 className="text-base font-black text-gray-900 tracking-tight">Get SahiMed on mobile</h3>
+                  <p className="text-[10px] text-gray-500 font-bold mt-2 max-w-[220px] leading-relaxed">Install for a faster, professional clinical shopping experience.</p>
                 </div>
-                <Button className="rounded-full h-12 px-10 font-black uppercase text-[11px] tracking-[0.2em] gap-3 shadow-xl shadow-primary/20">
-                  <Download className="w-4 h-4" /> Add to Home
+                <Button className="rounded-full h-12 px-10 font-black text-[11px] tracking-[0.2em] gap-3 shadow-xl shadow-primary/20">
+                  <Download className="w-4 h-4" /> Add to home
                 </Button>
               </div>
            </div>
