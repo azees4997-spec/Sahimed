@@ -10,9 +10,18 @@ import Image from 'next/image';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { collection, query, limit, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import Autoplay from "embla-carousel-autoplay";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 
 export default function Home() {
   const db = useFirestore();
+  const plugin = React.useRef(
+    Autoplay({ delay: 4000, stopOnInteraction: true })
+  );
 
   const medicinesQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -33,18 +42,68 @@ export default function Home() {
       
       <main className="max-w-7xl mx-auto px-4 py-4 space-y-6 pb-6">
         
-        {/* Hero Banner - SKY BLUE THEME */}
-        <section className="relative rounded-[24px] bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
-          <div className="space-y-3 relative z-10">
-            <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight uppercase tracking-tight">
-              Affordable Medicines<br />Across India
-            </h1>
-            <div className="w-16 h-0.5 bg-white/20" />
-            <p className="text-white/90 text-sm font-bold pt-1 uppercase tracking-widest">Sahi Dawai, Sahi Daam Pe</p>
-          </div>
-          <div className="absolute right-[-30px] bottom-[-30px] opacity-10 rotate-12">
-            <ShieldCheck size={220} className="text-white" strokeWidth={1} />
-          </div>
+        {/* Scrolling Hero Section */}
+        <section className="relative w-full">
+          <Carousel
+            plugins={[plugin.current]}
+            className="w-full"
+            onMouseEnter={plugin.current.stop}
+            onMouseLeave={plugin.current.reset}
+          >
+            <CarouselContent>
+              {/* Slide 1: Affordable Medicines */}
+              <CarouselItem>
+                <div className="relative rounded-[24px] bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
+                  <div className="space-y-3 relative z-10">
+                    <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight uppercase tracking-tight">
+                      Affordable Medicines<br />Across India
+                    </h1>
+                    <div className="w-16 h-0.5 bg-white/20" />
+                    <p className="text-white/90 text-sm font-bold pt-1 uppercase tracking-widest">Premium clinical selection at the right price</p>
+                  </div>
+                  <div className="absolute right-[-30px] bottom-[-30px] opacity-10 rotate-12">
+                    <ShieldCheck size={220} className="text-white" strokeWidth={1} />
+                  </div>
+                </div>
+              </CarouselItem>
+
+              {/* Slide 2: Smarter Clinical Choice (Substitutes) */}
+              <CarouselItem>
+                <div className="relative rounded-[24px] bg-gradient-to-br from-[#136A31] to-[#2E8B57] overflow-hidden p-6 sm:p-8 flex flex-col justify-center min-h-[220px]">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
+                    <div className="space-y-3 flex-1 text-center sm:text-left">
+                      <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full border border-white/20">
+                        <Zap className="w-3.5 h-3.5 text-[#F97316] fill-current" />
+                        <span className="text-[10px] font-black text-white uppercase tracking-widest">Smarter clinical choice</span>
+                      </div>
+                      <h2 className="text-2xl sm:text-4xl font-black text-white leading-tight uppercase tracking-tight">
+                        Save Upto 60%<br />on Clinical Substitutes
+                      </h2>
+                      <div className="flex flex-wrap justify-center sm:justify-start gap-4 pt-2">
+                        <div className="flex items-center gap-2">
+                          <ShieldPlus className="w-4 h-4 text-white/80" />
+                          <span className="text-[9px] font-bold text-white uppercase tracking-widest">GMP & FDA Certified</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FlaskConical className="w-4 h-4 text-white/80" />
+                          <span className="text-[9px] font-bold text-white uppercase tracking-widest">Identical Formula</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="hidden sm:flex flex-col items-center justify-center text-center p-6 bg-white/10 backdrop-blur rounded-[32px] border border-white/20">
+                       <Star className="w-6 h-6 text-[#EAB308] fill-current mb-2" />
+                       <p className="text-[9px] font-black text-white uppercase tracking-tighter leading-tight max-w-[140px]">
+                         Manufactured by India's leading producers
+                       </p>
+                    </div>
+                  </div>
+                  <div className="absolute left-[-20px] top-[-20px] opacity-10">
+                    <Dna size={180} className="text-white" strokeWidth={1} />
+                  </div>
+                </div>
+              </CarouselItem>
+            </CarouselContent>
+          </Carousel>
         </section>
 
         {/* Action Row - 3 Column Grid */}
@@ -100,70 +159,6 @@ export default function Home() {
                 <span className="text-[10px] font-black text-gray-600 uppercase tracking-tight text-center leading-tight">{cat.name}</span>
               </Link>
             ))}
-          </div>
-        </section>
-
-        {/* Substitutes Information Section */}
-        <section className="rounded-[32px] border border-[#DCFCE7] shadow-sm overflow-hidden flex flex-col md:flex-row items-stretch">
-          <div className="md:w-1/3 relative min-h-[90px] bg-gradient-to-br from-[#136A31] to-[#2E8B57] overflow-hidden">
-            <div className="absolute inset-0 p-4 flex flex-col justify-center">
-              <div className="space-y-0.5">
-                <p className="text-[8px] font-black text-white/80 uppercase tracking-[0.2em]">Save Upto</p>
-                <h2 className="text-3xl font-black text-white tracking-tighter leading-none">60%</h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="w-2.5 h-2.5 bg-white rounded-full flex items-center justify-center">
-                    <div className="w-0.5 h-0.5 bg-[#136A31] rounded-full" />
-                  </div>
-                  <p className="text-[7px] font-black text-white uppercase tracking-widest">Clinical Substitutes</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="md:w-2/3 p-5 sm:p-6 flex flex-col justify-center bg-white">
-            <div className="mb-5">
-              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight leading-none">
-                Smarter clinical choice
-              </h3>
-              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">Switch to high-quality generics</p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm border border-green-100">
-                  <ShieldPlus className="w-5 h-5 text-[#136A31]" />
-                </div>
-                <div className="space-y-0.5">
-                  <p className="text-[10px] font-black uppercase text-gray-900 leading-none">Safe</p>
-                  <p className="text-[8px] font-bold text-gray-400 uppercase leading-none">GMP & FDA certified medicines</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm border border-green-100">
-                  <FlaskConical className="w-5 h-5 text-[#136A31]" />
-                </div>
-                <div className="space-y-0.5">
-                  <p className="text-[10px] font-black uppercase text-gray-900 leading-none">Identical</p>
-                  <p className="text-[8px] font-bold text-gray-400 uppercase leading-none">Same composition & strength</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm border border-green-100">
-                  <Zap className="w-5 h-5 text-[#F97316] fill-current" />
-                </div>
-                <div className="space-y-0.5">
-                  <p className="text-[10px] font-black uppercase text-gray-900 leading-none">Savings</p>
-                  <p className="text-[8px] font-bold text-gray-400 uppercase leading-none">Upto 60% OFF</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/60 p-3 rounded-[16px] flex items-center gap-3 border border-green-100/50 shadow-sm">
-               <Star className="w-3.5 h-3.5 text-[#EAB308] fill-current shrink-0" />
-               <p className="text-[9px] font-black text-gray-700 uppercase tracking-tight leading-none">
-                 Quality assured: <span className="text-[#136A31]">All substitutes are manufactured from India's leading manufacturers.</span>
-               </p>
-            </div>
           </div>
         </section>
 
