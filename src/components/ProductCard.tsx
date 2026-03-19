@@ -49,7 +49,7 @@ export default function ProductCard({ product }: { product: Product }) {
     <div className="bg-white rounded-[16px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full group relative p-2">
       {savingsPct > 0 && (
         <div className="absolute top-2 left-2 z-10">
-          <div className="bg-[#136A31] text-white font-black text-[7px] px-1.5 py-0.5 rounded uppercase tracking-tighter">
+          <div className="bg-primary text-white font-black text-[7px] px-1.5 py-0.5 rounded uppercase tracking-tighter">
             SAVE {savingsPct}%
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function ProductCard({ product }: { product: Product }) {
               addToCart({ ...product, price: currentPrice, mrp: currentMrp });
               toast({ title: "Added to Bag" });
             }} 
-            className="rounded-md h-8 w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-black text-[10px] uppercase tracking-wider transition-all active:scale-95"
+            className="rounded-md h-8 w-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-wider transition-all active:scale-95"
           >
             Add
           </button>

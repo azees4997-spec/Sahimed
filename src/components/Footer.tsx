@@ -9,7 +9,7 @@ export default function Footer() {
   if (pathname.startsWith('/admin')) return null;
 
   return (
-    <footer className="bg-[#020617] text-white pt-6 pb-32 sm:pb-10 px-6 border-t-2 border-[#0EA5E9]">
+    <footer className="bg-[#020617] text-white pt-6 pb-32 sm:pb-10 px-6 border-t-2 border-[#059669]">
       <div className="max-w-7xl mx-auto flex flex-col items-center gap-4">
         
         {/* Brand Info - Centered */}
@@ -17,8 +17,8 @@ export default function Footer() {
           <div className="bg-white p-1.5 rounded-xl flex items-center gap-2 mb-1.5 shadow-lg shadow-black/20">
             <SahiMedIcon className="w-7 h-7" />
             <div className="flex items-center leading-none">
-              <span className="font-black text-xl text-[#0EA5E9] tracking-tighter">Sahi</span>
-              <span className="font-black text-xl text-[#F97316] tracking-tighter">Med</span>
+              <span className="font-black text-xl text-[#059669] tracking-tighter">Sahi</span>
+              <span className="font-black text-xl text-[#047857] tracking-tighter">Med</span>
             </div>
           </div>
         </div>

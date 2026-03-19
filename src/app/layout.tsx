@@ -8,7 +8,7 @@ import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'SahiMed | Sahi Dawai, Sahi Daam Pe',
+  title: 'SahiMed | Clinical Healthcare Pharmacy',
   description: 'SahiMed Pharmacy - High-end healthcare solutions and medicine delivery at the right price. Sahi Dawai, Sahi Daam Pe.',
   manifest: '/manifest.json',
   appleWebApp: {
@@ -27,7 +27,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#0EA5E9',
+  themeColor: '#059669',
 };
 
 export default function RootLayout({
