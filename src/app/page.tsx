@@ -79,7 +79,7 @@ export default function Home() {
                       Affordable Medicines<br />Across India
                     </h1>
                     <div className="w-16 h-0.5 bg-white/20" />
-                    <p className="text-white/90 text-sm font-bold pt-1 uppercase tracking-widest">Premium clinical selection at the right price</p>
+                    <p className="text-white/90 text-sm font-bold pt-1 uppercase tracking-widest">Sahi Dawai, Sahi Daam pe</p>
                   </div>
                   <div className="absolute right-[-30px] bottom-[-30px] opacity-10 rotate-12">
                     <ShieldCheck size={220} className="text-white" strokeWidth={1} />
@@ -89,30 +89,30 @@ export default function Home() {
 
               {/* Slide 2: Smarter Clinical Choice (Substitutes) */}
               <CarouselItem>
-                <div className="relative rounded-[24px] bg-gradient-to-br from-[#136A31] to-[#2E8B57] overflow-hidden p-6 sm:p-8 flex flex-col justify-center min-h-[220px]">
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
-                    <div className="space-y-3 flex-1 text-center sm:text-left">
+                <div className="relative rounded-[24px] bg-gradient-to-br from-[#136A31] to-[#2E8B57] overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
+                    <div className="space-y-2 flex-1 text-center sm:text-left">
                       <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full border border-white/20">
-                        <Zap className="w-3.5 h-3.5 text-[#F97316] fill-current" />
-                        <span className="text-[10px] font-black text-white uppercase tracking-widest">Smarter clinical choice</span>
+                        <Zap className="w-3 h-3 text-[#F97316] fill-current" />
+                        <span className="text-[9px] font-black text-white uppercase tracking-widest">Smarter clinical choice</span>
                       </div>
-                      <h2 className="text-2xl sm:text-4xl font-black text-white leading-tight uppercase tracking-tight">
+                      <h2 className="text-xl sm:text-3xl font-black text-white leading-tight uppercase tracking-tight">
                         Save Upto 60%<br />on Clinical Substitutes
                       </h2>
-                      <div className="flex flex-wrap justify-center sm:justify-start gap-4 pt-2">
-                        <div className="flex items-center gap-2">
-                          <ShieldPlus className="w-4 h-4 text-white/80" />
-                          <span className="text-[9px] font-bold text-white uppercase tracking-widest">GMP & FDA Certified</span>
+                      <div className="flex flex-wrap justify-center sm:justify-start gap-3 pt-1">
+                        <div className="flex items-center gap-1.5">
+                          <ShieldPlus className="w-3.5 h-3.5 text-white/80" />
+                          <span className="text-[8px] font-bold text-white uppercase tracking-widest">GMP & FDA Certified</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <FlaskConical className="w-4 h-4 text-white/80" />
-                          <span className="text-[9px] font-bold text-white uppercase tracking-widest">Identical Formula</span>
+                        <div className="flex items-center gap-1.5">
+                          <FlaskConical className="w-3.5 h-3.5 text-white/80" />
+                          <span className="text-[8px] font-bold text-white uppercase tracking-widest">Identical Formula</span>
                         </div>
                       </div>
                     </div>
-                    <div className="hidden sm:flex flex-col items-center justify-center text-center p-6 bg-white/10 backdrop-blur rounded-[32px] border border-white/20">
-                       <Star className="w-6 h-6 text-[#EAB308] fill-current mb-2" />
-                       <p className="text-[9px] font-black text-white uppercase tracking-tighter leading-tight max-w-[140px]">
+                    <div className="hidden sm:flex flex-col items-center justify-center text-center p-4 bg-white/10 backdrop-blur rounded-[24px] border border-white/20 shrink-0">
+                       <Star className="w-5 h-5 text-[#EAB308] fill-current mb-1.5" />
+                       <p className="text-[8px] font-black text-white uppercase tracking-tighter leading-tight max-w-[120px]">
                          Manufactured by India's leading producers
                        </p>
                     </div>
