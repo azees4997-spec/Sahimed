@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { collection, query, limit, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCart } from '@/context/CartContext';
 import Autoplay from "embla-carousel-autoplay";
 import {
   Carousel,
@@ -21,6 +22,7 @@ import { cn } from '@/lib/utils';
 
 export default function Home() {
   const db = useFirestore();
+  const { location, setLocation } = useCart();
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
@@ -28,6 +30,35 @@ export default function Home() {
   const plugin = React.useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
   );
+
+  // Automatic Location Capture (Swiggy/Blinkit style)
+  React.useEffect(() => {
+    const savedLoc = localStorage.getItem('hl_location');
+    // If location is default or not explicitly set by user, attempt auto-detection
+    if (!savedLoc || savedLoc === 'Mumbai, MH') {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            try {
+              const { latitude: lat, longitude: lng } = position.coords;
+              const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+              const data = await response.json();
+              if (data && data.address) {
+                const neighborhood = data.address.suburb || data.address.neighbourhood || data.address.city_district || data.address.city || data.address.town || 'Current Location';
+                setLocation(neighborhood);
+              }
+            } catch (e) {
+              console.warn("Reverse geocoding failed for auto-location", e);
+            }
+          },
+          (error) => {
+            console.log("User declined or browser blocked automatic location access", error);
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      }
+    }
+  }, [setLocation]);
 
   React.useEffect(() => {
     if (!api) {
@@ -102,18 +133,18 @@ export default function Home() {
                       <div className="flex flex-wrap justify-center sm:justify-start gap-3 pt-1">
                         <div className="flex items-center gap-1.5">
                           <ShieldPlus className="w-3.5 h-3.5 text-white/80" />
-                          <span className="text-[8px] font-bold text-white uppercase tracking-widest">GMP & FDA Certified</span>
+                          <span className="text-[8px] font-bold text-white uppercase tracking-widest">GMP & FDA Certified medicines</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <FlaskConical className="w-3.5 h-3.5 text-white/80" />
-                          <span className="text-[8px] font-bold text-white uppercase tracking-widest">Identical Formula</span>
+                          <span className="text-[8px] font-bold text-white uppercase tracking-widest">Same composition & strength</span>
                         </div>
                       </div>
                     </div>
                     <div className="hidden sm:flex flex-col items-center justify-center text-center p-4 bg-white/10 backdrop-blur rounded-[24px] border border-white/20 shrink-0">
                        <Star className="w-5 h-5 text-[#EAB308] fill-current mb-1.5" />
                        <p className="text-[8px] font-black text-white uppercase tracking-tighter leading-tight max-w-[120px]">
-                         Manufactured by India's leading producers
+                         All substitutes are manufactured from India's leading manufacturers.
                        </p>
                     </div>
                   </div>
