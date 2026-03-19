@@ -21,7 +21,6 @@ export default function Footer() {
               <span className="font-black text-xl text-[#F97316] tracking-tighter">Med</span>
             </div>
           </div>
-          <span className="text-[10px] font-black text-[#0EA5E9] uppercase tracking-[0.2em]">Sahi Dawai, Sahi Daam Pe</span>
         </div>
 
         {/* Links Section - Horizontal Strip */}

@@ -162,7 +162,6 @@ export default function Navbar() {
                 <span className="font-black text-2xl text-[#0EA5E9] tracking-tighter leading-none">Sahi</span>
                 <span className="font-black text-2xl text-[#F97316] tracking-tighter leading-none">Med</span>
               </div>
-              <span className="text-[9px] font-black text-[#0EA5E9] uppercase tracking-widest mt-0.5">Sahi Dawai, Sahi Daam Pe</span>
             </div>
           </Link>
 
