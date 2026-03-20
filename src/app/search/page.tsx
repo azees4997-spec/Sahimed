@@ -7,8 +7,8 @@ import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Filter, Search as SearchIcon, SlidersHorizontal, Info, Loader2 } from 'lucide-react';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
-import { collection, query, orderBy, where, limit, QueryConstraint, getDocs } from 'firebase/firestore';
-import { Suspense, useMemo, useState, useEffect } from 'react';
+import { collection, query, orderBy, where, limit, getDocs } from 'firebase/firestore';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -27,38 +27,59 @@ function SearchResults() {
     const performSearch = async () => {
       setIsSearching(true);
       try {
-        const constraints: QueryConstraint[] = [];
-        
-        if (c) {
-          constraints.push(where('category', '==', c));
-        }
+        const resultsMap = new Map();
 
-        if (rawQ.length < 3 && !c) {
+        // 1. If search term is provided, execute targeted prefix queries for name and saltComposition
+        if (rawQ.length >= 3) {
+          const vProper = rawQ.replace(/(^|[\s-])\S/g, (match) => match.toUpperCase());
+          const vUpper = rawQ.toUpperCase();
+          const vRaw = rawQ;
+          const variants = Array.from(new Set([vProper, vUpper, vRaw])).filter(v => v.length >= 3);
+
+          const queries = variants.flatMap(v => {
+            const base = collection(db, 'medicines');
+            const qName = query(base, where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(40));
+            const qComp = query(base, where('saltComposition', '>=', v), where('saltComposition', '<=', v + '\uf8ff'), limit(40));
+            return [qName, qComp];
+          });
+
+          const snaps = await Promise.all(queries.map(q => getDocs(q)));
+          snaps.forEach(snap => {
+            snap.forEach(doc => {
+              resultsMap.set(doc.id, { id: doc.id, ...doc.data() });
+            });
+          });
+        } 
+        // 2. If no query but category is selected, fetch by category
+        else if (c) {
+          const q = query(collection(db, 'medicines'), where('category', '==', c), limit(60));
+          const snap = await getDocs(q);
+          snap.forEach(doc => {
+            resultsMap.set(doc.id, { id: doc.id, ...doc.data() });
+          });
+        } 
+        // 3. Default view: show best sellers or general catalog
+        else {
           const q = query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(24));
           const snap = await getDocs(q);
-          setFilteredMedicines(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-          return;
+          snap.forEach(doc => {
+            resultsMap.set(doc.id, { id: doc.id, ...doc.data() });
+          });
         }
 
-        const baseQuery = c 
-          ? query(collection(db, 'medicines'), where('category', '==', c), limit(100))
-          : query(collection(db, 'medicines'), limit(100));
-        
-        const snap = await getDocs(baseQuery);
-        const allFetched = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        let finalResults = Array.from(resultsMap.values());
 
-        if (rawQ.length >= 3) {
-          const searchTerm = rawQ.toLowerCase();
-          const matches = allFetched.filter(m => 
-            (m.name || '').toLowerCase().includes(searchTerm) || 
-            (m.saltComposition || '').toLowerCase().includes(searchTerm)
-          );
-          setFilteredMedicines(matches);
-        } else {
-          setFilteredMedicines(allFetched.slice(0, 24));
+        // Apply category filter client-side if a search term was used
+        if (c && rawQ.length >= 3) {
+          finalResults = finalResults.filter(m => m.category === c);
         }
+
+        // Sort by name for consistency
+        finalResults.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+        setFilteredMedicines(finalResults);
       } catch (err) {
-        console.error("Search error", err);
+        console.error("Clinical search failure:", err);
       } finally {
         setIsSearching(false);
       }
