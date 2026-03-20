@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from 'react';
@@ -115,7 +114,7 @@ export default function Home() {
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
                     <div className="space-y-2 flex-1 text-center sm:text-left">
                       <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full border border-white/20">
-                        <Zap className="w-3 h-3 text-[#EAB308] fill-current" />
+                        <Zap className="w-3 h-3 text-white fill-current" />
                         <span className="text-[9px] font-black text-white tracking-widest">Smarter clinical choice</span>
                       </div>
                       <h2 className="text-xl sm:text-3xl font-black text-white leading-tight tracking-tight">
@@ -133,7 +132,7 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="hidden sm:flex flex-col items-center justify-center text-center p-4 bg-white/10 backdrop-blur rounded-[24px] border border-white/20 shrink-0">
-                       <Star className="w-5 h-5 text-[#EAB308] fill-current mb-1.5" />
+                       <Star className="w-5 h-5 text-white fill-current mb-1.5" />
                        <p className="text-[8px] font-black text-white tracking-tighter leading-tight max-w-[120px]">
                          Verified clinical alternatives.
                        </p>
