@@ -217,7 +217,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="bg-gradient-to-r from-accent to-accent/80 p-5 rounded-[24px] flex items-center gap-4 text-white shadow-xl shadow-blue-900/10 border-b-4 border-black/10">
+        <section className="bg-gradient-to-r from-accent to-accent/80 p-5 rounded-[24px] flex items-center gap-4 text-white shadow-xl shadow-purple-900/10 border-b-4 border-black/10">
           <div className="bg-white/20 p-2.5 rounded-xl">
             <Truck className="w-6 h-6" />
           </div>

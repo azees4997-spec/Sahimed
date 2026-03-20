@@ -23,11 +23,11 @@ export function SahiMedIcon({ className }: { className?: string }) {
     >
       <path 
         d="M20 55C20 30 40 20 50 20C35 35 32 55 32 75C32 90 45 100 55 100C30 100 20 85 20 55Z" 
-        fill="#06b6d4"
+        fill="#8b31c0"
       />
       <path 
         d="M80 45C80 70 60 80 50 80C65 65 68 45 68 25C68 10 55 0 45 0C70 0 80 15 80 45Z" 
-        fill="#06b6d4" 
+        fill="#8b31c0" 
       />
       <path 
         d="M50 10C35 30 35 55 50 65C65 75 65 95 50 110C80 90 80 65 65 55C50 45 50 25 50 10Z" 
