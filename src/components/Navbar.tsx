@@ -49,7 +49,7 @@ interface SuggestionItem {
 }
 
 export default function Navbar() {
-  const { location, setLocation, totalItems } = useCart();
+  const { location, setLocation, totalItems, addToCart } = useCart();
   const [search, setSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -288,10 +288,10 @@ export default function Navbar() {
               <div className="p-4 bg-gray-50 border-t flex flex-col gap-3">
                 <span className="text-[10px] font-black text-gray-400 tracking-widest px-1">Recent products</span>
                 {rawSuggestions.slice(0, 2).map((p) => (
-                  <button 
+                  <div 
                     key={p.id}
                     onClick={() => handleSuggestionClick(p.name)}
-                    className="flex items-center gap-4 p-2 bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all text-left"
+                    className="flex items-center gap-4 p-2 bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all text-left cursor-pointer group"
                   >
                     <div className="w-10 h-10 bg-gray-50 rounded-lg overflow-hidden shrink-0 p-1">
                       {p.imageUrl ? <img src={p.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-5 h-5 text-gray-200" />}
@@ -302,9 +302,17 @@ export default function Navbar() {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-[11px] font-black text-accent">₹{p.price}</p>
-                      <button className="text-[9px] font-black text-primary border border-primary px-3 py-1 rounded-full mt-1">Add</button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart({ ...p, price: Number(p.price) });
+                        }}
+                        className="text-[9px] font-black text-primary border border-primary px-3 py-1 rounded-full mt-1 hover:bg-primary hover:text-white transition-colors"
+                      >
+                        Add
+                      </button>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
