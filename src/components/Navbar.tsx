@@ -1,11 +1,12 @@
+
 "use client"
 
 import Link from 'next/link';
-import { Search as SearchIcon, MapPin, ChevronDown, LocateFixed, Loader2, ShoppingCart, Package, ChevronRight } from 'lucide-react';
+import { Search as SearchIcon, MapPin, ChevronDown, LocateFixed, Loader2, ShoppingCart, Package, ChevronRight, ArrowUpRight, ChevronUp } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -41,14 +42,21 @@ export function SahiMedIcon({ className }: { className?: string }) {
   );
 }
 
+interface SuggestionItem {
+  id: string;
+  term: string;
+  type: 'Brand' | 'Salt';
+}
+
 export default function Navbar() {
   const { location, setLocation, totalItems } = useCart();
   const [search, setSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [rawSuggestions, setRawSuggestions] = useState<any[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const db = useFirestore();
@@ -79,7 +87,7 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!db || search.trim().length < 3) {
-      setSuggestions([]);
+      setRawSuggestions([]);
       setIsSearching(false);
       return;
     }
@@ -94,8 +102,8 @@ export default function Navbar() {
 
       try {
         const queries = variants.flatMap(v => [
-          query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(5)),
-          query(collection(db, 'medicines'), where('saltComposition', '>=', v), where('saltComposition', '<=', v + '\uf8ff'), limit(5))
+          query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(10)),
+          query(collection(db, 'medicines'), where('saltComposition', '>=', v), where('saltComposition', '<=', v + '\uf8ff'), limit(10))
         ]);
 
         const snaps = await Promise.all(queries.map(q => getDocs(q)));
@@ -106,7 +114,7 @@ export default function Navbar() {
           });
         });
 
-        setSuggestions(Array.from(resultsMap.values()).slice(0, 8));
+        setRawSuggestions(Array.from(resultsMap.values()));
         setShowSuggestions(true);
       } catch (err) {
         console.error("Suggestion fetch failed", err);
@@ -118,6 +126,32 @@ export default function Navbar() {
     const timer = setTimeout(fetchSuggestions, 300);
     return () => clearTimeout(timer);
   }, [search, db]);
+
+  const suggestions = useMemo(() => {
+    if (!rawSuggestions.length) return [];
+    
+    const term = search.toLowerCase();
+    const items: SuggestionItem[] = [];
+    const seenTerms = new Set<string>();
+
+    rawSuggestions.forEach(p => {
+      const name = p.name || '';
+      const salt = p.saltComposition || '';
+
+      if (name.toLowerCase().includes(term) && !seenTerms.has(name)) {
+        items.push({ id: `brand-${p.id}`, term: name, type: 'Brand' });
+        seenTerms.add(name);
+      }
+      if (salt.toLowerCase().includes(term) && !seenTerms.has(salt)) {
+        items.push({ id: `salt-${p.id}`, term: salt, type: 'Salt' });
+        seenTerms.add(salt);
+      }
+    });
+
+    return items;
+  }, [rawSuggestions, search]);
+
+  const displayedSuggestions = expanded ? suggestions : suggestions.slice(0, 5);
 
   const handleGeoLocation = () => {
     setIsLocating(true);
@@ -216,40 +250,63 @@ export default function Navbar() {
           </form>
 
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2">
-              <div className="px-4 py-2 bg-gray-50 border-b">
-                <span className="text-[8px] font-black text-gray-400 tracking-widest">Clinical matches</span>
-              </div>
-              <div className="max-h-[320px] overflow-y-auto scrollbar-hide">
-                {suggestions.map((item) => (
+            <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl shadow-3xl border border-gray-100 overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2">
+              <div className="max-h-[400px] overflow-y-auto scrollbar-hide py-2">
+                {displayedSuggestions.map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => handleSuggestionClick(item.name)}
-                    className="w-full px-4 py-3 flex items-center gap-4 hover:bg-primary/5 transition-all text-left border-b last:border-none group"
+                    onClick={() => handleSuggestionClick(item.term)}
+                    className="w-full px-5 py-3 flex items-center gap-4 hover:bg-gray-50 transition-all text-left group"
                   >
-                    <div className="w-10 h-10 bg-gray-50 rounded-lg flex-shrink-0 border flex items-center justify-center overflow-hidden">
-                      {item.imageUrl ? (
-                        <img src={item.imageUrl} alt="" className="w-full h-full object-contain" />
-                      ) : (
-                        <Package className="w-5 h-5 text-gray-200" />
-                      )}
+                    <SearchIcon className="w-4 h-4 text-gray-300 group-hover:text-gray-400 shrink-0" />
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
+                      <p className="font-medium text-sm text-gray-600 truncate flex-1">
+                        {item.term}
+                      </p>
+                      <Badge variant="secondary" className="bg-gray-100 text-gray-400 font-bold text-[9px] px-2 py-0.5 rounded-md border-none shrink-0">
+                        {item.type}
+                      </Badge>
+                    </div>
+                    <ArrowUpRight className="w-4 h-4 text-primary opacity-40 group-hover:opacity-100 transition-opacity shrink-0" />
+                  </button>
+                ))}
+
+                {suggestions.length > 5 && (
+                  <button 
+                    onClick={() => setExpanded(!expanded)}
+                    className="w-full py-3 flex items-center justify-center gap-2 text-primary font-black text-[10px] tracking-widest hover:bg-gray-50 transition-colors border-t border-gray-50"
+                  >
+                    {expanded ? (
+                      <>View less <ChevronUp className="w-3 h-3" /></>
+                    ) : (
+                      <>View more <ChevronDown className="w-3 h-3" /></>
+                    )}
+                  </button>
+                )}
+              </div>
+              
+              <div className="p-4 bg-gray-50 border-t flex flex-col gap-3">
+                <span className="text-[10px] font-black text-gray-400 tracking-widest px-1">Recent products</span>
+                {rawSuggestions.slice(0, 2).map((p) => (
+                  <button 
+                    key={p.id}
+                    onClick={() => handleSuggestionClick(p.name)}
+                    className="flex items-center gap-4 p-2 bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all text-left"
+                  >
+                    <div className="w-10 h-10 bg-gray-50 rounded-lg overflow-hidden shrink-0 p-1">
+                      {p.imageUrl ? <img src={p.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-5 h-5 text-gray-200" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-black text-[11px] text-gray-900 truncate tracking-tight">{item.name}</p>
-                      <p className="text-[8px] font-bold text-gray-400 tracking-widest truncate mt-0.5">
-                        {item.saltComposition}
-                      </p>
+                      <p className="font-black text-[11px] text-gray-900 truncate">{p.name}</p>
+                      <p className="text-[9px] font-bold text-gray-400 truncate">{p.packSize || '10 Tablets'}</p>
                     </div>
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-primary transition-transform group-hover:translate-x-1" />
+                    <div className="text-right shrink-0">
+                      <p className="text-[11px] font-black text-accent">₹{p.price}</p>
+                      <button className="text-[9px] font-black text-primary border border-primary px-3 py-1 rounded-full mt-1">Add</button>
+                    </div>
                   </button>
                 ))}
               </div>
-              <button 
-                onClick={() => handleSearch()}
-                className="w-full p-3 text-center bg-primary/5 hover:bg-primary/10 transition-colors"
-              >
-                <span className="text-[9px] font-black text-primary tracking-[0.2em]">View full catalog</span>
-              </button>
             </div>
           )}
         </div>
