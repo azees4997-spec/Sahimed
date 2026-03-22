@@ -101,16 +101,31 @@ export default function Navbar() {
       const variants = Array.from(new Set([vProper, vUpper, vRaw])).filter(v => v.length >= 3);
 
       try {
-        const queries = variants.flatMap(v => [
-          query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(10)),
-          query(collection(db, 'medicines'), where('saltComposition', '>=', v), where('saltComposition', '<=', v + '\uf8ff'), limit(10))
+        const medicineQueries = variants.flatMap(v => [
+          query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(15)),
+          query(collection(db, 'medicines'), where('saltComposition', '>=', v), where('saltComposition', '<=', v + '\uf8ff'), limit(15))
         ]);
 
-        const snaps = await Promise.all(queries.map(q => getDocs(q)));
+        const moleculeQueries = variants.map(v => 
+          query(collection(db, 'moleculeMaster'), where('molecule', '>=', v), where('molecule', '<=', v + '\uf8ff'), limit(15))
+        );
+
+        const allQueries = [...medicineQueries, ...moleculeQueries];
+        const snaps = await Promise.all(allQueries.map(q => getDocs(q)));
+        
         const resultsMap = new Map();
-        snaps.forEach(snap => {
+        
+        // Process medicine snaps
+        snaps.slice(0, medicineQueries.length).forEach(snap => {
           snap.forEach(doc => {
-            resultsMap.set(doc.id, { id: doc.id, ...doc.data() });
+            resultsMap.set(doc.id, { id: doc.id, ...doc.data(), _type: 'medicine' });
+          });
+        });
+
+        // Process molecule snaps
+        snaps.slice(medicineQueries.length).forEach(snap => {
+          snap.forEach(doc => {
+            resultsMap.set(`mol-${doc.id}`, { id: doc.id, ...doc.data(), _type: 'molecule' });
           });
         });
 
@@ -135,16 +150,24 @@ export default function Navbar() {
     const seenTerms = new Set<string>();
 
     rawSuggestions.forEach(p => {
-      const name = p.name || '';
-      const salt = p.saltComposition || '';
+      if (p._type === 'molecule') {
+        const molName = p.molecule || '';
+        if (molName.toLowerCase().includes(term) && !seenTerms.has(molName)) {
+          items.push({ id: `mol-${p.id}`, term: molName, type: 'Salt' });
+          seenTerms.add(molName);
+        }
+      } else {
+        const name = p.name || '';
+        const salt = p.saltComposition || '';
 
-      if (name.toLowerCase().includes(term) && !seenTerms.has(name)) {
-        items.push({ id: `brand-${p.id}`, term: name, type: 'Brand' });
-        seenTerms.add(name);
-      }
-      if (salt.toLowerCase().includes(term) && !seenTerms.has(salt)) {
-        items.push({ id: `salt-${p.id}`, term: salt, type: 'Salt' });
-        seenTerms.add(salt);
+        if (name.toLowerCase().includes(term) && !seenTerms.has(name)) {
+          items.push({ id: `brand-${p.id}`, term: name, type: 'Brand' });
+          seenTerms.add(name);
+        }
+        if (salt.toLowerCase().includes(term) && !seenTerms.has(salt)) {
+          items.push({ id: `salt-${p.id}`, term: salt, type: 'Salt' });
+          seenTerms.add(salt);
+        }
       }
     });
 
@@ -287,7 +310,7 @@ export default function Navbar() {
               
               <div className="p-4 bg-gray-50 border-t flex flex-col gap-3">
                 <span className="text-[10px] font-black text-gray-400 tracking-widest px-1">Recent products</span>
-                {rawSuggestions.slice(0, 2).map((p) => (
+                {rawSuggestions.filter(p => p._type === 'medicine').slice(0, 2).map((p) => (
                   <div 
                     key={p.id}
                     onClick={() => handleSuggestionClick(p.name)}
