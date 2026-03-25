@@ -11,7 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, limit, where, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, where } from 'firebase/firestore';
+import { useMongoDBCollection } from '@/hooks/use-mongodb';
 
 function SearchResults() {
   const searchParams = useSearchParams();
@@ -20,29 +21,16 @@ function SearchResults() {
   
   const db = useFirestore();
 
-  // Fetch medicines from Firestore
-  const medicinesQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    let qBase = collection(db, 'medicines');
-    if (c) {
-      return query(qBase, where('category', '==', c), limit(60));
-    }
-    return query(qBase, limit(60));
-  }, [db, c]);
+  // Fetch medicines from MongoDB
+  const { data: medicines, isLoading: isMedsLoading } = useMongoDBCollection({ 
+    q: rawQ, 
+    category: c || undefined, 
+    limit: 60 
+  });
 
-  const { data: medicines, isLoading: isMedsLoading } = useCollection(medicinesQuery);
-
-  // Client-side text search fallback
-  const filteredMedicines = useMemo(() => {
-    if (!medicines) return null;
-    if (!rawQ) return medicines;
-    const term = rawQ.toLowerCase();
-    return medicines.filter(p => 
-      p.name?.toLowerCase().includes(term) || 
-      p.sku?.toLowerCase().includes(term) ||
-      p.manufacturer?.toLowerCase().includes(term)
-    );
-  }, [medicines, rawQ]);
+  // Since useMongoDBCollection already handles search and category on the server,
+  // we don't need the client-side filter anymore.
+  const filteredMedicines = medicines;
 
   const isSearching = isMedsLoading;
 
@@ -135,25 +123,28 @@ function SaveMoreStrip({ query: rawQ }: { query: string }) {
   const db = useFirestore();
 
   useEffect(() => {
-    if (rawQ.length < 3 || !db) return;
+    if (rawQ.length < 3) return;
 
     const findGeneric = async () => {
       setLoading(true);
       try {
-        const q = query(collection(db, 'medicines'), limit(50));
-        const res = await getDocs(q);
-        const products = res.docs.map(d => ({ ...d.data(), id: d.id }));
+        // 1. Find the main product from MongoDB to get its moleculeId
+        const resMain = await fetch(`/api/products?q=${encodeURIComponent(rawQ)}&limit=5`);
+        const mainProducts = await resMain.json();
+        const mainProduct = mainProducts.find((p: any) => p.name.toLowerCase().includes(rawQ.toLowerCase()));
         
-        const mainProduct = products.find((p: any) => p.name.toLowerCase().includes(rawQ.toLowerCase()));
         let targetMolId = mainProduct?.moleculeId;
 
         if (targetMolId) {
-          const qGen = query(collection(db, 'medicines'), where('moleculeId', '==', targetMolId), limit(10));
-          const resGen = await getDocs(qGen);
-          const alternatives = resGen.docs.map(d => ({ ...d.data(), id: d.id }));
-          const gen = alternatives.find((a: any) => a.isGeneric && a.id !== mainProduct?.id);
+          // 2. Find generic alternatives with the same moleculeId from MongoDB
+          const resGen = await fetch(`/api/products?moleculeId=${encodeURIComponent(targetMolId)}&limit=10`);
+          const alternatives = await resGen.json();
+          const gen = alternatives.find((a: any) => 
+            (a.isGeneric === true || a.isGeneric === "true") && 
+            (a._id || a.id) !== (mainProduct?._id || mainProduct?.id)
+          );
           if (gen) {
-            setGenericAlt(gen);
+            setGenericAlt({ ...gen, id: gen._id || gen.id });
           }
         }
       } catch (err) {
@@ -164,7 +155,7 @@ function SaveMoreStrip({ query: rawQ }: { query: string }) {
     };
 
     findGeneric();
-  }, [rawQ, db]);
+  }, [rawQ]);
 
   if (loading || !genericAlt) return null;
 

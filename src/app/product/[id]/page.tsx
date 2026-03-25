@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, doc, where } from 'firebase/firestore';
+import { useMongoDBDoc, useMongoDBMolecule, useMongoDBCollection } from '@/hooks/use-mongodb';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -166,11 +167,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { toast } = useToast();
   const { addToCart, getItemQuantity } = useCart();
 
-  // 1. Fetch main product
-  const productRef = useMemoFirebase(() => id ? doc(db, 'medicines', id) : null, [db, id]);
-  const { data: rawProduct, isLoading: productLoading } = useDoc(productRef);
+  // 1. Fetch main product from MongoDB
+  const { data: rawProduct, isLoading: productLoading } = useMongoDBDoc(id);
   
-  // 2. Fetch live pricing data (SKU-based)
+  // 2. Fetch live pricing data (SKU-based) from Firestore
   const liveRef = useMemoFirebase(() => rawProduct?.sku ? doc(db, 'product_live_data', rawProduct.sku) : null, [db, rawProduct?.sku]);
   const { data: liveDataDoc } = useDoc(liveRef);
 
@@ -187,22 +187,14 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     };
   }, [rawProduct, liveDataDoc]);
 
-  // 3. Fetch molecule data
-  const molRef = useMemoFirebase(() => product?.moleculeId ? doc(db, 'moleculeMaster', product.moleculeId) : null, [db, product?.moleculeId]);
-  const { data: molData } = useDoc(molRef);
+  // 3. Fetch molecule data from MongoDB
+  const { data: molData } = useMongoDBMolecule(product?.moleculeId);
 
-  // 4. Fetch generic alternatives
-  const genericQuery = useMemoFirebase(() => {
-    if (!product?.moleculeId) return null;
-    return query(collection(db, 'medicines'), where('moleculeId', '==', product.moleculeId), limit(10));
-  }, [db, product?.moleculeId]);
-  
-  const { data: rawAlternatives } = useCollection(genericQuery);
-
-  // We need live data for alternatives too to show correct "Save" badges
-  // However, fetching live data for 10 items in a loop with hooks is not ideal.
-  // For now, we'll use the static price in alternatives or assume they'll load when navigated to.
-  const genericAlternatives = rawAlternatives;
+  // 4. Fetch generic alternatives from MongoDB
+  const { data: genericAlternatives } = useMongoDBCollection({ 
+    moleculeId: product?.moleculeId,
+    limit: 10 
+  });
 
   if (productLoading) {
     return (<div className="min-h-screen bg-[#F8F8F8]"><Navbar /><main className="max-w-7xl mx-auto px-4 py-12"><Skeleton className="h-[400px] rounded-[40px]" /></main></div>);

@@ -72,13 +72,8 @@ export default function Home() {
     return query(collection(db, 'categories'), orderBy('name', 'asc'), limit(12));
   }, [db]);
 
-  const medicinesQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'medicines'), limit(50));
-  }, [db]);
-
-  const { data: medicines, isLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: isCatsLoading } = useCollection(categoriesQuery);
+  const { data: medicines, isLoading } = useMongoDBCollection({ limit: 50 });
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
