@@ -174,16 +174,19 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const liveRef = useMemoFirebase(() => rawProduct?.sku ? doc(db, 'product_live_data', rawProduct.sku) : null, [db, rawProduct?.sku]);
   const { data: liveDataDoc } = useDoc(liveRef);
 
-  // Combine product with live data
+  // Combine product with live data (Merge MongoDB migrated data with Firestore live data)
   const product = React.useMemo(() => {
     if (!rawProduct) return null;
+    const baseLiveData = rawProduct.liveData || {};
+    const liveData = liveDataDoc ? {
+      mrp: liveDataDoc.mrp ?? baseLiveData.mrp,
+      sahimed_price: liveDataDoc.sahimed_price ?? baseLiveData.sahimed_price,
+      stock_quantity: liveDataDoc.stock_quantity ?? baseLiveData.stock_quantity
+    } : baseLiveData;
+
     return {
       ...rawProduct,
-      liveData: liveDataDoc ? {
-        mrp: liveDataDoc.mrp,
-        sahimed_price: liveDataDoc.sahimed_price,
-        stock_quantity: liveDataDoc.stock_quantity
-      } : null
+      liveData
     };
   }, [rawProduct, liveDataDoc]);
 
@@ -202,7 +205,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   
   const genericAlt = genericAlternatives?.find((a: any) => 
     (a.isGeneric === true || a.isGeneric === "true") && 
-    String(a.id) !== String(product?.id)
+    String(a.id || a._id) !== String(product?.id || product?._id)
   );
 
   const hasGenericAlt = !!genericAlt;
@@ -221,18 +224,21 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const switchSavingsPct = brandedMrp > 0 ? Math.round((switchSavingsAmt / brandedMrp) * 100) : 0;
 
   useEffect(() => {
-    if (product) {
+    if (product || productLoading === false) {
       console.log("[ProductPage Debug]", {
         id,
-        productName: product.name,
-        brandedPrice,
-        brandedMrp,
-        genericFound: hasGenericAlt,
-        genericPrice,
-        showComparison
+        found: !!product,
+        productName: product?.name,
+        moleculeId: product?.moleculeId,
+        isBranded,
+        genericAlternativesCount: genericAlternatives?.length || 0,
+        genericAltFound: !!genericAlt,
+        genericAltName: genericAlt?.name,
+        showComparison,
+        switchSavingsAmt
       });
     }
-  }, [id, product?.name, brandedPrice, brandedMrp, hasGenericAlt, genericPrice, showComparison]);
+  }, [id, productLoading, product?.name, product?.moleculeId, isBranded, genericAlternatives?.length, genericAlt?.name, showComparison, switchSavingsAmt]);
 
   if (productLoading) {
     return (<div className="min-h-screen bg-[#F8F8F8]"><Navbar /><main className="max-w-7xl mx-auto px-4 py-12"><Skeleton className="h-[400px] rounded-[40px]" /></main></div>);
