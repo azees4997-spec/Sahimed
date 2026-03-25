@@ -232,6 +232,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         moleculeId: product?.moleculeId,
         isBranded,
         genericAlternativesCount: genericAlternatives?.length || 0,
+        alternativesSample: genericAlternatives?.slice(0, 3).map(a => ({ 
+          name: a.name, 
+          isGeneric: a.isGeneric,
+          id: a.id || a._id 
+        })),
         genericAltFound: !!genericAlt,
         genericAltName: genericAlt?.name,
         showComparison,
