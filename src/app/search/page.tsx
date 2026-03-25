@@ -137,7 +137,7 @@ function SaveMoreStrip({ query: rawQ }: { query: string }) {
 
         if (targetMolId) {
           // 2. Find generic alternatives with the same moleculeId from MongoDB
-          const resGen = await fetch(`/api/products?moleculeId=${encodeURIComponent(targetMolId)}&limit=10`);
+          const resGen = await fetch(`/api/products?moleculeId=${encodeURIComponent(targetMolId)}&isGeneric=true&limit=10`);
           const alternatives = await resGen.json();
           const gen = alternatives.find((a: any) => 
             (a.isGeneric === true || a.isGeneric === "true") && 

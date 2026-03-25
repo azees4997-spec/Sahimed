@@ -196,6 +196,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   // 4. Fetch generic alternatives from MongoDB
   const { data: genericAlternatives } = useMongoDBCollection({ 
     moleculeId: product?.moleculeId,
+    isGeneric: true,
     limit: 10 
   });
   

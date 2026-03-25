@@ -14,6 +14,7 @@ export async function GET(request: Request) {
     const collection = db.collection('products');
 
     const moleculeId = searchParams.get('moleculeId');
+    const isGeneric = searchParams.get('isGeneric');
 
     const query: any = {};
     if (category) {
@@ -21,6 +22,9 @@ export async function GET(request: Request) {
     }
     if (moleculeId) {
       query.moleculeId = moleculeId;
+    }
+    if (isGeneric !== null) {
+      query.isGeneric = isGeneric === 'true';
     }
     if (q) {
       query.$or = [

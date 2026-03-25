@@ -8,6 +8,7 @@ export function useMongoDBCollection<T = any>(options: {
   category?: string; 
   q?: string;
   moleculeId?: string;
+  isGeneric?: boolean;
 } = {}) {
   const [data, setData] = useState<T[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,6 +23,7 @@ export function useMongoDBCollection<T = any>(options: {
         if (options.limit) params.append('limit', options.limit.toString());
         if (options.category) params.append('category', options.category);
         if (options.moleculeId) params.append('moleculeId', options.moleculeId);
+        if (options.isGeneric !== undefined) params.append('isGeneric', options.isGeneric.toString());
         if (options.q) params.append('q', options.q);
 
         const res = await fetch(`/api/products?${params.toString()}`);
