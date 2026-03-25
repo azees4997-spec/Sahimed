@@ -12,15 +12,28 @@ export async function GET(
     const client = await clientPromise;
     const db = client.db('sahimed');
     const collection = db.collection('products');
+    console.log(`[API Debug] Fetching product ID: ${id}`);
+    const count = await collection.countDocuments();
+    console.log(`[API Debug] Total products in collection: ${count}`);
 
     const product = await collection.findOne({ _id: id as any });
+    console.log(`[API Debug] Result found: ${!!product}`);
 
     if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+      // Diagnostic check: find one product to see the ID format
+      const sample = await collection.findOne({});
+      console.log(`[API Debug] Sample product ID format: ${sample?._id} (type: ${typeof sample?._id})`);
+      return NextResponse.json({ 
+        error: 'Product not found', 
+        idSearched: id,
+        totalInDb: count,
+        sampleId: sample?._id
+      }, { status: 404 });
     }
 
     return NextResponse.json(product);
   } catch (e: any) {
+    console.error(`[API Debug] Error: ${e.message}`);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
