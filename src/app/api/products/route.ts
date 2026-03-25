@@ -27,30 +27,34 @@ export async function GET(request: Request) {
       query.isGeneric = isGeneric === 'true';
     }
     if (q) {
-      // Build a fuzzy regex to ignore hyphens/spaces (e.g. "dflax" matches "d-flaxane")
-      const cleanQ = q.replace(/[^a-zA-Z0-9]/g, '');
-      if (cleanQ) {
-        // Allows common separators like +, /, (, ), spaces, and hyphens between characters
-        const fuzzyRegex = cleanQ.split('').join('[- /+()]*');
-        query.$or = [
-          { name: { $regex: fuzzyRegex, $options: 'i' } },
-          { saltComposition: { $regex: fuzzyRegex, $options: 'i' } },
-          { salt: { $regex: fuzzyRegex, $options: 'i' } },
-          { composition: { $regex: fuzzyRegex, $options: 'i' } },
-          { molecule: { $regex: fuzzyRegex, $options: 'i' } }
-        ];
-      } else {
-        query.$or = [
-          { name: { $regex: q, $options: 'i' } },
-          { saltComposition: { $regex: q, $options: 'i' } }
-        ];
-      }
+      // 1. Exact/Substring match (High Priority)
+      // 2. Fuzzy match (Hyphen/Space insensitive): replace symbols with .* to be more inclusive
+      const fuzzy = q.replace(/[^a-zA-Z0-9]/g, '.*').split('').join('.*');
+      
+      console.log(`[Search API] Querying: "${q}" (Fuzzy: "${fuzzy}")`);
+
+      query.$or = [
+        { name: { $regex: q, $options: 'i' } },
+        { name: { $regex: fuzzy, $options: 'i' } },
+        { saltComposition: { $regex: q, $options: 'i' } },
+        { saltComposition: { $regex: fuzzy, $options: 'i' } },
+        { salt: { $regex: q, $options: 'i' } },
+        { composition: { $regex: q, $options: 'i' } },
+        { molecule: { $regex: q, $options: 'i' } }
+      ];
     }
 
     const products = await collection
       .find(query)
       .limit(limitValue)
       .toArray();
+
+    console.log(`[Search API] Found ${products.length} products for "${q}"`);
+    if (products.length === 0 && q && q.length > 3) {
+      // Diagnostic: Check if these words exist AT ALL in any field
+      const terms = q.split(/\s+/);
+      console.log(`[Search API] No results. Checking individual terms: ${terms.join(', ')}`);
+    }
 
     return NextResponse.json(products);
   } catch (err: any) {
