@@ -10,6 +10,7 @@ import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { collection, query, limit, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCart } from '@/context/CartContext';
+import { useMongoDBCollection } from '@/hooks/use-mongodb';
 import Autoplay from "embla-carousel-autoplay";
 import {
   Carousel,
@@ -66,17 +67,17 @@ export default function Home() {
     });
   }, [api]);
 
-  const medicinesQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(10));
-  }, [db]);
-
   const categoriesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'categories'), orderBy('name', 'asc'), limit(12));
   }, [db]);
 
-  const { data: medicines, isLoading: isMedsLoading } = useCollection(medicinesQuery);
+  const medicinesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'medicines'), limit(50));
+  }, [db]);
+
+  const { data: medicines, isLoading } = useCollection(medicinesQuery);
   const { data: categories, isLoading: isCatsLoading } = useCollection(categoriesQuery);
 
   return (
@@ -232,7 +233,7 @@ export default function Home() {
             <h2 className="text-base font-black text-gray-900 tracking-tight">Best sellers</h2>
           </div>
           <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-4 px-1">
-            {isMedsLoading ? (
+            {isLoading ? (
               [...Array(4)].map((_, i) => <Skeleton className="min-w-[140px] aspect-[2/3] rounded-[16px]" key={i} />)
             ) : medicines?.map((p: any) => (
               <div key={p.id} className="min-w-[140px]">

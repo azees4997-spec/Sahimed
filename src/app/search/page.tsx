@@ -1,93 +1,52 @@
-
 "use client"
 
 import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
-import { Filter, Search as SearchIcon, SlidersHorizontal, Info, Loader2 } from 'lucide-react';
-import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
-import { collection, query, orderBy, where, limit, getDocs } from 'firebase/firestore';
-import { Suspense, useState, useEffect } from 'react';
+import { Filter, Search as SearchIcon, SlidersHorizontal, Info, Loader2, TrendingDown, Zap, ArrowRight } from 'lucide-react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy, limit, where, getDocs } from 'firebase/firestore';
 
 function SearchResults() {
   const searchParams = useSearchParams();
   const rawQ = searchParams.get('q')?.trim() || '';
   const c = searchParams.get('c');
+  
   const db = useFirestore();
 
-  const [filteredMedicines, setFilteredMedicines] = useState<any[] | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
+  // Fetch medicines from Firestore
+  const medicinesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    let qBase = collection(db, 'medicines');
+    if (c) {
+      return query(qBase, where('category', '==', c), limit(60));
+    }
+    return query(qBase, limit(60));
+  }, [db, c]);
 
-  useEffect(() => {
-    if (!db) return;
+  const { data: medicines, isLoading: isMedsLoading } = useCollection(medicinesQuery);
 
-    const performSearch = async () => {
-      setIsSearching(true);
-      try {
-        const resultsMap = new Map();
+  // Client-side text search fallback
+  const filteredMedicines = useMemo(() => {
+    if (!medicines) return null;
+    if (!rawQ) return medicines;
+    const term = rawQ.toLowerCase();
+    return medicines.filter(p => 
+      p.name?.toLowerCase().includes(term) || 
+      p.sku?.toLowerCase().includes(term) ||
+      p.manufacturer?.toLowerCase().includes(term)
+    );
+  }, [medicines, rawQ]);
 
-        // 1. If search term is provided, execute targeted prefix queries for name and saltComposition
-        if (rawQ.length >= 3) {
-          const vProper = rawQ.replace(/(^|[\s-])\S/g, (match) => match.toUpperCase());
-          const vUpper = rawQ.toUpperCase();
-          const vRaw = rawQ;
-          const variants = Array.from(new Set([vProper, vUpper, vRaw])).filter(v => v.length >= 3);
+  const isSearching = isMedsLoading;
 
-          const queries = variants.flatMap(v => {
-            const base = collection(db, 'medicines');
-            const qName = query(base, where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(40));
-            const qComp = query(base, where('saltComposition', '>=', v), where('saltComposition', '<=', v + '\uf8ff'), limit(40));
-            return [qName, qComp];
-          });
-
-          const snaps = await Promise.all(queries.map(q => getDocs(q)));
-          snaps.forEach(snap => {
-            snap.forEach(doc => {
-              resultsMap.set(doc.id, { id: doc.id, ...doc.data() });
-            });
-          });
-        } 
-        // 2. If no query but category is selected, fetch by category
-        else if (c) {
-          const q = query(collection(db, 'medicines'), where('category', '==', c), limit(60));
-          const snap = await getDocs(q);
-          snap.forEach(doc => {
-            resultsMap.set(doc.id, { id: doc.id, ...doc.data() });
-          });
-        } 
-        // 3. Default view: show best sellers or general catalog
-        else {
-          const q = query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(24));
-          const snap = await getDocs(q);
-          snap.forEach(doc => {
-            resultsMap.set(doc.id, { id: doc.id, ...doc.data() });
-          });
-        }
-
-        let finalResults = Array.from(resultsMap.values());
-
-        // Apply category filter client-side if a search term was used
-        if (c && rawQ.length >= 3) {
-          finalResults = finalResults.filter(m => m.category === c);
-        }
-
-        // Sort by name for consistency
-        finalResults.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-        setFilteredMedicines(finalResults);
-      } catch (err) {
-        console.error("Clinical search failure:", err);
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-    performSearch();
-  }, [db, rawQ, c]);
-
+  // Categories for the sidebar
   const categoriesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'categories'), orderBy('name', 'asc'), limit(20));
@@ -139,6 +98,8 @@ function SearchResults() {
               <Button variant="outline" className="md:hidden gap-2 rounded-full border-2 font-black text-[9px] h-10 px-5"><SlidersHorizontal className="w-3 h-3" /> Filters</Button>
             </div>
 
+            {rawQ && <SaveMoreStrip query={rawQ} />}
+
             {isSearching ? (
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                 {[...Array(6)].map((_, i) => (<Skeleton key={i} className="aspect-square rounded-[32px]" />))}
@@ -165,6 +126,75 @@ function SearchResults() {
         </div>
       </main>
     </div>
+  );
+}
+
+function SaveMoreStrip({ query: rawQ }: { query: string }) {
+  const [genericAlt, setGenericAlt] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const db = useFirestore();
+
+  useEffect(() => {
+    if (rawQ.length < 3 || !db) return;
+
+    const findGeneric = async () => {
+      setLoading(true);
+      try {
+        const q = query(collection(db, 'medicines'), limit(50));
+        const res = await getDocs(q);
+        const products = res.docs.map(d => ({ ...d.data(), id: d.id }));
+        
+        const mainProduct = products.find((p: any) => p.name.toLowerCase().includes(rawQ.toLowerCase()));
+        let targetMolId = mainProduct?.moleculeId;
+
+        if (targetMolId) {
+          const qGen = query(collection(db, 'medicines'), where('moleculeId', '==', targetMolId), limit(10));
+          const resGen = await getDocs(qGen);
+          const alternatives = resGen.docs.map(d => ({ ...d.data(), id: d.id }));
+          const gen = alternatives.find((a: any) => a.isGeneric && a.id !== mainProduct?.id);
+          if (gen) {
+            setGenericAlt(gen);
+          }
+        }
+      } catch (err) {
+        console.warn("Substitute search error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    findGeneric();
+  }, [rawQ, db]);
+
+  if (loading || !genericAlt) return null;
+
+  return (
+    <Card className="mb-8 overflow-hidden border-none shadow-2xl bg-gradient-to-r from-accent to-accent/90 animate-in slide-in-from-top-4 duration-700">
+      <div className="p-1 px-4 bg-white/10 flex items-center justify-between">
+         <div className="flex items-center gap-2">
+            <TrendingDown className="w-3 h-3 text-white" />
+            <span className="text-[8px] font-black text-white tracking-[0.2em] uppercase">Save more with SahiMed</span>
+         </div>
+         <Badge variant="outline" className="text-[7px] font-black text-white border-white/20 px-2 py-0 border-none bg-white/10">Clinical recommended</Badge>
+      </div>
+      <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-6 text-white text-center sm:text-left">
+          <div className="bg-white/10 p-3 rounded-2xl border border-white/20">
+             <Zap className="w-6 h-6 fill-white" />
+          </div>
+          <div>
+            <h3 className="text-xl font-black tracking-tight leading-tight">Switch to generic alternative</h3>
+            <p className="text-[10px] font-bold text-white/70 tracking-widest mt-1">Same clinical composition, upto 60% lower price.</p>
+          </div>
+        </div>
+        
+        <Link href={`/product/${genericAlt.id}`} className="w-full sm:w-auto">
+          <Button className="bg-white text-accent hover:bg-white/90 rounded-full h-14 px-10 font-black tracking-widest text-[11px] gap-3 w-full shadow-2xl border-none">
+            View {genericAlt.name} <ArrowRight className="w-4 h-4" />
+          </Button>
+        </Link>
+      </div>
+    </Card>
   );
 }
 

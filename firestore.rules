@@ -64,13 +64,13 @@ service cloud.firestore {
       }
     }
 
+    // Clinical catalog: Publicly readable for the storefront
     match /medicines/{medicineId} {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }
 
-    // Explicit public read for inventory and live pricing
-    // REQUIRED for storefront real-time sync
+    // Live pricing: Publicly readable for live stock/price updates
     match /product_live_data/{sku} {
       allow read: if true;
       allow write: if isAdmin();

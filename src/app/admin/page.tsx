@@ -48,7 +48,9 @@ import {
   Zap,
   Filter,
   Calendar,
-  X
+  X,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -84,6 +86,7 @@ import {
   useAuth, 
   useMemoFirebase, 
   useCollection,
+  useFunctions,
   setDocumentNonBlocking,
   updateDocumentNonBlocking,
   deleteDocumentNonBlocking,
@@ -92,11 +95,13 @@ import {
 } from '@/firebase';
 import { doc, collection, query, collectionGroup, getDoc, getDocs, serverTimestamp, orderBy, where, writeBatch, limit } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { httpsCallable } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
+import { useMongoDBCollection } from '@/hooks/use-mongodb';
 
 function SectionHeader({ title, subtitle, onBack, children }: { title: string, subtitle: string, onBack?: () => void, children?: React.ReactNode }) {
   return (
@@ -488,29 +493,19 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
   }, [searchTerm]);
 
   useEffect(() => {
-    if (searchTerm.trim().length >= 2 && db) {
+    if (searchTerm.trim().length >= 2) {
       setIsSearching(true);
       const term = searchTerm.trim();
-      const vUpper = term.toUpperCase();
-      const vProper = term.replace(/(^|[\s-])\S/g, (match) => match.toUpperCase());
-      const vRaw = term;
-      const variants = Array.from(new Set([vProper, vUpper, vRaw])).filter(v => v.length >= 2);
       
       const fetchSuggestions = async () => {
         try {
-          const queries = variants.map(v => 
-            query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(5))
-          );
-          const snaps = await Promise.all(queries.map(q => getDocs(q)));
-          const resultsMap = new Map();
-          snaps.forEach(snap => {
-            snap.forEach(doc => {
-              resultsMap.set(doc.id, { id: doc.id, ...doc.data() });
-            });
-          });
-          setSuggestions(Array.from(resultsMap.values()).slice(0, 5));
+          const res = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=10`);
+          if (res.ok) {
+            const data = await res.json();
+            setSuggestions(data.map((p: any) => ({ ...p, id: p._id || p.id })));
+          }
         } catch (error) {
-          console.warn("Suggestion link error:", error);
+          console.warn("Suggestion fetch error:", error);
         } finally {
           setIsSearching(false);
         }
@@ -522,19 +517,12 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
       setSuggestions([]);
       setIsSearching(false);
     }
-  }, [searchTerm, db]);
+  }, [searchTerm]);
 
-  const medsQuery = useMemoFirebase(() => {
-    if (!db || !isVerified) return null;
-    if (debouncedSearch.trim()) {
-      const term = debouncedSearch.trim();
-      const vProper = term.replace(/(^|[\s-])\S/g, (match) => match.toUpperCase());
-      return query(collection(db, 'medicines'), where('name', '>=', vProper), where('name', '<=', vProper + '\uf8ff'), limit(2));
-    }
-    return query(collection(db, 'medicines'), orderBy('name', 'asc'), limit(2));
-  }, [db, isVerified, debouncedSearch]);
-
-  const { data: medicines, isLoading } = useCollection(medsQuery);
+  const { data: medicines, isLoading, refetch } = useMongoDBCollection({
+    q: debouncedSearch,
+    limit: 50
+  });
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
@@ -597,7 +585,26 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
                 <tr key={med.id} className="hover:bg-gray-50/50">
                   <td className="px-10 py-8"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border flex items-center justify-center overflow-hidden">{med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-6 h-6 text-gray-200" />}</div><div className="flex flex-col"><span className="font-black text-sm">{med.name}</span><span className="text-[9px] text-gray-400 uppercase">{med.sku} • {med.manufacturer}</span></div></div></td>
                   <td className="px-10 py-8"><Badge variant="outline" className="font-black text-[8px]">{med.category}</Badge></td>
-                  <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => { setEditingItem(med); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button><Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'medicines', med.id))}><Trash2 className="w-4 h-4 text-red-300" /></Button></div></td>
+                  <td className="px-10 py-8 text-right">
+                     <div className="flex justify-end gap-2">
+                       <Button variant="ghost" size="icon" onClick={() => { setEditingItem(med); setIsFormOpen(true); }}>
+                         <Edit2 className="w-4 h-4 text-gray-400" />
+                       </Button>
+                       <Button variant="ghost" size="icon" onClick={async () => {
+                         if (confirm("Delete this product from MongoDB & Firestore?")) {
+                           const docId = med._id || med.id;
+                           // 1. Delete from MongoDB
+                           await fetch(`/api/products/${docId}`, { method: 'DELETE' });
+                           // 2. Delete from Firestore (legacy)
+                           deleteDocumentNonBlocking(doc(db, 'medicines', docId));
+                           toast({ title: "Product deleted" });
+                           refetch?.();
+                         }
+                       }}>
+                         <Trash2 className="w-4 h-4 text-red-300" />
+                       </Button>
+                     </div>
+                   </td>
                 </tr>
               ))}
             </tbody>
@@ -616,6 +623,7 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 }
 
 function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const { toast } = useToast();
   const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc'), limit(100)), [db]);
   const { data: molecules } = useCollection(molsQuery);
   const [form, setForm] = useState({
@@ -645,16 +653,51 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     }
   }, [initialData, db]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const docId = initialData?.id || form.sku;
-    const staticPayload = { ...form, updatedAt: serverTimestamp() };
-    const livePayload = { mrp: Number(liveData.mrp), sahimed_price: Number(liveData.price), stock_quantity: Number(liveData.availableQuantity), updatedAt: serverTimestamp() };
-    setDocumentNonBlocking(doc(db, 'medicines', docId), staticPayload, { merge: true });
-    if (form.sku) {
-      setDocumentNonBlocking(doc(db, 'product_live_data', form.sku), livePayload, { merge: true });
+    const docId = initialData?.id || initialData?._id || form.sku;
+    if (!docId) {
+      toast({ variant: 'destructive', title: "Error", description: "Sku is required for new products" });
+      return;
     }
-    onSuccess();
+
+    const staticPayload = { ...form };
+    const livePayload = { 
+      mrp: Number(liveData.mrp), 
+      sahimed_price: Number(liveData.price), 
+      stock_quantity: Number(liveData.availableQuantity) 
+    };
+
+    const combinedPayload = {
+      ...staticPayload,
+      liveData: livePayload,
+      id: docId
+    };
+
+    try {
+      // 1. Sync to MongoDB
+      const method = initialData ? 'PUT' : 'POST';
+      const url = initialData ? `/api/products/${docId}` : '/api/products';
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(combinedPayload)
+      });
+      
+      if (!res.ok) throw new Error('Failed to sync with MongoDB');
+
+      // 2. Legacy Sync to Firestore
+      setDocumentNonBlocking(doc(db, 'medicines', docId), { ...staticPayload, updatedAt: serverTimestamp() }, { merge: true });
+      if (form.sku) {
+        setDocumentNonBlocking(doc(db, 'product_live_data', form.sku), { ...livePayload, updatedAt: serverTimestamp() }, { merge: true });
+      }
+
+      toast({ title: "Product synchronized", description: "Updated in MongoDB and Firestore" });
+      onSuccess();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: "Sync failed", description: err.message });
+    }
   };
 
   return (
@@ -733,6 +776,7 @@ function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 }
 
 function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const { toast } = useToast();
   const [form, setForm] = useState({ name: initialData?.name || '', description: initialData?.description || '', imageUrl: initialData?.imageUrl || '' });
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -792,6 +836,7 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
 }
 
 function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const { toast } = useToast();
   const [form, setForm] = useState({ molecule: initialData?.molecule || '', masterId: initialData?.masterId || '', form: initialData?.form || 'Tablet' });
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -837,6 +882,224 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
             {statusFilter !== 'Completed' && (<Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black text-[10px] bg-primary text-white gap-2"><Wand2 className="w-3.5 h-3.5" /> Digitize</Button>)}
           </Card>
         ))}
+      </div>
+
+      <Dialog open={!!selectedEnquiry} onOpenChange={o => !o && setSelectedEnquiry(null)}>
+        <DialogContent className="rounded-[40px] max-w-5xl border-none p-0 overflow-hidden">
+          <div className="bg-primary p-8 text-white flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-2xl font-black">Clinical digitization</DialogTitle>
+              <p className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">Powered by Genkit AI</p>
+            </div>
+          </div>
+          <div className="p-8 h-[80vh] overflow-hidden flex flex-col md:flex-row gap-8">
+             <div className="flex-1 bg-gray-50 rounded-[32px] border overflow-hidden relative group">
+                {selectedEnquiry?.imageUrl && <img src={selectedEnquiry.imageUrl} className="w-full h-full object-contain" alt="Prescription" />}
+                <div className="absolute top-6 left-6 flex gap-2">
+                  <Badge className="bg-white/90 backdrop-blur text-primary border-none font-black text-[9px] px-3 py-1.5 shadow-sm">Patient: {selectedEnquiry?.patientName}</Badge>
+                </div>
+             </div>
+             <div className="w-full md:w-[400px] flex flex-col gap-6 overflow-y-auto pr-2 scrollbar-hide">
+                <DigitizePanel enquiry={selectedEnquiry} db={db} onComplete={() => setSelectedEnquiry(null)} />
+             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function DigitizePanel({ enquiry, db, onComplete }: { enquiry: any, db: any, onComplete: () => void }) {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [meds, setMeds] = useState<any[]>(enquiry?.digitizedData?.medications || []);
+  const [summary, setSummary] = useState(enquiry?.digitizedData?.analysisSummary || '');
+  const [isLegible, setIsLegible] = useState(enquiry?.digitizedData?.isLegible ?? true);
+  const { toast } = useToast();
+  const functions = useFunctions();
+
+  const handleAIAnalysis = async () => {
+    if (!enquiry?.imageUrl) return;
+    setIsAnalyzing(true);
+    try {
+      const analyzeFn = httpsCallable<any, any>(functions, 'prescriptionAnalysisAndPreFillFlow');
+      const { data: result } = await analyzeFn({
+        prescriptionImageUri: enquiry.imageUrl
+      });
+
+      if (result) {
+        setMeds(result.medications || []);
+        setSummary(result.analysisSummary || '');
+        setIsLegible(result.isLegible);
+        toast({ title: "Analysis complete", description: "Medications extracted successfully." });
+      }
+    } catch (err) {
+      console.error("AI Analysis Error:", err);
+      toast({ variant: "destructive", title: "Analysis failed", description: "Cloud processing error." });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const updateMed = (index: number, field: string, value: any) => {
+    const newMeds = [...meds];
+    newMeds[index] = { ...newMeds[index], [field]: value };
+    setMeds(newMeds);
+  };
+
+  const removeMed = (index: number) => {
+    setMeds(meds.filter((_, i) => i !== index));
+  };
+
+  const addMed = () => {
+    setMeds([...meds, { drugName: '', dosage: '', quantity: 1, instructions: '' }]);
+  };
+
+  const handleSave = async () => {
+    try {
+      // Find the specific prescription document within the user's subcollection
+      // Note: enquiry.id is the document ID, but we need the path. 
+      // Since it's from collectionGroup, we can use the ref if available, or build it.
+      // But useCollection with collectionGroup usually gives docs with id and data.
+      // We need to find the user ID. 
+      // Most prescriptions uploaded in this app are at /userProfiles/{userId}/prescriptions/{id}
+      
+      // Let's assume enquiry has userId or we can extract it from the path if we had access to the doc object.
+      // Since we are using useCollection hook, it might not return the full path easily.
+      // However, the blueprint says userProfiles/{userId}/prescriptions.
+      
+      // I'll try to find the document reference.
+      const userId = enquiry.userId;
+      if (!userId) {
+        toast({ variant: "destructive", title: "Error", description: "User ID not found for this enquiry." });
+        return;
+      }
+
+      const docRef = doc(db, 'userProfiles', userId, 'prescriptions', enquiry.id);
+      
+      await updateDocumentNonBlocking(docRef, {
+        digitizedData: {
+          medications: meds,
+          analysisSummary: summary,
+          isLegible: isLegible,
+          digitizedAt: serverTimestamp()
+        },
+        status: 'Digitized'
+      });
+
+      toast({ title: "Saving digital record", description: "Prescription successfully digitized." });
+      onComplete();
+    } catch (err) {
+      toast({ variant: "destructive", title: "Save failed" });
+    }
+  };
+
+  return (
+    <div className="space-y-6 flex flex-col h-full">
+      <div className="space-y-4">
+        <Button 
+          onClick={handleAIAnalysis} 
+          disabled={isAnalyzing} 
+          className="w-full h-16 rounded-2xl bg-accent hover:bg-accent/90 text-white font-black tracking-widest gap-3 shadow-xl shadow-accent/20"
+        >
+          {isAnalyzing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+          {meds.length > 0 ? "Re-run AI Analysis" : "Auto-digitize with AI"}
+        </Button>
+
+        {!isLegible && (
+          <div className="bg-red-50 p-4 rounded-xl border border-red-100 flex gap-3">
+             <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
+             <p className="text-[10px] font-bold text-red-800 leading-tight">AI flagged this image as potentially illegible. Please review manually.</p>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 space-y-4 overflow-y-auto pr-2 scrollbar-hide min-h-0">
+        <div className="flex items-center justify-between">
+          <h3 className="text-[10px] font-black text-gray-400 tracking-widest uppercase">Medications ({meds.length})</h3>
+          <Button variant="ghost" size="sm" onClick={addMed} className="h-8 rounded-lg font-black text-[9px] text-primary gap-1"><PlusCircle className="w-3 h-3" /> Add item</Button>
+        </div>
+
+        <div className="space-y-3">
+          {meds.map((med, i) => (
+            <div key={i} className="bg-white p-5 rounded-2xl border border-gray-100 space-y-4 relative group/item hover:border-primary/20 transition-colors shadow-sm">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => removeMed(i)} 
+                className="absolute top-4 right-4 h-8 w-8 rounded-full text-gray-300 hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+              
+              <div className="space-y-2">
+                <Label className="text-[8px] font-black text-gray-400">Drug name</Label>
+                <Input 
+                  value={med.drugName} 
+                  onChange={e => updateMed(i, 'drugName', e.target.value)} 
+                  className="h-10 rounded-xl bg-gray-50 border-none font-bold text-xs" 
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-[8px] font-black text-gray-400">Dosage</Label>
+                  <Input 
+                    value={med.dosage} 
+                    onChange={e => updateMed(i, 'dosage', e.target.value)} 
+                    className="h-10 rounded-xl bg-gray-50 border-none font-bold text-xs" 
+                    placeholder="e.g. 500mg"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[8px] font-black text-gray-400">Qty</Label>
+                  <Input 
+                    type="number" 
+                    value={med.quantity} 
+                    onChange={e => updateMed(i, 'quantity', parseInt(e.target.value))} 
+                    className="h-10 rounded-xl bg-gray-50 border-none font-bold text-xs" 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[8px] font-black text-gray-400">Instructions</Label>
+                <Input 
+                  value={med.instructions} 
+                  onChange={e => updateMed(i, 'instructions', e.target.value)} 
+                  className="h-10 rounded-xl bg-gray-50 border-none font-bold text-xs italic" 
+                  placeholder="e.g. 1-0-1 after food"
+                />
+              </div>
+            </div>
+          ))}
+
+          {meds.length === 0 && !isAnalyzing && (
+            <div className="py-12 text-center border-2 border-dashed rounded-[32px] border-gray-100">
+               <ClipboardList className="w-8 h-8 text-gray-200 mx-auto mb-3" />
+               <p className="text-[10px] font-black text-gray-300 tracking-widest uppercase">No medications added</p>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2 pt-4">
+          <Label className="text-[10px] font-black text-gray-400 tracking-widest uppercase ml-1">AI Assistant Notes</Label>
+          <Textarea 
+            value={summary} 
+            onChange={e => setSummary(e.target.value)} 
+            placeholder="AI observations..." 
+            className="rounded-2xl bg-gray-50 border-none font-bold text-xs min-h-[100px] resize-none p-4"
+          />
+        </div>
+      </div>
+
+      <div className="pt-6 border-t mt-auto">
+        <Button 
+          onClick={handleSave} 
+          disabled={meds.length === 0}
+          className="w-full h-16 rounded-full font-black tracking-widest bg-primary text-white shadow-2xl gap-3"
+        >
+          Confirm & Digitization <ArrowRight className="w-4 h-4" />
+        </Button>
       </div>
     </div>
   );

@@ -31,8 +31,8 @@ import {
   DialogTrigger,
   DialogTitle
 } from "@/components/ui/dialog";
-import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, query, collection, where, limit, onSnapshot } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, orderBy, limit, doc, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -45,78 +45,116 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { toast } = useToast();
   const { addToCart, getItemQuantity } = useCart();
 
-  const productRef = useMemoFirebase(() => (!db || !id) ? null : doc(db, 'medicines', id), [db, id]);
-  const { data: staticProduct, isLoading: productLoading } = useDoc(productRef);
+  // 1. Fetch main product
+  const productRef = useMemoFirebase(() => id ? doc(db, 'medicines', id) : null, [db, id]);
+  const { data: rawProduct, isLoading: productLoading } = useDoc(productRef);
+  
+  // 2. Fetch live pricing data (SKU-based)
+  const liveRef = useMemoFirebase(() => rawProduct?.sku ? doc(db, 'product_live_data', rawProduct.sku) : null, [db, rawProduct?.sku]);
+  const { data: liveDataDoc } = useDoc(liveRef);
 
-  const [liveData, setLiveData] = useState<{ mrp: number, price: number, stock: number } | null>(null);
+  // Combine product with live data
+  const product = React.useMemo(() => {
+    if (!rawProduct) return null;
+    return {
+      ...rawProduct,
+      liveData: liveDataDoc ? {
+        mrp: liveDataDoc.mrp,
+        sahimed_price: liveDataDoc.sahimed_price,
+        stock_quantity: liveDataDoc.stock_quantity
+      } : null
+    };
+  }, [rawProduct, liveDataDoc]);
 
-  useEffect(() => {
-    const sku = staticProduct?.sku || staticProduct?.id;
-    if (db && sku) {
-      const liveRef = doc(db, 'product_live_data', sku);
-      const unsubscribe = onSnapshot(liveRef, (snap) => {
-        if (snap.exists()) {
-          const d = snap.data();
-          setLiveData({ 
-            mrp: Number(d.mrp) || 0, 
-            price: Number(d.sahimed_price) || 0, 
-            stock: Number(d.stock_quantity) ?? 0 
-          });
-        }
-      });
-      return () => unsubscribe();
-    }
-  }, [db, staticProduct?.sku, staticProduct?.id]);
-
-  const molRef = useMemoFirebase(() => (!db || !staticProduct?.moleculeId) ? null : doc(db, 'moleculeMaster', staticProduct.moleculeId), [db, staticProduct?.moleculeId]);
+  // 3. Fetch molecule data
+  const molRef = useMemoFirebase(() => product?.moleculeId ? doc(db, 'moleculeMaster', product.moleculeId) : null, [db, product?.moleculeId]);
   const { data: molData } = useDoc(molRef);
 
-  const alternativesQuery = useMemoFirebase(() => {
-    if (!db || !staticProduct?.moleculeId || staticProduct?.isGeneric) return null;
-    return query(collection(db, 'medicines'), where('moleculeId', '==', staticProduct.moleculeId), where('isGeneric', '==', true), limit(1));
-  }, [db, staticProduct?.moleculeId, staticProduct?.isGeneric]);
+  // 4. Fetch generic alternatives
+  const genericQuery = useMemoFirebase(() => {
+    if (!product?.moleculeId) return null;
+    return query(collection(db, 'medicines'), where('moleculeId', '==', product.moleculeId), limit(10));
+  }, [db, product?.moleculeId]);
   
-  const { data: genericAlternatives } = useCollection(alternativesQuery);
-  const genericAlt = genericAlternatives?.[0];
+  const { data: rawAlternatives } = useCollection(genericQuery);
 
-  const [altLiveData, setAltLiveData] = useState<{ price: number, mrp: number, stock: number } | null>(null);
+  // We need live data for alternatives too to show correct "Save" badges
+  // However, fetching live data for 10 items in a loop with hooks is not ideal.
+  // For now, we'll use the static price in alternatives or assume they'll load when navigated to.
+  const genericAlternatives = rawAlternatives;
 
-  useEffect(() => {
-    const altSku = genericAlt?.sku || genericAlt?.id;
-    if (db && altSku) {
-      const liveRef = doc(db, 'product_live_data', altSku);
-      const unsubscribe = onSnapshot(liveRef, (snap) => {
-        if (snap.exists()) {
-          const d = snap.data();
-          setAltLiveData({ 
-            price: Number(d.sahimed_price) || 0, 
-            mrp: Number(d.mrp) || 0, 
-            stock: Number(d.stock_quantity) ?? 0 
-          });
-        }
-      });
-      return () => unsubscribe();
-    }
-  }, [db, genericAlt?.sku, genericAlt?.id]);
-
-  if (productLoading || !staticProduct) {
+  if (productLoading) {
     return (<div className="min-h-screen bg-[#F8F8F8]"><Navbar /><main className="max-w-7xl mx-auto px-4 py-12"><Skeleton className="h-[400px] rounded-[40px]" /></main></div>);
   }
 
-  const isBranded = !staticProduct.isGeneric;
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-[#F8F8F8]">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 py-20 text-center">
+          <div className="bg-white rounded-[40px] p-16 shadow-sm border border-gray-100 max-w-lg mx-auto">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Info className="w-8 h-8 text-orange-400" />
+            </div>
+            <h1 className="text-2xl font-black tracking-tight mb-2">Medicine not found</h1>
+            <p className="text-gray-500 font-bold text-sm mb-8">The requested clinical record could not be retrieved from our secure database.</p>
+            <Button onClick={() => window.location.href = '/search'} className="rounded-full h-14 px-10 font-black tracking-widest">Browse catalog</Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const isGeneric = product.isGeneric === true || product.isGeneric === "true";
+  const isBranded = !isGeneric;
+  
+  const genericAlt = genericAlternatives?.find((a: any) => 
+    (a.isGeneric === true || a.isGeneric === "true") && 
+    String(a.id) !== String(product.id)
+  );
+
   const hasGenericAlt = !!genericAlt;
+  
+  // Logic: Show comparison ONLY if:
+  // 1. Current product is BRANDED
+  // 2. A GENERIC alternative exists
   const showComparison = isBranded && hasGenericAlt;
 
-  const brandedMrp = (liveData?.mrp && liveData.mrp > 0) ? liveData.mrp : (staticProduct.mrp || staticProduct.price + 50);
-  const genericPrice = (altLiveData?.price && altLiveData.price > 0) ? altLiveData.price : (genericAlt?.price || 0);
+  // Defensive pricing logic
+  const pPriceRaw = product.liveData?.sahimed_price || product.price || 0;
+  const pMrpRaw = product.liveData?.mrp || product.mrp || (pPriceRaw + 20);
+
+  const brandedPrice = Number(pPriceRaw) || 0;
+  const brandedMrp = Number(pMrpRaw) || (brandedPrice + 20);
   
+  const genPriceRaw = genericAlt ? (genericAlt.liveData?.sahimed_price || genericAlt.price || 0) : 0;
+  const genericPrice = Number(genPriceRaw) || 0;
+  
+  // Savings calculations
   const switchSavingsAmt = Math.max(0, brandedMrp - genericPrice);
   const switchSavingsPct = brandedMrp > 0 ? Math.round((switchSavingsAmt / brandedMrp) * 100) : 0;
 
-  const ComparisonCard = ({ product, live, label, isAlt = false }: { product: any, live: any, label: string, isAlt?: boolean }) => {
-    const qty = getItemQuantity(product.id);
-    const pPrice = (live?.price && live.price > 0) ? live.price : product.price;
-    const pMrp = (live?.mrp && live.mrp > 0) ? live.mrp : (product.mrp || product.price + 50);
+  useEffect(() => {
+    console.log("[ProductPage Debug]", {
+      id,
+      productName: product.name,
+      brandedPrice,
+      brandedMrp,
+      genericFound: hasGenericAlt,
+      genericPrice,
+      showComparison
+    });
+  }, [id, product.name, brandedPrice, brandedMrp, hasGenericAlt, genericPrice, showComparison]);
+
+  const ComparisonCard = ({ product, label, isAlt = false }: { product: any, label: string, isAlt?: boolean }) => {
+    if (!product) return null;
+    
+    const qty = getItemQuantity(product.id || product._id);
+    const pPriceRaw = product.liveData?.sahimed_price || product.price || 0;
+    const pMrpRaw = product.liveData?.mrp || product.mrp || (Number(pPriceRaw) + 20);
+
+    const pPrice = Number(pPriceRaw) || 0;
+    const pMrp = Number(pMrpRaw) || (pPrice + 20);
     
     let displaySavingsAmt = Math.max(0, pMrp - pPrice);
     let displaySavingsPct = pMrp > 0 ? Math.round((displaySavingsAmt / pMrp) * 100) : 0;
@@ -126,13 +164,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       displaySavingsPct = brandedMrp > 0 ? Math.round((displaySavingsAmt / brandedMrp) * 100) : 0;
     }
 
-    const unitMatch = product.packSize?.match(/(\d+)/);
+    const unitMatch = String(product.packSize || '').match(/(\d+)/);
     const unitCount = (unitMatch && parseInt(unitMatch[1]) > 0) ? parseInt(unitMatch[1]) : 1;
     const unitPrice = pPrice / unitCount;
 
     const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
       ? product.imageUrl
-      : `https://picsum.photos/seed/${product.id}/300/300`;
+      : `https://picsum.photos/seed/${product.id || 'err'}/300/300`;
 
     return (
       <Card className={cn(
@@ -203,7 +241,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
         <div className="mt-3">
           <Button 
-            onClick={() => addToCart({ ...product, price: pPrice, mrp: pMrp })} 
+            onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })} 
             className={cn("w-full h-9 sm:h-12 rounded-full font-black text-[8px] sm:text-[10px] tracking-widest gap-2 shadow-lg active:scale-95 transition-all", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
           >
             {qty > 0 ? `In bag (${qty})` : "Add"} <ShoppingCart className="w-3 sm:w-4 h-3 sm:h-4" />
@@ -222,10 +260,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            <div className="inline-flex items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10 shadow-sm">
               <Dna className="w-3.5 h-3.5 text-primary" />
               <span className="text-[10px] sm:text-base font-black text-primary tracking-[0.1em]">
-                {molData?.molecule || staticProduct.name}
+                {molData?.molecule || product.name}
               </span>
            </div>
-           {staticProduct.prescriptionRequired && (
+           {product.prescriptionRequired && (
              <Badge className="bg-red-50 text-red-600 border-red-100 rounded-full font-black text-[8px] px-2.5 py-1.5 tracking-widest flex items-center gap-1.5 shadow-sm shrink-0">
                <AlertTriangle className="w-3 h-3" /> Rx
              </Badge>
@@ -248,13 +286,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           {showComparison ? (
             <div className="grid grid-cols-2 gap-2 sm:gap-10 items-stretch">
               <ComparisonCard 
-                product={staticProduct} 
-                live={liveData} 
+                product={product} 
                 label="Current selection" 
               />
               <ComparisonCard 
                 product={genericAlt} 
-                live={altLiveData} 
                 label="Recommended choice" 
                 isAlt 
               />
@@ -262,8 +298,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           ) : (
             <div className="flex justify-center">
               <ComparisonCard 
-                product={staticProduct} 
-                live={liveData} 
+                product={product} 
                 label={isBranded ? "Branded selection" : "Generic choice"} 
               />
             </div>
@@ -282,11 +317,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                <div className="max-w-4xl mx-auto divide-y divide-gray-100">
                   <div className="pb-6 space-y-2">
                      <div className="flex items-center gap-3"><ClipboardList className="w-4 h-4 text-primary" /><h3 className="text-xs sm:text-lg font-black text-gray-900 tracking-tight">Primary treatment</h3></div>
-                     <p className="text-[10px] sm:text-[14px] font-bold text-gray-500 leading-relaxed">{staticProduct.treatment || "Precision clinical protocol."}</p>
+                     <p className="text-[10px] sm:text-[14px] font-bold text-gray-500 leading-relaxed">{product.treatment || "Precision clinical protocol."}</p>
                   </div>
                   <div className="pt-6 space-y-2">
                      <div className="flex items-center gap-3"><Info className="w-4 h-4 text-primary" /><h3 className="text-xs sm:text-lg font-black text-gray-900 tracking-tight">Pharmacology</h3></div>
-                     <p className="text-[10px] sm:text-[14px] font-bold text-gray-500 leading-relaxed">{staticProduct.description || "Active clinical formulation."}</p>
+                     <p className="text-[10px] sm:text-[14px] font-bold text-gray-500 leading-relaxed">{product.description || "Active clinical formulation."}</p>
                   </div>
                </div>
             </TabsContent>
@@ -294,22 +329,22 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <TabsContent value="safety" className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
                <div className="bg-orange-50/50 p-5 rounded-[24px] border border-orange-100 flex gap-3">
                  <div className="w-10 h-10 sm:w-16 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0 border"><AlertTriangle className="w-5 h-5 text-orange-600" /></div>
-                 <div><h4 className="text-[9px] sm:text-sm font-black text-orange-600 mb-0.5">Clinical caution</h4><p className="text-[9px] sm:text-[13px] font-bold text-orange-900/70 leading-relaxed">{staticProduct.safetyAdvice || "Follow professional clinical guidance."}</p></div>
+                 <div><h4 className="text-[9px] sm:text-sm font-black text-orange-600 mb-0.5">Clinical caution</h4><p className="text-[9px] sm:text-[13px] font-bold text-orange-900/70 leading-relaxed">{product.safetyAdvice || "Follow professional clinical guidance."}</p></div>
                </div>
                <div className="bg-blue-50/50 p-5 rounded-[24px] border border-blue-100 flex gap-3">
                  <div className="w-10 h-10 sm:w-16 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0 border"><Stethoscope className="w-5 h-5 text-blue-600" /></div>
-                 <div><h4 className="text-[9px] sm:text-sm font-black text-blue-600 mb-0.5">Usage protocol</h4><p className="text-[9px] sm:text-[13px] font-bold text-blue-900/70 leading-relaxed">{staticProduct.howToUse || "Follow clinical instructions carefully."}</p></div>
+                 <div><h4 className="text-[9px] sm:text-sm font-black text-blue-600 mb-0.5">Usage protocol</h4><p className="text-[9px] sm:text-[13px] font-bold text-blue-900/70 leading-relaxed">{product.howToUse || "Follow clinical instructions carefully."}</p></div>
                </div>
             </TabsContent>
 
             <TabsContent value="interactions" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 animate-in fade-in slide-in-from-bottom-2">
               {[
-                { icon: Dna, title: "Clinical composition", text: staticProduct.saltComposition },
-                { icon: Baby, title: "Pregnancy protocol", text: staticProduct.pregnancyInteraction },
-                { icon: Milk, title: "Lactation caution", text: staticProduct.lactationInteraction },
-                { icon: Car, title: "Driving stability", text: staticProduct.drivingInteraction },
-                { icon: Package, title: "Renal safety", text: staticProduct.kidneyInteraction },
-                { icon: ShieldAlert, title: "Hepatic protocol", text: staticProduct.liverInteraction }
+                { icon: Dna, title: "Clinical composition", text: product.saltComposition },
+                { icon: Baby, title: "Pregnancy protocol", text: product.pregnancyInteraction },
+                { icon: Milk, title: "Lactation caution", text: product.lactationInteraction },
+                { icon: Car, title: "Driving stability", text: product.drivingInteraction },
+                { icon: Package, title: "Renal safety", text: product.kidneyInteraction },
+                { icon: ShieldAlert, title: "Hepatic protocol", text: product.liverInteraction }
               ].map((item, i) => (
                 <div key={i} className="bg-white p-4 rounded-[20px] border border-gray-100 flex items-start gap-3 hover:shadow-md transition-all">
                   <div className="w-8 h-8 bg-primary/5 rounded-lg flex items-center justify-center text-primary shrink-0"><item.icon className="w-4 h-4" /></div>

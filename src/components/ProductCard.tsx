@@ -15,30 +15,13 @@ export default function ProductCard({ product }: { product: Product }) {
   const db = useFirestore();
   const { toast } = useToast();
   
-  const [liveData, setLiveData] = useState<{ price: number, mrp: number, stock: number } | null>(null);
   const quantity = getItemQuantity(product.id);
 
-  useEffect(() => {
-    const sku = product.sku || product.id;
-    if (!db || !sku) return;
+  const pPriceRaw = product.liveData?.sahimed_price || product.price || 0;
+  const pMrpRaw = product.liveData?.mrp || product.mrp || (Number(pPriceRaw) + 20);
 
-    const liveRef = doc(db, 'product_live_data', sku);
-    const unsubscribe = onSnapshot(liveRef, (snap) => {
-      if (snap.exists()) {
-        const d = snap.data();
-        setLiveData({ 
-          price: Number(d.sahimed_price) || 0, 
-          mrp: Number(d.mrp) || 0, 
-          stock: Number(d.stock_quantity) ?? 0 
-        });
-      }
-    });
-
-    return () => unsubscribe();
-  }, [db, product.sku, product.id]);
-
-  const currentPrice = (liveData?.price && liveData.price > 0) ? liveData.price : product.price;
-  const currentMrp = (liveData?.mrp && liveData.mrp > 0) ? liveData.mrp : (product.mrp || product.price + 50);
+  const currentPrice = Number(pPriceRaw) || 0;
+  const currentMrp = Number(pMrpRaw) || (currentPrice + 20);
   
   const savingsPct = currentMrp > 0 ? Math.round(((currentMrp - currentPrice) / currentMrp) * 100) : 0;
 
