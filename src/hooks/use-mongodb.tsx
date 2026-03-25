@@ -62,7 +62,13 @@ export function useMongoDBDoc<T = any>(id: string | null | undefined) {
       setIsLoading(true);
       try {
         const res = await fetch(`/api/products/${id}`);
-        if (!res.ok) throw new Error('Failed to fetch product');
+        if (!res.ok) {
+          if (res.status === 404) {
+            const errorInfo = await res.json();
+            console.error("[useMongoDBDoc 404 Detail]", errorInfo);
+          }
+          throw new Error(`Failed to fetch product (Status: ${res.status})`);
+        }
         const json = await res.json();
         setData({ ...json, id: json._id || json.id });
       } catch (err: any) {
