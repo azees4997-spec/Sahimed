@@ -27,33 +27,30 @@ export async function GET(request: Request) {
       query.isGeneric = isGeneric === 'true';
     }
     if (q) {
-      // 1. Exact/Substring match (High Priority)
-      // 2. Fuzzy match (Hyphen/Space insensitive): replace symbols with .* to be more inclusive
-      const fuzzy = q.replace(/[^a-zA-Z0-9]/g, '.*').split('').join('.*');
+      console.log(`[Search API] Searching for: "${q}"`);
       
-      console.log(`[Search API] Querying: "${q}" (Fuzzy: "${fuzzy}")`);
-
       query.$or = [
         { name: { $regex: q, $options: 'i' } },
-        { name: { $regex: fuzzy, $options: 'i' } },
         { saltComposition: { $regex: q, $options: 'i' } },
-        { saltComposition: { $regex: fuzzy, $options: 'i' } },
         { salt: { $regex: q, $options: 'i' } },
         { composition: { $regex: q, $options: 'i' } },
         { molecule: { $regex: q, $options: 'i' } }
       ];
     }
 
+    const totalCount = await collection.countDocuments();
+    console.log(`[Search API] Total products in collection: ${totalCount}`);
+
     const products = await collection
       .find(query)
       .limit(limitValue)
       .toArray();
 
-    console.log(`[Search API] Found ${products.length} products for "${q}"`);
-    if (products.length === 0 && q && q.length > 3) {
-      // Diagnostic: Check if these words exist AT ALL in any field
-      const terms = q.split(/\s+/);
-      console.log(`[Search API] No results. Checking individual terms: ${terms.join(', ')}`);
+    console.log(`[Search API] Found ${products.length} products for query`);
+    
+    if (products.length === 0 && q) {
+      const sample = await collection.findOne({});
+      console.log(`[Search API] No results. DB Sample Keys: ${Object.keys(sample || {}).join(', ')}`);
     }
 
     return NextResponse.json(products);
