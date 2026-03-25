@@ -30,7 +30,8 @@ export async function GET(request: Request) {
       // Build a fuzzy regex to ignore hyphens/spaces (e.g. "dflax" matches "d-flaxane")
       const cleanQ = q.replace(/[^a-zA-Z0-9]/g, '');
       if (cleanQ) {
-        const fuzzyRegex = cleanQ.split('').join('[- ]*');
+        // Allows common separators like +, /, (, ), spaces, and hyphens between characters
+        const fuzzyRegex = cleanQ.split('').join('[- /+()]*');
         query.$or = [
           { name: { $regex: fuzzyRegex, $options: 'i' } },
           { saltComposition: { $regex: fuzzyRegex, $options: 'i' } },
