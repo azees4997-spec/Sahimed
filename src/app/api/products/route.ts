@@ -27,33 +27,36 @@ export async function GET(request: Request) {
       query.isGeneric = isGeneric === 'true';
     }
     if (q) {
-      console.log(`[Search API] Searching for: "${q}"`);
+      const startTime = Date.now();
+      const totalCount = await collection.countDocuments();
+      console.log(`[Search API] Searching for: "${q}" in ${totalCount} docs`);
       
+      // Use prefix matching first as it's much faster
       query.$or = [
+        { name: { $regex: `^${q}`, $options: 'i' } },
         { name: { $regex: q, $options: 'i' } },
         { saltComposition: { $regex: q, $options: 'i' } },
         { salt: { $regex: q, $options: 'i' } },
         { composition: { $regex: q, $options: 'i' } },
         { molecule: { $regex: q, $options: 'i' } }
       ];
+
+      const products = await collection
+        .find(query)
+        .limit(limitValue)
+        .toArray();
+
+      const duration = Date.now() - startTime;
+      console.log(`[Search API] Completed in ${duration}ms. Found ${products.length} products.`);
+
+      if (products.length === 0) {
+        // Quick check: does this exact string exist as a prefix elsewhere?
+        const check = await collection.findOne({ name: { $regex: `^${q.substring(0, 3)}`, $options: 'i' } });
+        console.log(`[Search API] No results for "${q}". Found sample with same 3-char prefix: ${check?.name || 'NONE'}`);
+      }
+
+      return NextResponse.json(products);
     }
-
-    const totalCount = await collection.countDocuments();
-    console.log(`[Search API] Total products in collection: ${totalCount}`);
-
-    const products = await collection
-      .find(query)
-      .limit(limitValue)
-      .toArray();
-
-    console.log(`[Search API] Found ${products.length} products for query`);
-    
-    if (products.length === 0 && q) {
-      const sample = await collection.findOne({});
-      console.log(`[Search API] No results. DB Sample Keys: ${Object.keys(sample || {}).join(', ')}`);
-    }
-
-    return NextResponse.json(products);
   } catch (err: any) {
     console.error("[Search API Error]", err);
     const message = err.message || "Unknown database error";
