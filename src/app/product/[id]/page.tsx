@@ -195,6 +195,44 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     moleculeId: product?.moleculeId,
     limit: 10 
   });
+  
+  // Derived state (Must be above early returns to be used in hooks)
+  const isGeneric = product?.isGeneric === true || product?.isGeneric === "true";
+  const isBranded = !isGeneric;
+  
+  const genericAlt = genericAlternatives?.find((a: any) => 
+    (a.isGeneric === true || a.isGeneric === "true") && 
+    String(a.id) !== String(product?.id)
+  );
+
+  const hasGenericAlt = !!genericAlt;
+  const showComparison = isBranded && hasGenericAlt;
+
+  const pPriceRaw = product?.liveData?.sahimed_price || product?.price || 0;
+  const pMrpRaw = product?.liveData?.mrp || product?.mrp || (Number(pPriceRaw) + 20);
+
+  const brandedPrice = Number(pPriceRaw) || 0;
+  const brandedMrp = Number(pMrpRaw) || (brandedPrice + 20);
+  
+  const genPriceRaw = genericAlt ? (genericAlt.liveData?.sahimed_price || genericAlt.price || 0) : 0;
+  const genericPrice = Number(genPriceRaw) || 0;
+  
+  const switchSavingsAmt = Math.max(0, brandedMrp - genericPrice);
+  const switchSavingsPct = brandedMrp > 0 ? Math.round((switchSavingsAmt / brandedMrp) * 100) : 0;
+
+  useEffect(() => {
+    if (product) {
+      console.log("[ProductPage Debug]", {
+        id,
+        productName: product.name,
+        brandedPrice,
+        brandedMrp,
+        genericFound: hasGenericAlt,
+        genericPrice,
+        showComparison
+      });
+    }
+  }, [id, product?.name, brandedPrice, brandedMrp, hasGenericAlt, genericPrice, showComparison]);
 
   if (productLoading) {
     return (<div className="min-h-screen bg-[#F8F8F8]"><Navbar /><main className="max-w-7xl mx-auto px-4 py-12"><Skeleton className="h-[400px] rounded-[40px]" /></main></div>);
@@ -217,47 +255,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       </div>
     );
   }
-
-  const isGeneric = product.isGeneric === true || product.isGeneric === "true";
-  const isBranded = !isGeneric;
-  
-  const genericAlt = genericAlternatives?.find((a: any) => 
-    (a.isGeneric === true || a.isGeneric === "true") && 
-    String(a.id) !== String(product.id)
-  );
-
-  const hasGenericAlt = !!genericAlt;
-  
-  // Logic: Show comparison ONLY if:
-  // 1. Current product is BRANDED
-  // 2. A GENERIC alternative exists
-  const showComparison = isBranded && hasGenericAlt;
-
-  // Defensive pricing logic
-  const pPriceRaw = product.liveData?.sahimed_price || product.price || 0;
-  const pMrpRaw = product.liveData?.mrp || product.mrp || (pPriceRaw + 20);
-
-  const brandedPrice = Number(pPriceRaw) || 0;
-  const brandedMrp = Number(pMrpRaw) || (brandedPrice + 20);
-  
-  const genPriceRaw = genericAlt ? (genericAlt.liveData?.sahimed_price || genericAlt.price || 0) : 0;
-  const genericPrice = Number(genPriceRaw) || 0;
-  
-  // Savings calculations
-  const switchSavingsAmt = Math.max(0, brandedMrp - genericPrice);
-  const switchSavingsPct = brandedMrp > 0 ? Math.round((switchSavingsAmt / brandedMrp) * 100) : 0;
-
-  useEffect(() => {
-    console.log("[ProductPage Debug]", {
-      id,
-      productName: product.name,
-      brandedPrice,
-      brandedMrp,
-      genericFound: hasGenericAlt,
-      genericPrice,
-      showComparison
-    });
-  }, [id, product.name, brandedPrice, brandedMrp, hasGenericAlt, genericPrice, showComparison]);
 
   return (
     <div className="min-h-screen bg-[#F4F7F6] pb-32 pharma-bg-pattern page-transition-wrapper">
