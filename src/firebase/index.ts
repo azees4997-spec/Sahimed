@@ -5,12 +5,14 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore'
 import { getStorage, FirebaseStorage } from 'firebase/storage';
+import { getFunctions, Functions } from 'firebase/functions';
 
 interface FirebaseSdks {
   firebaseApp: FirebaseApp;
   auth: Auth;
   firestore: Firestore;
   storage: FirebaseStorage;
+  functions: Functions;
 }
 
 /**
@@ -53,7 +55,8 @@ export function initializeFirebase(): FirebaseSdks {
     firebaseApp,
     auth: getAuth(firebaseApp),
     firestore: getFirestore(firebaseApp),
-    storage: getStorage(firebaseApp)
+    storage: getStorage(firebaseApp),
+    functions: getFunctions(firebaseApp)
   };
 
   cachedSdks = sdks;
@@ -74,7 +77,8 @@ export function getSdks(firebaseApp: FirebaseApp): FirebaseSdks {
     firebaseApp,
     auth: getAuth(firebaseApp),
     firestore: getFirestore(firebaseApp),
-    storage: getStorage(firebaseApp)
+    storage: getStorage(firebaseApp),
+    functions: getFunctions(firebaseApp)
   };
 }
 

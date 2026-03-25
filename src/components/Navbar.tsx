@@ -86,7 +86,7 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    if (!db || search.trim().length < 3) {
+    if (search.trim().length < 3) {
       setRawSuggestions([]);
       setIsSearching(false);
       return;
@@ -95,41 +95,39 @@ export default function Navbar() {
     const fetchSuggestions = async () => {
       setIsSearching(true);
       const term = search.trim();
-      const vProper = term.replace(/(^|[\s-])\S/g, (match) => match.toUpperCase());
-      const vUpper = term.toUpperCase();
-      const vRaw = term;
-      const variants = Array.from(new Set([vProper, vUpper, vRaw])).filter(v => v.length >= 3);
 
       try {
-        const medicineQueries = variants.flatMap(v => [
-          query(collection(db, 'medicines'), where('name', '>=', v), where('name', '<=', v + '\uf8ff'), limit(15)),
-          query(collection(db, 'medicines'), where('saltComposition', '>=', v), where('saltComposition', '<=', v + '\uf8ff'), limit(15))
-        ]);
+        // 1. Fetch from MongoDB API for medicines
+        const res = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=20`);
+        const mongoMeds = res.ok ? await res.json() : [];
 
-        const moleculeQueries = variants.map(v => 
-          query(collection(db, 'moleculeMaster'), where('molecule', '>=', v), where('molecule', '<=', v + '\uf8ff'), limit(15))
-        );
-
-        const allQueries = [...medicineQueries, ...moleculeQueries];
-        const snaps = await Promise.all(allQueries.map(q => getDocs(q)));
-        
-        const resultsMap = new Map();
-        
-        // Process medicine snaps
-        snaps.slice(0, medicineQueries.length).forEach(snap => {
-          snap.forEach(doc => {
-            resultsMap.set(doc.id, { id: doc.id, ...doc.data(), _type: 'medicine' });
+        // 2. Fetch from Firestore for moleculeMaster (if still needed)
+        let firestoreMols: any[] = [];
+        if (db) {
+          const vProper = term.replace(/(^|[\s-])\S/g, (match) => match.toUpperCase());
+          const vUpper = term.toUpperCase();
+          const variants = Array.from(new Set([vProper, vUpper, term])).filter(v => v.length >= 3);
+          
+          const moleculeQueries = variants.map(v => 
+            query(collection(db, 'moleculeMaster'), where('molecule', '>=', v), where('molecule', '<=', v + '\uf8ff'), limit(15))
+          );
+          const molSnaps = await Promise.all(moleculeQueries.map(q => getDocs(q)));
+          const molMap = new Map();
+          molSnaps.forEach(snap => {
+            snap.forEach(doc => {
+              molMap.set(doc.id, { id: doc.id, ...doc.data(), _type: 'molecule' });
+            });
           });
-        });
+          firestoreMols = Array.from(molMap.values());
+        }
 
-        // Process molecule snaps
-        snaps.slice(medicineQueries.length).forEach(snap => {
-          snap.forEach(doc => {
-            resultsMap.set(`mol-${doc.id}`, { id: doc.id, ...doc.data(), _type: 'molecule' });
-          });
-        });
+        const normalizedMeds = mongoMeds.map((m: any) => ({
+          ...m,
+          id: m._id || m.id,
+          _type: 'medicine'
+        }));
 
-        setRawSuggestions(Array.from(resultsMap.values()));
+        setRawSuggestions([...normalizedMeds, ...firestoreMols]);
         setShowSuggestions(true);
       } catch (err) {
         console.error("Suggestion fetch failed", err);
@@ -328,7 +326,7 @@ export default function Navbar() {
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          addToCart({ ...p, price: Number(p.price) });
+                          addToCart({ ...p, id: p._id || p.id, price: Number(p.liveData?.sahimed_price || p.price) });
                         }}
                         className="text-[9px] font-black text-primary border border-primary px-3 py-1 rounded-full mt-1 hover:bg-primary hover:text-white transition-colors"
                       >

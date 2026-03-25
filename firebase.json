@@ -1,15 +1,13 @@
-
 {
   "firestore": {
     "rules": "firestore.rules"
   },
-  "hosting": {
-    "source": ".",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "frameworksBackend": {}
+  "apphosting": {
+    "backendId": "studio",
+    "rootDir": "."
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20"
   }
 }

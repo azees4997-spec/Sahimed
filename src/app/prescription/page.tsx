@@ -22,8 +22,9 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, initializeFirebase, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -35,7 +36,7 @@ export default function PrescriptionPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   
   const { user } = useUser();
-  const db = useFirestore();
+  const { storage, firestore: db } = initializeFirebase();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -69,9 +70,15 @@ export default function PrescriptionPage() {
 
     setSubmitting(true);
     try {
+      // 1. Upload to Firebase Storage
+      const storageRef = ref(storage, `prescriptions/${user.uid}/${Date.now()}.jpg`);
+      const uploadResult = await uploadString(storageRef, image, 'data_url');
+      const downloadUrl = await getDownloadURL(uploadResult.ref);
+
+      // 2. Save to Firestore with the Storage URL
       const prescriptionData = {
         userId: user.uid,
-        imageUrl: image,
+        imageUrl: downloadUrl, // Use storage URL instead of base64
         patientName: customerName || 'Self',
         notes: notes,
         uploadDate: serverTimestamp(),
@@ -79,14 +86,15 @@ export default function PrescriptionPage() {
         phoneNumber: user.phoneNumber || ''
       };
 
-      const ref = collection(db, 'userProfiles', user.uid, 'prescriptions');
-      addDocumentNonBlocking(ref, prescriptionData);
+      const enquiryRef = collection(db, 'userProfiles', user.uid, 'prescriptions');
+      addDocumentNonBlocking(enquiryRef, prescriptionData);
       
       setTimeout(() => {
         setIsSuccess(true);
         toast({ title: "Order request sent", description: "Our team is reviewing your prescription." });
       }, 800);
     } catch (err) {
+      console.error("Upload failure:", err);
       toast({ variant: "destructive", title: "Submission failed" });
     } finally {
       setSubmitting(false);
