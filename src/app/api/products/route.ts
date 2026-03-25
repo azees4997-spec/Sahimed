@@ -33,7 +33,10 @@ export async function GET(request: Request) {
         const fuzzyRegex = cleanQ.split('').join('[- ]*');
         query.$or = [
           { name: { $regex: fuzzyRegex, $options: 'i' } },
-          { saltComposition: { $regex: fuzzyRegex, $options: 'i' } }
+          { saltComposition: { $regex: fuzzyRegex, $options: 'i' } },
+          { salt: { $regex: fuzzyRegex, $options: 'i' } },
+          { composition: { $regex: fuzzyRegex, $options: 'i' } },
+          { molecule: { $regex: fuzzyRegex, $options: 'i' } }
         ];
       } else {
         query.$or = [
