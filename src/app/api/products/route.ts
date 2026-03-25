@@ -27,9 +27,13 @@ export async function GET(request: Request) {
       query.isGeneric = isGeneric === 'true';
     }
     if (q) {
+      // Build a fuzzy regex to ignore hyphens/spaces (e.g. "dflax" matches "d-flaxane")
+      const cleanQ = q.replace(/[^a-zA-Z0-9]/g, '');
+      const fuzzyRegex = cleanQ.split('').join('[- ]*');
+      
       query.$or = [
-        { name: { $regex: q, $options: 'i' } },
-        { saltComposition: { $regex: q, $options: 'i' } }
+        { name: { $regex: fuzzyRegex, $options: 'i' } },
+        { saltComposition: { $regex: fuzzyRegex, $options: 'i' } }
       ];
     }
 
