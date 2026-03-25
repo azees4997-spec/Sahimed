@@ -37,6 +37,127 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
+const ComparisonCard = ({ 
+  product, 
+  label, 
+  isAlt = false, 
+  getItemQuantity, 
+  addToCart, 
+  showComparison, 
+  brandedMrp 
+}: { 
+  product: any, 
+  label: string, 
+  isAlt?: boolean, 
+  getItemQuantity: (id: string) => number,
+  addToCart: (p: any) => void,
+  showComparison: boolean,
+  brandedMrp: number
+}) => {
+  if (!product) return null;
+  
+  const qty = getItemQuantity(product.id || product._id);
+  const pPriceRaw = product.liveData?.sahimed_price || product.price || 0;
+  const pMrpRaw = product.liveData?.mrp || product.mrp || (Number(pPriceRaw) + 20);
+
+  const pPrice = Number(pPriceRaw) || 0;
+  const pMrp = Number(pMrpRaw) || (pPrice + 20);
+  
+  let displaySavingsAmt = Math.max(0, pMrp - pPrice);
+  let displaySavingsPct = pMrp > 0 ? Math.round((displaySavingsAmt / pMrp) * 100) : 0;
+
+  if (isAlt && showComparison) {
+    displaySavingsAmt = Math.max(0, brandedMrp - pPrice);
+    displaySavingsPct = brandedMrp > 0 ? Math.round((displaySavingsAmt / brandedMrp) * 100) : 0;
+  }
+
+  const unitMatch = String(product.packSize || '').match(/(\d+)/);
+  const unitCount = (unitMatch && parseInt(unitMatch[1]) > 0) ? parseInt(unitMatch[1]) : 1;
+  const unitPrice = pPrice / unitCount;
+
+  const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
+    ? product.imageUrl
+    : `https://picsum.photos/seed/${product.id || 'err'}/300/300`;
+
+  return (
+    <Card className={cn(
+      "rounded-[20px] sm:rounded-[32px] p-2.5 sm:p-6 flex flex-col h-full border shadow-sm transition-all overflow-hidden relative",
+      isAlt ? "bg-accent/5 border-dashed border-accent/20" : "bg-white border-gray-100",
+      !showComparison && "max-w-md mx-auto w-full"
+    )}>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[7px] sm:text-[9px] font-black text-gray-400 tracking-widest block">{label}</span>
+        {displaySavingsPct > 0 && (
+          <Badge className="bg-accent text-white text-[7px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-md tracking-tighter">
+            Save {displaySavingsPct}%
+          </Badge>
+        )}
+      </div>
+      
+      <Dialog>
+        <DialogTrigger asChild>
+          <div className="relative aspect-square w-full max-h-[120px] sm:max-h-none bg-white rounded-xl mb-2 overflow-hidden border border-gray-50 flex items-center justify-center p-2 cursor-zoom-in group/img">
+            <Image src={safeImageUrl} alt={product.name} fill sizes="(max-width: 768px) 45vw, 30vw" className="object-contain p-1 transition-transform group-hover/img:scale-105" />
+            <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
+               <Maximize2 className="w-4 h-4 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
+            </div>
+          </div>
+        </DialogTrigger>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-transparent shadow-none">
+          <DialogTitle className="sr-only">{product.name}</DialogTitle>
+          <div className="relative aspect-square w-full bg-white rounded-[40px] overflow-hidden p-8 flex items-center justify-center shadow-3xl">
+             <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-10" />
+             <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full border border-gray-100 shadow-xl flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <span className="font-black text-[10px] tracking-widest text-gray-900">{product.name}</span>
+             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="flex-1 space-y-0.5">
+        <h3 className="font-black text-[11px] sm:text-[15px] text-gray-900 leading-tight line-clamp-2 min-h-[2.2rem]">
+          {product.name}
+        </h3>
+        <p className="text-[8px] sm:text-[10px] font-black text-gray-400 tracking-tighter">
+          {product.packSize || "N/A"}
+        </p>
+        <p className="text-[8px] sm:text-[10px] font-bold text-gray-500 truncate">
+          {product.manufacturer}
+        </p>
+
+        <div className="pt-1.5 border-t border-dashed mt-1.5">
+          <div className="flex items-baseline gap-1">
+            <p className="text-lg sm:text-2xl font-black tracking-tighter text-accent">
+              ₹{Number(pPrice).toFixed(2)}
+            </p>
+            {pMrp > pPrice && (
+              <span className="text-[8px] sm:text-[10px] text-red-400 line-through font-bold">₹{Number(pMrp).toFixed(2)}</span>
+            )}
+          </div>
+          {displaySavingsAmt > 0 && (
+            <p className="text-[8px] sm:text-[10px] font-black text-accent tracking-tighter">
+              Save ₹{Number(displaySavingsAmt).toFixed(2)} ({displaySavingsPct}%)
+            </p>
+          )}
+          <p className="text-[7px] sm:text-[9px] font-bold text-gray-400 tracking-tighter">
+            ₹{unitPrice.toFixed(2)} per unit
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3">
+        <Button 
+          onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })} 
+          className={cn("w-full h-9 sm:h-12 rounded-full font-black text-[8px] sm:text-[10px] tracking-widest gap-2 shadow-lg active:scale-95 transition-all", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
+        >
+          {qty > 0 ? `In bag (${qty})` : "Add"} <ShoppingCart className="w-3 sm:w-4 h-3 sm:h-4" />
+        </Button>
+      </div>
+    </Card>
+  );
+};
+
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const id = resolvedParams?.id;
@@ -146,111 +267,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     });
   }, [id, product.name, brandedPrice, brandedMrp, hasGenericAlt, genericPrice, showComparison]);
 
-  const ComparisonCard = ({ product, label, isAlt = false }: { product: any, label: string, isAlt?: boolean }) => {
-    if (!product) return null;
-    
-    const qty = getItemQuantity(product.id || product._id);
-    const pPriceRaw = product.liveData?.sahimed_price || product.price || 0;
-    const pMrpRaw = product.liveData?.mrp || product.mrp || (Number(pPriceRaw) + 20);
-
-    const pPrice = Number(pPriceRaw) || 0;
-    const pMrp = Number(pMrpRaw) || (pPrice + 20);
-    
-    let displaySavingsAmt = Math.max(0, pMrp - pPrice);
-    let displaySavingsPct = pMrp > 0 ? Math.round((displaySavingsAmt / pMrp) * 100) : 0;
-
-    if (isAlt && showComparison) {
-      displaySavingsAmt = Math.max(0, brandedMrp - pPrice);
-      displaySavingsPct = brandedMrp > 0 ? Math.round((displaySavingsAmt / brandedMrp) * 100) : 0;
-    }
-
-    const unitMatch = String(product.packSize || '').match(/(\d+)/);
-    const unitCount = (unitMatch && parseInt(unitMatch[1]) > 0) ? parseInt(unitMatch[1]) : 1;
-    const unitPrice = pPrice / unitCount;
-
-    const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
-      ? product.imageUrl
-      : `https://picsum.photos/seed/${product.id || 'err'}/300/300`;
-
-    return (
-      <Card className={cn(
-        "rounded-[20px] sm:rounded-[32px] p-2.5 sm:p-6 flex flex-col h-full border shadow-sm transition-all overflow-hidden relative",
-        isAlt ? "bg-accent/5 border-dashed border-accent/20" : "bg-white border-gray-100",
-        !showComparison && "max-w-md mx-auto w-full"
-      )}>
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[7px] sm:text-[9px] font-black text-gray-400 tracking-widest block">{label}</span>
-          {displaySavingsPct > 0 && (
-            <Badge className="bg-accent text-white text-[7px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-md tracking-tighter">
-              Save {displaySavingsPct}%
-            </Badge>
-          )}
-        </div>
-        
-        <Dialog>
-          <DialogTrigger asChild>
-            <div className="relative aspect-square w-full max-h-[120px] sm:max-h-none bg-white rounded-xl mb-2 overflow-hidden border border-gray-50 flex items-center justify-center p-2 cursor-zoom-in group/img">
-              <Image src={safeImageUrl} alt={product.name} fill sizes="(max-width: 768px) 45vw, 30vw" className="object-contain p-1 transition-transform group-hover/img:scale-105" />
-              <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
-                 <Maximize2 className="w-4 h-4 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
-              </div>
-            </div>
-          </DialogTrigger>
-          <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-transparent shadow-none">
-            <DialogTitle className="sr-only">{product.name}</DialogTitle>
-            <div className="relative aspect-square w-full bg-white rounded-[40px] overflow-hidden p-8 flex items-center justify-center shadow-3xl">
-               <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-10" />
-               <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full border border-gray-100 shadow-xl flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span className="font-black text-[10px] tracking-widest text-gray-900">{product.name}</span>
-               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <div className="flex-1 space-y-0.5">
-          <h3 className="font-black text-[11px] sm:text-[15px] text-gray-900 leading-tight line-clamp-2 min-h-[2.2rem]">
-            {product.name}
-          </h3>
-          <p className="text-[8px] sm:text-[10px] font-black text-gray-400 tracking-tighter">
-            {product.packSize || "N/A"}
-          </p>
-          <p className="text-[8px] sm:text-[10px] font-bold text-gray-500 truncate">
-            {product.manufacturer}
-          </p>
-
-          <div className="pt-1.5 border-t border-dashed mt-1.5">
-            <div className="flex items-baseline gap-1">
-              <p className="text-lg sm:text-2xl font-black tracking-tighter text-accent">
-                ₹{Number(pPrice).toFixed(2)}
-              </p>
-              {pMrp > pPrice && (
-                <span className="text-[8px] sm:text-[10px] text-red-400 line-through font-bold">₹{Number(pMrp).toFixed(2)}</span>
-              )}
-            </div>
-            {displaySavingsAmt > 0 && (
-              <p className="text-[8px] sm:text-[10px] font-black text-accent tracking-tighter">
-                Save ₹{Number(displaySavingsAmt).toFixed(2)} ({displaySavingsPct}%)
-              </p>
-            )}
-            <p className="text-[7px] sm:text-[9px] font-bold text-gray-400 tracking-tighter">
-              ₹{unitPrice.toFixed(2)} per unit
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-3">
-          <Button 
-            onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })} 
-            className={cn("w-full h-9 sm:h-12 rounded-full font-black text-[8px] sm:text-[10px] tracking-widest gap-2 shadow-lg active:scale-95 transition-all", isAlt ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90")}
-          >
-            {qty > 0 ? `In bag (${qty})` : "Add"} <ShoppingCart className="w-3 sm:w-4 h-3 sm:h-4" />
-          </Button>
-        </div>
-      </Card>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-[#F4F7F6] pb-32 pharma-bg-pattern page-transition-wrapper">
       <Navbar />
@@ -288,11 +304,19 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <ComparisonCard 
                 product={product} 
                 label="Current selection" 
+                getItemQuantity={getItemQuantity}
+                addToCart={addToCart}
+                showComparison={showComparison}
+                brandedMrp={brandedMrp}
               />
               <ComparisonCard 
                 product={genericAlt} 
                 label="Recommended choice" 
                 isAlt 
+                getItemQuantity={getItemQuantity}
+                addToCart={addToCart}
+                showComparison={showComparison}
+                brandedMrp={brandedMrp}
               />
             </div>
           ) : (
@@ -300,6 +324,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <ComparisonCard 
                 product={product} 
                 label={isBranded ? "Branded selection" : "Generic choice"} 
+                getItemQuantity={getItemQuantity}
+                addToCart={addToCart}
+                showComparison={showComparison}
+                brandedMrp={brandedMrp}
               />
             </div>
           )}

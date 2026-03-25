@@ -36,7 +36,14 @@ export async function GET(request: Request) {
 
     return NextResponse.json(products);
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("[Search API Error]", err);
+    const message = err.message || "Unknown database error";
+    const status = message.includes("timeout") ? 504 : 500;
+    return NextResponse.json({ 
+      error: message,
+      details: "Ensure MONGODB_URI is correct and Render IPs are whitelisted in MongoDB Atlas.",
+      timestamp: new Date().toISOString()
+    }, { status });
   }
 }
 
