@@ -102,10 +102,10 @@ function SearchResults() {
                   {rawQ.length > 0 && rawQ.length < 3 ? <Info className="w-6 h-6 text-orange-400" /> : <SearchIcon className="w-6 h-6 text-gray-300" />}
                 </div>
                 <h3 className="text-lg font-black mb-1.5 tracking-tight">
-                  {rawQ.length > 0 && rawQ.length < 3 ? "Keep typing..." : "No medicines found"}
+                  {rawQ.length > 0 && rawQ.length < 1 ? "Keep typing..." : "No medicines found"}
                 </h3>
                 <p className="text-gray-400 font-bold mb-8 text-[10px] tracking-widest">
-                  {rawQ.length > 0 && rawQ.length < 3 ? "Enter at least 3 characters for a clinical search." : "Try broader terms or browse by categories."}
+                  {rawQ.length > 0 && rawQ.length < 1 ? "Enter at least 1 character for a clinical search." : "Try broader terms or browse by categories."}
                 </p>
                 <Button onClick={() => window.location.href = '/search'} className="rounded-full px-10 h-14 font-black tracking-widest shadow-xl">Clear filters</Button>
               </div>

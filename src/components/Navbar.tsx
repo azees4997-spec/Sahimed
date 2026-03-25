@@ -63,7 +63,7 @@ export default function Navbar() {
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (search.trim().length >= 3) {
+    if (search.trim().length >= 1) {
       router.push(`/search?q=${encodeURIComponent(search.trim())}`);
       setShowSuggestions(false);
     }
@@ -86,7 +86,7 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    if (search.trim().length < 3) {
+    if (search.trim().length < 1) {
       setRawSuggestions([]);
       setIsSearching(false);
       return;
@@ -98,28 +98,12 @@ export default function Navbar() {
 
       try {
         // 1. Fetch from MongoDB API for medicines
-        const res = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=20`);
-        const mongoMeds = res.ok ? await res.json() : [];
+        const resMeds = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=20`);
+        const mongoMeds = resMeds.ok ? await resMeds.json() : [];
 
-        // 2. Fetch from Firestore for moleculeMaster (if still needed)
-        let firestoreMols: any[] = [];
-        if (db) {
-          const vProper = term.replace(/(^|[\s-])\S/g, (match) => match.toUpperCase());
-          const vUpper = term.toUpperCase();
-          const variants = Array.from(new Set([vProper, vUpper, term])).filter(v => v.length >= 3);
-          
-          const moleculeQueries = variants.map(v => 
-            query(collection(db, 'moleculeMaster'), where('molecule', '>=', v), where('molecule', '<=', v + '\uf8ff'), limit(15))
-          );
-          const molSnaps = await Promise.all(moleculeQueries.map(q => getDocs(q)));
-          const molMap = new Map();
-          molSnaps.forEach(snap => {
-            snap.forEach(doc => {
-              molMap.set(doc.id, { id: doc.id, ...doc.data(), _type: 'molecule' });
-            });
-          });
-          firestoreMols = Array.from(molMap.values());
-        }
+        // 2. Fetch from MongoDB API for molecules
+        const resMols = await fetch(`/api/molecules?q=${encodeURIComponent(term)}&limit=15`);
+        const mongoMols = resMols.ok ? await resMols.json() : [];
 
         const normalizedMeds = mongoMeds.map((m: any) => ({
           ...m,
@@ -127,7 +111,13 @@ export default function Navbar() {
           _type: 'medicine'
         }));
 
-        setRawSuggestions([...normalizedMeds, ...firestoreMols]);
+        const normalizedMols = mongoMols.map((m: any) => ({
+          ...m,
+          id: m._id || m.id,
+          _type: 'molecule'
+        }));
+
+        setRawSuggestions([...normalizedMeds, ...normalizedMols]);
         setShowSuggestions(true);
       } catch (err) {
         console.error("Suggestion fetch failed", err);
@@ -138,7 +128,7 @@ export default function Navbar() {
 
     const timer = setTimeout(fetchSuggestions, 300);
     return () => clearTimeout(timer);
-  }, [search, db]);
+  }, [search]);
 
   const suggestions = useMemo(() => {
     if (!rawSuggestions.length) return [];
