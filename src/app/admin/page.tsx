@@ -970,7 +970,7 @@ function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: a
   );
 }
 
-function OrderCreationForm({ enquiry, onSuccess }: { enquiry: any, onSuccess: () => void }) {
+function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db: any, onSuccess: () => void }) {
   const { toast } = useToast();
   const [customer, setCustomer] = useState({ name: enquiry.patientName || '', mobile: enquiry.phoneNumber || '', address: enquiry.shippingDetails?.street || '' });
   const [items, setItems] = useState<any[]>([]);
@@ -1003,8 +1003,8 @@ function OrderCreationForm({ enquiry, onSuccess }: { enquiry: any, onSuccess: ()
   const totals = useMemo(() => {
     const mrp = items.reduce((acc, it) => acc + (it.mrp * it.qty), 0);
     const sale = items.reduce((acc, it) => acc + (it.price * it.qty), 0);
-    const discount = mrp - sale;
-    const promo = promocode ? 0 : 0; // Placeholder for promo logic
+    let discount = mrp - sale;
+    const promo = promocode ? (sale * 0.1) : 0; // Simplified 10% for any code for now, can fetch later
     return { mrp, sale, discount, promo, total: sale - promo };
   }, [items, promocode]);
 
@@ -1082,18 +1082,45 @@ function OrderCreationForm({ enquiry, onSuccess }: { enquiry: any, onSuccess: ()
           <div className="bg-gray-50 p-6 rounded-[32px] border">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-6">Order Items</h4>
             <div className="space-y-4 max-h-[300px] overflow-y-auto scrollbar-hide">
-              {items.length === 0 ? <p className="text-center py-10 text-[10px] font-black text-gray-300 uppercase tracking-widest">No items added</p> : items.map((it, i) => (
-                <div key={i} className="flex items-center gap-4 bg-white p-4 rounded-2xl border">
-                  <div className="flex-1"><p className="text-xs font-black truncate">{it.name}</p><p className="text-[10px] text-primary font-black">₹{it.price}</p></div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => updateQty(i, it.qty - 1)}>-</Button>
-                    <span className="text-xs font-black w-4 text-center">{it.qty}</span>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => updateQty(i, it.qty + 1)}>+</Button>
+              {items.length === 0 ? <p className="text-center py-10 text-[10px] font-black text-gray-300 uppercase tracking-widest">No items added</p> : items.map((it, i) => {
+                const discPc = Math.round(((it.mrp - it.price) / it.mrp) * 100) || 0;
+                return (
+                  <div key={i} className="flex flex-col gap-2 bg-white p-4 rounded-2xl border">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1"><p className="text-xs font-black truncate">{it.name}</p></div>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400" onClick={() => removeItem(i)}><Trash2 className="w-3 h-3" /></Button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-gray-400 line-through">₹{it.mrp}</span>
+                          <span className="text-[10px] font-black text-green-600">{discPc}% OFF</span>
+                        </div>
+                        <span className="text-xs font-black text-primary">₹{it.price}</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => updateQty(i, it.qty - 1)}>-</Button>
+                        <span className="text-xs font-black w-4 text-center">{it.qty}</span>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => updateQty(i, it.qty + 1)}>+</Button>
+                      </div>
+                    </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400" onClick={() => removeItem(i)}><Trash2 className="w-4 h-4" /></Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
+          </div>
+
+          <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
+             <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Marketing</h4>
+             <div className="relative">
+               <Ticket className="absolute left-4 top-1/2 -translate-y-1/2 text-primary w-4 h-4" />
+               <Input 
+                 placeholder="Enter promocode" 
+                 value={promocode} 
+                 onChange={e => setPromocode(e.target.value.toUpperCase())} 
+                 className="rounded-2xl h-12 pl-12 bg-white border-none font-bold placeholder:text-gray-300" 
+               />
+             </div>
           </div>
 
           <div className="bg-primary/5 p-6 rounded-[32px] border border-primary/10 space-y-4">
@@ -1349,6 +1376,7 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
             {selectedEnquiry && (
               <OrderCreationForm 
                 enquiry={selectedEnquiry} 
+                db={db}
                 onSuccess={() => { setSelectedEnquiry(null); }}
               />
             )}
