@@ -486,6 +486,66 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
   const [isSearching, setIsSearching] = useState(false);
   const suggestionRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = async () => {
+    window.open('/api/products/bulk', '_blank');
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      
+      const products = lines.slice(1).map(line => {
+        // Simple CSV parser handling quotes
+        const values: string[] = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          if (char === '"') inQuotes = !inQuotes;
+          else if (char === ',' && !inQuotes) {
+            values.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        values.push(current.trim());
+
+        const obj: any = {};
+        headers.forEach((h, i) => {
+          let val: any = values[i]?.replace(/^"|"$/g, '') || '';
+          if (h === 'isGeneric' || h === 'prescriptionRequired') val = val.toLowerCase() === 'true';
+          obj[h] = val;
+        });
+        return obj;
+      });
+
+      try {
+        const res = await fetch('/api/products/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(products)
+        });
+        if (res.ok) {
+          toast({ title: "Bulk import success", description: "Catalog updated" });
+          window.location.reload();
+        } else {
+          throw new Error('Import failed');
+        }
+      } catch (err: any) {
+        toast({ variant: 'destructive', title: "Import failed", description: err.message });
+      }
+    };
+    reader.readAsText(file);
+  };
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchTerm), 500);
@@ -527,7 +587,16 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Product master" subtitle="Targeted management (Limit: 2)" onBack={onBack}>
-        <Button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] bg-primary text-white"><Plus className="w-4 h-4" /> New product</Button>
+        <div className="flex gap-4">
+          <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".csv" />
+          <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] border-2 gap-2 text-primary border-primary/20">
+            <Upload className="w-4 h-4" /> Bulk Import
+          </Button>
+          <Button onClick={handleExport} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] border-2 gap-2">
+            <Download className="w-4 h-4" /> Export CSV
+          </Button>
+          <Button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] bg-primary text-white"><Plus className="w-4 h-4" /> New product</Button>
+        </div>
       </SectionHeader>
 
       <div className="relative" ref={suggestionRef}>
@@ -858,6 +927,50 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMol, setEditingMol] = useState<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  const handleExport = async () => {
+    window.open('/api/molecules/bulk', '_blank');
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+      const headers = lines[0].split(',').map(h => h.trim());
+      
+      const molecules = lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim());
+        const obj: any = {};
+        headers.forEach((h, i) => {
+          obj[h] = values[i];
+        });
+        return obj;
+      });
+
+      try {
+        const res = await fetch('/api/molecules/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(molecules)
+        });
+        if (res.ok) {
+          toast({ title: "Bulk import success", description: "Registry updated" });
+          window.location.reload();
+        } else {
+          throw new Error('Import failed');
+        }
+      } catch (err: any) {
+        toast({ variant: 'destructive', title: "Import failed", description: err.message });
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const filtered = molecules?.filter(m => {
     const s = searchTerm.toLowerCase();
@@ -867,7 +980,16 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Formula registry" subtitle="Clinical molecule masters" onBack={onBack}>
-        <Button onClick={() => { setEditingMol(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] bg-primary text-white"><Plus className="w-4 h-4" /> New formula</Button>
+        <div className="flex gap-4">
+          <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".csv" />
+          <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] border-2 gap-2 text-primary border-primary/20">
+            <Upload className="w-4 h-4" /> Bulk Import
+          </Button>
+          <Button onClick={handleExport} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] border-2 gap-2">
+            <Download className="w-4 h-4" /> Export CSV
+          </Button>
+          <Button onClick={() => { setEditingMol(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] bg-primary text-white"><Plus className="w-4 h-4" /> New formula</Button>
+        </div>
       </SectionHeader>
       <div className="relative"><Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" /><Input placeholder="Search formulas..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm" /></div>
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
@@ -927,7 +1049,10 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
       <div className="space-y-2"><Label className="text-[10px] font-black">Form</Label><Select value={form.form} onValueChange={v => setForm({...form, form: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger><SelectContent className="rounded-2xl">
         <SelectItem value="Tablet">Tablet</SelectItem>
         <SelectItem value="Tablet ER">Tablet ER</SelectItem>
+        <SelectItem value="Tablet PR">Tablet PR</SelectItem>
+        <SelectItem value="Tablet SR">Tablet SR</SelectItem>
         <SelectItem value="Capsule">Capsule</SelectItem>
+        <SelectItem value="Capsule ER">Capsule ER</SelectItem>
         <SelectItem value="Syrup">Syrup</SelectItem>
         <SelectItem value="Injection">Injection</SelectItem>
         <SelectItem value="Gel">Gel</SelectItem>
