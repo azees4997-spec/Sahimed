@@ -247,7 +247,7 @@ export default function Navbar() {
               <Input
                 type="text"
                 placeholder="Search for medicines or generics"
-                className="w-full pl-11 pr-12 clay-input h-11 text-[13px] font-medium placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-primary/20 bg-white"
+                className="w-full pl-11 pr-12 h-11 text-[13px] font-medium placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-primary/20 bg-white border border-gray-100 rounded-xl shadow-sm"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onFocus={() => search.length >= 3 && setShowSuggestions(true)}

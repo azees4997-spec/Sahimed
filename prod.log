@@ -1,0 +1,25 @@
+
+> nextn@0.1.0 start
+> next start -p 9002
+
+   ▲ Next.js 15.5.9
+   - Local:        http://localhost:9002
+   - Network:      http://192.168.100.29:9002
+
+ ✓ Starting...
+ ✓ Ready in 1582ms
+CRITICAL: MongoDB connection failed: [MongoServerSelectionError: Server selection timed out after 10000 ms] {
+  errorLabelSet: Set(0) {},
+  reason: [TopologyDescription],
+  code: undefined
+}
+[MongoServerSelectionError: Server selection timed out after 10000 ms] {
+  errorLabelSet: Set(0) {},
+  reason: [TopologyDescription],
+  code: undefined
+}
+ ⨯ unhandledRejection:  [MongoServerSelectionError: Server selection timed out after 10000 ms] {
+  errorLabelSet: Set(0) {},
+  reason: [TopologyDescription],
+  code: undefined
+}
