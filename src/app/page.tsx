@@ -6,8 +6,6 @@ import ProductCard from '@/components/ProductCard';
 import { MessageCircle, ShieldCheck, ChevronRight, Truck, Phone, FileText, Star, TrendingDown, Dna, ShieldPlus, FlaskConical, Zap } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
-import { collection, query, limit, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCart } from '@/context/CartContext';
 import { useMongoDBCollection } from '@/hooks/use-mongodb';
@@ -21,7 +19,6 @@ import {
 import { cn } from '@/lib/utils';
 
 export default function Home() {
-  const db = useFirestore();
   const { location, setLocation } = useCart();
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
@@ -67,12 +64,22 @@ export default function Home() {
     });
   }, [api]);
 
-  const categoriesQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'categories'), orderBy('name', 'asc'), limit(12));
-  }, [db]);
+  const [categories, setCategories] = React.useState<any[]>([]);
+  const [isCatsLoading, setIsCatsLoading] = React.useState(true);
 
-  const { data: categories, isLoading: isCatsLoading } = useCollection(categoriesQuery);
+  React.useEffect(() => {
+    fetch('/api/categories?limit=12')
+      .then(res => res.json())
+      .then(data => {
+        setCategories(data);
+        setIsCatsLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch categories", err);
+        setIsCatsLoading(false);
+      });
+  }, []);
+
   const { data: medicines, isLoading } = useMongoDBCollection({ limit: 50 });
 
   return (

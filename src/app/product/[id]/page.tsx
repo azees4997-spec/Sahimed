@@ -31,8 +31,6 @@ import {
   DialogTrigger,
   DialogTitle
 } from "@/components/ui/dialog";
-import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, orderBy, limit, doc, where } from 'firebase/firestore';
 import { useMongoDBDoc, useMongoDBMolecule, useMongoDBCollection } from '@/hooks/use-mongodb';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -163,32 +161,14 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const resolvedParams = use(params);
   const id = resolvedParams?.id;
   
-  const db = useFirestore();
   const { toast } = useToast();
   const { addToCart, getItemQuantity } = useCart();
 
   // 1. Fetch main product from MongoDB
   const { data: rawProduct, isLoading: productLoading } = useMongoDBDoc(id);
   
-  // 2. Fetch live pricing data (SKU-based) from Firestore
-  const liveRef = useMemoFirebase(() => rawProduct?.sku ? doc(db, 'product_live_data', rawProduct.sku) : null, [db, rawProduct?.sku]);
-  const { data: liveDataDoc } = useDoc(liveRef);
-
-  // Combine product with live data (Merge MongoDB migrated data with Firestore live data)
-  const product = React.useMemo(() => {
-    if (!rawProduct) return null;
-    const baseLiveData = rawProduct.liveData || {};
-    const liveData = liveDataDoc ? {
-      mrp: liveDataDoc.mrp ?? baseLiveData.mrp,
-      sahimed_price: liveDataDoc.sahimed_price ?? baseLiveData.sahimed_price,
-      stock_quantity: liveDataDoc.stock_quantity ?? baseLiveData.stock_quantity
-    } : baseLiveData;
-
-    return {
-      ...rawProduct,
-      liveData
-    };
-  }, [rawProduct, liveDataDoc]);
+  // Use the main product from MongoDB (which now includes liveData)
+  const product = rawProduct;
 
   // 3. Fetch molecule data from MongoDB
   const { data: molData } = useMongoDBMolecule(product?.moleculeId);

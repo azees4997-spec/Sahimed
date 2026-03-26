@@ -10,8 +10,6 @@ import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, limit, where } from 'firebase/firestore';
 import { useMongoDBCollection } from '@/hooks/use-mongodb';
 
 function SearchResults() {
@@ -19,7 +17,8 @@ function SearchResults() {
   const rawQ = searchParams.get('q')?.trim() || '';
   const c = searchParams.get('c');
   
-  const db = useFirestore();
+  const [categories, setCategories] = useState<any[]>([]);
+  const [catsLoading, setCatsLoading] = useState(true);
 
   // Fetch medicines from MongoDB
   const { data: medicines, isLoading: isMedsLoading } = useMongoDBCollection({ 
@@ -28,19 +27,21 @@ function SearchResults() {
     limit: 60 
   });
 
-  // Since useMongoDBCollection already handles search and category on the server,
-  // we don't need the client-side filter anymore.
   const filteredMedicines = medicines;
-
   const isSearching = isMedsLoading;
 
-  // Categories for the sidebar
-  const categoriesQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'categories'), orderBy('name', 'asc'), limit(20));
-  }, [db]);
-
-  const { data: categories, isLoading: catsLoading } = useCollection(categoriesQuery);
+  useEffect(() => {
+    fetch('/api/categories?limit=20')
+      .then(res => res.json())
+      .then(data => {
+        setCategories(data);
+        setCatsLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch categories", err);
+        setCatsLoading(false);
+      });
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] page-transition-wrapper">
@@ -120,7 +121,6 @@ function SearchResults() {
 function SaveMoreStrip({ query: rawQ }: { query: string }) {
   const [genericAlt, setGenericAlt] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const db = useFirestore();
 
   useEffect(() => {
     if (rawQ.length < 3) return;

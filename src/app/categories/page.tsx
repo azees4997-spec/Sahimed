@@ -5,20 +5,25 @@ import Navbar from '@/components/Navbar';
 import { ChevronRight, Dna, Activity, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { CATEGORIES as LOCAL_CATEGORIES } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 
 export default function CategoriesPage() {
-  const db = useFirestore();
+  const [categories, setCategories] = React.useState<any[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const categoriesQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'categories'), orderBy('name', 'asc'), limit(50));
-  }, [db]);
-
-  const { data: categories, isLoading } = useCollection(categoriesQuery);
+  React.useEffect(() => {
+    fetch('/api/categories?limit=50')
+      .then(res => res.json())
+      .then(data => {
+        setCategories(data);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch categories", err);
+        setIsLoading(false);
+      });
+  }, []);
   const displayCategories = categories?.length ? categories : LOCAL_CATEGORIES;
 
   return (

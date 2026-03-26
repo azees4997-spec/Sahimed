@@ -11,8 +11,6 @@ import { useRouter } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { useFirestore } from '@/firebase';
-import { collection, query, where, limit, getDocs, orderBy } from 'firebase/firestore';
 
 export function SahiMedIcon({ className }: { className?: string }) {
   return (
@@ -59,7 +57,6 @@ export default function Navbar() {
   const [rawSuggestions, setRawSuggestions] = useState<any[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const db = useFirestore();
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();

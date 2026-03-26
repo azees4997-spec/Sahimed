@@ -32,6 +32,11 @@ export interface Product {
   drivingInteraction?: string;
   kidneyInteraction?: string;
   liverInteraction?: string;
+  liveData?: {
+    mrp: number;
+    sahimed_price: number;
+    stock_quantity: number;
+  };
 }
 
 interface CartItem extends Product {

@@ -6,13 +6,10 @@ import Image from 'next/image';
 import { Minus, Plus } from 'lucide-react';
 import { Product, useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore } from '@/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
 import { useState, useEffect } from 'react';
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
-  const db = useFirestore();
   const { toast } = useToast();
   
   const quantity = getItemQuantity(product.id);
