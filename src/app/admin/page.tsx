@@ -344,68 +344,68 @@ function OverviewTab({ setTab }: { setTab: (t: AdminTab) => void }) {
 
 function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const [statusFilter, setStatusFilter] = useState('All');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  
-  const ordersQuery = useMemoFirebase(() => {
-    if (!db || !isVerified) return null;
-    return query(collectionGroup(db, 'orders'), limit(100)); 
-  }, [db, isVerified]);
-
-  const { data: rawOrders, isLoading } = useCollection(ordersQuery);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const orders = useMemo(() => {
-    if (!rawOrders) return null;
-    let filtered = [...rawOrders];
-
-    if (statusFilter !== 'All') {
-      filtered = filtered.filter(o => (o.status || 'Pending').toLowerCase() === statusFilter.toLowerCase());
+  const fetchOrders = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/orders?status=${statusFilter === 'All' ? '' : statusFilter}`);
+      const data = await res.json();
+      setOrders(data);
+    } catch (err) {
+      toast({ variant: 'destructive', title: "Fetch failed" });
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    if (startDate) {
-      const start = startOfDay(new Date(startDate));
-      filtered = filtered.filter(o => {
-        const orderDate = o.orderDate?.toDate ? o.orderDate.toDate() : null;
-        return orderDate && (orderDate >= start);
-      });
-    }
-
-    if (endDate) {
-      const end = endOfDay(new Date(endDate));
-      filtered = filtered.filter(o => {
-        const orderDate = o.orderDate?.toDate ? o.orderDate.toDate() : null;
-        return orderDate && (orderDate <= end);
-      });
-    }
-
-    return filtered.sort((a, b) => {
-      const timeA = a.orderDate?.seconds || 0;
-      const timeB = b.orderDate?.seconds || 0;
-      return timeB - timeA;
-    });
-  }, [rawOrders, statusFilter, startDate, endDate]);
+  useEffect(() => { fetchOrders(); }, [statusFilter]);
 
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [isShippingDialogOpen, setIsShippingDialogOpen] = useState(false);
-  const [shippingData, setShippingData] = useState({ carrier: '', trackingId: '' });
+  const [statusUpdateTarget, setStatusUpdateTarget] = useState<any>(null);
+  const [shippingInfo, setShippingInfo] = useState({ partner: '', awb: '' });
+  const [cancelReason, setCancelReason] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+
+  const updateOrderStatus = async (id: string, newStatus: string, extra = {}) => {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus, ...extra })
+      });
+      if (res.ok) {
+        toast({ title: `Order ${newStatus}` });
+        fetchOrders();
+        setStatusUpdateTarget(null);
+        setSelectedOrder(null);
+      }
+    } catch (err) {
+      toast({ variant: 'destructive', title: "Update failed" });
+    }
+  };
 
   const handleExport = () => {
     if (!orders || orders.length === 0) return;
-    const headers = ["Order ID", "Order Date", "Patient Name", "Phone", "Street", "Landmark", "Pincode", "Payment Type", "Status", "Grand Total", "Medicine Name", "Quantity", "Unit Price", "Item Total"];
-    const rows = orders.flatMap(order => {
-      const dateStr = order.orderDate?.toDate ? format(order.orderDate.toDate(), 'yyyy-MM-dd HH:mm') : 'Pending';
-      const baseInfo = [order.id, dateStr, order.patientName || 'N/A', order.phoneNumber || 'N/A', `"${(order.shippingDetails?.street || '').replace(/"/g, '""')}"`, `"${(order.shippingDetails?.landmark || '').replace(/"/g, '""')}"`, order.shippingDetails?.pincode || '', order.paymentType || 'COD', order.status || 'Pending', Number(order.totalAmount || 0).toFixed(2)];
-      return (order.items || []).map((item: any) => [...baseInfo, `"${(item.name || '').replace(/"/g, '""')}"`, item.quantity || 0, Number(item.unitPrice || 0).toFixed(2), Number((item.quantity || 0) * (item.unitPrice || 0)).toFixed(2)].join(","));
-    });
+    const headers = ["Order ID", "Order Date", "Patient Name", "Phone", "Street", "Status", "Grand Total"];
+    const rows = orders.map(order => [
+      order.orderId, 
+      format(new Date(order.orderDate), 'yyyy-MM-dd HH:mm'), 
+      order.patientName, 
+      order.phoneNumber, 
+      `"${(order.shippingDetails?.street || '').replace(/"/g, '""')}"`, 
+      order.status, 
+      order.totalAmount
+    ].join(","));
     const csv = [headers.join(","), ...rows].join("\n");
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `SahiMed_Fulfillment_${format(new Date(), 'yyyyMMdd')}.csv`;
+    a.download = `orders_${format(new Date(), 'yyyyMMdd')}.csv`;
     a.click();
-    toast({ title: "Manifest exported" });
   };
 
   return (
@@ -418,14 +418,9 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
 
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
         <div className="bg-white p-1 rounded-full border flex w-fit gap-1">
-          {['All', 'Pending', 'Shipping', 'Delivered'].map((status) => (
+          {['All', 'Confirmed', 'Packing', 'Shipped', 'Delivered', 'Cancelled'].map((status) => (
             <button key={status} onClick={() => setStatusFilter(status)} className={cn("px-8 py-2.5 rounded-full text-[10px] font-black tracking-widest transition-all", statusFilter === status ? "bg-primary text-white shadow-lg scale-105" : "text-gray-400 hover:bg-gray-50")}>{status}</button>
           ))}
-        </div>
-        <div className="flex items-center gap-3 bg-white p-2 rounded-3xl border shadow-sm">
-          <Calendar className="w-3.5 h-3.5 text-primary ml-2" /><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-10 w-36 rounded-xl border-none bg-gray-50 font-bold text-[10px] px-3" />
-          <span className="text-gray-300 font-bold">→</span><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="h-10 w-36 rounded-xl border-none bg-gray-50 font-bold text-[10px] px-3" />
-          {(startDate || endDate) && <Button variant="ghost" size="icon" onClick={() => { setStartDate(''); setEndDate(''); }} className="h-8 w-8 text-red-400"><X className="w-4 h-4" /></Button>}
         </div>
       </div>
       
@@ -437,13 +432,20 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (<tr><td colSpan={6} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : (!orders || orders.length === 0) ? (<tr><td colSpan={6} className="p-20 text-center font-bold text-gray-400 text-[10px]">No orders found</td></tr>) : orders.map(order => (
-                <tr key={order.id} className="hover:bg-gray-50/50">
-                  <td className="px-8 py-6 font-black text-xs uppercase">#{order.id.substring(0,8)}</td>
-                  <td className="px-8 py-6 text-[10px] font-black">{order.orderDate?.toDate ? format(order.orderDate.toDate(), 'dd MMM yyyy') : 'N/A'}</td>
+                <tr key={order._id} className="hover:bg-gray-50/50">
+                  <td className="px-8 py-6 font-black text-xs uppercase">{order.orderId}</td>
+                  <td className="px-8 py-6 text-[10px] font-black">{format(new Date(order.orderDate), 'dd MMM yyyy')}</td>
                   <td className="px-8 py-6"><p className="font-bold text-xs">{order.patientName}</p><p className="text-[10px] text-gray-400">{order.phoneNumber}</p></td>
                   <td className="px-8 py-6 max-w-[250px]"><p className="text-[10px] font-bold text-gray-600 truncate">{order.shippingDetails?.street}</p></td>
-                  <td className="px-8 py-6 font-black text-accent">₹{Number(order.totalAmount || 0).toFixed(2)}</td>
-                  <td className="px-8 py-6 text-right"><Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)}><Eye className="w-4 h-4 text-primary" /></Button></td>
+                  <td className="px-8 py-6">
+                    <Badge className={cn("font-black text-[8px]", 
+                      order.status === 'Confirmed' ? "bg-blue-100 text-blue-600" :
+                      order.status === 'Shipped' ? "bg-purple-100 text-purple-600" :
+                      order.status === 'Delivered' ? "bg-green-100 text-green-600" :
+                      order.status === 'Cancelled' ? "bg-red-100 text-red-600" : "bg-gray-100"
+                    )}>{order.status}</Badge>
+                  </td>
+                  <td className="px-8 py-6 text-right"><div className="flex justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)}><Eye className="w-4 h-4 text-primary" /></Button><Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(order); setIsEditing(true); }}><Edit2 className="w-4 h-4 text-gray-300" /></Button></div></td>
                 </tr>
               ))}
             </tbody>
@@ -451,25 +453,58 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
         </div>
       </Card>
 
-      <Dialog open={!!selectedOrder && !isShippingDialogOpen} onOpenChange={o => !o && setSelectedOrder(null)}>
+      <Dialog open={!!selectedOrder} onOpenChange={o => !o && (setSelectedOrder(null), setIsEditing(false), setStatusUpdateTarget(null))}>
         <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden">
-          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black">Order details</DialogTitle></div>
-          <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
-             <div className="grid grid-cols-2 gap-8">
-                <div><h4 className="text-[10px] font-black text-gray-400 mb-2">Patient</h4><p className="font-black text-sm">{selectedOrder?.patientName}</p><p className="text-xs text-gray-500">{selectedOrder?.phoneNumber}</p></div>
-                <div><h4 className="text-[10px] font-black text-gray-400 mb-2">Address</h4><p className="text-[11px] font-bold leading-relaxed">{selectedOrder?.shippingDetails?.street}</p><p className="text-[10px] font-black text-primary mt-1">Pin: {selectedOrder?.shippingDetails?.pincode}</p></div>
-             </div>
-             {selectedOrder?.prescriptionUrl && (
-               <div className="space-y-3"><h4 className="text-[10px] font-black text-gray-400">Prescription</h4><div className="rounded-[32px] overflow-hidden aspect-[3/4] bg-gray-50 border"><img src={selectedOrder.prescriptionUrl} className="w-full h-full object-contain" alt="" /></div></div>
-             )}
-             <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
-                <h4 className="text-[10px] font-black text-gray-400 mb-2">Items breakdown</h4>
-                {selectedOrder?.items?.map((it: any, i: number) => (<div key={i} className="flex justify-between items-center"><p className="text-[11px] font-black">{it.name} x {it.quantity}</p><span className="font-black text-xs">₹{(it.unitPrice * it.quantity).toFixed(2)}</span></div>))}
-             </div>
-             <div className="flex justify-between items-center border-t pt-6">
-               <div><span className="font-black text-[10px] text-gray-400">Payment</span><Badge className="bg-green-100 text-green-600 ml-2">{selectedOrder?.paymentType}</Badge></div>
-               <div className="text-right"><span className="font-black text-[10px] text-gray-400">Total</span><p className="text-3xl font-black text-accent">₹{Number(selectedOrder?.totalAmount || 0).toFixed(2)}</p></div>
-             </div>
+          <div className="bg-primary p-8 text-white flex justify-between items-center">
+            <DialogTitle className="text-2xl font-black">Order #{selectedOrder?.orderId}</DialogTitle>
+            <Badge className="bg-white/20 text-white border-none font-black text-[10px]">{selectedOrder?.status}</Badge>
+          </div>
+          <div className="p-8 space-y-8 max-h-[80vh] overflow-y-auto scrollbar-hide">
+            {isEditing ? (
+              <div className="space-y-6">
+                <h3 className="text-sm font-black">Update patient details</h3>
+                <Input value={selectedOrder?.patientName} onChange={e => setSelectedOrder({...selectedOrder, patientName: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+                <Input value={selectedOrder?.phoneNumber} onChange={e => setSelectedOrder({...selectedOrder, phoneNumber: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+                <Button onClick={() => updateOrderStatus(selectedOrder._id, selectedOrder.status, selectedOrder)} className="w-full h-16 rounded-full font-black bg-primary text-white">Save Changes</Button>
+              </div>
+            ) : statusUpdateTarget ? (
+               <div className="space-y-6">
+                 <h3 className="text-sm font-black">Finalize status: {statusUpdateTarget}</h3>
+                 {statusUpdateTarget === 'Shipped' && (
+                   <div className="space-y-4">
+                     <Select onValueChange={v => setShippingInfo({...shippingInfo, partner: v})}>
+                       <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select partner" /></SelectTrigger>
+                       <SelectContent><SelectItem value="Delhivery">Delhivery</SelectItem><SelectItem value="BlueDart">BlueDart</SelectItem><SelectItem value="Post">India Post</SelectItem></SelectContent>
+                     </Select>
+                     <Input placeholder="AWB Number" value={shippingInfo.awb} onChange={e => setShippingInfo({...shippingInfo, awb: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+                   </div>
+                 )}
+                 {statusUpdateTarget === 'Cancelled' && (
+                   <Textarea placeholder="Reason for cancellation" value={cancelReason} onChange={e => setCancelReason(e.target.value)} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" />
+                 )}
+                 <Button onClick={() => updateOrderStatus(selectedOrder._id, statusUpdateTarget, statusUpdateTarget === 'Shipped' ? { shipping: shippingInfo } : statusUpdateTarget === 'Cancelled' ? { cancellationReason: cancelReason } : {})} className="w-full h-16 rounded-full font-black bg-primary text-white shadow-xl">Confirm update</Button>
+               </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-8">
+                  <div><h4 className="text-[10px] font-black text-gray-400 mb-2">Patient</h4><p className="font-black text-sm">{selectedOrder?.patientName}</p><p className="text-xs text-gray-500">{selectedOrder?.phoneNumber}</p></div>
+                  <div><h4 className="text-[10px] font-black text-gray-400 mb-2">Address</h4><p className="text-[11px] font-bold leading-relaxed">{selectedOrder?.shippingDetails?.street}</p></div>
+                </div>
+                <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
+                  <h4 className="text-[10px] font-black text-gray-400">Status Migration</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {['Packing', 'Packed', 'Shipped', 'Delivered', 'Cancelled'].map(s => (
+                      <Button key={s} variant="outline" onClick={() => setStatusUpdateTarget(s)} className={cn("rounded-2xl h-12 font-black text-[10px] border-2", selectedOrder?.status === s ? "border-primary bg-primary/5 text-primary" : "text-gray-400")}>{s}</Button>
+                    ))}
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
+                  <h4 className="text-[10px] font-black text-gray-400">Order Items</h4>
+                  {selectedOrder?.items?.map((it: any, i: number) => (<div key={i} className="flex justify-between items-center"><p className="text-[11px] font-black">{it.name} x {it.quantity}</p><span className="font-black text-xs">₹{(it.unitPrice * it.quantity).toFixed(2)}</span></div>))}
+                  <div className="pt-4 border-t flex justify-between items-center font-black text-primary"><span>Total Amount</span><span className="text-xl">₹{Number(selectedOrder?.totalAmount || 0).toFixed(2)}</span></div>
+                </div>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -487,6 +522,17 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
   const suggestionRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const downloadTemplate = () => {
+    const headers = ['id', 'name', 'sku', 'manufacturer', 'category', 'isGeneric', 'prescriptionRequired', 'packSize', 'imageUrl', 'imageUrl2', 'imageUrl3', 'description', 'treatment'];
+    const csv = headers.join(',') + '\n"","New Product","SKU001","Manufacturer","Category","false","false","10 Tablets","","","","Description","Treatment"';
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'product_template.csv';
+    a.click();
+  };
 
   const handleExport = async () => {
     window.open('/api/products/bulk', '_blank');
@@ -589,6 +635,9 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
       <SectionHeader title="Product master" subtitle="Targeted management (Limit: 2)" onBack={onBack}>
         <div className="flex gap-4">
           <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".csv" />
+          <Button onClick={downloadTemplate} variant="ghost" className="rounded-full h-12 px-6 font-black text-[10px] text-gray-400 hover:text-primary gap-2">
+            <Download className="w-4 h-4" /> Template
+          </Button>
           <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] border-2 gap-2 text-primary border-primary/20">
             <Upload className="w-4 h-4" /> Bulk Import
           </Button>
@@ -921,6 +970,152 @@ function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: a
   );
 }
 
+function OrderCreationForm({ enquiry, onSuccess }: { enquiry: any, onSuccess: () => void }) {
+  const { toast } = useToast();
+  const [customer, setCustomer] = useState({ name: enquiry.patientName || '', mobile: enquiry.phoneNumber || '', address: enquiry.shippingDetails?.street || '' });
+  const [items, setItems] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [promocode, setPromocode] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (searchTerm.trim().length >= 2) {
+      fetch(`/api/products?q=${encodeURIComponent(searchTerm)}&limit=10`).then(res => res.json()).then(data => setSuggestions(data));
+    } else {
+      setSuggestions([]);
+    }
+  }, [searchTerm]);
+
+  const addItem = (prod: any) => {
+    setItems([...items, { id: prod._id, name: prod.name, mrp: prod.mrp || 0, price: prod.sahimed_price || prod.mrp || 0, qty: 1 }]);
+    setSearchTerm('');
+    setSuggestions([]);
+  };
+
+  const removeItem = (idx: number) => setItems(items.filter((_, i) => i !== idx));
+  const updateQty = (idx: number, q: number) => {
+    const next = [...items];
+    next[idx].qty = Math.max(1, q);
+    setItems(next);
+  };
+
+  const totals = useMemo(() => {
+    const mrp = items.reduce((acc, it) => acc + (it.mrp * it.qty), 0);
+    const sale = items.reduce((acc, it) => acc + (it.price * it.qty), 0);
+    const discount = mrp - sale;
+    const promo = promocode ? 0 : 0; // Placeholder for promo logic
+    return { mrp, sale, discount, promo, total: sale - promo };
+  }, [items, promocode]);
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const orderData = {
+        patientName: customer.name,
+        phoneNumber: customer.mobile,
+        shippingDetails: { street: customer.address },
+        items: items.map(it => ({ name: it.name, quantity: it.qty, unitPrice: it.price, mrp: it.mrp })),
+        totalAmount: totals.total,
+        totalMrp: totals.mrp,
+        discount: totals.discount,
+        paymentType: 'COD',
+        status: 'Confirmed',
+        orderDate: new Date(),
+        prescriptionUrl: enquiry.imageUrl
+      };
+
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+
+      if (res.ok) {
+        // Mark enquiry as completed/digitized in Firestore
+        if (enquiry?.id) {
+          updateDocumentNonBlocking(doc(db, 'prescriptions', enquiry.id), { status: 'Digitized', orderId: orderData.orderId, updatedAt: serverTimestamp() });
+        }
+        toast({ title: "Order created successfully" });
+        onSuccess();
+      }
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: "Order failed", description: err.message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8 pb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Customer Details</h4>
+            <div className="space-y-4">
+              <Input placeholder="Patient Name" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="rounded-2xl h-12 bg-white border-none font-bold" />
+              <Input placeholder="Mobile Number" value={customer.mobile} onChange={e => setCustomer({...customer, mobile: e.target.value})} className="rounded-2xl h-12 bg-white border-none font-bold" />
+              <Textarea placeholder="Shipping Address" value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="rounded-2xl min-h-[80px] bg-white border-none font-bold" />
+            </div>
+          </div>
+          
+          <div className="relative">
+            <Label className="text-[10px] font-black mb-2 block">Search and Add Medicines</Label>
+            <div className="relative">
+               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4" />
+               <Input placeholder="Search catalog..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="rounded-2xl h-14 pl-12 bg-white border shadow-sm font-bold" />
+            </div>
+            {suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 bg-white shadow-2xl rounded-[24px] border mt-2 z-50 overflow-hidden">
+                {suggestions.map(p => (
+                  <button key={p._id} onClick={() => addItem(p)} className="w-full p-4 hover:bg-gray-50 flex items-center gap-4 text-left border-b last:border-none">
+                    <img src={p.imageUrl} className="w-10 h-10 object-contain rounded-lg bg-gray-50" alt="" />
+                    <div className="flex-1"><p className="text-xs font-black">{p.name}</p><p className="text-[10px] text-gray-400">₹{p.sahimed_price} • {p.manufacturer}</p></div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-gray-50 p-6 rounded-[32px] border">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-6">Order Items</h4>
+            <div className="space-y-4 max-h-[300px] overflow-y-auto scrollbar-hide">
+              {items.length === 0 ? <p className="text-center py-10 text-[10px] font-black text-gray-300 uppercase tracking-widest">No items added</p> : items.map((it, i) => (
+                <div key={i} className="flex items-center gap-4 bg-white p-4 rounded-2xl border">
+                  <div className="flex-1"><p className="text-xs font-black truncate">{it.name}</p><p className="text-[10px] text-primary font-black">₹{it.price}</p></div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => updateQty(i, it.qty - 1)}>-</Button>
+                    <span className="text-xs font-black w-4 text-center">{it.qty}</span>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => updateQty(i, it.qty + 1)}>+</Button>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400" onClick={() => removeItem(i)}><Trash2 className="w-4 h-4" /></Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-primary/5 p-6 rounded-[32px] border border-primary/10 space-y-4">
+             <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest"><span>Summary</span><span>Amount</span></div>
+             <div className="flex justify-between text-sm font-bold"><span>Total MRP</span><span>₹{totals.mrp.toFixed(2)}</span></div>
+             <div className="flex justify-between text-sm font-bold text-green-600"><span>Product Discount</span><span>-₹{totals.discount.toFixed(2)}</span></div>
+             <div className="flex justify-between text-sm font-bold text-blue-600"><span>Promo Discount</span><span>-₹{totals.promo.toFixed(2)}</span></div>
+             <div className="flex justify-between items-center pt-4 border-t border-primary/20">
+               <div><p className="text-base font-black text-primary">Payable</p><p className="text-[8px] font-black text-green-600 uppercase">You saved ₹{totals.discount.toFixed(0)} ({((totals.discount/totals.mrp)*100 || 0).toFixed(0)}%)</p></div>
+               <p className="text-2xl font-black text-primary">₹{totals.total.toFixed(2)}</p>
+             </div>
+          </div>
+          
+          <Button disabled={isSubmitting || items.length === 0} onClick={handleSubmit} className="w-full h-16 rounded-full font-black bg-primary text-white shadow-xl shadow-primary/20 disabled:grayscale">
+            {isSubmitting ? <Loader2 className="animate-spin" /> : "Confirm Order (COD)"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const molsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc'), limit(50)) : null, [db, isVerified]);
   const { data: molecules, isLoading } = useCollection(molsQuery);
@@ -929,6 +1124,17 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
   const [editingMol, setEditingMol] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const downloadTemplate = () => {
+    const headers = ['id', 'molecule', 'masterId', 'form'];
+    const csv = headers.join(',') + '\n"","Divalproex (500mg)","MM000035","Tablet ER"';
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'molecule_template.csv';
+    a.click();
+  };
 
   const handleExport = async () => {
     window.open('/api/molecules/bulk', '_blank');
@@ -982,6 +1188,9 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
       <SectionHeader title="Formula registry" subtitle="Clinical molecule masters" onBack={onBack}>
         <div className="flex gap-4">
           <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".csv" />
+          <Button onClick={downloadTemplate} variant="ghost" className="rounded-full h-12 px-6 font-black text-[10px] text-gray-400 hover:text-primary gap-2">
+            <Download className="w-4 h-4" /> Template
+          </Button>
           <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] border-2 gap-2 text-primary border-primary/20">
             <Upload className="w-4 h-4" /> Bulk Import
           </Button>
@@ -1018,7 +1227,19 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
 
 function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
   const { toast } = useToast();
-  const [form, setForm] = useState({ molecule: initialData?.molecule || '', masterId: initialData?.masterId || '', form: initialData?.form || 'Tablet' });
+  const [form, setForm] = useState({ molecule: initialData?.molecule || '', masterId: initialData?.masterId || '', form: initialData?.form || '' });
+  const [availableForms, setAvailableForms] = useState<string[]>([]);
+  const [isCustomForm, setIsCustomForm] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/molecules/forms').then(res => res.json()).then(data => {
+      setAvailableForms(data);
+      if (initialData?.form && !data.includes(initialData.form)) {
+        setIsCustomForm(true);
+      }
+    });
+  }, [initialData]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const payload = { ...form, updatedAt: new Date() };
@@ -1046,22 +1267,41 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2"><Label className="text-[10px] font-black">Molecule name</Label><Input value={form.molecule} onChange={e => setForm({...form, molecule: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       <div className="space-y-2"><Label className="text-[10px] font-black">Master id</Label><Input value={form.masterId} onChange={e => setForm({...form, masterId: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      <div className="space-y-2"><Label className="text-[10px] font-black">Form</Label><Select value={form.form} onValueChange={v => setForm({...form, form: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger><SelectContent className="rounded-2xl">
-        <SelectItem value="Tablet">Tablet</SelectItem>
-        <SelectItem value="Tablet ER">Tablet ER</SelectItem>
-        <SelectItem value="Tablet PR">Tablet PR</SelectItem>
-        <SelectItem value="Tablet SR">Tablet SR</SelectItem>
-        <SelectItem value="Capsule">Capsule</SelectItem>
-        <SelectItem value="Capsule ER">Capsule ER</SelectItem>
-        <SelectItem value="Syrup">Syrup</SelectItem>
-        <SelectItem value="Injection">Injection</SelectItem>
-        <SelectItem value="Gel">Gel</SelectItem>
-        <SelectItem value="Cream">Cream</SelectItem>
-        <SelectItem value="Ointment">Ointment</SelectItem>
-        <SelectItem value="Drops">Drops</SelectItem>
-        <SelectItem value="Sachet">Sachet</SelectItem>
-        <SelectItem value="Liquid">Liquid</SelectItem>
-      </SelectContent></Select></div>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black">Clinical Form</Label>
+          {!isCustomForm ? (
+            <Select value={form.form} onValueChange={v => { if(v === '_custom') { setIsCustomForm(true); setForm({...form, form: ''}); } else { setForm({...form, form: v}); } }}>
+              <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold">
+                <SelectValue placeholder="Select clinical form" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl">
+                {availableForms.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                <div className="border-t my-2" />
+                <SelectItem value="_custom" className="text-primary font-black">+ Create New Form...</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <div className="relative">
+              <Input 
+                value={form.form} 
+                onChange={e => setForm({...form, form: e.target.value})} 
+                placeholder="Enter custom form (e.g. Injection)" 
+                className="rounded-2xl h-14 bg-gray-50 border-none font-bold pr-20" 
+                autoFocus
+              />
+              <Button 
+                type="button" 
+                onClick={() => setIsCustomForm(false)} 
+                variant="ghost" 
+                className="absolute right-2 top-2 h-10 rounded-xl text-[10px] font-black text-primary hover:bg-primary/5"
+              >
+                Back to list
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
       <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white">Save registry entry</Button>
     </form>
   );
@@ -1101,20 +1341,17 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
         <DialogContent className="rounded-[40px] max-w-5xl border-none p-0 overflow-hidden">
           <div className="bg-primary p-8 text-white flex items-center justify-between">
             <div>
-              <DialogTitle className="text-2xl font-black">Clinical digitization</DialogTitle>
-              <p className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">Powered by Genkit AI</p>
+              <DialogTitle className="text-2xl font-black">Create manual order</DialogTitle>
+              <p className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">Order creation from enquiry</p>
             </div>
           </div>
-          <div className="p-8 h-[80vh] overflow-hidden flex flex-col md:flex-row gap-8">
-             <div className="flex-1 bg-gray-50 rounded-[32px] border overflow-hidden relative group">
-                {selectedEnquiry?.imageUrl && <img src={selectedEnquiry.imageUrl} className="w-full h-full object-contain" alt="Prescription" />}
-                <div className="absolute top-6 left-6 flex gap-2">
-                  <Badge className="bg-white/90 backdrop-blur text-primary border-none font-black text-[9px] px-3 py-1.5 shadow-sm">Patient: {selectedEnquiry?.patientName}</Badge>
-                </div>
-             </div>
-             <div className="w-full md:w-[400px] flex flex-col gap-6 overflow-y-auto pr-2 scrollbar-hide">
-                <DigitizePanel enquiry={selectedEnquiry} db={db} onComplete={() => setSelectedEnquiry(null)} />
-             </div>
+          <div className="p-8 h-[80vh] overflow-y-auto scrollbar-hide">
+            {selectedEnquiry && (
+              <OrderCreationForm 
+                enquiry={selectedEnquiry} 
+                onSuccess={() => { setSelectedEnquiry(null); }}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -1122,201 +1359,7 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
   );
 }
 
-function DigitizePanel({ enquiry, db, onComplete }: { enquiry: any, db: any, onComplete: () => void }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [meds, setMeds] = useState<any[]>(enquiry?.digitizedData?.medications || []);
-  const [summary, setSummary] = useState(enquiry?.digitizedData?.analysisSummary || '');
-  const [isLegible, setIsLegible] = useState(enquiry?.digitizedData?.isLegible ?? true);
-  const { toast } = useToast();
-  const functions = useFunctions();
-
-  const handleAIAnalysis = async () => {
-    if (!enquiry?.imageUrl) return;
-    setIsAnalyzing(true);
-    try {
-      const analyzeFn = httpsCallable<any, any>(functions, 'prescriptionAnalysisAndPreFillFlow');
-      const { data: result } = await analyzeFn({
-        prescriptionImageUri: enquiry.imageUrl
-      });
-
-      if (result) {
-        setMeds(result.medications || []);
-        setSummary(result.analysisSummary || '');
-        setIsLegible(result.isLegible);
-        toast({ title: "Analysis complete", description: "Medications extracted successfully." });
-      }
-    } catch (err) {
-      console.error("AI Analysis Error:", err);
-      toast({ variant: "destructive", title: "Analysis failed", description: "Cloud processing error." });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const updateMed = (index: number, field: string, value: any) => {
-    const newMeds = [...meds];
-    newMeds[index] = { ...newMeds[index], [field]: value };
-    setMeds(newMeds);
-  };
-
-  const removeMed = (index: number) => {
-    setMeds(meds.filter((_, i) => i !== index));
-  };
-
-  const addMed = () => {
-    setMeds([...meds, { drugName: '', dosage: '', quantity: 1, instructions: '' }]);
-  };
-
-  const handleSave = async () => {
-    try {
-      // Find the specific prescription document within the user's subcollection
-      // Note: enquiry.id is the document ID, but we need the path. 
-      // Since it's from collectionGroup, we can use the ref if available, or build it.
-      // But useCollection with collectionGroup usually gives docs with id and data.
-      // We need to find the user ID. 
-      // Most prescriptions uploaded in this app are at /userProfiles/{userId}/prescriptions/{id}
-      
-      // Let's assume enquiry has userId or we can extract it from the path if we had access to the doc object.
-      // Since we are using useCollection hook, it might not return the full path easily.
-      // However, the blueprint says userProfiles/{userId}/prescriptions.
-      
-      // I'll try to find the document reference.
-      const userId = enquiry.userId;
-      if (!userId) {
-        toast({ variant: "destructive", title: "Error", description: "User ID not found for this enquiry." });
-        return;
-      }
-
-      const docRef = doc(db, 'userProfiles', userId, 'prescriptions', enquiry.id);
-      
-      await updateDocumentNonBlocking(docRef, {
-        digitizedData: {
-          medications: meds,
-          analysisSummary: summary,
-          isLegible: isLegible,
-          digitizedAt: serverTimestamp()
-        },
-        status: 'Digitized'
-      });
-
-      toast({ title: "Saving digital record", description: "Prescription successfully digitized." });
-      onComplete();
-    } catch (err) {
-      toast({ variant: "destructive", title: "Save failed" });
-    }
-  };
-
-  return (
-    <div className="space-y-6 flex flex-col h-full">
-      <div className="space-y-4">
-        <Button 
-          onClick={handleAIAnalysis} 
-          disabled={isAnalyzing} 
-          className="w-full h-16 rounded-2xl bg-accent hover:bg-accent/90 text-white font-black tracking-widest gap-3 shadow-xl shadow-accent/20"
-        >
-          {isAnalyzing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-          {meds.length > 0 ? "Re-run AI Analysis" : "Auto-digitize with AI"}
-        </Button>
-
-        {!isLegible && (
-          <div className="bg-red-50 p-4 rounded-xl border border-red-100 flex gap-3">
-             <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
-             <p className="text-[10px] font-bold text-red-800 leading-tight">AI flagged this image as potentially illegible. Please review manually.</p>
-          </div>
-        )}
-      </div>
-
-      <div className="flex-1 space-y-4 overflow-y-auto pr-2 scrollbar-hide min-h-0">
-        <div className="flex items-center justify-between">
-          <h3 className="text-[10px] font-black text-gray-400 tracking-widest uppercase">Medications ({meds.length})</h3>
-          <Button variant="ghost" size="sm" onClick={addMed} className="h-8 rounded-lg font-black text-[9px] text-primary gap-1"><PlusCircle className="w-3 h-3" /> Add item</Button>
-        </div>
-
-        <div className="space-y-3">
-          {meds.map((med, i) => (
-            <div key={i} className="bg-white p-5 rounded-2xl border border-gray-100 space-y-4 relative group/item hover:border-primary/20 transition-colors shadow-sm">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => removeMed(i)} 
-                className="absolute top-4 right-4 h-8 w-8 rounded-full text-gray-300 hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-              
-              <div className="space-y-2">
-                <Label className="text-[8px] font-black text-gray-400">Drug name</Label>
-                <Input 
-                  value={med.drugName} 
-                  onChange={e => updateMed(i, 'drugName', e.target.value)} 
-                  className="h-10 rounded-xl bg-gray-50 border-none font-bold text-xs" 
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label className="text-[8px] font-black text-gray-400">Dosage</Label>
-                  <Input 
-                    value={med.dosage} 
-                    onChange={e => updateMed(i, 'dosage', e.target.value)} 
-                    className="h-10 rounded-xl bg-gray-50 border-none font-bold text-xs" 
-                    placeholder="e.g. 500mg"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[8px] font-black text-gray-400">Qty</Label>
-                  <Input 
-                    type="number" 
-                    value={med.quantity} 
-                    onChange={e => updateMed(i, 'quantity', parseInt(e.target.value))} 
-                    className="h-10 rounded-xl bg-gray-50 border-none font-bold text-xs" 
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[8px] font-black text-gray-400">Instructions</Label>
-                <Input 
-                  value={med.instructions} 
-                  onChange={e => updateMed(i, 'instructions', e.target.value)} 
-                  className="h-10 rounded-xl bg-gray-50 border-none font-bold text-xs italic" 
-                  placeholder="e.g. 1-0-1 after food"
-                />
-              </div>
-            </div>
-          ))}
-
-          {meds.length === 0 && !isAnalyzing && (
-            <div className="py-12 text-center border-2 border-dashed rounded-[32px] border-gray-100">
-               <ClipboardList className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-               <p className="text-[10px] font-black text-gray-300 tracking-widest uppercase">No medications added</p>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-2 pt-4">
-          <Label className="text-[10px] font-black text-gray-400 tracking-widest uppercase ml-1">AI Assistant Notes</Label>
-          <Textarea 
-            value={summary} 
-            onChange={e => setSummary(e.target.value)} 
-            placeholder="AI observations..." 
-            className="rounded-2xl bg-gray-50 border-none font-bold text-xs min-h-[100px] resize-none p-4"
-          />
-        </div>
-      </div>
-
-      <div className="pt-6 border-t mt-auto">
-        <Button 
-          onClick={handleSave} 
-          disabled={meds.length === 0}
-          className="w-full h-16 rounded-full font-black tracking-widest bg-primary text-white shadow-2xl gap-3"
-        >
-          Confirm & Digitization <ArrowRight className="w-4 h-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
+// Removed old DigitizePanel in favor of OrderCreationForm
 
 function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const promosQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'promocodes'), orderBy('code', 'asc'), limit(50)) : null, [db, isVerified]);
@@ -1352,7 +1395,18 @@ function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 }
 
 function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
-  const [form, setForm] = useState({ code: initialData?.code || '', description: initialData?.description || '', discountType: initialData?.discountType || 'fixed', discountValue: initialData?.discountValue || 0, minOrderValue: initialData?.minOrderValue || 0, isActive: initialData?.isActive ?? true });
+  const [form, setForm] = useState({ 
+    code: initialData?.code || '', 
+    description: initialData?.description || '', 
+    discountType: initialData?.discountType || 'percentage', 
+    discountValue: initialData?.discountValue || 0, 
+    minOrderValue: initialData?.minOrderValue || 0, 
+    maxDiscount: initialData?.maxDiscount || 0,
+    expiryDate: initialData?.expiryDate || '',
+    scope: initialData?.scope || 'global', // global, category, product
+    scopeValue: initialData?.scopeValue || '',
+    isActive: initialData?.isActive ?? true 
+  });
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const payload = { ...form, updatedAt: serverTimestamp() };
@@ -1365,8 +1419,12 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
         <div className="space-y-2"><Label className="text-[10px] font-black">Code</Label><Input value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase()})} required className="rounded-2xl h-14 bg-gray-50 border-none font-black text-primary" /></div>
         <div className="space-y-2"><Label className="text-[10px] font-black">Type</Label><Select value={form.discountType} onValueChange={v => setForm({...form, discountType: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger><SelectContent className="rounded-2xl"><SelectItem value="fixed">Fixed (₹)</SelectItem><SelectItem value="percentage">Percentage (%)</SelectItem></SelectContent></Select></div>
         <div className="space-y-2"><Label className="text-[10px] font-black">Value</Label><Input type="number" value={form.discountValue} onChange={e => setForm({...form, discountValue: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black">Max Discount Cap (₹)</Label><Input type="number" value={form.maxDiscount} onChange={e => setForm({...form, maxDiscount: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
         <div className="space-y-2"><Label className="text-[10px] font-black">Min purchase</Label><Input type="number" value={form.minOrderValue} onChange={e => setForm({...form, minOrderValue: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-        <div className="flex items-center space-x-2 pt-2"><Checkbox id="promo-active" checked={form.isActive} onCheckedChange={c => setForm({...form, isActive: !!c})} /><Label htmlFor="promo-active" className="text-[10px] font-black cursor-pointer">Live</Label></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black">Expiry Date</Label><Input type="date" value={form.expiryDate} onChange={e => setForm({...form, expiryDate: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black">Scope</Label><Select value={form.scope} onValueChange={v => setForm({...form, scope: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger><SelectContent className="rounded-2xl"><SelectItem value="global">Global</SelectItem><SelectItem value="category">Category Wise</SelectItem><SelectItem value="product">Product Wise</SelectItem></SelectContent></Select></div>
+        <div className="space-y-2"><Label className="text-[10px] font-black">{form.scope === 'global' ? 'Description' : 'Scope Value (ID/Name)'}</Label><Input value={form.scopeValue} onChange={e => setForm({...form, scopeValue: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" placeholder={form.scope === 'global' ? 'e.g. Summer Sale' : 'Enter ID'} /></div>
+        <div className="flex items-center space-x-2 pt-2"><Checkbox id="promo-active" checked={form.isActive} onCheckedChange={c => setForm({...form, isActive: !!c})} /><Label htmlFor="promo-active" className="text-[10px] font-black cursor-pointer">Live campaign</Label></div>
       </div>
       <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white">Commit campaign</Button>
     </form>
@@ -1407,7 +1465,14 @@ function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onB
 }
 
 function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
-  const [form, setForm] = useState({ name: initialData?.name || '', discountedAmount: initialData?.discountedAmount || 0, type: initialData?.type || 'fixed', minPurchase: initialData?.minPurchase || 0, isActive: initialData?.isActive ?? true });
+  const [form, setForm] = useState({ 
+    name: initialData?.name || '', 
+    discountedAmount: initialData?.discountedAmount || 0, 
+    type: initialData?.type || 'fixed', 
+    minPurchase: initialData?.minPurchase || 0, 
+    tiers: initialData?.tiers || [{ minOrder: 499, charge: 50 }, { minOrder: 1000, charge: 25 }],
+    isActive: initialData?.isActive ?? true 
+  });
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const payload = { ...form, updatedAt: serverTimestamp() };
@@ -1417,11 +1482,18 @@ function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, o
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2"><Label className="text-[10px] font-black">Fee label</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      <div className="grid grid-cols-2 gap-6">
-        <div className="space-y-2"><Label className="text-[10px] font-black">Charge amount</Label><Input type="number" value={form.discountedAmount} onChange={e => setForm({...form, discountedAmount: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-        <div className="space-y-2"><Label className="text-[10px] font-black">Free above</Label><Input type="number" value={form.minPurchase} onChange={e => setForm({...form, minPurchase: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-        <div className="flex items-center space-x-2 pt-8"><Checkbox id="fee-active" checked={form.isActive} onCheckedChange={c => setForm({...form, isActive: !!c})} /><Label htmlFor="fee-active" className="text-[10px] font-black cursor-pointer">Active</Label></div>
+      <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
+        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tiered Pricing Levels</h4>
+        {form.tiers.map((t: any, i: number) => (
+          <div key={i} className="flex gap-4 items-end">
+            <div className="flex-1 space-y-2"><Label className="text-[8px] font-black">For orders above (₹)</Label><Input type="number" value={t.minOrder} onChange={e => { const next = [...form.tiers]; next[i].minOrder = Number(e.target.value); setForm({...form, tiers: next}); }} className="rounded-xl h-12 bg-white border-none font-bold" /></div>
+            <div className="flex-1 space-y-2"><Label className="text-[8px] font-black">Charge amount (₹)</Label><Input type="number" value={t.charge} onChange={e => { const next = [...form.tiers]; next[i].charge = Number(e.target.value); setForm({...form, tiers: next}); }} className="rounded-xl h-12 bg-white border-none font-bold" /></div>
+            <Button type="button" variant="ghost" size="icon" onClick={() => setForm({...form, tiers: form.tiers.filter((_, idx) => idx !== i)})} className="h-10 w-10 text-red-300"><Trash2 className="w-4 h-4" /></Button>
+          </div>
+        ))}
+        <Button type="button" onClick={() => setForm({...form, tiers: [...form.tiers, { minOrder: 0, charge: 0 }]})} variant="outline" className="w-full rounded-xl h-12 border-dashed font-black text-[10px] gap-2"><PlusCircle className="w-4 h-4" /> Add price level</Button>
       </div>
+      <div className="flex items-center space-x-2"><Checkbox id="fee-active" checked={form.isActive} onCheckedChange={c => setForm({...form, isActive: !!c})} /><Label htmlFor="fee-active" className="text-[10px] font-black cursor-pointer">Active in cart & checkout</Label></div>
       <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white">Update logistics policy</Button>
     </form>
   );
@@ -1431,6 +1503,15 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles'), orderBy('createdAt', 'desc'), limit(50)) : null, [db, isVerified]);
   const { data: users, isLoading } = useCollection(usersQuery);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const { toast } = useToast();
+
+  const handleUpdateUser = (id: string, updates: any) => {
+    updateDocumentNonBlocking(doc(db, 'userProfiles', id), { ...updates, updatedAt: serverTimestamp() });
+    toast({ title: "Patient record updated" });
+    setSelectedUser(null);
+  };
+
   const filteredUsers = users?.filter(patient => {
     const s = searchTerm.toLowerCase();
     const name = String(patient.name || '').toLowerCase();
@@ -1445,36 +1526,81 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[10px] font-black text-gray-400 border-b">
-              <tr><th className="px-10 py-8">Name</th><th className="px-10 py-8">Identifier</th><th className="px-10 py-8 text-right">Action</th></tr>
+              <tr><th className="px-10 py-8">Name</th><th className="px-10 py-8">Identifier</th><th className="px-10 py-8">Tags</th><th className="px-10 py-8 text-right">Action</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={3} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : filteredUsers?.map(patient => (
+              {isLoading ? (<tr><td colSpan={4} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : filteredUsers?.map(patient => (
                 <tr key={patient.id} className="hover:bg-gray-50/50">
                   <td className="px-10 py-8 font-black text-sm">{patient.name || 'SahiMed member'}</td>
                   <td className="px-10 py-8 font-bold text-sm text-primary">{patient.phone || patient.email}</td>
-                  <td className="px-10 py-8 text-right"><Button variant="ghost" size="icon"><Eye className="w-4 h-4" /></Button></td>
+                  <td className="px-10 py-8 flex flex-wrap gap-1">
+                    {(patient.tags || []).map((t: string) => <Badge key={t} className="bg-gray-100 text-gray-400 text-[8px] font-black">{t}</Badge>)}
+                    {(!patient.tags || patient.tags.length === 0) && <span className="text-[10px] text-gray-300 font-bold italic">No tags</span>}
+                  </td>
+                  <td className="px-10 py-8 text-right"><Button variant="ghost" size="icon" onClick={() => setSelectedUser(patient)}><Edit2 className="w-4 h-4" /></Button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </Card>
+      
+      <Dialog open={!!selectedUser} onOpenChange={o => !o && setSelectedUser(null)}>
+        <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden">
+          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black">Patient profile</DialogTitle></div>
+          <div className="p-8 space-y-6">
+            <div className="space-y-2"><Label className="text-[10px] font-black">Display Name</Label><Input value={selectedUser?.name} onChange={e => setSelectedUser({...selectedUser, name: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black">Administrative Tags (Comma separated)</Label><Input value={selectedUser?.tags?.join(', ')} onChange={e => setSelectedUser({...selectedUser, tags: e.target.value.split(',').map(t => t.trim())})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" placeholder="VIP, Chronic, Priority" /></div>
+            <Button onClick={() => handleUpdateUser(selectedUser.id, { name: selectedUser.name, tags: selectedUser.tags })} className="w-full h-16 rounded-full font-black bg-primary text-white">Save Record</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
 function AlertsTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const alertsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'systemAlerts'), orderBy('createdAt', 'desc'), limit(20)) : null, [db, isVerified]);
-  const { data: alerts, isLoading } = useCollection(alertsQuery);
+  const [stockAlerts, setStockAlerts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStockAlerts = async () => {
+      try {
+        const res = await fetch('/api/products?limit=100'); // Fetch products to check stock
+        const data = await res.json();
+        const lowStock = data.filter((p: any) => (p.availableQuantity || 0) <= 10);
+        setStockAlerts(lowStock);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStockAlerts();
+  }, []);
+
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Clinical alerts" subtitle="System broadcasts" onBack={onBack}><Button className="rounded-full h-12 px-8 font-black text-[10px] bg-red-600 text-white"><Plus className="w-4 h-4" /> New alert</Button></SectionHeader>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {isLoading ? (<div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>) : alerts?.map(alert => (
-          <Card key={alert.id} className="rounded-[40px] border-none shadow-sm bg-white p-8">
-            <Badge className="bg-red-100 text-red-600 font-black text-[8px] mb-4">Live</Badge>
-            <h3 className="font-black text-sm mb-2">{alert.title}</h3>
-            <p className="text-[11px] font-bold text-gray-500">{alert.message}</p>
+      <SectionHeader title="Inventory alerts" subtitle="Low stock notifications" onBack={onBack}>
+        <Button variant="outline" className="rounded-full h-12 px-8 font-black text-[10px] border-2">Generate report</Button>
+      </SectionHeader>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {isLoading ? (<div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>) : stockAlerts?.length === 0 ? (
+          <div className="col-span-full py-20 text-center bg-white rounded-[40px] shadow-sm">
+            <Zap className="w-12 h-12 text-green-100 mx-auto mb-4" />
+            <p className="text-[10px] font-black text-gray-400">Inventory is healthy. No alerts.</p>
+          </div>
+        ) : stockAlerts?.map(item => (
+          <Card key={item._id} className="rounded-[40px] border-none shadow-sm bg-white p-8 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-2 h-full bg-red-500" />
+            <div className="flex justify-between items-start mb-6">
+              <Badge className="bg-red-100 text-red-600 font-black text-[8px] uppercase">Low Stock</Badge>
+              <span className="font-black text-lg text-red-600">{item.availableQuantity || 0} left</span>
+            </div>
+            <h3 className="font-black text-sm mb-2 truncate">{item.name}</h3>
+            <p className="text-[10px] font-bold text-gray-400 mb-6">{item.manufacturer}</p>
+            <Button className="w-full rounded-full h-12 font-black text-[10px] bg-red-600 hover:bg-red-700 text-white gap-2">Update inventory</Button>
           </Card>
         ))}
       </div>
