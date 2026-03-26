@@ -637,7 +637,8 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     packSize: initialData?.packSize || '',
     description: initialData?.description || '',
     howToUse: initialData?.howToUse || '',
-    treatment: initialData?.treatment || ''
+    treatment: initialData?.treatment || '',
+    imageUrl: initialData?.imageUrl || ''
   });
 
   const [liveData, setLiveData] = useState({ price: 0, mrp: 0, availableQuantity: 0 });
@@ -721,6 +722,25 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
           </div>
         </TabsContent>
         <TabsContent value="live" className="space-y-6"><div className="grid grid-cols-3 gap-6 bg-primary/5 p-8 rounded-[32px] border border-primary/10"><div className="space-y-2"><Label className="text-[10px] font-black text-primary">Live price</Label><Input type="number" value={liveData.price} onChange={e => setLiveData({...liveData, price: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-black text-xl" /></div><div className="space-y-2"><Label className="text-[10px] font-black">Mrp</Label><Input type="number" value={liveData.mrp} onChange={e => setLiveData({...liveData, mrp: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-bold" /></div><div className="space-y-2"><Label className="text-[10px] font-black">Stock</Label><Input type="number" value={liveData.availableQuantity} onChange={e => setLiveData({...liveData, availableQuantity: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-bold" /></div></div></TabsContent>
+        <TabsContent value="images" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black">Product Image URL</Label>
+              <Input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} placeholder="https://..." className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+              <p className="text-[9px] font-bold text-gray-400 mt-2">Paste a public URL for the product image. This will be visible on the storefront.</p>
+            </div>
+            <div className="bg-gray-50 rounded-[32px] border border-dashed aspect-square flex items-center justify-center p-8">
+              {form.imageUrl ? (
+                <img src={form.imageUrl} alt="Preview" className="w-full h-full object-contain rounded-2xl" />
+              ) : (
+                <div className="text-center">
+                  <ImageIcon className="w-12 h-12 text-gray-100 mx-auto mb-2" />
+                  <span className="text-[10px] font-black text-gray-300">No image preview</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
         <TabsContent value="clinical" className="space-y-6">
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -805,6 +825,7 @@ function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: a
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2"><Label className="text-[10px] font-black">Category name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       <div className="space-y-2"><Label className="text-[10px] font-black">Description</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
+      <div className="space-y-2"><Label className="text-[10px] font-black">Category Image URL</Label><Input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} placeholder="https://..." className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white">Save category profile</Button>
     </form>
   );
