@@ -989,6 +989,40 @@ function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db: any, 
   const [activePromo, setActivePromo] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [prescriptions, setPrescriptions] = useState<string[]>([enquiry.imageUrl].filter(Boolean));
+  const [isFetchingPincode, setIsFetchingPincode] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Pincode lookup logic
+  useEffect(() => {
+    if (customer.pincode.length === 6) {
+      setIsFetchingPincode(true);
+      fetch(`https://api.postalpincode.in/pincode/${customer.pincode}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data?.[0]?.Status === 'Success') {
+            const first = data[0].PostOffice[0];
+            setCustomer(prev => ({ 
+              ...prev, 
+              area: first.Name, 
+              city: first.District 
+            }));
+          }
+        })
+        .catch(err => console.error('Pincode fetch failed', err))
+        .finally(() => setIsFetchingPincode(false));
+    }
+  }, [customer.pincode]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Simulate upload for now by creating local blob URL
+    // In production, this would upload to Firebase Storage
+    const url = URL.createObjectURL(file);
+    setPrescriptions([...prescriptions, url]);
+    toast({ title: "Prescription attached", description: file.name });
+  };
 
   // Fetch promocodes for validation
   const promosQuery = useMemoFirebase(() => query(collection(db, 'promocodes'), where('isActive', '==', true)), [db]);
@@ -1050,7 +1084,19 @@ function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db: any, 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      const hasRxItem = items.some(it => it.rx);
+      if (hasRxItem && prescriptions.length === 0) {
+        toast({ variant: 'destructive', title: "Prescription Required", description: "At least one prescription must be attached for RX items." });
+        return;
+      }
+
+      if (customer.pincode.length !== 6) {
+        toast({ variant: 'destructive', title: "Invalid Pincode", description: "Please enter a valid 6-digit Indian Pincode." });
+        return;
+      }
+
       const orderData = {
+        enquiryPath: enquiry?.__path || enquiry?.path || `prescriptions/${enquiry.id}`, // Attempt to get full path
         patientName: customer.name,
         phoneNumber: customer.mobile,
         shippingDetails: { 
@@ -1081,14 +1127,7 @@ function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db: any, 
       const result = await res.json();
 
       if (res.ok) {
-        // Mark enquiry as completed/digitized in Firestore
-        if (enquiry?.id) {
-          updateDocumentNonBlocking(doc(db, 'prescriptions', enquiry.id), { 
-            status: 'Digitized', 
-            orderId: result.orderId, 
-            updatedAt: serverTimestamp() 
-          });
-        }
+        // Syncing happens in backend now to avoid client-side permission issues
         toast({ title: "Order created successfully", description: `ID: ${result.orderId}` });
         onSuccess();
       } else {
@@ -1107,20 +1146,39 @@ function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db: any, 
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-[32px] border shadow-sm space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+              <Users className="w-3 h-3" /> Customer Information
+            </h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                 <Label className="text-[10px] font-black text-gray-400">Patient Name</Label>
+                 <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="rounded-xl h-12 bg-gray-50 border-none font-bold" placeholder="Full Name" />
+              </div>
+              <div className="space-y-1.5">
+                 <Label className="text-[10px] font-black text-gray-400">Mobile Number</Label>
+                 <Input value={customer.mobile} onChange={e => setCustomer({...customer, mobile: e.target.value})} className="rounded-xl h-12 bg-gray-50 border-none font-bold" placeholder="10 digits" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-[32px] border shadow-sm space-y-4">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
               <MapPin className="w-3 h-3" /> Shipping Address
             </h4>
             <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 space-y-1.5">
-                 <Label className="text-[10px] font-black text-gray-400">Area / Colony</Label>
-                 <Input value={customer.area} onChange={e => setCustomer({...customer, area: e.target.value})} className="rounded-xl h-12 bg-gray-50 border-none font-bold" placeholder="e.g. Madhapur" />
-              </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 relative">
                  <Label className="text-[10px] font-black text-gray-400">Pincode</Label>
-                 <Input value={customer.pincode} onChange={e => setCustomer({...customer, pincode: e.target.value})} className="rounded-xl h-12 bg-gray-50 border-none font-bold" placeholder="500081" />
+                 <div className="relative">
+                   <Input value={customer.pincode} onChange={e => setCustomer({...customer, pincode: e.target.value.replace(/\D/g, '').slice(0,6)})} className="rounded-xl h-12 bg-gray-50 border-none font-bold pr-10" placeholder="500081" />
+                   {isFetchingPincode && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-primary" />}
+                 </div>
               </div>
               <div className="space-y-1.5">
                  <Label className="text-[10px] font-black text-gray-400">City</Label>
                  <Input value={customer.city} onChange={e => setCustomer({...customer, city: e.target.value})} className="rounded-xl h-12 bg-gray-50 border-none font-bold" />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                 <Label className="text-[10px] font-black text-gray-400">Area / Colony</Label>
+                 <Input value={customer.area} onChange={e => setCustomer({...customer, area: e.target.value})} className="rounded-xl h-12 bg-gray-50 border-none font-bold" placeholder="e.g. Madhapur" />
               </div>
               <div className="col-span-2 space-y-1.5">
                  <Label className="text-[10px] font-black text-gray-400">Landmark (Optional)</Label>
@@ -1163,37 +1221,49 @@ function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db: any, 
             <div className="flex flex-wrap gap-4">
                {prescriptions.map((url, idx) => (
                  <div key={idx} className="relative group">
-                   <img src={url} className="w-20 h-20 object-cover rounded-2xl border" alt="" />
+                   <img src={url} className="w-20 h-20 object-cover rounded-2xl border bg-gray-50" alt="" />
                    <button onClick={() => setPrescriptions(prescriptions.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 opacity-100 shadow-lg border-2 border-white"><X className="w-2.5 h-2.5" /></button>
                  </div>
                ))}
-               <div className="flex gap-2 w-full mt-2">
-                 <Input 
-                   id="new-prescription-url"
-                   placeholder="Paste Prescription Image URL..." 
-                   className="rounded-xl h-12 bg-gray-50 border-none font-bold text-[11px]" 
-                   onKeyDown={(e) => {
-                     if (e.key === 'Enter') {
-                       const val = (e.target as HTMLInputElement).value;
-                       if (val) {
-                         setPrescriptions([...prescriptions, val]);
-                         (e.target as HTMLInputElement).value = '';
+               <div className="flex flex-col gap-3 w-full mt-2">
+                 <div className="flex gap-2">
+                   <Input 
+                     id="new-prescription-url"
+                     placeholder="Paste Image URL..." 
+                     className="rounded-xl h-12 bg-gray-50 border-none font-bold text-[11px]" 
+                     onKeyDown={(e) => {
+                       if (e.key === 'Enter') {
+                         const val = (e.target as HTMLInputElement).value;
+                         if (val) {
+                           setPrescriptions([...prescriptions, val]);
+                           (e.target as HTMLInputElement).value = '';
+                         }
                        }
-                     }
-                   }}
-                 />
-                 <Button 
-                   onClick={() => {
-                     const el = document.getElementById('new-prescription-url') as HTMLInputElement;
-                     if (el.value) {
-                       setPrescriptions([...prescriptions, el.value]);
-                       el.value = '';
-                     }
-                   }}
-                   className="rounded-xl h-12 bg-primary text-white font-black text-[10px] px-6"
-                 >
-                   Attach
-                 </Button>
+                     }}
+                   />
+                   <Button 
+                     onClick={() => {
+                       const el = document.getElementById('new-prescription-url') as HTMLInputElement;
+                       if (el.value) {
+                         setPrescriptions([...prescriptions, el.value]);
+                         el.value = '';
+                       }
+                     }}
+                     className="rounded-xl h-12 bg-primary text-white font-black text-[10px] px-6"
+                   >
+                     Attach
+                   </Button>
+                 </div>
+                 <div className="relative">
+                   <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" />
+                   <Button 
+                     onClick={() => fileInputRef.current?.click()}
+                     variant="outline"
+                     className="w-full rounded-2xl h-14 border-2 border-dashed border-primary/20 bg-primary/5 text-primary font-black text-[10px] flex items-center justify-center gap-2 hover:bg-primary/10 transition-all"
+                   >
+                     <UploadCloud className="w-4 h-4" /> Browse Local Machine
+                   </Button>
+                 </div>
                </div>
             </div>
           </div>
@@ -1659,7 +1729,7 @@ function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, o
           <div key={i} className="flex gap-4 items-end">
             <div className="flex-1 space-y-2"><Label className="text-[8px] font-black">For orders above (₹)</Label><Input type="number" value={t.minOrder} onChange={e => { const next = [...form.tiers]; next[i].minOrder = Number(e.target.value); setForm({...form, tiers: next}); }} className="rounded-xl h-12 bg-white border-none font-bold" /></div>
             <div className="flex-1 space-y-2"><Label className="text-[8px] font-black">Charge amount (₹)</Label><Input type="number" value={t.charge} onChange={e => { const next = [...form.tiers]; next[i].charge = Number(e.target.value); setForm({...form, tiers: next}); }} className="rounded-xl h-12 bg-white border-none font-bold" /></div>
-            <Button type="button" variant="ghost" size="icon" onClick={() => setForm({...form, tiers: form.tiers.filter((_, idx) => idx !== i)})} className="h-10 w-10 text-red-300"><Trash2 className="w-4 h-4" /></Button>
+            <Button type="button" variant="ghost" size="icon" onClick={() => setForm({...form, tiers: form.tiers.filter((_: any, idx: number) => idx !== i)})} className="h-10 w-10 text-red-300"><Trash2 className="w-4 h-4" /></Button>
           </div>
         ))}
         <Button type="button" onClick={() => setForm({...form, tiers: [...form.tiers, { minOrder: 0, charge: 0 }]})} variant="outline" className="w-full rounded-xl h-12 border-dashed font-black text-[10px] gap-2"><PlusCircle className="w-4 h-4" /> Add price level</Button>

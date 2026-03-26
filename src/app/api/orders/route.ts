@@ -20,7 +20,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const { enquiryPath, ...body } = await req.json();
     const client = await clientPromise;
     const db = client.db('sahimed');
     
@@ -38,6 +38,22 @@ export async function POST(req: Request) {
     };
 
     const result = await db.collection('orders').insertOne(orderData);
+
+    // Sync to Firestore if enquiryPath is provided (resolves permission issues)
+    if (enquiryPath) {
+      try {
+        const { dbAdmin } = await import('@/lib/firebase-admin');
+        await dbAdmin.doc(enquiryPath).update({
+          status: 'Digitized',
+          orderId: nextId,
+          updatedAt: new Date()
+        });
+      } catch (fsErr) {
+        console.error('Firestore sync failed', fsErr);
+        // We don't fail the whole request because the order is already in MongoDB
+      }
+    }
+
     return NextResponse.json({ success: true, id: result.insertedId, orderId: nextId });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
