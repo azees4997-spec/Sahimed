@@ -638,7 +638,9 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     description: initialData?.description || '',
     howToUse: initialData?.howToUse || '',
     treatment: initialData?.treatment || '',
-    imageUrl: initialData?.imageUrl || ''
+    imageUrl: initialData?.imageUrl || '',
+    imageUrl2: initialData?.imageUrls?.[1] || '',
+    imageUrl3: initialData?.imageUrls?.[2] || ''
   });
 
   const [liveData, setLiveData] = useState({ price: 0, mrp: 0, availableQuantity: 0 });
@@ -662,7 +664,10 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       return;
     }
 
-    const staticPayload = { ...form };
+    const staticPayload = { 
+      ...form, 
+      imageUrls: [form.imageUrl, form.imageUrl2, form.imageUrl3].filter(Boolean) 
+    };
     const livePayload = { 
       mrp: Number(liveData.mrp), 
       sahimed_price: Number(liveData.price), 
@@ -724,20 +729,36 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
         <TabsContent value="live" className="space-y-6"><div className="grid grid-cols-3 gap-6 bg-primary/5 p-8 rounded-[32px] border border-primary/10"><div className="space-y-2"><Label className="text-[10px] font-black text-primary">Live price</Label><Input type="number" value={liveData.price} onChange={e => setLiveData({...liveData, price: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-black text-xl" /></div><div className="space-y-2"><Label className="text-[10px] font-black">Mrp</Label><Input type="number" value={liveData.mrp} onChange={e => setLiveData({...liveData, mrp: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-bold" /></div><div className="space-y-2"><Label className="text-[10px] font-black">Stock</Label><Input type="number" value={liveData.availableQuantity} onChange={e => setLiveData({...liveData, availableQuantity: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-bold" /></div></div></TabsContent>
         <TabsContent value="images" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black">Product Image URL</Label>
-              <Input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} placeholder="https://..." className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
-              <p className="text-[9px] font-bold text-gray-400 mt-2">Paste a public URL for the product image. This will be visible on the storefront.</p>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-primary">Primary Image URL</Label>
+                <Input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} placeholder="https://..." className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black">Alternate Image 2</Label>
+                <Input value={form.imageUrl2} onChange={e => setForm({...form, imageUrl2: e.target.value})} placeholder="https://..." className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black">Alternate Image 3</Label>
+                <Input value={form.imageUrl3} onChange={e => setForm({...form, imageUrl3: e.target.value})} placeholder="https://..." className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+              </div>
+              <p className="text-[9px] font-bold text-gray-400">Add up to 3 public URLs for the product. The first one is the primary display image.</p>
             </div>
-            <div className="bg-gray-50 rounded-[32px] border border-dashed aspect-square flex items-center justify-center p-8">
-              {form.imageUrl ? (
-                <img src={form.imageUrl} alt="Preview" className="w-full h-full object-contain rounded-2xl" />
-              ) : (
-                <div className="text-center">
-                  <ImageIcon className="w-12 h-12 text-gray-100 mx-auto mb-2" />
-                  <span className="text-[10px] font-black text-gray-300">No image preview</span>
+            <div className="space-y-4">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Previews</Label>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="bg-gray-50 rounded-[32px] border border-dashed aspect-[16/9] flex items-center justify-center p-4">
+                  {form.imageUrl ? <img src={form.imageUrl} alt="1" className="h-full object-contain rounded-xl" /> : <ImageIcon className="w-8 h-8 text-gray-100" />}
                 </div>
-              )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-[28px] border border-dashed aspect-square flex items-center justify-center p-2">
+                    {form.imageUrl2 ? <img src={form.imageUrl2} alt="2" className="h-full object-contain rounded-lg" /> : <ImageIcon className="w-4 h-4 text-gray-100" />}
+                  </div>
+                  <div className="bg-gray-50 rounded-[28px] border border-dashed aspect-square flex items-center justify-center p-2">
+                    {form.imageUrl3 ? <img src={form.imageUrl3} alt="3" className="h-full object-contain rounded-lg" /> : <ImageIcon className="w-4 h-4 text-gray-100" />}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </TabsContent>
@@ -903,7 +924,19 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2"><Label className="text-[10px] font-black">Molecule name</Label><Input value={form.molecule} onChange={e => setForm({...form, molecule: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       <div className="space-y-2"><Label className="text-[10px] font-black">Master id</Label><Input value={form.masterId} onChange={e => setForm({...form, masterId: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      <div className="space-y-2"><Label className="text-[10px] font-black">Form</Label><Select value={form.form} onValueChange={v => setForm({...form, form: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger><SelectContent className="rounded-2xl"><SelectItem value="Tablet">Tablet</SelectItem><SelectItem value="Capsule">Capsule</SelectItem><SelectItem value="Syrup">Syrup</SelectItem></SelectContent></Select></div>
+      <div className="space-y-2"><Label className="text-[10px] font-black">Form</Label><Select value={form.form} onValueChange={v => setForm({...form, form: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger><SelectContent className="rounded-2xl">
+        <SelectItem value="Tablet">Tablet</SelectItem>
+        <SelectItem value="Tablet ER">Tablet ER</SelectItem>
+        <SelectItem value="Capsule">Capsule</SelectItem>
+        <SelectItem value="Syrup">Syrup</SelectItem>
+        <SelectItem value="Injection">Injection</SelectItem>
+        <SelectItem value="Gel">Gel</SelectItem>
+        <SelectItem value="Cream">Cream</SelectItem>
+        <SelectItem value="Ointment">Ointment</SelectItem>
+        <SelectItem value="Drops">Drops</SelectItem>
+        <SelectItem value="Sachet">Sachet</SelectItem>
+        <SelectItem value="Liquid">Liquid</SelectItem>
+      </SelectContent></Select></div>
       <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white">Save registry entry</Button>
     </form>
   );
