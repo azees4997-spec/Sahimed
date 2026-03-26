@@ -192,7 +192,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white border-b sticky top-0 z-[100] px-4 pt-4 pb-3">
+    <nav className="bg-[#F8FAFC] border-b sticky top-0 z-[100] px-4 pt-4 pb-3">
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3">
@@ -247,7 +247,7 @@ export default function Navbar() {
               <Input
                 type="text"
                 placeholder="Search for medicines or generics"
-                className="w-full pl-11 pr-12 rounded-xl border-none bg-[#F1F5F9] h-11 text-[13px] font-medium placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-primary/20"
+                className="w-full pl-11 pr-12 clay-input h-11 text-[13px] font-medium placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-primary/20 bg-white"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onFocus={() => search.length >= 3 && setShowSuggestions(true)}

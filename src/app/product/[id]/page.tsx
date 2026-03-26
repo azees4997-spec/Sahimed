@@ -336,10 +336,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
         <section className="bg-white rounded-[32px] sm:rounded-[40px] p-6 sm:p-16 shadow-xl border border-gray-100 overflow-hidden">
           <Tabs defaultValue="clinical" className="w-full">
-            <TabsList className="bg-gray-100 p-1 rounded-full h-10 sm:h-16 w-full max-w-[600px] flex mx-auto mb-8 sm:mb-16">
-              <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-xs tracking-[0.1em]">Clinical</TabsTrigger>
-              <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-xs tracking-[0.1em]">Safety</TabsTrigger>
-              <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-xs tracking-[0.1em]">Risks</TabsTrigger>
+            <TabsList className="clay-card !bg-gray-100 p-1 !rounded-full h-10 sm:h-16 w-full max-w-[600px] flex mx-auto mb-8 sm:mb-16 !shadow-sm">
+              <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-xs tracking-[0.1em] data-[state=active]:clay-card data-[state=active]:!bg-white data-[state=active]:!shadow-md">Clinical</TabsTrigger>
+              <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-xs tracking-[0.1em] data-[state=active]:clay-card data-[state=active]:!bg-white data-[state=active]:!shadow-md">Safety</TabsTrigger>
+              <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-xs tracking-[0.1em] data-[state=active]:clay-card data-[state=active]:!bg-white data-[state=active]:!shadow-md">Risks</TabsTrigger>
             </TabsList>
 
             <TabsContent value="clinical" className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
@@ -356,12 +356,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </TabsContent>
 
             <TabsContent value="safety" className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
-               <div className="bg-orange-50/50 p-5 rounded-[24px] border border-orange-100 flex gap-3">
-                 <div className="w-10 h-10 sm:w-16 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0 border"><AlertTriangle className="w-5 h-5 text-orange-600" /></div>
+               <div className="clay-card !bg-orange-50/50 p-5 !ring-1 !ring-orange-100 flex gap-3">
+                 <div className="w-10 h-10 sm:w-16 clay-card !bg-white flex items-center justify-center shrink-0 border"><AlertTriangle className="w-5 h-5 text-orange-600" /></div>
                  <div><h4 className="text-[9px] sm:text-sm font-black text-orange-600 mb-0.5">Clinical caution</h4><p className="text-[9px] sm:text-[13px] font-bold text-orange-900/70 leading-relaxed">{product.safetyAdvice || "Follow professional clinical guidance."}</p></div>
                </div>
-               <div className="bg-blue-50/50 p-5 rounded-[24px] border border-blue-100 flex gap-3">
-                 <div className="w-10 h-10 sm:w-16 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0 border"><Stethoscope className="w-5 h-5 text-blue-600" /></div>
+               <div className="clay-card !bg-blue-50/50 p-5 !ring-1 !ring-blue-100 flex gap-3">
+                 <div className="w-10 h-10 sm:w-16 clay-card !bg-white flex items-center justify-center shrink-0 border"><Stethoscope className="w-5 h-5 text-blue-600" /></div>
                  <div><h4 className="text-[9px] sm:text-sm font-black text-blue-600 mb-0.5">Usage protocol</h4><p className="text-[9px] sm:text-[13px] font-bold text-blue-900/70 leading-relaxed">{product.howToUse || "Follow clinical instructions carefully."}</p></div>
                </div>
             </TabsContent>
@@ -375,7 +375,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 { icon: Package, title: "Renal safety", text: product.kidneyInteraction },
                 { icon: ShieldAlert, title: "Hepatic protocol", text: product.liverInteraction }
               ].map((item, i) => (
-                <div key={i} className="bg-white p-4 rounded-[20px] border border-gray-100 flex items-start gap-3 hover:shadow-md transition-all">
+                <div key={i} className="clay-card !p-4 flex items-start gap-3 hover:shadow-md transition-all">
                   <div className="w-8 h-8 bg-primary/5 rounded-lg flex items-center justify-center text-primary shrink-0"><item.icon className="w-4 h-4" /></div>
                   <div className="flex flex-col">
                     <h4 className="text-[8px] font-black tracking-[0.1em] text-gray-400 mb-0.5">{item.title}</h4>

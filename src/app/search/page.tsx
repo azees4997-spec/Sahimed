@@ -48,7 +48,7 @@ function SearchResults() {
       <main className="max-w-7xl mx-auto px-4 py-6 md:py-12">
         <div className="flex flex-col md:flex-row gap-8">
           <aside className="w-full md:w-64 space-y-6 hidden md:block">
-            <div className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
+            <div className="clay-card !p-6">
               <h3 className="font-black text-[9px] tracking-widest text-gray-400 mb-6 flex items-center gap-2">
                 <Filter className="w-3.5 h-3.5 text-primary" /> Filter results
               </h3>

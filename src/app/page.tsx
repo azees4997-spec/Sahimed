@@ -91,7 +91,7 @@ export default function Home() {
           >
             <CarouselContent>
               <CarouselItem>
-                <div className="relative rounded-[24px] bg-gradient-to-br from-primary to-primary/80 overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
+                <div className="relative clay-card clay-primary overflow-hidden p-8 flex flex-col justify-center min-h-[220px] !rounded-[24px]">
                   <div className="space-y-3 relative z-10">
                     <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight tracking-tight">
                       Affordable medicines<br />across India
@@ -106,7 +106,7 @@ export default function Home() {
               </CarouselItem>
 
               <CarouselItem>
-                <div className="relative rounded-[24px] bg-gradient-to-br from-accent to-accent/80 overflow-hidden p-8 flex flex-col justify-center min-h-[220px]">
+                <div className="relative clay-card clay-accent overflow-hidden p-8 flex flex-col justify-center min-h-[220px] !rounded-[24px]">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
                     <div className="space-y-2 flex-1 text-center sm:text-left">
                       <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full border border-white/20">
@@ -159,8 +159,8 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="grid grid-cols-3 gap-2 sm:gap-4">
-          <Link href="/prescription" className="flex flex-col items-center justify-center gap-2 bg-primary/5 p-3 sm:p-6 rounded-[20px] sm:rounded-[24px] group active:scale-95 transition-all shadow-sm text-center">
+        <section className="grid grid-cols-3 gap-3 sm:gap-6">
+          <Link href="/prescription" className="clay-card !bg-primary/5 p-3 sm:p-6 flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all text-center">
             <div className="bg-primary p-2 sm:p-3 rounded-xl sm:rounded-2xl text-white shadow-lg">
               <FileText className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
@@ -169,7 +169,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <Link href="https://wa.me/91XXXXXXXXXX" className="flex flex-col items-center justify-center gap-2 bg-accent/5 p-3 sm:p-6 rounded-[20px] sm:rounded-[24px] group active:scale-95 transition-all shadow-sm text-center">
+          <Link href="https://wa.me/91XXXXXXXXXX" className="clay-card !bg-accent/5 p-3 sm:p-6 flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all text-center">
             <div className="bg-accent p-2 sm:p-3 rounded-xl sm:rounded-2xl text-white shadow-lg">
               <MessageCircle className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
@@ -178,7 +178,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <Link href="tel:+91XXXXXXXXXX" className="flex flex-col items-center justify-center gap-2 bg-primary/5 p-3 sm:p-6 rounded-[20px] sm:rounded-[24px] group active:scale-95 transition-all shadow-sm text-center">
+          <Link href="tel:+91XXXXXXXXXX" className="clay-card !bg-primary/5 p-3 sm:p-6 flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all text-center">
             <div className="bg-primary p-2 sm:p-3 rounded-xl sm:rounded-2xl text-white shadow-lg">
               <Phone className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
@@ -198,7 +198,7 @@ export default function Home() {
               [...Array(6)].map((_, i) => <Skeleton className="w-24 h-24 rounded-full shrink-0" key={i} />)
             ) : categories?.map((cat: any, i) => (
               <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-2 group shrink-0">
-                <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm overflow-hidden group-active:scale-90 transition-transform">
+                <div className="w-24 h-24 clay-card !rounded-full flex items-center justify-center overflow-hidden group-active:scale-90 transition-transform p-0">
                   <Image 
                     src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} 
                     alt={cat.name} 

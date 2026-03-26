@@ -23,8 +23,16 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 275 60% 45%;
-    --radius: 1.25rem;
+    --radius: 1.5rem;
   }
+}
+
+:root {
+  --clay-bg: #f0f0f0;
+  --clay-shadow-out-dark: rgba(0, 0, 0, 0.1);
+  --clay-shadow-out-light: rgba(255, 255, 255, 0.9);
+  --clay-shadow-in-dark: rgba(0, 0, 0, 0.05);
+  --clay-shadow-in-light: rgba(255, 255, 255, 1);
 }
 
 @layer base {
@@ -61,6 +69,63 @@
 
   .pharma-bg-pattern {
     background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%238b31c0' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4h-6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* Claymorphism Utilities */
+  .clay-card {
+    background: var(--clay-bg);
+    border-radius: var(--radius);
+    box-shadow: 16px 16px 32px var(--clay-shadow-out-dark), 
+                -16px -16px 32px var(--clay-shadow-out-light),
+                inset 8px 8px 16px var(--clay-shadow-in-light),
+                inset -8px -8px 16px var(--clay-shadow-in-dark);
+    border: none;
+  }
+
+  .clay-button {
+    background: var(--clay-bg);
+    border-radius: calc(var(--radius) * 0.75);
+    box-shadow: 8px 8px 16px var(--clay-shadow-out-dark), 
+                -8px -8px 16px var(--clay-shadow-out-light),
+                inset 4px 4px 8px var(--clay-shadow-in-light),
+                inset -4px -4px 8px var(--clay-shadow-in-dark);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+  }
+
+  .clay-button:active {
+    box-shadow: 4px 4px 8px var(--clay-shadow-out-dark), 
+                -4px -4px 8px var(--clay-shadow-out-light),
+                inset 8px 8px 16px var(--clay-shadow-in-light),
+                inset -8px -8px 16px var(--clay-shadow-in-dark);
+    transform: scale(0.98);
+  }
+
+  .clay-input {
+    background: var(--clay-bg);
+    border-radius: calc(var(--radius) * 0.5);
+    box-shadow: inset 6px 6px 12px var(--clay-shadow-out-dark), 
+                inset -6px -6px 12px var(--clay-shadow-out-light);
+    border: none;
+    transition: all 0.2s ease;
+  }
+
+  .clay-primary {
+    --clay-bg: hsl(var(--primary));
+    --clay-shadow-out-dark: rgba(0, 0, 0, 0.2);
+    --clay-shadow-out-light: rgba(255, 255, 255, 0.2);
+    --clay-shadow-in-dark: rgba(0, 0, 0, 0.1);
+    --clay-shadow-in-light: rgba(255, 255, 255, 0.3);
+    color: white;
+  }
+
+  .clay-accent {
+    --clay-bg: hsl(var(--accent));
+    --clay-shadow-out-dark: rgba(0, 0, 0, 0.2);
+    --clay-shadow-out-light: rgba(255, 255, 255, 0.2);
+    --clay-shadow-in-dark: rgba(0, 0, 0, 0.1);
+    --clay-shadow-in-light: rgba(255, 255, 255, 0.3);
+    color: white;
   }
 }
 

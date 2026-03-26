@@ -30,7 +30,7 @@ export default function ProductCard({ product }: { product: Product }) {
     : `https://picsum.photos/seed/${product.id}/300/300`;
 
   return (
-    <div className="bg-white rounded-[16px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full group relative p-2">
+    <div className="clay-card overflow-hidden flex flex-col h-full group relative p-3">
       {savingsPct > 0 && (
         <div className="absolute top-2 left-2 z-10">
           <div className="bg-primary text-white font-black text-[7px] px-1.5 py-0.5 rounded tracking-tighter">
@@ -67,7 +67,7 @@ export default function ProductCard({ product }: { product: Product }) {
       
       <div className="mt-2">
         {quantity > 0 ? (
-          <div className="flex items-center gap-1 rounded-md border border-primary p-0.5 bg-white w-full h-8">
+          <div className="clay-card flex items-center gap-1 p-0.5 w-full h-8 !shadow-sm !rounded-lg">
             <button 
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateQuantity(product.id, -1); }} 
               className="h-full flex-1 flex items-center justify-center text-primary hover:bg-primary/5 transition-colors"
@@ -91,7 +91,7 @@ export default function ProductCard({ product }: { product: Product }) {
               addToCart({ ...product, price: currentPrice, mrp: currentMrp });
               toast({ title: "Added to bag" });
             }} 
-            className="rounded-md h-8 w-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] tracking-wider transition-all active:scale-95"
+            className="clay-button clay-primary h-8 w-full text-white font-black text-[10px] tracking-wider"
           >
             Add
           </button>
