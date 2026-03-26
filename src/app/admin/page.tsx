@@ -778,11 +778,28 @@ function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
   const { toast } = useToast();
   const [form, setForm] = useState({ name: initialData?.name || '', description: initialData?.description || '', imageUrl: initialData?.imageUrl || '' });
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...form, updatedAt: serverTimestamp() };
-    initialData?.id ? updateDocumentNonBlocking(doc(db, 'categories', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'categories'), { ...payload, createdAt: serverTimestamp() });
-    onSuccess();
+    const payload = { ...form, updatedAt: new Date() };
+    
+    try {
+      // 1. Sync to MongoDB
+      const method = initialData ? 'PUT' : 'POST';
+      const url = initialData ? `/api/categories/${initialData.id || initialData._id}` : '/api/categories';
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      // 2. Sync to Firestore
+      initialData?.id ? updateDocumentNonBlocking(doc(db, 'categories', initialData.id), { ...payload, updatedAt: serverTimestamp() }) : addDocumentNonBlocking(collection(db, 'categories'), { ...payload, createdAt: serverTimestamp() });
+      
+      toast({ title: "Category synchronized" });
+      onSuccess();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: "Sync failed", description: err.message });
+    }
   };
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -838,11 +855,28 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
 function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
   const { toast } = useToast();
   const [form, setForm] = useState({ molecule: initialData?.molecule || '', masterId: initialData?.masterId || '', form: initialData?.form || 'Tablet' });
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...form, updatedAt: serverTimestamp() };
-    initialData?.id ? updateDocumentNonBlocking(doc(db, 'moleculeMaster', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'moleculeMaster'), { ...payload, createdAt: serverTimestamp() });
-    onSuccess();
+    const payload = { ...form, updatedAt: new Date() };
+
+    try {
+      // 1. Sync to MongoDB
+      const method = initialData ? 'PUT' : 'POST';
+      const url = initialData ? `/api/molecules/${initialData.id || initialData._id}` : '/api/molecules';
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      // 2. Sync to Firestore
+      initialData?.id ? updateDocumentNonBlocking(doc(db, 'moleculeMaster', initialData.id), { ...payload, updatedAt: serverTimestamp() }) : addDocumentNonBlocking(collection(db, 'moleculeMaster'), { ...payload, createdAt: serverTimestamp() });
+      
+      toast({ title: "Molecule synchronized" });
+      onSuccess();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: "Sync failed", description: err.message });
+    }
   };
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -1316,6 +1350,7 @@ function BannersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, 
 }
 
 function BannerForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const { toast } = useToast();
   const [form, setForm] = useState({
     title: initialData?.title || 'Upto 81% discount',
     subtitle: initialData?.subtitle || 'On all medicines & health products',
@@ -1325,15 +1360,32 @@ function BannerForm({ db, initialData, onSuccess }: { db: any, initialData?: any
     order: initialData?.order || 0
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...form, updatedAt: serverTimestamp() };
-    if (initialData?.id) {
-      updateDocumentNonBlocking(doc(db, 'banners', initialData.id), payload);
-    } else {
-      addDocumentNonBlocking(collection(db, 'banners'), { ...payload, createdAt: serverTimestamp() });
+    const payload = { ...form, updatedAt: new Date() };
+
+    try {
+      // 1. Sync to MongoDB
+      const method = initialData?.id ? 'PUT' : 'POST';
+      const url = initialData?.id ? `/api/banners/${initialData.id || initialData._id}` : '/api/banners';
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      // 2. Sync to Firestore
+      if (initialData?.id) {
+        updateDocumentNonBlocking(doc(db, 'banners', initialData.id), { ...payload, updatedAt: serverTimestamp() });
+      } else {
+        addDocumentNonBlocking(collection(db, 'banners'), { ...payload, createdAt: serverTimestamp() });
+      }
+      
+      toast({ title: "Banner synchronized" });
+      onSuccess();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: "Sync failed", description: err.message });
     }
-    onSuccess();
   };
 
   return (

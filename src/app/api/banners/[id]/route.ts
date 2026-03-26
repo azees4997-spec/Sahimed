@@ -10,24 +10,24 @@ const getQuery = (id: string) => {
   return { _id: id as any };
 };
 
-export async function GET(request: Request) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
+    const body = await request.json();
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const molecules = await db.collection('molecules').find({}).toArray();
-    return NextResponse.json(molecules.map(m => ({ ...m, id: m._id.toString() })));
+    await db.collection('banners').updateOne(getQuery(params.id), { $set: { ...body, updatedAt: new Date() } });
+    return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
-export async function POST(request: Request) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const body = await request.json();
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const result = await db.collection('molecules').insertOne({ ...body, createdAt: new Date() });
-    return NextResponse.json({ success: true, id: result.insertedId });
+    await db.collection('banners').deleteOne(getQuery(params.id));
+    return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

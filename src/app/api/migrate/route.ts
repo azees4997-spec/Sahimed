@@ -27,6 +27,29 @@ export async function GET() {
     const mongoDb = client.db('sahimed');
     logs.push("MongoDB Connected");
 
+    // --- PHASE 0: PRODUCT CATALOG ---
+    logs.push("Phase 0: Migrating Product Catalog (Static Data)...");
+    const medSnap = await getDocs(collection(db, 'medicines'));
+    const products = medSnap.docs.map(doc => ({
+      _id: doc.id as any,
+      ...doc.data(),
+      migratedAt: new Date()
+    }));
+    
+    if (products.length > 0) {
+      const productsCol = mongoDb.collection('products');
+      // Use upsert to avoid overwriting existing MongoDB-only data if any, 
+      // but here we want to ensure images/names match Firestore.
+      for (const prod of products) {
+        await productsCol.updateOne(
+          { _id: prod._id },
+          { $set: prod },
+          { upsert: true }
+        );
+      }
+      logs.push(`Successfully synced ${products.length} products from medicine catalog.`);
+    }
+
     // --- PHASE 1: CATEGORIES ---
     logs.push("Phase 1: Migrating Categories...");
     const catSnap = await getDocs(collection(db, 'categories'));
@@ -67,6 +90,26 @@ export async function GET() {
       if (result.matchedCount > 0) syncCount++;
     }
     logs.push(`Successfully synced live data for ${syncCount} products.`);
+
+    // --- PHASE 3: MOLECULES ---
+    logs.push("Phase 3: Migrating Molecules...");
+    const molSnap = await getDocs(collection(db, 'moleculeMaster'));
+    const molecules = molSnap.docs.map(doc => ({ _id: doc.id as any, ...doc.data(), migratedAt: new Date() }));
+    if (molecules.length > 0) {
+      await mongoDb.collection('molecules').deleteMany({});
+      await mongoDb.collection('molecules').insertMany(molecules);
+      logs.push(`Successfully migrated ${molecules.length} molecules.`);
+    }
+
+    // --- PHASE 4: BANNERS ---
+    logs.push("Phase 4: Migrating Banners...");
+    const bannerSnap = await getDocs(collection(db, 'banners'));
+    const banners = bannerSnap.docs.map(doc => ({ _id: doc.id as any, ...doc.data(), migratedAt: new Date() }));
+    if (banners.length > 0) {
+      await mongoDb.collection('banners').deleteMany({});
+      await mongoDb.collection('banners').insertMany(banners);
+      logs.push(`Successfully migrated ${banners.length} banners.`);
+    }
 
     return NextResponse.json({ 
       success: true, 

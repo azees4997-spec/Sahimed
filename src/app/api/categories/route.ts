@@ -2,30 +2,39 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
+// GET all categories
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const limitValue = parseInt(searchParams.get('limit') || '20');
+  const limitValue = parseInt(searchParams.get('limit') || '50');
 
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const collection = db.collection('categories');
-
-    const categories = await collection
+    const categories = await db.collection('categories')
       .find({})
       .sort({ name: 1 })
       .limit(limitValue)
       .toArray();
 
-    // Map _id to id for frontend compatibility
-    const normalized = categories.map(cat => ({
-      ...cat,
-      id: cat._id.toString()
-    }));
-
-    return NextResponse.json(normalized);
+    return NextResponse.json(categories.map(c => ({ ...c, id: c._id.toString() })));
   } catch (err: any) {
-    console.error("[Categories API Error]", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+// POST new category
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const client = await clientPromise;
+    const db = client.db('sahimed');
+    const result = await db.collection('categories').insertOne({
+      ...body,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+    return NextResponse.json({ success: true, id: result.insertedId });
+  } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
