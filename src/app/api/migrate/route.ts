@@ -38,15 +38,14 @@ export async function GET() {
     
     if (products.length > 0) {
       const productsCol = mongoDb.collection('products');
-      // Use upsert to avoid overwriting existing MongoDB-only data if any, 
-      // but here we want to ensure images/names match Firestore.
-      for (const prod of products) {
-        await productsCol.updateOne(
-          { _id: prod._id },
-          { $set: prod },
-          { upsert: true }
-        );
-      }
+      const ops = products.map(prod => ({
+        updateOne: {
+          filter: { _id: prod._id },
+          update: { $set: prod },
+          upsert: true
+        }
+      }));
+      await productsCol.bulkWrite(ops);
       logs.push(`Successfully synced ${products.length} products from medicine catalog.`);
     }
 
@@ -75,21 +74,21 @@ export async function GET() {
     }));
     
     const productsCol = mongoDb.collection('products');
-    let syncCount = 0;
-    
-    for (const item of liveDataItems) {
-      const result = await productsCol.updateOne(
-        { sku: item.sku },
-        { 
-          $set: { 
-            liveData: item.data,
-            lastSyncedAt: new Date()
-          } 
+    if (liveDataItems.length > 0) {
+      const ops = liveDataItems.map(item => ({
+        updateOne: {
+          filter: { sku: item.sku },
+          update: { 
+            $set: { 
+              liveData: item.data,
+              lastSyncedAt: new Date()
+            } 
+          }
         }
-      );
-      if (result.matchedCount > 0) syncCount++;
+      }));
+      const result = await productsCol.bulkWrite(ops);
+      logs.push(`Successfully synced live data for ${result.matchedCount} products.`);
     }
-    logs.push(`Successfully synced live data for ${syncCount} products.`);
 
     // --- PHASE 3: MOLECULES ---
     logs.push("Phase 3: Migrating Molecules...");
