@@ -5,3 +5,7 @@ runConfig:
 env:
   - variable: NODE_VERSION
     value: "20"
+  - variable: MONGODB_URI
+    value: "mongodb+srv://azees4997_db_user:99XzB5T3H1B0fNj8@sahimed.qwsbgml.mongodb.net/"
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "studio-9756314138-8403b"

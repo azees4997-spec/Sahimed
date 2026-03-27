@@ -19,6 +19,9 @@
 
 # production
 /build
+mobile/build/
+**/*.so
+**/*.apk
 
 # misc
 .DS_Store

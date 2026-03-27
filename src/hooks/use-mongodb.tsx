@@ -27,8 +27,18 @@ export function useMongoDBCollection<T = any>(options: {
         if (options.q) params.append('q', options.q);
 
         const res = await fetch(`/api/products?${params.toString()}`);
-        if (!res.ok) throw new Error('Failed to fetch products');
         const json = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(json.error || json.message || 'Failed to fetch products');
+        }
+        
+        if (!Array.isArray(json)) {
+          console.error("[useMongoDBCollection] Expected array but got:", json);
+          setData([]);
+          return;
+        }
+
         const normalized = json.map((item: any) => ({
           ...item,
           id: item._id || item.id

@@ -354,7 +354,12 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
     try {
       const res = await fetch(`/api/orders?status=${statusFilter === 'All' ? '' : statusFilter}`);
       const data = await res.json();
-      setOrders(data);
+      if (Array.isArray(data)) {
+        setOrders(data);
+      } else {
+        console.error("Orders API returned non-array:", data);
+        setOrders([]);
+      }
     } catch (err) {
       toast({ variant: 'destructive', title: "Fetch failed" });
     } finally {
@@ -432,8 +437,8 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
               <tr><th className="px-8 py-6">Order id</th><th className="px-8 py-6">Date</th><th className="px-8 py-6">Patient</th><th className="px-8 py-6">Address</th><th className="px-8 py-6">Amount</th><th className="px-8 py-6 text-right">Action</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={6} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : (!orders || orders.length === 0) ? (<tr><td colSpan={6} className="p-20 text-center font-bold text-gray-400 text-[10px]">No orders found</td></tr>) : orders.map(order => (
-                <tr key={order._id} className="hover:bg-gray-50/50">
+              {isLoading ? (<tr><td colSpan={6} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : (!Array.isArray(orders) || orders.length === 0) ? (<tr><td colSpan={6} className="p-20 text-center font-bold text-gray-400 text-[10px]">No orders found</td></tr>) : orders.map(order => (
+                <tr key={order._id || order.id} className="hover:bg-gray-50/50">
                   <td className="px-8 py-6 font-black text-xs uppercase">{order.orderId}</td>
                   <td className="px-8 py-6 text-[10px] font-black">{format(new Date(order.orderDate), 'dd MMM yyyy')}</td>
                   <td className="px-8 py-6"><p className="font-bold text-xs">{order.patientName}</p><p className="text-[10px] text-gray-400">{order.phoneNumber}</p></td>
@@ -609,7 +614,9 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
           const res = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=10`);
           if (res.ok) {
             const data = await res.json();
-            setSuggestions(data.map((p: any) => ({ ...p, id: p._id || p.id })));
+            if (Array.isArray(data)) {
+              setSuggestions(data.map((p: any) => ({ ...p, id: p._id || p.id })));
+            }
           }
         } catch (error) {
           console.warn("Suggestion fetch error:", error);
