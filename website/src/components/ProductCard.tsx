@@ -7,7 +7,8 @@ import { Product, useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-
+import { Badge } from "@/components/ui/badge";
+import { hoverVariant, springTransition, tapVariant } from '@/lib/animations';
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
@@ -29,16 +30,12 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      initial={{ opacity: 0, scale: 0.98, y: 10 }}
+      whileInView={{ opacity: 1, scale: 1, y: 0 }}
       viewport={{ once: true }}
-      whileHover={{ y: -8, rotate: -1, scale: 1.02 }}
-      transition={{ 
-        type: "spring", 
-        stiffness: 260, 
-        damping: 20 
-      }}
-      className="bg-white border border-slate-100/60 rounded-[40px] overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/10 transition-all flex flex-col h-full group relative p-5"
+      whileHover={hoverVariant}
+      transition={springTransition as any}
+      className="pharma-card flex flex-col h-full group relative p-5 bg-white border border-slate-100"
     >
       {savingsPct > 0 && (
         <div className="absolute top-5 left-5 z-10">
@@ -49,13 +46,13 @@ export default function ProductCard({ product }: { product: Product }) {
       )}
 
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 space-y-5">
-        <div className="relative aspect-square w-full bg-pastel-blue rounded-[32px] flex items-center justify-center overflow-hidden h-40 group-hover:bg-white transition-colors duration-500">
+        <div className="relative aspect-square w-full bg-sahi-blue rounded-[32px] flex items-center justify-center overflow-hidden h-40 group-hover:bg-white transition-colors duration-500 p-4">
           <Image 
             src={safeImageUrl} 
             alt={product.name} 
             fill 
             sizes="(max-width: 768px) 40vw, 15vw"
-            className="object-contain p-4 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6" 
+            className="object-contain p-4 transition-transform duration-700 group-hover:scale-110" 
           />
         </div>
 
@@ -109,11 +106,11 @@ export default function ProductCard({ product }: { product: Product }) {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              whileTap={{ scale: 0.95 }}
+              whileTap={tapVariant}
               onClick={(e) => {
                 e.preventDefault();
                 addToCart({ ...product, price: currentPrice, mrp: currentMrp });
-                toast({ title: "Clinical Medicine added to cart" });
+                toast({ title: "Medicines in Basket" });
               }} 
               className="h-12 w-full bg-primary text-white font-black text-xs tracking-[0.15em] uppercase rounded-[20px] shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-3 group/btn"
             >
@@ -124,13 +121,5 @@ export default function ProductCard({ product }: { product: Product }) {
         </AnimatePresence>
       </div>
     </motion.div>
-  );
-}
-
-function Badge({ children, className }: { children: React.ReactNode, className?: string }) {
-  return (
-    <span className={cn("inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold", className)}>
-      {children}
-    </span>
   );
 }

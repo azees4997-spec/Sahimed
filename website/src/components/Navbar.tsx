@@ -192,34 +192,30 @@ export default function Navbar() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.1 }}
       className={cn(
-        "sticky top-0 z-[100] transition-all duration-500 px-4 py-4 sm:py-6",
-        scrolled ? "bg-white/70 backdrop-blur-2xl shadow-2xl shadow-primary/5 border-b border-white/20 mt-0" : "bg-transparent mt-2"
+        "sticky top-0 z-[100] transition-all duration-500 px-4 py-3 sm:py-4",
+        scrolled ? "bg-white/80 backdrop-blur-2xl shadow-xl border-b border-white/20" : "bg-transparent"
       )}
     >
-      <div className="max-w-7xl mx-auto flex flex-col gap-6">
-        <div className="flex justify-between items-center bg-white/40 backdrop-blur-md p-3 sm:px-6 rounded-[32px] sm:rounded-full border border-white/40 shadow-sm">
-          <Link href="/" className="flex items-center gap-3 group">
-            <motion.div 
-              whileHover={{ rotate: [0, -10, 10, 0] }}
-              transition={{ duration: 0.5 }}
-            >
-              <SahiMedIcon className="w-10 h-10 sm:w-12 sm:h-12 shadow-xl shadow-primary/30" />
-            </motion.div>
-            <div className="flex flex-col">
-              <div className="flex items-center leading-none">
-                <span className="font-black text-2xl sm:text-3xl text-slate-900 tracking-tighter">Sahi</span>
-                <span className="font-black text-2xl sm:text-3xl text-primary tracking-tighter">Med</span>
+      <div className="max-w-7xl mx-auto flex flex-col gap-4">
+        {/* Tier 1: Logo, Location, Cart */}
+        <div className="flex justify-between items-center bg-white/40 backdrop-blur-md p-2 rounded-full border border-white/40 shadow-sm">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="flex items-center gap-3 group">
+              <SahiMedIcon className="w-10 h-10 sm:w-11 sm:h-11 shadow-lg shadow-primary/20" />
+              <div className="hidden sm:flex flex-col">
+                <div className="flex items-center leading-none">
+                  <span className="font-black text-2xl text-slate-900 tracking-tighter">Sahi</span>
+                  <span className="font-black text-2xl text-primary tracking-tighter">Med</span>
+                </div>
               </div>
-            </div>
-          </Link>
+            </Link>
 
-          <div className="flex items-center gap-2 sm:gap-6">
             <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
               <PopoverTrigger asChild>
-                <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 hover:bg-white transition-all text-[11px] sm:text-xs font-black text-slate-600 border border-white/40 shadow-sm group">
-                  <MapPin className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+                <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 hover:bg-white transition-all text-[11px] sm:text-xs font-black text-slate-600 border border-white/60 shadow-sm group">
+                  <MapPin className="w-3.5 h-3.5 text-primary group-hover:scale-110 transition-transform" />
                   <span className="max-w-[70px] sm:max-w-none truncate tracking-tight">{location}</span>
-                  <ChevronDown className="w-3.5 h-3.5 opacity-40" />
+                  <ChevronDown className="w-3.5 h-3.5 opacity-40 shrink-0" />
                 </button>
               </PopoverTrigger>
               <PopoverContent sideOffset={12} className="w-72 p-5 rounded-[32px] shadow-3xl border border-white/50 glass">
@@ -233,40 +229,39 @@ export default function Navbar() {
                 </Button>
               </PopoverContent>
             </Popover>
+          </div>
 
-            <div className="flex items-center gap-3">
-              <Link href="/cart" className="relative group">
-                <div className="p-3 bg-white/50 backdrop-blur-md rounded-full group-hover:bg-primary group-hover:text-white transition-all duration-500 border border-white/50 shadow-sm">
-                  <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
-                  {totalItems > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-accent text-white h-5 min-w-[20px] sm:h-6 sm:min-w-[24px] flex items-center justify-center p-0 text-[9px] sm:text-[10px] font-black rounded-full border-2 border-white shadow-lg animate-bounce">
-                      {totalItems}
-                    </span>
-                  )}
-                </div>
-              </Link>
-              <Link href="/profile" className="p-3 bg-white/50 backdrop-blur-md rounded-full hover:bg-slate-900 hover:text-white transition-all duration-500 border border-white/50 shadow-sm group">
-                <User className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600 group-hover:text-white" />
-              </Link>
-            </div>
+          <div className="flex items-center gap-3">
+            <Link href="/cart" className="flex items-center gap-2 group">
+              <div className="p-3 bg-white/60 backdrop-blur-md rounded-full group-hover:bg-primary group-hover:text-white transition-all duration-500 border border-white/60 shadow-sm relative">
+                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-accent text-white h-5 min-w-[20px] sm:h-6 sm:min-w-[24px] flex items-center justify-center p-0 text-[9px] sm:text-[10px] font-black rounded-full border-2 border-white shadow-lg animate-bounce">
+                    {totalItems}
+                  </span>
+                )}
+              </div>
+              <span className="hidden sm:block font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-primary transition-colors">Cart</span>
+            </Link>
           </div>
         </div>
 
-        <div className="relative w-full max-w-4xl mx-auto" ref={searchRef}>
+        {/* Tier 2: Search */}
+        <div className="relative w-full" ref={searchRef}>
           <form onSubmit={handleSearch} className="relative">
             <div className="relative group">
               <SearchIcon className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-5 h-5" />
               <Input
                 type="text"
-                placeholder="Find and book clinical medicines..."
-                className="w-full pl-14 pr-12 h-16 sm:h-20 text-sm sm:text-lg font-bold bg-white/50 border-white/50 focus:bg-white focus:border-primary/20 focus-visible:ring-8 focus-visible:ring-primary/5 rounded-full shadow-2xl shadow-primary/5 transition-all outline-none"
+                placeholder="Search for medicines or generics"
+                className="w-full pl-14 pr-12 h-14 sm:h-16 text-sm sm:text-base font-bold bg-white/60 border-white/60 focus:bg-white focus:border-primary/20 rounded-full shadow-2xl shadow-primary/5 transition-all outline-none"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onFocus={() => search.length >= 2 && setShowSuggestions(true)}
               />
               {isSearching && (
                 <div className="absolute right-6 top-1/2 -translate-y-1/2">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
                 </div>
               )}
             </div>
@@ -279,74 +274,28 @@ export default function Navbar() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.98 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="absolute top-[calc(100%+20px)] left-0 right-0 glass rounded-[40px] overflow-hidden z-[110] border border-white/50 shadow-3xl"
+                className="absolute top-[calc(100%+8px)] left-0 right-0 glass rounded-[32px] overflow-hidden z-[110] border border-white/50 shadow-3xl"
               >
-                <div className="max-h-[500px] overflow-y-auto scrollbar-hide py-5">
-                  <div className="px-8 pb-4 border-b border-white/20 flex items-center justify-between">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Quick Search</span>
-                    <span className="text-[10px] font-bold text-primary px-3 py-1 bg-primary/5 rounded-full">{suggestions.length} Results</span>
-                  </div>
-                  
+                <div className="max-h-[500px] overflow-y-auto scrollbar-hide py-3">
                   {displayedSuggestions.map((item) => (
                     <button
                       key={item.id}
                       onClick={() => handleSuggestionClick(item.term)}
-                      className="w-full px-8 py-4 flex items-center gap-6 hover:bg-primary/5 transition-all text-left group"
+                      className="w-full px-8 py-3.5 flex items-center gap-4 hover:bg-primary/5 transition-all text-left group"
                     >
-                      <div className="p-3 bg-white/50 rounded-2xl group-hover:bg-white group-hover:scale-110 transition-all border border-white/50 shadow-sm">
+                      <div className="p-2.5 bg-white/50 rounded-xl group-hover:bg-white group-hover:scale-110 transition-all border border-white/50">
                         <SearchIcon className="w-4 h-4 text-slate-400 group-hover:text-primary" />
                       </div>
-                      <div className="flex-1 min-w-0 flex items-center gap-4">
-                        <p className="font-extrabold text-base text-slate-800 truncate flex-1">
+                      <div className="flex-1 min-w-0 flex items-center justify-between gap-4">
+                        <p className="font-extrabold text-sm text-slate-800 truncate flex-1">
                           {item.term}
                         </p>
-                        <Badge variant="secondary" className="bg-white/50 text-slate-500 font-black text-[9px] px-3 py-1 rounded-lg border border-white/50 shrink-0 group-hover:bg-primary group-hover:text-white transition-all uppercase tracking-widest">
+                        <Badge variant="secondary" className="bg-white/50 text-slate-500 font-black text-[8px] px-2 py-0.5 rounded-lg border border-white/50 shrink-0 uppercase tracking-widest">
                           {item.type}
                         </Badge>
                       </div>
-                      <ArrowUpRight className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0 group-hover:rotate-12" />
                     </button>
                   ))}
-
-                  {suggestions.length > 5 && (
-                    <button 
-                      onClick={() => setExpanded(!expanded)}
-                      className="w-full py-4 flex items-center justify-center gap-2 text-primary font-black text-xs tracking-widest uppercase hover:bg-white/50 transition-colors border-t border-white/20 mt-2"
-                    >
-                      {expanded ? (
-                        <>Contract <ChevronUp className="w-4 h-4" /></>
-                      ) : (
-                        <>Expand Results <ChevronDown className="w-4 h-4" /></>
-                      )}
-                    </button>
-                  )}
-                </div>
-                
-                <div className="p-8 bg-white/30 backdrop-blur-md border-t border-white/50 flex flex-col gap-6">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Clinical Recommendations</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {rawSuggestions.filter(p => p._type === 'medicine').slice(0, 2).map((p) => (
-                      <div 
-                        key={p.id}
-                        onClick={() => handleSuggestionClick(p.name)}
-                        className="flex items-center gap-6 p-4 bg-white/60 rounded-[32px] border border-white/50 hover:bg-white hover:shadow-2xl hover:shadow-primary/10 transition-all text-left cursor-pointer group"
-                      >
-                        <div className="w-16 h-16 bg-white rounded-3xl overflow-hidden shrink-0 p-3 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-sm border border-slate-50">
-                          {p.imageUrl ? <img src={p.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-8 h-8 text-slate-200" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-extrabold text-sm text-slate-900 truncate leading-tight mb-1">{p.name}</p>
-                          <p className="text-[10px] font-bold text-slate-400 truncate tracking-tight uppercase opacity-80">{p.packSize || '10 Tablets'}</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-sm font-black text-primary tracking-tighter">₹{p.price}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </motion.div>
             )}

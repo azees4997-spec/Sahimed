@@ -21,7 +21,13 @@ import {
   ShoppingCart,
   Zap,
   TrendingDown,
-  Maximize2
+  Maximize2,
+  Loader2,
+  Search as SearchIcon,
+  Filter,
+  SlidersHorizontal,
+  ArrowRight,
+  Sparkles
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -38,6 +44,14 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
+import { 
+  hoverVariant, 
+  springTransition, 
+  tapVariant,
+  fadeInVariant,
+  scaleInVariant,
+  containerVariants
+} from '@/lib/animations';
 
 const ComparisonCard = ({ 
   product, 
@@ -83,29 +97,32 @@ const ComparisonCard = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 30 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ type: "spring", damping: 20, stiffness: 100 }}
+      initial="hidden"
+      animate="visible"
+      variants={scaleInVariant}
       className="h-full"
     >
       <Card className={cn(
-        "rounded-[48px] p-6 sm:p-8 flex flex-col h-full border shadow-xl transition-all overflow-hidden relative",
-        isAlt ? "bg-pastel-green border-dashed border-green-200" : "bg-white border-gray-100",
+        "rounded-[48px] p-6 sm:p-8 flex flex-col h-full border shadow-sm transition-all overflow-hidden relative",
+        isAlt ? "bg-sahi-green border-dashed border-green-200" : "bg-white border-slate-100",
         !showComparison && "max-w-md mx-auto w-full"
       )}>
         <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] sm:text-xs font-black text-gray-400 tracking-[0.2em] block uppercase">{label}</span>
+          <span className="text-[10px] sm:text-xs font-black text-slate-400 tracking-[0.2em] block uppercase">{label}</span>
           {displaySavingsPct > 0 && (
             <Badge className="bg-accent text-white text-[10px] sm:text-xs font-black px-3 py-1.5 rounded-xl tracking-widest border-none shadow-lg shadow-accent/20 uppercase">
-              Save {displaySavingsPct}%
+              SAVE {displaySavingsPct}%
             </Badge>
           )}
         </div>
         
         <Dialog>
           <DialogTrigger asChild>
-            <div className="relative aspect-square w-full max-h-[160px] sm:max-h-none bg-white rounded-[32px] mb-6 overflow-hidden border border-gray-50 flex items-center justify-center p-4 cursor-zoom-in group/img shadow-inner">
-              <Image src={safeImageUrl} alt={product.name} fill sizes="(max-width: 768px) 45vw, 30vw" className="object-contain p-2 transition-transform duration-700 group-hover/img:scale-110 group-hover/img:rotate-3" />
+            <div className={cn(
+              "relative aspect-square w-full max-h-[160px] sm:max-h-none rounded-[32px] mb-6 overflow-hidden border flex items-center justify-center p-4 cursor-zoom-in group/img shadow-inner transition-colors",
+              isAlt ? "bg-white/80" : "bg-slate-50 border-slate-100"
+            )}>
+              <Image src={safeImageUrl} alt={product.name} fill sizes="(max-width: 768px) 45vw, 30vw" className="object-contain p-2 transition-transform duration-700 group-hover/img:scale-110" />
               <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
                  <Maximize2 className="w-5 h-5 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
               </div>
@@ -116,41 +133,32 @@ const ComparisonCard = ({
             <DialogDescription className="sr-only">Visual representation of {product.name}</DialogDescription>
             <div className="relative aspect-square w-full bg-white rounded-[40px] overflow-hidden p-8 flex items-center justify-center shadow-3xl border border-white/20">
                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-10" />
-               <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-8 py-4 rounded-full border border-gray-100 shadow-2xl flex items-center gap-4">
-                  <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
-                  <span className="font-black text-xs tracking-widest text-gray-900 uppercase">{product.name}</span>
-               </div>
             </div>
           </DialogContent>
         </Dialog>
 
         <div className="flex-1 space-y-2">
-          <h3 className="font-black text-sm sm:text-xl text-gray-900 leading-tight line-clamp-2 min-h-[2.8rem] font-outfit">
+          <h3 className="font-extrabold text-sm sm:text-xl text-slate-800 leading-tight line-clamp-2 min-h-[2.8rem] font-outfit uppercase">
             {product.name}
           </h3>
-          <p className="text-[10px] sm:text-xs font-black text-gray-400 tracking-widest uppercase">
+          <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase opacity-60">
             {product.packSize || "N/A"}
           </p>
-          <p className="text-[10px] sm:text-xs font-bold text-gray-500 truncate opacity-70">
+          <p className="text-[10px] font-bold text-slate-400 truncate opacity-70 uppercase tracking-tighter">
             {product.manufacturer}
           </p>
 
           <div className="pt-4 border-t border-dashed mt-4 space-y-1">
             <div className="flex items-baseline gap-2">
               <p className="text-2xl sm:text-4xl font-black tracking-tighter text-slate-900 font-outfit">
-                ₹{Number(pPrice).toFixed(2)}
+                ₹{Number(pPrice).toFixed(0)}
               </p>
               {pMrp > pPrice && (
-                <span className="text-xs sm:text-sm text-red-400 line-through font-bold opacity-60 tracking-tight">₹{Number(pMrp).toFixed(2)}</span>
+                <span className="text-xs sm:text-sm text-slate-300 line-through font-bold opacity-60 tracking-tight">₹{Number(pMrp).toFixed(0)}</span>
               )}
             </div>
-            {displaySavingsAmt > 0 && (
-              <p className="text-[10px] sm:text-xs font-black text-accent tracking-[0.1em] uppercase">
-                Save ₹{Number(displaySavingsAmt).toFixed(2)} ({displaySavingsPct}% OFF)
-              </p>
-            )}
-            <p className="text-[9px] sm:text-[11px] font-bold text-gray-400 tracking-tight">
-              ₹{unitPrice.toFixed(2)} per clinical unit
+            <p className="text-[9px] font-bold text-slate-400 tracking-tight uppercase">
+              ₹{unitPrice.toFixed(2)} / unit
             </p>
           </div>
         </div>
@@ -159,11 +167,11 @@ const ComparisonCard = ({
           <Button 
             onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })} 
             className={cn(
-              "w-full h-12 sm:h-16 rounded-full font-black text-[10px] sm:text-xs tracking-[0.2em] uppercase gap-3 shadow-2xl active:scale-95 transition-all",
-              isAlt ? "bg-accent hover:bg-accent/90 shadow-accent/20" : "bg-primary hover:bg-primary/90 shadow-primary/20"
+              "w-full h-12 sm:h-16 rounded-full font-black text-[10px] sm:text-xs tracking-[0.2em] uppercase gap-3 shadow-xl active:scale-95 transition-all border-none",
+              isAlt ? "bg-accent text-white hover:bg-accent/90 shadow-accent/20" : "bg-primary text-white hover:bg-primary/90 shadow-primary/20"
             )}
           >
-            {qty > 0 ? `In bag (${qty})` : "Book Clinical Order"} <ShoppingCart className="w-4 sm:w-5 h-4 sm:h-5" />
+            {qty > 0 ? `IN BASKET (${qty})` : "ADD TO BASKET"} <ShoppingCart className="w-4 h-4" />
           </Button>
         </div>
       </Card>
@@ -212,22 +220,22 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const switchSavingsPct = brandedMrp > 0 ? Math.round((switchSavingsAmt / brandedMrp) * 100) : 0;
 
   if (productLoading) {
-    return (<div className="min-h-screen bg-[#F8F8F8]"><Navbar /><main className="max-w-7xl mx-auto px-4 py-12"><Skeleton className="h-[400px] rounded-[48px]" /></main></div>);
+    return (<div className="min-h-screen bg-[#F8FAFC]"><Navbar /><main className="max-w-7xl mx-auto px-4 py-12"><Skeleton className="h-[400px] rounded-[48px]" /></main></div>);
   }
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-[#F8F8F8]">
+      <div className="min-h-screen bg-[#F8FAFC]">
         <Navbar />
         <main className="max-w-7xl mx-auto px-4 py-20 text-center">
           <PageTransition>
-            <div className="bg-white rounded-[48px] p-16 shadow-2xl border border-gray-100 max-w-lg mx-auto">
-              <div className="w-24 h-24 bg-gray-50 rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-inner">
-                <Info className="w-10 h-10 text-orange-400" />
+            <div className="bg-white rounded-[48px] p-16 shadow-sm border border-slate-100 max-w-lg mx-auto">
+              <div className="w-20 h-20 bg-slate-50 rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-inner">
+                <Info className="w-8 h-8 text-orange-400" />
               </div>
-              <h1 className="text-3xl font-black tracking-tight mb-4 font-outfit">Medicine not found</h1>
-              <p className="text-gray-500 font-bold text-sm mb-10 leading-relaxed">The requested clinical record could not be retrieved from our secure database.</p>
-              <Button onClick={() => window.location.href = '/search'} className="rounded-full h-16 px-12 font-black tracking-widest uppercase bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20">Browse Secure Catalog</Button>
+              <h1 className="text-2xl font-black tracking-tighter mb-4 font-outfit uppercase">Clinical record missing</h1>
+              <p className="text-slate-400 font-bold text-[10px] mb-10 leading-relaxed uppercase tracking-widest">The requested medicine entry could not be found.</p>
+              <Button onClick={() => window.location.href = '/search'} className="rounded-full h-16 px-12 font-black tracking-widest uppercase bg-slate-900 text-white shadow-xl">Back to Catalog</Button>
             </div>
           </PageTransition>
         </main>
@@ -237,18 +245,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[#F4F7F6] pb-32 pharma-bg-pattern">
+      <div className="min-h-screen bg-[#F8FAFC] pb-32">
         <Navbar />
         <main className="max-w-[1200px] mx-auto px-4 sm:px-10 py-6 sm:py-10">
           
-          <div className="flex flex-row items-center justify-center mb-8 gap-4">
+          <div className="flex flex-row items-center justify-center mb-10 gap-4">
              <motion.div 
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                className="inline-flex items-center gap-3 bg-white/60 backdrop-blur-md px-6 py-3 rounded-full border border-white/50 shadow-sm"
+                className="inline-flex items-center gap-3 bg-white px-6 py-3 rounded-full border border-slate-100 shadow-sm"
              >
-                <Dna className="w-5 h-5 text-primary" />
-                <span className="text-sm sm:text-lg font-black text-gray-900 tracking-tight font-outfit uppercase">
+                <Dna className="w-4 h-4 text-primary" />
+                <span className="text-xs sm:text-sm font-black text-slate-800 tracking-tight font-outfit uppercase">
                   {molData?.molecule || product.name}
                 </span>
              </motion.div>
@@ -257,8 +265,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 initial={{ x: 20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                >
-                 <Badge className="bg-rose-500 text-white border-none rounded-full font-black text-xs px-4 py-2 tracking-widest flex items-center gap-2 shadow-lg shadow-rose-500/20 uppercase">
-                   <AlertTriangle className="w-3.5 h-3.5" /> Rx Required
+                 <Badge className="bg-rose-500 text-white border-none rounded-full font-black text-[9px] px-4 py-2 tracking-widest flex items-center gap-2 shadow-lg shadow-rose-500/20 uppercase">
+                   <AlertTriangle className="w-3 h-3" /> RX REQUIRED
                  </Badge>
                </motion.div>
              )}
@@ -266,23 +274,23 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
           {showComparison && switchSavingsAmt > 0 && (
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: -20 }}
+              initial={{ scale: 0.98, opacity: 0, y: -10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              className="mb-8"
+              className="mb-10"
             >
-              <div className="bg-gradient-to-r from-accent to-rose-500 text-white py-4 px-8 rounded-[24px] shadow-2xl flex items-center justify-center gap-4 text-center border-b-4 border-black/10">
-                 <TrendingDown className="w-6 h-6 animate-pulse" />
-                 <h2 className="text-xs sm:text-xl font-black tracking-tight uppercase">
-                   Switch and save ₹{Number(switchSavingsAmt).toFixed(2)} ({switchSavingsPct}% off branded MRP)
+              <div className="bg-gradient-to-r from-primary to-accent text-white py-5 px-8 rounded-[32px] shadow-xl flex items-center justify-center gap-4 text-center">
+                 <TrendingDown className="w-5 h-5 animate-bounce" />
+                 <h2 className="text-[10px] sm:text-sm font-black tracking-widest uppercase">
+                   Switch and save ₹{Number(switchSavingsAmt).toFixed(0)} • IDENTICAL MOLECULE
                  </h2>
-                 <Zap className="w-6 h-6 fill-white" />
+                 <Zap className="w-5 h-5 fill-white" />
               </div>
             </motion.div>
           )}
 
-          <div className="mb-12">
+          <div className="mb-16">
             {showComparison ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-12 items-stretch">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-stretch">
                 <ComparisonCard 
                   product={product} 
                   label="Original Branded" 
@@ -293,7 +301,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 />
                 <ComparisonCard 
                   product={genericAlt} 
-                  label="Smart Clinical Alternative" 
+                  label="Smart Switch Alternative" 
                   isAlt 
                   getItemQuantity={getItemQuantity}
                   addToCart={addToCart}
@@ -305,7 +313,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <div className="flex justify-center">
                 <ComparisonCard 
                   product={product} 
-                  label={isBranded ? "Clinical Selection" : "Verified Generic"} 
+                  label={isBranded ? "Verified Selection" : "Clinical Generic"} 
                   getItemQuantity={getItemQuantity}
                   addToCart={addToCart}
                   showComparison={showComparison}
@@ -316,60 +324,60 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
 
           <motion.section 
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-white rounded-[48px] p-8 sm:p-20 shadow-2xl border border-gray-100 overflow-hidden"
+            className="bg-white rounded-[56px] p-8 sm:p-20 shadow-sm border border-slate-100 overflow-hidden"
           >
             <Tabs defaultValue="clinical" className="w-full">
-              <TabsList className="bg-slate-50 p-2 rounded-full h-14 sm:h-20 w-full max-w-[700px] flex mx-auto mb-12 sm:mb-20 border border-slate-100 shadow-inner">
-                <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[9px] sm:text-sm tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-primary transition-all">Clinical Intelligence</TabsTrigger>
-                <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[9px] sm:text-sm tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-primary transition-all">Safety Protocol</TabsTrigger>
-                <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[9px] sm:text-sm tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-primary transition-all">Risk Factors</TabsTrigger>
+              <TabsList className="bg-slate-50 p-1.5 rounded-full h-14 sm:h-18 w-full max-w-[600px] flex mx-auto mb-16 border border-slate-100 shadow-inner">
+                <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[9px] sm:text-[11px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-primary transition-all">Intelligence</TabsTrigger>
+                <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[9px] sm:text-[11px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-primary transition-all">Protocol</TabsTrigger>
+                <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[9px] sm:text-[11px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-primary transition-all">Clinical Matrix</TabsTrigger>
               </TabsList>
 
               <TabsContent value="clinical" className="space-y-10 focus-visible:outline-none">
-                 <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-16">
-                    <div className="bg-pastel-blue p-10 rounded-[40px] border border-blue-100/50 space-y-4 shadow-sm">
-                       <div className="flex items-center gap-4"><ClipboardList className="w-6 h-6 text-primary" /><h3 className="text-lg sm:text-xl font-black text-gray-900 tracking-tight font-outfit uppercase">Primary indications</h3></div>
-                       <p className="text-xs sm:text-base font-bold text-slate-500 leading-relaxed">{product.treatment || "Standard precision clinical protocol."}</p>
+                 <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="bg-lavender p-10 rounded-[40px] border border-white space-y-4 shadow-sm">
+                       <div className="flex items-center gap-4"><ClipboardList className="w-5 h-5 text-primary" /><h3 className="text-lg font-black text-slate-800 tracking-tighter font-outfit uppercase">Clinical Indication</h3></div>
+                       <p className="text-[11px] font-black text-slate-500 leading-relaxed uppercase opacity-70 tracking-tight">{product.treatment || "Standard clinical protocol."}</p>
                     </div>
-                    <div className="bg-pastel-purple p-10 rounded-[40px] border border-purple-100/50 space-y-4 shadow-sm">
-                       <div className="flex items-center gap-4"><Info className="w-6 h-6 text-primary" /><h3 className="text-lg sm:text-xl font-black text-gray-900 tracking-tight font-outfit uppercase">Pharmacology</h3></div>
-                       <p className="text-xs sm:text-base font-bold text-slate-500 leading-relaxed">{product.description || "Active clinical formulation with verified efficacy."}</p>
+                    <div className="bg-sahi-blue p-10 rounded-[40px] border border-white space-y-4 shadow-sm">
+                       <div className="flex items-center gap-4"><Info className="w-5 h-5 text-primary" /><h3 className="text-lg font-black text-slate-800 tracking-tighter font-outfit uppercase">Pharmacology</h3></div>
+                       <p className="text-[11px] font-black text-slate-500 leading-relaxed uppercase opacity-70 tracking-tight">{product.description || "Active medical formulation."}</p>
                     </div>
                  </div>
               </TabsContent>
 
               <TabsContent value="safety" className="grid grid-cols-1 md:grid-cols-2 gap-8 focus-visible:outline-none">
-                 <motion.div whileHover={{ y: -5 }} className="bg-rose-50 border border-rose-100 p-10 rounded-[40px] flex gap-6 shadow-sm">
-                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-[24px] flex items-center justify-center shrink-0 border border-rose-200/50 shadow-xl"><AlertTriangle className="w-8 h-8 text-rose-600" /></div>
-                   <div><h4 className="text-xs sm:text-lg font-black text-rose-600 mb-2 uppercase tracking-widest">Clinical caution</h4><p className="text-[10px] sm:text-[15px] font-bold text-rose-900/70 leading-relaxed">{product.safetyAdvice || "Strictly follow professional clinical guidance."}</p></div>
-                 </motion.div>
-                 <motion.div whileHover={{ y: -5 }} className="bg-sky-50 border border-sky-100 p-10 rounded-[40px] flex gap-6 shadow-sm">
-                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-[24px] flex items-center justify-center shrink-0 border border-sky-200/50 shadow-xl"><Stethoscope className="w-8 h-8 text-sky-600" /></div>
-                   <div><h4 className="text-xs sm:text-lg font-black text-sky-600 mb-2 uppercase tracking-widest">Usage protocol</h4><p className="text-[10px] sm:text-[15px] font-bold text-sky-900/70 leading-relaxed">{product.howToUse || "Execute clinical administration carefully."}</p></div>
-                 </motion.div>
+                 <div className="bg-sahi-pink border border-white p-10 rounded-[40px] flex gap-6 shadow-sm">
+                   <div className="w-16 h-16 bg-white rounded-[24px] flex items-center justify-center shrink-0 shadow-lg"><AlertTriangle className="w-6 h-6 text-rose-500" /></div>
+                   <div><h4 className="text-xs font-black text-rose-600 mb-2 uppercase tracking-widest">Protocol Caution</h4><p className="text-[10px] font-black text-rose-900/60 leading-relaxed uppercase tracking-tight">{product.safetyAdvice || "Follow clinical guidance."}</p></div>
+                 </div>
+                 <div className="bg-sahi-blue border border-white p-10 rounded-[40px] flex gap-6 shadow-sm">
+                   <div className="w-16 h-16 bg-white rounded-[24px] flex items-center justify-center shrink-0 shadow-lg"><Stethoscope className="w-6 h-6 text-primary" /></div>
+                   <div><h4 className="text-xs font-black text-primary mb-2 uppercase tracking-widest">Usage Gateway</h4><p className="text-[10px] font-black text-slate-500 leading-relaxed uppercase tracking-tight">{product.howToUse || "Execute as professionally directed."}</p></div>
+                 </div>
               </TabsContent>
 
               <TabsContent value="interactions" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 focus-visible:outline-none">
                 {[
-                  { icon: Dna, title: "Composition", text: product.saltComposition, color: "bg-pastel-purple" },
-                  { icon: Baby, title: "Pregnancy", text: product.pregnancyInteraction, color: "bg-pastel-peach" },
-                  { icon: Milk, title: "Lactation", text: product.lactationInteraction, color: "bg-pastel-blue" },
-                  { icon: Car, title: "Driving", text: product.drivingInteraction, color: "bg-pastel-purple" },
-                  { icon: Package, title: "Renal", text: product.kidneyInteraction, color: "bg-pastel-green" },
+                  { icon: Dna, title: "Composition", text: product.saltComposition, color: "bg-lavender" },
+                  { icon: Baby, title: "Pregnancy", text: product.pregnancyInteraction, color: "bg-sahi-pink" },
+                  { icon: Milk, title: "Lactation", text: product.lactationInteraction, color: "bg-sahi-blue" },
+                  { icon: Car, title: "Driving", text: product.drivingInteraction, color: "bg-sahi-green" },
+                  { icon: Package, title: "Renal", text: product.kidneyInteraction, color: "bg-lavender" },
                   { icon: ShieldAlert, title: "Hepatic", text: product.liverInteraction, color: "bg-slate-50" }
                 ].map((item, i) => (
                   <motion.div 
                     key={i} 
-                    whileHover={{ scale: 1.05 }}
-                    className={cn("p-6 rounded-[32px] flex items-start gap-4 hover:shadow-2xl transition-all border border-black/5 shadow-sm", item.color)}
+                    variants={fadeInVariant}
+                    className={cn("p-8 rounded-[32px] flex flex-col gap-5 border border-white shadow-sm", item.color)}
                   >
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary shrink-0 shadow-sm"><item.icon className="w-5 h-5" /></div>
-                    <div className="flex flex-col">
-                      <h4 className="text-[10px] font-black tracking-widest text-slate-800/40 mb-1 uppercase">{item.title}</h4>
-                      <p className="text-[11px] font-bold text-gray-900 leading-relaxed">{item.text || "Standard clinical protocol applies"}</p>
+                    <div className="w-12 h-12 bg-white rounded-[16px] flex items-center justify-center text-primary shrink-0 shadow-sm border border-slate-50"><item.icon className="w-5 h-5" /></div>
+                    <div className="flex flex-col gap-1">
+                      <h4 className="text-[9px] font-black tracking-[0.2em] text-slate-500/60 uppercase">{item.title}</h4>
+                      <p className="text-[11px] font-black text-slate-800 leading-tight uppercase tracking-tight">{item.text || "PROTOCOL APPLICABLE"}</p>
                     </div>
                   </motion.div>
                 ))}

@@ -14,30 +14,14 @@ import { useMongoDBCollection } from '@/hooks/use-mongodb';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.2
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.95 },
-  show: { 
-    opacity: 1, 
-    y: 0, 
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 260,
-      damping: 20
-    } as any
-  }
-};
+import { cn } from '@/lib/utils';
+import { 
+  containerVariants, 
+  fadeInVariant, 
+  hoverVariant, 
+  springTransition, 
+  tapVariant 
+} from '@/lib/animations';
 
 function SearchResults() {
   const searchParams = useSearchParams();
@@ -71,15 +55,15 @@ function SearchResults() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern">
+      <div className="min-h-screen bg-[#F8FAFC]">
         <Navbar />
         <main className="max-w-7xl mx-auto px-4 py-8 md:py-16">
           <div className="flex flex-col md:flex-row gap-12">
             <aside className="w-full md:w-80 space-y-8 hidden md:block">
               <motion.div 
-                initial={{ x: -50, opacity: 0 }}
+                initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                className="bg-white/40 backdrop-blur-md border border-white/50 rounded-[40px] p-8 shadow-xl"
+                className="bg-white border border-slate-100 rounded-[40px] p-8 shadow-sm"
               >
                 <h3 className="font-black text-[10px] tracking-[0.2em] text-slate-400 mb-8 flex items-center gap-3 uppercase">
                   <Filter className="w-4 h-4 text-primary" /> Filter Matrix
@@ -87,20 +71,29 @@ function SearchResults() {
                 <div className="space-y-8">
                   <div>
                     <label className="text-[10px] font-black tracking-[0.2em] text-slate-400 mb-4 block px-1 uppercase opacity-60">Clinical category</label>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       {catsLoading ? (
                         <div className="space-y-3">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-2xl" />)}</div>
                       ) : categories?.map((cat, idx) => (
                         <motion.div
                           key={cat.id}
-                          initial={{ x: -20, opacity: 0 }}
+                          initial={{ x: -10, opacity: 0 }}
                           animate={{ x: 0, opacity: 1 }}
                           transition={{ delay: 0.1 + idx * 0.05 }}
                         >
                           <Link href={`/search?c=${encodeURIComponent(cat.name)}${rawQ ? `&q=${encodeURIComponent(rawQ)}` : ''}`} className="block">
-                            <div className={`px-4 py-3 rounded-2xl flex items-center gap-4 transition-all group ${c === cat.name ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'hover:bg-white hover:shadow-md'}`}>
-                              <div className={`w-2 h-2 rounded-full ${c === cat.name ? 'bg-white animate-pulse' : 'bg-slate-200 group-hover:bg-primary/40'}`} />
-                              <span className={`text-xs tracking-tight uppercase font-black ${c === cat.name ? 'text-white' : 'text-slate-600'}`}>{cat.name}</span>
+                            <div className={cn(
+                              "px-4 py-3 rounded-2xl flex items-center gap-4 transition-all group",
+                              c === cat.name ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'hover:bg-slate-50'
+                            )}>
+                              <div className={cn(
+                                "w-1.5 h-1.5 rounded-full transition-all",
+                                c === cat.name ? 'bg-white animate-pulse' : 'bg-slate-200 group-hover:bg-primary'
+                              )} />
+                              <span className={cn(
+                                "text-[10px] tracking-tight uppercase font-black transition-colors",
+                                c === cat.name ? 'text-white' : 'text-slate-500'
+                              )}>{cat.name}</span>
                             </div>
                           </Link>
                         </motion.div>
@@ -111,17 +104,17 @@ function SearchResults() {
               </motion.div>
               
               <motion.div 
-                initial={{ y: 50, opacity: 0 }}
+                initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="bg-primary p-10 rounded-[48px] text-white shadow-2xl shadow-primary/30 relative overflow-hidden group"
+                className="bg-sahi-blue p-10 rounded-[48px] border border-white shadow-sm relative overflow-hidden group"
               >
-                <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:rotate-45 transition-transform duration-700">
-                  <Sparkles className="w-12 h-12" />
+                <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:rotate-45 transition-all duration-700">
+                  <Sparkles className="w-12 h-12 text-primary" />
                 </div>
-                <Info className="w-10 h-10 mb-6 opacity-40" />
-                <h4 className="font-black text-lg mb-3 tracking-tight font-outfit">SahiMed Assurance</h4>
-                <p className="text-[10px] font-bold text-white/70 leading-relaxed tracking-widest uppercase">Every clinical record is verified against global pharmaceutical standards.</p>
+                <Info className="w-8 h-8 mb-6 text-primary opacity-40" />
+                <h4 className="font-black text-lg mb-2 tracking-tighter font-outfit uppercase text-slate-900 leading-tight">SahiMed Assurance</h4>
+                <p className="text-[10px] font-bold text-slate-500 leading-relaxed tracking-widest uppercase opacity-70">Verified clinical pharmaceutical standards.</p>
               </motion.div>
             </aside>
 
@@ -132,17 +125,17 @@ function SearchResults() {
                 className="flex items-center justify-between mb-10 px-2"
               >
                 <div>
-                  <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit">
+                  <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit uppercase">
                     {rawQ ? `"${rawQ}"` : c ? `${c}` : 'Global Catalog'}
                   </h2>
                   <div className="flex items-center gap-3 mt-4">
-                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                     <p className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase">
                       {isSearching ? 'Analyzing clinical data...' : `${filteredMedicines?.length || 0} Record(s) found`}
                     </p>
                   </div>
                 </div>
-                <Button variant="outline" className="md:hidden gap-3 rounded-full border-white/50 bg-white/50 backdrop-blur-md shadow-xl font-black text-[10px] h-12 px-6 uppercase tracking-widest"><SlidersHorizontal className="w-4 h-4" /> Filters</Button>
+                <Button variant="outline" className="md:hidden gap-3 rounded-full border-slate-200 bg-white shadow-xl font-black text-[10px] h-12 px-6 uppercase tracking-widest"><SlidersHorizontal className="w-4 h-4" /> Filters</Button>
               </motion.div>
 
               <AnimatePresence mode="wait">
@@ -165,11 +158,11 @@ function SearchResults() {
                     key="results-grid"
                     variants={containerVariants}
                     initial="hidden"
-                    animate="show"
+                    animate="visible"
                     className="grid grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10"
                   >
                     {filteredMedicines.map(p => (
-                      <motion.div key={p.id} variants={itemVariants}>
+                      <motion.div key={p.id} variants={fadeInVariant}>
                         <ProductCard product={p} />
                       </motion.div>
                     ))}
@@ -177,20 +170,20 @@ function SearchResults() {
                 ) : (
                   <motion.div 
                     key="empty-state"
-                    initial={{ scale: 0.9, opacity: 0 }}
+                    initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="bg-white/40 backdrop-blur-md rounded-[48px] p-20 text-center border border-white/50 shadow-2xl"
+                    className="bg-white border border-slate-100 rounded-[56px] p-20 text-center shadow-sm"
                   >
-                    <div className="w-24 h-24 bg-white/60 rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-inner border border-white/50">
-                      {rawQ.length > 0 && rawQ.length < 3 ? <Info className="w-10 h-10 text-orange-400" /> : <SearchIcon className="w-10 h-10 text-slate-300" />}
+                    <div className="w-20 h-20 bg-slate-50 rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-inner border border-slate-100">
+                      {rawQ.length > 0 && rawQ.length < 3 ? <Info className="w-8 h-8 text-orange-400" /> : <SearchIcon className="w-8 h-8 text-slate-300" />}
                     </div>
-                    <h3 className="text-3xl font-black mb-4 tracking-tight font-outfit">
-                      {rawQ.length > 0 && rawQ.length < 1 ? "Keep typing..." : "No records found"}
+                    <h3 className="text-2xl font-black mb-3 tracking-tighter font-outfit uppercase">
+                      {rawQ.length > 0 && rawQ.length < 1 ? "Minimum Input Required" : "No clinical matches"}
                     </h3>
-                    <p className="text-slate-500 font-bold mb-10 text-sm tracking-tight max-w-sm mx-auto">
-                      {rawQ.length > 0 && rawQ.length < 1 ? "Enter clinical identifiers for a verified search." : "Our clinical database didn't return any matches for your query. Try searching by Salt or Category."}
+                    <p className="text-slate-400 font-bold mb-10 text-[10px] uppercase tracking-[0.2em] max-w-xs mx-auto opacity-70">
+                      Our database couldn't find matches for your query. Try searching by Salt or Therapeutic category.
                     </p>
-                    <Button onClick={() => window.location.href = '/search'} className="rounded-full px-12 h-16 font-black tracking-widest uppercase bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/20">Reset Search Matrix</Button>
+                    <Button onClick={() => window.location.href = '/search'} className="rounded-full px-10 h-16 font-black tracking-widest uppercase bg-slate-900 text-white shadow-xl active:scale-95 transition-all">Reset Matrix Search</Button>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -243,33 +236,33 @@ function SaveMoreStrip({ query: rawQ }: { query: string }) {
 
   return (
     <motion.div
-      initial={{ scale: 0.9, opacity: 0, y: 20 }}
+      initial={{ scale: 0.98, opacity: 0, y: 10 }}
       animate={{ scale: 1, opacity: 1, y: 0 }}
-      exit={{ scale: 0.9, opacity: 0, y: 20 }}
-      transition={{ type: "spring", damping: 25, stiffness: 200 }}
+      exit={{ scale: 0.98, opacity: 0, y: 10 }}
+      transition={springTransition as any}
     >
-      <Card className="mb-12 overflow-hidden border border-white/20 shadow-[0_32px_64px_-16px_rgba(244,63,94,0.3)] bg-gradient-to-br from-accent to-rose-600 rounded-[48px]">
+      <Card className="mb-12 overflow-hidden border border-white shadow-xl bg-gradient-to-br from-primary to-accent rounded-[48px]">
         <div className="p-2 px-8 bg-white/10 flex items-center justify-between border-b border-white/10">
            <div className="flex items-center gap-3">
               <TrendingDown className="w-4 h-4 text-white animate-bounce" />
-              <span className="text-[10px] font-black text-white tracking-[0.2em] uppercase">SahiMed Intelligence Switch</span>
+              <span className="text-[10px] font-black text-white tracking-[0.2em] uppercase">Intelligence Switch</span>
            </div>
-           <Badge variant="outline" className="text-[9px] font-black text-white border-white/20 px-3 py-1 bg-white/10 uppercase tracking-widest">Precision Alternative</Badge>
+           <Badge variant="outline" className="text-[9px] font-black text-white border-white/20 px-3 py-1 bg-white/10 uppercase tracking-widest">Identical Composition</Badge>
         </div>
-        <div className="p-10 sm:p-14 flex flex-col sm:flex-row items-center justify-between gap-10">
+        <div className="p-10 flex flex-col sm:flex-row items-center justify-between gap-10">
           <div className="flex items-center gap-8 text-white text-center sm:text-left">
             <div className="bg-white/20 p-5 rounded-[24px] border border-white/30 shadow-inner group transition-transform hover:scale-110">
-               <Zap className="w-10 h-10 fill-white" />
+               <Zap className="w-8 h-8 fill-white" />
             </div>
             <div>
-              <h3 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight font-outfit uppercase">Save ₹{Math.round(genericAlt.mrp - genericAlt.price + 50)} instantly</h3>
-              <p className="text-xs sm:text-sm font-bold text-white/70 tracking-tight mt-2 opacity-90 leading-relaxed uppercase">Clinical composition is identical. Your budget is prioritized.</p>
+              <h3 className="text-2xl sm:text-3xl font-black tracking-tighter leading-tight font-outfit uppercase">Save ₹{Math.round(genericAlt.mrp - genericAlt.price + 50)} instantly</h3>
+              <p className="text-[10px] font-black text-white/70 tracking-widest mt-2 uppercase">Your medical budget is prioritized.</p>
             </div>
           </div>
           
           <Link href={`/product/${genericAlt.id}`} className="w-full sm:w-auto">
-            <Button className="bg-white text-accent hover:bg-white/90 rounded-full h-16 sm:h-20 px-12 font-black tracking-widest text-sm gap-4 w-full shadow-2xl border-none uppercase group">
-              View {genericAlt.name} <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+            <Button className="bg-white text-primary hover:bg-white/90 rounded-full h-16 px-10 font-black tracking-widest text-[10px] gap-4 w-full shadow-2xl border-none uppercase group">
+              Switch to {genericAlt.name} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
         </div>
@@ -279,5 +272,9 @@ function SaveMoreStrip({ query: rawQ }: { query: string }) {
 }
 
 export default function SearchPage() {
-  return (<Suspense fallback={<div className="p-20 text-center"><Loader2 className="w-12 h-12 animate-spin mx-auto text-primary opacity-20" /></div>}><SearchResults /></Suspense>);
+  return (
+    <Suspense fallback={<div className="p-20 text-center"><Loader2 className="w-12 h-12 animate-spin mx-auto text-primary opacity-20" /></div>}>
+      <SearchResults />
+    </Suspense>
+  );
 }
