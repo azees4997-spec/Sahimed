@@ -1,0 +1,11 @@
+{
+  "name": "sahimed-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:web": "npm run dev --prefix website",
+    "build:web": "npm run build --prefix website",
+    "vercel-build": "if [ \"$VERCEL_GIT_COMMIT_REF\" = \"preview\" ]; then npm run build --prefix website; else echo 'Skipping Vercel build for non-preview branch'; exit 0; fi",
+    "start:web": "npm run start --prefix website"
+  }
+}
