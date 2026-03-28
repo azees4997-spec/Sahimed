@@ -1,0 +1,6 @@
+{
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "website/.next",
+  "devCommand": "npm run dev --prefix website",
+  "installCommand": "npm install --prefix website"
+}
