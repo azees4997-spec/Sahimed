@@ -29,7 +29,8 @@ import {
   Dialog, 
   DialogContent, 
   DialogTrigger,
-  DialogTitle
+  DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { useMongoDBDoc, useMongoDBMolecule, useMongoDBCollection } from '@/hooks/use-mongodb';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -104,6 +105,7 @@ const ComparisonCard = ({
         </DialogTrigger>
         <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-transparent shadow-none">
           <DialogTitle className="sr-only">{product.name}</DialogTitle>
+          <DialogDescription className="sr-only">Visual representation of {product.name}</DialogDescription>
           <div className="relative aspect-square w-full bg-white rounded-[40px] overflow-hidden p-8 flex items-center justify-center shadow-3xl">
              <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-10" />
              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full border border-gray-100 shadow-xl flex items-center gap-3">

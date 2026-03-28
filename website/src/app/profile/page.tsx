@@ -35,6 +35,7 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
+  DialogDescription,
   DialogTrigger 
 } from '@/components/ui/dialog';
 import {
@@ -268,6 +269,9 @@ export default function ProfilePage() {
                     <DialogContent className="max-w-md rounded-[40px] border-none p-0 overflow-hidden shadow-3xl">
                       <div className="bg-primary p-8 text-white">
                         <DialogTitle className="text-2xl font-black tracking-tight">Add delivery point</DialogTitle>
+                        <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1">
+                          Securely save your clinical delivery locations
+                        </DialogDescription>
                       </div>
                       <div className="p-8 space-y-6">
                         <div className="space-y-3">

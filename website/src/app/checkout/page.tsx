@@ -32,7 +32,7 @@ import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp, doc, getDoc, query, orderBy } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 export default function CheckoutPage() {
   const { 
@@ -444,7 +444,9 @@ export default function CheckoutPage() {
             <div className="bg-primary p-5 text-white relative overflow-hidden shrink-0">
               <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl" />
               <DialogTitle className="text-xl font-black tracking-tight">Delivery point</DialogTitle>
-              <p className="text-[8px] font-black text-white/60 tracking-[0.2em] mt-0.5">Clinical logistics path</p>
+              <DialogDescription className="text-[8px] font-black text-white/60 tracking-[0.2em] mt-0.5">
+                Clinical logistics path
+              </DialogDescription>
             </div>
 
             <div className="p-5 space-y-4">

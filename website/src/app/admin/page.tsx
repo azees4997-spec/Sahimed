@@ -65,6 +65,7 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
+  DialogDescription,
   DialogTrigger
 } from '@/components/ui/dialog';
 import {
@@ -463,6 +464,9 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
         <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden">
           <div className="bg-primary p-8 text-white flex justify-between items-center">
             <DialogTitle className="text-2xl font-black">Order #{selectedOrder?.orderId}</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
+              Full transaction history and logistics status
+            </DialogDescription>
             <Badge className="bg-white/20 text-white border-none font-black text-[10px]">{selectedOrder?.status}</Badge>
           </div>
           <div className="p-8 space-y-8 max-h-[80vh] overflow-y-auto scrollbar-hide">
@@ -740,7 +744,12 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
 
       <Dialog open={isFormOpen} onOpenChange={isFormOpen => setIsFormOpen(isFormOpen)}>
         <DialogContent className="rounded-[40px] max-w-5xl border-none p-0 overflow-hidden">
-          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black">Product profile</DialogTitle></div>
+          <div className="bg-primary p-8 text-white">
+            <DialogTitle className="text-2xl font-black">Product profile</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
+              Configure clinical identity and live inventory status
+            </DialogDescription>
+          </div>
           <div className="p-8 max-h-[80vh] overflow-y-auto scrollbar-hide"><ItemForm db={db} initialData={editingItem} onSuccess={() => setIsFormOpen(false)} /></div>
         </DialogContent>
       </Dialog>
@@ -937,7 +946,19 @@ function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
           </table>
         </div>
       </Card>
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}><DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden"><div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black">Category definition</DialogTitle></div><div className="p-8"><CategoryForm db={db} initialData={editingCat} onSuccess={() => setIsFormOpen(false)} /></div></DialogContent></Dialog>
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden">
+          <div className="bg-primary p-8 text-white">
+            <DialogTitle className="text-2xl font-black">Category definition</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
+              Update therapeutic classification and visual markers
+            </DialogDescription>
+          </div>
+          <div className="p-8">
+            <CategoryForm db={db} initialData={editingCat} onSuccess={() => setIsFormOpen(false)} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1467,7 +1488,19 @@ function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: bo
           </table>
         </div>
       </Card>
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}><DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden"><div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black">Clinical formula</DialogTitle></div><div className="p-8"><MoleculeForm db={db} initialData={editingMol} onSuccess={() => setIsFormOpen(false)} /></div></DialogContent></Dialog>
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden">
+          <div className="bg-primary p-8 text-white">
+            <DialogTitle className="text-2xl font-black">Clinical formula</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
+              Manage master formula records and molecule mappings
+            </DialogDescription>
+          </div>
+          <div className="p-8">
+            <MoleculeForm db={db} initialData={editingMol} onSuccess={() => setIsFormOpen(false)} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1589,7 +1622,9 @@ function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
           <div className="bg-primary p-8 text-white flex items-center justify-between">
             <div>
               <DialogTitle className="text-2xl font-black">Create manual order</DialogTitle>
-              <p className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">Order creation from enquiry</p>
+              <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
+                Authorize manual entry and prescription digitization
+              </DialogDescription>
             </div>
           </div>
           <div className="p-8 h-[80vh] overflow-y-auto scrollbar-hide">
@@ -1637,7 +1672,19 @@ function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
           </table>
         </div>
       </Card>
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}><DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden"><div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black">Coupon config</DialogTitle></div><div className="p-8"><PromoCodeForm db={db} initialData={editingPromo} onSuccess={() => setIsFormOpen(false)} /></div></DialogContent></Dialog>
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden">
+          <div className="bg-primary p-8 text-white">
+            <DialogTitle className="text-2xl font-black">Coupon config</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
+              Configure promotional scope and discount parameters
+            </DialogDescription>
+          </div>
+          <div className="p-8">
+            <PromoCodeForm db={db} initialData={editingPromo} onSuccess={() => setIsFormOpen(false)} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1707,7 +1754,19 @@ function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onB
           </table>
         </div>
       </Card>
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}><DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden"><div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black">Fee structure</DialogTitle></div><div className="p-8"><FeeForm db={db} initialData={editingFee} onSuccess={() => setIsFormOpen(false)} /></div></DialogContent></Dialog>
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden">
+          <div className="bg-primary p-8 text-white">
+            <DialogTitle className="text-2xl font-black">Fee structure</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
+              Define shipping tiers and administrative surcharges
+            </DialogDescription>
+          </div>
+          <div className="p-8">
+            <FeeForm db={db} initialData={editingFee} onSuccess={() => setIsFormOpen(false)} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1795,7 +1854,12 @@ function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean
       
       <Dialog open={!!selectedUser} onOpenChange={o => !o && setSelectedUser(null)}>
         <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden">
-          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black">Patient profile</DialogTitle></div>
+          <div className="bg-primary p-8 text-white">
+            <DialogTitle className="text-2xl font-black">Patient profile</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
+              Verified clinical identity and administrative tags
+            </DialogDescription>
+          </div>
           <div className="p-8 space-y-6">
             <div className="space-y-2"><Label className="text-[10px] font-black">Display Name</Label><Input value={selectedUser?.name} onChange={e => setSelectedUser({...selectedUser, name: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black">Administrative Tags (Comma separated)</Label><Input value={selectedUser?.tags?.join(', ')} onChange={e => setSelectedUser({...selectedUser, tags: e.target.value.split(',').map(t => t.trim())})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" placeholder="VIP, Chronic, Priority" /></div>
@@ -1894,7 +1958,12 @@ function BannersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, 
       </div>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden">
-          <div className="bg-primary p-8 text-white"><DialogTitle className="text-2xl font-black">Banner configuration</DialogTitle></div>
+          <div className="bg-primary p-8 text-white">
+            <DialogTitle className="text-2xl font-black">Banner configuration</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
+              Sync visual promotions and storefront carousel order
+            </DialogDescription>
+          </div>
           <div className="p-8"><BannerForm db={db} initialData={editingBanner} onSuccess={() => setIsFormOpen(false)} /></div>
         </DialogContent>
       </Dialog>

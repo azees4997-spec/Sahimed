@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useState, useEffect } from 'react';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -289,6 +289,9 @@ export default function CartPage() {
         <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden shadow-3xl">
           <div className="bg-primary p-8 text-white">
             <DialogTitle className="text-2xl font-black tracking-tight">Available offers</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1">
+              Select a clinical discount to apply to your order
+            </DialogDescription>
           </div>
           <div className="p-8 space-y-4 max-h-[60vh] overflow-y-auto scrollbar-hide">
             {availablePromos.length === 0 ? (

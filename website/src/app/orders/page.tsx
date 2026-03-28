@@ -33,6 +33,7 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle,
+  DialogDescription,
   DialogTrigger
 } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
@@ -158,7 +159,9 @@ export default function OrdersPage() {
           <div className="bg-primary p-8 md:p-10 text-white">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <p className="text-[10px] font-black tracking-[0.3em] text-white/60">Clinical record</p>
+                <DialogDescription className="text-[10px] font-black tracking-[0.3em] text-white/60">
+                  Clinical record
+                </DialogDescription>
                 <DialogTitle className="text-2xl font-black tracking-tight">Order details</DialogTitle>
               </div>
               <Badge className="bg-white/20 text-white border-none font-black text-[10px] px-4 py-1.5 rounded-full backdrop-blur-sm">
@@ -217,6 +220,7 @@ export default function OrdersPage() {
                   </DialogTrigger>
                   <DialogContent className="max-w-[95vw] sm:max-w-3xl border-none p-0 bg-transparent shadow-none">
                     <DialogTitle className="sr-only">Prescription view</DialogTitle>
+                    <DialogDescription className="sr-only">Detailed view of the attached clinical prescription document</DialogDescription>
                     <div className="relative aspect-[3/4] w-full bg-white rounded-[40px] overflow-hidden p-4">
                       <img src={selectedOrder.prescriptionUrl} className="w-full h-full object-contain" alt="Full Clinical Document" />
                     </div>
