@@ -6,6 +6,20 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import MobileCartBar from '@/components/MobileCartBar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
+import { Outfit, Poppins } from 'next/font/google';
+
+const outfit = Outfit({ 
+  subsets: ['latin'],
+  variable: '--font-outfit',
+  display: 'swap',
+});
+
+const poppins = Poppins({
+  weight: ['400', '500', '600', '700', '800', '900'],
+  subsets: ['latin'],
+  variable: '--font-poppins',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'SahiMed | Clinical Healthcare Pharmacy',
@@ -27,7 +41,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#8b31c0',
+  themeColor: '#7C3AED',
 };
 
 export default function RootLayout({
@@ -36,13 +50,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-body antialiased bg-[#F8F8F8]">
+    <html lang="en" className={`${outfit.variable} ${poppins.variable}`}>
+      <body className="font-outfit antialiased bg-[#F8FAFC]">
         <FirebaseClientProvider>
           <CartProvider>
             <div className="flex flex-col min-h-screen">
