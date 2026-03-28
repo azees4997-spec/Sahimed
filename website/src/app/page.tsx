@@ -75,7 +75,12 @@ export default function Home() {
     fetch('/api/categories?limit=12')
       .then(res => res.json())
       .then(data => {
-        setCategories(data);
+        if (Array.isArray(data)) {
+          setCategories(data);
+        } else {
+          console.error("Categories API did not return an array", data);
+          setCategories([]);
+        }
         setIsCatsLoading(false);
       })
       .catch(err => {
