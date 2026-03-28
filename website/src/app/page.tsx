@@ -142,13 +142,13 @@ export default function Home() {
                 </CarouselItem>
 
                 <CarouselItem>
-                  <div className="relative overflow-hidden p-8 sm:p-14 flex flex-col justify-center min-h-[300px] sm:min-h-[420px] rounded-[48px] bg-slate-900 text-white shadow-2xl">
+                  <div className="relative overflow-hidden p-8 sm:p-14 flex flex-col justify-center min-h-[300px] sm:min-h-[420px] rounded-[48px] bg-sahi-pink text-slate-800 shadow-2xl border border-white">
                     <div className="space-y-4 max-w-lg relative z-10">
                       <Badge className="bg-primary/20 text-primary border-primary/30 font-black px-4 py-1 rounded-full uppercase tracking-widest text-[10px]">Smart choice</Badge>
                       <h2 className="text-4xl sm:text-6xl font-black leading-[1] tracking-tighter">
                         Save up to 80% with<br />Generic Matrix
                       </h2>
-                      <p className="text-white/60 text-lg font-bold">
+                      <p className="text-slate-600 text-lg font-bold">
                         Clinical substitutes with verified composition.
                       </p>
                     </div>
@@ -258,7 +258,7 @@ export default function Home() {
                         alt={cat.name} 
                         width={128} 
                         height={128} 
-                        className="object-contain w-full h-full p-2 group-hover:rotate-[8deg] transition-transform duration-500"
+                        className="object-contain w-full h-full p-2 group-hover:scale-110 transition-transform duration-500"
                       />
                     </div>
                   </Link>

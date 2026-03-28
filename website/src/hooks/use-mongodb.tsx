@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export function useMongoDBCollection<T = any>(options: { 
   limit?: number; 
@@ -54,7 +54,11 @@ export function useMongoDBCollection<T = any>(options: {
     fetchData();
   }, [options.limit, options.category, options.q, options.moleculeId, refreshKey]);
 
-  return { data, isLoading, error, refetch: () => setRefreshKey(k => k + 1) };
+  const refetch = useCallback(() => {
+    setRefreshKey(k => k + 1);
+  }, []);
+
+  return { data, isLoading, error, refetch };
 }
 
 export function useMongoDBDoc<T = any>(id: string | null | undefined) {
@@ -93,7 +97,11 @@ export function useMongoDBDoc<T = any>(id: string | null | undefined) {
     fetchData();
   }, [id, refreshKey]);
 
-  return { data, isLoading, error, refetch: () => setRefreshKey(k => k + 1) };
+  const refetch = useCallback(() => {
+    setRefreshKey(k => k + 1);
+  }, []);
+
+  return { data, isLoading, error, refetch };
 }
 
 export function useMongoDBMolecule<T = any>(id: string | null | undefined) {
@@ -126,5 +134,9 @@ export function useMongoDBMolecule<T = any>(id: string | null | undefined) {
     fetchData();
   }, [id, refreshKey]);
 
-  return { data, isLoading, error, refetch: () => setRefreshKey(k => k + 1) };
+  const refetch = useCallback(() => {
+    setRefreshKey(k => k + 1);
+  }, []);
+
+  return { data, isLoading, error, refetch };
 }
