@@ -9,6 +9,7 @@ export interface Product {
   id: string;
   sku?: string; 
   moleculeId?: string; 
+  brand?: string; 
   name: string;
   price: number;
   mrp: number;

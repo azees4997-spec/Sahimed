@@ -12,7 +12,7 @@
     --popover-foreground: 222 47% 11%;
     --primary: 262 83% 58%; /* Electric Violet */
     --primary-foreground: 210 40% 98%;
-    --secondary: 262 83% 95%;
+    --secondary: 262 83% 96%;
     --secondary-foreground: 262 83% 30%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -23,7 +23,13 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 262 83% 58%;
-    --radius: 1.25rem;
+    --radius: 2.5rem; /* Increased for Docly feel */
+
+    /* Custom Pastel Tokens */
+    --pastel-purple: 262 83% 95%;
+    --pastel-green: 142 70% 95%;
+    --pastel-peach: 350 100% 97%;
+    --pastel-blue: 200 100% 96%;
   }
 
   * {
@@ -52,8 +58,13 @@
   }
 
   .pharma-card {
-    @apply bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[24px] transition-all duration-300 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1;
+    @apply bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[40px] transition-all duration-300 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1;
   }
+
+  .bg-pastel-purple { background-color: hsl(var(--pastel-purple)); }
+  .bg-pastel-green { background-color: hsl(var(--pastel-green)); }
+  .bg-pastel-peach { background-color: hsl(var(--pastel-peach)); }
+  .bg-pastel-blue { background-color: hsl(var(--pastel-blue)); }
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
@@ -75,8 +86,9 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%, 100% { transform: translateY(0) rotate(0); }
+  33% { transform: translateY(-10px) rotate(2deg); }
+  66% { transform: translateY(-5px) rotate(-2deg); }
 }
 
 @keyframes pulse-subtle {
@@ -90,4 +102,4 @@
 
 .animate-pulse-subtle {
   animation: pulse-subtle 4s ease-in-out infinite;
-}
+}

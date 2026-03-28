@@ -6,11 +6,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ShieldCheck, ArrowLeft, Smartphone, ChevronRight, Loader2 } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Smartphone, ChevronRight, Loader2, Sparkles, Zap, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/firebase';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
+import { motion, AnimatePresence } from 'framer-motion';
+import PageTransition from '@/components/PageTransition';
 
 function LoginForm() {
   const [step, setStep] = useState(1); 
@@ -86,87 +88,143 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] flex items-center justify-center p-2 sm:p-4">
+    <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern flex items-center justify-center p-6 sm:p-8">
       <div id="recaptcha-container"></div>
       
-      <Card className="max-w-md w-full rounded-[32px] sm:rounded-[48px] shadow-2xl border-none overflow-hidden bg-white mx-auto">
-        <CardHeader className="text-center p-8 sm:p-12 bg-primary text-white relative">
-          <Link href="/" className="absolute top-6 left-6 sm:top-8 sm:left-8 p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
-            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          </Link>
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-[24px] sm:rounded-[32px] flex items-center justify-center mx-auto mb-4 sm:mb-6 backdrop-blur">
-            <Smartphone className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-          </div>
-          <CardTitle className="text-2xl sm:text-3xl font-black font-headline mb-1 sm:mb-2 tracking-tight">SahiMed Login</CardTitle>
-          <CardDescription className="text-white/70 uppercase text-[8px] sm:text-[9px] font-black tracking-widest">sahi dawa sahi daam pe</CardDescription>
-        </CardHeader>
-        
-        <CardContent className="p-8 sm:p-12">
-          {step === 1 ? (
-            <form onSubmit={handleSendOtp} className="space-y-6 sm:space-y-8">
-              <div>
-                <label className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 sm:mb-4 block">Mobile Number (India)</label>
-                <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 border-r pr-3 sm:pr-4 border-gray-100">
-                    <span className="text-xs sm:text-sm font-bold text-gray-500">+91</span>
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 200, damping: 20 }}
+        className="max-w-md w-full"
+      >
+        <Card className="rounded-[64px] shadow-3xl border-none overflow-hidden bg-white/80 backdrop-blur-3xl border border-white mx-auto relative">
+          <CardHeader className="text-center p-12 sm:p-14 bg-primary text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12 scale-150">
+               <Zap className="w-48 h-48" />
+            </div>
+            
+            <Link href="/" className="absolute top-10 left-10 p-4 bg-white/10 rounded-full hover:bg-white/20 transition-all hover:scale-110 active:scale-95 z-10">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            
+            <div className="w-24 h-24 sm:w-28 sm:h-28 bg-white/20 rounded-[40px] flex items-center justify-center mx-auto mb-8 backdrop-blur-md relative z-10 border border-white/20 shadow-xl group hover:scale-110 transition-transform duration-500">
+              <Smartphone className="w-12 h-12 text-white group-hover:rotate-12 transition-transform" />
+            </div>
+            
+            <div className="space-y-3 relative z-10">
+              <CardTitle className="text-3xl sm:text-4xl font-black font-outfit mb-2 tracking-tighter uppercase">Identity Hub</CardTitle>
+              <CardDescription className="text-white/60 uppercase text-[9px] font-black tracking-[0.4em]">Protocol Authentication Entry</CardDescription>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="p-12 sm:p-14">
+            <AnimatePresence mode="wait">
+              {step === 1 ? (
+                <motion.form 
+                  key="step1"
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: -20, opacity: 0 }}
+                  onSubmit={handleSendOtp} 
+                  className="space-y-10"
+                >
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4 block opacity-60">Communication Terminal</label>
+                    <div className="relative group">
+                      <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3 border-r-2 pr-5 border-slate-100 group-focus-within:border-primary/20 transition-colors">
+                        <span className="text-sm font-black text-slate-400 uppercase tracking-widest">+91</span>
+                      </div>
+                      <Input 
+                        type="tel"
+                        placeholder="10 Digit Key"
+                        maxLength={10}
+                        className="h-20 pl-24 rounded-[28px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white text-lg font-black tracking-widest outline-none transition-all placeholder:text-slate-300 shadow-inner px-8"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                        required
+                      />
+                    </div>
                   </div>
-                  <Input 
-                    type="tel"
-                    placeholder="Enter 10 digits"
-                    maxLength={10}
-                    className="h-14 sm:h-16 pl-20 sm:pl-24 rounded-xl sm:rounded-2xl bg-gray-50 border-none font-bold text-base sm:text-lg focus-visible:ring-primary shadow-inner"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                    required
-                  />
-                </div>
-              </div>
-              <Button type="submit" disabled={loading} className="w-full h-16 sm:h-18 rounded-full font-black uppercase text-xs sm:text-sm tracking-[0.2em] gap-3 shadow-2xl shadow-primary/30">
-                {loading ? <Loader2 className="animate-spin" /> : "Request OTP"}
-                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-              </Button>
-            </form>
-          ) : (
-            <form onSubmit={handleVerifyOtp} className="space-y-6 sm:space-y-8">
-              <div className="text-center">
-                <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase font-black tracking-widest">Code sent to <span className="text-gray-900">+91 {phone}</span></p>
-                <Button variant="link" onClick={() => { setStep(1); setOtp(''); }} className="text-[9px] sm:text-[10px] font-black text-primary p-0 h-auto uppercase tracking-widest mt-1">Change Number</Button>
-              </div>
-              <div>
-                <label className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 sm:mb-4 block text-center">Verify 6-digit Code</label>
-                <Input 
-                  type="text"
-                  placeholder="000000"
-                  maxLength={6}
-                  className="h-14 sm:h-16 rounded-xl sm:rounded-2xl bg-gray-50 border-none font-bold text-xl sm:text-2xl text-center tracking-[0.3em] sm:tracking-[0.4em] focus-visible:ring-primary shadow-inner px-2"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                  required
-                />
-              </div>
-              <Button type="submit" disabled={loading} className="w-full h-16 sm:h-18 rounded-full font-black uppercase tracking-[0.2em] text-xs sm:text-sm shadow-2xl shadow-primary/30">
-                {loading ? <Loader2 className="animate-spin" /> : "Sign In Now"}
-              </Button>
-              <p className="text-center text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                No code? <Button variant="link" onClick={handleSendOtp} className="text-[9px] sm:text-[10px] p-0 h-auto text-primary font-black uppercase tracking-widest">Try Again</Button>
-              </p>
-            </form>
-          )}
+                  <Button type="submit" disabled={loading} className="w-full h-20 rounded-full font-black uppercase text-xs tracking-[0.4em] gap-4 shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary hover:scale-[1.02] border-4 border-white">
+                    {loading ? <Loader2 className="animate-spin" /> : (
+                      <>
+                        <Sparkles className="w-5 h-5" />
+                        Initiate OTP
+                        <ChevronRight className="w-5 h-5" />
+                      </>
+                    )}
+                  </Button>
+                </motion.form>
+              ) : (
+                <motion.form 
+                  key="step2"
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: -20, opacity: 0 }}
+                  onSubmit={handleVerifyOtp} 
+                  className="space-y-10"
+                >
+                  <div className="text-center space-y-3">
+                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-[0.2em] opacity-60">Transmission sent to terminal</p>
+                    <div className="bg-primary/5 py-4 rounded-3xl border border-primary/10">
+                      <span className="text-primary font-black tracking-widest">+91 {phone}</span>
+                    </div>
+                    <Button variant="link" onClick={() => { setStep(1); setOtp(''); }} className="text-[9px] font-black text-primary p-0 h-auto uppercase tracking-widest mt-2 hover:scale-110 active:scale-95 transition-transform">Update Terminal Number</Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4 block text-center opacity-60">Validate 6-Digit Matrix</label>
+                    <div className="relative">
+                      <Input 
+                        type="text"
+                        placeholder="000 000"
+                        maxLength={6}
+                        className="h-24 rounded-[32px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white font-black text-3xl text-center tracking-[0.5em] focus-visible:ring-0 shadow-inner px-8 transition-all"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <Button type="submit" disabled={loading} className="w-full h-20 rounded-full font-black uppercase tracking-[0.4em] text-xs shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary hover:scale-[1.02] border-4 border-white">
+                    {loading ? <Loader2 className="animate-spin" /> : "Authenticate Now"}
+                  </Button>
+                  
+                  <p className="text-center text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] opacity-60">
+                    Transmission Error? <Button variant="link" onClick={handleSendOtp} className="text-[9px] p-0 h-auto text-primary font-black uppercase tracking-widest hover:scale-110 active:scale-95">Re-Transcribe</Button>
+                  </p>
+                </motion.form>
+              )}
+            </AnimatePresence>
 
-          <div className="mt-8 sm:mt-10 pt-8 sm:pt-10 border-t flex items-center justify-center gap-3 sm:gap-4">
-             <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
-             <p className="text-[8px] sm:text-[9px] text-gray-400 font-black uppercase tracking-widest">SahiMed Secure Gateway</p>
-          </div>
-        </CardContent>
-      </Card>
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mt-14 pt-10 border-t border-slate-100 flex items-center justify-center gap-4"
+            >
+               <div className="w-10 h-10 bg-emerald-50 rounded-2xl flex items-center justify-center">
+                 <Shield className="w-6 h-6 text-emerald-500" />
+               </div>
+               <div className="flex flex-col gap-1 leading-none">
+                 <p className="text-[9px] text-emerald-600 font-black uppercase tracking-[0.3em]">SahiMed Firewall Active</p>
+                 <p className="text-[8px] text-slate-300 font-black uppercase tracking-[0.2em]">Bank-Grade Security Layer</p>
+               </div>
+            </motion.div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#F8F8F8]"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
-      <LoginForm />
-    </Suspense>
+    <PageTransition>
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#F4F7F6]"><Loader2 className="w-12 h-12 animate-spin text-primary" /></div>}>
+        <LoginForm />
+      </Suspense>
+    </PageTransition>
   );
 }

@@ -4,7 +4,7 @@
 import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShoppingBag, ArrowRight, Plus, Minus, Ticket, ChevronRight, FileWarning, Camera, ClipboardCheck, Tag, PartyPopper, Sparkles, Zap } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, Plus, Minus, Ticket, ChevronRight, FileWarning, Camera, ClipboardCheck, Tag, PartyPopper, Sparkles, Zap, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,33 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { useState, useEffect } from 'react';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import PageTransition from '@/components/PageTransition';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  show: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 260,
+      damping: 20
+    } as any
+  }
+};
 
 export default function CartPage() {
   const { 
@@ -93,252 +120,304 @@ export default function CartPage() {
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-[#F8F8F8]">
-        <Navbar />
-        <main className="max-w-4xl mx-auto px-4 py-12 text-center">
-          <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-xl border"><ShoppingBag className="w-8 h-8 text-gray-200" /></div>
-          <h1 className="text-2xl font-black mb-2 tracking-tight">Your bag is empty</h1>
-          <Link href="/"><Button className="rounded-full px-12 h-16 font-black tracking-widest shadow-2xl bg-primary">Start shopping</Button></Link>
-        </main>
-      </div>
+      <PageTransition>
+        <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern">
+          <Navbar />
+          <main className="max-w-4xl mx-auto px-4 py-32 text-center">
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", damping: 20 }}
+              className="w-32 h-32 bg-white rounded-[48px] flex items-center justify-center mx-auto mb-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-white"
+            >
+              <ShoppingBag className="w-12 h-12 text-slate-200" />
+            </motion.div>
+            <h1 className="text-4xl font-black mb-4 tracking-tighter font-outfit">Your bag is empty</h1>
+            <p className="text-slate-500 font-bold mb-12 tracking-tight uppercase text-[10px]">Add clinical supplies to start your order</p>
+            <Link href="/"><Button className="rounded-full px-16 h-20 font-black tracking-[0.2em] shadow-2xl shadow-primary/20 bg-primary uppercase text-sm">Start Discovering</Button></Link>
+          </main>
+        </div>
+      </PageTransition>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] pb-20">
-      <Navbar />
-      <main className="max-w-7xl mx-auto px-4 py-6 sm:py-10">
-        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tighter mb-6 sm:mb-10">Shopping bag ({totalItems})</h1>
+    <PageTransition>
+      <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 py-12 sm:py-20">
+          <motion.h1 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tighter mb-12 sm:mb-20 font-outfit"
+          >
+            Shopping Bag <span className="text-primary/30 ml-2">[{totalItems}]</span>
+          </motion.h1>
 
-        {requiresPrescription && (
-          <div className={cn(
-            "border-2 p-4 sm:p-6 rounded-[32px] sm:rounded-[40px] mb-8 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 shadow-lg relative overflow-hidden",
-            attachedPrescription ? "bg-green-50 border-green-100" : "bg-orange-50 border-orange-100"
-          )}>
-            <div className={cn(
-              "w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0",
-              attachedPrescription ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"
-            )}>
-               {attachedPrescription ? <ClipboardCheck className="w-5 h-5 sm:w-6 sm:h-6" /> : <FileWarning className="w-5 h-5 sm:w-6 sm:h-6" />}
-            </div>
-            <div className="flex-1 text-center sm:text-left">
-              <p className="font-black text-xs sm:text-sm tracking-tight">{attachedPrescription ? "Prescription attached" : "Prescription required"}</p>
-              <p className="text-[8px] sm:text-[9px] font-bold tracking-widest mt-1 opacity-70 leading-relaxed">Clinical verification will occur during fulfillment.</p>
-            </div>
-            <input type="file" id="cart-upload" className="hidden" accept="image/*" onChange={handleFileChange} />
-            <Button 
-              onClick={() => document.getElementById('cart-upload')?.click()} 
-              variant="outline" 
-              className="w-full sm:w-auto rounded-full font-black text-[9px] sm:text-[10px] h-10 sm:h-12 gap-2 border-2"
-            >
-              <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {attachedPrescription ? "Change" : "Upload now"}
-            </Button>
-          </div>
-        )}
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-          <div className="lg:col-span-2 space-y-4">
-            {cart.map((item) => {
-              const safeImageUrl = (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http'))
-                ? item.imageUrl
-                : `https://picsum.photos/seed/${item.id}/300/300`;
-                
-              return (
-                <div key={item.id} className="bg-white p-4 sm:p-6 rounded-[32px] sm:rounded-[40px] shadow-sm border border-gray-100 flex gap-4 sm:gap-6 items-start group hover:shadow-xl transition-all">
-                  <div className="relative w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-2xl sm:rounded-[32px] overflow-hidden shrink-0 border border-gray-100">
-                    <Image src={safeImageUrl} alt={item.name} fill className="object-contain p-2" />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0 flex flex-col sm:flex-row justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-black text-gray-900 text-xs sm:text-sm tracking-tight line-clamp-2">{item.name}</h3>
-                      <p className="text-[8px] sm:text-[9px] text-gray-400 font-bold tracking-widest truncate mt-1 mb-3">{item.saltComposition}</p>
-                      
-                      <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1 border w-fit">
-                        <button onClick={() => updateQuantity(item.id, -1)} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-primary text-white tap-highlight"><Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" /></button>
-                        <span className="text-[10px] sm:text-xs font-black w-6 text-center">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, 1)} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-primary text-white tap-highlight"><Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" /></button>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col items-end justify-between sm:text-right shrink-0">
-                      <div className="space-y-0.5">
-                        <p className="text-sm sm:text-lg font-black text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</p>
-                        <p className="text-[8px] sm:text-[10px] text-red-500 font-black line-through">₹{((item.mrp || item.price + 50) * item.quantity).toFixed(2)}</p>
-                      </div>
-                      <button 
-                        onClick={() => removeFromCart(item.id)} 
-                        className="mt-2 text-gray-300 hover:text-red-500 transition-colors p-1"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="lg:col-span-1">
-            <div className="space-y-6 sticky top-24">
-              <div 
-                className={cn(
-                  "p-6 rounded-[40px] shadow-sm border flex items-center justify-between group cursor-pointer transition-all",
-                  appliedPromo ? "bg-primary/5 border-primary/20 hover:shadow-xl" : "bg-white border-gray-100 hover:shadow-lg"
-                )} 
-                onClick={() => setIsPromoDialogOpen(true)}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                    appliedPromo ? "bg-primary text-white" : "bg-purple-50 text-purple-600"
-                  )}>
-                    < Ticket className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-black text-[10px] tracking-tight text-gray-900">
-                      {appliedPromo ? `Applied: ${appliedPromo.code}` : "Apply coupon"}
-                    </p>
-                    <p className="text-[8px] font-bold text-gray-400">
-                      {appliedPromo ? appliedPromo.description : "Save more on this order"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {appliedPromo ? (
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); applyPromo(null); }} 
-                      className="text-red-500 font-black text-[10px] tracking-widest hover:underline"
-                    >
-                      Remove
-                    </button>
-                  ) : (
-                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-primary transition-colors" />
-                  )}
-                </div>
-              </div>
-
-              {appliedPromo && showCelebration && (
-                <div className="bg-accent text-white p-4 rounded-[32px] shadow-2xl flex items-center justify-center gap-3 animate-spring overflow-hidden relative">
-                  <div className="absolute inset-0 bg-white/10 animate-pulse pointer-events-none" />
-                  <PartyPopper className="w-5 h-5 animate-bounce shrink-0" />
-                  <div className="text-center">
-                    <p className="text-[10px] font-black tracking-tight leading-none">Coupon celebration!</p>
-                    <p className="text-[13px] font-black tracking-tighter mt-1">Extra ₹{promoDiscount.toFixed(2)} saved!</p>
-                  </div>
-                  <Sparkles className="w-5 h-5 animate-pulse shrink-0" />
-                </div>
+          {requiresPrescription && (
+            <motion.div 
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className={cn(
+                "border border-white/50 p-6 sm:p-10 rounded-[48px] mb-12 flex flex-col sm:flex-row items-center gap-6 sm:gap-10 shadow-2xl backdrop-blur-md relative overflow-hidden",
+                attachedPrescription ? "bg-emerald-50/50" : "bg-primary/5"
               )}
-
-              <div className="bg-white p-8 sm:p-10 rounded-[40px] sm:rounded-[50px] shadow-2xl border relative overflow-hidden">
-                {appliedPromo && (
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl -mr-16 -mt-16" />
-                )}
-                
-                <h2 className="text-[10px] sm:text-[11px] font-black mb-8 sm:mb-10 tracking-[0.3em] text-gray-400 relative z-10">Bill details</h2>
-                <div className="space-y-5 sm:space-y-6 mb-8 sm:mb-10 relative z-10">
-                  <div className="flex justify-between text-[10px] sm:text-[11px] font-black text-gray-500">
-                    <span>Cart gross (MRP)</span>
-                    <span className="text-red-500 line-through">₹{totalMrp.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-[10px] sm:text-[11px] font-black">
-                    <span>Item total</span>
-                    <span className="text-gray-900">₹{totalPrice.toFixed(2)}</span>
-                  </div>
-                  {appliedPromo && (
-                    <div className="flex justify-between text-[10px] sm:text-[11px] font-black text-accent animate-in slide-in-from-left-2">
-                      <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Coupon discount</span>
-                      <span>-₹{promoDiscount.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {feeTotal > 0 && (
-                    <div className="flex justify-between text-[10px] sm:text-[11px] font-black">
-                      <span>Clinical fees</span>
-                      <span className="text-gray-900">₹{feeTotal.toFixed(2)}</span>
-                    </div>
-                  )}
+            >
+              <div className={cn(
+                "w-16 h-16 sm:w-20 sm:h-20 rounded-[32px] flex items-center justify-center shrink-0 shadow-inner",
+                attachedPrescription ? "bg-emerald-100 text-emerald-600" : "bg-primary/10 text-primary"
+              )}>
+                 {attachedPrescription ? <ClipboardCheck className="w-8 h-8" /> : <FileWarning className="w-8 h-8" />}
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <p className="font-black text-lg sm:text-xl tracking-tight uppercase font-outfit">{attachedPrescription ? "Clinical Record Attached" : "Clinical Record Required"}</p>
+                <p className="text-[10px] font-black tracking-[0.2em] mt-2 opacity-60 leading-relaxed uppercase">Our medical board requires a valid prescription for these items.</p>
+              </div>
+              <input type="file" id="cart-upload" className="hidden" accept="image/*" onChange={handleFileChange} />
+              <Button 
+                onClick={() => document.getElementById('cart-upload')?.click()} 
+                variant="outline" 
+                className="w-full sm:w-auto rounded-full font-black text-[10px] h-14 sm:h-16 px-10 gap-4 border-2 uppercase tracking-widest hover:bg-white"
+              >
+                {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />} 
+                {attachedPrescription ? "Update Record" : "Upload prescription"}
+              </Button>
+            </motion.div>
+          )}
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-20">
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="lg:col-span-2 space-y-6"
+            >
+              {cart.map((item) => {
+                const safeImageUrl = (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http'))
+                  ? item.imageUrl
+                  : `https://picsum.photos/seed/${item.id}/300/300`;
                   
-                  {totalSavings > 0 && (
-                    <div className="pt-2 flex justify-between text-[10px] sm:text-[11px] font-black text-accent bg-accent/5 p-3 rounded-xl border border-accent/10">
-                      <span className="flex items-center gap-1.5"><Zap className="w-3 h-3 fill-current" /> Total savings</span>
-                      <span>₹{totalSavings.toFixed(2)}</span>
+                return (
+                  <motion.div 
+                    key={item.id} 
+                    variants={itemVariants}
+                    className="bg-white/40 backdrop-blur-md p-6 sm:p-8 rounded-[48px] shadow-xl border border-white/50 flex gap-6 sm:gap-10 items-center group hover:shadow-2xl transition-all relative overflow-hidden"
+                  >
+                    <div className="relative w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-[32px] overflow-hidden shrink-0 border border-white shadow-inner">
+                      <Image src={safeImageUrl} alt={item.name} fill className="object-contain p-4 group-hover:scale-110 transition-transform duration-500" />
                     </div>
-                  )}
+                    
+                    <div className="flex-1 min-w-0 flex flex-col sm:flex-row justify-between gap-6">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[9px] font-black text-primary tracking-[0.2em] uppercase mb-2 block">{item.brand || 'Premium'}</span>
+                        <h3 className="font-black text-slate-900 text-lg sm:text-2xl tracking-tighter line-clamp-1 font-outfit uppercase">{item.name}</h3>
+                        <p className="text-[10px] text-slate-400 font-bold tracking-[0.2em] truncate mt-2 mb-6 uppercase">{item.saltComposition}</p>
+                        
+                        <div className="flex items-center gap-3 bg-white/60 rounded-full p-1.5 border border-white shadow-sm w-fit">
+                          <button onClick={() => updateQuantity(item.id, -1)} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-slate-900 text-white hover:bg-primary transition-colors tap-highlight shadow-lg"><Minus className="w-4 h-4" /></button>
+                          <span className="text-sm sm:text-lg font-black w-10 text-center font-outfit">{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item.id, 1)} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-slate-900 text-white hover:bg-primary transition-colors tap-highlight shadow-lg"><Plus className="w-4 h-4" /></button>
+                        </div>
+                      </div>
 
-                  <div className="pt-8 sm:pt-10 border-t border-dashed flex justify-between items-baseline">
-                    <span className="text-xs sm:text-sm font-black text-gray-900">Total payable</span>
-                    <span className="text-3xl sm:text-4xl font-black text-primary tracking-tighter">₹{finalPayable.toFixed(2)}</span>
+                      <div className="flex flex-col items-end justify-between sm:text-right shrink-0">
+                        <div className="text-right">
+                          <p className="text-2xl sm:text-3xl font-black text-slate-900 font-outfit tracking-tighter">₹{(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="text-[11px] text-primary font-black line-through opacity-40">₹{((item.mrp || item.price + 50) * item.quantity).toFixed(2)}</p>
+                        </div>
+                        <button 
+                          onClick={() => removeFromCart(item.id)} 
+                          className="mt-4 w-12 h-12 rounded-full flex items-center justify-center bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+
+            <div className="lg:col-span-1">
+              <div className="space-y-8 sticky top-32">
+                <motion.div 
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className={cn(
+                    "p-8 rounded-[48px] shadow-2xl border flex items-center justify-between group cursor-pointer transition-all relative overflow-hidden",
+                    appliedPromo ? "bg-primary text-white border-primary shadow-primary/20" : "bg-white/40 border-white backdrop-blur-md"
+                  )} 
+                  onClick={() => setIsPromoDialogOpen(true)}
+                >
+                  <div className="flex items-center gap-6 relative z-10">
+                    <div className={cn(
+                      "w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg",
+                      appliedPromo ? "bg-white text-primary" : "bg-white text-primary"
+                    )}>
+                      < Ticket className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <p className="font-black text-xs tracking-widest uppercase mb-1">
+                        {appliedPromo ? `Reward: ${appliedPromo.code}` : "Apply Promo Code"}
+                      </p>
+                      <p className={cn("text-[10px] font-bold uppercase tracking-widest opacity-60", appliedPromo ? "text-white" : "text-slate-400")}>
+                        {appliedPromo ? appliedPromo.description : "Maximum clinical savings"}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                {isPrescriptionReady ? (
-                  <Button onClick={handleCheckoutClick} className="w-full rounded-full h-16 sm:h-20 text-[10px] sm:text-[11px] font-black tracking-[0.2em] shadow-2xl shadow-primary/30 bg-primary text-white relative z-10">
-                    Checkout now <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-4" />
-                  </Button>
-                ) : (
-                  <Button onClick={() => document.getElementById('cart-upload')?.click()} className="w-full rounded-full h-16 sm:h-20 text-[10px] sm:text-[11px] font-black tracking-[0.2em] shadow-2xl shadow-orange-200 bg-orange-600 text-white relative z-10">
-                    Upload prescription <Camera className="w-4 h-4 sm:w-5 sm:h-5 ml-4" />
-                  </Button>
-                )}
+                  <div className="relative z-10">
+                    {appliedPromo ? (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); applyPromo(null); }} 
+                        className="text-white font-black text-[10px] tracking-widest hover:underline uppercase p-2"
+                      >
+                        [ Remove ]
+                      </button>
+                    ) : (
+                      <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-primary transition-transform group-hover:translate-x-2" />
+                    )}
+                  </div>
+                </motion.div>
+
+                <AnimatePresence>
+                  {appliedPromo && showCelebration && (
+                    <motion.div 
+                      initial={{ scale: 0.5, opacity: 0, y: 20 }}
+                      animate={{ scale: 1, opacity: 1, y: 0 }}
+                      exit={{ scale: 0.5, opacity: 0, y: -20 }}
+                      className="bg-accent text-white p-6 rounded-[40px] shadow-3xl flex items-center justify-center gap-4 relative overflow-hidden border border-white/20"
+                    >
+                      <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                      <PartyPopper className="w-6 h-6 animate-bounce shrink-0" />
+                      <div className="text-center relative z-10">
+                        <p className="text-[10px] font-black tracking-[0.2em] leading-none uppercase mb-2">Clinical Bonus Applied</p>
+                        <p className="text-xl font-black tracking-tighter font-outfit">Extra ₹{promoDiscount.toFixed(2)} Saved!</p>
+                      </div>
+                      <Sparkles className="w-6 h-6 animate-pulse shrink-0" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <motion.div 
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-white p-10 sm:p-12 rounded-[56px] shadow-[0_64px_96px_-16px_rgba(0,0,0,0.1)] border border-white relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
+                  
+                  <h2 className="text-[10px] font-black mb-10 tracking-[0.4em] text-slate-400 uppercase relative z-10">Consolidated Invoice</h2>
+                  <div className="space-y-6 mb-12 relative z-10">
+                    <div className="flex justify-between text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                      <span>Cart Gross</span>
+                      <span className="text-primary/40 line-through">₹{totalMrp.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
+                      <span>Item Total</span>
+                      <span className="text-slate-900">₹{totalPrice.toFixed(2)}</span>
+                    </div>
+                    {appliedPromo && (
+                      <div className="flex justify-between text-[11px] font-black text-primary uppercase tracking-widest">
+                        <span className="flex items-center gap-2"><Tag className="w-3.5 h-3.5" /> Promo Discount</span>
+                        <span>-₹{promoDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {feeTotal > 0 && (
+                      <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
+                        <span>Clinical Fees</span>
+                        <span className="text-slate-900">₹{feeTotal.toFixed(2)}</span>
+                      </div>
+                    )}
+                    
+                    {totalSavings > 0 && (
+                      <div className="mt-8 flex justify-between text-[11px] font-black text-primary bg-primary/5 p-4 rounded-[24px] border border-primary/10 shadow-inner">
+                        <span className="flex items-center gap-2 uppercase tracking-widest"><Zap className="w-3.5 h-3.5 fill-current" /> Net Savings</span>
+                        <span>₹{totalSavings.toFixed(2)}</span>
+                      </div>
+                    )}
+
+                    <div className="pt-10 border-t border-slate-100 flex justify-between items-baseline">
+                      <span className="text-sm font-black text-slate-900 uppercase tracking-widest">To be paid</span>
+                      <span className="text-4xl sm:text-5xl font-black text-primary tracking-tighter font-outfit">₹{finalPayable.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  {isPrescriptionReady ? (
+                    <Button onClick={handleCheckoutClick} className="w-full rounded-full h-20 text-xs font-black tracking-[0.3em] uppercase shadow-2xl shadow-primary/20 bg-primary text-white relative z-10 group hover:scale-[1.02] transition-transform">
+                      Checkout Pipeline <ArrowRight className="w-6 h-6 ml-4 group-hover:translate-x-2 transition-transform" />
+                    </Button>
+                  ) : (
+                    <Button onClick={() => document.getElementById('cart-upload')?.click()} className="w-full rounded-full h-20 text-xs font-black tracking-[0.3em] uppercase shadow-2xl shadow-rose-200 bg-rose-600 text-white relative z-10 group hover:scale-[1.02] transition-transform">
+                      Submit Record <Camera className="w-6 h-6 ml-4 group-hover:scale-110 transition-transform" />
+                    </Button>
+                  )}
+                </motion.div>
               </div>
             </div>
           </div>
-        </div>
-      </main>
+        </main>
 
-      <Dialog open={isPromoDialogOpen} onOpenChange={setIsPromoDialogOpen}>
-        <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden shadow-3xl">
-          <div className="bg-primary p-8 text-white">
-            <DialogTitle className="text-2xl font-black tracking-tight">Available offers</DialogTitle>
-            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1">
-              Select a clinical discount to apply to your order
-            </DialogDescription>
-          </div>
-          <div className="p-8 space-y-4 max-h-[60vh] overflow-y-auto scrollbar-hide">
-            {availablePromos.length === 0 ? (
-              <div className="py-12 text-center">
-                <Ticket className="w-12 h-12 text-gray-100 mx-auto mb-4" />
-                <p className="text-gray-400 font-bold text-[10px] tracking-widest">No active coupons available</p>
+        <Dialog open={isPromoDialogOpen} onOpenChange={setIsPromoDialogOpen}>
+          <DialogContent className="rounded-[56px] max-w-lg border-none p-0 overflow-hidden shadow-3xl backdrop-blur-3xl bg-white/90">
+            <div className="bg-primary p-12 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12">
+                <Ticket className="w-32 h-32" />
               </div>
-            ) : (
-              availablePromos.map(promo => {
-                const isApplicable = totalPrice >= promo.minOrderValue;
-                return (
-                  <div 
-                    key={promo.id} 
-                    className={cn(
-                      "p-6 rounded-[32px] border-2 transition-all flex flex-col gap-2 relative overflow-hidden group",
-                      isApplicable ? "border-gray-100 hover:border-primary cursor-pointer bg-white" : "opacity-50 grayscale cursor-not-allowed border-dashed bg-gray-50"
-                    )}
-                    onClick={() => isApplicable && handleApplyPromo(promo)}
-                  >
-                    <div className="flex justify-between items-center">
-                      <Badge className="bg-purple-100 text-purple-600 font-black text-[9px] tracking-widest px-3 py-1 border-none">
-                        {promo.code}
-                      </Badge>
-                      <span className="font-black text-sm text-primary">
-                        {promo.discountType === 'percentage' ? `${promo.discountValue}% Off` : `₹${promo.discountValue.toFixed(2)} Off`}
-                      </span>
-                    </div>
-                    <p className="text-[10px] font-bold text-gray-600 leading-relaxed">{promo.description}</p>
-                    {!isApplicable ? (
-                      <div className="mt-2 flex items-center gap-2">
-                        <div className="h-1 flex-1 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-orange-400" style={{ width: `${(totalPrice / promo.minOrderValue) * 100}%` }} />
-                        </div>
-                        <p className="text-[8px] font-black text-orange-500 tracking-tighter shrink-0">
-                          Add ₹{(promo.minOrderValue - totalPrice).toFixed(2)} more
-                        </p>
+              <DialogTitle className="text-3xl font-black tracking-tighter font-outfit uppercase">Medical Privileges</DialogTitle>
+              <DialogDescription className="text-[10px] font-black text-white/60 tracking-[0.2em] mt-3 uppercase">
+                Select a clinical discount to optimize your healthcare budget
+              </DialogDescription>
+            </div>
+            <div className="p-10 space-y-6 max-h-[60vh] overflow-y-auto scrollbar-hide">
+              {availablePromos.length === 0 ? (
+                <div className="py-20 text-center">
+                  <Ticket className="w-16 h-16 text-slate-100 mx-auto mb-6" />
+                  <p className="text-slate-400 font-black text-[10px] tracking-[0.3em] uppercase">No active rewards available</p>
+                </div>
+              ) : (
+                availablePromos.map((promo, idx) => {
+                  const isApplicable = totalPrice >= promo.minOrderValue;
+                  return (
+                    <motion.div 
+                      key={promo.id} 
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className={cn(
+                        "p-8 rounded-[40px] border-2 transition-all flex flex-col gap-3 relative overflow-hidden group",
+                        isApplicable ? "border-slate-100 hover:border-primary cursor-pointer bg-white shadow-lg hover:shadow-2xl" : "opacity-50 grayscale cursor-not-allowed border-dashed bg-slate-50"
+                      )}
+                      onClick={() => isApplicable && handleApplyPromo(promo)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <Badge className="bg-primary/10 text-primary font-black text-[10px] tracking-widest px-4 py-2 border-none uppercase">
+                          {promo.code}
+                        </Badge>
+                        <span className="font-black text-xl text-primary font-outfit">
+                          {promo.discountType === 'percentage' ? `${promo.discountValue}% Off` : `₹${promo.discountValue.toFixed(2)} Off`}
+                        </span>
                       </div>
-                    ) : (
-                      <p className="text-[8px] font-black text-accent tracking-widest mt-2 group-hover:animate-pulse">Tap to apply</p>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed mt-2">{promo.description}</p>
+                      {!isApplicable ? (
+                        <div className="mt-4 flex items-center gap-4">
+                          <div className="h-1.5 flex-1 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-primary" style={{ width: `${(totalPrice / promo.minOrderValue) * 100}%` }} />
+                          </div>
+                          <p className="text-[9px] font-black text-primary tracking-tighter shrink-0 uppercase">
+                            Add ₹{(promo.minOrderValue - totalPrice).toFixed(2)} More
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-[9px] font-black text-primary/40 tracking-[0.3em] mt-4 uppercase group-hover:text-primary transition-colors">Select Reward Matrix</p>
+                      )}
+                    </motion.div>
+                  );
+                })
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </PageTransition>
   );
 }

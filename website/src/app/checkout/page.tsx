@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -25,7 +24,9 @@ import {
   Target,
   Banknote,
   Navigation,
-  LocateFixed
+  LocateFixed,
+  Zap,
+  Sparkles
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -33,6 +34,33 @@ import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBl
 import { collection, serverTimestamp, doc, getDoc, query, orderBy } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { motion, AnimatePresence } from 'framer-motion';
+import PageTransition from '@/components/PageTransition';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  show: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 260,
+      damping: 20
+    } as any
+  }
+};
 
 export default function CheckoutPage() {
   const { 
@@ -279,309 +307,353 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] pb-32 sm:pb-8 page-transition-wrapper">
-      <Navbar />
-      <main className="max-w-7xl mx-auto px-4 py-6 md:py-16">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-12">
-           <div className="space-y-1">
-             <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tighter">Delivery details</h1>
-             <p className="text-[10px] font-black text-gray-400 tracking-widest leading-none">Confirm logistic path</p>
-           </div>
-        </div>
+    <PageTransition>
+      <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 py-12 md:py-20">
+          <motion.div 
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-12 sm:mb-20"
+          >
+             <div className="space-y-4">
+               <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tighter font-outfit uppercase">Logistics Pipeline</h1>
+               <div className="flex items-center gap-3">
+                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                 <p className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase">Confirm final clinical destination</p>
+               </div>
+             </div>
+          </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-          <div className="lg:col-span-2 space-y-10">
-            
-            <div className="space-y-6">
-              <div className="flex items-center justify-between px-2">
-                <h3 className="text-sm font-black text-gray-900 tracking-tight">Saved delivery points</h3>
-                <button 
-                  onClick={() => {
-                    setOrderInfo({ patientName: orderInfo.patientName, phoneNumber: orderInfo.phoneNumber, houseNumber: '', buildingLocality: '', city: '', state: '', pincode: '', lat: 0, lng: 0, tag: 'Home', otherTag: '' });
-                    setIsAddressModalOpen(true);
-                  }}
-                  className="text-primary font-black text-[10px] tracking-widest flex items-center gap-1.5 hover:underline"
-                >
-                  <Plus className="w-3" /> Add new address
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {savedAddresses && savedAddresses.length > 0 ? (
-                  savedAddresses.map((addr) => (
-                    <div 
-                      key={addr.id}
-                      onClick={() => {
-                        setSelectedAddressId(addr.id);
-                        setOrderInfo(prev => ({
-                          ...prev,
-                          houseNumber: addr.houseNumber || '',
-                          buildingLocality: addr.street,
-                          pincode: addr.pincode,
-                          lat: addr.lat || 0,
-                          lng: addr.lng || 0,
-                          tag: addr.tag
-                        }));
-                        toast({ title: `Location locked: ${addr.tag}` });
-                      }}
-                      className={cn(
-                        "p-6 rounded-[32px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white shadow-sm hover:shadow-md group",
-                        selectedAddressId === addr.id ? "border-primary bg-primary/5 shadow-lg scale-[1.02]" : "border-transparent hover:border-gray-100"
-                      )}
-                    >
-                      <div className="flex items-center gap-5 min-w-0">
-                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm", selectedAddressId === addr.id ? "bg-primary text-white" : "bg-gray-50 text-gray-400")}>
-                          {addr.tag === 'Home' ? <Home className="w-6 h-6" /> : addr.tag === 'Office' ? <Briefcase className="w-6 h-6" /> : <MapPin className="w-6 h-6" />}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-black text-[10px] text-gray-900 tracking-tight">{addr.tag}</p>
-                          <p className="text-[11px] font-bold text-gray-500 line-clamp-2 leading-relaxed mt-1">
-                            {addr.houseNumber ? `${addr.houseNumber}, ` : ''}{addr.street}
-                          </p>
-                          <p className="text-[9px] font-black text-gray-400 mt-1">PIN: {addr.pincode}</p>
-                        </div>
-                      </div>
-                      <div className="shrink-0 ml-4">
-                        <div className={cn(
-                          "w-6 h-6 rounded-full flex items-center justify-center transition-all",
-                          selectedAddressId === addr.id ? "bg-primary scale-110" : "bg-gray-100 group-hover:bg-gray-200"
-                        )}>
-                          <Check className={cn("w-3.5 h-3.5", selectedAddressId === addr.id ? "text-white" : "text-transparent")} />
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div 
-                    onClick={() => setIsAddressModalOpen(true)}
-                    className="p-12 rounded-[40px] border-2 border-dashed border-gray-200 bg-white text-center cursor-pointer hover:bg-gray-50 transition-colors col-span-full group"
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-20">
+            <div className="lg:col-span-2 space-y-16">
+              
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                className="space-y-10"
+              >
+                <div className="flex items-center justify-between px-2">
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight font-outfit uppercase">Secure Delivery Points</h3>
+                  <button 
+                    onClick={() => {
+                      setOrderInfo({ patientName: orderInfo.patientName, phoneNumber: orderInfo.phoneNumber, houseNumber: '', buildingLocality: '', city: '', state: '', pincode: '', lat: 0, lng: 0, tag: 'Home', otherTag: '' });
+                      setIsAddressModalOpen(true);
+                    }}
+                    className="bg-white/60 backdrop-blur-md px-6 py-3 rounded-full border border-white text-primary font-black text-[10px] tracking-[0.2em] flex items-center gap-3 uppercase hover:bg-white shadow-xl transition-all active:scale-95"
                   >
-                    <div className="w-16 h-16 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-inner">
-                      <MapPin className="w-8 h-8 text-gray-200" />
-                    </div>
-                    <p className="text-[10px] font-black text-gray-400 tracking-widest" >No saved locations found</p>
-                    <p className="text-[10px] font-bold text-primary mt-2 tracking-widest">+ Tap to add delivery point</p>
-                  </div>
-                )}
-              </div>
-            </div>
+                    <Plus className="w-4 h-4" /> Add Protocol
+                  </button>
+                </div>
 
-            <div className="space-y-6">
-              <h3 className="text-sm font-black text-gray-900 tracking-tight px-2">Select payment</h3>
-              <div 
-                className={cn(
-                  "p-6 rounded-[32px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white shadow-sm",
-                  paymentMethod === 'COD' ? "border-primary bg-primary/5" : "border-transparent hover:border-gray-100"
-                )}
-                onClick={() => setPaymentMethod('COD')}
-              >
-                <div className="flex items-center gap-5">
-                  <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm", paymentMethod === 'COD' ? "bg-primary text-white" : "bg-gray-50 text-gray-400")}>
-                    <Banknote className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="font-black text-xs tracking-tight">Cash on Delivery</p>
-                    <p className="text-[9px] font-bold text-gray-400 tracking-widest">Collect at doorstep during fulfillment</p>
-                  </div>
-                </div>
-                <div className={cn("w-6 h-6 rounded-full flex items-center justify-center", paymentMethod === 'COD' ? "bg-primary" : "bg-gray-100")}>
-                  <Check className={cn("w-3.5 h-3.5", paymentMethod === 'COD' ? "text-white" : "text-transparent")} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:col-span-1">
-            <div className="bg-white p-8 sm:p-10 rounded-[48px] shadow-2xl border border-gray-50 sticky top-24 animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl" />
-              
-              <h2 className="text-[10px] font-black mb-8 text-gray-400 tracking-[0.3em] relative z-10">Order summary</h2>
-              
-              <div className="space-y-5 mb-10 pt-6 border-t border-dashed relative z-10">
-                <div className="flex justify-between text-[11px] font-black text-gray-500">
-                  <span>Order value</span>
-                  <span>₹{totalPrice.toFixed(2)}</span>
-                </div>
-                {appliedPromo && (
-                  <div className="flex justify-between text-[11px] font-black text-accent animate-in slide-in-from-left-2">
-                    <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Offer applied</span>
-                    <span>-₹{(appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))).toFixed(2)}</span>
-                  </div>
-                )}
-                <div className="pt-8 border-t border-gray-100 flex justify-between items-baseline">
-                  <span className="text-xs font-black text-gray-900 tracking-widest">Total payable</span>
-                  <span className="text-4xl font-black text-primary tracking-tighter">₹{(totalPrice - (appliedPromo ? (appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))) : 0)).toFixed(2)}</span>
-                </div>
-              </div>
-
-              <div className="space-y-4 relative z-10">
-                <Button 
-                  onClick={handlePlaceOrder} 
-                  disabled={loading} 
-                  className="w-full h-20 rounded-full text-sm font-black tracking-[0.2em] shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 gap-4 text-white transition-all active:scale-95 group"
-                >
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                    <>
-                      Verify & place order
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  {savedAddresses && savedAddresses.length > 0 ? (
+                    savedAddresses.map((addr) => (
+                      <motion.div 
+                        key={addr.id}
+                        variants={itemVariants}
+                        onClick={() => {
+                          setSelectedAddressId(addr.id);
+                          setOrderInfo(prev => ({
+                            ...prev,
+                            houseNumber: addr.houseNumber || '',
+                            buildingLocality: addr.street,
+                            pincode: addr.pincode,
+                            lat: addr.lat || 0,
+                            lng: addr.lng || 0,
+                            tag: addr.tag
+                          }));
+                          toast({ title: `Target locked: ${addr.tag}` });
+                        }}
+                        className={cn(
+                          "p-8 rounded-[48px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white/40 backdrop-blur-md shadow-xl hover:shadow-2xl group relative overflow-hidden",
+                          selectedAddressId === addr.id ? "border-primary bg-white shadow-primary/10" : "border-transparent"
+                        )}
+                      >
+                        <div className="flex items-center gap-6 min-w-0 relative z-10">
+                          <div className={cn("w-16 h-16 rounded-[24px] flex items-center justify-center shrink-0 shadow-inner", selectedAddressId === addr.id ? "bg-primary text-white" : "bg-white text-slate-300")}>
+                            {addr.tag === 'Home' ? <Home className="w-8 h-8" /> : addr.tag === 'Office' ? <Briefcase className="w-8 h-8" /> : <MapPin className="w-8 h-8" />}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-black text-[10px] text-slate-900 tracking-[0.2em] uppercase">{addr.tag}</p>
+                            <p className="text-xs font-bold text-slate-500 line-clamp-2 leading-relaxed mt-2 uppercase">
+                              {addr.houseNumber ? `${addr.houseNumber}, ` : ''}{addr.street}
+                            </p>
+                            <p className="text-[9px] font-black text-slate-400 mt-2 tracking-widest uppercase opacity-60">PIN: {addr.pincode}</p>
+                          </div>
+                        </div>
+                        <div className="shrink-0 ml-6 relative z-10">
+                          <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-inner",
+                            selectedAddressId === addr.id ? "bg-primary scale-110" : "bg-white group-hover:bg-slate-50"
+                          )}>
+                            <Check className={cn("w-4 h-4", selectedAddressId === addr.id ? "text-white" : "text-transparent")} />
+                          </div>
+                        </div>
+                        {selectedAddressId === addr.id && (
+                          <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12">
+                            <LocateFixed className="w-20 h-20 text-primary" />
+                          </div>
+                        )}
+                      </motion.div>
+                    ))
+                  ) : (
+                    <motion.div 
+                      variants={itemVariants}
+                      onClick={() => setIsAddressModalOpen(true)}
+                      className="p-16 rounded-[48px] border-2 border-dashed border-slate-200 bg-white/40 backdrop-blur-md text-center cursor-pointer hover:bg-white transition-all col-span-full group"
+                    >
+                      <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-2xl border border-white">
+                        <MapPin className="w-10 h-10 text-slate-200" />
+                      </div>
+                      <p className="text-[10px] font-black text-slate-400 tracking-[0.4em] uppercase" >No Logistical Targets Saved</p>
+                      <p className="text-xs font-black text-primary mt-4 tracking-[0.2em] uppercase transition-all group-hover:scale-110">+ Register Delivery Point</p>
+                    </motion.div>
                   )}
-                </Button>
-                
-                <div className="flex items-center justify-center gap-3 py-2">
-                   <ShieldCheck className="w-4 h-4 text-accent" />
-                   <span className="text-[8px] font-black text-gray-400 tracking-widest">Secured clinical checkout</span>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
+              </motion.div>
 
-      <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
-        <DialogContent className="max-w-xl w-[96vw] sm:w-full rounded-[32px] border-none p-0 overflow-hidden shadow-3xl bg-white mx-auto z-[110]">
-          <div className="max-h-[92vh] overflow-y-auto scrollbar-hide">
-            <div className="bg-primary p-5 text-white relative overflow-hidden shrink-0">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl" />
-              <DialogTitle className="text-xl font-black tracking-tight">Delivery point</DialogTitle>
-              <DialogDescription className="text-[8px] font-black text-white/60 tracking-[0.2em] mt-0.5">
-                Clinical logistics path
-              </DialogDescription>
-            </div>
-
-            <div className="p-5 space-y-4">
-              <Button 
-                onClick={handleLocateMe}
-                variant="outline" 
-                type="button"
-                className="h-12 w-full rounded-xl border-2 border-primary/20 text-primary bg-white hover:bg-primary/5 font-black text-[10px] gap-3 transition-none active:scale-95"
+              <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="space-y-10"
               >
-                {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Target className="w-4 h-4" />}
-                Autofill current location
-              </Button>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black text-gray-400 ml-1">Name *</Label>
-                  <Input 
-                    placeholder="e.g. Rahul Sharma" 
-                    value={orderInfo.patientName} 
-                    onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})}
-                    className="h-12 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-4"
-                  />
+                <div className="flex items-center gap-4 px-2">
+                   <div className="w-1 h-6 bg-primary rounded-full" />
+                   <h3 className="text-lg font-black text-slate-900 tracking-tight font-outfit uppercase">Settlement Protocol</h3>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black text-gray-400 ml-1">Phone number *</Label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 border-r pr-2.5">+91</div>
-                    <Input 
-                      placeholder="Mobile number" 
-                      value={orderInfo.phoneNumber} 
-                      maxLength={10}
-                      onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '')})}
-                      className="h-12 pl-14 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-[9px] font-black text-gray-400 ml-1">House no. / building *</Label>
-                <Input 
-                  placeholder="Apartment name, Flat number" 
-                  value={orderInfo.houseNumber} 
-                  onChange={e => setOrderInfo({...orderInfo, houseNumber: e.target.value})}
-                  className="h-12 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-4"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-[9px] font-black text-gray-400 ml-1">Locality / street *</Label>
-                <Input 
-                  placeholder="Street name, Area" 
-                  value={orderInfo.buildingLocality} 
-                  onChange={e => setOrderInfo({...orderInfo, buildingLocality: e.target.value})}
-                  className="h-12 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-4"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black text-gray-400 ml-1">Pincode *</Label>
-                  <Input 
-                    placeholder="6-digits" 
-                    value={orderInfo.pincode} 
-                    maxLength={6}
-                    onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '')})}
-                    className="h-12 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-3"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black text-gray-400 ml-1">City *</Label>
-                  <Input 
-                    placeholder="City" 
-                    value={orderInfo.city} 
-                    onChange={e => setOrderInfo({...orderInfo, city: e.target.value})}
-                    className="h-12 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-3"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black text-gray-400 ml-1">State *</Label>
-                  <Input 
-                    placeholder="State" 
-                    value={orderInfo.state} 
-                    onChange={e => setOrderInfo({...orderInfo, state: e.target.value})}
-                    className="h-12 rounded-xl bg-gray-50 border border-gray-200 font-bold text-sm px-3"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <Label className="text-[9px] font-black text-gray-400 ml-1">Address type</Label>
-                <RadioGroup 
-                  value={orderInfo.tag} 
-                  onValueChange={(v) => setOrderInfo({...orderInfo, tag: v})}
-                  className="flex flex-wrap gap-4 items-center pt-0.5"
+                <div 
+                  className={cn(
+                    "p-8 rounded-[48px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white/40 backdrop-blur-md shadow-xl relative overflow-hidden group",
+                    paymentMethod === 'COD' ? "border-primary bg-white" : "border-transparent"
+                  )}
+                  onClick={() => setPaymentMethod('COD')}
                 >
-                  {['Home', 'Office', 'Other'].map(t => (
-                    <div key={t} className="flex items-center space-x-2">
-                      <RadioGroupItem value={t} id={`type-${t}`} className="border-primary text-primary h-4 w-4" />
-                      <Label htmlFor={`type-${t}`} className="text-xs font-bold tracking-tight cursor-pointer">{t}</Label>
+                  <div className="flex items-center gap-8 relative z-10">
+                    <div className={cn("w-16 h-16 rounded-[24px] flex items-center justify-center shadow-inner transition-colors", paymentMethod === 'COD' ? "bg-primary text-white" : "bg-white text-slate-300")}>
+                      <Banknote className="w-8 h-8" />
                     </div>
-                  ))}
-                </RadioGroup>
-                
-                {orderInfo.tag === 'Other' && (
-                  <div className="pt-2 animate-in fade-in slide-in-from-top-1">
-                    <Input 
-                      placeholder="Mention name (e.g. Clinic, Hostel)" 
-                      value={orderInfo.otherTag} 
-                      onChange={e => setOrderInfo({...orderInfo, otherTag: e.target.value})}
-                      className="h-11 rounded-xl bg-gray-50 border border-primary/20 font-bold text-xs px-4"
-                    />
+                    <div>
+                      <p className="font-black text-lg tracking-tight font-outfit uppercase">Doorstep Fulfillment</p>
+                      <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-1">Settle at delivery matrix</p>
+                    </div>
                   </div>
-                )}
-              </div>
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-inner relative z-10", paymentMethod === 'COD' ? "bg-primary" : "bg-white")}>
+                    <Check className={cn("w-4 h-4", paymentMethod === 'COD' ? "text-white" : "text-transparent")} />
+                  </div>
+                  {paymentMethod === 'COD' && (
+                    <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12">
+                      <Zap className="w-24 h-24 text-primary fill-primary" />
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </div>
 
-              <div className="flex gap-3 pt-2">
-                <Button 
-                  onClick={handleSaveNewAddress}
-                  className="flex-1 h-12 rounded-xl bg-primary text-white font-black tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all"
-                >
-                  Save
-                </Button>
-                <Button 
-                  onClick={() => setIsAddressModalOpen(false)}
-                  variant="outline"
-                  className="flex-1 h-12 rounded-xl border border-gray-200 text-gray-500 font-black tracking-widest text-[10px] hover:bg-gray-50 active:scale-95 transition-all"
-                >
-                  Cancel
-                </Button>
-              </div>
+            <div className="lg:col-span-1">
+              <motion.div 
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="bg-white p-10 sm:p-12 rounded-[56px] shadow-[0_64px_96px_-16px_rgba(0,0,0,0.1)] border border-white sticky top-32 overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
+                
+                <h2 className="text-[10px] font-black mb-12 tracking-[0.4em] text-slate-400 uppercase relative z-10">Consolidation Summary</h2>
+                
+                <div className="space-y-6 mb-12 pt-8 border-t border-slate-100 relative z-10">
+                  <div className="flex justify-between text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                    <span>Clinical Value</span>
+                    <span>₹{totalPrice.toFixed(2)}</span>
+                  </div>
+                  {appliedPromo && (
+                    <div className="flex justify-between text-[11px] font-black text-primary uppercase tracking-widest bg-primary/5 p-4 rounded-[24px] border border-primary/10">
+                      <span className="flex items-center gap-3"><Tag className="w-4 h-4" /> Advantage Applied</span>
+                      <span>-₹{(appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="pt-10 border-t border-slate-100 flex justify-between items-baseline">
+                    <span className="text-xs font-black text-slate-900 uppercase tracking-widest">To be Paid</span>
+                    <span className="text-4xl sm:text-5xl font-black text-primary tracking-tighter font-outfit">₹{(totalPrice - (appliedPromo ? (appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))) : 0)).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-6 relative z-10">
+                  <Button 
+                    onClick={handlePlaceOrder} 
+                    disabled={loading} 
+                    className="w-full h-20 rounded-full text-xs font-black tracking-[0.3em] uppercase shadow-2xl shadow-primary/20 bg-primary hover:bg-primary/90 gap-4 text-white transition-all active:scale-95 group"
+                  >
+                    {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
+                      <>
+                        Initiate Fulfillment
+                        <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                      </>
+                    )}
+                  </Button>
+                  
+                  <div className="flex items-center justify-center gap-3 py-4 bg-slate-50 rounded-[28px] border border-slate-100 shadow-inner">
+                     <ShieldCheck className="w-4 h-4 text-primary" />
+                     <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase">Clinical Vault Encryption</span>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </main>
+
+        <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
+          <DialogContent className="max-w-2xl w-[96vw] sm:w-full rounded-[56px] border-none p-0 overflow-hidden shadow-3xl bg-white/90 backdrop-blur-3xl mx-auto z-[110]">
+            <div className="max-h-[85vh] overflow-y-auto scrollbar-hide">
+              <div className="bg-primary p-12 text-white relative overflow-hidden shrink-0">
+                <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12">
+                  <MapPin className="w-32 h-32" />
+                </div>
+                <DialogTitle className="text-3xl font-black tracking-tighter uppercase font-outfit">Logistical Target</DialogTitle>
+                <DialogDescription className="text-[10px] font-black text-white/60 tracking-[0.3em] mt-3 uppercase">
+                  Precision Clinical Destination Matrix
+                </DialogDescription>
+              </div>
+
+              <div className="p-10 space-y-8">
+                <Button 
+                  onClick={handleLocateMe}
+                  variant="outline" 
+                  type="button"
+                  className="h-16 w-full rounded-[32px] border-2 border-primary/20 text-primary bg-white hover:bg-primary/5 font-black text-xs gap-4 transition-all hover:scale-[1.02] shadow-xl uppercase tracking-widest"
+                >
+                  {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Target className="w-5 h-5" />}
+                  Synchronize GPS Coordinates
+                </Button>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Recipient Identity *</Label>
+                    <Input 
+                      placeholder="e.g. CLINICAL DIRECTOR" 
+                      value={orderInfo.patientName} 
+                      onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})}
+                      className="h-14 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm px-6 uppercase tracking-tight focus:bg-white transition-colors"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Secure Contact *</Label>
+                    <div className="relative">
+                      <div className="absolute left-6 top-1/2 -translate-y-1/2 text-xs font-black text-primary border-r border-slate-200 pr-4">IN +91</div>
+                      <Input 
+                        placeholder="MOBILE" 
+                        value={orderInfo.phoneNumber} 
+                        maxLength={10}
+                        onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '')})}
+                        className="h-14 pl-24 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm uppercase tracking-widest focus:bg-white transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Structural Identifier *</Label>
+                  <Input 
+                    placeholder="HOUSE / BUILDING / APARTMENT" 
+                    value={orderInfo.houseNumber} 
+                    onChange={e => setOrderInfo({...orderInfo, houseNumber: e.target.value})}
+                    className="h-14 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm px-6 uppercase focus:bg-white transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Logistical Sector *</Label>
+                  <Input 
+                    placeholder="LOCALITY / STREET / LANDMARK" 
+                    value={orderInfo.buildingLocality} 
+                    onChange={e => setOrderInfo({...orderInfo, buildingLocality: e.target.value})}
+                    className="h-14 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm px-6 uppercase focus:bg-white transition-colors"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">HUB Code *</Label>
+                    <Input 
+                      placeholder="PINCODE" 
+                      value={orderInfo.pincode} 
+                      maxLength={6}
+                      onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '')})}
+                      className="h-14 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm px-6 text-center focus:bg-white transition-colors"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Zone *</Label>
+                    <Input 
+                      placeholder="CITY" 
+                      value={orderInfo.city} 
+                      onChange={e => setOrderInfo({...orderInfo, city: e.target.value})}
+                      className="h-14 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm px-6 text-center uppercase focus:bg-white transition-colors"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Territory *</Label>
+                    <Input 
+                      placeholder="STATE" 
+                      value={orderInfo.state} 
+                      onChange={e => setOrderInfo({...orderInfo, state: e.target.value})}
+                      className="h-14 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm px-6 text-center uppercase focus:bg-white transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-6 bg-slate-50 p-8 rounded-[40px] border border-slate-100 shadow-inner">
+                  <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Destination Classification</Label>
+                  <RadioGroup 
+                    value={orderInfo.tag} 
+                    onValueChange={(v) => setOrderInfo({...orderInfo, tag: v})}
+                    className="flex flex-wrap gap-8 items-center"
+                  >
+                    {['Home', 'Office', 'Other'].map(t => (
+                      <div key={t} className="flex items-center space-x-3">
+                        <RadioGroupItem value={t} id={`type-${t}`} className="border-primary text-primary h-5 w-5" />
+                        <Label htmlFor={`type-${t}`} className="text-sm font-black tracking-tight cursor-pointer uppercase font-outfit">{t}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                  
+                  {orderInfo.tag === 'Other' && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      className="pt-4 overflow-hidden"
+                    >
+                      <Input 
+                        placeholder="SPECIFY SECTOR NAME" 
+                        value={orderInfo.otherTag} 
+                        onChange={e => setOrderInfo({...orderInfo, otherTag: e.target.value})}
+                        className="h-14 rounded-[24px] bg-white border-primary/20 font-black text-xs px-8 uppercase tracking-widest shadow-lg"
+                      />
+                    </motion.div>
+                  )}
+                </div>
+
+                <div className="flex gap-6 pt-6">
+                  <Button 
+                    onClick={handleSaveNewAddress}
+                    className="flex-1 h-20 rounded-full bg-primary text-white font-black tracking-[0.3em] text-xs shadow-2xl shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all uppercase"
+                  >
+                    Commit Matrix
+                  </Button>
+                  <Button 
+                    onClick={() => setIsAddressModalOpen(false)}
+                    variant="outline"
+                    className="flex-1 h-20 rounded-full border-2 border-slate-100 text-slate-400 font-black tracking-[0.3em] text-xs hover:bg-slate-50 active:scale-95 transition-all uppercase"
+                  >
+                    Abort
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </PageTransition>
   );
 }

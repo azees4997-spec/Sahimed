@@ -104,25 +104,59 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { useMongoDBCollection } from '@/hooks/use-mongodb';
+import { motion, AnimatePresence } from 'framer-motion';
+import PageTransition from '@/components/PageTransition';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  show: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 260,
+      damping: 20
+    } as any
+  }
+};
 
 function SectionHeader({ title, subtitle, onBack, children }: { title: string, subtitle: string, onBack?: () => void, children?: React.ReactNode }) {
   return (
-    <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
-      <div className="flex items-center gap-4">
+    <motion.div 
+      initial={{ x: -20, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      className="flex flex-col md:flex-row items-center justify-between gap-8 mb-12"
+    >
+      <div className="flex items-center gap-6">
         {onBack && (
-          <button onClick={onBack} className="rounded-full bg-white shadow-sm h-12 w-12 hover:scale-110 transition-transform flex items-center justify-center">
-            <ChevronRight className="w-5 h-5 rotate-180" />
+          <button 
+            onClick={onBack} 
+            className="rounded-full bg-white shadow-xl h-14 w-14 hover:scale-110 transition-transform flex items-center justify-center border border-white active:scale-95"
+          >
+            <ChevronRight className="w-6 h-6 rotate-180 text-slate-900" />
           </button>
         )}
         <div className="space-y-1">
-          <h2 className="text-3xl font-black text-gray-900 tracking-tight">{title}</h2>
-          <p className="text-[10px] font-black text-gray-400 tracking-widest leading-none">{subtitle}</p>
+          <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase font-outfit">{title}</h2>
+          <p className="text-[10px] font-black text-primary tracking-[0.4em] uppercase leading-none opacity-70">{subtitle}</p>
         </div>
       </div>
-      <div className="flex flex-wrap justify-center gap-3">
+      <div className="flex flex-wrap justify-center gap-4">
         {children}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -198,149 +232,212 @@ export default function AdminConsole() {
 
   if (isUserLoading || isVerifying) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F7F6] gap-4">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-[10px] font-black tracking-[0.3em] text-gray-400">Syncing authority...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F7F6] gap-6 pharma-bg-pattern">
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        >
+          <Loader2 className="w-12 h-12 text-primary" />
+        </motion.div>
+        <p className="text-[10px] font-black tracking-[0.4em] text-slate-400 uppercase">Synchronizing Matrix...</p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F4F7F6] p-4">
-        <Card className="max-w-md w-full rounded-[40px] shadow-2xl border-none overflow-hidden bg-white">
-          <CardHeader className="text-center p-10 bg-primary text-white">
-            <Lock className="w-10 h-10 mx-auto mb-4 opacity-50" />
-            <CardTitle className="text-2xl font-black tracking-tight text-white">SahiMed admin</CardTitle>
-          </CardHeader>
-          <CardContent className="p-8">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black tracking-widest text-gray-400">Admin email</Label>
-                <input type="email" placeholder="admin@sahimed.com" value={email} onChange={e => setEmail(e.target.value)} required className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none focus:ring-2 focus:ring-primary/20" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black tracking-widest text-gray-400">Password</Label>
-                <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="w-full h-14 rounded-2xl bg-gray-50 border-none px-4 font-bold outline-none focus:ring-2 focus:ring-primary/20" />
-              </div>
-              <Button type="submit" disabled={authLoading} className="w-full h-14 rounded-full font-black tracking-widest mt-4 shadow-xl shadow-primary/20">
-                {authLoading ? <Loader2 className="animate-spin" /> : "Authorize access"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+      <PageTransition>
+        <div className="min-h-screen flex items-center justify-center bg-[#F4F7F6] p-6 pharma-bg-pattern">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+          >
+            <Card className="max-w-md w-full rounded-[56px] shadow-3xl border-none overflow-hidden bg-white/80 backdrop-blur-xl border border-white">
+              <CardHeader className="text-center p-12 bg-primary text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
+                   <ShieldCheck className="w-32 h-32" />
+                </div>
+                <Lock className="w-14 h-14 mx-auto mb-6 text-white/40 relative z-10" />
+                <CardTitle className="text-3xl font-black tracking-tighter text-white uppercase font-outfit relative z-10">Administrative Port</CardTitle>
+                <p className="text-[10px] font-black text-white/50 tracking-[0.3em] uppercase relative z-10">SahiMed Systems Console</p>
+              </CardHeader>
+              <CardContent className="p-10">
+                <form onSubmit={handleLogin} className="space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Credential Identity</Label>
+                    <input type="email" placeholder="admin@sahimed.com" value={email} onChange={e => setEmail(e.target.value)} required className="w-full h-16 rounded-[24px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white px-6 font-black outline-none transition-all placeholder:text-slate-300" />
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Access Matrix Key</Label>
+                    <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="w-full h-16 rounded-[24px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white px-6 font-black outline-none transition-all placeholder:text-slate-300" />
+                  </div>
+                  <Button type="submit" disabled={authLoading} className="w-full h-20 rounded-full font-black tracking-[0.3em] mt-4 shadow-2xl shadow-primary/30 uppercase active:scale-95 text-xs bg-primary hover:scale-[1.02] transition-all">
+                    {authLoading ? <Loader2 className="animate-spin" /> : "Authorize Protocol"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </PageTransition>
     );
   }
 
   if (!isVerified) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F4F7F6] p-4">
-        <Card className="max-w-md w-full rounded-[40px] shadow-2xl border-none p-10 text-center space-y-6 bg-white">
-          <ShieldAlert className="w-12 h-12 text-orange-500 mx-auto" />
-          <div className="space-y-2">
-            <h2 className="text-xl font-black">Restricted area</h2>
-            <p className="text-gray-400 text-[10px] font-bold tracking-widest leading-relaxed">Admin role is not detected.</p>
-          </div>
-          <div className="bg-gray-50 p-4 rounded-2xl space-y-2">
-            <p className="text-[8px] font-black text-gray-400 tracking-widest">Your uid</p>
-            <div className="flex items-center gap-2 bg-white border p-3 rounded-xl">
-              <code className="text-[10px] font-black text-gray-600 truncate flex-1">{user.uid}</code>
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-primary" onClick={() => {
-                navigator.clipboard.writeText(user.uid);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-                toast({ title: "Uid copied" });
-              }}>
-                {copied ? <Check className="w-4 h-4 text-green-500" /> : <LogOut className="w-4 h-4" />}
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-3 pt-6 border-t">
-            <Button onClick={bootstrapAdmin} className="w-full gap-2 rounded-full h-14 bg-orange-600 hover:bg-orange-700 font-black text-[10px] tracking-widest">
-              <UserPlus className="w-4 h-4" /> Initialize admin role
-            </Button>
-            <Button onClick={performVerification} variant="outline" className="w-full h-14 rounded-full font-black text-[10px] border-2">
-               Refresh authority
-            </Button>
-            <Button onClick={handleLogout} variant="ghost" className="w-full text-gray-400 font-bold text-[9px] tracking-widest">Sign out</Button>
-          </div>
-        </Card>
-      </div>
+      <PageTransition>
+        <div className="min-h-screen flex items-center justify-center bg-[#F4F7F6] p-6 pharma-bg-pattern">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+          >
+            <Card className="max-w-md w-full rounded-[56px] shadow-3xl border-none p-12 text-center space-y-8 bg-white/80 backdrop-blur-xl border border-white">
+              <div className="w-24 h-24 bg-orange-50 rounded-[40px] flex items-center justify-center mx-auto shadow-inner">
+                <ShieldAlert className="w-12 h-12 text-orange-500" />
+              </div>
+              <div className="space-y-3">
+                <h2 className="text-3xl font-black tracking-tight uppercase font-outfit">Restricted Sector</h2>
+                <p className="text-slate-400 text-[10px] font-black tracking-[0.3em] leading-relaxed uppercase opacity-60">Authority Signature Required</p>
+              </div>
+              <div className="bg-slate-50/50 p-6 rounded-[32px] border border-white shadow-inner space-y-3">
+                <p className="text-[8px] font-black text-slate-400 tracking-[0.4em] uppercase">User Identity Tag</p>
+                <div className="flex items-center gap-3 bg-white border border-slate-100 p-4 rounded-2xl shadow-sm">
+                  <code className="text-[10px] font-black text-slate-600 truncate flex-1 font-mono tracking-tight">{user.uid}</code>
+                  <Button size="icon" variant="ghost" className="h-10 w-10 text-primary hover:bg-primary/5 rounded-xl" onClick={() => {
+                    navigator.clipboard.writeText(user.uid);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                    toast({ title: "Identity Logged" });
+                  }}>
+                    {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <LogOut className="w-4 h-4 rotate-180" />}
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-4 pt-6">
+                <Button onClick={bootstrapAdmin} className="w-full gap-4 rounded-full h-20 bg-orange-600 hover:bg-orange-700 font-black text-xs tracking-[0.3em] uppercase shadow-2xl shadow-orange-200 border-4 border-white transition-all hover:scale-[1.02] active:scale-95">
+                  <UserPlus className="w-5 h-5" /> Initialize Root
+                </Button>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button onClick={performVerification} variant="outline" className="h-16 rounded-full font-black text-[10px] tracking-[0.2em] border-2 uppercase hover:bg-slate-50 transition-all active:scale-95">
+                    Sync Authority
+                  </Button>
+                  <Button onClick={handleLogout} variant="ghost" className="h-16 text-slate-400 font-black text-[10px] tracking-[0.2em] uppercase hover:text-rose-500 transition-all active:scale-95">Disconnect</Button>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+      </PageTransition>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F7F6]">
-      <header className="bg-white border-b sticky top-0 z-50 h-20">
-        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <button onClick={() => setActiveTab('overview')} className="flex items-center gap-3 group text-left">
-              <div className="bg-primary p-2 rounded-xl group-active:scale-95 transition-transform shadow-lg shadow-primary/20">
-                <ShieldCheck className="text-white w-5 h-5" />
-              </div>
-              <div className="flex flex-col items-start leading-none">
-                <span className="font-black text-xl tracking-tighter text-gray-900">Admin center</span>
-                <span className="text-[8px] font-black text-primary tracking-[0.3em]">Management portal</span>
-              </div>
-            </button>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/" target="_blank">
-              <Button variant="outline" className="rounded-xl border-2 font-black text-[9px] gap-1.5 h-10 px-4 hidden sm:flex">
-                <ExternalLink className="w-3.5 h-3.5" /> Live store
+    <PageTransition>
+      <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
+        <header className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-[100] h-24 border-white/40 shadow-sm">
+          <div className="max-w-7xl mx-auto px-8 h-full flex items-center justify-between">
+            <div className="flex items-center gap-10">
+              <button 
+                onClick={() => setActiveTab('overview')} 
+                className="flex items-center gap-5 group text-left hover:scale-[1.02] transition-all"
+              >
+                <div className="bg-primary p-3 rounded-2xl group-active:scale-95 transition-all shadow-xl shadow-primary/30 border-2 border-primary/20">
+                  <ShieldCheck className="text-white w-6 h-6" />
+                </div>
+                <div className="flex flex-col items-start leading-none gap-1">
+                  <span className="font-black text-2xl tracking-tighter text-slate-900 uppercase font-outfit">Console Center</span>
+                  <span className="text-[9px] font-black text-primary tracking-[0.4em] uppercase opacity-70">Matrix Management Portal</span>
+                </div>
+              </button>
+            </div>
+            <div className="flex items-center gap-6">
+              <Link href="/" target="_blank">
+                <Button variant="outline" className="rounded-2xl border-2 font-black text-[10px] gap-3 h-12 px-6 hidden sm:flex uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95">
+                  <ExternalLink className="w-4 h-4" /> Storefront
+                </Button>
+              </Link>
+              <div className="w-px h-8 bg-slate-200 hidden sm:block mx-2" />
+              <Button 
+                variant="ghost" 
+                onClick={handleLogout} 
+                className="w-12 h-12 rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all active:scale-95"
+              >
+                <LogOut className="w-5 h-5" />
               </Button>
-            </Link>
-            <Button variant="ghost" onClick={handleLogout} size="icon" className="w-10 h-10 rounded-xl text-gray-400 hover:text-red-500"><LogOut className="w-4 h-4" /></Button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-10">
-        {activeTab === 'overview' && <OverviewTab setTab={setActiveTab} />}
-        {activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-        {activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-        {activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-        {activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-        {activeTab === 'categories' && <CategoriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-        {activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-        {activeTab === 'stockAlerts' && <AlertsTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-        {activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-        {activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-        {activeTab === 'banners' && <BannersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-      </main>
-    </div>
+        <main className="max-w-7xl mx-auto px-8 py-14">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, scale: 0.98, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              {activeTab === 'overview' && <OverviewTab setTab={setActiveTab} />}
+              {activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {activeTab === 'categories' && <CategoriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {activeTab === 'stockAlerts' && <AlertsTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {activeTab === 'banners' && <BannersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+      </div>
+    </PageTransition>
   );
 }
 
 function OverviewTab({ setTab }: { setTab: (t: AdminTab) => void }) {
   const stats = [
-    { label: 'Inquiries', icon: FileText, desc: 'Prescription digitization', tab: 'enquiries', color: 'text-blue-600' },
-    { label: 'Orders', icon: ShoppingBag, desc: 'Fulfillment & logistics', tab: 'fulfillment', color: 'text-blue-500' },
-    { label: 'Coupons', icon: Ticket, desc: 'Marketing campaigns', tab: 'promocodes', color: 'text-purple-500' },
-    { label: 'Fees', icon: Receipt, desc: 'Billing adjustments', tab: 'fees', color: 'text-orange-500' },
-    { label: 'Banners', icon: ImageIcon, desc: 'Storefront promotions', tab: 'banners', color: 'text-yellow-500' },
-    { label: 'Categories', icon: Tag, desc: 'Therapeutic taxonomy', tab: 'categories', color: 'text-pink-500' },
-    { label: 'Customers', icon: Users, desc: 'Patient registry', tab: 'customers', color: 'text-indigo-500' },
-    { label: 'Alerts', icon: Megaphone, desc: 'System broadcasts', tab: 'stockAlerts', color: 'text-red-500' },
-    { label: 'Catalog', icon: Package, desc: 'Product master data', tab: 'itemMaster', color: 'text-green-600' },
-    { label: 'Formulas', icon: Dna, desc: 'Molecule registry', tab: 'moleculeMaster', color: 'text-green-500' },
+    { label: 'Inquiries', icon: FileText, desc: 'Prescription digitization', tab: 'enquiries', color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Orders', icon: ShoppingBag, desc: 'Fulfillment & logistics', tab: 'fulfillment', color: 'text-sky-500', bg: 'bg-sky-50' },
+    { label: 'Coupons', icon: Ticket, desc: 'Marketing campaigns', tab: 'promocodes', color: 'text-purple-500', bg: 'bg-purple-50' },
+    { label: 'Fees', icon: Receipt, desc: 'Billing adjustments', tab: 'fees', color: 'text-orange-500', bg: 'bg-orange-50' },
+    { label: 'Banners', icon: ImageIcon, desc: 'Storefront promotions', tab: 'banners', color: 'text-amber-500', bg: 'bg-amber-50' },
+    { label: 'Categories', icon: Tag, desc: 'Therapeutic taxonomy', tab: 'categories', color: 'text-rose-500', bg: 'bg-rose-50' },
+    { label: 'Customers', icon: Users, desc: 'Patient registry', tab: 'customers', color: 'text-indigo-500', bg: 'bg-indigo-50' },
+    { label: 'Alerts', icon: Megaphone, desc: 'System broadcasts', tab: 'stockAlerts', color: 'text-red-500', bg: 'bg-red-50' },
+    { label: 'Catalog', icon: Package, desc: 'Product master data', tab: 'itemMaster', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Formulas', icon: Dna, desc: 'Molecule registry', tab: 'moleculeMaster', color: 'text-teal-500', bg: 'bg-teal-50' },
   ];
 
   return (
-    <div className="animate-in fade-in duration-500">
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {stats.map(card => (
-          <Card key={card.label} className="rounded-[40px] p-8 border-none shadow-sm hover:shadow-2xl transition-all cursor-pointer bg-white group text-center flex flex-col items-center justify-center min-h-[220px]" onClick={() => setTab(card.tab as AdminTab)}>
-            <div className={cn("w-16 h-16 rounded-[24px] bg-gray-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform", card.color)}>
-               <card.icon className="w-8 h-8" />
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+    >
+      {stats.map(card => (
+        <motion.div key={card.label} variants={itemVariants}>
+          <Card 
+            className="rounded-[56px] p-10 border-none shadow-xl hover:shadow-3xl transition-all cursor-pointer bg-white/60 backdrop-blur-md group text-center flex flex-col items-center justify-center min-h-[280px] border border-white active:scale-95" 
+            onClick={() => setTab(card.tab as AdminTab)}
+          >
+            <div className={cn("w-20 h-20 rounded-[32px] flex items-center justify-center mb-8 group-hover:scale-110 transition-all duration-500 shadow-inner", card.bg, card.color)}>
+               <card.icon className="w-10 h-10" />
             </div>
-            <CardTitle className="text-[10px] font-black text-gray-400 tracking-[0.2em] mb-2">{card.label}</CardTitle>
-            <p className="text-[10px] font-black text-gray-900 tracking-tighter opacity-60 group-hover:opacity-100 transition-opacity">Manage portal</p>
+            <div className="space-y-2">
+              <CardTitle className="text-[10px] font-black text-slate-400 tracking-[0.4em] mb-2 uppercase opacity-60 group-hover:opacity-100 transition-opacity">{card.label}</CardTitle>
+              <p className="text-xs font-black text-slate-900 tracking-tight uppercase font-outfit">Control Protocol</p>
+            </div>
+            <div className="mt-6 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+               <span className="text-[9px] font-black text-primary tracking-widest uppercase flex items-center gap-2">Access Portal <ArrowRight className="w-3 h-3" /></span>
+            </div>
           </Card>
-        ))}
-      </div>
-    </div>
+        </motion.div>
+      ))}
+    </motion.div>
   );
 }
 
@@ -416,17 +513,17 @@ function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boole
   };
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Fulfillment hub" subtitle="Active order processing" onBack={onBack}>
-        <Button onClick={handleExport} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] border-2 gap-2">
-          <Download className="w-4 h-4" /> Download manifest
+    <div className="space-y-10">
+      <SectionHeader title="Fulfillment Matrix" subtitle="Operational Logistics Monitoring" onBack={onBack}>
+        <Button onClick={handleExport} variant="outline" className="rounded-full h-14 px-8 font-black text-[10px] border-2 gap-3 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
+          <Download className="w-4 h-4" /> Export Ledger
         </Button>
       </SectionHeader>
 
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-        <div className="bg-white p-1 rounded-full border flex w-fit gap-1">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+        <div className="bg-white/60 backdrop-blur-md p-1.5 rounded-full border border-white shadow-xl flex w-fit gap-1.5 overflow-x-auto no-scrollbar">
           {['All', 'Confirmed', 'Packing', 'Shipped', 'Delivered', 'Cancelled'].map((status) => (
-            <button key={status} onClick={() => setStatusFilter(status)} className={cn("px-8 py-2.5 rounded-full text-[10px] font-black tracking-widest transition-all", statusFilter === status ? "bg-primary text-white shadow-lg scale-105" : "text-gray-400 hover:bg-gray-50")}>{status}</button>
+            <button key={status} onClick={() => setStatusFilter(status)} className={cn("px-8 py-3.5 rounded-full text-[9px] font-black tracking-[0.2em] transition-all uppercase whitespace-nowrap", statusFilter === status ? "bg-primary text-white shadow-lg shadow-primary/30" : "text-slate-400 hover:bg-white/80")}>{status}</button>
           ))}
         </div>
       </div>
@@ -643,43 +740,50 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
   });
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Product master" subtitle="Targeted management (Limit: 2)" onBack={onBack}>
-        <div className="flex gap-4">
+    <div className="space-y-10">
+      <SectionHeader title="Clinical Catalog" subtitle="Master Inventory Intelligence" onBack={onBack}>
+        <div className="flex flex-wrap items-center gap-4">
           <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".csv" />
-          <Button onClick={downloadTemplate} variant="ghost" className="rounded-full h-12 px-6 font-black text-[10px] text-gray-400 hover:text-primary gap-2">
+          <Button onClick={downloadTemplate} variant="ghost" className="rounded-full h-14 px-8 font-black text-[10px] text-slate-400 hover:text-primary gap-3 uppercase tracking-widest transition-all">
             <Download className="w-4 h-4" /> Template
           </Button>
-          <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] border-2 gap-2 text-primary border-primary/20">
-            <Upload className="w-4 h-4" /> Bulk Import
+          <div className="w-px h-8 bg-slate-200 mx-2 hidden sm:block" />
+          <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full h-14 px-8 font-black text-[10px] border-2 gap-3 text-primary border-primary/20 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
+            <Upload className="w-4 h-4" /> Bulk Upload
           </Button>
-          <Button onClick={handleExport} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] border-2 gap-2">
-            <Download className="w-4 h-4" /> Export CSV
+          <Button onClick={handleExport} variant="outline" className="rounded-full h-14 px-8 font-black text-[10px] border-2 gap-3 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
+            <Download className="w-4 h-4" /> Export Matrix
           </Button>
-          <Button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] bg-primary text-white"><Plus className="w-4 h-4" /> New product</Button>
+          <Button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="rounded-full h-14 px-10 font-black text-[10px] bg-primary text-white shadow-2xl shadow-primary/30 uppercase tracking-widest hover:scale-105 transition-all border-4 border-white active:scale-95">
+            <Plus className="w-5 h-5" /> New Entity
+          </Button>
         </div>
       </SectionHeader>
 
-      <div className="relative" ref={suggestionRef}>
-        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" />
+      <div className="relative group/search" ref={suggestionRef}>
+        <div className="absolute left-8 top-1/2 -translate-y-1/2 text-slate-300 w-6 h-6 group-focus-within/search:text-primary transition-colors">
+          <Search className="w-6 h-6" />
+        </div>
         <Input 
-          placeholder="Search items (e.g. d-veniz)..." 
+          placeholder="SEARCH CLINICAL REGISTRY (E.G. D-VENIZ)..." 
           value={searchTerm} 
           onChange={e => setSearchTerm(e.target.value)} 
-          className="h-16 pl-14 rounded-[32px] border-none bg-white shadow-sm font-black text-sm" 
+          className="h-20 pl-20 rounded-[40px] border-none bg-white shadow-xl font-black text-sm tracking-tight placeholder:text-slate-300 focus:ring-4 focus:ring-primary/10 transition-all uppercase" 
         />
         {isSearching && (
-          <div className="absolute right-6 top-1/2 -translate-y-1/2">
-            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          <div className="absolute right-8 top-1/2 -translate-y-1/2">
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+              <Loader2 className="w-5 h-5 text-primary" />
+            </motion.div>
           </div>
         )}
 
         {suggestions.length > 0 && (
-          <div className="absolute top-[calc(100%+12px)] left-0 right-0 bg-white rounded-[32px] shadow-2xl border border-gray-100 overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="px-6 py-3 bg-gray-50 border-b">
-              <p className="text-[8px] font-black text-gray-400 tracking-widest">Clinical selection</p>
+          <div className="absolute top-[calc(100%+20px)] left-0 right-0 bg-white/95 backdrop-blur-2xl rounded-[48px] shadow-3xl border border-white overflow-hidden z-[110] animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="px-10 py-5 bg-slate-50/50 border-b border-white">
+              <p className="text-[9px] font-black text-slate-400 tracking-[0.4em] uppercase opacity-60">Intelligence Matches</p>
             </div>
-            <div className="max-h-[300px] overflow-y-auto scrollbar-hide">
+            <div className="max-h-[400px] overflow-y-auto no-scrollbar">
               {suggestions.map((item) => (
                 <button
                   key={item.id}
@@ -687,16 +791,18 @@ function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolea
                     setSearchTerm(item.name);
                     setSuggestions([]);
                   }}
-                  className="w-full p-5 flex items-center gap-4 hover:bg-primary/5 transition-all border-b last:border-none text-left active:scale-[0.98]"
+                  className="w-full px-10 py-6 flex items-center gap-6 hover:bg-primary/5 transition-all text-left group/item border-b border-slate-50 last:border-none active:scale-[0.99]"
                 >
-                  <div className="w-10 h-10 bg-gray-50 rounded-xl flex-shrink-0 border border-gray-100 p-1 flex items-center justify-center overflow-hidden">
-                    {item.imageUrl ? <img src={item.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-5 h-5 text-gray-200" />}
+                  <div className="w-14 h-14 bg-white rounded-2xl flex-shrink-0 border border-slate-100 p-2 flex items-center justify-center overflow-hidden shadow-sm group-hover/item:scale-110 transition-transform duration-500">
+                    {item.imageUrl ? <img src={item.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-6 h-6 text-slate-100" />}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-[11px] text-gray-900 truncate tracking-tight">{item.name}</p>
-                    <p className="text-[8px] font-bold text-gray-400 tracking-widest truncate">{item.sku} • {item.manufacturer}</p>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <p className="font-black text-base text-slate-900 truncate tracking-tighter uppercase font-outfit">{item.name}</p>
+                    <p className="text-[9px] font-black text-slate-400 tracking-[0.3em] truncate uppercase opacity-60">{item.sku} • {item.manufacturer}</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-200" />
+                  <div className="bg-slate-50 p-3 rounded-full group-hover/item:bg-primary group-hover/item:text-white transition-all">
+                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover/item:text-white transition-all" />
+                  </div>
                 </button>
               ))}
             </div>
