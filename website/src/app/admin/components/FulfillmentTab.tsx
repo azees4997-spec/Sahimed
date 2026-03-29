@@ -29,12 +29,14 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from "date-fns";
+import { useUser } from '@/firebase';
 import { SectionHeader } from './SectionHeader';
 
 export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const [statusFilter, setStatusFilter] = useState('All');
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useUser();
   const { toast } = useToast();
 
   const fetchOrders = async () => {
@@ -65,9 +67,13 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
 
   const updateOrderStatus = async (id: string, newStatus: string, extra = {}) => {
     try {
+      const token = await user?.getIdToken();
       const res = await fetch('/api/orders', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ id, status: newStatus, ...extra })
       });
       if (res.ok) {

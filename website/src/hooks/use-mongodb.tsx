@@ -9,6 +9,7 @@ export function useMongoDBCollection<T = any>(options: {
   q?: string;
   moleculeId?: string;
   isGeneric?: boolean;
+  isBestSeller?: string | boolean;
 } = {}) {
   const [data, setData] = useState<T[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,6 +25,7 @@ export function useMongoDBCollection<T = any>(options: {
         if (options.category) params.append('category', options.category);
         if (options.moleculeId) params.append('moleculeId', options.moleculeId);
         if (options.isGeneric !== undefined) params.append('isGeneric', options.isGeneric.toString());
+        if (options.isBestSeller !== undefined) params.append('isBestSeller', options.isBestSeller.toString());
         if (options.q) params.append('q', options.q);
 
         const res = await fetch(`/api/products?${params.toString()}`);
@@ -52,7 +54,7 @@ export function useMongoDBCollection<T = any>(options: {
     };
 
     fetchData();
-  }, [options.limit, options.category, options.q, options.moleculeId, refreshKey]);
+  }, [options.limit, options.category, options.q, options.moleculeId, options.isBestSeller, refreshKey]);
 
   const refetch = useCallback(() => {
     setRefreshKey(k => k + 1);

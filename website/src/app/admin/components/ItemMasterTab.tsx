@@ -10,7 +10,9 @@ import {
   Trash2, 
   Download, 
   Upload, 
-  ImageIcon 
+  ImageIcon,
+  Check,
+  ChevronsUpDown
 } from 'lucide-react';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,6 +36,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { 
+  useUser,
   useMemoFirebase, 
   useCollection,
   deleteDocumentNonBlocking,
@@ -41,6 +44,8 @@ import {
 } from '@/firebase';
 import { doc, collection, query, orderBy, getDoc, serverTimestamp, limit } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMongoDBCollection } from '@/hooks/use-mongodb';
 import { motion } from 'framer-motion';
 import { SectionHeader } from './SectionHeader';
@@ -53,6 +58,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const suggestionRef = useRef<HTMLDivElement>(null);
+  const { user } = useUser();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -107,9 +113,13 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
       });
 
       try {
+        const token = await user?.getIdToken();
         const res = await fetch('/api/products/bulk', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify(products)
         });
         if (res.ok) {
@@ -252,13 +262,17 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                          <Edit2 className="w-4 h-4 text-gray-400" />
                        </Button>
                        <Button variant="ghost" size="icon" onClick={async () => {
-                         if (confirm("Delete this product from MongoDB & Firestore?")) {
-                           const docId = med._id || med.id;
-                           await fetch(`/api/products/${docId}`, { method: 'DELETE' });
-                           deleteDocumentNonBlocking(doc(db, 'medicines', docId));
-                           toast({ title: "Product deleted" });
-                           refetch?.();
-                         }
+                          if (confirm("Delete this product from MongoDB & Firestore?")) {
+                            const docId = med._id || med.id;
+                            const token = await user?.getIdToken();
+                            await fetch(`/api/products/${docId}`, { 
+                              method: 'DELETE',
+                              headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            deleteDocumentNonBlocking(doc(db, 'medicines', docId));
+                            toast({ title: "Product deleted" });
+                            refetch?.();
+                          }
                        }}>
                          <Trash2 className="w-4 h-4 text-red-300" />
                        </Button>
@@ -279,7 +293,9 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
               Configure clinical identity and live inventory status
             </DialogDescription>
           </div>
-          <div className="p-8 max-h-[80vh] overflow-y-auto scrollbar-hide"><ItemForm db={db} initialData={editingItem} onSuccess={() => setIsFormOpen(false)} /></div>
+          <div className="p-8 max-h-[80vh] overflow-y-auto scrollbar-hide">
+            {isFormOpen && <ItemForm db={db} initialData={editingItem} onSuccess={() => setIsFormOpen(false)} />}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
@@ -287,15 +303,19 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
 }
 
 function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const { user } = useUser();
   const { toast } = useToast();
-  const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc'), limit(100)), [db]);
-  const { data: molecules } = useCollection(molsQuery);
+  const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc'), limit(1000)), [db]);
+  const { data: molecules, isLoading: isMolsLoading } = useCollection(molsQuery);
+  const [molSearch, setMolSearch] = useState('');
+  const [isMolOpen, setIsMolOpen] = useState(false);
   const [form, setForm] = useState({
     name: initialData?.name || '',
     sku: initialData?.sku || '',
     manufacturer: initialData?.manufacturer || '',
     category: initialData?.category || '',
     isGeneric: initialData?.isGeneric || false,
+    isBestSeller: initialData?.isBestSeller || false,
     prescriptionRequired: initialData?.prescriptionRequired || false,
     moleculeId: initialData?.moleculeId || '',
     packSize: initialData?.packSize || '',
@@ -348,9 +368,13 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       const method = initialData ? 'PUT' : 'POST';
       const url = initialData ? `/api/products/${docId}` : '/api/products';
       
+      const token = await user?.getIdToken();
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(combinedPayload)
       });
       
@@ -385,6 +409,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
             <div className="col-span-2 flex items-center space-x-10 pt-4">
               <div className="flex items-center space-x-2"><Checkbox id="rx-req" checked={form.prescriptionRequired} onCheckedChange={(c) => setForm({...form, prescriptionRequired: !!c})} /><Label htmlFor="rx-req" className="text-[10px] font-black text-red-500">Rx required</Label></div>
               <div className="flex items-center space-x-2"><Checkbox id="is-generic" checked={form.isGeneric} onCheckedChange={(c) => setForm({...form, isGeneric: !!c})} /><Label htmlFor="is-generic" className="text-[10px] font-black text-accent">SahiMed generic</Label></div>
+              <div className="flex items-center space-x-2"><Checkbox id="is-best-seller" checked={form.isBestSeller} onCheckedChange={(c) => setForm({...form, isBestSeller: !!c})} /><Label htmlFor="is-best-seller" className="text-[10px] font-black text-yellow-500 uppercase">Best Seller</Label></div>
             </div>
           </div>
         </TabsContent>
@@ -427,11 +452,76 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
         <TabsContent value="clinical" className="space-y-6">
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black">Molecule mapping</Label>
-              <Select value={form.moleculeId} onValueChange={v => setForm({...form, moleculeId: v})}>
-                <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select molecule" /></SelectTrigger>
-                <SelectContent className="rounded-2xl">{molecules?.map(m => (<SelectItem key={m.id} value={m.id}>{m.molecule} ({m.masterId})</SelectItem>))}</SelectContent>
-              </Select>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Molecule mapping</Label>
+              <Popover open={isMolOpen} onOpenChange={setIsMolOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-bold text-slate-900"
+                  >
+                    <span className="truncate">
+                      {form.moleculeId 
+                        ? molecules?.find((m) => m.id === form.moleculeId)?.molecule 
+                        : "SEARCH & SELECT MOLECULE..."}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-3xl border-none shadow-3xl bg-white/95 backdrop-blur-xl z-[150]" align="start">
+                  <div className="p-4 border-b border-slate-100 flex items-center gap-3">
+                    <Search className="w-4 h-4 text-slate-400" />
+                    <Input 
+                      placeholder="Type molecule name..."
+                      value={molSearch}
+                      onChange={(e) => setMolSearch(e.target.value)}
+                      className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0"
+                    />
+                  </div>
+                  <ScrollArea className="h-[350px] p-2">
+                    {isMolsLoading ? (
+                      <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+                    ) : (
+                      <div className="space-y-1">
+                        {molecules?.filter(m => 
+                          m.molecule?.toLowerCase().includes(molSearch.toLowerCase()) || 
+                          m.masterId?.toLowerCase().includes(molSearch.toLowerCase())
+                        ).length === 0 ? (
+                          <div className="py-6 px-4 text-center text-[10px] font-black text-slate-400 uppercase">No molecule matched</div>
+                        ) : (
+                          molecules?.filter(m => 
+                            m.molecule?.toLowerCase().includes(molSearch.toLowerCase()) || 
+                            m.masterId?.toLowerCase().includes(molSearch.toLowerCase())
+                          ).map((mol) => (
+                            <button
+                              key={mol.id}
+                              onClick={() => {
+                                setForm({...form, moleculeId: mol.id});
+                                setIsMolOpen(false);
+                                setMolSearch('');
+                              }}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group",
+                                form.moleculeId === mol.id ? "bg-primary/10 text-primary" : "text-slate-600"
+                              )}
+                            >
+                              <div className={cn(
+                                "w-2 h-2 rounded-full",
+                                form.moleculeId === mol.id ? "bg-primary" : "bg-transparent group-hover:bg-slate-200"
+                              )} />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-black text-[12px] uppercase truncate tracking-tight">{mol.molecule}</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase opacity-60">{mol.masterId} • {mol.form}</p>
+                              </div>
+                              {form.moleculeId === mol.id && <Check className="w-4 h-4" />}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2"><Label className="text-[10px] font-black">Primary treatment</Label><Input value={form.treatment} onChange={e => setForm({...form, treatment: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black">Clinical description</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>

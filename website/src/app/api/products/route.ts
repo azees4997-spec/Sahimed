@@ -15,6 +15,7 @@ export async function GET(request: Request) {
 
     const moleculeId = searchParams.get('moleculeId');
     const isGeneric = searchParams.get('isGeneric');
+    const isBestSeller = searchParams.get('isBestSeller');
 
     const query: any = {};
     if (category) {
@@ -25,6 +26,9 @@ export async function GET(request: Request) {
     }
     if (isGeneric !== null) {
       query.isGeneric = isGeneric === 'true';
+    }
+    if (isBestSeller !== null) {
+      query.isBestSeller = isBestSeller === 'true';
     }
     if (q) {
       // Use prefix matching first as it's much faster

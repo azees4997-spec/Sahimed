@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { use, useState, useEffect } from 'react';
@@ -23,11 +22,8 @@ import {
   TrendingDown,
   Maximize2,
   Loader2,
-  Search as SearchIcon,
-  Filter,
-  SlidersHorizontal,
-  ArrowRight,
-  Sparkles
+  TrendingUp,
+  FlaskConical
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -45,12 +41,8 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 import { 
-  hoverVariant, 
-  springTransition, 
-  tapVariant,
-  fadeInVariant,
   scaleInVariant,
-  containerVariants
+  fadeInVariant
 } from '@/lib/animations';
 
 const ComparisonCard = ({ 
@@ -96,82 +88,76 @@ const ComparisonCard = ({
     : `https://picsum.photos/seed/${product.id || 'err'}/300/300`;
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={scaleInVariant}
-      className="h-full"
-    >
+    <motion.div variants={scaleInVariant} className="h-full">
       <Card className={cn(
-        "rounded-[48px] p-6 sm:p-8 flex flex-col h-full border shadow-sm transition-all overflow-hidden relative",
-        isAlt ? "bg-sahi-green border-dashed border-green-200" : "bg-white border-slate-100",
-        !showComparison && "max-w-md mx-auto w-full"
+        "h-full rounded-[32px] sm:rounded-[48px] p-4 sm:p-10 flex flex-col justify-between border shadow-sm relative overflow-hidden transition-all duration-700",
+        isAlt ? "bg-accent/[0.03] ring-2 ring-accent/10 border-accent/20" : "bg-white border-slate-100"
       )}>
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] sm:text-xs font-black text-slate-400 tracking-[0.2em] block uppercase">{label}</span>
-          {displaySavingsPct > 0 && (
-            <Badge className="bg-accent text-white text-[10px] sm:text-xs font-black px-3 py-1.5 rounded-xl tracking-widest border-none shadow-lg shadow-accent/20 uppercase">
-              SAVE {displaySavingsPct}%
-            </Badge>
-          )}
-        </div>
-        
-        <Dialog>
-          <DialogTrigger asChild>
-            <div className={cn(
-              "relative aspect-square w-full max-h-[160px] sm:max-h-none rounded-[32px] mb-6 overflow-hidden border flex items-center justify-center p-4 cursor-zoom-in group/img shadow-inner transition-colors",
-              isAlt ? "bg-white/80" : "bg-slate-50 border-slate-100"
-            )}>
-              <Image src={safeImageUrl} alt={product.name} fill sizes="(max-width: 768px) 45vw, 30vw" className="object-contain p-2 transition-transform duration-700 group-hover/img:scale-110" />
-              <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
-                 <Maximize2 className="w-5 h-5 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
+        <div className="space-y-4 sm:space-y-8">
+          <div className="flex items-center justify-between">
+            <Badge className={cn("rounded-full font-black text-[8px] sm:text-[10px] px-3 py-1 uppercase tracking-widest", isAlt ? "bg-accent text-white" : "bg-slate-100 text-slate-400")}>{label}</Badge>
+            {displaySavingsPct > 0 && (
+              <Badge className="bg-primary text-white text-[8px] sm:text-[10px] font-black px-2 py-0.5 rounded-lg shadow-sm">-{displaySavingsPct}%</Badge>
+            )}
+          </div>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <div className="relative aspect-square w-full bg-white rounded-[24px] sm:rounded-[32px] flex items-center justify-center overflow-hidden h-24 sm:h-56 p-2 sm:p-6 border border-slate-50 shadow-inner group/img cursor-zoom-in">
+                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-3 sm:p-6 transition-transform duration-700 group-hover/img:scale-110" />
+                <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
+                   <Maximize2 className="w-5 h-5 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                </div>
               </div>
-            </div>
-          </DialogTrigger>
-          <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-transparent shadow-none">
-            <DialogTitle className="sr-only">{product.name}</DialogTitle>
-            <DialogDescription className="sr-only">Visual representation of {product.name}</DialogDescription>
-            <div className="relative aspect-square w-full bg-white rounded-[40px] overflow-hidden p-8 flex items-center justify-center shadow-3xl border border-white/20">
-               <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-10" />
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-transparent shadow-none">
+              <DialogTitle className="sr-only">{product.name}</DialogTitle>
+              <DialogDescription className="sr-only">Visual representation of {product.name}</DialogDescription>
+              <div className="relative aspect-square w-full bg-white rounded-[40px] overflow-hidden p-8 flex items-center justify-center shadow-3xl border border-white/20">
+                 <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-10" />
+              </div>
+            </DialogContent>
+          </Dialog>
 
-        <div className="flex-1 space-y-2">
-          <h3 className="font-extrabold text-sm sm:text-xl text-slate-800 leading-tight line-clamp-2 min-h-[2.8rem] font-outfit uppercase">
-            {product.name}
-          </h3>
-          <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase opacity-60">
-            {product.packSize || "N/A"}
-          </p>
-          <p className="text-[10px] font-bold text-slate-400 truncate opacity-70 uppercase tracking-tighter">
-            {product.manufacturer}
-          </p>
-
-          <div className="pt-4 border-t border-dashed mt-4 space-y-1">
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl sm:text-4xl font-black tracking-tighter text-slate-900 font-outfit">
-                ₹{Number(pPrice).toFixed(0)}
-              </p>
-              {pMrp > pPrice && (
-                <span className="text-xs sm:text-sm text-slate-300 line-through font-bold opacity-60 tracking-tight">₹{Number(pMrp).toFixed(0)}</span>
-              )}
-            </div>
-            <p className="text-[9px] font-bold text-slate-400 tracking-tight uppercase">
-              ₹{unitPrice.toFixed(2)} / unit
+          <div className="space-y-1 sm:space-y-2">
+            <h3 className="font-extrabold text-xs sm:text-xl text-slate-800 leading-tight line-clamp-2 min-h-[2rem] sm:min-h-[2.8rem] font-outfit uppercase">
+              {product.name}
+            </h3>
+            <p className="text-[10px] sm:text-[12px] font-black text-slate-600 tracking-widest uppercase opacity-100">
+              {product.packSize || "N/A"}
             </p>
+            <p className="text-[10px] sm:text-[12px] font-bold text-slate-700/80 truncate opacity-100 uppercase tracking-tighter">
+              {product.manufacturer}
+            </p>
+
+            <div className="pt-2 sm:pt-4 border-t border-dashed mt-2 sm:mt-4 space-y-0.5 sm:space-y-1">
+              <div className="flex items-baseline gap-2 sm:gap-3">
+                <p className="text-xl sm:text-5xl font-black tracking-tighter text-primary font-outfit">
+                  ₹{Number(pPrice).toFixed(0)}
+                </p>
+                {pMrp > pPrice && (
+                  <div className="flex flex-col">
+                    <span className="text-[10px] sm:text-lg text-slate-400 line-through font-bold opacity-80 decoration-1">₹{Number(pMrp).toFixed(0)}</span>
+                    <span className="text-[9px] sm:text-xs font-black text-accent uppercase bg-accent/10 px-1.5 py-0.5 rounded-md">Save ₹{Number(pMrp - pPrice).toFixed(0)}</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-[9px] font-bold text-slate-400 tracking-tight uppercase">
+                ₹{unitPrice.toFixed(2)} / unit
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-4 sm:mt-8">
           <Button 
             onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })} 
             className={cn(
-              "w-full h-12 sm:h-16 rounded-full font-black text-[10px] sm:text-xs tracking-[0.2em] uppercase gap-3 shadow-xl active:scale-95 transition-all border-none",
+              "w-full h-10 sm:h-16 rounded-full font-black text-[8px] sm:text-xs tracking-[0.15em] uppercase gap-2 sm:gap-3 shadow-xl active:scale-95 transition-all border-none",
               isAlt ? "bg-accent text-white hover:bg-accent/90 shadow-accent/20" : "bg-primary text-white hover:bg-primary/90 shadow-primary/20"
             )}
           >
-            {qty > 0 ? `IN BASKET (${qty})` : "ADD TO BASKET"} <ShoppingCart className="w-4 h-4" />
+            {qty > 0 ? `IN BASKET (${qty})` : "ADD"} <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
           </Button>
         </div>
       </Card>
@@ -249,34 +235,41 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <Navbar />
         <main className="max-w-[1200px] mx-auto px-4 sm:px-10 py-6 sm:py-10">
           
-          <div className="flex flex-row items-center justify-center mb-10 gap-4">
-             <motion.div 
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                className="inline-flex items-center gap-3 bg-white px-6 py-3 rounded-full border border-slate-100 shadow-sm"
-             >
-                <Dna className="w-4 h-4 text-primary" />
-                <span className="text-xs sm:text-sm font-black text-slate-800 tracking-tight font-outfit uppercase">
-                  {molData?.molecule || product.name}
-                </span>
-             </motion.div>
-             {product.prescriptionRequired && (
+          <div className="flex flex-col items-center justify-center mb-8">
+             {(product.prescriptionRequired || product.rxRequired) && (
                <motion.div
-                initial={{ x: 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="mb-4"
                >
                  <Badge className="bg-rose-500 text-white border-none rounded-full font-black text-[9px] px-4 py-2 tracking-widest flex items-center gap-2 shadow-lg shadow-rose-500/20 uppercase">
-                   <AlertTriangle className="w-3 h-3" /> RX REQUIRED
+                    RX REQUIRED
                  </Badge>
                </motion.div>
              )}
+          </div>
+
+          <div className="flex flex-col items-center justify-center mb-10 text-center px-4">
+             <motion.div 
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="inline-flex flex-col items-center gap-2"
+             >
+                <div className="p-3 bg-primary/10 rounded-2xl mb-2">
+                   <Dna className="w-6 h-6 text-primary" />
+                </div>
+                <h2 className="text-xs font-black text-slate-400 tracking-[0.2em] uppercase mb-1">Composition</h2>
+                <span className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter font-outfit uppercase leading-tight max-w-2xl px-4">
+                   {molData?.molecule || product.saltComposition || product.molecule || "Molecular formulation info Pending"}
+                </span>
+             </motion.div>
           </div>
 
           {showComparison && switchSavingsAmt > 0 && (
             <motion.div 
               initial={{ scale: 0.98, opacity: 0, y: -10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              className="mb-10"
+              className="mb-10 px-2"
             >
               <div className="bg-gradient-to-r from-primary to-accent text-white py-5 px-8 rounded-[32px] shadow-xl flex items-center justify-center gap-4 text-center">
                  <TrendingDown className="w-5 h-5 animate-bounce" />
@@ -288,9 +281,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </motion.div>
           )}
 
-          <div className="mb-16">
+          <div className="mb-16 px-1">
             {showComparison ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-stretch">
+              <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-10 items-stretch">
                 <ComparisonCard 
                   product={product} 
                   label="Original Branded" 
@@ -327,13 +320,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-white rounded-[56px] p-8 sm:p-20 shadow-sm border border-slate-100 overflow-hidden"
+            className="bg-white rounded-[32px] sm:rounded-[56px] p-6 sm:p-20 shadow-sm border border-slate-100 overflow-hidden"
           >
             <Tabs defaultValue="clinical" className="w-full">
               <TabsList className="bg-slate-50 p-1.5 rounded-full h-14 sm:h-18 w-full max-w-[600px] flex mx-auto mb-16 border border-slate-100 shadow-inner">
                 <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[9px] sm:text-[11px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-primary transition-all">Intelligence</TabsTrigger>
                 <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[9px] sm:text-[11px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-primary transition-all">Protocol</TabsTrigger>
-                <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[9px] sm:text-[11px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-primary transition-all">Clinical Matrix</TabsTrigger>
+                <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[9px] sm:text-[11px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-primary transition-all">Matrix</TabsTrigger>
               </TabsList>
 
               <TabsContent value="clinical" className="space-y-10 focus-visible:outline-none">
@@ -346,7 +339,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                        <div className="flex items-center gap-4"><Info className="w-5 h-5 text-primary" /><h3 className="text-lg font-black text-slate-800 tracking-tighter font-outfit uppercase">Pharmacology</h3></div>
                        <p className="text-[11px] font-black text-slate-500 leading-relaxed uppercase opacity-70 tracking-tight">{product.description || "Active medical formulation."}</p>
                     </div>
-                 </div>
+                  </div>
               </TabsContent>
 
               <TabsContent value="safety" className="grid grid-cols-1 md:grid-cols-2 gap-8 focus-visible:outline-none">
@@ -362,7 +355,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               <TabsContent value="interactions" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 focus-visible:outline-none">
                 {[
-                  { icon: Dna, title: "Composition", text: product.saltComposition, color: "bg-lavender" },
+                  { icon: FlaskConical, title: "Composition", text: product.saltComposition, color: "bg-lavender" },
                   { icon: Baby, title: "Pregnancy", text: product.pregnancyInteraction, color: "bg-sahi-pink" },
                   { icon: Milk, title: "Lactation", text: product.lactationInteraction, color: "bg-sahi-blue" },
                   { icon: Car, title: "Driving", text: product.drivingInteraction, color: "bg-sahi-green" },
@@ -389,4 +382,3 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     </PageTransition>
   );
 }
-

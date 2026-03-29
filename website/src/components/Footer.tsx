@@ -4,9 +4,20 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { SahiMedIcon } from './Navbar';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 
 export default function Footer() {
   const pathname = usePathname();
+  const db = useFirestore();
+
+  const footerPagesQuery = query(
+    collection(db, 'pages'), 
+    where('placement', 'in', ['footer', 'both']),
+    orderBy('lastUpdated', 'desc')
+  );
+  const { data: footerPages } = useCollection(footerPagesQuery);
+
   if (pathname.startsWith('/admin')) return null;
 
   return (
@@ -29,7 +40,12 @@ export default function Footer() {
           <Link href="#" className="hover:text-white transition-colors">Offers</Link>
           <Link href="#" className="hover:text-white transition-colors">Contact us</Link>
           <Link href="#" className="hover:text-white transition-colors">FAQs</Link>
-          <Link href="#" className="hover:text-white transition-colors">Policies</Link>
+          {footerPages?.map((page: any) => (
+            <Link key={page.id} href={`/p/${page.id}`} className="hover:text-white transition-colors uppercase">
+              {page.title}
+            </Link>
+          ))}
+          {!footerPages && <Link href="#" className="hover:text-white transition-colors">Policies</Link>}
         </div>
 
         <div className="w-full pt-4 border-t border-white/5 text-center">

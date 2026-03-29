@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { 
+  useUser,
   useMemoFirebase, 
   useCollection,
   deleteDocumentNonBlocking,
@@ -34,6 +35,8 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
   const { data: categories, isLoading } = useCollection(catsQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCat, setEditingCat] = useState<any>(null);
+  const { user } = useUser();
+  const { toast } = useToast();
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
@@ -49,7 +52,17 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
                 <tr key={cat.id} className="hover:bg-gray-50/50">
                   <td className="px-10 py-8 font-black text-sm text-gray-900">{cat.name}</td>
                   <td className="px-10 py-8 font-bold text-gray-400">{cat.order || 0}</td>
-                  <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => { setEditingCat(cat); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button><Button variant="ghost" size="icon" onClick={() => { if(confirm("Delete category?")) deleteDocumentNonBlocking(doc(db, 'categories', cat.id)); }}><Trash2 className="w-4 h-4 text-red-300" /></Button></div></td>
+                  <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => { setEditingCat(cat); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button><Button variant="ghost" size="icon" onClick={async () => { 
+                    if(confirm("Delete category?")) {
+                      const token = await user?.getIdToken();
+                      await fetch(`/api/categories/${cat.id || cat._id}`, { 
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      });
+                      deleteDocumentNonBlocking(doc(db, 'categories', cat.id)); 
+                      toast({ title: "Category archived" });
+                    }
+                  }}><Trash2 className="w-4 h-4 text-red-300" /></Button></div></td>
                 </tr>
               ))}
             </tbody>
@@ -75,11 +88,34 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
 
 function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
   const [form, setForm] = useState({ name: initialData?.name || '', order: initialData?.order || 0 });
-  const handleSubmit = (e: React.FormEvent) => {
+  const { user } = useUser();
+  const { toast } = useToast();
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...form, updatedAt: serverTimestamp() };
-    initialData?.id ? updateDocumentNonBlocking(doc(db, 'categories', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'categories'), { ...payload, createdAt: serverTimestamp() });
-    onSuccess();
+    
+    try {
+      const docId = initialData?.id || initialData?._id || form.name.toLowerCase().replace(/\s+/g, '-');
+      const token = await user?.getIdToken();
+
+      await fetch(initialData ? `/api/categories/${docId}` : '/api/categories', {
+        method: initialData ? 'PUT' : 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ ...form, id: docId })
+      });
+
+      // 2. Sync to Firestore
+      const firestorePayload = { ...form, updatedAt: serverTimestamp() };
+      initialData?.id ? updateDocumentNonBlocking(doc(db, 'categories', initialData.id), firestorePayload) : addDocumentNonBlocking(collection(db, 'categories'), { ...firestorePayload, createdAt: serverTimestamp() });
+      
+      toast({ title: "Category synchronized" });
+      onSuccess();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: "Sync failed", description: err.message });
+    }
   };
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

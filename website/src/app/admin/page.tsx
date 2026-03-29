@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   ShieldCheck, 
   LogOut, 
@@ -40,6 +41,9 @@ import { AlertsTab } from './components/AlertsTab';
 import { ItemMasterTab } from './components/ItemMasterTab';
 import { MoleculeMasterTab } from './components/MoleculeMasterTab';
 import { BannersTab } from './components/BannersTab';
+import { AdminProfilesTab } from './components/AdminProfilesTab';
+import { PagesTab } from './components/PagesTab';
+import { SearchAnalyticsTab } from './components/SearchAnalyticsTab';
 
 export default function AdminConsole() {
   const { user, isUserLoading } = useUser();
@@ -49,6 +53,7 @@ export default function AdminConsole() {
   
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [isVerified, setIsVerified] = useState(false);
+  const [userRole, setUserRole] = useState<string>('');
   const [isVerifying, setIsVerifying] = useState(false);
   
   const [email, setEmail] = useState('');
@@ -60,10 +65,12 @@ export default function AdminConsole() {
     setIsVerifying(true);
     try {
       const snap = await getDoc(doc(db, 'adminProfiles', user.uid));
-      if (snap.exists() && (snap.data().role === 'admin' || snap.data().role === 'pharmacist')) {
+      if (snap.exists() && (snap.data().role === 'admin' || snap.data().role === 'pharmacist' || snap.data().role === 'sub-admin')) {
         setIsVerified(true);
+        setUserRole(snap.data().role);
       } else {
         setIsVerified(false);
+        setUserRole('');
       }
     } catch (err) {
       setIsVerified(false);
@@ -235,17 +242,20 @@ export default function AdminConsole() {
               exit={{ opacity: 0, scale: 1.02, y: -10 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             >
-              {activeTab === 'overview' && <OverviewTab setTab={setActiveTab} />}
+              {activeTab === 'overview' && <OverviewTab setTab={setActiveTab} role={userRole} />}
               {activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
               {activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {activeTab === 'categories' && <CategoriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {(userRole === 'admin' || userRole === 'pharmacist') && activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {(userRole === 'admin' || userRole === 'pharmacist') && activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {(userRole === 'admin' || userRole === 'pharmacist') && activeTab === 'categories' && <CategoriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
               {activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
               {activeTab === 'stockAlerts' && <AlertsTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
               {activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
               {activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
               {activeTab === 'banners' && <BannersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {userRole === 'admin' && activeTab === 'admins' && <AdminProfilesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {(userRole === 'admin' || userRole === 'pharmacist') && activeTab === 'pages' && <PagesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {(userRole === 'admin' || userRole === 'pharmacist') && activeTab === 'searchAnalytics' && <SearchAnalyticsTab onBack={() => setActiveTab('overview')} />}
             </motion.div>
           </AnimatePresence>
         </main>

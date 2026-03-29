@@ -27,13 +27,25 @@ function SearchResults() {
   const searchParams = useSearchParams();
   const rawQ = searchParams.get('q')?.trim() || '';
   const c = searchParams.get('c');
+  const moleculeId = searchParams.get('moleculeId');
   
   const [categories, setCategories] = useState<any[]>([]);
   const [catsLoading, setCatsLoading] = useState(true);
+  const [moleculeName, setMoleculeName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (moleculeId) {
+      fetch(`/api/molecules/${moleculeId}`)
+        .then(res => res.json())
+        .then(data => setMoleculeName(data.molecule || data.name))
+        .catch(err => console.error("Failed to fetch molecule name", err));
+    }
+  }, [moleculeId]);
 
   const { data: medicines, isLoading: isMedsLoading } = useMongoDBCollection({ 
     q: rawQ, 
     category: c || undefined, 
+    moleculeId: moleculeId || undefined,
     limit: 60 
   });
 
@@ -131,7 +143,7 @@ function SearchResults() {
               >
                 <div>
                   <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit uppercase">
-                    {rawQ ? `"${rawQ}"` : c ? `${c}` : 'Global Catalog'}
+                    {moleculeName ? `${moleculeName}` : rawQ ? `"${rawQ}"` : c ? `${c}` : 'Global Catalog'}
                   </h2>
                   <div className="flex items-center gap-3 mt-4">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />

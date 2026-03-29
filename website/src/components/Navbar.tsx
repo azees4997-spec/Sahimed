@@ -11,6 +11,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
+import { useFirestore, useCollection, useUser } from '@/firebase';
+import { collection, query, where, orderBy, getDoc, doc } from 'firebase/firestore';
 
 export function SahiMedIcon({ className }: { className?: string }) {
   return (
@@ -35,10 +39,22 @@ interface SuggestionItem {
   id: string;
   term: string;
   type: 'Brand' | 'Salt';
+  moleculeId?: string;
+  product?: any;
 }
 
 export default function Navbar() {
   const { location, setLocation, totalItems, addToCart } = useCart();
+  const db = useFirestore();
+  const { user } = useUser();
+  const { toast } = useToast();
+
+  const headerPagesQuery = query(
+    collection(db, 'pages'), 
+    where('placement', 'in', ['header', 'both']),
+    orderBy('lastUpdated', 'desc')
+  );
+  const { data: headerPages } = useCollection(headerPagesQuery);
   const [search, setSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -58,17 +74,43 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const logSearch = async (keyword: string) => {
+    if (!user) return;
+    try {
+      // Fetch profile to get mobile
+      const profileSnap = await getDoc(doc(db, 'userProfiles', user.uid));
+      const profile = profileSnap.data();
+      
+      await fetch('/api/analytics/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          keyword,
+          mobile: profile?.phone || user.phoneNumber || 'Unknown',
+          userId: user.uid
+        })
+      });
+    } catch (err) {
+      console.error("Search analytics failure", err);
+    }
+  };
+
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (search.trim().length >= 1) {
+      logSearch(search.trim());
       router.push(`/search?q=${encodeURIComponent(search.trim())}`);
       setShowSuggestions(false);
     }
   };
 
-  const handleSuggestionClick = (term: string) => {
-    setSearch(term);
-    router.push(`/search?q=${encodeURIComponent(term)}`);
+  const handleSuggestionClick = (item: any) => {
+    logSearch(item.term);
+    if (item.type === 'Salt' && item.moleculeId) {
+      router.push(`/search?moleculeId=${item.moleculeId}&q=${encodeURIComponent(item.term)}`);
+    } else {
+      router.push(`/product/${item.product?.id || item.id.replace('brand-', '').replace('mol-', '')}`);
+    }
     setShowSuggestions(false);
   };
 
@@ -133,23 +175,42 @@ export default function Navbar() {
     const seenTerms = new Set<string>();
 
     rawSuggestions.forEach(p => {
-      if (p._type === 'molecule') {
-        const molName = p.molecule || '';
-        if (molName.toLowerCase().includes(term) && !seenTerms.has(molName)) {
-          items.push({ id: `mol-${p.id}`, term: molName, type: 'Salt' });
-          seenTerms.add(molName);
+      const type = p._type;
+      const id = p.id;
+      const name = p.name || p.molecule || '';
+      const salt = p.saltComposition || '';
+      const price = p.price || p.liveData?.sahimed_price || 0;
+      const imageUrl = p.imageUrl || `https://picsum.photos/seed/${id}/200/200`;
+
+      if (type === 'molecule') {
+        if (name.toLowerCase().includes(term) && !seenTerms.has(`mol-${name}`)) {
+          items.push({ 
+            id: `mol-${id}`, 
+            term: name, 
+            type: 'Salt',
+            moleculeId: id 
+          } as any);
+          seenTerms.add(`mol-${name}`);
         }
       } else {
-        const name = p.name || '';
-        const salt = p.saltComposition || '';
-
-        if (name.toLowerCase().includes(term) && !seenTerms.has(name)) {
-          items.push({ id: `brand-${p.id}`, term: name, type: 'Brand' });
-          seenTerms.add(name);
+        if (name.toLowerCase().includes(term) && !seenTerms.has(`brand-${name}`)) {
+          items.push({ 
+            id: `brand-${id}`, 
+            term: name, 
+            type: 'Brand',
+            price,
+            imageUrl,
+            product: p 
+          } as any);
+          seenTerms.add(`brand-${name}`);
         }
-        if (salt.toLowerCase().includes(term) && !seenTerms.has(salt)) {
-          items.push({ id: `salt-${p.id}`, term: salt, type: 'Salt' });
-          seenTerms.add(salt);
+        if (salt.toLowerCase().includes(term) && !seenTerms.has(`salt-${salt}`)) {
+          items.push({ 
+            id: `salt-${id}`, 
+            term: salt, 
+            type: 'Salt'
+          } as any);
+          seenTerms.add(`salt-${salt}`);
         }
       }
     });
@@ -193,26 +254,36 @@ export default function Navbar() {
       transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.1 }}
       className={cn(
         "sticky top-0 z-[100] transition-all duration-500 px-4 py-3 sm:py-4",
-        scrolled ? "bg-white/80 backdrop-blur-2xl shadow-xl border-b border-white/20" : "bg-transparent"
+        scrolled ? "bg-white shadow-xl border-b border-slate-100" : "bg-transparent"
       )}
     >
       <div className="max-w-7xl mx-auto flex flex-col gap-4">
-        {/* Tier 1: Logo, Location, Cart */}
-        <div className="flex justify-between items-center bg-white/40 backdrop-blur-md p-2 rounded-full border border-white/40 shadow-sm">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-3 group">
-              <SahiMedIcon className="w-10 h-10 sm:w-11 sm:h-11 shadow-lg shadow-primary/20" />
-              <div className="hidden sm:flex flex-col">
-                <div className="flex items-center leading-none">
-                  <span className="font-black text-2xl text-slate-900 tracking-tighter">Sahi</span>
-                  <span className="font-black text-2xl text-primary tracking-tighter">Med</span>
-                </div>
+        {/* Tier 1: Logo (Left), Location & Cart (Right) */}
+        <div className="flex justify-between items-center bg-white/40 backdrop-blur-md p-2 rounded-full border border-white/40 shadow-sm overflow-hidden">
+          {/* Logo Section */}
+          <Link href="/" className="flex items-center gap-1.5 group shrink-0 ml-1">
+            <SahiMedIcon className="w-8 h-8 sm:w-11 sm:h-11 shadow-lg shadow-primary/20" />
+            <div className="flex flex-col">
+              <div className="flex items-center leading-none">
+                <span className="font-black text-lg sm:text-2xl text-slate-900 tracking-tight">Sahi</span>
+                <span className="font-black text-lg sm:text-2xl text-primary tracking-tight">Med</span>
               </div>
-            </Link>
+            </div>
+          </Link>
 
+          <div className="hidden lg:flex items-center gap-4 ml-4">
+             {headerPages?.map((page: any) => (
+                <Link key={page.id} href={`/p/${page.id}`} className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors">
+                  {page.title}
+                </Link>
+             ))}
+          </div>
+
+          {/* Right Section: Location & Cart */}
+          <div className="flex items-center gap-3 pr-1">
             <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
               <PopoverTrigger asChild>
-                <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 hover:bg-white transition-all text-[11px] sm:text-xs font-black text-slate-600 border border-white/60 shadow-sm group">
+                <button className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-white/60 hover:bg-white transition-all text-[10px] sm:text-xs font-black text-slate-600 border border-white/60 shadow-sm group">
                   <MapPin className="w-3.5 h-3.5 text-primary group-hover:scale-110 transition-transform" />
                   <span className="max-w-[70px] sm:max-w-none truncate tracking-tight">{location}</span>
                   <ChevronDown className="w-3.5 h-3.5 opacity-40 shrink-0" />
@@ -229,9 +300,7 @@ export default function Navbar() {
                 </Button>
               </PopoverContent>
             </Popover>
-          </div>
 
-          <div className="flex items-center gap-3">
             <Link href="/cart" className="flex items-center gap-2 group">
               <div className="p-3 bg-white/60 backdrop-blur-md rounded-full group-hover:bg-primary group-hover:text-white transition-all duration-500 border border-white/60 shadow-sm relative">
                 <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -254,9 +323,12 @@ export default function Navbar() {
               <Input
                 type="text"
                 placeholder="Search for medicines or generics"
-                className="w-full pl-14 pr-12 h-14 sm:h-16 text-sm sm:text-base font-bold bg-white/60 border-white/60 focus:bg-white focus:border-primary/20 rounded-full shadow-2xl shadow-primary/5 transition-all outline-none"
+                className="w-full pl-14 pr-12 h-14 sm:h-16 text-sm sm:text-base font-bold bg-white border-slate-200 focus:border-primary/20 rounded-full shadow-2xl shadow-primary/5 transition-all outline-none"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  if (e.target.value.length >= 2) setShowSuggestions(true);
+                }}
                 onFocus={() => search.length >= 2 && setShowSuggestions(true)}
               />
               {isSearching && (
@@ -278,23 +350,56 @@ export default function Navbar() {
               >
                 <div className="max-h-[500px] overflow-y-auto scrollbar-hide py-3">
                   {displayedSuggestions.map((item) => (
-                    <button
+                    <div 
                       key={item.id}
-                      onClick={() => handleSuggestionClick(item.term)}
-                      className="w-full px-8 py-3.5 flex items-center gap-4 hover:bg-primary/5 transition-all text-left group"
+                      className="w-full px-4 sm:px-6 py-4 flex items-center gap-4 hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group"
                     >
-                      <div className="p-2.5 bg-white/50 rounded-xl group-hover:bg-white group-hover:scale-110 transition-all border border-white/50">
-                        <SearchIcon className="w-4 h-4 text-slate-400 group-hover:text-primary" />
+                      <div className="relative w-14 h-14 sm:w-16 sm:h-16 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
+                        <Image 
+                          src={(item as any).imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
+                          alt={item.term} 
+                          fill 
+                          className="object-contain p-2" 
+                        />
                       </div>
-                      <div className="flex-1 min-w-0 flex items-center justify-between gap-4">
-                        <p className="font-extrabold text-sm text-slate-800 truncate flex-1">
-                          {item.term}
-                        </p>
-                        <Badge variant="secondary" className="bg-white/50 text-slate-500 font-black text-[8px] px-2 py-0.5 rounded-lg border border-white/50 shrink-0 uppercase tracking-widest">
-                          {item.type}
-                        </Badge>
+                      <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0" onClick={() => handleSuggestionClick(item)}>
+                          <p className="font-extrabold text-xs sm:text-sm text-slate-800 truncate cursor-pointer hover:text-primary transition-colors">
+                            {item.term}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary" className="bg-slate-100 text-slate-500 font-bold text-[8px] px-1.5 py-0 rounded-md border-none uppercase tracking-widest shrink-0">
+                              {item.type}
+                            </Badge>
+                            {(item as any).price > 0 && (
+                               <span className="text-[10px] sm:text-xs font-black text-primary">₹{(item as any).price}</span>
+                            )}
+                          </div>
+                        </div>
+                        {item.type === 'Brand' && (item as any).product && (
+                          <Button 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addToCart((item as any).product);
+                              toast({ title: "Added to Basket" });
+                            }}
+                            className="h-10 px-6 rounded-full bg-primary text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                          >
+                            Add +
+                          </Button>
+                        )}
+                        {item.type === 'Salt' && (
+                           <Button 
+                              variant="ghost"
+                              onClick={() => handleSuggestionClick(item)}
+                              className="h-10 px-4 rounded-full text-primary font-black text-[9px] uppercase tracking-widest hover:bg-primary/5 transition-all gap-2"
+                           >
+                              View Items <ArrowUpRight className="w-3 h-3" />
+                           </Button>
+                        )}
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </motion.div>
@@ -303,6 +408,5 @@ export default function Navbar() {
         </div>
       </div>
     </motion.nav>
-
   );
 }

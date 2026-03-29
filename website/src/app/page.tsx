@@ -4,7 +4,7 @@ import * as React from 'react';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, ShieldCheck, ChevronRight, Truck, Phone, FileText, Star, Activity, HeartPulse, MapPin, ArrowRight, Zap, ShieldPlus, FlaskConical } from 'lucide-react';
+import { MessageCircle, ShieldCheck, ChevronRight, Phone, FileText, Star, HeartPulse, Zap, ShieldPlus } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,39 +18,10 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.3
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0, scale: 0.95 },
-  visible: { 
-    y: 0, 
-    opacity: 1, 
-    scale: 1,
-    transition: { type: "spring", damping: 15, stiffness: 100 }
-  }
-};
-
-const categoryColors = [
-  "bg-pastel-purple",
-  "bg-pastel-peach",
-  "bg-pastel-blue",
-  "bg-pastel-green"
-];
-
 export default function Home() {
-  const { location, setLocation } = useCart();
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
@@ -75,24 +46,15 @@ export default function Home() {
     fetch('/api/categories?limit=12')
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          setCategories(data);
-        } else {
-          console.error("Categories API did not return an array", data);
-          setCategories([]);
-        }
-        setIsCatsLoading(false);
-      })
-      .catch(err => {
-        console.error("Failed to fetch categories", err);
+        if (Array.isArray(data)) setCategories(data);
         setIsCatsLoading(false);
       });
   }, []);
 
   const { data: medicines, isLoading, refetch } = useMongoDBCollection({ limit: 50 });
+  const { data: bestSellers, isLoading: isBestLoading } = useMongoDBCollection({ limit: 20, isBestSeller: 'true' });
 
   React.useEffect(() => {
-    // Smart refetch on mount and window focus to solve "page not refreshing" bug
     const handleFocus = () => refetch();
     window.addEventListener('focus', handleFocus);
     refetch(); 
@@ -104,205 +66,148 @@ export default function Home() {
       <div className="min-h-screen bg-[#F8FAFC]">
         <Navbar />
         
-        <main className="max-w-7xl mx-auto px-4 py-8 space-y-10 pb-24">
+        <main className="max-w-7xl mx-auto px-4 py-4 sm:py-10 space-y-6 sm:space-y-16 pb-24 sm:pb-40">
           
-          {/* Hero Section - Lavender Alignment */}
+          {/* Main Banner */}
           <section className="relative w-full">
-            <Carousel
-              setApi={setApi}
-              plugins={[plugin.current]}
-              className="w-full"
-            >
+            <Carousel setApi={setApi} plugins={[plugin.current]} className="w-full">
               <CarouselContent>
                 <CarouselItem>
                   <motion.div 
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="relative overflow-hidden p-8 sm:p-14 flex flex-col justify-center min-h-[300px] sm:min-h-[420px] rounded-[48px] bg-lavender text-lavender shadow-2xl shadow-primary/5 border border-white"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative overflow-hidden p-8 sm:p-20 flex flex-col justify-center min-h-[220px] sm:min-h-[460px] rounded-[40px] sm:rounded-[64px] bg-lavender text-slate-800 shadow-xl border border-white"
                   >
-                    <div className="space-y-6 relative z-10 max-w-xl">
-                      <h1 className="text-4xl sm:text-6xl font-black leading-[1] tracking-tighter text-slate-800">
+                    <div className="space-y-4 sm:space-y-8 relative z-10 max-w-2xl">
+                      <h1 className="text-3xl sm:text-7xl font-black leading-[1.1] tracking-tighter text-slate-900">
                         Affordable medicines<br />across India
                       </h1>
-                      <p className="text-lavender-text font-black text-lg sm:text-2xl tracking-tight opacity-80">
-                        Sahi Dawai, Sahi Daam pe
-                      </p>
+                      <p className="text-primary font-bold text-sm sm:text-3xl tracking-tight">Sahi Dawai, Sahi Daam pe</p>
                     </div>
-                    {/* Pulse Icon on Right */}
-                    <div className="absolute right-8 sm:right-16 top-1/2 -translate-y-1/2 opacity-20 sm:opacity-100">
+                    <div className="absolute right-[-20px] sm:right-20 top-1/2 -translate-y-1/2 opacity-20 sm:opacity-100">
                       <motion.div
-                        animate={{ scale: [1, 1.05, 1] }}
-                        transition={{ duration: 3, repeat: Infinity }}
-                        className="text-primary/40 sm:text-primary"
+                        animate={{ scale: [1, 1.02, 1], rotate: [0, 1, 0] }}
+                        transition={{ duration: 5, repeat: Infinity }}
+                        className="text-primary"
                       >
-                        <HeartPulse size={240} strokeWidth={1.5} />
+                        <HeartPulse size={340} strokeWidth={1} />
                       </motion.div>
                     </div>
                   </motion.div>
                 </CarouselItem>
 
                 <CarouselItem>
-                  <div className="relative overflow-hidden p-8 sm:p-14 flex flex-col justify-center min-h-[300px] sm:min-h-[420px] rounded-[48px] bg-sahi-pink text-slate-800 shadow-2xl border border-white">
-                    <div className="space-y-4 max-w-lg relative z-10">
-                      <Badge className="bg-primary/20 text-primary border-primary/30 font-black px-4 py-1 rounded-full uppercase tracking-widest text-[10px]">Smart choice</Badge>
-                      <h2 className="text-4xl sm:text-6xl font-black leading-[1] tracking-tighter">
-                        Save up to 80% with<br />Generic Matrix
-                      </h2>
-                      <p className="text-slate-600 text-lg font-bold">
-                        Clinical substitutes with verified composition.
-                      </p>
-                    </div>
-                    <div className="absolute right-[-40px] bottom-[-40px] opacity-10">
-                      <ShieldPlus size={320} strokeWidth={0.5} />
+                  <div className="relative overflow-hidden p-8 sm:p-20 flex flex-col justify-center min-h-[220px] sm:min-h-[460px] rounded-[40px] sm:rounded-[64px] bg-sahi-pink text-slate-900 shadow-xl border border-white">
+                    <div className="space-y-4 max-w-2xl relative z-10">
+                      <Badge className="bg-primary/20 text-primary border-primary/30 font-black px-4 py-1 rounded-full uppercase tracking-widest text-[10px]">Matrix AI</Badge>
+                      <h2 className="text-3xl sm:text-7xl font-black leading-[1.1] tracking-tighter">Save up to 80% on<br />Clinical Generics</h2>
+                      <p className="text-slate-600 font-bold text-sm sm:text-2xl">Verified molecules with guaranteed efficacy.</p>
                     </div>
                   </div>
                 </CarouselItem>
               </CarouselContent>
             </Carousel>
-
-            <div className="flex justify-center gap-2 mt-6">
-              {Array.from({ length: count }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => api?.scrollTo(index)}
-                  className={cn(
-                    "h-1.5 rounded-full transition-all duration-500",
-                    current === index 
-                      ? "w-8 bg-accent shadow-lg shadow-accent/20" 
-                      : "w-2 bg-slate-200 hover:bg-slate-300"
-                  )}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
-              ))}
-            </div>
           </section>
 
-          {/* Quick Actions - Design Aligned */}
-          <motion.section 
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-3 gap-6"
-          >
+          {/* Quick Actions Grid - MATCHING REFERENCE IMAGE */}
+          <section className="grid grid-cols-3 gap-2 sm:gap-8">
             {[
-              { 
-                label: 'Upload prescription', 
-                sub: 'Verified medical orders', 
-                href: '/prescription', 
-                color: 'bg-lavender', 
-                iconColor: 'bg-primary text-white', 
-                icon: FileText 
-              },
-              { 
-                label: 'Order Via WhatsApp', 
-                sub: 'Direct clinical support', 
-                href: 'https://wa.me/91XXXXXXXXXX', 
-                color: 'bg-sahi-green', 
-                iconColor: 'bg-green-600 text-white', 
-                icon: MessageCircle 
-              },
-              { 
-                label: 'Call for Medicines', 
-                sub: 'Immediate pharmacy help', 
-                href: 'tel:+91XXXXXXXXXX', 
-                color: 'bg-sahi-pink', 
-                iconColor: 'bg-rose-500 text-white', 
-                icon: Phone 
-              }
+              { label: 'Upload prescription', href: '/prescription', color: 'bg-lavender', iconColor: 'bg-primary text-white', icon: FileText },
+              { label: 'Order Via WhatsApp', href: 'https://wa.me/91XXXXXXXXXX', color: 'bg-sahi-green', iconColor: 'bg-green-600 text-white', icon: MessageCircle },
+              { label: 'Call for Medicines', href: 'tel:+91XXXXXXXXXX', color: 'bg-sahi-pink', iconColor: 'bg-rose-500 text-white', icon: Phone }
             ].map((action, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ scale: 1.02, y: -4 }}
-                transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              >
-                <Link href={action.href} className={cn("group relative overflow-hidden p-8 rounded-[48px] flex flex-col items-center text-center gap-6 transition-all border border-white shadow-sm", action.color)}>
-                  <div className={cn("p-6 rounded-[32px] transition-all duration-500 scale-110 shadow-lg", action.iconColor)}>
-                    <action.icon className="w-8 h-8" />
+              <motion.div key={i} whileTap={{ scale: 0.96 }}>
+                <Link href={action.href} className={cn("group h-full p-4 sm:p-12 rounded-[32px] sm:rounded-[56px] flex flex-col items-center text-center gap-3 sm:gap-6 transition-all border border-white shadow-sm overflow-hidden", action.color)}>
+                  <div className={cn("w-12 h-12 sm:w-24 sm:h-24 flex items-center justify-center rounded-[18px] sm:rounded-[40px] shadow-lg", action.iconColor)}>
+                    <action.icon className="w-6 h-6 sm:w-12 sm:h-12" />
                   </div>
-                  <div>
-                    <h3 className="font-outfit font-black text-slate-900 text-lg tracking-tight uppercase">{action.label}</h3>
-                    <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-widest opacity-60">{action.sub}</p>
-                  </div>
+                  <h3 className="font-outfit font-bold text-slate-700 text-[10px] sm:text-2xl tracking-tight leading-tight">{action.label}</h3>
                 </Link>
               </motion.div>
             ))}
-          </motion.section>
+          </section>
 
-          {/* Categories Section */}
-          <section className="space-y-8">
-            <div className="flex items-center justify-between px-2">
-              <div className="space-y-1">
-                <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Shop by Categories</h2>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Global healthcare registry</p>
+          {/* Most Popular Brands (Best Sellers) */}
+          {(isBestLoading || (bestSellers && bestSellers.length > 0)) && (
+            <section className="space-y-6 sm:space-y-12">
+              <div className="flex items-center justify-between px-2">
+                <h2 className="text-xl sm:text-4xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Our Most Popular Brands</h2>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-yellow-100 text-yellow-700 border-none font-black px-3 py-1 rounded-full uppercase tracking-widest text-[8px] sm:text-[10px]">Best Sellers</Badge>
+                </div>
               </div>
-              <Link href="/categories" className="text-[10px] font-black tracking-widest text-primary flex items-center gap-2 group transition-all uppercase">
-                Explore All <ChevronRight className="w-4 h-4 group-hover:translate-x-1" />
-              </Link>
+              <div className="flex gap-6 sm:gap-10 overflow-x-auto scrollbar-hide pb-12 px-2">
+                {isBestLoading ? (
+                  [...Array(4)].map((_, i) => <Skeleton className="min-w-[190px] sm:min-w-[320px] aspect-[4/5] rounded-[48px]" key={i} />)
+                ) : bestSellers?.map((p: any) => (
+                  <div key={p.id} className="min-w-[190px] sm:min-w-[320px]">
+                    <ProductCard product={p} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Categories Horizontal Scroll */}
+          <section className="space-y-6 sm:space-y-12">
+            <div className="flex items-center justify-between px-2">
+              <h2 className="text-xl sm:text-4xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Shop by category</h2>
+              <Link href="/categories" className="text-[10px] sm:text-sm font-black tracking-widest text-primary uppercase flex items-center gap-2">Explore All <ChevronRight className="w-4 h-4" /></Link>
             </div>
-            
-            <div className="flex gap-8 overflow-x-auto scrollbar-hide pb-8 px-2">
+            <div className="flex gap-4 sm:gap-12 overflow-x-auto scrollbar-hide pb-6 px-2">
               {isCatsLoading ? (
-                [...Array(6)].map((_, i) => <Skeleton className="w-32 h-32 rounded-full shrink-0" key={i} />)
+                [...Array(6)].map((_, i) => <Skeleton className="w-24 h-24 sm:w-48 sm:h-48 rounded-[32px] shrink-0" key={i} />)
               ) : categories?.map((cat: any, i) => (
-                <motion.div 
-                  key={i}
-                  whileHover={{ scale: 1.05, y: -4 }}
-                  className="flex flex-col items-center gap-4 shrink-0"
-                >
-                  <Link href={`/search?c=${encodeURIComponent(cat.name)}`} className="group">
-                    <div className={cn(
-                      "w-32 h-32 rounded-[40px] flex items-center justify-center overflow-hidden transition-all duration-500 border border-white shadow-sm relative p-2",
+                <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-4 shrink-0">
+                  <motion.div 
+                    whileHover={{ y: -8 }}
+                    className={cn(
+                      "w-24 h-24 sm:w-48 sm:h-48 rounded-[32px] sm:rounded-[56px] flex items-center justify-center border border-white shadow-sm p-3",
                       i % 4 === 0 ? "bg-lavender" : i % 4 === 1 ? "bg-sahi-pink" : i % 4 === 2 ? "bg-sahi-blue" : "bg-sahi-green"
                     )}>
-                      <Image 
-                        src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} 
-                        alt={cat.name} 
-                        width={128} 
-                        height={128} 
-                        className="object-contain w-full h-full p-2 group-hover:scale-110 transition-transform duration-500"
-                      />
-                    </div>
-                  </Link>
-                  <span className="text-[9px] font-black text-slate-500 tracking-widest text-center uppercase">{cat.name}</span>
-                </motion.div>
+                    <Image src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} alt={cat.name} width={192} height={192} className="object-contain w-full h-full" />
+                  </motion.div>
+                  <span className="text-[10px] sm:text-lg font-black text-slate-500 tracking-tight uppercase">{cat.name}</span>
+                </Link>
               ))}
             </div>
           </section>
 
-          {/* Featured Products */}
+          {/* Top Sellers */}
           <section className="space-y-8">
-            <div className="flex items-center justify-between px-2">
-              <div className="space-y-1">
-                <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Top Sellers</h2>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Certified for clinical excellence</p>
-              </div>
-            </div>
-            <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-12 px-2">
+            <h2 className="text-xl sm:text-4xl font-black text-slate-900 tracking-tighter uppercase font-outfit px-2">Top Clinical Sellers</h2>
+            <div className="flex gap-6 sm:gap-10 overflow-x-auto scrollbar-hide pb-12 px-2">
               {isLoading ? (
-                [...Array(4)].map((_, i) => <Skeleton className="min-w-[200px] aspect-[4/5] rounded-[48px]" key={i} />)
+                [...Array(4)].map((_, i) => <Skeleton className="min-w-[180px] aspect-[4/5] rounded-[48px]" key={i} />)
               ) : medicines?.map((p: any) => (
-                <motion.div key={p.id} className="min-w-[180px] sm:min-w-[240px]">
+                <div key={p.id} className="min-w-[190px] sm:min-w-[320px]">
                   <ProductCard product={p} />
-                </motion.div>
+                </div>
               ))}
             </div>
           </section>
 
-          {/* Trust Banner */}
-          <section className="bg-sahi-blue p-10 rounded-[56px] border border-white flex flex-col md:flex-row items-center gap-10 shadow-sm relative overflow-hidden group">
-            <div className="relative z-10 w-24 h-24 bg-white rounded-[32px] flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-500">
+          {/* Clinical Assurance Banner */}
+          <section className="bg-slate-900 p-10 sm:p-24 rounded-[48px] sm:rounded-[80px] text-white flex flex-col items-center text-center gap-8 shadow-3xl relative overflow-hidden">
+            <div className="w-24 h-24 bg-primary/20 rounded-[40px] flex items-center justify-center relative z-10">
                <ShieldCheck className="w-12 h-12 text-primary" />
             </div>
-            <div className="relative z-10 flex-1 text-center md:text-left">
-               <h3 className="text-3xl font-black text-slate-900 tracking-tighter uppercase mb-2">Verified SahiMed Quality</h3>
-               <p className="text-xs font-bold text-sahi-blue-text uppercase tracking-widest opacity-70">Sahi Dawai, Sahi Daam pe • Always Lab Certified</p>
+            <div className="space-y-4 relative z-10 max-w-3xl">
+               <h3 className="text-3xl sm:text-6xl font-black tracking-tighter uppercase leading-tight">Verified Clinical Pharmacy</h3>
+               <p className="text-sm sm:text-2xl font-bold text-white/60 uppercase tracking-widest">Always Lab Certified • India's Clinical Registry Interface</p>
             </div>
-            <Link href="/search" className="relative z-10 px-10 py-5 bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-2xl active:scale-95">
-              Shop Locally
+            <Link href="/search" className="w-full sm:w-auto px-16 py-6 bg-primary text-white font-black text-xs sm:text-base uppercase tracking-widest rounded-full relative z-10 hover:scale-105 transition-all shadow-xl">
+              Start Clinic Search
             </Link>
+            <div className="absolute top-0 right-0 p-10 opacity-5">
+               <FlaskConical size={400} />
+            </div>
           </section>
-
         </main>
       </div>
     </PageTransition>
   );
-}
+}
+
+// Add the missing FlaskConical icon import if not found
+import { FlaskConical } from 'lucide-react';

@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { verifyAdmin } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 
 export async function GET(req: Request) {
@@ -62,6 +63,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    await verifyAdmin(req);
     const body = await req.json();
     const { id, ...updates } = body;
     const client = await clientPromise;

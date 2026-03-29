@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { verifyAdmin } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 
 const getQuery = (id: string) => {
@@ -12,6 +13,7 @@ const getQuery = (id: string) => {
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
+    await verifyAdmin(request);
     const body = await request.json();
     const client = await clientPromise;
     const db = client.db('sahimed');
@@ -24,6 +26,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
+    await verifyAdmin(request);
     const client = await clientPromise;
     const db = client.db('sahimed');
     await db.collection('categories').deleteOne(getQuery(params.id));

@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { 
+  useUser,
   useMemoFirebase, 
   useCollection,
   deleteDocumentNonBlocking,
@@ -42,6 +43,7 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
   const { data: molecules, isLoading } = useCollection(molsQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMol, setEditingMol] = useState<any>(null);
+  const { user } = useUser();
   const { toast } = useToast();
 
   return (
@@ -59,7 +61,17 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
                   <td className="px-10 py-8 font-black text-sm text-gray-900 uppercase tracking-tight">{mol.molecule}</td>
                   <td className="px-10 py-8 font-bold text-primary">{mol.masterId}</td>
                   <td className="px-10 py-8 font-bold text-gray-400">{mol.form}</td>
-                  <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => { setEditingMol(mol); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button><Button variant="ghost" size="icon" onClick={() => { if(confirm("Delete molecule?")) deleteDocumentNonBlocking(doc(db, 'moleculeMaster', mol.id)); }}><Trash2 className="w-4 h-4 text-red-300" /></Button></div></td>
+                  <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => { setEditingMol(mol); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button><Button variant="ghost" size="icon" onClick={async () => { 
+                    if(confirm("Delete molecule?")) {
+                      const token = await user?.getIdToken();
+                      await fetch(`/api/molecules/${mol.id || mol._id}`, { 
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      });
+                      deleteDocumentNonBlocking(doc(db, 'moleculeMaster', mol.id)); 
+                      toast({ title: "Molecule purged from registry" });
+                    }
+                  }}><Trash2 className="w-4 h-4 text-red-300" /></Button></div></td>
                 </tr>
               ))}
             </tbody>
@@ -84,18 +96,28 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
 }
 
 function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const { user } = useUser();
   const { toast } = useToast();
   const [form, setForm] = useState({ molecule: initialData?.molecule || '', masterId: initialData?.masterId || '', form: initialData?.form || '' });
   const [availableForms, setAvailableForms] = useState<string[]>([]);
   const [isCustomForm, setIsCustomForm] = useState(false);
+  const [isLoadingForms, setIsLoadingForms] = useState(true);
 
   useEffect(() => {
-    fetch('/api/molecules/forms').then(res => res.json()).then(data => {
-      setAvailableForms(data);
-      if (initialData?.form && !data.includes(initialData.form)) {
-        setIsCustomForm(true);
-      }
-    });
+    setIsLoadingForms(true);
+    fetch('/api/molecules/forms')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setAvailableForms(data);
+          // Only switch to custom if we have data and the initial value isn't there
+          if (initialData?.form && data.length > 0 && !data.includes(initialData.form)) {
+            setIsCustomForm(true);
+          }
+        }
+      })
+      .catch(err => console.error("Forms fetch failed", err))
+      .finally(() => setIsLoadingForms(false));
   }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -103,13 +125,16 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
     const payload = { ...form, updatedAt: new Date() };
 
     try {
-      // 1. Sync to MongoDB
-      const method = initialData ? 'PUT' : 'POST';
-      const url = initialData ? `/api/molecules/${initialData.id || initialData._id}` : '/api/molecules';
-      await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      const docId = initialData?.id || initialData?._id || `${form.molecule}-${form.form}`.toLowerCase().replace(/\s+/g, '-');
+      const token = await user?.getIdToken();
+      
+      const res = await fetch(initialData ? `/api/molecules/${docId}` : '/api/molecules', {
+        method: initialData ? 'PUT' : 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ ...form, id: docId })
       });
 
       // 2. Sync to Firestore
@@ -129,16 +154,33 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
         <div className="space-y-2">
           <Label className="text-[10px] font-black">Clinical Form</Label>
           {!isCustomForm ? (
-            <Select value={form.form} onValueChange={v => { if(v === '_custom') { setIsCustomForm(true); setForm({...form, form: ''}); } else { setForm({...form, form: v}); } }}>
-              <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold">
-                <SelectValue placeholder="Select clinical form" />
-              </SelectTrigger>
-              <SelectContent className="rounded-2xl">
-                {availableForms.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                <div className="border-t my-2" />
-                <SelectItem value="_custom" className="text-primary font-black">+ Create New Form...</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select 
+                value={form.form || ""} 
+                onValueChange={v => { 
+                  if(v === '_custom') { 
+                    setIsCustomForm(true); 
+                  } else { 
+                    setForm({...form, form: v}); 
+                  } 
+                }}
+              >
+                <SelectTrigger className="flex-1 rounded-2xl h-14 bg-gray-50 border-none font-bold">
+                  <SelectValue placeholder={isLoadingForms ? "Loading forms..." : "Select clinical form"} />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl z-[120]">
+                  {availableForms.map(f => (
+                    <SelectItem key={f} value={f} className="font-bold">
+                      {f}
+                    </SelectItem>
+                  ))}
+                  <div className="border-t my-2" />
+                  <SelectItem value="_custom" className="text-primary font-black">
+                    + Create New Form...
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           ) : (
             <div className="relative">
               <Input 
