@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { useFirestore, useCollection, useUser } from '@/firebase';
+import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, getDoc, doc } from 'firebase/firestore';
 
 export function SahiMedIcon({ className }: { className?: string }) {
@@ -49,11 +49,11 @@ export default function Navbar() {
   const { user } = useUser();
   const { toast } = useToast();
 
-  const headerPagesQuery = query(
+  const headerPagesQuery = useMemoFirebase(() => query(
     collection(db, 'pages'), 
     where('placement', 'in', ['header', 'both']),
     orderBy('lastUpdated', 'desc')
-  );
+  ), [db]);
   const { data: headerPages } = useCollection(headerPagesQuery);
   const [search, setSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);

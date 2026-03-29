@@ -4,18 +4,18 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { SahiMedIcon } from './Navbar';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 
 export default function Footer() {
   const pathname = usePathname();
   const db = useFirestore();
 
-  const footerPagesQuery = query(
+  const footerPagesQuery = useMemoFirebase(() => query(
     collection(db, 'pages'), 
     where('placement', 'in', ['footer', 'both']),
     orderBy('lastUpdated', 'desc')
-  );
+  ), [db]);
   const { data: footerPages } = useCollection(footerPagesQuery);
 
   if (pathname.startsWith('/admin')) return null;
