@@ -38,7 +38,7 @@ export default function ProductCard({ product }: { product: Product }) {
       className="pharma-card flex flex-col h-full group relative p-2.5 sm:p-5 bg-white border border-slate-100 rounded-[20px] sm:rounded-[48px] gap-2 sm:gap-0"
     >
       {savingsPct > 0 && (
-        <div className="absolute top-5 left-5 z-10">
+        <div className="absolute top-3 left-3 sm:top-5 sm:left-5 z-20">
           <Badge className="bg-accent text-white font-black text-[9px] px-2.5 py-1 rounded-xl tracking-widest border-none shadow-lg shadow-accent/20 uppercase">
             {savingsPct}% OFF
           </Badge>
@@ -46,7 +46,7 @@ export default function ProductCard({ product }: { product: Product }) {
       )}
 
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 gap-2 sm:gap-5 w-full">
-        <div className="relative aspect-square w-24 h-24 sm:w-full sm:h-40 bg-sahi-blue rounded-[20px] sm:rounded-[32px] flex items-center justify-center overflow-hidden group-hover:bg-white transition-colors duration-500 p-2 sm:p-4 shrink-0">
+        <div className="relative w-full aspect-square sm:h-40 bg-sahi-blue rounded-[20px] sm:rounded-[32px] flex items-center justify-center overflow-hidden group-hover:bg-white transition-colors duration-500 p-3 sm:p-4 shrink-0 mx-auto">
           <Image 
             src={safeImageUrl} 
             alt={product.name} 
@@ -55,7 +55,7 @@ export default function ProductCard({ product }: { product: Product }) {
             className="object-contain p-2 sm:p-4 transition-transform duration-700 group-hover:scale-110" 
           />
           {savingsPct > 0 && (
-             <div className="absolute top-2 right-2 bg-accent text-white text-[8px] sm:text-[10px] font-black px-2 py-1 rounded-lg shadow-lg shadow-accent/20 z-10 animate-pulse-slow">
+             <div className="hidden sm:block absolute top-2 right-2 bg-accent text-white text-[8px] sm:text-[10px] font-black px-2 py-1 rounded-lg shadow-lg shadow-accent/20 z-10 animate-pulse-slow">
                SAVE ₹{Math.round(currentMrp - currentPrice)}
              </div>
           )}

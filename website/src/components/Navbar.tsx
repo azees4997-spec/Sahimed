@@ -180,10 +180,10 @@ export default function Navbar() {
     const seenTerms = new Set<string>();
 
     rawSuggestions.forEach(p => {
-      const type = p._type;
+      const type = p._type || (p.molecule ? 'molecule' : 'medicine');
       const id = p.id;
       const name = p.name || p.molecule || '';
-      const salt = p.saltComposition || '';
+      const salt = p.saltComposition || p.composition || p.liveData?.composition || p.salt || '';
       const price = p.price || p.liveData?.sahimed_price || 0;
       const imageUrl = p.imageUrl || `https://picsum.photos/seed/${id}/200/200`;
 
@@ -376,15 +376,17 @@ export default function Navbar() {
                       key={item.id}
                       className="w-full px-3 sm:px-6 py-2 flex items-center gap-2 sm:gap-3 hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group"
                     >
-                      <div className="relative w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[10px] sm:rounded-[14px] flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
-                        <Image 
-                          src={(item as any).imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
-                          alt={item.term} 
-                          fill 
-                          className="object-contain p-1 sm:p-1.5" 
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
+                      {item.type !== 'Salt' && (
+                        <div className="relative w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[10px] sm:rounded-[14px] flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
+                          <Image 
+                            src={(item as any).imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
+                            alt={item.term} 
+                            fill 
+                            className="object-contain p-1 sm:p-1.5" 
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0 flex items-center justify-between gap-1 sm:gap-4">
                         <div className="flex-1 min-w-0" onClick={() => handleSuggestionClick(item)}>
                           <p className="font-extrabold text-xs sm:text-sm text-slate-800 truncate cursor-pointer hover:text-primary transition-colors">
                             {item.term}
@@ -411,14 +413,16 @@ export default function Navbar() {
                             Add +
                           </Button>
                         )}
-                        {item.type === 'Salt' && (
-                           <Button 
-                              variant="ghost"
-                              onClick={() => handleSuggestionClick(item)}
-                              className="h-10 px-4 rounded-full text-primary font-black text-[9px] uppercase tracking-widest hover:bg-primary/5 transition-all gap-2"
-                           >
-                              View Items <ArrowUpRight className="w-3 h-3" />
-                           </Button>
+                         {item.type === 'Salt' && (
+                           <div className="flex items-center gap-2">
+                             <Button 
+                                variant="ghost"
+                                onClick={(e) => { e.stopPropagation(); handleSuggestionClick(item); }}
+                                className="h-7 sm:h-8 px-3 sm:px-4 rounded-full text-slate-500 font-bold text-[8px] sm:text-[9px] uppercase tracking-widest hover:bg-slate-100 transition-all gap-1 sm:gap-2 border border-slate-200 shrink-0"
+                             >
+                                Browse <ArrowUpRight className="w-3 h-3" />
+                             </Button>
+                           </div>
                         )}
                       </div>
                     </div>
