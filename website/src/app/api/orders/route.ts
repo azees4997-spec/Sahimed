@@ -43,7 +43,8 @@ export async function POST(req: Request) {
     // Sync to Firestore if enquiryPath is provided (resolves permission issues)
     if (enquiryPath) {
       try {
-        const { dbAdmin } = await import('@/lib/firebase-admin');
+        const { getDbAdmin } = await import('@/lib/firebase-admin');
+        const dbAdmin = getDbAdmin();
         await dbAdmin.doc(enquiryPath).update({
           status: 'Digitized',
           orderId: nextId,

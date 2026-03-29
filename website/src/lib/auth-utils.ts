@@ -1,4 +1,4 @@
-import { authAdmin, dbAdmin } from './firebase-admin';
+import { getAuthAdmin, getDbAdmin } from './firebase-admin';
 
 /**
  * Verifies if the request is from a legitimate admin or pharmacist.
@@ -16,6 +16,9 @@ export async function verifyAdmin(request: Request) {
   const token = authHeader.split('Bearer ')[1];
   
   try {
+    const authAdmin = getAuthAdmin();
+    const dbAdmin = getDbAdmin();
+    
     // 1. Verify the ID token using the Firebase Admin SDK
     const decodedToken = await authAdmin.verifyIdToken(token);
     const uid = decodedToken.uid;
