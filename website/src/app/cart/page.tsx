@@ -170,7 +170,7 @@ export default function CartPage() {
                  {attachedPrescription ? <ClipboardCheck className="w-8 h-8" /> : <FileWarning className="w-8 h-8" />}
               </div>
               <div className="flex-1 text-center sm:text-left">
-                <p className="font-black text-lg sm:text-xl tracking-tight uppercase font-outfit">{attachedPrescription ? "Clinical Record Attached" : "Clinical Record Required"}</p>
+                <p className="font-black text-lg sm:text-xl tracking-tight uppercase font-outfit">{attachedPrescription ? "Prescription Attached" : "Prescription Required"}</p>
                 <p className="text-[10px] font-black tracking-[0.2em] mt-2 opacity-60 leading-relaxed uppercase">Our medical board requires a valid prescription for these items.</p>
               </div>
               <input type="file" id="cart-upload" className="hidden" accept="image/*" onChange={handleFileChange} />
@@ -203,14 +203,16 @@ export default function CartPage() {
                     variants={itemVariants}
                     className="bg-white/40 backdrop-blur-md p-6 sm:p-8 rounded-[48px] shadow-xl border border-white/50 flex gap-6 sm:gap-10 items-center group hover:shadow-2xl transition-all relative overflow-hidden"
                   >
-                    <div className="relative w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-[32px] overflow-hidden shrink-0 border border-white shadow-inner">
+                    <Link href={`/product/${item.id}`} className="relative w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-[32px] overflow-hidden shrink-0 border border-white shadow-inner cursor-pointer">
                       <Image src={safeImageUrl} alt={item.name} fill className="object-contain p-4 group-hover:scale-110 transition-transform duration-500" />
-                    </div>
+                    </Link>
                     
                     <div className="flex-1 min-w-0 flex flex-col sm:flex-row justify-between gap-6">
                       <div className="flex-1 min-w-0">
                         <span className="text-[9px] font-black text-primary tracking-[0.2em] uppercase mb-2 block">{item.brand || 'Premium'}</span>
-                        <h3 className="font-black text-slate-900 text-lg sm:text-2xl tracking-tighter line-clamp-1 font-outfit uppercase">{item.name}</h3>
+                        <Link href={`/product/${item.id}`} className="hover:text-primary transition-colors cursor-pointer">
+                          <h3 className="font-black text-slate-900 text-lg sm:text-2xl tracking-tighter line-clamp-1 font-outfit uppercase">{item.name}</h3>
+                        </Link>
                         <p className="text-[10px] text-slate-400 font-bold tracking-[0.2em] truncate mt-2 mb-6 uppercase">{item.saltComposition}</p>
                         
                         <div className="flex items-center gap-3 bg-white/60 rounded-full p-1.5 border border-white shadow-sm w-fit">
@@ -303,44 +305,48 @@ export default function CartPage() {
                   initial={{ y: 50, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="bg-white p-10 sm:p-12 rounded-[56px] shadow-[0_64px_96px_-16px_rgba(0,0,0,0.1)] border border-white relative overflow-hidden"
+                  className="bg-white p-6 sm:p-12 rounded-[32px] sm:rounded-[56px] shadow-[0_64px_96px_-16px_rgba(0,0,0,0.1)] border border-white relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
                   
-                  <h2 className="text-[10px] font-black mb-10 tracking-[0.4em] text-slate-400 uppercase relative z-10">Consolidated Invoice</h2>
-                  <div className="space-y-6 mb-12 relative z-10">
-                    <div className="flex justify-between text-[11px] font-black text-slate-400 uppercase tracking-widest">
-                      <span>Cart Gross</span>
-                      <span className="text-primary/40 line-through">₹{totalMrp.toFixed(2)}</span>
+                  <h2 className="text-[10px] sm:text-xs font-black mb-8 tracking-[0.4em] text-slate-400 uppercase relative z-10">Invoice Summary</h2>
+                  <div className="space-y-4 sm:space-y-6 mb-8 relative z-10">
+                    <div className="flex justify-between text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-widest">
+                      <span>Total MRP</span>
+                      <span>₹{totalMrp.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
-                      <span>Item Total</span>
-                      <span className="text-slate-900">₹{totalPrice.toFixed(2)}</span>
-                    </div>
+                    {itemSavings > 0 && (
+                      <div className="flex justify-between text-xs sm:text-sm font-bold text-primary uppercase tracking-widest">
+                        <span>Discount Amount</span>
+                        <span>-₹{itemSavings.toFixed(2)}</span>
+                      </div>
+                    )}
                     {appliedPromo && (
-                      <div className="flex justify-between text-[11px] font-black text-primary uppercase tracking-widest">
-                        <span className="flex items-center gap-2"><Tag className="w-3.5 h-3.5" /> Promo Discount</span>
+                      <div className="flex justify-between text-xs sm:text-sm font-bold text-primary uppercase tracking-widest">
+                        <span className="flex items-center gap-2"><Tag className="w-3.5 h-3.5" /> Promocode Saving</span>
                         <span>-₹{promoDiscount.toFixed(2)}</span>
                       </div>
                     )}
                     {feeTotal > 0 && (
-                      <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
-                        <span>Clinical Fees</span>
-                        <span className="text-slate-900">₹{feeTotal.toFixed(2)}</span>
-                      </div>
-                    )}
-                    
-                    {totalSavings > 0 && (
-                      <div className="mt-8 flex justify-between text-[11px] font-black text-primary bg-primary/5 p-4 rounded-[24px] border border-primary/10 shadow-inner">
-                        <span className="flex items-center gap-2 uppercase tracking-widest"><Zap className="w-3.5 h-3.5 fill-current" /> Net Savings</span>
-                        <span>₹{totalSavings.toFixed(2)}</span>
+                      <div className="flex justify-between text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-widest">
+                        <span>Delivery Fees</span>
+                        <span>₹{feeTotal.toFixed(2)}</span>
                       </div>
                     )}
 
-                    <div className="pt-10 border-t border-slate-100 flex justify-between items-baseline">
-                      <span className="text-sm font-black text-slate-900 uppercase tracking-widest">To be paid</span>
-                      <span className="text-4xl sm:text-5xl font-black text-primary tracking-tighter font-outfit">₹{finalPayable.toFixed(2)}</span>
+                    <div className="pt-6 sm:pt-8 border-t border-slate-100 flex justify-between items-baseline">
+                      <span className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-widest">Total Payable</span>
+                      <span className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit">₹{finalPayable.toFixed(2)}</span>
                     </div>
+                    
+                    {totalSavings > 0 && (
+                      <div className="mt-6 flex justify-between items-center text-xs sm:text-sm font-black text-emerald-700 bg-emerald-50 p-4 rounded-[16px] border border-emerald-100 shadow-inner">
+                        <span className="flex items-center gap-2 uppercase tracking-widest">Total Savings</span>
+                        <span className="bg-emerald-100 px-3 py-1.5 rounded-md text-[10px] sm:text-xs uppercase tracking-widest border border-emerald-200">
+                          Saved ₹{totalSavings.toFixed(2)} ({Math.round((totalSavings / totalMrp) * 100)}%)
+                        </span>
+                      </div>
+                    )}
                   </div>
                   {isPrescriptionReady ? (
                     <Button onClick={handleCheckoutClick} className="w-full rounded-full h-20 text-xs font-black tracking-[0.3em] uppercase shadow-2xl shadow-primary/20 bg-primary text-white relative z-10 group hover:scale-[1.02] transition-transform">

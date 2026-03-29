@@ -346,23 +346,23 @@ export default function Navbar() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.98 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="absolute top-[calc(100%+8px)] left-0 right-0 glass rounded-[32px] overflow-hidden z-[110] border border-white/50 shadow-3xl"
+                className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] overflow-hidden z-[110] border border-slate-100 shadow-2xl"
               >
-                <div className="max-h-[500px] overflow-y-auto scrollbar-hide py-3">
+                <div className="max-h-[500px] overflow-y-auto scrollbar-hide py-2">
                   {displayedSuggestions.map((item) => (
                     <div 
                       key={item.id}
-                      className="w-full px-4 sm:px-6 py-4 flex items-center gap-4 hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group"
+                      className="w-full px-4 sm:px-6 py-2.5 flex items-center gap-3 hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group"
                     >
-                      <div className="relative w-14 h-14 sm:w-16 sm:h-16 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
+                      <div className="relative w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-[14px] flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
                         <Image 
                           src={(item as any).imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
                           alt={item.term} 
                           fill 
-                          className="object-contain p-2" 
+                          className="object-contain p-1.5" 
                         />
                       </div>
-                      <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex-1 min-w-0" onClick={() => handleSuggestionClick(item)}>
                           <p className="font-extrabold text-xs sm:text-sm text-slate-800 truncate cursor-pointer hover:text-primary transition-colors">
                             {item.term}
@@ -384,7 +384,7 @@ export default function Navbar() {
                               addToCart((item as any).product);
                               toast({ title: "Added to Basket" });
                             }}
-                            className="h-10 px-6 rounded-full bg-primary text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                            className="h-8 px-5 rounded-full bg-primary text-white font-black text-[9px] uppercase tracking-widest shadow-md shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
                           >
                             Add +
                           </Button>

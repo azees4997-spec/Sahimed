@@ -83,6 +83,23 @@ export default function CheckoutPage() {
   const { toast } = useToast();
   const router = useRouter();
 
+  const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
+  const applicableFees = activeFees.filter(f => totalPrice >= (f.minPurchase || 0));
+  const feeTotal = applicableFees.reduce((acc, fee) => {
+    const amt = fee.discountedAmount ?? fee.originalAmount ?? 0;
+    return fee.type === 'fixed' ? acc + amt : acc + (totalPrice * (amt / 100));
+  }, 0);
+
+  let rawDiscount = 0;
+  if (appliedPromo) {
+    rawDiscount = appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue / 100));
+  }
+  const promoDiscount = (appliedPromo?.maxDiscount && appliedPromo.maxDiscount > 0) ? Math.min(rawDiscount, appliedPromo.maxDiscount) : rawDiscount;
+  
+  const finalPayable = Math.max(0, totalPrice + feeTotal - promoDiscount);
+  const itemSavings = totalMrp - totalPrice;
+  const totalSavings = itemSavings + promoDiscount;
+
   const [orderInfo, setOrderInfo] = useState({
     patientName: '',
     phoneNumber: '',
@@ -244,26 +261,13 @@ export default function CheckoutPage() {
 
     setLoading(true);
     
-    const applicableFees = activeFees.filter(f => totalPrice >= (f.minPurchase || 0));
-    const feeTotal = applicableFees.reduce((acc, fee) => {
-      const amt = fee.discountedAmount ?? fee.originalAmount ?? 0;
-      return fee.type === 'fixed' ? acc + amt : acc + (totalPrice * (amt / 100));
-    }, 0);
-
-    let promoDiscount = 0;
-    if (appliedPromo) {
-      const raw = appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100));
-      promoDiscount = (appliedPromo.maxDiscount && appliedPromo.maxDiscount > 0) ? Math.min(raw, appliedPromo.maxDiscount) : raw;
-    }
-
-    const finalAmount = Math.max(0, totalPrice + feeTotal - promoDiscount);
     const cleanPhone = orderInfo.phoneNumber.replace(/\D/g, '');
     const finalTag = orderInfo.tag === 'Other' ? (orderInfo.otherTag || 'Other') : orderInfo.tag;
 
     const orderData = {
       userId: user.uid,
       orderDate: serverTimestamp(),
-      totalAmount: finalAmount,
+      totalAmount: finalPayable,
       status: 'Pending',
       paymentType: paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online',
       patientName: orderInfo.patientName,
@@ -284,9 +288,9 @@ export default function CheckoutPage() {
         name: item.name
       })),
       billingBreakdown: {
-        grossMrp: cart.reduce((acc, it) => acc + (it.mrp || it.price + 50) * it.quantity, 0),
+        grossMrp: totalMrp,
         campaignDiscount: promoDiscount,
-        savings: (cart.reduce((acc, it) => acc + (it.mrp || it.price + 50) * it.quantity, 0)) - finalAmount
+        savings: totalSavings
       }
     };
 
@@ -460,23 +464,44 @@ export default function CheckoutPage() {
               >
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
                 
-                <h2 className="text-[10px] font-black mb-12 tracking-[0.4em] text-slate-400 uppercase relative z-10">Consolidation Summary</h2>
-                
-                <div className="space-y-6 mb-12 pt-8 border-t border-slate-100 relative z-10">
-                  <div className="flex justify-between text-[11px] font-black text-slate-400 uppercase tracking-widest">
-                    <span>Clinical Value</span>
-                    <span>₹{totalPrice.toFixed(2)}</span>
+                <h2 className="text-[10px] sm:text-xs font-black mb-8 tracking-[0.4em] text-slate-400 uppercase relative z-10">Invoice Summary</h2>
+                <div className="space-y-4 sm:space-y-6 mb-8 relative z-10 pt-8 border-t border-slate-100">
+                  <div className="flex justify-between text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-widest">
+                    <span>Total MRP</span>
+                    <span>₹{totalMrp.toFixed(2)}</span>
                   </div>
-                  {appliedPromo && (
-                    <div className="flex justify-between text-[11px] font-black text-primary uppercase tracking-widest bg-primary/5 p-4 rounded-[24px] border border-primary/10">
-                      <span className="flex items-center gap-3"><Tag className="w-4 h-4" /> Advantage Applied</span>
-                      <span>-₹{(appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))).toFixed(2)}</span>
+                  {itemSavings > 0 && (
+                    <div className="flex justify-between text-xs sm:text-sm font-bold text-primary uppercase tracking-widest">
+                      <span>Discount Amount</span>
+                      <span>-₹{itemSavings.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="pt-10 border-t border-slate-100 flex justify-between items-baseline">
-                    <span className="text-xs font-black text-slate-900 uppercase tracking-widest">To be Paid</span>
-                    <span className="text-4xl sm:text-5xl font-black text-primary tracking-tighter font-outfit">₹{(totalPrice - (appliedPromo ? (appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue/100))) : 0)).toFixed(2)}</span>
+                  {appliedPromo && (
+                    <div className="flex justify-between text-xs sm:text-sm font-bold text-primary uppercase tracking-widest">
+                      <span className="flex items-center gap-2"><Tag className="w-3.5 h-3.5" /> Promocode Saving</span>
+                      <span>-₹{promoDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {feeTotal > 0 && (
+                    <div className="flex justify-between text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-widest">
+                      <span>Delivery Fees</span>
+                      <span>₹{feeTotal.toFixed(2)}</span>
+                    </div>
+                  )}
+
+                  <div className="pt-6 sm:pt-8 border-t border-slate-100 flex justify-between items-baseline">
+                    <span className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-widest">Total Payable</span>
+                    <span className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit">₹{finalPayable.toFixed(2)}</span>
                   </div>
+                  
+                  {totalSavings > 0 && (
+                    <div className="mt-6 flex justify-between items-center text-xs sm:text-sm font-black text-emerald-700 bg-emerald-50 p-4 rounded-[16px] border border-emerald-100 shadow-inner">
+                      <span className="flex items-center gap-2 uppercase tracking-widest">Total Savings</span>
+                      <span className="bg-emerald-100 px-3 py-1.5 rounded-md text-[10px] sm:text-xs uppercase tracking-widest border border-emerald-200">
+                        Saved ₹{totalSavings.toFixed(2)} ({Math.round((totalSavings / totalMrp) * 100)}%)
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-6 relative z-10">

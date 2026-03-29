@@ -35,7 +35,7 @@ export default function ProductCard({ product }: { product: Product }) {
       viewport={{ once: true }}
       whileHover={hoverVariant}
       transition={springTransition as any}
-      className="pharma-card flex flex-row sm:flex-col h-full group relative p-3 sm:p-5 bg-white border border-slate-100 rounded-[24px] sm:rounded-[48px] gap-3 sm:gap-0"
+      className="pharma-card flex flex-col h-full group relative p-2.5 sm:p-5 bg-white border border-slate-100 rounded-[20px] sm:rounded-[48px] gap-2 sm:gap-0"
     >
       {savingsPct > 0 && (
         <div className="absolute top-5 left-5 z-10">
@@ -45,7 +45,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
       )}
 
-      <Link href={`/product/${product.id}`} className="flex flex-row sm:flex-col flex-1 gap-3 sm:gap-5 w-full">
+      <Link href={`/product/${product.id}`} className="flex flex-col flex-1 gap-2 sm:gap-5 w-full">
         <div className="relative aspect-square w-24 h-24 sm:w-full sm:h-40 bg-sahi-blue rounded-[20px] sm:rounded-[32px] flex items-center justify-center overflow-hidden group-hover:bg-white transition-colors duration-500 p-2 sm:p-4 shrink-0">
           <Image 
             src={safeImageUrl} 
@@ -91,7 +91,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
       </Link>
       
-      <div className="mt-6">
+      <div className="mt-3 sm:mt-6">
         <AnimatePresence mode="wait">
           {quantity > 0 ? (
             <motion.div 
@@ -132,7 +132,7 @@ export default function ProductCard({ product }: { product: Product }) {
               className="h-10 sm:h-12 w-full bg-primary text-white font-black text-[9px] sm:text-xs tracking-[0.15em] uppercase rounded-[16px] sm:rounded-[20px] shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 sm:gap-3 group/btn"
             >
               <ShoppingBag className="w-4 h-4 group-hover/btn:translate-y-[-2px] transition-transform" />
-              Add to Bag
+              ADD TO CART
             </motion.button>
           )}
         </AnimatePresence>

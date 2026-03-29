@@ -260,7 +260,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 </div>
                 <h2 className="text-xs font-black text-slate-400 tracking-[0.2em] uppercase mb-1">Composition</h2>
                 <span className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter font-outfit uppercase leading-tight max-w-2xl px-4">
-                   {molData?.molecule || product.saltComposition || product.molecule || "Molecular formulation info Pending"}
+                   {molData?.molecule || molData?.name || product.saltComposition || product.molecule || "Molecular formulation info Pending"}
                 </span>
              </motion.div>
           </div>
