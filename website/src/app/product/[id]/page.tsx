@@ -149,15 +149,15 @@ const ComparisonCard = ({
           </div>
         </div>
 
-        <div className="mt-4 sm:mt-8">
+        <div className="mt-2 sm:mt-6">
           <Button 
             onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })} 
             className={cn(
-              "w-full h-10 sm:h-16 rounded-full font-black text-[8px] sm:text-xs tracking-[0.15em] uppercase gap-2 sm:gap-3 shadow-xl active:scale-95 transition-all border-none",
-              isAlt ? "bg-accent text-white hover:bg-accent/90 shadow-accent/20" : "bg-primary text-white hover:bg-primary/90 shadow-primary/20"
+              "w-full h-8 sm:h-16 rounded-full font-black text-[7px] sm:text-xs tracking-[0.1em] sm:tracking-[0.15em] uppercase gap-1 sm:gap-3 shadow-md sm:shadow-xl active:scale-95 transition-all border-none",
+              isAlt ? "bg-accent text-white hover:bg-accent/90" : "bg-primary text-white hover:bg-primary/90"
             )}
           >
-            {qty > 0 ? `IN BASKET (${qty})` : "ADD"} <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+            {qty > 0 ? `IN CART (${qty})` : "ADD"} <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
           </Button>
         </div>
       </Card>
@@ -219,7 +219,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <div className="w-20 h-20 bg-slate-50 rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-inner">
                 <Info className="w-8 h-8 text-orange-400" />
               </div>
-              <h1 className="text-2xl font-black tracking-tighter mb-4 font-outfit uppercase">Clinical record missing</h1>
+              <h1 className="text-2xl font-black tracking-tighter mb-4 font-outfit uppercase">Medicine not found</h1>
               <p className="text-slate-400 font-bold text-[10px] mb-10 leading-relaxed uppercase tracking-widest">The requested medicine entry could not be found.</p>
               <Button onClick={() => window.location.href = '/search'} className="rounded-full h-16 px-12 font-black tracking-widest uppercase bg-slate-900 text-white shadow-xl">Back to Catalog</Button>
             </div>
@@ -233,33 +233,29 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     <PageTransition>
       <div className="min-h-screen bg-[#F8FAFC] pb-32">
         <Navbar />
-        <main className="max-w-[1200px] mx-auto px-4 sm:px-10 py-6 sm:py-10">
+        <main className="max-w-[1200px] mx-auto px-2 sm:px-10 py-2 sm:py-10">
           
-          <div className="flex flex-col items-center justify-center mb-8">
+          <div className="flex flex-row items-center justify-center mb-2 sm:mb-8 gap-4 px-2">
              {(product.prescriptionRequired || product.rxRequired) && (
-               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="mb-4"
-               >
-                 <Badge className="bg-rose-500 text-white border-none rounded-full font-black text-[9px] px-4 py-2 tracking-widest flex items-center gap-2 shadow-lg shadow-rose-500/20 uppercase">
+               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                 <Badge className="bg-rose-500 text-white border-none rounded-full font-black text-[9px] px-3 py-1 sm:py-2 tracking-widest shadow-lg shadow-rose-500/20 uppercase shrink-0">
                     RX REQUIRED
                  </Badge>
                </motion.div>
              )}
           </div>
 
-          <div className="flex flex-col items-center justify-center mb-10 text-center px-4">
+          <div className="flex flex-col items-center justify-center mb-4 sm:mb-10 text-center px-2">
              <motion.div 
-                initial={{ y: 10, opacity: 0 }}
+                initial={{ y: 5, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="inline-flex flex-col items-center gap-2"
+                className="inline-flex flex-col items-center gap-1 sm:gap-2"
              >
-                <div className="p-3 bg-primary/10 rounded-2xl mb-2">
+                <div className="hidden sm:flex p-3 bg-primary/10 rounded-2xl mb-2">
                    <Dna className="w-6 h-6 text-primary" />
                 </div>
-                <h2 className="text-xs font-black text-slate-400 tracking-[0.2em] uppercase mb-1">Composition</h2>
-                <span className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter font-outfit uppercase leading-tight max-w-2xl px-4">
+                <h2 className="text-[10px] sm:text-xs font-black text-slate-400 tracking-[0.2em] uppercase mb-0 sm:mb-1">Composition</h2>
+                <span className="text-sm md:text-2xl font-black text-slate-900 tracking-tighter font-outfit uppercase leading-tight max-w-2xl px-2 line-clamp-2">
                    {molData?.molecule || molData?.name || product.saltComposition || product.molecule || "Molecular formulation info Pending"}
                 </span>
              </motion.div>
@@ -267,23 +263,22 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
           {showComparison && switchSavingsAmt > 0 && (
             <motion.div 
-              initial={{ scale: 0.98, opacity: 0, y: -10 }}
+              initial={{ scale: 0.98, opacity: 0, y: -5 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              className="mb-10 px-2"
+              className="mb-4 sm:mb-10 px-2"
             >
-              <div className="bg-gradient-to-r from-primary to-accent text-white py-5 px-8 rounded-[32px] shadow-xl flex items-center justify-center gap-4 text-center">
-                 <TrendingDown className="w-5 h-5 animate-bounce" />
-                 <h2 className="text-[10px] sm:text-sm font-black tracking-widest uppercase">
+              <div className="bg-gradient-to-r from-primary to-accent text-white py-3 sm:py-5 px-4 sm:px-8 rounded-[20px] sm:rounded-[32px] shadow-xl flex items-center justify-center gap-2 sm:gap-4 text-center">
+                 <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 animate-bounce" />
+                 <h2 className="text-[9px] sm:text-sm font-black tracking-widest uppercase line-clamp-1">
                    Switch and save ₹{Number(switchSavingsAmt).toFixed(0)} • IDENTICAL MOLECULE
                  </h2>
-                 <Zap className="w-5 h-5 fill-white" />
               </div>
             </motion.div>
           )}
 
-          <div className="mb-16 px-1">
+          <div className="mb-8 sm:mb-16 px-1">
             {showComparison ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-10 items-stretch">
+              <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-10 items-stretch">
                 <ComparisonCard 
                   product={product} 
                   label="Original Branded" 
@@ -304,14 +299,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </div>
             ) : (
               <div className="flex justify-center">
-                <ComparisonCard 
-                  product={product} 
-                  label={isBranded ? "Verified Selection" : "Clinical Generic"} 
-                  getItemQuantity={getItemQuantity}
-                  addToCart={addToCart}
-                  showComparison={showComparison}
-                  brandedMrp={brandedMrp}
-                />
+                <div className="w-full sm:w-auto">
+                  <ComparisonCard 
+                    product={product} 
+                    label={isBranded ? "Verified Selection" : "Clinical Generic"} 
+                    getItemQuantity={getItemQuantity}
+                    addToCart={addToCart}
+                    showComparison={showComparison}
+                    brandedMrp={brandedMrp}
+                  />
+                </div>
               </div>
             )}
           </div>

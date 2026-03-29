@@ -301,7 +301,24 @@ export default function Navbar() {
               </PopoverContent>
             </Popover>
 
-            <Link href="/cart" className="flex items-center gap-2 group">
+            <AnimatePresence>
+              {scrolled && (
+                <motion.button 
+                  initial={{ opacity: 0, scale: 0.8, width: 0 }}
+                  animate={{ opacity: 1, scale: 1, width: 'auto' }}
+                  exit={{ opacity: 0, scale: 0.8, width: 0 }}
+                  onClick={() => {
+                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                     setTimeout(() => searchRef.current?.querySelector('input')?.focus(), 500);
+                  }} 
+                  className="sm:hidden flex items-center justify-center p-3 bg-white/60 backdrop-blur-md rounded-full border border-white/60 shadow-sm shrink-0"
+                >
+                  <SearchIcon className="w-5 h-5 text-primary" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            <Link href="/cart" className="flex items-center gap-2 group shrink-0">
               <div className="p-3 bg-white/60 backdrop-blur-md rounded-full group-hover:bg-primary group-hover:text-white transition-all duration-500 border border-white/60 shadow-sm relative">
                 <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
                 {totalItems > 0 && (
@@ -316,7 +333,7 @@ export default function Navbar() {
         </div>
 
         {/* Tier 2: Search */}
-        <div className="relative w-full" ref={searchRef}>
+        <div className={cn("relative w-full transition-all duration-300", scrolled ? "hidden sm:block" : "block")} ref={searchRef}>
           <form onSubmit={handleSearch} className="relative">
             <div className="relative group">
               <SearchIcon className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-5 h-5" />

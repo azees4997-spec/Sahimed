@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Minus, Plus, ShoppingBag } from 'lucide-react';
+import { Minus, Plus, ShoppingCart } from 'lucide-react';
 import { Product, useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -131,7 +131,7 @@ export default function ProductCard({ product }: { product: Product }) {
               }} 
               className="h-10 sm:h-12 w-full bg-primary text-white font-black text-[9px] sm:text-xs tracking-[0.15em] uppercase rounded-[16px] sm:rounded-[20px] shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 sm:gap-3 group/btn"
             >
-              <ShoppingBag className="w-4 h-4 group-hover/btn:translate-y-[-2px] transition-transform" />
+              <ShoppingCart className="w-4 h-4 group-hover/btn:translate-y-[-2px] transition-transform" />
               ADD TO CART
             </motion.button>
           )}

@@ -203,19 +203,25 @@ export default function Home() {
           </section>
 
           {/* Free Delivery Banner (Moved below Categories) */}
-          <section className="bg-slate-900 p-10 sm:p-24 rounded-[48px] sm:rounded-[80px] text-white flex flex-col items-center text-center gap-8 shadow-3xl relative overflow-hidden">
-            <div className="w-24 h-24 bg-primary/20 rounded-[40px] flex items-center justify-center relative z-10">
-               <Package className="w-12 h-12 text-primary" />
+          <section className="bg-slate-900 p-6 sm:p-16 rounded-[32px] sm:rounded-[64px] text-white flex flex-row items-center justify-between gap-4 shadow-3xl relative overflow-hidden">
+            <div className="space-y-2 sm:space-y-4 relative z-10 max-w-xl text-left flex-1 min-w-0">
+               <h3 className="text-xl sm:text-5xl font-black tracking-tighter uppercase leading-tight text-white">
+                 Pan India Free Delivery<br className="max-sm:hidden"/> Above ₹499
+               </h3>
+               <p className="text-[10px] sm:text-lg font-bold text-white/60 uppercase tracking-widest truncate">
+                 Order Now & Save More
+               </p>
+               <Link href="/search" className="inline-block mt-2 sm:mt-6 px-6 sm:px-12 py-3 sm:py-5 bg-primary text-white font-black text-[10px] sm:text-base uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-xl">
+                 Shop Now
+               </Link>
             </div>
-            <div className="space-y-4 relative z-10 max-w-3xl">
-               <h3 className="text-3xl sm:text-6xl font-black tracking-tighter uppercase leading-tight">ISO Free Delivery <br className="hidden sm:block" />Above ₹499</h3>
-               <p className="text-sm sm:text-2xl font-bold text-white/60 uppercase tracking-widest">Guaranteed Authentic Medicines • ISO Certified Pharmacy</p>
+            <div className="relative z-10 shrink-0 right-[-10px] sm:right-6">
+               <div className="w-20 h-20 sm:w-40 sm:h-40 bg-primary/20 rounded-[28px] sm:rounded-[56px] flex items-center justify-center border border-primary/30">
+                 <Package className="w-10 h-10 sm:w-20 sm:h-20 text-primary" />
+               </div>
             </div>
-            <Link href="/search" className="w-full sm:w-auto px-16 py-6 bg-primary text-white font-black text-xs sm:text-base uppercase tracking-widest rounded-full relative z-10 hover:scale-105 transition-all shadow-xl">
-              Shop Now
-            </Link>
-            <div className="absolute top-0 right-0 p-10 opacity-5">
-               <Package size={400} />
+            <div className="absolute top-1/2 -translate-y-1/2 right-0 sm:right-10 opacity-5 pointer-events-none">
+               <Package className="w-64 h-64 sm:w-[400px] sm:h-[400px]" />
             </div>
           </section>
 

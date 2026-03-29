@@ -4,7 +4,7 @@
 import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShoppingBag, ArrowRight, Plus, Minus, Ticket, ChevronRight, FileWarning, Camera, ClipboardCheck, Tag, PartyPopper, Sparkles, Zap, Loader2 } from 'lucide-react';
+import { Trash2, ShoppingCart, ArrowRight, Plus, Minus, Ticket, ChevronRight, FileWarning, Camera, ClipboardCheck, Tag, PartyPopper, Sparkles, Zap, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -128,11 +128,11 @@ export default function CartPage() {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", damping: 20 }}
-              className="w-32 h-32 bg-white rounded-[48px] flex items-center justify-center mx-auto mb-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-white"
+              className="w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-[32px] sm:rounded-[48px] flex items-center justify-center mx-auto mb-6 sm:mb-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-white"
             >
-              <ShoppingBag className="w-12 h-12 text-slate-200" />
+              <ShoppingCart className="w-10 h-10 sm:w-12 sm:h-12 text-slate-200" />
             </motion.div>
-            <h1 className="text-4xl font-black mb-4 tracking-tighter font-outfit">Your bag is empty</h1>
+            <h1 className="text-3xl sm:text-4xl font-black mb-4 tracking-tighter font-outfit">Your cart is empty</h1>
             <p className="text-slate-500 font-bold mb-12 tracking-tight uppercase text-[10px]">Add clinical supplies to start your order</p>
             <Link href="/"><Button className="rounded-full px-16 h-20 font-black tracking-[0.2em] shadow-2xl shadow-primary/20 bg-primary uppercase text-sm">Start Discovering</Button></Link>
           </main>
@@ -149,9 +149,9 @@ export default function CartPage() {
           <motion.h1 
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tighter mb-12 sm:mb-20 font-outfit"
+            className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tighter mb-8 sm:mb-20 font-outfit flex flex-col sm:block"
           >
-            Shopping Bag <span className="text-primary/30 ml-2">[{totalItems}]</span>
+            Your Cart <span className="text-primary/100 sm:text-primary/30 mt-2 sm:mt-0 sm:ml-2 text-xl sm:text-6xl border sm:border-none border-primary/20 bg-primary/5 sm:bg-transparent rounded-full px-4 py-1 w-fit">[{totalItems} Items]</span>
           </motion.h1>
 
           {requiresPrescription && (
@@ -180,7 +180,7 @@ export default function CartPage() {
                 className="w-full sm:w-auto rounded-full font-black text-[10px] h-14 sm:h-16 px-10 gap-4 border-2 uppercase tracking-widest hover:bg-white"
               >
                 {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />} 
-                {attachedPrescription ? "Update Record" : "Upload prescription"}
+                {attachedPrescription ? "Update Prescription" : "Upload prescription"}
               </Button>
             </motion.div>
           )}
@@ -201,37 +201,36 @@ export default function CartPage() {
                   <motion.div 
                     key={item.id} 
                     variants={itemVariants}
-                    className="bg-white/40 backdrop-blur-md p-6 sm:p-8 rounded-[48px] shadow-xl border border-white/50 flex gap-6 sm:gap-10 items-center group hover:shadow-2xl transition-all relative overflow-hidden"
+                    className="bg-white p-3 sm:p-8 rounded-[24px] sm:rounded-[48px] shadow-sm sm:shadow-xl border border-slate-100 sm:border-white/50 flex flex-row gap-3 sm:gap-10 items-center group hover:shadow-xl transition-all relative overflow-hidden"
                   >
-                    <Link href={`/product/${item.id}`} className="relative w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-[32px] overflow-hidden shrink-0 border border-white shadow-inner cursor-pointer">
-                      <Image src={safeImageUrl} alt={item.name} fill className="object-contain p-4 group-hover:scale-110 transition-transform duration-500" />
+                    <Link href={`/product/${item.id}`} className="relative w-20 h-20 sm:w-32 sm:h-32 bg-slate-50 sm:bg-white rounded-[16px] sm:rounded-[32px] overflow-hidden shrink-0 border border-slate-100 sm:border-white shadow-inner cursor-pointer">
+                      <Image src={safeImageUrl} alt={item.name} fill className="object-contain p-2 sm:p-4 group-hover:scale-110 transition-transform duration-500" />
                     </Link>
                     
-                    <div className="flex-1 min-w-0 flex flex-col sm:flex-row justify-between gap-6">
+                    <div className="flex-1 min-w-0 flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-6">
                       <div className="flex-1 min-w-0">
-                        <span className="text-[9px] font-black text-primary tracking-[0.2em] uppercase mb-2 block">{item.brand || 'Premium'}</span>
                         <Link href={`/product/${item.id}`} className="hover:text-primary transition-colors cursor-pointer">
-                          <h3 className="font-black text-slate-900 text-lg sm:text-2xl tracking-tighter line-clamp-1 font-outfit uppercase">{item.name}</h3>
+                          <h3 className="font-black text-slate-900 text-sm sm:text-2xl tracking-tighter line-clamp-1 sm:line-clamp-2 font-outfit uppercase leading-tight">{item.name}</h3>
                         </Link>
-                        <p className="text-[10px] text-slate-400 font-bold tracking-[0.2em] truncate mt-2 mb-6 uppercase">{item.saltComposition}</p>
+                        <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold tracking-[0.2em] truncate mt-1 sm:mt-2 mb-2 sm:mb-6 uppercase">{item.saltComposition}</p>
                         
-                        <div className="flex items-center gap-3 bg-white/60 rounded-full p-1.5 border border-white shadow-sm w-fit">
-                          <button onClick={() => updateQuantity(item.id, -1)} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-slate-900 text-white hover:bg-primary transition-colors tap-highlight shadow-lg"><Minus className="w-4 h-4" /></button>
-                          <span className="text-sm sm:text-lg font-black w-10 text-center font-outfit">{item.quantity}</span>
-                          <button onClick={() => updateQuantity(item.id, 1)} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-slate-900 text-white hover:bg-primary transition-colors tap-highlight shadow-lg"><Plus className="w-4 h-4" /></button>
+                        <div className="flex items-center gap-2 sm:gap-3 bg-slate-50 sm:bg-white/60 rounded-full p-1 sm:p-1.5 border border-slate-100 sm:border-white shadow-none sm:shadow-sm w-fit">
+                          <button onClick={() => updateQuantity(item.id, -1)} className="w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-slate-200 sm:bg-slate-900 text-slate-600 sm:text-white hover:bg-primary transition-colors tap-highlight shadow-sm"><Minus className="w-3 h-3 sm:w-4 sm:h-4" /></button>
+                          <span className="text-xs sm:text-lg font-black w-6 sm:w-10 text-center font-outfit">{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item.id, 1)} className="w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-slate-200 sm:bg-slate-900 text-slate-600 sm:text-white hover:bg-primary transition-colors tap-highlight shadow-sm"><Plus className="w-3 h-3 sm:w-4 sm:h-4" /></button>
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end justify-between sm:text-right shrink-0">
-                        <div className="text-right">
-                          <p className="text-2xl sm:text-3xl font-black text-slate-900 font-outfit tracking-tighter">₹{(item.price * item.quantity).toFixed(2)}</p>
-                          <p className="text-[11px] text-primary font-black line-through opacity-40">₹{((item.mrp || item.price + 50) * item.quantity).toFixed(2)}</p>
+                      <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:text-right shrink-0">
+                        <div className="text-left sm:text-right">
+                          <p className="text-lg sm:text-3xl font-black text-slate-900 font-outfit tracking-tighter leading-none">₹{(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="text-[10px] sm:text-[11px] text-primary font-black line-through opacity-40 mt-1">₹{((item.mrp || item.price + 50) * item.quantity).toFixed(2)}</p>
                         </div>
                         <button 
                           onClick={() => removeFromCart(item.id)} 
-                          className="mt-4 w-12 h-12 rounded-full flex items-center justify-center bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                          className="w-10 h-10 sm:w-12 sm:h-12 sm:mt-4 rounded-full flex items-center justify-center bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-none sm:shadow-sm"
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                       </div>
                     </div>
@@ -354,7 +353,7 @@ export default function CartPage() {
                     </Button>
                   ) : (
                     <Button onClick={() => document.getElementById('cart-upload')?.click()} className="w-full rounded-full h-20 text-xs font-black tracking-[0.3em] uppercase shadow-2xl shadow-rose-200 bg-rose-600 text-white relative z-10 group hover:scale-[1.02] transition-transform">
-                      Submit Record <Camera className="w-6 h-6 ml-4 group-hover:scale-110 transition-transform" />
+                      Submit Prescription <Camera className="w-6 h-6 ml-4 group-hover:scale-110 transition-transform" />
                     </Button>
                   )}
                 </motion.div>
