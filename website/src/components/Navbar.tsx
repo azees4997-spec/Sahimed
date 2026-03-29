@@ -68,7 +68,12 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
+      const y = window.scrollY;
+      if (y > 120) {
+        setScrolled(true);
+      } else if (y < 20) {
+        setScrolled(false);
+      }
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -365,21 +370,21 @@ export default function Navbar() {
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
                 className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] overflow-hidden z-[110] border border-slate-100 shadow-2xl"
               >
-                <div className="max-h-[500px] overflow-y-auto scrollbar-hide py-2">
+                <div className="max-h-[40vh] sm:max-h-[500px] overflow-y-auto scrollbar-hide py-1 sm:py-2">
                   {displayedSuggestions.map((item) => (
                     <div 
                       key={item.id}
-                      className="w-full px-4 sm:px-6 py-2.5 flex items-center gap-3 hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group"
+                      className="w-full px-3 sm:px-6 py-2 flex items-center gap-2 sm:gap-3 hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group"
                     >
-                      <div className="relative w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-[14px] flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
+                      <div className="relative w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[10px] sm:rounded-[14px] flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
                         <Image 
                           src={(item as any).imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
                           alt={item.term} 
                           fill 
-                          className="object-contain p-1.5" 
+                          className="object-contain p-1 sm:p-1.5" 
                         />
                       </div>
-                      <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
                         <div className="flex-1 min-w-0" onClick={() => handleSuggestionClick(item)}>
                           <p className="font-extrabold text-xs sm:text-sm text-slate-800 truncate cursor-pointer hover:text-primary transition-colors">
                             {item.term}
@@ -401,7 +406,7 @@ export default function Navbar() {
                               addToCart((item as any).product);
                               toast({ title: "Added to Basket" });
                             }}
-                            className="h-8 px-5 rounded-full bg-primary text-white font-black text-[9px] uppercase tracking-widest shadow-md shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                            className="h-7 sm:h-8 px-3 sm:px-5 rounded-full bg-primary text-white font-black text-[8px] sm:text-[9px] uppercase tracking-widest shadow-md shadow-primary/20 hover:scale-105 active:scale-95 transition-all w-fit"
                           >
                             Add +
                           </Button>

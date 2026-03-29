@@ -165,11 +165,11 @@ export default function Home() {
                   <Badge className="bg-yellow-100 text-yellow-700 border-none font-black px-3 py-1 rounded-full uppercase tracking-widest text-[8px] sm:text-[10px]">Best Sellers</Badge>
                 </div>
               </div>
-              <div className="flex gap-6 sm:gap-10 overflow-x-auto scrollbar-hide pb-12 px-2">
+              <div className="flex gap-4 sm:gap-10 overflow-x-auto scrollbar-hide pb-8 px-2">
                 {isBestLoading ? (
-                  [...Array(4)].map((_, i) => <Skeleton className="min-w-[190px] sm:min-w-[320px] aspect-[4/5] rounded-[48px]" key={i} />)
+                  [...Array(4)].map((_, i) => <Skeleton className="min-w-[140px] sm:min-w-[280px] aspect-[4/5] rounded-[32px] sm:rounded-[48px]" key={i} />)
                 ) : bestSellers?.map((p: any) => (
-                  <div key={p.id} className="min-w-[190px] sm:min-w-[320px]">
+                  <div key={p.id} className="min-w-[140px] sm:min-w-[280px]">
                     <ProductCard product={p} />
                   </div>
                 ))}
@@ -228,11 +228,11 @@ export default function Home() {
           {/* Top Sellers */}
           <section className="space-y-8">
             <h2 className="text-xl sm:text-4xl font-black text-slate-900 tracking-tighter uppercase font-outfit px-2">Best Sellers</h2>
-            <div className="flex gap-6 sm:gap-10 overflow-x-auto scrollbar-hide pb-12 px-2">
+            <div className="flex gap-4 sm:gap-10 overflow-x-auto scrollbar-hide pb-8 px-2">
               {isLoading ? (
-                [...Array(4)].map((_, i) => <Skeleton className="min-w-[180px] aspect-[4/5] rounded-[48px]" key={i} />)
+                [...Array(4)].map((_, i) => <Skeleton className="min-w-[140px] sm:min-w-[280px] aspect-[4/5] rounded-[32px] sm:rounded-[48px]" key={i} />)
               ) : medicines?.map((p: any) => (
-                <div key={p.id} className="min-w-[190px] sm:min-w-[320px]">
+                <div key={p.id} className="min-w-[140px] sm:min-w-[280px]">
                   <ProductCard product={p} />
                 </div>
               ))}
