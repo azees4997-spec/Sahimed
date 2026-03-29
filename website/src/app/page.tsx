@@ -74,23 +74,23 @@ export default function Home() {
         
         {/* Full Width Hero HeroSection (Outside main container) */}
         <section className="relative w-full bg-[#FFF9F9] border-b border-rose-50/50">
-          <div className="max-w-7xl mx-auto px-4 py-6 sm:py-16">
+          <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
             <Carousel setApi={setApi} plugins={[plugin.current]} className="w-full">
               <CarouselContent>
                 {isBannersLoading ? (
                   <CarouselItem>
-                     <Skeleton className="w-full min-h-[300px] sm:min-h-[500px] rounded-[32px]" />
+                     <Skeleton className="w-full min-h-[200px] sm:min-h-[360px] rounded-[24px]" />
                   </CarouselItem>
                 ) : (banners && banners.length > 0) ? (
                   banners.map((b) => (
                     <CarouselItem key={b.id}>
-                      <div className="relative overflow-hidden p-6 sm:p-16 flex flex-col justify-center min-h-[300px] sm:min-h-[500px] rounded-[32px] bg-slate-900 shadow-xl group">
+                      <div className="relative overflow-hidden p-5 sm:p-10 flex flex-col justify-center min-h-[200px] sm:min-h-[360px] rounded-[24px] bg-slate-900 shadow-xl group">
                         {b.imageUrl && <Image src={b.imageUrl} alt={b.title || 'Banner'} fill className="object-cover absolute inset-0 opacity-40 group-hover:scale-105 transition-transform duration-700" />}
                         <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/60 to-transparent pointer-events-none" />
-                        <div className="space-y-3 max-w-xl relative z-10 pointer-events-none">
-                          <Badge className="bg-primary/20 text-primary border-primary/30 font-black px-3 py-0.5 rounded-full uppercase tracking-widest text-[8px]">Sahimed Exclusive</Badge>
-                          <h2 className="text-2xl sm:text-4xl font-black leading-tight tracking-tighter text-white uppercase font-outfit">{b.title}</h2>
-                          {b.subtitle && <p className="text-slate-300 font-bold text-xs sm:text-lg">{b.subtitle}</p>}
+                        <div className="space-y-2 max-w-xl relative z-10 pointer-events-none">
+                          <Badge className="bg-primary/20 text-primary border-primary/30 font-black px-2 py-0.5 rounded-full uppercase tracking-widest text-[7px]">Sahimed Exclusive</Badge>
+                          <h2 className="text-xl sm:text-3xl font-black leading-tight tracking-tighter text-white uppercase font-outfit">{b.title}</h2>
+                          {b.subtitle && <p className="text-slate-300 font-bold text-[10px] sm:text-base">{b.subtitle}</p>}
                         </div>
                       </div>
                     </CarouselItem>
@@ -101,53 +101,49 @@ export default function Home() {
                       <motion.div 
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-between min-h-[340px] sm:min-h-0 sm:h-[480px] group"
+                        className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-between min-h-[220px] sm:h-[360px] group"
                       >
-                         <div className="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none">
-                            <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" className="absolute right-0 top-0 w-full h-full object-cover">
-                               <path fill="#ffb3b3" d="M45.7,-76.3C58.6,-69.3,68,-55.1,75.4,-40.7C82.8,-26.3,88.1,-11.7,85.1,1.7C82.1,15.1,70.6,27.2,60.8,38.5C51,49.8,42.8,60.3,31.7,66.4C20.5,72.4,6.4,73.9,-7.1,72.6C-20.6,71.2,-33.5,67.1,-46.1,60.6C-58.7,54,-71,45.1,-78.9,32.3C-86.8,19.4,-90.3,2.7,-86.6,-12.3C-82.9,-27.3,-71.9,-40.6,-59.1,-48.9C-46.3,-57.2,-31.7,-60.5,-18,-64C-4.3,-67.4,8.5,-70.9,22.4,-73C36.3,-75.1,51.3,-75.8,45.7,-76.3Z" transform="translate(400 300) scale(4)" />
-                            </svg>
-                         </div>
+                         {/* Background Blob removed or reduced to avoid clutter */}
 
-                         <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-4 sm:gap-5">
-                            <h1 className="text-3xl sm:text-5xl font-black leading-[1.1] tracking-tighter text-slate-900 font-outfit uppercase">
+                         <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-3 sm:gap-4">
+                            <h1 className="text-2xl sm:text-4xl font-black leading-[1.1] tracking-tighter text-slate-900 font-outfit uppercase">
                                Affordable Solutions for <br className="hidden sm:block" />
                                <span className="text-primary">Everyday Care</span>
                             </h1>
 
-                            <div className="flex flex-col gap-2 sm:gap-2.5 w-full items-center sm:items-start">
+                            <div className="flex flex-col gap-1.5 sm:gap-2 w-full items-center sm:items-start">
                                <div className="flex items-center gap-2">
-                                  <div className="w-5 h-5 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
-                                     <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                                  <div className="w-4.5 h-4.5 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
+                                     <ShieldCheck className="w-3 h-3 text-white" />
                                   </div>
-                                  <span className="text-slate-800 font-bold uppercase tracking-[0.1em] text-[10px] sm:text-[11px]">Trusted by 10L+ users</span>
+                                  <span className="text-slate-800 font-bold uppercase tracking-[0.1em] text-[9px] sm:text-[10px]">Trusted by 10L+ users</span>
                                </div>
                                <div className="flex items-center gap-2">
-                                  <div className="w-5 h-5 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
-                                     <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                                  <div className="w-4.5 h-4.5 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
+                                     <ShieldCheck className="w-3 h-3 text-white" />
                                   </div>
-                                  <span className="text-slate-800 font-bold uppercase tracking-[0.1em] text-[10px] sm:text-[11px]">Save Upto 80%</span>
+                                  <span className="text-slate-800 font-bold uppercase tracking-[0.1em] text-[9px] sm:text-[10px]">Save Upto 80%</span>
                                </div>
                             </div>
 
                             <div 
                                onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); document.querySelector('input')?.focus(); }}
-                               className="w-full max-w-sm mt-4 bg-white rounded-full p-1 shadow-xl flex items-center border border-slate-100 cursor-pointer hover:shadow-2xl transition-all"
+                               className="w-full max-w-sm mt-3 bg-white rounded-full p-1 shadow-lg flex items-center border border-slate-100 cursor-pointer hover:shadow-xl transition-all"
                             >
-                               <div className="pl-4">
-                                  <Search className="w-4 h-4 text-primary" />
+                               <div className="pl-3">
+                                  <Search className="w-3.5 h-3.5 text-primary" />
                                </div>
-                               <div className="flex-1 px-4 text-[10px] sm:text-xs font-bold text-slate-400">
+                               <div className="flex-1 px-3 text-[9px] sm:text-[11px] font-bold text-slate-400">
                                   Search for Healthcare Products
                                </div>
-                               <button className="bg-primary hover:bg-primary/90 text-white font-black text-[9px] sm:text-[10px] tracking-widest uppercase px-5 py-2.5 sm:py-3 rounded-full shadow-lg">
+                               <button className="bg-primary hover:bg-primary/90 text-white font-black text-[8px] sm:text-[9.5px] tracking-widest uppercase px-4 py-2 sm:py-2.5 rounded-full shadow-md">
                                   Search
                                </button>
                             </div>
                          </div>
 
-                         <div className="relative z-10 w-full sm:w-5/12 flex justify-center mt-10 sm:mt-0">
-                            <div className="relative w-48 h-48 sm:w-[360px] sm:h-[360px] rounded-full border-[8px] sm:border-[12px] border-white shadow-2xl overflow-hidden bg-white">
+                         <div className="relative z-10 w-full sm:w-5/12 flex justify-center mt-6 sm:mt-0">
+                            <div className="relative w-36 h-36 sm:w-[300px] sm:h-[300px] rounded-full border-[6px] sm:border-[10px] border-white shadow-2xl overflow-hidden bg-white">
                                <Image 
                                   src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
                                   alt="Healthcare Professional" 
@@ -166,25 +162,25 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Place Your Order Via Call Strip (Outside main container) */}
+        {/* Place Your Order Via Call Strip (Thinner for Above-The-Fold) */}
         <section className="w-full bg-white border-b border-slate-100 shadow-sm">
-           <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-14">
+           <div className="max-w-7xl mx-auto px-4 py-2 sm:py-3 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-14">
               <div className="flex items-center gap-2">
-                 <span className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase">Place Your Order Via</span>
+                 <span className="text-[9.5px] font-black text-slate-400 tracking-[0.2em] uppercase">Place Your Order Via</span>
               </div>
-              <div className="flex items-center gap-4">
-                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-50 flex items-center justify-center">
-                    <Phone className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-green-600" />
+              <div className="flex items-center gap-3">
+                 <div className="w-7 h-7 sm:w-8.5 sm:h-8.5 rounded-full bg-green-50 flex items-center justify-center">
+                    <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600" />
                  </div>
                  <div className="flex flex-col">
-                    <span className="text-[9px] font-bold text-slate-400 tracking-widest uppercase">Call Us On</span>
-                    <span className="text-sm sm:text-base font-black text-slate-800 tracking-tight">+91 96069 73757</span>
+                    <span className="text-[8.5px] font-bold text-slate-400 tracking-widest uppercase leading-none mb-0.5">Call Us On</span>
+                    <span className="text-xs sm:text-sm font-black text-slate-800 tracking-tight">+91 96069 73757</span>
                  </div>
               </div>
            </div>
         </section>
 
-        <main className="max-w-7xl mx-auto px-4 py-8 sm:py-16 space-y-10 sm:space-y-20 pb-24 sm:pb-40">
+        <main className="max-w-7xl mx-auto px-4 py-6 sm:py-10 space-y-8 sm:space-y-16 pb-24 sm:pb-40">
           <section className="grid grid-cols-3 gap-2 sm:gap-4 px-1">
             {[
               { label: 'Upload Rx', href: '/prescription', color: 'bg-lavender', iconColor: 'bg-primary text-white', icon: FileText },
