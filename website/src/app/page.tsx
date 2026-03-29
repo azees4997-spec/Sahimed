@@ -4,7 +4,7 @@ import * as React from 'react';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, ShieldCheck, ChevronRight, Phone, FileText, Star, HeartPulse, Zap, ShieldPlus, Package } from 'lucide-react';
+import { MessageCircle, ShieldCheck, ChevronRight, Phone, FileText, Star, HeartPulse, Zap, ShieldPlus, Package, Search } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -103,34 +103,62 @@ export default function Home() {
                       <motion.div 
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="relative overflow-hidden p-8 sm:p-20 flex flex-col justify-center min-h-[220px] sm:min-h-[460px] rounded-[40px] sm:rounded-[64px] bg-lavender text-slate-800 shadow-xl border border-white"
+                        className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-between min-h-[340px] sm:min-h-[460px] rounded-[40px] sm:rounded-[64px] bg-red-50/50 shadow-xl border border-white px-6 py-10 sm:px-20 sm:py-0 group"
                       >
-                        <div className="space-y-4 sm:space-y-8 relative z-10 max-w-2xl">
-                          <h1 className="text-3xl sm:text-7xl font-black leading-[1.1] tracking-tighter text-slate-900">
-                            Affordable medicines<br />across India
-                          </h1>
-                          <p className="text-primary font-bold text-sm sm:text-3xl tracking-tight">Sahi Dawai, Sahi Daam pe</p>
-                        </div>
-                        <div className="absolute -right-10 sm:right-20 top-1/2 -translate-y-1/2 opacity-20 sm:opacity-100">
-                          <motion.div
-                            animate={{ scale: [1, 1.02, 1], rotate: [0, 1, 0] }}
-                            transition={{ duration: 5, repeat: Infinity }}
-                            className="text-primary"
-                          >
-                            <HeartPulse className="w-48 h-48 sm:w-[340px] sm:h-[340px]" strokeWidth={1} />
-                          </motion.div>
-                        </div>
-                      </motion.div>
-                    </CarouselItem>
+                         <div className="absolute top-0 right-0 w-full h-full opacity-20 pointer-events-none">
+                            <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" className="absolute right-0 top-0 w-full h-full object-cover">
+                               <path fill="#ffb3b3" d="M45.7,-76.3C58.6,-69.3,68,-55.1,75.4,-40.7C82.8,-26.3,88.1,-11.7,85.1,1.7C82.1,15.1,70.6,27.2,60.8,38.5C51,49.8,42.8,60.3,31.7,66.4C20.5,72.4,6.4,73.9,-7.1,72.6C-20.6,71.2,-33.5,67.1,-46.1,60.6C-58.7,54,-71,45.1,-78.9,32.3C-86.8,19.4,-90.3,2.7,-86.6,-12.3C-82.9,-27.3,-71.9,-40.6,-59.1,-48.9C-46.3,-57.2,-31.7,-60.5,-18,-64C-4.3,-67.4,8.5,-70.9,22.4,-73C36.3,-75.1,51.3,-75.8,45.7,-76.3Z" transform="translate(400 300) scale(4)" />
+                            </svg>
+                         </div>
 
-                    <CarouselItem>
-                      <div className="relative overflow-hidden p-8 sm:p-20 flex flex-col justify-center min-h-[220px] sm:min-h-[460px] rounded-[40px] sm:rounded-[64px] bg-sahi-pink text-slate-900 shadow-xl border border-white">
-                        <div className="space-y-4 max-w-2xl relative z-10">
-                          <Badge className="bg-primary/20 text-primary border-primary/30 font-black px-4 py-1 rounded-full uppercase tracking-widest text-[10px]">Matrix AI</Badge>
-                          <h2 className="text-3xl sm:text-7xl font-black leading-[1.1] tracking-tighter">Save up to 80% on<br />Clinical Generics</h2>
-                          <p className="text-slate-600 font-bold text-sm sm:text-2xl">Verified molecules with guaranteed efficacy.</p>
-                        </div>
-                      </div>
+                         <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6 pt-0 sm:pt-0">
+                            <h1 className="text-3xl sm:text-[3.5rem] font-black leading-[1.2] tracking-tighter text-slate-900 font-outfit uppercase">
+                               Affordable Solutions for <br className="hidden sm:block" />
+                               <span className="text-primary">Everyday Care</span>
+                            </h1>
+
+                            <div className="flex flex-col gap-2 sm:gap-3 mt-2 sm:mt-4 w-full items-center sm:items-start">
+                               <div className="flex items-center gap-3">
+                                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#25D366] flex items-center justify-center shrink-0 shadow-lg shadow-green-500/20">
+                                     <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                                  </div>
+                                  <span className="text-slate-800 font-bold uppercase tracking-[0.2em] text-[10px] sm:text-xs">Trusted by 10L+ users</span>
+                               </div>
+                               <div className="flex items-center gap-3">
+                                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#25D366] flex items-center justify-center shrink-0 shadow-lg shadow-green-500/20">
+                                     <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                                  </div>
+                                  <span className="text-slate-800 font-bold uppercase tracking-[0.2em] text-[10px] sm:text-xs">Save Upto 80%</span>
+                               </div>
+                            </div>
+
+                            <div 
+                               onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); document.querySelector('input')?.focus(); }}
+                               className="w-full max-w-md mt-4 sm:mt-6 bg-white rounded-full p-1.5 shadow-2xl shadow-primary/10 flex items-center border border-slate-100 relative group/search cursor-pointer hover:scale-[1.02] transition-transform"
+                            >
+                               <div className="pl-4">
+                                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                               </div>
+                               <div className="flex-1 bg-transparent border-none px-4 text-xs sm:text-sm font-bold text-slate-400">
+                                  Search for Healthcare Products
+                               </div>
+                               <button className="bg-primary hover:bg-primary/90 text-white font-black text-[10px] sm:text-xs tracking-widest uppercase px-6 py-3 sm:py-4 rounded-full transition-all shadow-lg shrink-0">
+                                  Search
+                               </button>
+                            </div>
+                         </div>
+
+                         <div className="relative z-10 w-full sm:w-5/12 flex justify-center mt-10 sm:mt-0">
+                            <div className="relative w-48 h-48 sm:w-[400px] sm:h-[400px] rounded-full border-[10px] sm:border-[16px] border-white shadow-2xl overflow-hidden bg-white">
+                               <Image 
+                                  src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
+                                  alt="Healthcare Professional" 
+                                  fill
+                                  className="object-cover object-top" 
+                               />
+                            </div>
+                         </div>
+                      </motion.div>
                     </CarouselItem>
                   </>
                 )}
@@ -138,7 +166,24 @@ export default function Home() {
             </Carousel>
           </section>
 
-          {/* Quick Actions Grid - MATCHING REFERENCE IMAGE */}
+          {/* Place Your Order Via Call Strip */}
+          <section className="w-full bg-white border border-slate-100 shadow-xl rounded-[24px] sm:rounded-[40px] p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between mt-4">
+             <div className="flex flex-col text-center sm:text-left">
+                <span className="text-[10px] sm:text-sm font-black text-slate-400 tracking-[0.3em] uppercase mb-1">Place</span>
+                <span className="text-lg sm:text-3xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Your Order Via</span>
+             </div>
+             <div className="flex flex-row items-center justify-center gap-4 sm:gap-6 mt-6 sm:mt-0 w-full sm:w-auto">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                   <Phone className="w-5 h-5 sm:w-7 sm:h-7 text-green-600" />
+                </div>
+                <div className="flex flex-col border-l-2 border-slate-100 pl-4 sm:pl-6 text-left">
+                   <span className="text-[9px] sm:text-xs font-bold text-slate-400 tracking-[0.2em] uppercase mb-1">Call Us On</span>
+                   <span className="text-base sm:text-2xl font-black text-slate-800 tracking-tighter">+91 96069 73757</span>
+                </div>
+             </div>
+          </section>
+
+          {/* Quick Actions Grid */}
           <section className="grid grid-cols-3 gap-2 sm:gap-8">
             {[
               { label: 'Upload prescription', href: '/prescription', color: 'bg-lavender', iconColor: 'bg-primary text-white', icon: FileText },
