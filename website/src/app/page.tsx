@@ -102,10 +102,10 @@ export default function Home() {
                         <motion.div 
                           initial={{ opacity: 0, scale: 0.98 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-between min-h-[380px] sm:min-h-[500px] bg-transparent sm:px-10 sm:py-0 group"
+                          className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-between min-h-[300px] sm:min-h-[400px] bg-transparent sm:px-10 sm:py-0 group"
                         >
-                           <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6 pt-4 sm:pt-0">
-                              <h1 className="text-[1.75rem] sm:text-[4rem] font-black leading-[1.1] tracking-tighter text-slate-900 font-outfit uppercase">
+                           <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-3 sm:gap-4 pt-4 sm:pt-0">
+                              <h1 className="text-[1.5rem] sm:text-[2.5rem] font-black leading-[1.1] tracking-tighter text-slate-900 font-outfit uppercase">
                                  Affordable Solutions for <br className="hidden sm:block" />
                                  <span className="text-primary">Everyday Care</span>
                               </h1>
@@ -127,22 +127,22 @@ export default function Home() {
 
                               <div 
                                  onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => document.querySelector('input')?.focus(), 500); }}
-                                 className="w-full max-w-md mt-6 sm:mt-8 bg-white rounded-full p-1.5 shadow-2xl shadow-primary/10 flex items-center border border-slate-100 relative group/search cursor-pointer hover:scale-[1.02] active:scale-95 transition-all"
+                                 className="w-full max-w-sm mt-4 sm:mt-6 bg-white rounded-full p-1 shadow-xl shadow-primary/5 flex items-center border border-slate-100 relative group/search cursor-pointer hover:scale-[1.02] active:scale-95 transition-all"
                               >
                                  <div className="pl-4">
-                                    <Search className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                                    <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                                  </div>
-                                 <div className="flex-1 bg-transparent border-none px-4 text-[10px] sm:text-sm font-bold text-slate-400">
+                                 <div className="flex-1 bg-transparent border-none px-3 text-[9px] sm:text-xs font-bold text-slate-400">
                                     Search for Healthcare Products
                                  </div>
-                                 <button className="bg-primary hover:bg-primary/90 text-white font-black text-[9px] sm:text-xs tracking-widest uppercase px-6 py-3 sm:py-4 rounded-full transition-all shadow-lg shrink-0">
+                                 <button className="bg-primary hover:bg-primary/90 text-white font-black text-[8px] sm:text-[10px] tracking-widest uppercase px-4 py-2.5 sm:py-3 rounded-full transition-all shadow-lg shrink-0">
                                     Search
                                  </button>
                               </div>
                            </div>
 
-                           <div className="relative z-10 w-full sm:w-5/12 flex justify-center mt-10 sm:mt-0">
-                              <div className="relative w-48 h-48 sm:w-[480px] sm:h-[480px] rounded-[48px] sm:rounded-[80px] border-[8px] sm:border-[16px] border-white shadow-3xl overflow-hidden bg-white/50 backdrop-blur-sm">
+                           <div className="relative z-10 w-full sm:w-5/12 flex justify-center mt-6 sm:mt-0">
+                              <div className="relative w-40 h-40 sm:w-[320px] sm:h-[320px] rounded-[32px] sm:rounded-[48px] border-[6px] sm:border-[10px] border-white shadow-2xl overflow-hidden bg-white/50 backdrop-blur-sm">
                                  <Image 
                                     src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
                                     alt="Healthcare Professional" 
@@ -164,25 +164,25 @@ export default function Home() {
 
         {/* Place Your Order Via Call Strip - Full Width Strip */}
         <div className="w-full bg-white border-b border-slate-100 shadow-sm relative z-20">
-          <div className="max-w-7xl mx-auto px-4 py-6 sm:py-10 flex flex-col sm:flex-row items-center justify-between">
-             <div className="flex flex-col text-center sm:text-left mb-6 sm:mb-0">
-                <span className="text-[10px] sm:text-sm font-black text-slate-400 tracking-[0.3em] uppercase mb-1">Place</span>
-                <span className="text-xl sm:text-4xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Your Order Via</span>
+          <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6 flex flex-col sm:flex-row items-center justify-between">
+             <div className="flex flex-col text-center sm:text-left mb-4 sm:mb-0">
+                <span className="text-[9px] sm:text-xs font-black text-slate-400 tracking-[0.2em] uppercase mb-0.5">Place</span>
+                <span className="text-base sm:text-2xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Your Order Via</span>
              </div>
              
-             <div className="flex flex-row items-center justify-center gap-4 sm:gap-8 w-full sm:w-auto">
-                <div className="w-14 h-14 sm:w-[84px] sm:h-[84px] rounded-full bg-[#10B981]/10 flex items-center justify-center shrink-0 border border-[#10B981]/20">
-                   <Phone className="w-6 h-6 sm:w-10 sm:h-10 text-[#10B981] animate-pulse" />
+             <div className="flex flex-row items-center justify-center gap-3 sm:gap-6 w-full sm:w-auto">
+                <div className="w-10 h-10 sm:w-[60px] sm:h-[60px] rounded-full bg-[#10B981]/10 flex items-center justify-center shrink-0 border border-[#10B981]/20">
+                   <Phone className="w-4 h-4 sm:w-7 sm:h-7 text-[#10B981]" />
                 </div>
-                <div className="flex flex-col border-l-2 border-slate-100 pl-4 sm:pl-8 text-left">
-                   <span className="text-[10px] sm:text-xs font-black text-slate-400 tracking-[0.2em] uppercase mb-1">Call Us On</span>
-                   <span className="text-lg sm:text-4xl font-black text-slate-800 tracking-tighter hover:text-primary transition-colors cursor-pointer">+91 96069 73757</span>
+                <div className="flex flex-col border-l-2 border-slate-100 pl-3 sm:pl-6 text-left">
+                   <span className="text-[9px] sm:text-xs font-black text-slate-400 tracking-[0.1em] uppercase mb-0.5">Call Us On</span>
+                   <span className="text-sm sm:text-2xl font-black text-slate-800 tracking-tighter hover:text-primary transition-colors cursor-pointer">+91 96069 73757</span>
                 </div>
              </div>
           </div>
         </div>
         
-        <main className="max-w-7xl mx-auto px-4 py-12 sm:py-24 space-y-16 sm:space-y-32 pb-24 sm:pb-40">
+        <main className="max-w-7xl mx-auto px-4 py-8 sm:py-16 space-y-12 sm:space-y-24 pb-24 sm:pb-40">
           
           {/* Quick Actions Grid */}
           <section className="grid grid-cols-3 gap-2 sm:gap-8">
