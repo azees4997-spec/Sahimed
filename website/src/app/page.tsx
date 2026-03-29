@@ -71,118 +71,119 @@ export default function Home() {
     <PageTransition>
       <div className="min-h-screen bg-[#F8FAFC]">
         <Navbar />
-        
-        <main className="max-w-7xl mx-auto px-4 py-4 sm:py-10 space-y-6 sm:space-y-16 pb-24 sm:pb-40">
-          
-          {/* Main Banner */}
-          <section className="relative w-full">
-            <Carousel setApi={setApi} plugins={[plugin.current]} className="w-full">
-              <CarouselContent>
-                {isBannersLoading ? (
-                  <CarouselItem>
-                     <Skeleton className="w-full min-h-[220px] sm:min-h-[460px] rounded-[40px] sm:rounded-[64px]" />
-                  </CarouselItem>
-                ) : (banners && banners.length > 0) ? (
-                  banners.map((b) => (
-                    <CarouselItem key={b.id}>
-                      <div className="relative overflow-hidden p-8 sm:p-20 flex flex-col justify-center min-h-[220px] sm:min-h-[460px] rounded-[40px] sm:rounded-[64px] bg-slate-900 border border-white shadow-xl group">
-                        {b.imageUrl && <Image src={b.imageUrl} alt={b.title || 'Banner'} fill className="object-cover absolute inset-0 opacity-50 group-hover:scale-105 transition-transform duration-700" />}
-                        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent pointer-events-none" />
-                        <div className="space-y-4 max-w-2xl relative z-10 pointer-events-none">
-                          <Badge className="bg-primary/20 text-primary border-primary/30 font-black px-4 py-1 rounded-full uppercase tracking-widest text-[10px]">Sahimed Exclusive</Badge>
-                          <h2 className="text-3xl sm:text-7xl font-black leading-[1.1] tracking-tighter text-white">{b.title}</h2>
-                          {b.subtitle && <p className="text-slate-300 font-bold text-sm sm:text-2xl">{b.subtitle}</p>}
-                          {b.hindiTagline && <p className="text-primary font-black text-xs sm:text-lg tracking-widest mt-4 uppercase">{b.hindiTagline}</p>}
-                        </div>
-                      </div>
-                    </CarouselItem>
-                  ))
-                ) : (
-                  <>
+        <div className="bg-[#FFF8F8] w-full border-b border-rose-100/30">
+          <div className="max-w-7xl mx-auto px-2 sm:px-6 pt-2 sm:pt-6 pb-4 sm:pb-12">
+            {/* Main Banner */}
+            <section className="relative w-full">
+              <Carousel setApi={setApi} plugins={[plugin.current]} className="w-full">
+                <CarouselContent>
+                  {isBannersLoading ? (
                     <CarouselItem>
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-between min-h-[340px] sm:min-h-[460px] rounded-[40px] sm:rounded-[64px] bg-red-50/50 shadow-xl border border-white px-6 py-10 sm:px-20 sm:py-0 group"
-                      >
-                         <div className="absolute top-0 right-0 w-full h-full opacity-20 pointer-events-none">
-                            <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" className="absolute right-0 top-0 w-full h-full object-cover">
-                               <path fill="#ffb3b3" d="M45.7,-76.3C58.6,-69.3,68,-55.1,75.4,-40.7C82.8,-26.3,88.1,-11.7,85.1,1.7C82.1,15.1,70.6,27.2,60.8,38.5C51,49.8,42.8,60.3,31.7,66.4C20.5,72.4,6.4,73.9,-7.1,72.6C-20.6,71.2,-33.5,67.1,-46.1,60.6C-58.7,54,-71,45.1,-78.9,32.3C-86.8,19.4,-90.3,2.7,-86.6,-12.3C-82.9,-27.3,-71.9,-40.6,-59.1,-48.9C-46.3,-57.2,-31.7,-60.5,-18,-64C-4.3,-67.4,8.5,-70.9,22.4,-73C36.3,-75.1,51.3,-75.8,45.7,-76.3Z" transform="translate(400 300) scale(4)" />
-                            </svg>
-                         </div>
-
-                         <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6 pt-0 sm:pt-0">
-                            <h1 className="text-3xl sm:text-[3.5rem] font-black leading-[1.2] tracking-tighter text-slate-900 font-outfit uppercase">
-                               Affordable Solutions for <br className="hidden sm:block" />
-                               <span className="text-primary">Everyday Care</span>
-                            </h1>
-
-                            <div className="flex flex-col gap-2 sm:gap-3 mt-2 sm:mt-4 w-full items-center sm:items-start">
-                               <div className="flex items-center gap-3">
-                                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#25D366] flex items-center justify-center shrink-0 shadow-lg shadow-green-500/20">
-                                     <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                                  </div>
-                                  <span className="text-slate-800 font-bold uppercase tracking-[0.2em] text-[10px] sm:text-xs">Trusted by 10L+ users</span>
-                               </div>
-                               <div className="flex items-center gap-3">
-                                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#25D366] flex items-center justify-center shrink-0 shadow-lg shadow-green-500/20">
-                                     <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                                  </div>
-                                  <span className="text-slate-800 font-bold uppercase tracking-[0.2em] text-[10px] sm:text-xs">Save Upto 80%</span>
-                               </div>
-                            </div>
-
-                            <div 
-                               onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); document.querySelector('input')?.focus(); }}
-                               className="w-full max-w-md mt-4 sm:mt-6 bg-white rounded-full p-1.5 shadow-2xl shadow-primary/10 flex items-center border border-slate-100 relative group/search cursor-pointer hover:scale-[1.02] transition-transform"
-                            >
-                               <div className="pl-4">
-                                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                               </div>
-                               <div className="flex-1 bg-transparent border-none px-4 text-xs sm:text-sm font-bold text-slate-400">
-                                  Search for Healthcare Products
-                               </div>
-                               <button className="bg-primary hover:bg-primary/90 text-white font-black text-[10px] sm:text-xs tracking-widest uppercase px-6 py-3 sm:py-4 rounded-full transition-all shadow-lg shrink-0">
-                                  Search
-                               </button>
-                            </div>
-                         </div>
-
-                         <div className="relative z-10 w-full sm:w-5/12 flex justify-center mt-10 sm:mt-0">
-                            <div className="relative w-48 h-48 sm:w-[400px] sm:h-[400px] rounded-full border-[10px] sm:border-[16px] border-white shadow-2xl overflow-hidden bg-white">
-                               <Image 
-                                  src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
-                                  alt="Healthcare Professional" 
-                                  fill
-                                  className="object-cover object-top" 
-                               />
-                            </div>
-                         </div>
-                      </motion.div>
+                       <Skeleton className="w-full min-h-[220px] sm:min-h-[460px] rounded-[32px] sm:rounded-[48px]" />
                     </CarouselItem>
-                  </>
-                )}
-              </CarouselContent>
-            </Carousel>
-          </section>
+                  ) : (banners && banners.length > 0) ? (
+                    banners.map((b) => (
+                      <CarouselItem key={b.id}>
+                        <div className="relative overflow-hidden p-8 sm:p-20 flex flex-col justify-center min-h-[220px] sm:min-h-[460px] rounded-[32px] sm:rounded-[48px] bg-slate-900 border border-white shadow-xl group">
+                          {b.imageUrl && <Image src={b.imageUrl} alt={b.title || 'Banner'} fill className="object-cover absolute inset-0 opacity-50 group-hover:scale-105 transition-transform duration-700" />}
+                          <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent pointer-events-none" />
+                          <div className="space-y-4 max-w-2xl relative z-10 pointer-events-none">
+                            <Badge className="bg-primary/20 text-primary border-primary/30 font-black px-4 py-1 rounded-full uppercase tracking-widest text-[10px]">Sahimed Exclusive</Badge>
+                            <h2 className="text-3xl sm:text-7xl font-black leading-[1.1] tracking-tighter text-white">{b.title}</h2>
+                            {b.subtitle && <p className="text-slate-300 font-bold text-sm sm:text-2xl">{b.subtitle}</p>}
+                            {b.hindiTagline && <p className="text-primary font-black text-xs sm:text-lg tracking-widest mt-4 uppercase">{b.hindiTagline}</p>}
+                          </div>
+                        </div>
+                      </CarouselItem>
+                    ))
+                  ) : (
+                    <>
+                      <CarouselItem>
+                        <motion.div 
+                          initial={{ opacity: 0, scale: 0.98 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-between min-h-[380px] sm:min-h-[500px] bg-transparent sm:px-10 sm:py-0 group"
+                        >
+                           <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6 pt-4 sm:pt-0">
+                              <h1 className="text-[1.75rem] sm:text-[4rem] font-black leading-[1.1] tracking-tighter text-slate-900 font-outfit uppercase">
+                                 Affordable Solutions for <br className="hidden sm:block" />
+                                 <span className="text-primary">Everyday Care</span>
+                              </h1>
 
-          {/* Place Your Order Via Call Strip */}
-          <section className="w-full bg-white border border-slate-100 shadow-xl rounded-[24px] sm:rounded-[40px] p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between mt-4">
-             <div className="flex flex-col text-center sm:text-left">
+                              <div className="flex flex-col gap-2 sm:gap-3 mt-1 sm:mt-4 w-full items-center sm:items-start">
+                                 <div className="flex items-center gap-3">
+                                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#10B981] flex items-center justify-center shrink-0 shadow-lg shadow-green-500/20">
+                                       <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                                    </div>
+                                    <span className="text-slate-800 font-extrabold uppercase tracking-widest text-[9px] sm:text-[11px]">Trusted by 10L+ users</span>
+                                 </div>
+                                 <div className="flex items-center gap-3">
+                                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#10B981] flex items-center justify-center shrink-0 shadow-lg shadow-green-500/20">
+                                       <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                                    </div>
+                                    <span className="text-slate-800 font-extrabold uppercase tracking-widest text-[9px] sm:text-[11px]">Save Upto 80%</span>
+                                 </div>
+                              </div>
+
+                              <div 
+                                 onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => document.querySelector('input')?.focus(), 500); }}
+                                 className="w-full max-w-md mt-6 sm:mt-8 bg-white rounded-full p-1.5 shadow-2xl shadow-primary/10 flex items-center border border-slate-100 relative group/search cursor-pointer hover:scale-[1.02] active:scale-95 transition-all"
+                              >
+                                 <div className="pl-4">
+                                    <Search className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                                 </div>
+                                 <div className="flex-1 bg-transparent border-none px-4 text-[10px] sm:text-sm font-bold text-slate-400">
+                                    Search for Healthcare Products
+                                 </div>
+                                 <button className="bg-primary hover:bg-primary/90 text-white font-black text-[9px] sm:text-xs tracking-widest uppercase px-6 py-3 sm:py-4 rounded-full transition-all shadow-lg shrink-0">
+                                    Search
+                                 </button>
+                              </div>
+                           </div>
+
+                           <div className="relative z-10 w-full sm:w-5/12 flex justify-center mt-10 sm:mt-0">
+                              <div className="relative w-48 h-48 sm:w-[480px] sm:h-[480px] rounded-[48px] sm:rounded-[80px] border-[8px] sm:border-[16px] border-white shadow-3xl overflow-hidden bg-white/50 backdrop-blur-sm">
+                                 <Image 
+                                    src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
+                                    alt="Healthcare Professional" 
+                                    fill
+                                    priority
+                                    className="object-cover object-top hover:scale-110 transition-transform duration-1000" 
+                                 />
+                              </div>
+                           </div>
+                        </motion.div>
+                      </CarouselItem>
+                    </>
+                  )}
+                </CarouselContent>
+              </Carousel>
+            </section>
+          </div>
+        </div>
+
+        {/* Place Your Order Via Call Strip - Full Width Strip */}
+        <div className="w-full bg-white border-b border-slate-100 shadow-sm relative z-20">
+          <div className="max-w-7xl mx-auto px-4 py-6 sm:py-10 flex flex-col sm:flex-row items-center justify-between">
+             <div className="flex flex-col text-center sm:text-left mb-6 sm:mb-0">
                 <span className="text-[10px] sm:text-sm font-black text-slate-400 tracking-[0.3em] uppercase mb-1">Place</span>
-                <span className="text-lg sm:text-3xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Your Order Via</span>
+                <span className="text-xl sm:text-4xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Your Order Via</span>
              </div>
-             <div className="flex flex-row items-center justify-center gap-4 sm:gap-6 mt-6 sm:mt-0 w-full sm:w-auto">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-                   <Phone className="w-5 h-5 sm:w-7 sm:h-7 text-green-600" />
+             
+             <div className="flex flex-row items-center justify-center gap-4 sm:gap-8 w-full sm:w-auto">
+                <div className="w-14 h-14 sm:w-[84px] sm:h-[84px] rounded-full bg-[#10B981]/10 flex items-center justify-center shrink-0 border border-[#10B981]/20">
+                   <Phone className="w-6 h-6 sm:w-10 sm:h-10 text-[#10B981] animate-pulse" />
                 </div>
-                <div className="flex flex-col border-l-2 border-slate-100 pl-4 sm:pl-6 text-left">
-                   <span className="text-[9px] sm:text-xs font-bold text-slate-400 tracking-[0.2em] uppercase mb-1">Call Us On</span>
-                   <span className="text-base sm:text-2xl font-black text-slate-800 tracking-tighter">+91 96069 73757</span>
+                <div className="flex flex-col border-l-2 border-slate-100 pl-4 sm:pl-8 text-left">
+                   <span className="text-[10px] sm:text-xs font-black text-slate-400 tracking-[0.2em] uppercase mb-1">Call Us On</span>
+                   <span className="text-lg sm:text-4xl font-black text-slate-800 tracking-tighter hover:text-primary transition-colors cursor-pointer">+91 96069 73757</span>
                 </div>
              </div>
-          </section>
-
+          </div>
+        </div>
+        
+        <main className="max-w-7xl mx-auto px-4 py-12 sm:py-24 space-y-16 sm:space-y-32 pb-24 sm:pb-40">
+          
           {/* Quick Actions Grid */}
           <section className="grid grid-cols-3 gap-2 sm:gap-8">
             {[

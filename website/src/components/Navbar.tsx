@@ -368,9 +368,9 @@ export default function Navbar() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.98 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] overflow-hidden z-[110] border border-slate-100 shadow-2xl"
+                className="absolute top-[calc(100%+12px)] left-0 right-0 bg-white/95 backdrop-blur-xl rounded-[28px] overflow-hidden z-[110] border border-white/40 shadow-3xl ring-1 ring-black/5"
               >
-                <div className="max-h-[40vh] sm:max-h-[500px] overflow-y-auto scrollbar-hide py-1 sm:py-2">
+                <div className="max-h-[60vh] sm:max-h-[500px] overflow-y-auto scrollbar-hide py-2 sm:py-3">
                   {displayedSuggestions.map((item) => (
                     <div 
                       key={item.id}
