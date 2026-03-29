@@ -103,8 +103,6 @@ export default function Home() {
                         animate={{ opacity: 1, y: 0 }}
                         className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-between min-h-[220px] sm:h-[360px] group"
                       >
-                         {/* Background Blob removed or reduced to avoid clutter */}
-
                          <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-3 sm:gap-4">
                             <h1 className="text-2xl sm:text-4xl font-black leading-[1.1] tracking-tighter text-slate-900 font-outfit uppercase">
                                Affordable Solutions for <br className="hidden sm:block" />
@@ -138,7 +136,7 @@ export default function Home() {
                                </div>
                                <button className="bg-primary hover:bg-primary/90 text-white font-black text-[8px] sm:text-[9.5px] tracking-widest uppercase px-4 py-2 sm:py-2.5 rounded-full shadow-md">
                                   Search
-                               </button>
+                                </button>
                             </div>
                          </div>
 
@@ -159,44 +157,28 @@ export default function Home() {
                 )}
               </CarouselContent>
             </Carousel>
+
+            {/* QUICK ACTIONS INTEGRATED INTO HERO CONTAINER */}
+            <div className="mt-8 grid grid-cols-3 gap-3 sm:gap-6">
+              {[
+                { label: 'Upload prescription', href: '/prescription', color: 'bg-lavender', iconColor: 'bg-primary text-white', icon: FileText },
+                { label: 'Order Via WhatsApp', href: 'https://wa.me/91XXXXXXXXXX', color: 'bg-green-50', iconColor: 'bg-[#25D366] text-white', icon: () => <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" className="w-4 h-4 sm:w-6 sm:h-6"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" /><path d="M9 10a5 5 0 1 1 5 5h-1a.5.5 0 0 0 0 1h1a5 5 0 1 1 5 5" /></svg> },
+                { label: 'Call for Medicines', href: 'tel:+91XXXXXXXXXX', color: 'bg-sahi-pink', iconColor: 'bg-rose-500 text-white', icon: Phone }
+              ].map((action, i) => (
+                <motion.div key={i} whileTap={{ scale: 0.96 }}>
+                  <Link href={action.href} className={cn("group h-full p-4 sm:p-7 rounded-[24px] sm:rounded-[36px] flex flex-col items-center text-center gap-2 sm:gap-4 transition-all border border-white shadow-sm overflow-hidden", action.color)}>
+                     <div className={cn("w-9 h-9 sm:w-14 sm:h-14 flex items-center justify-center rounded-[12px] sm:rounded-[18px] shadow-md", action.iconColor)}>
+                        <action.icon className="w-5 h-5 sm:w-7 sm:h-7" />
+                     </div>
+                     <h3 className="font-outfit font-bold text-slate-800 text-[9px] sm:text-[11px] tracking-tight leading-tight uppercase line-clamp-2">{action.label}</h3>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* Place Your Order Via Call Strip (Thinner for Above-The-Fold) */}
-        <section className="w-full bg-white border-b border-slate-100 shadow-sm">
-           <div className="max-w-7xl mx-auto px-4 py-2 sm:py-3 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-14">
-              <div className="flex items-center gap-2">
-                 <span className="text-[9.5px] font-black text-slate-400 tracking-[0.2em] uppercase">Place Your Order Via</span>
-              </div>
-              <div className="flex items-center gap-3">
-                 <div className="w-7 h-7 sm:w-8.5 sm:h-8.5 rounded-full bg-green-50 flex items-center justify-center">
-                    <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600" />
-                 </div>
-                 <div className="flex flex-col">
-                    <span className="text-[8.5px] font-bold text-slate-400 tracking-widest uppercase leading-none mb-0.5">Call Us On</span>
-                    <span className="text-xs sm:text-sm font-black text-slate-800 tracking-tight">+91 96069 73757</span>
-                 </div>
-              </div>
-           </div>
-        </section>
-
-        <main className="max-w-7xl mx-auto px-4 py-6 sm:py-10 space-y-8 sm:space-y-16 pb-24 sm:pb-40">
-          <section className="grid grid-cols-3 gap-2 sm:gap-4 px-1">
-            {[
-              { label: 'Upload Rx', href: '/prescription', color: 'bg-lavender', iconColor: 'bg-primary text-white', icon: FileText },
-              { label: 'WhatsApp', href: 'https://wa.me/91XXXXXXXXXX', color: 'bg-green-50', iconColor: 'bg-[#25D366] text-white', icon: () => <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" className="w-4 h-4 sm:w-6 sm:h-6"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" /><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1" /></svg> },
-              { label: 'Call Now', href: 'tel:+91XXXXXXXXXX', color: 'bg-sahi-pink', iconColor: 'bg-rose-500 text-white', icon: Phone }
-            ].map((action, i) => (
-              <motion.div key={i} whileTap={{ scale: 0.96 }}>
-                <Link href={action.href} className={cn("group h-full p-2.5 sm:p-5 rounded-[16px] sm:rounded-[24px] flex flex-col items-center text-center gap-1.5 sm:gap-2.5 transition-all border border-white shadow-sm overflow-hidden", action.color)}>
-                  <div className={cn("w-7 h-7 sm:w-11 sm:h-11 flex items-center justify-center rounded-[8px] sm:rounded-[12px] shadow-md", action.iconColor)}>
-                    <action.icon className="w-4 h-4 sm:w-6 sm:h-6" />
-                  </div>
-                  <h3 className="font-outfit font-bold text-slate-700 text-[8px] sm:text-[9.5px] tracking-tight leading-tight uppercase line-clamp-1">{action.label}</h3>
-                </Link>
-              </motion.div>
-            ))}
-          </section>
+        <main className="max-w-7xl mx-auto px-4 py-8 sm:py-16 space-y-12 sm:space-y-24 pb-24 sm:pb-40">
 
           {/* Most Popular Brands (Best Sellers) */}
           {(isBestLoading || (bestSellers && bestSellers.length > 0)) && (
@@ -219,25 +201,25 @@ export default function Home() {
             </section>
           )}
 
-          <section className="space-y-3 sm:space-y-6">
+          <section className="space-y-4 sm:space-y-8">
             <div className="flex items-center justify-between px-2">
-              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tighter uppercase font-outfit">Shop by category</h2>
-              <Link href="/categories" className="text-[8px] sm:text-[9.5px] font-black tracking-widest text-primary uppercase flex items-center gap-1">Explore All <ChevronRight className="w-3 h-3" /></Link>
+              <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Shop by category</h2>
+              <Link href="/categories" className="text-[9px] sm:text-[11px] font-black tracking-widest text-primary uppercase flex items-center gap-1.5">Explore All <ChevronRight className="w-3.5 h-3.5" /></Link>
             </div>
-            <div className="flex gap-3 sm:gap-5 overflow-x-auto scrollbar-hide pb-2 px-2">
+            <div className="flex gap-4 sm:gap-10 overflow-x-auto scrollbar-hide pb-4 px-2">
               {isCatsLoading ? (
-                [...Array(6)].map((_, i) => <Skeleton className="w-14 h-14 sm:w-20 sm:h-20 rounded-[12px] shrink-0" key={i} />)
+                [...Array(6)].map((_, i) => <Skeleton className="w-20 h-20 sm:w-32 sm:h-32 rounded-[24px] shrink-0" key={i} />)
               ) : categories?.map((cat: any, i) => (
-                <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-2 shrink-0">
+                <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-3 shrink-0">
                   <motion.div 
-                    whileHover={{ y: -3 }}
+                    whileHover={{ y: -5 }}
                     className={cn(
-                      "w-14 h-14 sm:w-20 sm:h-20 rounded-[12px] sm:rounded-[20px] flex items-center justify-center border border-white shadow-sm p-1.5",
+                      "w-20 h-20 sm:w-32 sm:h-32 rounded-[24px] sm:rounded-[48px] flex items-center justify-center border border-white shadow-sm p-4",
                       i % 4 === 0 ? "bg-lavender" : i % 4 === 1 ? "bg-sahi-pink" : i % 4 === 2 ? "bg-sahi-blue" : "bg-sahi-green"
                     )}>
-                    <Image src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} alt={cat.name} width={80} height={80} className="object-contain w-full h-full" />
+                    <Image src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} alt={cat.name} width={128} height={128} className="object-contain w-full h-full" />
                   </motion.div>
-                  <span className="text-[8px] sm:text-[9.5px] font-black text-slate-500 tracking-tight uppercase line-clamp-1">{cat.name}</span>
+                  <span className="text-[9px] sm:text-xs font-black text-slate-500 tracking-tight uppercase">{cat.name}</span>
                 </Link>
               ))}
             </div>
