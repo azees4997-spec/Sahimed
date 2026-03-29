@@ -71,132 +71,132 @@ export default function Home() {
     <PageTransition>
       <div className="min-h-screen bg-[#F8FAFC]">
         <Navbar />
-        <div className="bg-[#FFF8F8] w-full border-b border-rose-100/30">
-          <div className="max-w-7xl mx-auto px-2 sm:px-6 pt-2 sm:pt-6 pb-4 sm:pb-12">
-            {/* Main Banner */}
-            <section className="relative w-full">
-              <Carousel setApi={setApi} plugins={[plugin.current]} className="w-full">
-                <CarouselContent>
-                  {isBannersLoading ? (
-                    <CarouselItem>
-                       <Skeleton className="w-full min-h-[220px] sm:min-h-[460px] rounded-[32px] sm:rounded-[48px]" />
-                    </CarouselItem>
-                  ) : (banners && banners.length > 0) ? (
-                    banners.map((b) => (
-                      <CarouselItem key={b.id}>
-                        <div className="relative overflow-hidden p-8 sm:p-20 flex flex-col justify-center min-h-[220px] sm:min-h-[460px] rounded-[32px] sm:rounded-[48px] bg-slate-900 border border-white shadow-xl group">
-                          {b.imageUrl && <Image src={b.imageUrl} alt={b.title || 'Banner'} fill className="object-cover absolute inset-0 opacity-50 group-hover:scale-105 transition-transform duration-700" />}
-                          <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent pointer-events-none" />
-                          <div className="space-y-4 max-w-2xl relative z-10 pointer-events-none">
-                            <Badge className="bg-primary/20 text-primary border-primary/30 font-black px-4 py-1 rounded-full uppercase tracking-widest text-[10px]">Sahimed Exclusive</Badge>
-                            <h2 className="text-3xl sm:text-7xl font-black leading-[1.1] tracking-tighter text-white">{b.title}</h2>
-                            {b.subtitle && <p className="text-slate-300 font-bold text-sm sm:text-2xl">{b.subtitle}</p>}
-                            {b.hindiTagline && <p className="text-primary font-black text-xs sm:text-lg tracking-widest mt-4 uppercase">{b.hindiTagline}</p>}
-                          </div>
-                        </div>
-                      </CarouselItem>
-                    ))
-                  ) : (
-                    <>
-                      <CarouselItem>
-                        <motion.div 
-                          initial={{ opacity: 0, scale: 0.98 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-between min-h-[300px] sm:min-h-[400px] bg-transparent sm:px-10 sm:py-0 group"
-                        >
-                           <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-3 sm:gap-4 pt-4 sm:pt-0">
-                              <h1 className="text-[1.5rem] sm:text-[2.5rem] font-black leading-[1.1] tracking-tighter text-slate-900 font-outfit uppercase">
-                                 Affordable Solutions for <br className="hidden sm:block" />
-                                 <span className="text-primary">Everyday Care</span>
-                              </h1>
-
-                              <div className="flex flex-col gap-2 sm:gap-3 mt-1 sm:mt-4 w-full items-center sm:items-start">
-                                 <div className="flex items-center gap-3">
-                                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#10B981] flex items-center justify-center shrink-0 shadow-lg shadow-green-500/20">
-                                       <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                                    </div>
-                                    <span className="text-slate-800 font-extrabold uppercase tracking-widest text-[9px] sm:text-[11px]">Trusted by 10L+ users</span>
-                                 </div>
-                                 <div className="flex items-center gap-3">
-                                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#10B981] flex items-center justify-center shrink-0 shadow-lg shadow-green-500/20">
-                                       <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                                    </div>
-                                    <span className="text-slate-800 font-extrabold uppercase tracking-widest text-[9px] sm:text-[11px]">Save Upto 80%</span>
-                                 </div>
-                              </div>
-
-                              <div 
-                                 onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => document.querySelector('input')?.focus(), 500); }}
-                                 className="w-full max-w-sm mt-4 sm:mt-6 bg-white rounded-full p-1 shadow-xl shadow-primary/5 flex items-center border border-slate-100 relative group/search cursor-pointer hover:scale-[1.02] active:scale-95 transition-all"
-                              >
-                                 <div className="pl-4">
-                                    <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-                                 </div>
-                                 <div className="flex-1 bg-transparent border-none px-3 text-[9px] sm:text-xs font-bold text-slate-400">
-                                    Search for Healthcare Products
-                                 </div>
-                                 <button className="bg-primary hover:bg-primary/90 text-white font-black text-[8px] sm:text-[10px] tracking-widest uppercase px-4 py-2.5 sm:py-3 rounded-full transition-all shadow-lg shrink-0">
-                                    Search
-                                 </button>
-                              </div>
-                           </div>
-
-                           <div className="relative z-10 w-full sm:w-5/12 flex justify-center mt-6 sm:mt-0">
-                              <div className="relative w-40 h-40 sm:w-[320px] sm:h-[320px] rounded-[32px] sm:rounded-[48px] border-[6px] sm:border-[10px] border-white shadow-2xl overflow-hidden bg-white/50 backdrop-blur-sm">
-                                 <Image 
-                                    src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
-                                    alt="Healthcare Professional" 
-                                    fill
-                                    priority
-                                    className="object-cover object-top hover:scale-110 transition-transform duration-1000" 
-                                 />
-                              </div>
-                           </div>
-                        </motion.div>
-                      </CarouselItem>
-                    </>
-                  )}
-                </CarouselContent>
-              </Carousel>
-            </section>
-          </div>
-        </div>
-
-        {/* Place Your Order Via Call Strip - Full Width Strip */}
-        <div className="w-full bg-white border-b border-slate-100 shadow-sm relative z-20">
-          <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6 flex flex-col sm:flex-row items-center justify-between">
-             <div className="flex flex-col text-center sm:text-left mb-4 sm:mb-0">
-                <span className="text-[9px] sm:text-xs font-black text-slate-400 tracking-[0.2em] uppercase mb-0.5">Place</span>
-                <span className="text-base sm:text-2xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Your Order Via</span>
-             </div>
-             
-             <div className="flex flex-row items-center justify-center gap-3 sm:gap-6 w-full sm:w-auto">
-                <div className="w-10 h-10 sm:w-[60px] sm:h-[60px] rounded-full bg-[#10B981]/10 flex items-center justify-center shrink-0 border border-[#10B981]/20">
-                   <Phone className="w-4 h-4 sm:w-7 sm:h-7 text-[#10B981]" />
-                </div>
-                <div className="flex flex-col border-l-2 border-slate-100 pl-3 sm:pl-6 text-left">
-                   <span className="text-[9px] sm:text-xs font-black text-slate-400 tracking-[0.1em] uppercase mb-0.5">Call Us On</span>
-                   <span className="text-sm sm:text-2xl font-black text-slate-800 tracking-tighter hover:text-primary transition-colors cursor-pointer">+91 96069 73757</span>
-                </div>
-             </div>
-          </div>
-        </div>
         
-        <main className="max-w-7xl mx-auto px-4 py-8 sm:py-16 space-y-12 sm:space-y-24 pb-24 sm:pb-40">
-          
-          {/* Quick Actions Grid */}
-          <section className="grid grid-cols-3 gap-2 sm:gap-8">
+        {/* Full Width Hero HeroSection (Outside main container) */}
+        <section className="relative w-full bg-[#FFF9F9] border-b border-rose-50/50">
+          <div className="max-w-7xl mx-auto px-4 py-6 sm:py-16">
+            <Carousel setApi={setApi} plugins={[plugin.current]} className="w-full">
+              <CarouselContent>
+                {isBannersLoading ? (
+                  <CarouselItem>
+                     <Skeleton className="w-full min-h-[300px] sm:min-h-[500px] rounded-[32px]" />
+                  </CarouselItem>
+                ) : (banners && banners.length > 0) ? (
+                  banners.map((b) => (
+                    <CarouselItem key={b.id}>
+                      <div className="relative overflow-hidden p-6 sm:p-16 flex flex-col justify-center min-h-[300px] sm:min-h-[500px] rounded-[32px] bg-slate-900 shadow-xl group">
+                        {b.imageUrl && <Image src={b.imageUrl} alt={b.title || 'Banner'} fill className="object-cover absolute inset-0 opacity-40 group-hover:scale-105 transition-transform duration-700" />}
+                        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/60 to-transparent pointer-events-none" />
+                        <div className="space-y-3 max-w-xl relative z-10 pointer-events-none">
+                          <Badge className="bg-primary/20 text-primary border-primary/30 font-black px-3 py-0.5 rounded-full uppercase tracking-widest text-[8px]">Sahimed Exclusive</Badge>
+                          <h2 className="text-2xl sm:text-4xl font-black leading-tight tracking-tighter text-white uppercase font-outfit">{b.title}</h2>
+                          {b.subtitle && <p className="text-slate-300 font-bold text-xs sm:text-lg">{b.subtitle}</p>}
+                        </div>
+                      </div>
+                    </CarouselItem>
+                  ))
+                ) : (
+                  <>
+                    <CarouselItem>
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-between min-h-[340px] sm:min-h-0 sm:h-[480px] group"
+                      >
+                         <div className="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none">
+                            <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" className="absolute right-0 top-0 w-full h-full object-cover">
+                               <path fill="#ffb3b3" d="M45.7,-76.3C58.6,-69.3,68,-55.1,75.4,-40.7C82.8,-26.3,88.1,-11.7,85.1,1.7C82.1,15.1,70.6,27.2,60.8,38.5C51,49.8,42.8,60.3,31.7,66.4C20.5,72.4,6.4,73.9,-7.1,72.6C-20.6,71.2,-33.5,67.1,-46.1,60.6C-58.7,54,-71,45.1,-78.9,32.3C-86.8,19.4,-90.3,2.7,-86.6,-12.3C-82.9,-27.3,-71.9,-40.6,-59.1,-48.9C-46.3,-57.2,-31.7,-60.5,-18,-64C-4.3,-67.4,8.5,-70.9,22.4,-73C36.3,-75.1,51.3,-75.8,45.7,-76.3Z" transform="translate(400 300) scale(4)" />
+                            </svg>
+                         </div>
+
+                         <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-4 sm:gap-5">
+                            <h1 className="text-3xl sm:text-5xl font-black leading-[1.1] tracking-tighter text-slate-900 font-outfit uppercase">
+                               Affordable Solutions for <br className="hidden sm:block" />
+                               <span className="text-primary">Everyday Care</span>
+                            </h1>
+
+                            <div className="flex flex-col gap-2 sm:gap-2.5 w-full items-center sm:items-start">
+                               <div className="flex items-center gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
+                                     <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                                  </div>
+                                  <span className="text-slate-800 font-bold uppercase tracking-[0.1em] text-[10px] sm:text-[11px]">Trusted by 10L+ users</span>
+                               </div>
+                               <div className="flex items-center gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
+                                     <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                                  </div>
+                                  <span className="text-slate-800 font-bold uppercase tracking-[0.1em] text-[10px] sm:text-[11px]">Save Upto 80%</span>
+                               </div>
+                            </div>
+
+                            <div 
+                               onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); document.querySelector('input')?.focus(); }}
+                               className="w-full max-w-sm mt-4 bg-white rounded-full p-1 shadow-xl flex items-center border border-slate-100 cursor-pointer hover:shadow-2xl transition-all"
+                            >
+                               <div className="pl-4">
+                                  <Search className="w-4 h-4 text-primary" />
+                               </div>
+                               <div className="flex-1 px-4 text-[10px] sm:text-xs font-bold text-slate-400">
+                                  Search for Healthcare Products
+                               </div>
+                               <button className="bg-primary hover:bg-primary/90 text-white font-black text-[9px] sm:text-[10px] tracking-widest uppercase px-5 py-2.5 sm:py-3 rounded-full shadow-lg">
+                                  Search
+                               </button>
+                            </div>
+                         </div>
+
+                         <div className="relative z-10 w-full sm:w-5/12 flex justify-center mt-10 sm:mt-0">
+                            <div className="relative w-48 h-48 sm:w-[360px] sm:h-[360px] rounded-full border-[8px] sm:border-[12px] border-white shadow-2xl overflow-hidden bg-white">
+                               <Image 
+                                  src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
+                                  alt="Healthcare Professional" 
+                                  fill
+                                  priority
+                                  className="object-cover object-top" 
+                               />
+                            </div>
+                         </div>
+                      </motion.div>
+                    </CarouselItem>
+                  </>
+                )}
+              </CarouselContent>
+            </Carousel>
+          </div>
+        </section>
+
+        {/* Place Your Order Via Call Strip (Outside main container) */}
+        <section className="w-full bg-white border-b border-slate-100 shadow-sm">
+           <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-14">
+              <div className="flex items-center gap-2">
+                 <span className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase">Place Your Order Via</span>
+              </div>
+              <div className="flex items-center gap-4">
+                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-50 flex items-center justify-center">
+                    <Phone className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-green-600" />
+                 </div>
+                 <div className="flex flex-col">
+                    <span className="text-[9px] font-bold text-slate-400 tracking-widest uppercase">Call Us On</span>
+                    <span className="text-sm sm:text-base font-black text-slate-800 tracking-tight">+91 96069 73757</span>
+                 </div>
+              </div>
+           </div>
+        </section>
+
+        <main className="max-w-7xl mx-auto px-4 py-8 sm:py-16 space-y-10 sm:space-y-20 pb-24 sm:pb-40">
+          <section className="grid grid-cols-3 gap-2 sm:gap-6">
             {[
-              { label: 'Upload prescription', href: '/prescription', color: 'bg-lavender', iconColor: 'bg-primary text-white', icon: FileText },
-              { label: 'Order Via WhatsApp', href: 'https://wa.me/91XXXXXXXXXX', color: 'bg-green-50', iconColor: 'bg-[#25D366] text-white', icon: () => <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 sm:w-12 sm:h-12"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" /><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1" /></svg> },
-              { label: 'Call for Medicines', href: 'tel:+91XXXXXXXXXX', color: 'bg-sahi-pink', iconColor: 'bg-rose-500 text-white', icon: Phone }
+              { label: 'Upload Rx', href: '/prescription', color: 'bg-lavender', iconColor: 'bg-primary text-white', icon: FileText },
+              { label: 'WhatsApp', href: 'https://wa.me/91XXXXXXXXXX', color: 'bg-green-50', iconColor: 'bg-[#25D366] text-white', icon: () => <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" className="w-5 h-5 sm:w-8 sm:h-8"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" /><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1" /></svg> },
+              { label: 'Call Now', href: 'tel:+91XXXXXXXXXX', color: 'bg-sahi-pink', iconColor: 'bg-rose-500 text-white', icon: Phone }
             ].map((action, i) => (
               <motion.div key={i} whileTap={{ scale: 0.96 }}>
-                <Link href={action.href} className={cn("group h-full p-4 sm:p-12 rounded-[32px] sm:rounded-[56px] flex flex-col items-center text-center gap-3 sm:gap-6 transition-all border border-white shadow-sm overflow-hidden", action.color)}>
-                  <div className={cn("w-12 h-12 sm:w-24 sm:h-24 flex items-center justify-center rounded-[18px] sm:rounded-[40px] shadow-lg", action.iconColor)}>
-                    <action.icon className="w-6 h-6 sm:w-12 sm:h-12" />
+                <Link href={action.href} className={cn("group h-full p-4 sm:p-8 rounded-[24px] sm:rounded-[40px] flex flex-col items-center text-center gap-2 sm:gap-4 transition-all border border-white shadow-sm overflow-hidden", action.color)}>
+                  <div className={cn("w-10 h-10 sm:w-16 sm:h-16 flex items-center justify-center rounded-[12px] sm:rounded-[24px] shadow-lg", action.iconColor)}>
+                    <action.icon className="w-5 h-5 sm:w-8 sm:h-8" />
                   </div>
-                  <h3 className="font-outfit font-bold text-slate-700 text-[10px] sm:text-2xl tracking-tight leading-tight">{action.label}</h3>
+                  <h3 className="font-outfit font-bold text-slate-700 text-[9px] sm:text-xs tracking-tight leading-tight uppercase">{action.label}</h3>
                 </Link>
               </motion.div>
             ))}
@@ -204,11 +204,11 @@ export default function Home() {
 
           {/* Most Popular Brands (Best Sellers) */}
           {(isBestLoading || (bestSellers && bestSellers.length > 0)) && (
-            <section className="space-y-6 sm:space-y-12">
+            <section className="space-y-4 sm:space-y-8">
               <div className="flex items-center justify-between px-2">
-                <h2 className="text-xl sm:text-4xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Our Most Popular Brands</h2>
+                <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Our Most Popular Brands</h2>
                 <div className="flex items-center gap-2">
-                  <Badge className="bg-yellow-100 text-yellow-700 border-none font-black px-3 py-1 rounded-full uppercase tracking-widest text-[8px] sm:text-[10px]">Best Sellers</Badge>
+                  <Badge className="bg-yellow-100 text-yellow-700 border-none font-black px-2 py-0.5 rounded-full uppercase tracking-widest text-[7px] sm:text-[9px]">Best Sellers</Badge>
                 </div>
               </div>
               <div className="flex gap-4 sm:gap-10 overflow-x-auto scrollbar-hide pb-8 px-2">
@@ -223,57 +223,53 @@ export default function Home() {
             </section>
           )}
 
-          {/* Categories Horizontal Scroll */}
-          <section className="space-y-6 sm:space-y-12">
+          <section className="space-y-4 sm:space-y-8">
             <div className="flex items-center justify-between px-2">
-              <h2 className="text-xl sm:text-4xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Shop by category</h2>
-              <Link href="/categories" className="text-[10px] sm:text-sm font-black tracking-widest text-primary uppercase flex items-center gap-2">Explore All <ChevronRight className="w-4 h-4" /></Link>
+              <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Shop by category</h2>
+              <Link href="/categories" className="text-[9px] sm:text-[11px] font-black tracking-widest text-primary uppercase flex items-center gap-1.5">Explore All <ChevronRight className="w-3.5 h-3.5" /></Link>
             </div>
-            <div className="flex gap-4 sm:gap-12 overflow-x-auto scrollbar-hide pb-6 px-2">
+            <div className="flex gap-4 sm:gap-8 overflow-x-auto scrollbar-hide pb-4 px-2">
               {isCatsLoading ? (
-                [...Array(6)].map((_, i) => <Skeleton className="w-24 h-24 sm:w-48 sm:h-48 rounded-[32px] shrink-0" key={i} />)
+                [...Array(6)].map((_, i) => <Skeleton className="w-20 h-20 sm:w-32 sm:h-32 rounded-[24px] shrink-0" key={i} />)
               ) : categories?.map((cat: any, i) => (
-                <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-4 shrink-0">
+                <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-3 shrink-0">
                   <motion.div 
-                    whileHover={{ y: -8 }}
+                    whileHover={{ y: -5 }}
                     className={cn(
-                      "w-24 h-24 sm:w-48 sm:h-48 rounded-[32px] sm:rounded-[56px] flex items-center justify-center border border-white shadow-sm p-3",
+                      "w-20 h-20 sm:w-32 sm:h-32 rounded-[24px] sm:rounded-[48px] flex items-center justify-center border border-white shadow-sm p-3",
                       i % 4 === 0 ? "bg-lavender" : i % 4 === 1 ? "bg-sahi-pink" : i % 4 === 2 ? "bg-sahi-blue" : "bg-sahi-green"
                     )}>
-                    <Image src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} alt={cat.name} width={192} height={192} className="object-contain w-full h-full" />
+                    <Image src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} alt={cat.name} width={128} height={128} className="object-contain w-full h-full" />
                   </motion.div>
-                  <span className="text-[10px] sm:text-lg font-black text-slate-500 tracking-tight uppercase">{cat.name}</span>
+                  <span className="text-[9px] sm:text-xs font-black text-slate-500 tracking-tight uppercase">{cat.name}</span>
                 </Link>
               ))}
             </div>
           </section>
 
           {/* Free Delivery Banner (Moved below Categories) */}
-          <section className="bg-slate-900 p-6 sm:p-16 rounded-[32px] sm:rounded-[64px] text-white flex flex-row items-center justify-between gap-4 shadow-3xl relative overflow-hidden">
-            <div className="space-y-2 sm:space-y-4 relative z-10 max-w-xl text-left flex-1 min-w-0">
-               <h3 className="text-xl sm:text-5xl font-black tracking-tighter uppercase leading-tight text-white">
+          <section className="bg-slate-900 px-6 py-6 sm:px-12 sm:py-10 rounded-[24px] sm:rounded-[48px] text-white flex flex-row items-center justify-between gap-4 shadow-3xl relative overflow-hidden">
+            <div className="space-y-2 relative z-10 max-w-xl text-left flex-1 min-w-0">
+               <h3 className="text-lg sm:text-3xl font-black tracking-tighter uppercase leading-tight text-white">
                  Pan India Free Delivery<br className="max-sm:hidden"/> Above ₹499
                </h3>
-               <p className="text-[10px] sm:text-lg font-bold text-white/60 uppercase tracking-widest truncate">
+               <p className="text-[9px] sm:text-xs font-bold text-white/60 uppercase tracking-widest truncate">
                  Order Now & Save More
                </p>
-               <Link href="/search" className="inline-block mt-2 sm:mt-6 px-6 sm:px-12 py-3 sm:py-5 bg-primary text-white font-black text-[10px] sm:text-base uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-xl">
+               <Link href="/search" className="inline-block mt-3 px-6 py-2.5 sm:py-3.5 bg-primary text-white font-black text-[9px] sm:text-[10px] uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-xl">
                  Shop Now
                </Link>
             </div>
-            <div className="relative z-10 shrink-0 right-[-10px] sm:right-6">
-               <div className="w-20 h-20 sm:w-40 sm:h-40 bg-primary/20 rounded-[28px] sm:rounded-[56px] flex items-center justify-center border border-primary/30">
-                 <Package className="w-10 h-10 sm:w-20 sm:h-20 text-primary" />
+            <div className="relative z-10 shrink-0 right-0 sm:right-4">
+               <div className="w-16 h-16 sm:w-28 sm:h-28 bg-primary/20 rounded-[20px] sm:rounded-[40px] flex items-center justify-center border border-primary/30">
+                 <Package className="w-8 h-8 sm:w-16 sm:h-16 text-primary" />
                </div>
-            </div>
-            <div className="absolute top-1/2 -translate-y-1/2 right-0 sm:right-10 opacity-5 pointer-events-none">
-               <Package className="w-64 h-64 sm:w-[400px] sm:h-[400px]" />
             </div>
           </section>
 
           {/* Top Sellers */}
-          <section className="space-y-8">
-            <h2 className="text-xl sm:text-4xl font-black text-slate-900 tracking-tighter uppercase font-outfit px-2">Best Sellers</h2>
+          <section className="space-y-6">
+            <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter uppercase font-outfit px-2">Best Sellers</h2>
             <div className="flex gap-4 sm:gap-10 overflow-x-auto scrollbar-hide pb-8 px-2">
               {isLoading ? (
                 [...Array(4)].map((_, i) => <Skeleton className="min-w-[140px] sm:min-w-[280px] aspect-[4/5] rounded-[32px] sm:rounded-[48px]" key={i} />)
