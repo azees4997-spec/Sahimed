@@ -107,6 +107,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // CMS Pages: Publicly readable for the Legal Footer and Header Links
+    match /pages/{pageId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /stockEnquiries/{enquiryId} {
       allow create: if isSignedIn();
       allow read, write: if isAdmin();
