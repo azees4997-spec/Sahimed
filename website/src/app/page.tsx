@@ -185,18 +185,18 @@ export default function Home() {
         </section>
 
         <main className="max-w-7xl mx-auto px-4 py-8 sm:py-16 space-y-10 sm:space-y-20 pb-24 sm:pb-40">
-          <section className="grid grid-cols-3 gap-2 sm:gap-6">
+          <section className="grid grid-cols-3 gap-2 sm:gap-4 px-1">
             {[
               { label: 'Upload Rx', href: '/prescription', color: 'bg-lavender', iconColor: 'bg-primary text-white', icon: FileText },
-              { label: 'WhatsApp', href: 'https://wa.me/91XXXXXXXXXX', color: 'bg-green-50', iconColor: 'bg-[#25D366] text-white', icon: () => <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" className="w-5 h-5 sm:w-8 sm:h-8"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" /><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1" /></svg> },
+              { label: 'WhatsApp', href: 'https://wa.me/91XXXXXXXXXX', color: 'bg-green-50', iconColor: 'bg-[#25D366] text-white', icon: () => <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" className="w-4 h-4 sm:w-6 sm:h-6"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" /><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1" /></svg> },
               { label: 'Call Now', href: 'tel:+91XXXXXXXXXX', color: 'bg-sahi-pink', iconColor: 'bg-rose-500 text-white', icon: Phone }
             ].map((action, i) => (
               <motion.div key={i} whileTap={{ scale: 0.96 }}>
-                <Link href={action.href} className={cn("group h-full p-4 sm:p-8 rounded-[24px] sm:rounded-[40px] flex flex-col items-center text-center gap-2 sm:gap-4 transition-all border border-white shadow-sm overflow-hidden", action.color)}>
-                  <div className={cn("w-10 h-10 sm:w-16 sm:h-16 flex items-center justify-center rounded-[12px] sm:rounded-[24px] shadow-lg", action.iconColor)}>
-                    <action.icon className="w-5 h-5 sm:w-8 sm:h-8" />
+                <Link href={action.href} className={cn("group h-full p-2.5 sm:p-5 rounded-[16px] sm:rounded-[24px] flex flex-col items-center text-center gap-1.5 sm:gap-2.5 transition-all border border-white shadow-sm overflow-hidden", action.color)}>
+                  <div className={cn("w-7 h-7 sm:w-11 sm:h-11 flex items-center justify-center rounded-[8px] sm:rounded-[12px] shadow-md", action.iconColor)}>
+                    <action.icon className="w-4 h-4 sm:w-6 sm:h-6" />
                   </div>
-                  <h3 className="font-outfit font-bold text-slate-700 text-[9px] sm:text-xs tracking-tight leading-tight uppercase">{action.label}</h3>
+                  <h3 className="font-outfit font-bold text-slate-700 text-[8px] sm:text-[9.5px] tracking-tight leading-tight uppercase line-clamp-1">{action.label}</h3>
                 </Link>
               </motion.div>
             ))}
@@ -223,25 +223,25 @@ export default function Home() {
             </section>
           )}
 
-          <section className="space-y-4 sm:space-y-8">
+          <section className="space-y-3 sm:space-y-6">
             <div className="flex items-center justify-between px-2">
-              <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Shop by category</h2>
-              <Link href="/categories" className="text-[9px] sm:text-[11px] font-black tracking-widest text-primary uppercase flex items-center gap-1.5">Explore All <ChevronRight className="w-3.5 h-3.5" /></Link>
+              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tighter uppercase font-outfit">Shop by category</h2>
+              <Link href="/categories" className="text-[8px] sm:text-[9.5px] font-black tracking-widest text-primary uppercase flex items-center gap-1">Explore All <ChevronRight className="w-3 h-3" /></Link>
             </div>
-            <div className="flex gap-4 sm:gap-8 overflow-x-auto scrollbar-hide pb-4 px-2">
+            <div className="flex gap-3 sm:gap-5 overflow-x-auto scrollbar-hide pb-2 px-2">
               {isCatsLoading ? (
-                [...Array(6)].map((_, i) => <Skeleton className="w-20 h-20 sm:w-32 sm:h-32 rounded-[24px] shrink-0" key={i} />)
+                [...Array(6)].map((_, i) => <Skeleton className="w-14 h-14 sm:w-20 sm:h-20 rounded-[12px] shrink-0" key={i} />)
               ) : categories?.map((cat: any, i) => (
-                <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-3 shrink-0">
+                <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-2 shrink-0">
                   <motion.div 
-                    whileHover={{ y: -5 }}
+                    whileHover={{ y: -3 }}
                     className={cn(
-                      "w-20 h-20 sm:w-32 sm:h-32 rounded-[24px] sm:rounded-[48px] flex items-center justify-center border border-white shadow-sm p-3",
+                      "w-14 h-14 sm:w-20 sm:h-20 rounded-[12px] sm:rounded-[20px] flex items-center justify-center border border-white shadow-sm p-1.5",
                       i % 4 === 0 ? "bg-lavender" : i % 4 === 1 ? "bg-sahi-pink" : i % 4 === 2 ? "bg-sahi-blue" : "bg-sahi-green"
                     )}>
-                    <Image src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} alt={cat.name} width={128} height={128} className="object-contain w-full h-full" />
+                    <Image src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} alt={cat.name} width={80} height={80} className="object-contain w-full h-full" />
                   </motion.div>
-                  <span className="text-[9px] sm:text-xs font-black text-slate-500 tracking-tight uppercase">{cat.name}</span>
+                  <span className="text-[8px] sm:text-[9.5px] font-black text-slate-500 tracking-tight uppercase line-clamp-1">{cat.name}</span>
                 </Link>
               ))}
             </div>
