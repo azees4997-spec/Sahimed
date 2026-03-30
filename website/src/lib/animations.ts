@@ -1,13 +1,13 @@
 import { Variants } from 'framer-motion';
 
 export const springTransition = {
-  type: "spring",
+  type: "spring" as const,
   stiffness: 300,
   damping: 30,
 };
 
 export const softSpringTransition = {
-  type: "spring",
+  type: "spring" as const,
   stiffness: 200,
   damping: 25,
 };
@@ -28,7 +28,7 @@ export const fadeInVariant: Variants = {
   visible: { 
     opacity: 1, 
     y: 0,
-    transition: springTransition as any,
+    transition: springTransition,
   },
 };
 
@@ -37,14 +37,14 @@ export const scaleInVariant: Variants = {
   visible: { 
     opacity: 1, 
     scale: 1,
-    transition: springTransition as any,
+    transition: springTransition,
   },
 };
 
 export const hoverVariant = {
   scale: 1.02,
   y: -4,
-  transition: { type: "spring", stiffness: 400, damping: 20 },
+  transition: { type: "spring" as const, stiffness: 400, damping: 20 },
 };
 
 export const tapVariant = {

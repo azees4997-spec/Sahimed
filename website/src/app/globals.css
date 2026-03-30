@@ -80,6 +80,18 @@
   .shimmer {
     @apply relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/40 before:to-transparent;
   }
+
+  .mobile-pill {
+    @apply rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-lg px-4 py-2;
+  }
+
+  .active-tab-shadow {
+    @apply shadow-[0_8px_30px_rgb(124,58,237,0.15)];
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 @keyframes shimmer {

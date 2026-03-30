@@ -103,41 +103,40 @@ export default function Home() {
                         animate={{ opacity: 1, y: 0 }}
                         className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-between min-h-[220px] sm:h-[360px] group"
                       >
-                         <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-3 sm:gap-4">
-                            <h1 className="text-2xl sm:text-4xl font-black leading-[1.1] tracking-tighter text-slate-900 font-outfit uppercase">
-                               Affordable Solutions for <br className="hidden sm:block" />
-                               <span className="text-primary">Everyday Care</span>
+                          <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-3 sm:gap-5">
+                            <h1 className="text-3xl sm:text-4xl font-black leading-[1.05] tracking-tighter text-slate-900 font-outfit uppercase">
+                                Affordable Solutions for <br className="hidden sm:block" />
+                                <span className="text-primary italic">Everyday Care</span>
                             </h1>
 
-                            <div className="flex flex-col gap-1.5 sm:gap-2 w-full items-center sm:items-start">
-                               <div className="flex items-center gap-2">
-                                  <div className="w-4.5 h-4.5 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
-                                     <ShieldCheck className="w-3 h-3 text-white" />
+                            <div className="flex flex-col gap-2 sm:gap-2 w-full items-center sm:items-start">
+                               <div className="flex items-center gap-2.5 px-3 py-1.5 bg-white/50 backdrop-blur-sm rounded-full border border-white/50">
+                                  <div className="w-4 h-4 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
+                                     <ShieldCheck className="w-2.5 h-2.5 text-white" />
                                   </div>
-                                  <span className="text-slate-800 font-bold uppercase tracking-[0.1em] text-[9px] sm:text-[10px]">Trusted by 10L+ users</span>
-                               </div>
-                               <div className="flex items-center gap-2">
-                                  <div className="w-4.5 h-4.5 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
-                                     <ShieldCheck className="w-3 h-3 text-white" />
-                                  </div>
-                                  <span className="text-slate-800 font-bold uppercase tracking-[0.1em] text-[9px] sm:text-[10px]">Save Upto 80%</span>
+                                  <span className="text-slate-800 font-black uppercase tracking-[0.1em] text-[9px] sm:text-[10px]">Trusted by 10L+ users</span>
                                </div>
                             </div>
 
-                            <div 
-                               onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); document.querySelector('input')?.focus(); }}
-                               className="w-full max-w-sm mt-3 bg-white rounded-full p-1 shadow-lg flex items-center border border-slate-100 cursor-pointer hover:shadow-xl transition-all"
+                            <button 
+                               onClick={() => { 
+                                 if (window.innerWidth < 640) {
+                                   const searchBtn = document.querySelector('button[onClick*="setIsSearchOverlayOpen"]');
+                                   if (searchBtn instanceof HTMLElement) searchBtn.click();
+                                 } else {
+                                   window.scrollTo({ top: 0, behavior: 'smooth' }); 
+                                   document.querySelector('input')?.focus();
+                                 }
+                               }}
+                               className="w-full max-w-[280px] sm:max-w-sm mt-2 bg-primary text-white rounded-full p-1 shadow-2xl shadow-primary/30 flex items-center border border-white/20 active:scale-95 transition-all group"
                             >
-                               <div className="pl-3">
-                                  <Search className="w-3.5 h-3.5 text-primary" />
+                               <div className="flex-1 px-4 text-left text-[11px] sm:text-[12px] font-black uppercase tracking-widest">
+                                  Search Medicines
                                </div>
-                               <div className="flex-1 px-3 text-[9px] sm:text-[11px] font-bold text-slate-400">
-                                  Search for Healthcare Products
+                               <div className="bg-white/20 p-2.5 rounded-full group-hover:bg-white/30 transition-colors">
+                                  <Search className="w-4 h-4 text-white" />
                                </div>
-                               <button className="bg-primary hover:bg-primary/90 text-white font-black text-[8px] sm:text-[9.5px] tracking-widest uppercase px-4 py-2 sm:py-2.5 rounded-full shadow-md">
-                                  Search
-                                </button>
-                            </div>
+                            </button>
                          </div>
 
                          <div className="relative z-10 w-full sm:w-5/12 flex justify-center mt-6 sm:mt-0">
@@ -159,18 +158,21 @@ export default function Home() {
             </Carousel>
 
             {/* QUICK ACTIONS INTEGRATED INTO HERO CONTAINER */}
-            <div className="mt-8 grid grid-cols-3 gap-3 sm:gap-6">
+            <div className="mt-10 grid grid-cols-3 gap-3 sm:gap-6">
               {[
-                { label: 'Upload prescription', href: '/prescription', color: 'bg-lavender', iconColor: 'bg-primary text-white', icon: FileText },
-                { label: 'Order Via WhatsApp', href: 'https://wa.me/91XXXXXXXXXX', color: 'bg-green-50', iconColor: 'bg-[#25D366] text-white', icon: () => <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" className="w-4 h-4 sm:w-6 sm:h-6"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" /><path d="M9 10a5 5 0 1 1 5 5h-1a.5.5 0 0 0 0 1h1a5 5 0 1 1 5 5" /></svg> },
-                { label: 'Call for Medicines', href: 'tel:+91XXXXXXXXXX', color: 'bg-sahi-pink', iconColor: 'bg-rose-500 text-white', icon: Phone }
+                { label: 'Upload Rx', href: '/prescription', sub: 'Easy Upload', color: 'bg-lavender', iconColor: 'bg-primary text-white', icon: FileText },
+                { label: 'WhatsApp', href: 'https://wa.me/91XXXXXXXXXX', sub: 'Chat & Order', color: 'bg-green-50', iconColor: 'bg-[#25D366] text-white', icon: () => <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" className="w-4 h-4 sm:w-6 sm:h-6"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" /><path d="M9 10a5 5 0 1 1 5 5h-1a.5.5 0 0 0 0 1h1a5 5 0 1 1 5 5" /></svg> },
+                { label: 'Call Order', href: 'tel:+91XXXXXXXXXX', sub: 'Direct Call', color: 'bg-sahi-pink', iconColor: 'bg-rose-500 text-white', icon: Phone }
               ].map((action, i) => (
                 <motion.div key={i} whileTap={{ scale: 0.96 }}>
-                  <Link href={action.href} className={cn("group h-full p-4 sm:p-7 rounded-[24px] sm:rounded-[36px] flex flex-col items-center text-center gap-2 sm:gap-4 transition-all border border-white shadow-sm overflow-hidden", action.color)}>
-                     <div className={cn("w-9 h-9 sm:w-14 sm:h-14 flex items-center justify-center rounded-[12px] sm:rounded-[18px] shadow-md", action.iconColor)}>
+                  <Link href={action.href} className={cn("group h-full p-4 sm:p-7 rounded-[28px] sm:rounded-[36px] flex flex-col items-center text-center gap-2 sm:gap-4 transition-all border border-white shadow-xl shadow-slate-200/40 overflow-hidden", action.color)}>
+                     <div className={cn("w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center rounded-[14px] sm:rounded-[18px] shadow-lg", action.iconColor)}>
                         <action.icon className="w-5 h-5 sm:w-7 sm:h-7" />
                      </div>
-                     <h3 className="font-outfit font-bold text-slate-800 text-[9px] sm:text-[11px] tracking-tight leading-tight uppercase line-clamp-2">{action.label}</h3>
+                     <div className="space-y-0.5">
+                        <h3 className="font-outfit font-black text-slate-900 text-[10px] sm:text-[12px] tracking-tight leading-tight uppercase line-clamp-1">{action.label}</h3>
+                        <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">{action.sub}</p>
+                     </div>
                   </Link>
                 </motion.div>
               ))}
