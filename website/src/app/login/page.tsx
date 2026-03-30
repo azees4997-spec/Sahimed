@@ -111,13 +111,13 @@ function LoginForm() {
               <Smartphone className="w-12 h-12 text-white group-hover:rotate-12 transition-transform" />
             </div>
             
-            <div className="space-y-3 relative z-10">
-              <CardTitle className="text-3xl sm:text-4xl font-black font-outfit mb-2 tracking-tighter uppercase">Identity Hub</CardTitle>
-              <CardDescription className="text-white/60 uppercase text-[9px] font-black tracking-[0.4em]">Protocol Authentication Entry</CardDescription>
+            <div className="space-y-2 relative z-10">
+              <CardTitle className="text-3xl sm:text-4xl font-black font-outfit mb-1 tracking-tighter uppercase">Welcome to SahiMed</CardTitle>
+              <CardDescription className="text-white/70 uppercase text-[10px] font-black tracking-widest leading-none">Login or Sign up to manage your health</CardDescription>
             </div>
           </CardHeader>
           
-          <CardContent className="p-12 sm:p-14">
+          <CardContent className="p-8 sm:p-14">
             <AnimatePresence mode="wait">
               {step === 1 ? (
                 <motion.form 
@@ -126,19 +126,19 @@ function LoginForm() {
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: -20, opacity: 0 }}
                   onSubmit={handleSendOtp} 
-                  className="space-y-10"
+                  className="space-y-8"
                 >
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4 block opacity-60">Communication Terminal</label>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block opacity-60">Mobile Number</label>
                     <div className="relative group">
                       <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3 border-r-2 pr-5 border-slate-100 group-focus-within:border-primary/20 transition-colors">
                         <span className="text-sm font-black text-slate-400 uppercase tracking-widest">+91</span>
                       </div>
                       <Input 
                         type="tel"
-                        placeholder="10 Digit Key"
+                        placeholder="Enter 10 Digit Number"
                         maxLength={10}
-                        className="h-20 pl-24 rounded-[28px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white text-lg font-black tracking-widest outline-none transition-all placeholder:text-slate-300 shadow-inner px-8"
+                        className="h-16 pl-24 rounded-[24px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white text-base font-black tracking-widest transition-all placeholder:text-slate-300 shadow-inner px-8"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                         required
@@ -162,24 +162,24 @@ function LoginForm() {
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: -20, opacity: 0 }}
                   onSubmit={handleVerifyOtp} 
-                  className="space-y-10"
+                  className="space-y-8"
                 >
-                  <div className="text-center space-y-3">
-                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-[0.2em] opacity-60">Transmission sent to terminal</p>
-                    <div className="bg-primary/5 py-4 rounded-3xl border border-primary/10">
+                  <div className="text-center space-y-2">
+                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest opacity-60">OTP sent to</p>
+                    <div className="bg-primary/5 py-3 rounded-2xl border border-primary/10">
                       <span className="text-primary font-black tracking-widest">+91 {phone}</span>
                     </div>
-                    <Button variant="link" onClick={() => { setStep(1); setOtp(''); }} className="text-[9px] font-black text-primary p-0 h-auto uppercase tracking-widest mt-2 hover:scale-110 active:scale-95 transition-transform">Update Terminal Number</Button>
+                    <Button variant="link" onClick={() => { setStep(1); setOtp(''); }} className="text-[9px] font-black text-primary p-0 h-auto uppercase tracking-widest mt-1 hover:underline">Change Number</Button>
                   </div>
                   
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4 block text-center opacity-60">Validate 6-Digit Matrix</label>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block text-center opacity-60">Enter 6-Digit OTP</label>
                     <div className="relative">
                       <Input 
                         type="text"
-                        placeholder="000 000"
+                        placeholder="······"
                         maxLength={6}
-                        className="h-24 rounded-[32px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white font-black text-3xl text-center tracking-[0.5em] focus-visible:ring-0 shadow-inner px-8 transition-all"
+                        className="h-20 rounded-[28px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white font-black text-4xl text-center tracking-[0.5em] shadow-inner px-8 transition-all"
                         value={otp}
                         onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                         required
@@ -187,12 +187,12 @@ function LoginForm() {
                     </div>
                   </div>
                   
-                  <Button type="submit" disabled={loading} className="w-full h-20 rounded-full font-black uppercase tracking-[0.4em] text-xs shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary hover:scale-[1.02] border-4 border-white">
-                    {loading ? <Loader2 className="animate-spin" /> : "Authenticate Now"}
+                  <Button type="submit" disabled={loading} className="w-full h-16 rounded-full font-black uppercase tracking-widest text-xs shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary hover:scale-[1.02] border-4 border-white">
+                    {loading ? <Loader2 className="animate-spin" /> : "Verify & Login"}
                   </Button>
                   
-                  <p className="text-center text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] opacity-60">
-                    Transmission Error? <Button variant="link" onClick={handleSendOtp} className="text-[9px] p-0 h-auto text-primary font-black uppercase tracking-widest hover:scale-110 active:scale-95">Re-Transcribe</Button>
+                  <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-60">
+                    Didn't receive OTP? <Button variant="link" onClick={handleSendOtp} className="text-[10px] p-0 h-auto text-primary font-black uppercase tracking-widest hover:underline">Resend</Button>
                   </p>
                 </motion.form>
               )}

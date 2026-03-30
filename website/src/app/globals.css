@@ -10,20 +10,20 @@
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 262 83% 58%;
+    --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 262 83% 96%;
-    --secondary-foreground: 262 83% 30%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 340 80% 60%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 346 84% 61%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 262 83% 58%;
-    --radius: 2rem;
+    --ring: 221 83% 53%;
+    --radius: 1.5rem;
 
     /* Docly/SahiMed Color System - Precise Alignment */
     --lavender-bg: 262 80% 96%;
@@ -36,26 +36,55 @@
     --blue-text: 200 80% 35%;
   }
 
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
   * {
     @apply border-border;
     -webkit-tap-highlight-color: transparent;
   }
-  
   body {
-    @apply bg-background text-foreground font-outfit antialiased;
-    overscroll-behavior-y: none;
+    @apply bg-background text-foreground font-inter antialiased;
+    font-size: 14px; /* Reduced base for mobile app density */
+  }
+}
+
+@layer components {
+  .pharma-card {
+    @apply bg-white border border-slate-100 shadow-sm transition-all duration-300;
+  }
+  
+  .glass {
+    @apply backdrop-blur-xl bg-white/70 border border-white/20;
+  }
+
+  .mobile-pill {
+    @apply rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest;
   }
 }
 
 @layer utilities {
-  .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
-  }
-  
-  .pharma-card {
-    @apply bg-white border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] rounded-[32px] transition-all duration-300 hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] hover:-translate-y-1;
-  }
-
   /* Alignment Classes */
   .bg-lavender { background-color: hsl(var(--lavender-bg)); }
   .text-lavender { color: hsl(var(--lavender-text)); }

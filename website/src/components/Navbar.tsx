@@ -69,6 +69,9 @@ export default function Navbar() {
   const router = useRouter();
 
   useEffect(() => {
+    const handleOpenSearch = () => setIsSearchOverlayOpen(true);
+    window.addEventListener('open-mobile-search', handleOpenSearch);
+    
     const handleScroll = () => {
       const y = window.scrollY;
       if (y > 120) {
@@ -78,7 +81,10 @@ export default function Navbar() {
       }
     };
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('open-mobile-search', handleOpenSearch);
+    };
   }, []);
 
   const logSearch = async (keyword: string) => {

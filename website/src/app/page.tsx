@@ -86,11 +86,11 @@ export default function Home() {
                     <CarouselItem key={b.id}>
                       <div className="relative overflow-hidden p-5 sm:p-10 flex flex-col justify-center min-h-[200px] sm:min-h-[360px] rounded-[24px] bg-slate-900 shadow-xl group">
                         {b.imageUrl && <Image src={b.imageUrl} alt={b.title || 'Banner'} fill className="object-cover absolute inset-0 opacity-40 group-hover:scale-105 transition-transform duration-700" />}
-                        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/60 to-transparent pointer-events-none" />
-                        <div className="space-y-2 max-w-xl relative z-10 pointer-events-none">
-                          <Badge className="bg-primary/20 text-primary border-primary/30 font-black px-2 py-0.5 rounded-full uppercase tracking-widest text-[7px]">Sahimed Exclusive</Badge>
-                          <h2 className="text-xl sm:text-3xl font-black leading-tight tracking-tighter text-white uppercase font-outfit">{b.title}</h2>
-                          {b.subtitle && <p className="text-slate-300 font-bold text-[10px] sm:text-base">{b.subtitle}</p>}
+                        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent pointer-events-none" />
+                        <div className="space-y-4 max-w-xl relative z-10 pointer-events-none p-4 sm:p-0">
+                          <Badge className="bg-primary/30 text-white border-white/20 font-black px-3 py-1 rounded-full uppercase tracking-widest text-[8px] backdrop-blur-md">Sahimed Exclusive</Badge>
+                          <h2 className="text-2xl sm:text-4xl font-black leading-tight tracking-tighter text-white uppercase font-outfit drop-shadow-2xl">{b.title}</h2>
+                          {b.subtitle && <p className="text-white/80 font-bold text-[11px] sm:text-lg tracking-tight max-w-sm">{b.subtitle}</p>}
                         </div>
                       </div>
                     </CarouselItem>
@@ -103,8 +103,8 @@ export default function Home() {
                         animate={{ opacity: 1, y: 0 }}
                         className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-between min-h-[220px] sm:h-[360px] group"
                       >
-                          <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-3 sm:gap-5">
-                            <h1 className="text-3xl sm:text-4xl font-black leading-[1.05] tracking-tighter text-slate-900 font-outfit uppercase">
+                          <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6">
+                            <h1 className="text-3xl sm:text-5xl font-black leading-[1] tracking-tighter text-slate-900 font-outfit uppercase">
                                 Affordable Solutions for <br className="hidden sm:block" />
                                 <span className="text-primary italic">Everyday Care</span>
                             </h1>
@@ -120,21 +120,20 @@ export default function Home() {
 
                             <button 
                                onClick={() => { 
-                                 if (window.innerWidth < 640) {
-                                   const searchBtn = document.querySelector('button[onClick*="setIsSearchOverlayOpen"]');
-                                   if (searchBtn instanceof HTMLElement) searchBtn.click();
+                                 if (window.innerWidth < 1024) {
+                                   // Custom event to trigger mobile search overlay in Navbar
+                                   window.dispatchEvent(new CustomEvent('open-mobile-search'));
                                  } else {
-                                   window.scrollTo({ top: 0, behavior: 'smooth' }); 
                                    document.querySelector('input')?.focus();
                                  }
                                }}
-                               className="w-full max-w-[280px] sm:max-w-sm mt-2 bg-primary text-white rounded-full p-1 shadow-2xl shadow-primary/30 flex items-center border border-white/20 active:scale-95 transition-all group"
+                               className="w-full max-w-[280px] sm:max-w-sm mt-4 bg-white text-slate-900 rounded-full p-1 shadow-2xl shadow-slate-200/50 flex items-center border border-slate-100 active:scale-95 transition-all group"
                             >
-                               <div className="flex-1 px-4 text-left text-[11px] sm:text-[12px] font-black uppercase tracking-widest">
+                               <div className="flex-1 px-5 text-left text-[11px] sm:text-[13px] font-black uppercase tracking-[0.2em] text-slate-400">
                                   Search Medicines
                                </div>
-                               <div className="bg-white/20 p-2.5 rounded-full group-hover:bg-white/30 transition-colors">
-                                  <Search className="w-4 h-4 text-white" />
+                               <div className="bg-primary p-3 sm:p-4 rounded-full group-hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
+                                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                                </div>
                             </button>
                          </div>

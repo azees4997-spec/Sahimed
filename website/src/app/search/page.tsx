@@ -176,7 +176,7 @@ function SearchResults() {
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
-                    className="grid grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10"
+                    className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-10"
                   >
                     {filteredMedicines.map(p => (
                       <motion.div key={p.id} variants={fadeInVariant}>

@@ -149,9 +149,9 @@ export default function CartPage() {
           <motion.h1 
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tighter mb-8 sm:mb-20 font-outfit flex flex-col sm:block"
+            className="text-2xl sm:text-5xl font-black text-slate-900 tracking-tighter mb-6 sm:mb-16 font-outfit flex items-baseline gap-2"
           >
-            Your Cart <span className="text-primary/100 sm:text-primary/30 mt-2 sm:mt-0 sm:ml-2 text-xl sm:text-6xl border sm:border-none border-primary/20 bg-primary/5 sm:bg-transparent rounded-full px-4 py-1 w-fit">[{totalItems} Items]</span>
+            Your Cart <span className="text-primary/50 text-xs sm:text-2xl font-black tracking-widest uppercase bg-primary/5 px-3 py-1 rounded-full border border-primary/10">{totalItems} Items</span>
           </motion.h1>
 
           {requiresPrescription && (
@@ -159,28 +159,28 @@ export default function CartPage() {
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               className={cn(
-                "border border-white/50 p-6 sm:p-10 rounded-[48px] mb-12 flex flex-col sm:flex-row items-center gap-6 sm:gap-10 shadow-2xl backdrop-blur-md relative overflow-hidden",
+                "border border-white/50 p-4 sm:p-10 rounded-[32px] sm:rounded-[48px] mb-8 flex flex-col sm:flex-row items-center gap-4 sm:gap-10 shadow-xl backdrop-blur-md relative overflow-hidden",
                 attachedPrescription ? "bg-emerald-50/50" : "bg-primary/5"
               )}
             >
               <div className={cn(
-                "w-16 h-16 sm:w-20 sm:h-20 rounded-[32px] flex items-center justify-center shrink-0 shadow-inner",
+                "w-12 h-12 sm:w-20 sm:h-20 rounded-[20px] sm:rounded-[32px] flex items-center justify-center shrink-0 shadow-inner",
                 attachedPrescription ? "bg-emerald-100 text-emerald-600" : "bg-primary/10 text-primary"
               )}>
-                 {attachedPrescription ? <ClipboardCheck className="w-8 h-8" /> : <FileWarning className="w-8 h-8" />}
+                 {attachedPrescription ? <ClipboardCheck className="w-6 h-6 sm:w-8 sm:h-8" /> : <FileWarning className="w-6 h-6 sm:w-8 sm:h-8" />}
               </div>
               <div className="flex-1 text-center sm:text-left">
-                <p className="font-black text-lg sm:text-xl tracking-tight uppercase font-outfit">{attachedPrescription ? "Prescription Attached" : "Prescription Required"}</p>
-                <p className="text-[10px] font-black tracking-[0.2em] mt-2 opacity-60 leading-relaxed uppercase">Our medical board requires a valid prescription for these items.</p>
+                <p className="font-black text-sm sm:text-xl tracking-tight uppercase font-outfit">{attachedPrescription ? "Prescription Attached" : "Prescription Required"}</p>
+                <p className="text-[8px] sm:text-[10px] font-black tracking-[0.2em] mt-1 opacity-60 leading-relaxed uppercase">Doctor's prescription is required for these items.</p>
               </div>
               <input type="file" id="cart-upload" className="hidden" accept="image/*" onChange={handleFileChange} />
               <Button 
                 onClick={() => document.getElementById('cart-upload')?.click()} 
                 variant="outline" 
-                className="w-full sm:w-auto rounded-full font-black text-[10px] h-14 sm:h-16 px-10 gap-4 border-2 uppercase tracking-widest hover:bg-white"
+                className="w-full sm:w-auto rounded-full font-black text-[9px] h-12 sm:h-16 px-8 gap-3 border-2 uppercase tracking-widest hover:bg-white"
               >
-                {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />} 
-                {attachedPrescription ? "Update Prescription" : "Upload prescription"}
+                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4 sm:w-5 sm:h-5" />} 
+                {attachedPrescription ? "Update" : "Upload now"}
               </Button>
             </motion.div>
           )}
@@ -201,36 +201,36 @@ export default function CartPage() {
                   <motion.div 
                     key={item.id} 
                     variants={itemVariants}
-                    className="bg-white p-3 sm:p-8 rounded-[24px] sm:rounded-[48px] shadow-sm sm:shadow-xl border border-slate-100 sm:border-white/50 flex flex-row gap-3 sm:gap-10 items-center group hover:shadow-xl transition-all relative overflow-hidden"
+                    className="bg-white p-3 sm:p-6 rounded-[20px] sm:rounded-[40px] shadow-sm sm:shadow-lg border border-slate-100 sm:border-white/50 flex flex-row gap-3 sm:gap-8 items-center group transition-all relative overflow-hidden"
                   >
-                    <Link href={`/product/${item.id}`} className="relative w-20 h-20 sm:w-32 sm:h-32 bg-slate-50 sm:bg-white rounded-[16px] sm:rounded-[32px] overflow-hidden shrink-0 border border-slate-100 sm:border-white shadow-inner cursor-pointer">
+                    <Link href={`/product/${item.id}`} className="relative w-16 h-16 sm:w-28 sm:h-28 bg-slate-50 sm:bg-white rounded-[14px] sm:rounded-[28px] overflow-hidden shrink-0 border border-slate-100 sm:border-white shadow-inner cursor-pointer">
                       <Image src={safeImageUrl} alt={item.name} fill className="object-contain p-2 sm:p-4 group-hover:scale-110 transition-transform duration-500" />
                     </Link>
                     
                     <div className="flex-1 min-w-0 flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-6">
                       <div className="flex-1 min-w-0">
                         <Link href={`/product/${item.id}`} className="hover:text-primary transition-colors cursor-pointer">
-                          <h3 className="font-black text-slate-900 text-sm sm:text-2xl tracking-tighter line-clamp-1 sm:line-clamp-2 font-outfit uppercase leading-tight">{item.name}</h3>
+                          <h3 className="font-extrabold text-slate-900 text-xs sm:text-xl tracking-tight line-clamp-1 sm:line-clamp-2 font-outfit uppercase leading-tight">{item.name}</h3>
                         </Link>
-                        <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold tracking-[0.2em] truncate mt-1 sm:mt-2 mb-2 sm:mb-6 uppercase">{item.saltComposition}</p>
+                        <p className="text-[7px] sm:text-[10px] text-slate-400 font-bold tracking-widest truncate mt-0.5 sm:mt-1 mb-2 sm:mb-4 uppercase">{item.saltComposition}</p>
                         
-                        <div className="flex items-center gap-2 sm:gap-3 bg-slate-50 sm:bg-white/60 rounded-full p-1 sm:p-1.5 border border-slate-100 sm:border-white shadow-none sm:shadow-sm w-fit">
-                          <button onClick={() => updateQuantity(item.id, -1)} className="w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-slate-200 sm:bg-slate-900 text-slate-600 sm:text-white hover:bg-primary transition-colors tap-highlight shadow-sm"><Minus className="w-3 h-3 sm:w-4 sm:h-4" /></button>
-                          <span className="text-xs sm:text-lg font-black w-6 sm:w-10 text-center font-outfit">{item.quantity}</span>
-                          <button onClick={() => updateQuantity(item.id, 1)} className="w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-slate-200 sm:bg-slate-900 text-slate-600 sm:text-white hover:bg-primary transition-colors tap-highlight shadow-sm"><Plus className="w-3 h-3 sm:w-4 sm:h-4" /></button>
+                        <div className="flex items-center gap-1.5 sm:gap-3 bg-slate-100 sm:bg-white/60 rounded-full p-0.5 sm:p-1.5 border border-slate-100 sm:border-white shadow-none sm:shadow-sm w-fit">
+                          <button onClick={() => updateQuantity(item.id, -1)} className="w-7 h-7 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-white sm:bg-slate-900 text-primary sm:text-white shadow-sm hover:bg-primary hover:text-white transition-all"><Minus className="w-3 h-3" /></button>
+                          <span className="text-[11px] sm:text-base font-black w-5 sm:w-8 text-center font-outfit">{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item.id, 1)} className="w-7 h-7 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-white sm:bg-slate-900 text-primary sm:text-white shadow-sm hover:bg-primary hover:text-white transition-all"><Plus className="w-3 h-3" /></button>
                         </div>
                       </div>
 
                       <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:text-right shrink-0">
                         <div className="text-left sm:text-right">
-                          <p className="text-lg sm:text-3xl font-black text-slate-900 font-outfit tracking-tighter leading-none">₹{(item.price * item.quantity).toFixed(2)}</p>
-                          <p className="text-[10px] sm:text-[11px] text-primary font-black line-through opacity-40 mt-1">₹{((item.mrp || item.price + 50) * item.quantity).toFixed(2)}</p>
+                          <p className="text-sm sm:text-2xl font-black text-slate-900 font-outfit tracking-tighter leading-none">₹{(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="text-[8px] sm:text-[11px] text-primary font-black line-through opacity-40 mt-0.5 sm:mt-1">₹{((item.mrp || item.price + 50) * item.quantity).toFixed(2)}</p>
                         </div>
                         <button 
                           onClick={() => removeFromCart(item.id)} 
-                          className="w-10 h-10 sm:w-12 sm:h-12 sm:mt-4 rounded-full flex items-center justify-center bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-none sm:shadow-sm"
+                          className="w-8 h-8 sm:w-10 sm:h-10 sm:mt-3 rounded-full flex items-center justify-center bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
                         >
-                          <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
                       </div>
                     </div>
@@ -304,56 +304,56 @@ export default function CartPage() {
                   initial={{ y: 50, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="bg-white p-6 sm:p-12 rounded-[32px] sm:rounded-[56px] shadow-[0_64px_96px_-16px_rgba(0,0,0,0.1)] border border-white relative overflow-hidden"
+                  className="bg-white p-5 sm:p-12 rounded-[28px] sm:rounded-[56px] shadow-2xl border border-white relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
                   
-                  <h2 className="text-[10px] sm:text-xs font-black mb-8 tracking-[0.4em] text-slate-400 uppercase relative z-10">Invoice Summary</h2>
-                  <div className="space-y-4 sm:space-y-6 mb-8 relative z-10">
-                    <div className="flex justify-between text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-widest">
+                  <h2 className="text-[8px] sm:text-xs font-black mb-6 sm:mb-8 tracking-[0.3em] text-slate-400 uppercase relative z-10">Invoice Summary</h2>
+                  <div className="space-y-3 sm:space-y-6 mb-8 relative z-10">
+                    <div className="flex justify-between text-[11px] sm:text-sm font-bold text-slate-500 uppercase tracking-widest">
                       <span>Total MRP</span>
                       <span>₹{totalMrp.toFixed(2)}</span>
                     </div>
                     {itemSavings > 0 && (
-                      <div className="flex justify-between text-xs sm:text-sm font-bold text-primary uppercase tracking-widest">
-                        <span>Discount Amount</span>
+                      <div className="flex justify-between text-[11px] sm:text-sm font-bold text-primary uppercase tracking-widest">
+                        <span>Cart Discount</span>
                         <span>-₹{itemSavings.toFixed(2)}</span>
                       </div>
                     )}
                     {appliedPromo && (
-                      <div className="flex justify-between text-xs sm:text-sm font-bold text-primary uppercase tracking-widest">
-                        <span className="flex items-center gap-2"><Tag className="w-3.5 h-3.5" /> Promocode Saving</span>
+                      <div className="flex justify-between text-[11px] sm:text-sm font-bold text-primary uppercase tracking-widest">
+                        <span className="flex items-center gap-2">Coupon Applied</span>
                         <span>-₹{promoDiscount.toFixed(2)}</span>
                       </div>
                     )}
                     {feeTotal > 0 && (
-                      <div className="flex justify-between text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-widest">
-                        <span>Delivery Fees</span>
+                      <div className="flex justify-between text-[11px] sm:text-sm font-bold text-slate-500 uppercase tracking-widest">
+                        <span>Delivery & Handling</span>
                         <span>₹{feeTotal.toFixed(2)}</span>
                       </div>
                     )}
 
-                    <div className="pt-6 sm:pt-8 border-t border-slate-100 flex justify-between items-baseline">
-                      <span className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-widest">Total Payable</span>
-                      <span className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit">₹{finalPayable.toFixed(2)}</span>
+                    <div className="pt-4 sm:pt-8 border-t border-slate-100 flex justify-between items-baseline">
+                      <span className="text-xs sm:text-base font-black text-slate-900 uppercase tracking-widest">Final Payable</span>
+                      <span className="text-2xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit">₹{finalPayable.toFixed(2)}</span>
                     </div>
                     
                     {totalSavings > 0 && (
-                      <div className="mt-6 flex justify-between items-center text-xs sm:text-sm font-black text-emerald-700 bg-emerald-50 p-4 rounded-[16px] border border-emerald-100 shadow-inner">
-                        <span className="flex items-center gap-2 uppercase tracking-widest">Total Savings</span>
-                        <span className="bg-emerald-100 px-3 py-1.5 rounded-md text-[10px] sm:text-xs uppercase tracking-widest border border-emerald-200">
-                          Saved ₹{totalSavings.toFixed(2)} ({Math.round((totalSavings / totalMrp) * 100)}%)
+                      <div className="mt-4 flex justify-between items-center text-[10px] sm:text-sm font-black text-emerald-700 bg-emerald-50 p-3 sm:p-4 rounded-xl border border-emerald-100 shadow-inner">
+                        <span className="uppercase tracking-widest">You Saved</span>
+                        <span className="bg-emerald-100 px-2.5 py-1 rounded-md text-[9px] sm:text-xs uppercase tracking-widest border border-emerald-200">
+                          ₹{totalSavings.toFixed(2)}
                         </span>
                       </div>
                     )}
                   </div>
                   {isPrescriptionReady ? (
-                    <Button onClick={handleCheckoutClick} className="w-full rounded-full h-20 text-xs font-black tracking-[0.3em] uppercase shadow-2xl shadow-primary/20 bg-primary text-white relative z-10 group hover:scale-[1.02] transition-transform">
-                      Checkout Pipeline <ArrowRight className="w-6 h-6 ml-4 group-hover:translate-x-2 transition-transform" />
+                    <Button onClick={handleCheckoutClick} className="w-full rounded-full h-14 sm:h-20 text-[10px] sm:text-xs font-black tracking-[0.2em] sm:tracking-[0.3em] uppercase shadow-2xl shadow-primary/20 bg-primary text-white relative z-10 group hover:scale-[1.02] transition-transform">
+                      Checkout Pipeline <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-2" />
                     </Button>
                   ) : (
-                    <Button onClick={() => document.getElementById('cart-upload')?.click()} className="w-full rounded-full h-20 text-xs font-black tracking-[0.3em] uppercase shadow-2xl shadow-rose-200 bg-rose-600 text-white relative z-10 group hover:scale-[1.02] transition-transform">
-                      Submit Prescription <Camera className="w-6 h-6 ml-4 group-hover:scale-110 transition-transform" />
+                    <Button onClick={() => document.getElementById('cart-upload')?.click()} className="w-full rounded-full h-14 sm:h-20 text-[10px] sm:text-xs font-black tracking-[0.2em] sm:tracking-[0.3em] uppercase shadow-2xl shadow-rose-200 bg-rose-600 text-white relative z-10 group hover:scale-[1.02] transition-transform">
+                      Upload Prescription <Camera className="w-5 h-5 ml-2 transition-transform group-hover:scale-110" />
                     </Button>
                   )}
                 </motion.div>

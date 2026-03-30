@@ -14,9 +14,9 @@ export default function MobileCartBar() {
   if (hideOnPaths.includes(pathname) || totalItems === 0) return null;
 
   return (
-    <div className="sm:hidden fixed bottom-20 left-0 right-0 z-40 px-4 animate-in slide-in-from-bottom-6 duration-500 ease-out">
+    <div className="sm:hidden fixed bottom-24 left-0 right-0 z-[160] px-4 animate-in slide-in-from-bottom-6 duration-500 ease-out">
       <Link href="/cart">
-        <div className="bg-primary text-white rounded-[24px] p-4 shadow-2xl shadow-primary/50 flex items-center justify-between border border-white/20 backdrop-blur-md bg-primary/95 active:scale-95 transition-transform">
+        <div className="bg-primary text-white rounded-[20px] p-3 shadow-2xl shadow-primary/30 flex items-center justify-between border border-white/20 backdrop-blur-xl bg-primary/95 active:scale-95 transition-transform">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center border border-white/10">
               <ShoppingBag className="w-5 h-5" />
