@@ -73,10 +73,10 @@ export default function Home() {
         <Navbar />
         
         {/* Mega Banner Hero Section */}
-        <section className="relative w-full bg-primary overflow-hidden pb-10 sm:pb-20 pt-20 sm:pt-32">
+        <section className="relative w-full bg-[#FFF9F9] overflow-hidden pb-10 sm:pb-20 pt-20 sm:pt-32 border-b border-rose-50/50">
           {/* Background Decorative Elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-rose-100/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none" />
           
           <div className="max-w-7xl mx-auto px-4 relative z-10">
             <div className="flex flex-col gap-6 sm:gap-12">
@@ -89,11 +89,16 @@ export default function Home() {
                     animate={{ opacity: 1, x: 0 }}
                     className="space-y-1 sm:space-y-3"
                   >
-                    <Badge className="bg-white/10 text-white border-white/20 font-black px-2 py-0.5 rounded-full uppercase tracking-tighter text-[7.5px] sm:text-[10px] backdrop-blur-md w-fit">Trusted by 10L+ users</Badge>
-                    <h1 className="text-2xl sm:text-6xl font-black leading-[1.1] tracking-tighter text-white font-outfit uppercase">
+                    <div className="flex items-center gap-2.5 px-3 py-1.5 bg-white/50 backdrop-blur-sm rounded-full border border-white/50 w-fit shrink-0">
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
+                        <ShieldCheck className="w-2.5 h-2.5 text-white" />
+                      </div>
+                      <span className="text-slate-800 font-black uppercase tracking-[0.1em] text-[8.5px] sm:text-[10px]">Trusted by 10L+ users</span>
+                    </div>
+                    <h1 className="text-2xl sm:text-6xl font-black leading-[1.1] tracking-tighter text-slate-900 font-outfit uppercase">
                       Affordable <br/>
                       Solutions for <br/>
-                      <span className="text-secondary italic">Everyday Care</span>
+                      <span className="text-primary italic">Everyday Care</span>
                     </h1>
                   </motion.div>
                 </div>
@@ -103,7 +108,7 @@ export default function Home() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="w-2/5 sm:w-5/12 flex justify-end"
                 >
-                  <div className="relative w-full aspect-square max-w-[140px] sm:max-w-[400px] rounded-2xl sm:rounded-[40px] border-4 border-white/10 shadow-2xl overflow-hidden bg-white/5">
+                  <div className="relative w-full aspect-square max-w-[140px] sm:max-w-[400px] rounded-2xl sm:rounded-[40px] border-[6px] sm:border-[10px] border-white shadow-2xl overflow-hidden bg-white">
                     <Image 
                       src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
                       alt="Healthcare Professional" 
@@ -130,18 +135,18 @@ export default function Home() {
                       document.querySelector('input')?.focus();
                     }
                   }}
-                  className="w-full bg-white text-slate-900 rounded-full p-1 shadow-2xl shadow-black/20 flex items-center border border-white/20 cursor-pointer hover:scale-[1.01] active:scale-95 transition-all group"
+                  className="w-full bg-white text-slate-900 rounded-full p-1 shadow-2xl shadow-slate-200/50 flex items-center border border-slate-100 cursor-pointer hover:scale-[1.01] active:scale-95 transition-all group"
                 >
                   <div className="flex-1 px-5 text-left text-[11px] sm:text-[14px] font-bold uppercase tracking-[0.1em] text-slate-400">
                     Search Medicines...
                   </div>
-                  <div className="bg-primary p-2.5 sm:p-4 rounded-full shadow-lg">
+                  <div className="bg-primary p-2.5 sm:p-4 rounded-full shadow-lg shadow-primary/20">
                     <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                 </div>
               </motion.div>
 
-              {/* Row 3: Quick Action Buttons (Integrated) */}
+              {/* Row 3: Quick Action Buttons (Integrated with previous colours) */}
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -149,13 +154,15 @@ export default function Home() {
                 className="grid grid-cols-3 gap-2.5 sm:gap-6"
               >
                 {[
-                  { label: 'Upload Rx', href: '/prescription', color: 'bg-white/10 border-white/20 text-white', icon: FileText },
-                  { label: 'WhatsApp', href: 'https://wa.me/91XXXXXXXXXX', color: 'bg-white/10 border-white/20 text-white', icon: MessageCircle },
-                  { label: 'Call Order', href: 'tel:+91XXXXXXXXXX', color: 'bg-white/10 border-white/20 text-white', icon: Phone }
+                  { label: 'Upload Rx', href: '/prescription', color: 'bg-lavender', icon: FileText, iconColor: 'bg-primary' },
+                  { label: 'WhatsApp', href: 'https://wa.me/91XXXXXXXXXX', color: 'bg-green-50', icon: MessageCircle, iconColor: 'bg-[#25D366]' },
+                  { label: 'Call Order', href: 'tel:+91XXXXXXXXXX', color: 'bg-sahi-pink', icon: Phone, iconColor: 'bg-rose-500' }
                 ].map((action, i) => (
-                  <Link key={i} href={action.href} className={cn("group p-2.5 sm:p-6 rounded-xl sm:rounded-2xl border flex flex-col items-center justify-center text-center gap-1.5 transition-all active:scale-95", action.color)}>
-                    <action.icon className="w-4 h-4 sm:w-7 sm:h-7" />
-                    <span className="font-black text-[8.5px] sm:text-xs tracking-tight uppercase leading-none whitespace-nowrap">{action.label}</span>
+                  <Link key={i} href={action.href} className={cn("group p-3 sm:p-6 rounded-2xl border border-white shadow-xl shadow-slate-200/40 flex flex-col items-center justify-center text-center gap-1.5 transition-all active:scale-95", action.color)}>
+                    <div className={cn("w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl shadow-md", action.iconColor)}>
+                      <action.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <span className="font-black text-[8px] sm:text-[11px] tracking-tight text-slate-900 uppercase leading-none whitespace-nowrap">{action.label}</span>
                   </Link>
                 ))}
               </motion.div>

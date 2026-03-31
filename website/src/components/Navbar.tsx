@@ -312,12 +312,12 @@ export default function Navbar() {
                   <button className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-[9.5px] font-black group border",
                     scrolled 
-                      ? "bg-slate-50 border-slate-100 text-slate-600" 
+                      ? "bg-slate-50 border-slate-100 text-slate-600 shadow-sm" 
                       : isHome 
-                        ? "bg-white/20 border-white/30 text-white" 
-                        : "bg-white/60 border-white/60 text-slate-600"
+                        ? "bg-white/40 border-slate-200/50 text-slate-800 shadow-sm" 
+                        : "bg-white/60 border-white/60 text-slate-600 shadow-sm"
                   )}>
-                    <MapPin className={cn("w-3 h-3 transition-transform", scrolled ? "text-primary" : "text-white")} />
+                    <MapPin className={cn("w-3 h-3 transition-transform", scrolled || isHome ? "text-primary" : "text-white")} />
                     <span className="max-w-[70px] truncate tracking-tight">{location}</span>
                   </button>
                 </PopoverTrigger>
@@ -341,7 +341,7 @@ export default function Navbar() {
                   scrolled 
                     ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
                     : isHome 
-                      ? "bg-white/20 text-white border-white/30" 
+                      ? "bg-white/80 text-primary border-slate-200/50 shadow-sm" 
                       : "bg-primary/10 text-primary border-primary/20"
                 )}
               >
