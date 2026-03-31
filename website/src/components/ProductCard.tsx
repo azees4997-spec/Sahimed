@@ -62,9 +62,9 @@ export default function ProductCard({ product }: { product: Product }) {
               {product.brand}
             </p>
           )}
-          {product.saltComposition && (
+          {(product.saltComposition || product.composition || product.salt || (product as any).moleculeName || product.molecule) && (
             <p className="text-[6px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-tight line-clamp-1 opacity-80 leading-none mb-1">
-              {product.saltComposition}
+              {product.saltComposition || product.composition || product.salt || (product as any).moleculeName || product.molecule}
             </p>
           )}
           <h3 className="font-extrabold text-slate-900 text-[10px] sm:text-[15px] leading-tight line-clamp-2 min-h-[24px] sm:min-h-[44px] font-outfit uppercase tracking-tight">

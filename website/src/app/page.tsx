@@ -106,15 +106,15 @@ export default function Home() {
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="w-2/5 sm:w-5/12 flex justify-end"
+                  className="w-[45%] sm:w-5/12 flex justify-end relative h-full self-end"
                 >
-                  <div className="relative w-full aspect-square max-w-[140px] sm:max-w-[400px] overflow-hidden">
+                  <div className="relative w-full aspect-[4/5] max-w-[180px] sm:max-w-[450px]">
                     <Image 
-                      src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
+                      src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?q=80&w=2070&auto=format&fit=crop" 
                       alt="Healthcare Professional" 
                       fill
                       priority
-                      className="object-cover object-top" 
+                      className="object-contain object-bottom mix-blend-multiply" 
                     />
                   </div>
                 </motion.div>
@@ -181,11 +181,11 @@ export default function Home() {
                   <Badge className="bg-yellow-100 text-yellow-700 border-none font-black px-2 py-0.5 rounded-full uppercase tracking-widest text-[7px] sm:text-[9px]">Best Sellers</Badge>
                 </div>
               </div>
-              <div className="flex gap-2 sm:gap-10 overflow-x-auto scrollbar-hide pb-8 px-2">
+              <div className="grid grid-cols-3 sm:flex gap-2 sm:gap-10 overflow-x-hidden sm:overflow-x-auto sm:scrollbar-hide pb-2 sm:pb-8 px-2">
                 {isBestLoading ? (
-                  [...Array(4)].map((_, i) => <Skeleton className="min-w-[115px] sm:min-w-[280px] aspect-[4/5] rounded-[32px] sm:rounded-[48px]" key={i} />)
-                ) : bestSellers?.map((p: any) => (
-                  <div key={p.id} className="min-w-[115px] sm:min-w-[280px]">
+                  [...Array(3)].map((_, i) => <Skeleton className="w-full aspect-[4/5] rounded-[24px] sm:rounded-[48px]" key={i} />)
+                ) : bestSellers?.slice(0, 3).map((p: any) => (
+                  <div key={p.id} className="w-full sm:min-w-[280px]">
                     <ProductCard product={p} />
                   </div>
                 ))}
@@ -206,10 +206,10 @@ export default function Home() {
                   <motion.div 
                     whileHover={{ y: -5 }}
                     className={cn(
-                      "w-20 h-20 sm:w-32 sm:h-32 rounded-[24px] sm:rounded-[48px] flex items-center justify-center border border-white shadow-sm p-2",
+                      "w-24 h-24 sm:w-32 sm:h-32 rounded-[24px] sm:rounded-[48px] flex items-center justify-center border border-white shadow-sm overflow-hidden p-0",
                       i % 4 === 0 ? "bg-lavender" : i % 4 === 1 ? "bg-sahi-pink" : i % 4 === 2 ? "bg-sahi-blue" : "bg-sahi-green"
                     )}>
-                    <Image src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} alt={cat.name} width={128} height={128} className="object-contain w-full h-full" />
+                    <Image src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} alt={cat.name} width={128} height={128} className="object-cover w-full h-full" />
                   </motion.div>
                   <span className="text-[9px] sm:text-xs font-black text-slate-500 tracking-tight uppercase">{cat.name}</span>
                 </Link>
@@ -218,7 +218,7 @@ export default function Home() {
           </section>
 
           {/* Free Delivery Banner (Moved below Categories) */}
-          <section className="bg-lavender/40 px-5 py-5 sm:px-12 sm:py-10 rounded-[28px] sm:rounded-[48px] text-slate-900 flex flex-row items-center justify-between gap-4 border border-white shadow-xl shadow-slate-200/40 relative overflow-hidden">
+          <section className="bg-gradient-to-br from-sahi-blue/40 to-lavender/40 px-5 py-5 sm:px-12 sm:py-10 rounded-[28px] sm:rounded-[48px] text-slate-900 flex flex-row items-center justify-between gap-4 border border-white shadow-xl shadow-slate-200/20 relative overflow-hidden">
             <div className="space-y-1 relative z-10 max-w-xl text-left flex-1 min-w-0">
                <h3 className="text-lg sm:text-3xl font-black tracking-tighter uppercase leading-tight">
                  Pan India Free Delivery<br className="max-sm:hidden"/> Above ₹499
@@ -231,7 +231,7 @@ export default function Home() {
                </Link>
             </div>
             <div className="relative z-10 shrink-0">
-               <div className="w-14 h-14 sm:w-28 sm:h-28 bg-white rounded-[20px] sm:rounded-[40px] flex items-center justify-center border border-slate-100 shadow-sm">
+               <div className="w-14 h-14 sm:w-28 sm:h-28 bg-white rounded-[20px] sm:rounded-[40px] flex items-center justify-center border border-white shadow-xl shadow-slate-200/10">
                  <Package className="w-7 h-7 sm:w-16 sm:h-16 text-primary" />
                </div>
             </div>
