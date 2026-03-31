@@ -9,11 +9,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Badge } from "@/components/ui/badge";
 import { hoverVariant, springTransition, tapVariant } from '@/lib/animations';
+import { useMongoDBMolecule } from '@/hooks/use-mongodb';
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
   const { toast } = useToast();
   
+  const { data: molData } = useMongoDBMolecule(product.moleculeId);
+  const moleculeName = molData?.molecule || product.saltComposition || (product as any).composition || (product as any).salt || (product as any).moleculeName || (product as any).molecule;
+
   const quantity = getItemQuantity(product.id);
 
   const pPriceRaw = product.liveData?.sahimed_price || product.price || 0;
@@ -62,9 +66,9 @@ export default function ProductCard({ product }: { product: Product }) {
               {product.brand}
             </p>
           )}
-          {(product.saltComposition || product.composition || product.salt || (product as any).moleculeName || product.molecule) && (
+          {moleculeName && (
             <p className="text-[6px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-tight line-clamp-1 opacity-80 leading-none mb-1">
-              {product.saltComposition || product.composition || product.salt || (product as any).moleculeName || product.molecule}
+              {moleculeName}
             </p>
           )}
           <h3 className="font-extrabold text-slate-900 text-[10px] sm:text-[15px] leading-tight line-clamp-2 min-h-[24px] sm:min-h-[44px] font-outfit uppercase tracking-tight">

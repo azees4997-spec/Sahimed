@@ -11,6 +11,18 @@ const getQuery = (id: string) => {
   return { _id: id as any };
 };
 
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const client = await clientPromise;
+    const db = client.db('sahimed');
+    const molecule = await db.collection('molecules').findOne(getQuery(params.id));
+    if (!molecule) return NextResponse.json({ error: 'Molecule not found' }, { status: 404 });
+    return NextResponse.json({ ...molecule, id: molecule._id.toString() });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     await verifyAdmin(request);
