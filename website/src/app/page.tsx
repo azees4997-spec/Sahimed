@@ -106,15 +106,15 @@ export default function Home() {
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="w-[45%] sm:w-5/12 flex justify-end relative h-full self-end"
+                  className="w-2/5 sm:w-5/12 flex justify-end"
                 >
-                  <div className="relative w-full aspect-[4/5] max-w-[180px] sm:max-w-[450px]">
+                  <div className="relative w-full aspect-square max-w-[140px] sm:max-w-[400px] rounded-2xl sm:rounded-[40px] border-[6px] sm:border-[10px] border-white shadow-2xl overflow-hidden bg-white">
                     <Image 
-                      src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?q=80&w=2070&auto=format&fit=crop" 
+                      src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
                       alt="Healthcare Professional" 
                       fill
                       priority
-                      className="object-contain object-bottom mix-blend-multiply" 
+                      className="object-cover object-top" 
                     />
                   </div>
                 </motion.div>
@@ -198,20 +198,20 @@ export default function Home() {
               <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Shop by category</h2>
               <Link href="/categories" className="text-[9px] sm:text-[11px] font-black tracking-widest text-primary uppercase flex items-center gap-1.5">Explore All <ChevronRight className="w-3.5 h-3.5" /></Link>
             </div>
-            <div className="flex gap-4 sm:gap-10 overflow-x-auto scrollbar-hide pb-4 px-2">
+            <div className="grid grid-cols-3 sm:flex gap-3 sm:gap-10 pb-4 px-2">
               {isCatsLoading ? (
-                [...Array(6)].map((_, i) => <Skeleton className="w-20 h-20 sm:w-32 sm:h-32 rounded-[24px] shrink-0" key={i} />)
-              ) : categories?.map((cat: any, i) => (
-                <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-3 shrink-0">
+                [...Array(6)].map((_, i) => <Skeleton className="w-full aspect-square rounded-[24px] shrink-0" key={i} />)
+              ) : categories?.slice(0, 9).map((cat: any, i) => (
+                <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-2">
                   <motion.div 
                     whileHover={{ y: -5 }}
                     className={cn(
-                      "w-24 h-24 sm:w-32 sm:h-32 rounded-[24px] sm:rounded-[48px] flex items-center justify-center border border-white shadow-sm overflow-hidden p-0",
+                      "w-20 h-20 sm:w-32 sm:h-32 rounded-[24px] sm:rounded-[48px] flex items-center justify-center border border-white shadow-sm overflow-hidden p-0",
                       i % 4 === 0 ? "bg-lavender" : i % 4 === 1 ? "bg-sahi-pink" : i % 4 === 2 ? "bg-sahi-blue" : "bg-sahi-green"
                     )}>
                     <Image src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} alt={cat.name} width={128} height={128} className="object-cover w-full h-full" />
                   </motion.div>
-                  <span className="text-[9px] sm:text-xs font-black text-slate-500 tracking-tight uppercase">{cat.name}</span>
+                  <span className="text-[8px] sm:text-xs font-black text-slate-500 tracking-tight uppercase text-center line-clamp-1 h-3">{cat.name}</span>
                 </Link>
               ))}
             </div>
