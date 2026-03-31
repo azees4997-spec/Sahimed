@@ -108,7 +108,7 @@ export default function Home() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="w-2/5 sm:w-5/12 flex justify-end"
                 >
-                  <div className="relative w-full aspect-square max-w-[140px] sm:max-w-[400px] rounded-2xl sm:rounded-[40px] border-[6px] sm:border-[10px] border-white shadow-2xl overflow-hidden bg-white">
+                  <div className="relative w-full aspect-square max-w-[140px] sm:max-w-[400px] overflow-hidden">
                     <Image 
                       src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
                       alt="Healthcare Professional" 
@@ -181,11 +181,11 @@ export default function Home() {
                   <Badge className="bg-yellow-100 text-yellow-700 border-none font-black px-2 py-0.5 rounded-full uppercase tracking-widest text-[7px] sm:text-[9px]">Best Sellers</Badge>
                 </div>
               </div>
-              <div className="flex gap-4 sm:gap-10 overflow-x-auto scrollbar-hide pb-8 px-2">
+              <div className="flex gap-2 sm:gap-10 overflow-x-auto scrollbar-hide pb-8 px-2">
                 {isBestLoading ? (
-                  [...Array(4)].map((_, i) => <Skeleton className="min-w-[140px] sm:min-w-[280px] aspect-[4/5] rounded-[32px] sm:rounded-[48px]" key={i} />)
+                  [...Array(4)].map((_, i) => <Skeleton className="min-w-[115px] sm:min-w-[280px] aspect-[4/5] rounded-[32px] sm:rounded-[48px]" key={i} />)
                 ) : bestSellers?.map((p: any) => (
-                  <div key={p.id} className="min-w-[140px] sm:min-w-[280px]">
+                  <div key={p.id} className="min-w-[115px] sm:min-w-[280px]">
                     <ProductCard product={p} />
                   </div>
                 ))}
@@ -206,7 +206,7 @@ export default function Home() {
                   <motion.div 
                     whileHover={{ y: -5 }}
                     className={cn(
-                      "w-20 h-20 sm:w-32 sm:h-32 rounded-[24px] sm:rounded-[48px] flex items-center justify-center border border-white shadow-sm p-4",
+                      "w-20 h-20 sm:w-32 sm:h-32 rounded-[24px] sm:rounded-[48px] flex items-center justify-center border border-white shadow-sm p-2",
                       i % 4 === 0 ? "bg-lavender" : i % 4 === 1 ? "bg-sahi-pink" : i % 4 === 2 ? "bg-sahi-blue" : "bg-sahi-green"
                     )}>
                     <Image src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} alt={cat.name} width={128} height={128} className="object-contain w-full h-full" />
@@ -218,21 +218,21 @@ export default function Home() {
           </section>
 
           {/* Free Delivery Banner (Moved below Categories) */}
-          <section className="bg-slate-900 px-6 py-6 sm:px-12 sm:py-10 rounded-[24px] sm:rounded-[48px] text-white flex flex-row items-center justify-between gap-4 shadow-3xl relative overflow-hidden">
-            <div className="space-y-2 relative z-10 max-w-xl text-left flex-1 min-w-0">
-               <h3 className="text-lg sm:text-3xl font-black tracking-tighter uppercase leading-tight text-white">
+          <section className="bg-lavender/40 px-5 py-5 sm:px-12 sm:py-10 rounded-[28px] sm:rounded-[48px] text-slate-900 flex flex-row items-center justify-between gap-4 border border-white shadow-xl shadow-slate-200/40 relative overflow-hidden">
+            <div className="space-y-1 relative z-10 max-w-xl text-left flex-1 min-w-0">
+               <h3 className="text-lg sm:text-3xl font-black tracking-tighter uppercase leading-tight">
                  Pan India Free Delivery<br className="max-sm:hidden"/> Above ₹499
                </h3>
-               <p className="text-[9px] sm:text-xs font-bold text-white/60 uppercase tracking-widest truncate">
+               <p className="text-[8px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest truncate">
                  Order Now & Save More
                </p>
-               <Link href="/search" className="inline-block mt-3 px-6 py-2.5 sm:py-3.5 bg-primary text-white font-black text-[9px] sm:text-[10px] uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-xl">
+               <Link href="/search" className="inline-block mt-2 px-5 py-2.5 bg-primary text-white font-black text-[9px] sm:text-[10px] uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-xl shadow-primary/20">
                  Shop Now
                </Link>
             </div>
-            <div className="relative z-10 shrink-0 right-0 sm:right-4">
-               <div className="w-16 h-16 sm:w-28 sm:h-28 bg-primary/20 rounded-[20px] sm:rounded-[40px] flex items-center justify-center border border-primary/30">
-                 <Package className="w-8 h-8 sm:w-16 sm:h-16 text-primary" />
+            <div className="relative z-10 shrink-0">
+               <div className="w-14 h-14 sm:w-28 sm:h-28 bg-white rounded-[20px] sm:rounded-[40px] flex items-center justify-center border border-slate-100 shadow-sm">
+                 <Package className="w-7 h-7 sm:w-16 sm:h-16 text-primary" />
                </div>
             </div>
           </section>

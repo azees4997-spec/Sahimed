@@ -58,8 +58,13 @@ export default function ProductCard({ product }: { product: Product }) {
  
         <div className="space-y-0.5 sm:space-y-2 flex-1 px-0.5 min-w-0">
           {product.brand && (
-            <p className="text-[7px] sm:text-[10px] font-black text-primary/80 uppercase tracking-widest mb-0">
+            <p className="text-[7px] sm:text-[10px] font-black text-primary/80 uppercase tracking-widest mb-0.5">
               {product.brand}
+            </p>
+          )}
+          {product.saltComposition && (
+            <p className="text-[6px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-tight line-clamp-1 opacity-80 leading-none mb-1">
+              {product.saltComposition}
             </p>
           )}
           <h3 className="font-extrabold text-slate-900 text-[10px] sm:text-[15px] leading-tight line-clamp-2 min-h-[24px] sm:min-h-[44px] font-outfit uppercase tracking-tight">
