@@ -4,10 +4,10 @@
   },
   "apphosting": {
     "backendId": "studio",
-    "rootDir": "sahimed-website"
+    "rootDir": "website"
   },
   "functions": {
-    "source": "sahimed-website/functions",
+    "source": "website/functions",
     "runtime": "nodejs20"
   }
 }
