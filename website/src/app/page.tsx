@@ -72,109 +72,93 @@ export default function Home() {
       <div className="min-h-screen bg-[#F8FAFC]">
         <Navbar />
         
-        {/* Full Width Hero HeroSection (Outside main container) */}
-        <section className="relative w-full bg-[#FFF9F9] border-b border-rose-50/50">
-          <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
-            <Carousel setApi={setApi} plugins={[plugin.current]} className="w-full">
-              <CarouselContent>
-                {isBannersLoading ? (
-                  <CarouselItem>
-                     <Skeleton className="w-full min-h-[200px] sm:min-h-[360px] rounded-[24px]" />
-                  </CarouselItem>
-                ) : (banners && banners.length > 0) ? (
-                  banners.map((b) => (
-                    <CarouselItem key={b.id}>
-                      <div className="relative overflow-hidden p-5 sm:p-10 flex flex-col justify-center min-h-[200px] sm:min-h-[360px] rounded-[24px] bg-slate-900 shadow-xl group">
-                        {b.imageUrl && <Image src={b.imageUrl} alt={b.title || 'Banner'} fill className="object-cover absolute inset-0 opacity-40 group-hover:scale-105 transition-transform duration-700" />}
-                        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent pointer-events-none" />
-                        <div className="space-y-4 max-w-xl relative z-10 pointer-events-none p-4 sm:p-0">
-                          <Badge className="bg-primary/30 text-white border-white/20 font-black px-3 py-1 rounded-full uppercase tracking-widest text-[8px] backdrop-blur-md">Sahimed Exclusive</Badge>
-                          <h2 className="text-2xl sm:text-4xl font-black leading-tight tracking-tighter text-white uppercase font-outfit drop-shadow-2xl">{b.title}</h2>
-                          {b.subtitle && <p className="text-white/80 font-bold text-[11px] sm:text-lg tracking-tight max-w-sm">{b.subtitle}</p>}
-                        </div>
-                      </div>
-                    </CarouselItem>
-                  ))
-                ) : (
-                  <>
-                    <CarouselItem>
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="relative overflow-hidden flex flex-col sm:flex-row items-center justify-between min-h-[220px] sm:h-[360px] group"
-                      >
-                          <div className="relative z-10 w-full sm:w-1/2 flex flex-col items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6">
-                            <h1 className="text-3xl sm:text-5xl font-black leading-[1] tracking-tighter text-slate-900 font-outfit uppercase">
-                                Affordable Solutions for <br className="hidden sm:block" />
-                                <span className="text-primary italic">Everyday Care</span>
-                            </h1>
+        {/* Mega Banner Hero Section */}
+        <section className="relative w-full bg-primary overflow-hidden pb-10 sm:pb-20 pt-20 sm:pt-32">
+          {/* Background Decorative Elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none" />
+          
+          <div className="max-w-7xl mx-auto px-4 relative z-10">
+            <div className="flex flex-col gap-6 sm:gap-12">
+              
+              {/* Row 1: Side-by-Side Text & Image */}
+              <div className="flex items-center justify-between gap-4 sm:gap-12">
+                <div className="flex-1 space-y-3 sm:space-y-6">
+                  <motion.div 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="space-y-1 sm:space-y-3"
+                  >
+                    <Badge className="bg-white/10 text-white border-white/20 font-black px-2 py-0.5 rounded-full uppercase tracking-tighter text-[7.5px] sm:text-[10px] backdrop-blur-md w-fit">Trusted by 10L+ users</Badge>
+                    <h1 className="text-2xl sm:text-6xl font-black leading-[1.1] tracking-tighter text-white font-outfit uppercase">
+                      Affordable <br/>
+                      Solutions for <br/>
+                      <span className="text-secondary italic">Everyday Care</span>
+                    </h1>
+                  </motion.div>
+                </div>
 
-                            <div className="flex flex-col gap-2 sm:gap-2 w-full items-center sm:items-start">
-                               <div className="flex items-center gap-2.5 px-3 py-1.5 bg-white/50 backdrop-blur-sm rounded-full border border-white/50">
-                                  <div className="w-4 h-4 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
-                                     <ShieldCheck className="w-2.5 h-2.5 text-white" />
-                                  </div>
-                                  <span className="text-slate-800 font-black uppercase tracking-[0.1em] text-[9px] sm:text-[10px]">Trusted by 10L+ users</span>
-                               </div>
-                            </div>
-
-                            <button 
-                               onClick={() => { 
-                                 if (window.innerWidth < 1024) {
-                                   // Custom event to trigger mobile search overlay in Navbar
-                                   window.dispatchEvent(new CustomEvent('open-mobile-search'));
-                                 } else {
-                                   document.querySelector('input')?.focus();
-                                 }
-                               }}
-                               className="w-full max-w-[280px] sm:max-w-sm mt-4 bg-white text-slate-900 rounded-full p-1 shadow-2xl shadow-slate-200/50 flex items-center border border-slate-100 active:scale-95 transition-all group"
-                            >
-                               <div className="flex-1 px-5 text-left text-[11px] sm:text-[13px] font-black uppercase tracking-[0.2em] text-slate-400">
-                                  Search Medicines
-                               </div>
-                               <div className="bg-primary p-3 sm:p-4 rounded-full group-hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
-                                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                               </div>
-                            </button>
-                         </div>
-
-                         <div className="relative z-10 w-full sm:w-5/12 flex justify-center mt-6 sm:mt-0">
-                            <div className="relative w-36 h-36 sm:w-[300px] sm:h-[300px] rounded-full border-[6px] sm:border-[10px] border-white shadow-2xl overflow-hidden bg-white">
-                               <Image 
-                                  src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
-                                  alt="Healthcare Professional" 
-                                  fill
-                                  priority
-                                  className="object-cover object-top" 
-                               />
-                            </div>
-                         </div>
-                      </motion.div>
-                    </CarouselItem>
-                  </>
-                )}
-              </CarouselContent>
-            </Carousel>
-
-            {/* QUICK ACTIONS INTEGRATED INTO HERO CONTAINER */}
-            <div className="mt-10 grid grid-cols-3 gap-3 sm:gap-6">
-              {[
-                { label: 'Upload Rx', href: '/prescription', sub: 'Easy Upload', color: 'bg-lavender', iconColor: 'bg-primary text-white', icon: FileText },
-                { label: 'WhatsApp', href: 'https://wa.me/91XXXXXXXXXX', sub: 'Chat & Order', color: 'bg-green-50', iconColor: 'bg-[#25D366] text-white', icon: () => <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" className="w-4 h-4 sm:w-6 sm:h-6"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" /><path d="M9 10a5 5 0 1 1 5 5h-1a.5.5 0 0 0 0 1h1a5 5 0 1 1 5 5" /></svg> },
-                { label: 'Call Order', href: 'tel:+91XXXXXXXXXX', sub: 'Direct Call', color: 'bg-sahi-pink', iconColor: 'bg-rose-500 text-white', icon: Phone }
-              ].map((action, i) => (
-                <motion.div key={i} whileTap={{ scale: 0.96 }}>
-                  <Link href={action.href} className={cn("group h-full p-4 sm:p-7 rounded-[28px] sm:rounded-[36px] flex flex-col items-center text-center gap-2 sm:gap-4 transition-all border border-white shadow-xl shadow-slate-200/40 overflow-hidden", action.color)}>
-                     <div className={cn("w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center rounded-[14px] sm:rounded-[18px] shadow-lg", action.iconColor)}>
-                        <action.icon className="w-5 h-5 sm:w-7 sm:h-7" />
-                     </div>
-                     <div className="space-y-0.5">
-                        <h3 className="font-outfit font-black text-slate-900 text-[10px] sm:text-[12px] tracking-tight leading-tight uppercase line-clamp-1">{action.label}</h3>
-                        <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">{action.sub}</p>
-                     </div>
-                  </Link>
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="w-2/5 sm:w-5/12 flex justify-end"
+                >
+                  <div className="relative w-full aspect-square max-w-[140px] sm:max-w-[400px] rounded-2xl sm:rounded-[40px] border-4 border-white/10 shadow-2xl overflow-hidden bg-white/5">
+                    <Image 
+                      src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
+                      alt="Healthcare Professional" 
+                      fill
+                      priority
+                      className="object-cover object-top" 
+                    />
+                  </div>
                 </motion.div>
-              ))}
+              </div>
+
+              {/* Row 2: Properly Aligned Search Bar */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="w-full"
+              >
+                <div 
+                  onClick={() => { 
+                    if (window.innerWidth < 1024) {
+                      window.dispatchEvent(new CustomEvent('open-mobile-search'));
+                    } else {
+                      document.querySelector('input')?.focus();
+                    }
+                  }}
+                  className="w-full bg-white text-slate-900 rounded-full p-1 shadow-2xl shadow-black/20 flex items-center border border-white/20 cursor-pointer hover:scale-[1.01] active:scale-95 transition-all group"
+                >
+                  <div className="flex-1 px-5 text-left text-[11px] sm:text-[14px] font-bold uppercase tracking-[0.1em] text-slate-400">
+                    Search Medicines...
+                  </div>
+                  <div className="bg-primary p-2.5 sm:p-4 rounded-full shadow-lg">
+                    <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Row 3: Quick Action Buttons (Integrated) */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="grid grid-cols-3 gap-2.5 sm:gap-6"
+              >
+                {[
+                  { label: 'Upload Rx', href: '/prescription', color: 'bg-white/10 border-white/20 text-white', icon: FileText },
+                  { label: 'WhatsApp', href: 'https://wa.me/91XXXXXXXXXX', color: 'bg-white/10 border-white/20 text-white', icon: MessageCircle },
+                  { label: 'Call Order', href: 'tel:+91XXXXXXXXXX', color: 'bg-white/10 border-white/20 text-white', icon: Phone }
+                ].map((action, i) => (
+                  <Link key={i} href={action.href} className={cn("group p-2.5 sm:p-6 rounded-xl sm:rounded-2xl border flex flex-col items-center justify-center text-center gap-1.5 transition-all active:scale-95", action.color)}>
+                    <action.icon className="w-4 h-4 sm:w-7 sm:h-7" />
+                    <span className="font-black text-[8.5px] sm:text-xs tracking-tight uppercase leading-none whitespace-nowrap">{action.label}</span>
+                  </Link>
+                ))}
+              </motion.div>
             </div>
           </div>
         </section>

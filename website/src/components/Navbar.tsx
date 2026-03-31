@@ -16,6 +16,7 @@ import Image from 'next/image';
 import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, getDoc, doc } from 'firebase/firestore';
 import MobileSearchOverlay from './MobileSearchOverlay';
+import { usePathname } from 'next/navigation';
 
 export function SahiMedIcon({ className }: { className?: string }) {
   return (
@@ -67,6 +68,8 @@ export default function Navbar() {
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
+  const isHome = pathname === '/';
 
   useEffect(() => {
     const handleOpenSearch = () => setIsSearchOverlayOpen(true);
@@ -74,10 +77,10 @@ export default function Navbar() {
     
     const handleScroll = () => {
       const y = window.scrollY;
-      if (y > 120) {
-        setScrolled(true);
-      } else if (y < 20) {
-        setScrolled(false);
+      if (isHome) {
+        setScrolled(y > 50);
+      } else {
+        setScrolled(y > 20);
       }
     };
     window.addEventListener('scroll', handleScroll);
@@ -268,14 +271,18 @@ export default function Navbar() {
         transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.1 }}
         className={cn(
           "sticky top-0 z-[100] transition-all duration-500",
-          scrolled ? "bg-white shadow-xl border-b border-slate-100" : "bg-transparent px-4 py-3 sm:py-4"
+          scrolled 
+            ? "bg-white shadow-xl border-b border-slate-100" 
+            : isHome 
+              ? "bg-transparent" 
+              : "bg-white/40 backdrop-blur-md"
         )}
       >
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto px-4 py-2 sm:py-4">
           {/* Main Container */}
           <div className={cn(
             "flex justify-between items-center transition-all duration-500",
-            scrolled ? "bg-white px-4 py-3" : "bg-white/40 backdrop-blur-md p-2 rounded-full border border-white/40 shadow-sm overflow-hidden"
+            scrolled ? "bg-transparent" : "bg-transparent"
           )}>
             {/* Logo Section */}
             <Link href="/" className="flex items-center gap-1.5 group shrink-0 ml-1">
@@ -298,14 +305,20 @@ export default function Navbar() {
             </div>
 
             {/* Right Section: Location, Search (Mobile Trigger), & Cart */}
-            <div className="flex items-center gap-2 sm:gap-3 pr-1">
-              {/* Location Picker */}
+            <div className="flex items-center gap-2 sm:gap-4 pr-1">
+              {/* Location Picker (Mobile: Show simplified or icon only if needed, but keeping text for clarity) */}
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <button className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-white/60 hover:bg-white transition-all text-[10px] sm:text-xs font-black text-slate-600 border border-white/60 shadow-sm group">
-                    <MapPin className="w-3.5 h-3.5 text-primary group-hover:scale-110 transition-transform" />
-                    <span className="max-w-[60px] sm:max-w-none truncate tracking-tight">{location}</span>
-                    <ChevronDown className="w-3 3 h-3 opacity-40 shrink-0" />
+                  <button className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-[9.5px] font-black group border",
+                    scrolled 
+                      ? "bg-slate-50 border-slate-100 text-slate-600" 
+                      : isHome 
+                        ? "bg-white/20 border-white/30 text-white" 
+                        : "bg-white/60 border-white/60 text-slate-600"
+                  )}>
+                    <MapPin className={cn("w-3 h-3 transition-transform", scrolled ? "text-primary" : "text-white")} />
+                    <span className="max-w-[70px] truncate tracking-tight">{location}</span>
                   </button>
                 </PopoverTrigger>
                 <PopoverContent sideOffset={12} className="w-72 p-5 rounded-[32px] shadow-3xl border border-white/50 glass">
@@ -323,22 +336,35 @@ export default function Navbar() {
               {/* Mobile Search Overlay Trigger */}
               <button 
                 onClick={() => setIsSearchOverlayOpen(true)}
-                className="lg:hidden flex items-center justify-center p-2.5 bg-white/60 backdrop-blur-md rounded-full border border-white/60 shadow-sm shrink-0 hover:bg-primary/5 active:scale-95 transition-all"
+                className={cn(
+                  "lg:hidden flex items-center justify-center p-2 rounded-full border transition-all h-9 w-9",
+                  scrolled 
+                    ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
+                    : isHome 
+                      ? "bg-white/20 text-white border-white/30" 
+                      : "bg-primary/10 text-primary border-primary/20"
+                )}
               >
-                <SearchIcon className="w-5 h-5 text-primary" />
+                <SearchIcon className="w-4 h-4" />
               </button>
 
               {/* Cart Button */}
-              <Link href="/cart" className="flex items-center gap-2 group shrink-0">
-                <div className="p-2.5 sm:p-3 bg-white/60 backdrop-blur-md rounded-full group-hover:bg-primary group-hover:text-white transition-all duration-500 border border-white/60 shadow-sm relative">
-                  <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
+              <Link href="/cart" className="flex items-center group shrink-0">
+                <div className={cn(
+                  "p-2 rounded-full transition-all duration-500 border relative h-9 w-9 flex items-center justify-center",
+                  scrolled 
+                    ? "bg-slate-100 text-slate-900 border-slate-200" 
+                    : isHome 
+                      ? "bg-white text-primary border-white" 
+                      : "bg-primary/10 text-primary border-primary/20"
+                )}>
+                  <ShoppingCart className="w-4 h-4" />
                   {totalItems > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-accent text-white h-4.5 min-w-[18px] sm:h-6 sm:min-w-[24px] flex items-center justify-center p-0 text-[8px] sm:text-[10px] font-black rounded-full border-2 border-white shadow-lg animate-bounce">
+                    <span className="absolute -top-1 -right-1 bg-accent text-white h-4 min-w-[16px] flex items-center justify-center text-[8px] font-black rounded-full border-2 border-white shadow-lg">
                       {totalItems}
                     </span>
                   )}
                 </div>
-                <span className="hidden sm:block font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-primary transition-colors">Cart</span>
               </Link>
             </div>
           </div>

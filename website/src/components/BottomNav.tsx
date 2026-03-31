@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, LayoutGrid, ClipboardList, User } from 'lucide-react';
+import { Home, Search, ClipboardList, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -12,14 +12,14 @@ export default function BottomNav() {
 
   const navItems = [
     { label: 'Home', icon: Home, path: '/' },
-    { label: 'Categories', icon: LayoutGrid, path: '/categories' },
-    { label: 'Orders', icon: ClipboardList, path: '/orders' },
-    { label: 'Profile', icon: User, path: '/profile' },
+    { label: 'Search', icon: Search, path: '/search' },
+    { label: 'Refills', icon: ClipboardList, path: '/orders' },
+    { label: 'Account', icon: User, path: '/profile' },
   ];
 
   return (
-    <div className="sm:hidden fixed bottom-0 left-0 right-0 z-[150] bg-white/90 backdrop-blur-xl border-t border-slate-100 shadow-[0_-8px_40px_rgba(0,0,0,0.08)] safe-bottom pointer-events-auto rounded-t-[32px]">
-      <div className="flex justify-around items-center h-[5.5rem] px-6 relative">
+    <div className="sm:hidden fixed bottom-6 left-6 right-6 z-[150] bg-white/80 backdrop-blur-3xl border border-white/20 shadow-2xl safe-bottom pointer-events-auto rounded-[32px]">
+      <div className="flex justify-around items-center h-20 px-4 relative">
         {navItems.map((item) => {
           const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
           
@@ -28,20 +28,20 @@ export default function BottomNav() {
               key={item.path} 
               href={item.path} 
               className={cn(
-                "flex-1 flex flex-col items-center justify-center gap-1.5 transition-all duration-500 relative z-10",
+                "flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-300 relative z-10",
                 isActive ? "text-primary" : "text-slate-400"
               )}
             >
-              <motion.div
-                animate={isActive ? { scale: 1.2, y: -2 } : { scale: 1, y: 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              >
-                <item.icon className={cn("w-6 h-6", isActive ? "stroke-[2.5px]" : "stroke-[2px]")} />
-              </motion.div>
+              <div className={cn(
+                "p-2 rounded-2xl transition-all duration-500",
+                isActive ? "bg-primary/10 scale-110" : "bg-transparent scale-100"
+              )}>
+                <item.icon className={cn("w-5.5 h-5.5 transition-all", isActive ? "stroke-[2.5px]" : "stroke-[2px]")} />
+              </div>
               
               <span className={cn(
-                "text-[9px] uppercase tracking-[0.15em] font-black leading-none transition-all duration-300",
-                isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
+                "text-[8px] uppercase tracking-[0.1em] font-black leading-none transition-all duration-300",
+                isActive ? "opacity-100" : "opacity-60"
               )}>
                 {item.label}
               </span>
@@ -49,7 +49,7 @@ export default function BottomNav() {
               {isActive && (
                 <motion.div 
                   layoutId="bottom-nav-indicator"
-                  className="absolute -top-2 w-12 h-1 bg-primary rounded-full"
+                  className="absolute -bottom-2 w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
