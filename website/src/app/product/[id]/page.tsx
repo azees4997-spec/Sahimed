@@ -176,31 +176,39 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const product = rawProduct;
   const { data: molData } = useMongoDBMolecule(product?.moleculeId);
 
-  const { data: genericAlternatives } = useMongoDBCollection({ 
-    moleculeId: product?.moleculeId,
-    isGeneric: true,
-    limit: 10 
-  });
-  
   const isGeneric = product?.isGeneric === true || product?.isGeneric === "true";
   const isBranded = !isGeneric;
   
-  const genericAlt = genericAlternatives?.find((a: any) => 
-    (a.isGeneric === true || a.isGeneric === "true") && 
+  // Rule: Fetch Generic if current is Branded, or Branded if current is Generic
+  const { data: counterparts } = useMongoDBCollection({ 
+    moleculeId: product?.moleculeId,
+    isGeneric: isBranded ? true : false, // Invert search for counterpart
+    limit: 5 
+  });
+  
+  const counterPart = counterparts?.find((a: any) => 
     String(a.id || a._id) !== String(product?.id || product?._id)
   );
 
-  const hasGenericAlt = !!genericAlt;
-  const showComparison = isBranded && hasGenericAlt;
+  const hasCounterPart = !!counterPart;
+  
+  // Rule: Show comparison if ANY molecular counterpart exists
+  const showComparison = hasCounterPart;
+
+  // Selection Logic: brandedItem is always the non-generic one, genericItem is always generic
+  const brandedItem = isBranded ? product : counterPart;
+  const genericItem = isBranded ? counterPart : product;
 
   const pPriceRaw = product?.liveData?.sahimed_price || product?.price || 0;
   const pMrpRaw = product?.liveData?.mrp || product?.mrp || (Number(pPriceRaw) + 20);
 
-  const brandedPrice = Number(pPriceRaw) || 0;
-  const brandedMrp = Number(pMrpRaw) || (brandedPrice + 20);
+  // Pricing Logic (Savings always relative to Branded MRP)
+  const brandedPriceRaw = brandedItem?.liveData?.sahimed_price || brandedItem?.price || 0;
+  const brandedMrpRaw = brandedItem?.liveData?.mrp || brandedItem?.mrp || (Number(brandedPriceRaw) + 20);
+  const brandedMrp = Number(brandedMrpRaw) || 0;
   
-  const genPriceRaw = genericAlt ? (genericAlt.liveData?.sahimed_price || genericAlt.price || 0) : 0;
-  const genericPrice = Number(genPriceRaw) || 0;
+  const genericPriceRaw = genericItem?.liveData?.sahimed_price || genericItem?.price || 0;
+  const genericPrice = Number(genericPriceRaw) || 0;
   
   const switchSavingsAmt = Math.max(0, brandedMrp - genericPrice);
   const switchSavingsPct = brandedMrp > 0 ? Math.round((switchSavingsAmt / brandedMrp) * 100) : 0;
@@ -280,7 +288,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             {showComparison ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-10 items-stretch">
                 <ComparisonCard 
-                  product={product} 
+                  product={brandedItem} 
                   label="Original Branded" 
                   getItemQuantity={getItemQuantity}
                   addToCart={addToCart}
@@ -288,7 +296,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   brandedMrp={brandedMrp}
                 />
                 <ComparisonCard 
-                  product={genericAlt} 
+                  product={genericItem} 
                   label="Smart Switch Alternative" 
                   isAlt 
                   getItemQuantity={getItemQuantity}

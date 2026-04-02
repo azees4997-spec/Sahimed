@@ -4,60 +4,66 @@ import { ObjectId } from 'mongodb';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const limitValue = parseInt(searchParams.get('limit') || '10');
+  const limitValue = parseInt(searchParams.get('limit') || '50');
   const category = searchParams.get('category');
   const q = searchParams.get('q');
+  const moleculeId = searchParams.get('moleculeId');
+  const isGeneric = searchParams.get('isGeneric');
+  const isBestSeller = searchParams.get('isBestSeller');
 
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
     const collection = db.collection('products');
 
-    const moleculeId = searchParams.get('moleculeId');
-    const isGeneric = searchParams.get('isGeneric');
-    const isBestSeller = searchParams.get('isBestSeller');
-
     const query: any = {};
     if (category) {
       query.category = category;
     }
+
+    // 1. Handle isGeneric (Robust: handles both Boolean and String)
+    if (isGeneric !== null) {
+      const isTrue = isGeneric === 'true';
+      query.isGeneric = { $in: [isTrue, isGeneric] };
+    }
+
+    // 2. Handle isBestSeller (Robust)
+    if (isBestSeller !== null) {
+      const isTrue = isBestSeller === 'true';
+      query.isBestSeller = { $in: [isTrue, isBestSeller] };
+    }
+
+    let moleculeOr: any[] = [];
     if (moleculeId) {
       try {
         if (moleculeId.length === 24) {
-          query.$or = [
+          moleculeOr = [
             { moleculeId: moleculeId },
             { moleculeId: new ObjectId(moleculeId) }
           ];
         } else {
-          query.moleculeId = moleculeId;
+          moleculeOr = [{ moleculeId: moleculeId }];
         }
 
-        // AUTO-MAPPING FALLBACK: If moleculeId is active, also try matching the salt name 
-        // to products that haven't been explicitly linked yet.
+        // AUTO-MAPPING FALLBACK
         const moleculeDoc = await db.collection('molecules').findOne(
           (moleculeId.length === 24 ? { _id: new ObjectId(moleculeId) } : { _id: moleculeId }) as any
         );
         
         if (moleculeDoc && (moleculeDoc.molecule || moleculeDoc.name)) {
           const saltName = moleculeDoc.molecule || moleculeDoc.name;
-          if (!query.$or) query.$or = [];
-          query.$or.push({ saltComposition: { $regex: saltName, $options: 'i' } });
-          query.$or.push({ salt: { $regex: saltName, $options: 'i' } });
-          query.$or.push({ composition: { $regex: saltName, $options: 'i' } });
+          moleculeOr.push({ saltComposition: { $regex: saltName, $options: 'i' } });
+          moleculeOr.push({ salt: { $regex: saltName, $options: 'i' } });
+          moleculeOr.push({ composition: { $regex: saltName, $options: 'i' } });
         }
       } catch (e) {
-        query.moleculeId = moleculeId;
+        moleculeOr = [{ moleculeId: moleculeId }];
       }
     }
-    if (isGeneric !== null) {
-      query.isGeneric = isGeneric === 'true';
-    }
-    if (isBestSeller !== null) {
-      query.isBestSeller = isBestSeller === 'true';
-    }
+
+    let searchOr: any[] = [];
     if (q) {
-      // Use prefix matching first as it's much faster
-      query.$or = [
+      searchOr = [
         { name: { $regex: `^${q}`, $options: 'i' } },
         { name: { $regex: q, $options: 'i' } },
         { saltComposition: { $regex: q, $options: 'i' } },
@@ -67,6 +73,18 @@ export async function GET(request: Request) {
       ];
     }
 
+    // Combine filters intelligently
+    if (moleculeOr.length > 0 && searchOr.length > 0) {
+      query.$and = [
+        { $or: moleculeOr },
+        { $or: searchOr }
+      ];
+    } else if (moleculeOr.length > 0) {
+      query.$or = moleculeOr;
+    } else if (searchOr.length > 0) {
+      query.$or = searchOr;
+    }
+
     const startTime = Date.now();
     const products = await collection
       .find(query)
@@ -74,24 +92,12 @@ export async function GET(request: Request) {
       .toArray();
 
     const duration = Date.now() - startTime;
-    console.log(`[Search API] ${q ? `"${q}" ` : ''}Completed in ${duration}ms. Found ${products.length} products.`);
-
-    if (q && products.length === 0) {
-      // Quick check: does this exact string exist as a prefix elsewhere?
-      const check = await collection.findOne({ name: { $regex: `^${q.substring(0, 3)}`, $options: 'i' } });
-      console.log(`[Search API] No results for "${q}". Found sample with same 3-char prefix: ${check?.name || 'NONE'}`);
-    }
+    console.log(`[Search API] Params: mol=${moleculeId || 'none'}, q=${q || 'none'} | Result: ${products.length} in ${duration}ms`);
 
     return NextResponse.json(products);
   } catch (err: any) {
     console.error("[Search API Error]", err);
-    const message = err.message || "Unknown database error";
-    const status = message.includes("timeout") ? 504 : 500;
-    return NextResponse.json({ 
-      error: message,
-      details: "Ensure MONGODB_URI is correct and Render IPs are whitelisted in MongoDB Atlas.",
-      timestamp: new Date().toISOString()
-    }, { status });
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
