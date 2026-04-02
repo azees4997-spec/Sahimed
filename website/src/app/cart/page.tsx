@@ -291,9 +291,11 @@ export default function CartPage() {
                       </div>
                     )}
                   </div>
-                  <Button onClick={handleCheckoutClick} className="w-full rounded-full h-12 sm:h-16 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-xl bg-primary text-white relative z-10 group hover:scale-[1.01] transition-all">
-                    Confirm Checkout <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
-                  </Button>
+                  <div className="hidden lg:flex">
+                    <Button onClick={handleCheckoutClick} className="w-full rounded-full h-12 sm:h-16 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-xl bg-primary text-white relative z-10 group hover:scale-[1.01] transition-all">
+                      Confirm Checkout <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </div>
                 </motion.div>
               </div>
             </div>
@@ -361,9 +363,9 @@ export default function CartPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Sticky Checkout Bar */}
+        {/* Sticky Checkout Bar (Mobile & Tablet only) */}
         {cart.length > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6 bg-white/80 backdrop-blur-3xl border-t border-slate-100/50 flex items-center justify-between shadow-[0_-20px_40px_rgba(0,0,0,0.03)] animate-in slide-in-from-bottom-full duration-500">
+          <div className="lg:hidden fixed bottom-[5.5rem] sm:bottom-0 left-0 right-0 z-50 p-4 sm:p-6 bg-white/80 backdrop-blur-3xl border-t border-slate-100/50 flex items-center justify-between shadow-[0_-20px_40px_rgba(0,0,0,0.03)] animate-in slide-in-from-bottom-full duration-500">
             <div className="flex flex-col">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimated Total</p>
               <div className="flex items-baseline gap-2">
