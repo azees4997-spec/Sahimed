@@ -48,22 +48,34 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
               <tr><th className="px-10 py-8">Category Name</th><th className="px-10 py-8">Image URL</th><th className="px-10 py-8">Display Order</th><th className="px-10 py-8 text-right">Actions</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={3} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : categories?.map(cat => (
+              {isLoading ? (<tr><td colSpan={4} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : categories?.map(cat => (
                 <tr key={cat.id} className="hover:bg-gray-50/50">
                   <td className="px-10 py-8 font-black text-sm text-gray-900">{cat.name}</td>
                   <td className="px-10 py-8 font-medium text-xs text-gray-400 truncate max-w-[200px]">{cat.imageUrl || 'No image'}</td>
                   <td className="px-10 py-8 font-bold text-gray-400">{cat.order || 0}</td>
-                  <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => { setEditingCat(cat); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button><Button variant="ghost" size="icon" onClick={async () => { 
-                    if(confirm("Delete category?")) {
-                      const token = await user?.getIdToken();
-                      await fetch(`/api/categories/${cat.id || cat._id}`, { 
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${token}` }
-                      });
-                      deleteDocumentNonBlocking(doc(db, 'categories', cat.id)); 
-                      toast({ title: "Category archived" });
-                    }
-                  }}><Trash2 className="w-4 h-4 text-red-300" /></Button></div></td>
+                  <td className="px-10 py-8 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => { setEditingCat(cat); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button>
+                      <Button variant="ghost" size="icon" onClick={async () => { 
+                        if(confirm("Delete category?")) {
+                          try {
+                            const token = await user?.getIdToken();
+                            const res = await fetch(`/api/categories/${cat.id || cat._id}`, { 
+                              method: 'DELETE',
+                              headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            
+                            if (!res.ok) throw new Error('Failed to delete from MongoDB');
+                            
+                            await deleteDocumentNonBlocking(doc(db, 'categories', cat.id)); 
+                            toast({ title: "Category archived" });
+                          } catch (err: any) {
+                            toast({ variant: 'destructive', title: "Archive failed", description: err.message });
+                          }
+                        }
+                      }}><Trash2 className="w-4 h-4 text-red-300" /></Button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -103,7 +115,7 @@ function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: a
       const docId = initialData?.id || initialData?._id || form.name.toLowerCase().replace(/\s+/g, '-');
       const token = await user?.getIdToken();
 
-      await fetch(initialData ? `/api/categories/${docId}` : '/api/categories', {
+      const res = await fetch(initialData ? `/api/categories/${docId}` : '/api/categories', {
         method: initialData ? 'PUT' : 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -112,9 +124,15 @@ function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: a
         body: JSON.stringify({ ...form, id: docId })
       });
 
+      if (!res.ok) throw new Error('Failed to sync with MongoDB');
+
       // 2. Sync to Firestore
       const firestorePayload = { ...form, updatedAt: serverTimestamp() };
-      initialData?.id ? updateDocumentNonBlocking(doc(db, 'categories', initialData.id), firestorePayload) : addDocumentNonBlocking(collection(db, 'categories'), { ...firestorePayload, createdAt: serverTimestamp() });
+      if (initialData?.id) {
+        await updateDocumentNonBlocking(doc(db, 'categories', initialData.id), firestorePayload);
+      } else {
+        await addDocumentNonBlocking(collection(db, 'categories'), { ...firestorePayload, createdAt: serverTimestamp() });
+      }
       
       toast({ title: "Category synchronized" });
       onSuccess();

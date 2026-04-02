@@ -61,17 +61,29 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
                   <td className="px-10 py-8 font-black text-sm text-gray-900 uppercase tracking-tight">{mol.molecule}</td>
                   <td className="px-10 py-8 font-bold text-primary">{mol.masterId}</td>
                   <td className="px-10 py-8 font-bold text-gray-400">{mol.form}</td>
-                  <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => { setEditingMol(mol); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button><Button variant="ghost" size="icon" onClick={async () => { 
-                    if(confirm("Delete molecule?")) {
-                      const token = await user?.getIdToken();
-                      await fetch(`/api/molecules/${mol.id || mol._id}`, { 
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${token}` }
-                      });
-                      deleteDocumentNonBlocking(doc(db, 'moleculeMaster', mol.id)); 
-                      toast({ title: "Molecule purged from registry" });
-                    }
-                  }}><Trash2 className="w-4 h-4 text-red-300" /></Button></div></td>
+                  <td className="px-10 py-8 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => { setEditingMol(mol); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button>
+                      <Button variant="ghost" size="icon" onClick={async () => { 
+                        if(confirm("Delete molecule?")) {
+                          try {
+                            const token = await user?.getIdToken();
+                            const res = await fetch(`/api/molecules/${mol.id || mol._id}`, { 
+                              method: 'DELETE',
+                              headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            
+                            if (!res.ok) throw new Error('Failed to delete from MongoDB');
+                            
+                            await deleteDocumentNonBlocking(doc(db, 'moleculeMaster', mol.id)); 
+                            toast({ title: "Molecule purged from registry" });
+                          } catch (err: any) {
+                            toast({ variant: 'destructive', title: "Purge failed", description: err.message });
+                          }
+                        }
+                      }}><Trash2 className="w-4 h-4 text-red-300" /></Button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -110,7 +122,6 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
       .then(data => {
         if (Array.isArray(data)) {
           setAvailableForms(data);
-          // Only switch to custom if we have data and the initial value isn't there
           if (initialData?.form && data.length > 0 && !data.includes(initialData.form)) {
             setIsCustomForm(true);
           }
@@ -137,8 +148,14 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
         body: JSON.stringify({ ...form, id: docId })
       });
 
+      if (!res.ok) throw new Error('Failed to sync with MongoDB');
+
       // 2. Sync to Firestore
-      initialData?.id ? updateDocumentNonBlocking(doc(db, 'moleculeMaster', initialData.id), { ...payload, updatedAt: serverTimestamp() }) : addDocumentNonBlocking(collection(db, 'moleculeMaster'), { ...payload, createdAt: serverTimestamp() });
+      if (initialData?.id) {
+        await updateDocumentNonBlocking(doc(db, 'moleculeMaster', initialData.id), { ...payload, updatedAt: serverTimestamp() });
+      } else {
+        await addDocumentNonBlocking(collection(db, 'moleculeMaster'), { ...payload, createdAt: serverTimestamp() });
+      }
       
       toast({ title: "Molecule synchronized" });
       onSuccess();

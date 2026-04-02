@@ -94,7 +94,16 @@ export function PagesTab({ db, isVerified, onBack }: { db: any, isVerified: bool
                   </Button>
                 </a>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => { if(confirm("Archiving this document will remove all public access. Proceed?")) deleteDocumentNonBlocking(doc(db, 'pages', page.id)); }} className="w-12 h-12 rounded-2xl text-red-200 hover:text-red-500 hover:bg-red-50 active:scale-90 transition-all">
+              <Button variant="ghost" size="icon" onClick={async () => { 
+                if(confirm("Archiving this document will remove all public access. Proceed?")) {
+                  try {
+                    await deleteDocumentNonBlocking(doc(db, 'pages', page.id)); 
+                    toast({ title: "Document archived" });
+                  } catch (err: any) {
+                    toast({ variant: 'destructive', title: "Archive failed", description: err.message });
+                  }
+                }
+              }} className="w-12 h-12 rounded-2xl text-red-200 hover:text-red-500 hover:bg-red-50 active:scale-90 transition-all">
                 <Trash2 className="w-5 h-5" />
               </Button>
             </div>
@@ -120,7 +129,7 @@ function PageEditor({ db, initialData, onSuccess }: { db: any, initialData?: any
     placement: initialData?.placement || 'footer',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.id || !form.title) {
         toast({ variant: 'destructive', title: "Validation Error", description: "Slug and Title are mandatory." });
@@ -128,14 +137,14 @@ function PageEditor({ db, initialData, onSuccess }: { db: any, initialData?: any
     }
 
     try {
-      setDocumentNonBlocking(doc(db, 'pages', form.id), {
+      await setDocumentNonBlocking(doc(db, 'pages', form.id), {
         ...form,
         lastUpdated: new Date().toISOString()
       }, { merge: true });
       
       toast({ title: "Document Synchronized", description: `Protocol ${form.id} is now live.` });
       onSuccess();
-    } catch (err) {
+    } catch (err: any) {
       toast({ variant: 'destructive', title: "Logic Error", description: "Transmission failed." });
     }
   };

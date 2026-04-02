@@ -87,40 +87,63 @@ const ComparisonCard = ({
     ? product.imageUrl
     : `https://picsum.photos/seed/${product.id || 'err'}/300/300`;
 
+  const isGeneric = product.isGeneric === true || product.isGeneric === "true";
+
   return (
     <motion.div 
-      initial={{ x: isAlt ? 20 : -20, opacity: 0 }}
+      initial={{ x: isAlt ? 40 : -40, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
       className="h-full"
     >
       <Card className={cn(
-        "h-full rounded-[32px] sm:rounded-[56px] p-2.5 sm:p-12 flex flex-col justify-between border-2 transition-all duration-700 relative overflow-hidden",
+        "h-full rounded-[40px] sm:rounded-[64px] p-4 sm:p-14 flex flex-col justify-between border-2 transition-all duration-700 relative overflow-hidden",
         isAlt 
-          ? "bg-accent/[0.04] border-accent/20 ring-4 ring-accent/5 shadow-2xl shadow-accent/10" 
-          : "bg-white border-slate-100 shadow-xl shadow-slate-200/50"
+          ? "bg-gradient-to-br from-accent/[0.08] to-accent/[0.02] border-accent/30 ring-8 ring-accent/5 shadow-2xl shadow-accent/20" 
+          : "bg-white border-slate-100 shadow-2xl shadow-slate-200/40"
       )}>
-        <div className="space-y-3 sm:space-y-10">
+        {isAlt && (
+          <div className="absolute -right-12 -top-12 w-48 h-48 bg-accent/10 rounded-full blur-3xl" />
+        )}
+        
+        <div className="space-y-4 sm:space-y-12 relative z-10">
           <div className="flex items-center justify-between">
-            <Badge className={cn(
-              "rounded-full font-black text-[7px] sm:text-[11px] px-2.5 sm:px-4 py-1 sm:py-1.5 uppercase tracking-widest shadow-sm", 
-              isAlt ? "bg-accent text-white" : "bg-slate-900 text-white"
-            )}>
-              {label}
-            </Badge>
-            {displaySavingsPct > 0 && (
-              <Badge className="bg-primary text-white text-[7px] sm:text-[11px] font-black px-2 sm:px-3 py-1 rounded-md sm:rounded-xl shadow-lg animate-pulse">
-                -{displaySavingsPct}%
+            <div className="flex flex-col gap-1">
+              <Badge className={cn(
+                "rounded-full font-black text-[7px] sm:text-[11px] px-3 sm:px-6 py-1.5 sm:py-2 uppercase tracking-[0.2em] shadow-lg", 
+                isAlt ? "bg-accent text-white" : "bg-slate-900 text-white"
+              )}>
+                {label}
               </Badge>
+              {isGeneric && (
+                <span className="text-[6px] sm:text-[9px] font-black text-accent tracking-widest uppercase ml-1 animate-pulse">
+                  Verified Sahi Generic
+                </span>
+              )}
+            </div>
+            {displaySavingsPct > 0 && (
+              <div className={cn(
+                "flex flex-col items-end",
+                isAlt ? "scale-110" : ""
+              )}>
+                <Badge className="bg-primary text-white text-[8px] sm:text-xs font-black px-2 sm:px-4 py-1 rounded-full shadow-xl border-2 border-white">
+                  -{displaySavingsPct}% OFF
+                </Badge>
+              </div>
             )}
           </div>
           
           <Dialog>
             <DialogTrigger asChild>
-              <div className="relative aspect-square w-full bg-white rounded-[24px] sm:rounded-[40px] flex items-center justify-center overflow-hidden h-32 sm:h-72 p-2 sm:p-10 border border-slate-50 shadow-inner group/img cursor-zoom-in">
-                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-2 sm:p-10 transition-transform duration-700 group-hover/img:scale-110" />
+              <div className={cn(
+                "relative aspect-square w-full rounded-[32px] sm:rounded-[48px] flex items-center justify-center overflow-hidden h-40 sm:h-80 p-4 sm:p-12 border shadow-inner group/img cursor-zoom-in transition-all duration-500",
+                isAlt ? "bg-white border-accent/10" : "bg-slate-50/50 border-slate-100"
+              )}>
+                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-4 sm:p-12 transition-transform duration-1000 group-hover/img:scale-110" />
                 <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
-                   <Maximize2 className="w-6 h-6 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                   <div className="bg-white/80 backdrop-blur-md rounded-full p-4 opacity-0 group-hover/img:opacity-100 transition-all scale-50 group-hover/img:scale-100 shadow-xl">
+                    <Maximize2 className="w-6 h-6 text-primary" />
+                   </div>
                 </div>
               </div>
             </DialogTrigger>
@@ -133,56 +156,71 @@ const ComparisonCard = ({
             </DialogContent>
           </Dialog>
 
-          <div className="space-y-2 sm:space-y-4 text-center sm:text-left">
-            <h3 className="font-extrabold text-[11px] sm:text-2xl text-slate-800 leading-tight line-clamp-2 min-h-[2rem] sm:min-h-[3.5rem] font-outfit uppercase tracking-tight">
+          <div className="space-y-3 sm:space-y-6 text-center sm:text-left">
+            <h3 className={cn(
+              "font-extrabold text-[13px] sm:text-3xl tracking-tighter text-slate-800 leading-[1.1] line-clamp-2 min-h-[2.5rem] sm:min-h-[4.5rem] font-outfit uppercase",
+              isAlt ? "text-accent" : ""
+            )}>
               {product.name}
             </h3>
-            <div className="space-y-1">
-              <p className="text-[8px] sm:text-[13px] font-black text-slate-400 tracking-[0.2em] uppercase">
-                {product.packSize || "N/A"}
-              </p>
-              <p className="text-[8px] sm:text-[13px] font-bold text-slate-400 truncate uppercase mt-1 tracking-tighter opacity-60">
-                {product.manufacturer}
-              </p>
+            
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4">
+              <div className="flex items-center gap-1.5 bg-slate-100 rounded-full px-3 py-1">
+                <Package className="w-3 h-3 text-slate-400" />
+                <span className="text-[8px] sm:text-[11px] font-black text-slate-500 tracking-widest uppercase">
+                  {product.packSize || "N/A"}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-slate-100 rounded-full px-3 py-1">
+                <FlaskConical className="w-3 h-3 text-slate-400" />
+                <span className="text-[8px] sm:text-[11px] font-black text-slate-500 tracking-widest uppercase truncate max-w-[100px]">
+                  {product.manufacturer}
+                </span>
+              </div>
             </div>
 
-            <div className="pt-3 sm:pt-8 border-t-2 border-dashed border-slate-100 mt-2 sm:mt-6 space-y-1 sm:space-y-2">
-              <div className="flex items-baseline justify-center sm:justify-start gap-2 sm:gap-4">
+            <div className={cn(
+              "pt-6 sm:pt-12 border-t-2 border-dashed mt-4 sm:mt-10 space-y-2",
+              isAlt ? "border-accent/20" : "border-slate-100"
+            )}>
+              <div className="flex items-baseline justify-center sm:justify-start gap-3 sm:gap-6">
                 <p className={cn(
-                  "text-lg sm:text-6xl font-black tracking-tighter font-outfit",
-                  isAlt ? "text-accent" : "text-primary"
+                  "text-2xl sm:text-7xl font-black tracking-tighter font-outfit",
+                  isAlt ? "text-accent drop-shadow-sm" : "text-primary"
                 )}>
                   ₹{Number(pPrice).toFixed(0)}
                 </p>
                 {pMrp > pPrice && (
                   <div className="flex flex-col">
-                    <span className="text-[8px] sm:text-xl text-slate-300 line-through font-bold decoration-2">₹{Number(pMrp).toFixed(0)}</span>
+                    <span className="text-[10px] sm:text-2xl text-slate-300 line-through font-bold decoration-[3px]">₹{Number(pMrp).toFixed(0)}</span>
                     <span className={cn(
-                      "text-[7px] sm:text-sm font-black uppercase px-2 py-0.5 rounded-lg",
+                      "text-[8px] sm:text-base font-black uppercase px-3 py-1 rounded-full mt-1",
                       isAlt ? "bg-accent/10 text-accent" : "bg-primary/10 text-primary"
                     )}>
-                      Save ₹{Number(pMrp - pPrice).toFixed(0)}
+                      {isAlt ? 'SMART PRICE' : 'SPECIAL PRICE'}
                     </span>
                   </div>
                 )}
               </div>
-              <p className="text-[8px] sm:text-xs font-bold text-slate-300 tracking-widest uppercase">
-                ₹{unitPrice.toFixed(2)} / unit
+              <p className="text-[9px] sm:text-sm font-black text-slate-400 tracking-[0.2em] uppercase opacity-60">
+                ₹{unitPrice.toFixed(2)} PER UNIT COST
               </p>
             </div>
           </div>
         </div>
 
-        <div className="mt-4 sm:mt-10">
+        <div className="mt-6 sm:mt-14">
           <Button 
             onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })} 
             className={cn(
-              "w-full h-10 sm:h-20 rounded-[20px] sm:rounded-[32px] font-black text-[9px] sm:text-base tracking-[0.1em] sm:tracking-[0.2em] uppercase gap-2 sm:gap-4 shadow-2xl active:scale-95 transition-all border-none group",
-              isAlt ? "bg-accent text-white hover:bg-accent/90 shadow-accent/20" : "bg-primary text-white hover:bg-primary/90 shadow-primary/20"
+              "w-full h-12 sm:h-24 rounded-[24px] sm:rounded-[40px] font-black text-[10px] sm:text-xl tracking-[0.2em] sm:tracking-[0.3em] uppercase gap-3 sm:gap-6 shadow-2xl active:scale-95 transition-all border-4 group",
+              isAlt 
+                ? "bg-accent text-white hover:bg-accent/90 shadow-accent/40 border-accent/20" 
+                : "bg-primary text-white hover:bg-primary/90 shadow-primary/40 border-primary/20"
             )}
           >
             {qty > 0 ? `IN CART (${qty})` : "ADD TO CART"} 
-            <ShoppingCart className="w-3.5 h-3.5 sm:w-6 sm:h-6 transition-transform group-hover:rotate-12" />
+            <ShoppingCart className="w-4 h-4 sm:w-8 sm:h-8 transition-all group-hover:translate-x-1 group-hover:-rotate-12" />
           </Button>
         </div>
       </Card>
@@ -288,15 +326,23 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
           {showComparison && switchSavingsAmt > 0 && (
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0, y: -10 }}
+              initial={{ scale: 0.9, opacity: 0, y: -20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              className="mb-6 sm:mb-10 px-2"
+              transition={{ delay: 0.5, duration: 1, type: "spring" }}
+              className="mb-8 sm:mb-16 px-2"
             >
-              <div className="bg-gradient-to-r from-primary via-primary to-accent text-white py-3 sm:py-6 px-6 sm:px-10 rounded-[20px] sm:rounded-[40px] shadow-2xl flex items-center justify-center gap-3 text-center border-b-4 border-black/10">
-                 <TrendingDown className="w-5 h-5 sm:w-7 sm:h-7 animate-bounce" />
-                 <h2 className="text-[10px] sm:text-lg font-black tracking-[0.1em] sm:tracking-[0.2em] uppercase">
-                   Switch and Save ₹{Number(switchSavingsAmt).toFixed(0)} • IDENTICAL MOLECULE
-                 </h2>
+              <div className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-gradient-x text-white py-4 sm:py-8 px-6 sm:px-12 rounded-[24px] sm:rounded-[48px] shadow-3xl flex items-center justify-center gap-4 sm:gap-8 text-center border-b-8 border-black/20 group relative overflow-hidden">
+                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                 <TrendingDown className="w-6 h-6 sm:w-10 sm:h-10 animate-bounce" />
+                 <div className="flex flex-col gap-0.5 sm:gap-1">
+                  <h2 className="text-[11px] sm:text-2xl font-black tracking-[0.15em] sm:tracking-[0.3em] uppercase drop-shadow-md">
+                    Switch and Save ₹{Number(switchSavingsAmt).toFixed(0)} PER PACK
+                  </h2>
+                  <p className="text-[7px] sm:text-xs font-black uppercase tracking-widest opacity-80 decoration-accent decoration-2 underline-offset-4 underline">
+                    100% Identical molecular formulation • clinically verified
+                  </p>
+                 </div>
+                 <TrendingDown className="w-6 h-6 sm:w-10 sm:h-10 animate-bounce invisible sm:visible" />
               </div>
             </motion.div>
           )}

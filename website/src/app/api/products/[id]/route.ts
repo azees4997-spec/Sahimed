@@ -53,6 +53,18 @@ export async function PUT(
     // Remove _id from body if it exists to avoid MongoDB error on update
     let { _id, ...updateData } = body;
 
+    // Build the query to handle both string and ObjectId
+    const query: any = {
+      $or: [
+        { _id: id as any },
+      ]
+    };
+    if (id.length === 24) {
+      try {
+        query.$or.push({ _id: new ObjectId(id) });
+      } catch (e) { /* silent fail if not a valid ObjectId */ }
+    }
+
     // INTELLIGENT MAPPING: Auto-link to molecule if missing
     if (!updateData.moleculeId && updateData.saltComposition) {
       const moleculesCol = db.collection('molecules');
@@ -67,7 +79,7 @@ export async function PUT(
     }
 
     const result = await db.collection("products").updateOne(
-      { _id: id as any },
+      query,
       { $set: { ...updateData, updatedAt: new Date() } }
     );
 
@@ -77,6 +89,7 @@ export async function PUT(
 
     return NextResponse.json({ success: true, modifiedCount: result.modifiedCount });
   } catch (err: any) {
+    console.error('[API PUT Error]', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -91,7 +104,18 @@ export async function DELETE(
     const client = await clientPromise;
     const db = client.db("sahimed");
 
-    const result = await db.collection("products").deleteOne({ _id: id as any });
+    const query: any = {
+      $or: [
+        { _id: id as any },
+      ]
+    };
+    if (id.length === 24) {
+      try {
+        query.$or.push({ _id: new ObjectId(id) });
+      } catch (e) { /* silent fail */ }
+    }
+
+    const result = await db.collection("products").deleteOne(query);
 
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
@@ -99,6 +123,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
+    console.error('[API DELETE Error]', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

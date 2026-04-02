@@ -37,6 +37,7 @@ export function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boole
   const { data: fees, isLoading } = useCollection(feesQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingFee, setEditingFee] = useState<any>(null);
+  const { toast } = useToast();
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
@@ -53,7 +54,21 @@ export function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boole
                   <td className="px-10 py-8 font-black text-sm">{fee.name}</td>
                   <td className="px-10 py-8 font-black text-gray-900">₹{Number(fee.discountedAmount || 0).toFixed(2)}</td>
                   <td className="px-10 py-8"><Badge className={cn("rounded-full font-black text-[8px]", fee.isActive ? "bg-accent text-white" : "bg-gray-100 text-gray-400")}>{fee.isActive ? 'Enabled' : 'Paused'}</Badge></td>
-                  <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => { setEditingFee(fee); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button><Button variant="ghost" size="icon" onClick={() => { if(confirm("Delete fee?")) deleteDocumentNonBlocking(doc(db, 'fees', fee.id)); }}><Trash2 className="w-4 h-4 text-red-300" /></Button></div></td>
+                  <td className="px-10 py-8 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => { setEditingFee(fee); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button>
+                      <Button variant="ghost" size="icon" onClick={async () => { 
+                        if(confirm("Delete fee?")) {
+                          try {
+                            await deleteDocumentNonBlocking(doc(db, 'fees', fee.id));
+                            toast({ title: "Fee model deleted" });
+                          } catch (err: any) {
+                            toast({ variant: 'destructive', title: "Deletion failed", description: err.message });
+                          }
+                        }
+                      }}><Trash2 className="w-4 h-4 text-red-300" /></Button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -78,6 +93,7 @@ export function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boole
 }
 
 function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const { toast } = useToast();
   const [form, setForm] = useState({ 
     name: initialData?.name || '', 
     discountedAmount: initialData?.discountedAmount || 0, 
@@ -86,11 +102,20 @@ function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, o
     tiers: initialData?.tiers || [{ minOrder: 499, charge: 50 }, { minOrder: 1000, charge: 25 }],
     isActive: initialData?.isActive ?? true 
   });
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const payload = { ...form, updatedAt: serverTimestamp() };
-    initialData?.id ? updateDocumentNonBlocking(doc(db, 'fees', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'fees'), { ...payload, createdAt: serverTimestamp() });
-    onSuccess();
+    try {
+      if (initialData?.id) {
+        await updateDocumentNonBlocking(doc(db, 'fees', initialData.id), payload);
+      } else {
+        await addDocumentNonBlocking(collection(db, 'fees'), { ...payload, createdAt: serverTimestamp() });
+      }
+      toast({ title: "Logistics protocol updated" });
+      onSuccess();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: "Update failed", description: err.message });
+    }
   };
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

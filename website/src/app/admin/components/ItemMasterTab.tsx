@@ -265,15 +265,22 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                        </Button>
                        <Button variant="ghost" size="icon" onClick={async () => {
                           if (confirm("Delete this product from MongoDB & Firestore?")) {
-                            const docId = med._id || med.id;
-                            const token = await user?.getIdToken();
-                            await fetch(`/api/products/${docId}`, { 
-                              method: 'DELETE',
-                              headers: { 'Authorization': `Bearer ${token}` }
-                            });
-                            deleteDocumentNonBlocking(doc(db, 'medicines', docId));
-                            toast({ title: "Product deleted" });
-                            refetch?.();
+                            try {
+                              const docId = med._id || med.id;
+                              const token = await user?.getIdToken();
+                              const res = await fetch(`/api/products/${docId}`, { 
+                                method: 'DELETE',
+                                headers: { 'Authorization': `Bearer ${token}` }
+                              });
+                              
+                              if (!res.ok) throw new Error('Failed to delete from MongoDB');
+                              
+                              await deleteDocumentNonBlocking(doc(db, 'medicines', docId));
+                              toast({ title: "Product deleted" });
+                              refetch?.();
+                            } catch (err: any) {
+                              toast({ variant: 'destructive', title: "Deletion failed", description: err.message });
+                            }
                           }
                        }}>
                          <Trash2 className="w-4 h-4 text-red-300" />
@@ -382,10 +389,13 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       
       if (!res.ok) throw new Error('Failed to sync with MongoDB');
 
-      setDocumentNonBlocking(doc(db, 'medicines', docId), { ...staticPayload, updatedAt: serverTimestamp() }, { merge: true });
+      const firestoreDocPromise = setDocumentNonBlocking(doc(db, 'medicines', docId), { ...staticPayload, updatedAt: serverTimestamp() }, { merge: true });
+      let liveDataPromise = Promise.resolve();
       if (form.sku) {
-        setDocumentNonBlocking(doc(db, 'product_live_data', form.sku), { ...livePayload, updatedAt: serverTimestamp() }, { merge: true });
+        liveDataPromise = setDocumentNonBlocking(doc(db, 'product_live_data', form.sku), { ...livePayload, updatedAt: serverTimestamp() }, { merge: true });
       }
+
+      await Promise.all([firestoreDocPromise, liveDataPromise]);
 
       toast({ title: "Product synchronized", description: "Updated in MongoDB and Firestore" });
       onSuccess();

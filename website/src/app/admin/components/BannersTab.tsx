@@ -39,6 +39,7 @@ export function BannersTab({ db, isVerified, onBack }: { db: any, isVerified: bo
   const { data: banners, isLoading } = useCollection(bannersQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<any>(null);
+  const { toast } = useToast();
 
   // Auto-calculate next order
   const nextOrder = useMemo(() => {
@@ -85,7 +86,16 @@ export function BannersTab({ db, isVerified, onBack }: { db: any, isVerified: bo
                 <Button variant="secondary" onClick={() => { setEditingBanner(banner); setIsFormOpen(true); }} className="rounded-full w-14 h-14 bg-white/20 hover:bg-white text-white hover:text-primary backdrop-blur-md border-white/20 border transition-all">
                   <Edit2 className="w-5 h-5" />
                 </Button>
-                <Button variant="destructive" onClick={() => { if(confirm("Archiving this promotion will remove it from the live storefront. Proceed?")) deleteDocumentNonBlocking(doc(db, 'banners', banner.id)); }} className="rounded-full w-14 h-14 bg-red-500/20 hover:bg-red-500 text-white backdrop-blur-md border-red-500/20 border transition-all">
+                <Button variant="destructive" onClick={async () => { 
+                  if(confirm("Archiving this promotion will remove it from the live storefront. Proceed?")) {
+                    try {
+                      await deleteDocumentNonBlocking(doc(db, 'banners', banner.id)); 
+                      toast({ title: "Banner removed" });
+                    } catch (err: any) {
+                      toast({ variant: 'destructive', title: "Removal failed", description: err.message });
+                    }
+                  }
+                }} className="rounded-full w-14 h-14 bg-red-500/20 hover:bg-red-500 text-white backdrop-blur-md border-red-500/20 border transition-all">
                   <Trash2 className="w-5 h-5" />
                 </Button>
               </div>
@@ -148,9 +158,9 @@ function BannerForm({ db, initialData, defaultOrder, onSuccess }: { db: any, ini
 
     try {
       if (initialData?.id) {
-        updateDocumentNonBlocking(doc(db, 'banners', initialData.id), { ...form, updatedAt: serverTimestamp() });
+        await updateDocumentNonBlocking(doc(db, 'banners', initialData.id), { ...form, updatedAt: serverTimestamp() });
       } else {
-        addDocumentNonBlocking(collection(db, 'banners'), { ...form, createdAt: serverTimestamp() });
+        await addDocumentNonBlocking(collection(db, 'banners'), { ...form, createdAt: serverTimestamp() });
       }
       
       toast({ title: "Visual Synchronized", description: "Storefront protocol updated successfully." });

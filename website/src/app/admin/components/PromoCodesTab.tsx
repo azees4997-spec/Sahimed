@@ -44,6 +44,7 @@ export function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified:
   const { data: promos, isLoading } = useCollection(promosQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPromo, setEditingPromo] = useState<any>(null);
+  const { toast } = useToast();
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
@@ -63,7 +64,16 @@ export function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified:
                   <td className="px-10 py-8 text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="icon" onClick={() => { setEditingPromo(promo); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => { if(confirm("Delete coupon?")) deleteDocumentNonBlocking(doc(db, 'promocodes', promo.id)); }}><Trash2 className="w-4 h-4 text-red-300" /></Button>
+                      <Button variant="ghost" size="icon" onClick={async () => { 
+                        if(confirm("Delete coupon?")) {
+                          try {
+                            await deleteDocumentNonBlocking(doc(db, 'promocodes', promo.id));
+                            toast({ title: "Coupon deleted" });
+                          } catch (err: any) {
+                            toast({ variant: 'destructive', title: "Deletion failed", description: err.message });
+                          }
+                        }
+                      }}><Trash2 className="w-4 h-4 text-red-300" /></Button>
                     </div>
                   </td>
                 </tr>
@@ -90,6 +100,7 @@ export function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified:
 }
 
 function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+  const { toast } = useToast();
   const [form, setForm] = useState({ 
     code: initialData?.code || '', 
     description: initialData?.description || '', 
@@ -102,11 +113,20 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
     scopeValue: initialData?.scopeValue || '',
     isActive: initialData?.isActive ?? true 
   });
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const payload = { ...form, updatedAt: serverTimestamp() };
-    initialData?.id ? updateDocumentNonBlocking(doc(db, 'promocodes', initialData.id), payload) : addDocumentNonBlocking(collection(db, 'promocodes'), { ...payload, createdAt: serverTimestamp() });
-    onSuccess();
+    try {
+      if (initialData?.id) {
+        await updateDocumentNonBlocking(doc(db, 'promocodes', initialData.id), payload);
+      } else {
+        await addDocumentNonBlocking(collection(db, 'promocodes'), { ...payload, createdAt: serverTimestamp() });
+      }
+      toast({ title: "Campaign committed" });
+      onSuccess();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: "Commit failed", description: err.message });
+    }
   };
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
