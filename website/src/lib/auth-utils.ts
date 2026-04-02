@@ -1,8 +1,15 @@
-import { getAuthAdmin, getDbAdmin } from './firebase-admin';
+import { jwtVerify, createRemoteJWKSet } from 'jose';
+import clientPromise from './mongodb';
+
+// Firebase Remote JWK Set for ID Token verification
+const JWKS = createRemoteJWKSet(
+  new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com')
+);
 
 /**
  * Verifies if the request is from a legitimate admin or pharmacist.
- * Checks the Authorization header for a Firebase ID Token.
+ * Uses manual JWT verification to remove dependency on Firebase Admin SDK (Service Account).
+ * Checks the 'adminProfiles' collection in MongoDB for authorization.
  * 
  * @param request The incoming Next.js Request
  * @returns The user's UID and role if verified, otherwise throws an error.
@@ -15,29 +22,56 @@ export async function verifyAdmin(request: Request) {
 
   const token = authHeader.split('Bearer ')[1];
   
-  try {
-    const authAdmin = getAuthAdmin();
-    const dbAdmin = getDbAdmin();
-    
-    // 1. Verify the ID token using the Firebase Admin SDK
-    const decodedToken = await authAdmin.verifyIdToken(token);
-    const uid = decodedToken.uid;
+  // Use public or private project ID env
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
 
-    // 2. Fetch the admin profile from Firestore
-    const adminSnap = await dbAdmin.collection('adminProfiles').doc(uid).get();
+  if (!projectId) {
+    console.error('[Auth Error] FIREBASE_PROJECT_ID is missing from environment.');
+    throw new Error('Server Configuration Error: Missing Project ID');
+  }
+
+  try {
+    // 1. Verify the ID token signature and claims manually
+    // This does NOT require a private key, only the project ID (public).
+    const { payload } = await jwtVerify(token, JWKS, {
+      issuer: `https://securetoken.google.com/${projectId}`,
+      audience: projectId,
+    });
+
+    const uid = payload.sub;
+    const email = payload.email as string;
+
+    if (!uid) throw new Error('Invalid token payload: missing sub');
+
+    // 2. Fetch the admin profile from MongoDB instead of Firestore
+    const client = await clientPromise;
+    const db = client.db('sahimed');
     
-    if (!adminSnap.exists) {
-      throw new Error('Forbidden: No administrative profile found');
+    // Look for matching UID or Email in adminProfiles
+    const adminProfile = await db.collection('adminProfiles').findOne({ 
+      $or: [
+        { uid: uid },
+        { id: uid },
+        { email: email }
+      ]
+    });
+    
+    if (!adminProfile) {
+      console.warn(`[Auth Security] Forbidden: No MongoDB admin profile found for UID: ${uid}`);
+      throw new Error('Forbidden: No administrative profile found in MongoDB');
     }
 
-    const adminData = adminSnap.data();
-    if (adminData?.role !== 'admin' && adminData?.role !== 'pharmacist' && adminData?.role !== 'sub-admin') {
+    const { role } = adminProfile;
+    if (!['admin', 'pharmacist', 'sub-admin'].includes(role)) {
       throw new Error('Forbidden: Insufficient clinical clearance');
     }
 
-    return { uid, role: adminData.role, email: decodedToken.email };
+    return { uid, role, email };
   } catch (error: any) {
     console.warn(`[Auth Security] Verification failed: ${error.message}`);
-    throw new Error(error.message || 'Unauthorized access attempt');
+    
+    // Propagate specific errors back to the caller
+    const msg = error.message || 'Unauthorized access attempt';
+    throw new Error(msg);
   }
 }
