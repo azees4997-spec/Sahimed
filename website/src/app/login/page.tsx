@@ -143,6 +143,32 @@ function LoginForm() {
                         required
                       />
                     </div>
+
+                    <motion.div 
+                      key="illustration"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ 
+                        opacity: 1, 
+                        scale: 1,
+                        y: [-5, 5, -5]
+                      }}
+                      transition={{ 
+                        opacity: { duration: 0.5 },
+                        y: { 
+                          repeat: Infinity, 
+                          duration: 4, 
+                          ease: "easeInOut" 
+                        }
+                      }}
+                      className="relative w-full aspect-[16/10] sm:aspect-[16/9] rounded-[32px] sm:rounded-[40px] overflow-hidden border-2 border-white shadow-xl bg-primary/5 mt-6 group"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent mix-blend-overlay z-10" />
+                      <img 
+                        src="/medical_login_illustration.png" 
+                        alt="Medical Illustration" 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                    </motion.div>
                   </div>
                   <Button 
                     type="submit" 
