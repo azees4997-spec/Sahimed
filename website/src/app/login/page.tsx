@@ -88,35 +88,35 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern flex items-center justify-center p-0 sm:p-8">
+    <div className="h-[100dvh] bg-[#F4F7F6] pharma-bg-pattern flex flex-col items-center justify-center p-0 sm:p-8 overflow-hidden">
       <div id="recaptcha-container"></div>
       
       <motion.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        className="max-w-md w-full h-full sm:h-auto"
+        className="max-w-md w-full"
       >
-        <Card className="rounded-none sm:rounded-[40px] shadow-3xl border-none overflow-hidden bg-white/80 backdrop-blur-3xl border border-white mx-auto relative group w-full min-h-screen sm:min-h-0">
-          <CardHeader className="text-center p-8 sm:p-10 bg-primary text-white relative overflow-hidden">
+        <Card className="rounded-none sm:rounded-[40px] shadow-3xl border-none overflow-hidden bg-white/80 backdrop-blur-3xl border border-white mx-auto relative group w-full py-6 sm:py-0">
+          <CardHeader className="text-center p-6 sm:p-10 bg-primary text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12 scale-150">
                <Zap className="w-48 h-48" />
             </div>
             
-            <Link href="/" className="absolute top-8 left-8 p-3 sm:top-10 sm:left-10 sm:p-4 bg-white/10 rounded-full hover:bg-white/20 transition-all hover:scale-110 active:scale-95 z-10">
-              <ArrowLeft className="w-5 h-5" />
+            <Link href="/" className="absolute top-6 left-6 p-3 sm:top-10 sm:left-10 sm:p-4 bg-white/10 rounded-full hover:bg-white/20 transition-all hover:scale-110 active:scale-95 z-10">
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </Link>
             
-            <div className="w-20 h-20 sm:w-28 sm:h-28 bg-white/20 rounded-[32px] sm:rounded-[40px] flex items-center justify-center mx-auto mb-6 sm:mb-8 backdrop-blur-md relative z-10 border border-white/20 shadow-xl group hover:scale-110 transition-transform duration-500">
-              <Smartphone className="w-10 h-10 sm:w-12 sm:h-12 text-white group-hover:rotate-12 transition-transform" />
+            <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white/20 rounded-[28px] sm:rounded-[40px] flex items-center justify-center mx-auto mb-4 sm:mb-8 backdrop-blur-md relative z-10 border border-white/20 shadow-xl group hover:scale-110 transition-transform duration-500">
+              <Smartphone className="w-8 h-8 sm:w-12 sm:h-12 text-white group-hover:rotate-12 transition-transform" />
             </div>
             
             <div className="space-y-1 relative z-10">
-              <CardTitle className="text-2xl sm:text-3xl font-black font-outfit mb-0.5 tracking-tighter uppercase leading-none">Login or Sign Up</CardTitle>
+              <CardTitle className="text-xl sm:text-3xl font-black font-outfit mb-0.5 tracking-tighter uppercase leading-none">Login or Sign Up</CardTitle>
             </div>
           </CardHeader>
           
-          <CardContent className="p-8 sm:p-10">
+          <CardContent className="p-8 sm:p-10 pb-12 sm:pb-10">
             <AnimatePresence mode="wait">
               {step === 1 ? (
                 <motion.form 
@@ -125,7 +125,7 @@ function LoginForm() {
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: -20, opacity: 0 }}
                   onSubmit={handleSendOtp} 
-                  className="space-y-8"
+                  className="space-y-6 sm:space-y-8"
                 >
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block opacity-60">Mobile Number</label>
@@ -137,7 +137,7 @@ function LoginForm() {
                         type="tel"
                         placeholder="Enter 10 Digit Number"
                         maxLength={10}
-                        className="h-16 pl-24 rounded-[24px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white text-sm font-black tracking-widest transition-all placeholder:text-slate-300 shadow-inner"
+                        className="h-14 sm:h-16 pl-24 rounded-[24px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white text-sm font-black tracking-widest transition-all placeholder:text-slate-300 shadow-inner"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                         required
@@ -160,7 +160,7 @@ function LoginForm() {
                           ease: "easeInOut" 
                         }
                       }}
-                      className="relative w-full aspect-[16/10] sm:aspect-[16/9] rounded-[32px] sm:rounded-[40px] overflow-hidden border-2 border-white shadow-xl bg-slate-50/50 mt-6 group flex items-center justify-center p-2"
+                      className="relative w-full h-auto max-h-[140px] sm:max-h-[220px] aspect-auto rounded-[32px] sm:rounded-[40px] overflow-hidden border-2 border-white shadow-xl bg-slate-50/50 mt-4 sm:mt-6 group flex items-center justify-center p-1"
                     >
                       <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent mix-blend-overlay z-10" />
                       <img 
@@ -233,8 +233,8 @@ function LoginForm() {
           </CardContent>
         </Card>
 
-        {/* Sticky Mobile Interaction Bar */}
-        <div className="sm:hidden fixed bottom-[5.5rem] left-0 right-0 z-[100] p-4 bg-white/80 backdrop-blur-3xl border-t border-slate-100/50 shadow-[0_-20px_40px_rgba(0,0,0,0.05)] animate-in slide-in-from-bottom-full duration-500">
+        {/* Sticky Mobile Interaction Bar - Parity Height (h-24) */}
+        <div className="sm:hidden fixed bottom-[5.5rem] left-0 right-0 z-[100] h-24 bg-white/80 backdrop-blur-3xl border-t border-slate-100/50 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] flex items-center px-6 animate-in slide-in-from-bottom-full duration-500">
            <Button 
              onClick={(e) => {
                e.preventDefault();
@@ -242,7 +242,7 @@ function LoginForm() {
                else handleVerifyOtp(e as any);
              }}
              disabled={loading} 
-             className="w-full h-14 rounded-full font-black uppercase text-[10px] tracking-[0.3em] gap-4 shadow-2xl shadow-primary/40 active:scale-95 transition-all bg-primary text-white border-2 border-white/20"
+             className="w-full h-14 rounded-full font-black uppercase text-[10px] tracking-[0.3em] gap-4 shadow-2xl shadow-primary/40 active:scale-95 transition-all bg-primary text-white border-none ring-offset-white"
            >
              {loading ? <Loader2 className="animate-spin" /> : (
                <>
