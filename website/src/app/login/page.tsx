@@ -88,17 +88,17 @@ function LoginForm() {
   };
 
   return (
-    <div className="fixed inset-0 h-[100dvh] bg-[#F4F7F6] pharma-bg-pattern flex flex-col items-center justify-center p-0 sm:p-8 overflow-hidden">
+    <div className="fixed inset-0 h-[100dvh] bg-[#F4F7F6] pharma-bg-pattern flex flex-col items-center justify-start p-0 sm:p-8 overflow-hidden">
       <div id="recaptcha-container"></div>
       
       <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        className="max-w-md w-full"
+        className="max-w-md w-full h-full sm:h-auto"
       >
-        <Card className="rounded-none sm:rounded-[40px] shadow-3xl border-none overflow-hidden bg-white/80 backdrop-blur-3xl border border-white mx-auto relative group w-full py-6 sm:py-0">
-          <CardHeader className="text-center p-4 sm:p-10 bg-primary text-white relative overflow-hidden">
+        <Card className="rounded-none sm:rounded-[40px] shadow-3xl border-none overflow-hidden bg-white/80 backdrop-blur-3xl border border-white mx-auto relative group w-full h-full sm:h-auto flex flex-col">
+          <CardHeader className="text-center p-4 sm:p-10 bg-primary text-white relative overflow-hidden shrink-0">
             <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12 scale-150">
                <Zap className="w-48 h-48" />
             </div>
