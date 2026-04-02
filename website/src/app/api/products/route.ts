@@ -1,6 +1,6 @@
-
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { ObjectId } from 'mongodb';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -22,7 +22,32 @@ export async function GET(request: Request) {
       query.category = category;
     }
     if (moleculeId) {
-      query.moleculeId = moleculeId;
+      try {
+        if (moleculeId.length === 24) {
+          query.$or = [
+            { moleculeId: moleculeId },
+            { moleculeId: new ObjectId(moleculeId) }
+          ];
+        } else {
+          query.moleculeId = moleculeId;
+        }
+
+        // AUTO-MAPPING FALLBACK: If moleculeId is active, also try matching the salt name 
+        // to products that haven't been explicitly linked yet.
+        const moleculeDoc = await db.collection('molecules').findOne(
+          (moleculeId.length === 24 ? { _id: new ObjectId(moleculeId) } : { _id: moleculeId }) as any
+        );
+        
+        if (moleculeDoc && (moleculeDoc.molecule || moleculeDoc.name)) {
+          const saltName = moleculeDoc.molecule || moleculeDoc.name;
+          if (!query.$or) query.$or = [];
+          query.$or.push({ saltComposition: { $regex: saltName, $options: 'i' } });
+          query.$or.push({ salt: { $regex: saltName, $options: 'i' } });
+          query.$or.push({ composition: { $regex: saltName, $options: 'i' } });
+        }
+      } catch (e) {
+        query.moleculeId = moleculeId;
+      }
     }
     if (isGeneric !== null) {
       query.isGeneric = isGeneric === 'true';

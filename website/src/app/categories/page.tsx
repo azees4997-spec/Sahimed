@@ -10,6 +10,7 @@ import { CATEGORIES as LOCAL_CATEGORIES } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -57,7 +58,7 @@ export default function CategoriesPage() {
         setIsLoading(false);
       });
   }, []);
-  const displayCategories = categories?.length ? categories : LOCAL_CATEGORIES;
+  const displayCategories = categories;
 
   return (
     <PageTransition>
@@ -85,9 +86,17 @@ export default function CategoriesPage() {
             variants={containerVariants}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-6"
+            className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-8"
           >
-            {displayCategories.map((cat: any, i) => {
+            {isLoading ? (
+              // Skeleton Grid
+              Array(12).fill(0).map((_, i) => (
+                <div key={i} className="bg-white rounded-[40px] sm:rounded-[56px] p-8 flex flex-col items-center gap-6 animate-pulse border border-slate-50 shadow-sm">
+                  <Skeleton className="w-24 h-24 sm:w-36 sm:h-36 rounded-full" />
+                  <Skeleton className="h-5 w-28 rounded-full" />
+                </div>
+              ))
+            ) : displayCategories.map((cat: any, i) => {
               const gradients = [
                 'from-blue-400 to-indigo-600',
                 'from-rose-400 to-orange-500',
@@ -107,13 +116,13 @@ export default function CategoriesPage() {
                     {/* 3D Gradient Background Layer */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-[0.03] group-hover:opacity-[0.08] transition-opacity`} />
                     
-                    <div className="relative w-16 h-16 sm:w-24 sm:h-24 rounded-full flex items-center justify-center overflow-hidden shadow-[inset_0_2px_10px_rgba(0,0,0,0.03)] bg-slate-50 group-hover:scale-110 transition-transform duration-700">
+                    <div className="relative w-24 h-24 sm:w-40 sm:h-40 rounded-full flex items-center justify-center overflow-hidden shadow-[inset_0_2px_15px_rgba(0,0,0,0.05)] bg-slate-50 group-hover:scale-110 transition-transform duration-700">
                       {cat.imageUrl ? (
                         <Image 
                           src={cat.imageUrl} 
                           alt={cat.name} 
                           fill 
-                          className="object-contain p-2 sm:p-5 group-hover:scale-110 transition-transform duration-700"
+                          className="object-contain p-0.5 sm:p-1 group-hover:scale-110 transition-transform duration-700"
                         />
                       ) : (
                         <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center opacity-80`}>
