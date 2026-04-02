@@ -12,7 +12,8 @@ import {
   Upload, 
   ImageIcon,
   Check,
-  ChevronsUpDown
+  ChevronsUpDown,
+  ChevronRight
 } from 'lucide-react';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
