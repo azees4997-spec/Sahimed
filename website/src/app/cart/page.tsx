@@ -45,7 +45,7 @@ const itemVariants = {
 export default function CartPage() {
   const { 
     cart, removeFromCart, updateQuantity, totalPrice, totalItems, activeFees, 
-    availablePromos, appliedPromo, applyPromo, attachedPrescription, setAttachedPrescription 
+    availablePromos, appliedPromo, applyPromo, attachedPrescriptions, addPrescription, removePrescription 
   } = useCart();
   
   const { user } = useUser();
@@ -81,23 +81,25 @@ export default function CartPage() {
   const totalSavings = itemSavings + promoDiscount;
 
   const requiresPrescription = cart.some(item => item.prescriptionRequired);
-  const isPrescriptionReady = !requiresPrescription || !!attachedPrescription;
+  const isPrescriptionReady = !requiresPrescription || attachedPrescriptions.length > 0;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast({ variant: "destructive", title: "Limit: 2MB" });
-        return;
-      }
-      setIsUploading(true);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAttachedPrescription(reader.result as string);
-        setIsUploading(false);
-        toast({ title: "Clinical file attached" });
-      };
-      reader.readAsDataURL(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      Array.from(files).forEach(file => {
+        if (file.size > 5 * 1024 * 1024) {
+          toast({ variant: "destructive", title: "Limit: 5MB per file" });
+          return;
+        }
+        setIsUploading(true);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          addPrescription(reader.result as string);
+          setIsUploading(false);
+          toast({ title: "Clinical file added" });
+        };
+        reader.readAsDataURL(file);
+      });
     }
   };
 
@@ -156,32 +158,57 @@ export default function CartPage() {
 
           {requiresPrescription && (
             <motion.div 
-              initial={{ y: -20, opacity: 0 }}
+              initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               className={cn(
-                "border border-white/50 p-4 sm:p-6 rounded-[24px] sm:rounded-[32px] mb-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 shadow-xl backdrop-blur-md relative overflow-hidden",
-                attachedPrescription ? "bg-emerald-50/50" : "bg-primary/5"
+                "border border-white/50 p-3 sm:p-4 rounded-[20px] sm:rounded-[28px] mb-6 flex flex-col gap-3 shadow-lg backdrop-blur-md relative overflow-hidden",
+                attachedPrescriptions.length > 0 ? "bg-emerald-50/20" : "bg-primary/5"
               )}
             >
-              <div className={cn(
-                "w-10 h-10 sm:w-16 sm:h-16 rounded-[16px] sm:rounded-[24px] flex items-center justify-center shrink-0 shadow-inner",
-                attachedPrescription ? "bg-emerald-100 text-emerald-600" : "bg-primary/10 text-primary"
-              )}>
-                 {attachedPrescription ? <ClipboardCheck className="w-5 h-5 sm:w-6 sm:h-6" /> : <FileWarning className="w-5 h-5 sm:w-6 sm:h-6" />}
+              <div className="flex flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-inner",
+                    attachedPrescriptions.length > 0 ? "bg-emerald-100 text-emerald-600" : "bg-primary/10 text-primary"
+                  )}>
+                     {attachedPrescriptions.length > 0 ? <ClipboardCheck className="w-4 h-4 sm:w-5 sm:h-5" /> : <FileWarning className="w-4 h-4 sm:w-5 sm:h-5" />}
+                  </div>
+                  <div>
+                    <p className="font-black text-[10px] sm:text-xs tracking-tight uppercase font-outfit">Prescription Matrix ({attachedPrescriptions.length})</p>
+                    <p className="text-[7px] sm:text-[8px] font-black tracking-widest opacity-60 uppercase">Max 5MB per file • Multiple allowed</p>
+                  </div>
+                </div>
+                
+                <input type="file" id="cart-upload" className="hidden" accept="image/*" multiple onChange={handleFileChange} />
+                <Button 
+                  onClick={() => document.getElementById('cart-upload')?.click()} 
+                  className="rounded-full font-black text-[8px] h-8 sm:h-10 px-4 gap-2 bg-primary text-white uppercase tracking-widest shadow-lg"
+                >
+                  {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-3 h-3 sm:w-4 sm:h-4" />} 
+                  Add File
+                </Button>
               </div>
-              <div className="flex-1 text-center sm:text-left">
-                <p className="font-black text-xs sm:text-lg tracking-tight uppercase font-outfit">{attachedPrescription ? "Review attached" : "Prescription Required"}</p>
-                <p className="text-[7px] sm:text-[9px] font-black tracking-[0.2em] mt-0.5 opacity-60 leading-relaxed uppercase">Clinical files needed for these items.</p>
-              </div>
-              <input type="file" id="cart-upload" className="hidden" accept="image/*" onChange={handleFileChange} />
-              <Button 
-                onClick={() => document.getElementById('cart-upload')?.click()} 
-                variant="outline" 
-                className="w-full sm:w-auto rounded-full font-black text-[8px] h-10 sm:h-12 px-6 gap-2 border-2 uppercase tracking-widest hover:bg-white"
-              >
-                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />} 
-                {attachedPrescription ? "Renew" : "Upload"}
-              </Button>
+
+              {attachedPrescriptions.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide pt-1 border-t border-slate-100/50">
+                  {attachedPrescriptions.map((img, idx) => (
+                    <motion.div 
+                      key={idx} 
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border border-white shadow-sm shrink-0 group"
+                    >
+                      <Image src={img} alt="prescription" fill className="object-cover" />
+                      <button 
+                        onClick={() => removePrescription(idx)}
+                        className="absolute top-0 right-0 bg-rose-500 text-white p-0.5 rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
           

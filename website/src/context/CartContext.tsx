@@ -82,8 +82,10 @@ interface CartContextType {
   applyPromo: (promo: PromoCode | null) => void;
   activeFees: Fee[];
   availablePromos: PromoCode[];
-  attachedPrescription: string | null;
-  setAttachedPrescription: (img: string | null) => void;
+  attachedPrescriptions: string[];
+  setAttachedPrescriptions: (imgs: string[]) => void;
+  addPrescription: (img: string) => void;
+  removePrescription: (index: number) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -92,7 +94,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [location, setLocation] = useState('Mumbai, MH');
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
-  const [attachedPrescription, setAttachedPrescription] = useState<string | null>(null);
+  const [attachedPrescriptions, setAttachedPrescriptions] = useState<string[]>([]);
   
   const db = useFirestore();
 
@@ -124,8 +126,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const savedLoc = localStorage.getItem('hl_location');
     if (savedLoc) setLocation(savedLoc);
 
-    const savedPrescription = localStorage.getItem('hl_prescription');
-    if (savedPrescription) setAttachedPrescription(savedPrescription);
+    const savedPrescriptions = localStorage.getItem('hl_prescriptions');
+    if (savedPrescriptions) {
+      try {
+        setAttachedPrescriptions(JSON.parse(savedPrescriptions));
+      } catch (e) {
+        setAttachedPrescriptions([]);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -137,12 +145,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [location]);
 
   useEffect(() => {
-    if (attachedPrescription) {
-      localStorage.setItem('hl_prescription', attachedPrescription);
-    } else {
-      localStorage.removeItem('hl_prescription');
-    }
-  }, [attachedPrescription]);
+    localStorage.setItem('hl_prescriptions', JSON.stringify(attachedPrescriptions));
+  }, [attachedPrescriptions]);
 
   const addToCart = (product: Product, qty: number = 1) => {
     setCart(prev => {
@@ -183,10 +187,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const clearCart = () => {
     setCart([]);
     setAppliedPromo(null);
-    setAttachedPrescription(null);
+    setAttachedPrescriptions([]);
   };
 
   const applyPromo = (promo: PromoCode | null) => setAppliedPromo(promo);
+
+  const addPrescription = (img: string) => {
+    setAttachedPrescriptions(prev => [...prev, img]);
+  };
+
+  const removePrescription = (index: number) => {
+    setAttachedPrescriptions(prev => prev.filter((_, i) => i !== index));
+  };
 
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
   const totalPrice = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -194,7 +206,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   return (
     <CartContext.Provider value={{
       cart, addToCart, removeFromCart, updateQuantity, clearCart, getItemQuantity, totalItems, totalPrice, location, setLocation,
-      appliedPromo, applyPromo, activeFees, availablePromos, attachedPrescription, setAttachedPrescription
+      appliedPromo, applyPromo, activeFees, availablePromos, attachedPrescriptions, setAttachedPrescriptions: setAttachedPrescriptions,
+      addPrescription, removePrescription
     }}>
       {children}
     </CartContext.Provider>
