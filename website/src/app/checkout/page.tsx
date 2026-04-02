@@ -26,8 +26,14 @@ import {
   Navigation,
   LocateFixed,
   Zap,
-  Sparkles
+  Sparkles,
+  Camera,
+  FileText,
+  Trash2,
+  Stethoscope
 } from 'lucide-react';
+import { useStorage } from '@/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
@@ -67,7 +73,9 @@ export default function CheckoutPage() {
     cart, 
     totalPrice, 
     clearCart, 
-    attachedPrescription,
+    attachedPrescriptions,
+    addPrescription,
+    removePrescription,
     activeFees,
     appliedPromo
   } = useCart();
@@ -82,6 +90,10 @@ export default function CheckoutPage() {
   
   const { toast } = useToast();
   const router = useRouter();
+  const storage = useStorage();
+
+  const [clinicalPath, setClinicalPath] = useState<'attach' | 'consult'>('attach');
+  const [isUploading, setIsUploading] = useState(false);
 
   const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
   const applicableFees = activeFees.filter(f => totalPrice >= (f.minPurchase || 0));
@@ -168,6 +180,12 @@ export default function CheckoutPage() {
       toast({ variant: 'destructive', title: "Contact error", description: "Please enter a valid 10-digit mobile number." });
       return false;
     }
+
+    const requiresPrescription = cart.some(item => item.prescriptionRequired);
+    if (requiresPrescription && clinicalPath === 'attach' && attachedPrescriptions.length === 0) {
+      toast({ variant: 'destructive', title: "Clinical File Required", description: "Please attach your prescription or select Doctor Consultation." });
+      return false;
+    }
     
     if (!orderInfo.houseNumber.trim()) {
       toast({ variant: 'destructive', title: "House no. missing", description: "House or Building number is mandatory." });
@@ -251,6 +269,33 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !storage) return;
+
+    setIsUploading(true);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > 5 * 1024 * 1024) {
+          toast({ variant: 'destructive', title: "File too large", description: `${file.name} exceeds 5MB limit.` });
+          continue;
+        }
+
+        const path = `prescriptions/${user?.uid || 'anonymous'}/${Date.now()}_${file.name}`;
+        const storageRef = ref(storage, path);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        addPrescription(url);
+      }
+      toast({ title: "Clinical files locked", description: "Prescription matrix updated." });
+    } catch (err) {
+      toast({ variant: 'destructive', title: "Upload failed", description: "Could not sync clinical files to cloud." });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handlePlaceOrder = async () => {
     if (!user || !db) return;
     if (!selectedAddressId) {
@@ -272,7 +317,9 @@ export default function CheckoutPage() {
       paymentType: paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online',
       patientName: orderInfo.patientName,
       phoneNumber: `+91${cleanPhone}`,
-      prescriptionUrl: attachedPrescription || null,
+      clinicalPath: clinicalPath,
+      isConsultationRequired: clinicalPath === 'consult',
+      prescriptionUrls: attachedPrescriptions,
       shippingDetails: {
         houseNumber: orderInfo.houseNumber,
         street: orderInfo.buildingLocality,
@@ -417,6 +464,144 @@ export default function CheckoutPage() {
                   )}
                 </div>
               </motion.div>
+
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Clinical Verification Path */}
+              {cart.some(i => i.prescriptionRequired) && (
+                <motion.div 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="space-y-10"
+                >
+                  <div className="flex items-center gap-4 px-2">
+                    <div className="w-1 h-6 bg-rose-500 rounded-full" />
+                    <h3 className="text-lg font-black text-slate-900 tracking-tight font-outfit uppercase">Clinical Protocol Choice</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* Attach Option */}
+                    <div 
+                      onClick={() => setClinicalPath('attach')}
+                      className={cn(
+                        "p-8 rounded-[48px] border-2 cursor-pointer transition-all bg-white/40 backdrop-blur-md shadow-xl relative overflow-hidden group",
+                        clinicalPath === 'attach' ? "border-primary bg-white ring-4 ring-primary/5" : "border-transparent"
+                      )}
+                    >
+                      <div className="flex items-center gap-6 relative z-10">
+                        <div className={cn("w-14 h-14 rounded-[20px] flex items-center justify-center shadow-inner", clinicalPath === 'attach' ? "bg-primary text-white" : "bg-white text-slate-300")}>
+                          <FileText className="w-7 h-7" />
+                        </div>
+                        <div>
+                          <p className="font-black text-sm tracking-tight font-outfit uppercase">Prescription Available</p>
+                          <p className="text-[9px] font-bold text-slate-400 tracking-widest uppercase mt-1">Upload verified files</p>
+                        </div>
+                      </div>
+                      <div className={cn("absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center border-2", clinicalPath === 'attach' ? "bg-primary border-primary" : "border-slate-100")}>
+                        {clinicalPath === 'attach' && <Check className="w-3.5 h-3.5 text-white" />}
+                      </div>
+                    </div>
+
+                    {/* Consult Option */}
+                    <div 
+                      onClick={() => setClinicalPath('consult')}
+                      className={cn(
+                        "p-8 rounded-[48px] border-2 cursor-pointer transition-all bg-white/40 backdrop-blur-md shadow-xl relative overflow-hidden group",
+                        clinicalPath === 'consult' ? "border-emerald-500 bg-white ring-4 ring-emerald-500/5" : "border-transparent"
+                      )}
+                    >
+                      <div className="flex items-center gap-6 relative z-10">
+                        <div className={cn("w-14 h-14 rounded-[20px] flex items-center justify-center shadow-inner", clinicalPath === 'consult' ? "bg-emerald-500 text-white" : "bg-white text-slate-300")}>
+                          <Stethoscope className="w-7 h-7" />
+                        </div>
+                        <div>
+                          <p className="font-black text-sm tracking-tight font-outfit uppercase">Consult Doctor</p>
+                          <p className="text-[9px] font-bold text-slate-400 tracking-widest uppercase mt-1">Free digital consultation</p>
+                        </div>
+                      </div>
+                      <div className={cn("absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center border-2", clinicalPath === 'consult' ? "bg-emerald-500 border-emerald-500" : "border-slate-100")}>
+                        {clinicalPath === 'consult' && <Check className="w-3.5 h-3.5 text-white" />}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Attachment Matrix Layer */}
+                  <AnimatePresence mode="wait">
+                    {clinicalPath === 'attach' && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="bg-white p-10 rounded-[48px] border-2 border-primary/5 shadow-2xl space-y-8">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Clinical Document Repository</h4>
+                            <Button 
+                              onClick={() => document.getElementById('checkout-rx-upload')?.click()} 
+                              disabled={isUploading}
+                              className="rounded-full bg-primary/10 hover:bg-primary/20 text-primary font-black text-[9px] tracking-widest px-6 h-10 border-none uppercase flex gap-2"
+                            >
+                              {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                              Inject Clinical File
+                            </Button>
+                            <input id="checkout-rx-upload" type="file" multiple className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
+                          </div>
+
+                          {attachedPrescriptions.length > 0 ? (
+                            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                              {attachedPrescriptions.map((url, idx) => {
+                                const isPDF = url.toLowerCase().includes('.pdf') || url.includes('application%2Fpdf');
+                                return (
+                                  <motion.div key={idx} initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="relative shrink-0 group">
+                                    {isPDF ? (
+                                      <div className="w-24 h-24 rounded-3xl bg-slate-50 border-2 border-slate-100 flex flex-col items-center justify-center text-rose-500">
+                                        <FileText className="w-10 h-10" />
+                                        <p className="text-[8px] font-black mt-1 uppercase">CLINICAL DOC</p>
+                                      </div>
+                                    ) : (
+                                      <img src={url} className="w-24 h-24 object-cover rounded-3xl border-2 border-slate-100 shadow-md" alt="" />
+                                    )}
+                                    <button 
+                                      onClick={() => removePrescription(idx)}
+                                      className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white shadow-xl border border-slate-100 flex items-center justify-center text-rose-500 hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="py-12 text-center rounded-[32px] bg-slate-50 border-2 border-dashed border-slate-100">
+                              <Camera className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                              <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em]">No documentation synchronized</p>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {clinicalPath === 'consult' && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        className="overflow-hidden"
+                      >
+                       <div className="bg-emerald-50/50 p-10 rounded-[48px] border-2 border-emerald-100 text-center space-y-4">
+                          <Stethoscope className="w-12 h-12 text-emerald-300 mx-auto" />
+                          <h4 className="text-sm font-black text-emerald-900 tracking-tight font-outfit uppercase">Medical Review Requested</h4>
+                          <p className="text-[10px] font-bold text-emerald-700 leading-relaxed max-w-sm mx-auto uppercase tracking-wider">
+                            Our medical desk will contact you to synchronize clinical details and authorize this fulfillment via digital consult.
+                          </p>
+                       </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              )}
 
               <motion.div 
                 initial={{ y: 20, opacity: 0 }}
