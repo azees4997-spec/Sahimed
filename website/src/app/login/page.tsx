@@ -160,13 +160,13 @@ function LoginForm() {
                           ease: "easeInOut" 
                         }
                       }}
-                      className="relative w-full aspect-[16/10] sm:aspect-[16/9] rounded-[32px] sm:rounded-[40px] overflow-hidden border-2 border-white shadow-xl bg-primary/5 mt-6 group"
+                      className="relative w-full aspect-[16/10] sm:aspect-[16/9] rounded-[32px] sm:rounded-[40px] overflow-hidden border-2 border-white shadow-xl bg-slate-50/50 mt-6 group flex items-center justify-center p-2"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent mix-blend-overlay z-10" />
+                      <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent mix-blend-overlay z-10" />
                       <img 
                         src="/medical_login_illustration.png" 
                         alt="Medical Illustration" 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110"
                       />
                     </motion.div>
                   </div>
