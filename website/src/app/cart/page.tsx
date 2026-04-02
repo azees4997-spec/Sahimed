@@ -171,7 +171,10 @@ export default function CartPage() {
                       <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:text-right shrink-0">
                         <div className="text-left sm:text-right">
                           <p className="text-xs sm:text-xl font-black text-slate-900 font-outfit tracking-tighter leading-none">₹{(item.price * item.quantity).toFixed(2)}</p>
-                          <p className="text-[7px] sm:text-[10px] text-primary font-black line-through opacity-30 mt-0.5">₹{((item.mrp || item.price + 50) * item.quantity).toFixed(2)}</p>
+                          <div className="flex items-center gap-1.5 sm:justify-end mt-0.5">
+                            <p className="text-[7px] sm:text-[10px] text-slate-400 font-black line-through opacity-50">₹{((item.mrp || item.price + 50) * item.quantity).toFixed(2)}</p>
+                            <span className="text-[6px] sm:text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full uppercase tracking-tighter animate-pulse">Save ₹{(((item.mrp || item.price + 50) - item.price) * item.quantity).toFixed(0)}</span>
+                          </div>
                         </div>
                         <button 
                           onClick={() => removeFromCart(item.id)} 
@@ -365,21 +368,30 @@ export default function CartPage() {
 
         {/* Sticky Checkout Bar (Mobile & Tablet only) */}
         {cart.length > 0 && (
-          <div className="lg:hidden fixed bottom-[5.5rem] sm:bottom-0 left-0 right-0 z-50 p-4 sm:p-6 bg-white/80 backdrop-blur-3xl border-t border-slate-100/50 flex items-center justify-between shadow-[0_-20px_40px_rgba(0,0,0,0.03)] animate-in slide-in-from-bottom-full duration-500">
+          <div className="lg:hidden fixed bottom-[5.5rem] sm:bottom-0 left-0 right-0 z-50 p-6 sm:p-8 bg-white/90 backdrop-blur-3xl border-t-2 border-primary/5 flex items-center justify-between shadow-[0_-20px_60px_rgba(0,0,0,0.1)] rounded-t-[48px] animate-in slide-in-from-bottom-full duration-500">
             <div className="flex flex-col">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimated Total</p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-xl sm:text-2xl font-black text-slate-900 font-outfit">₹{finalPayable.toFixed(2)}</span>
-                <span className="text-[10px] font-bold text-slate-400">({totalItems} {totalItems === 1 ? 'Item' : 'Items'})</span>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Net Payable</p>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl sm:text-3xl font-black text-slate-900 font-outfit">₹{finalPayable.toFixed(2)}</span>
+                  <span className="text-[10px] font-bold text-slate-400">({totalItems})</span>
+                </div>
+                {totalSavings > 0 && (
+                  <div className="bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 w-fit">
+                    <span className="text-[8px] sm:text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1">
+                      <Sparkles className="w-2 h-2" /> Saved ₹{totalSavings.toFixed(0)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="flex-1 max-w-[200px] sm:max-w-xs ml-4">
+            <div className="flex-1 max-w-[160px] sm:max-w-xs ml-4">
               <Button 
                 onClick={handleCheckoutClick} 
-                className="w-full rounded-full h-12 sm:h-14 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-2xl bg-primary text-white hover:scale-[1.02] active:scale-95 transition-all gap-2"
+                className="w-full rounded-full h-12 sm:h-16 text-[10px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-[0_20px_40px_rgba(0,0,0,0.1)] bg-primary text-white hover:scale-[1.02] active:scale-95 transition-all gap-2 border-none ring-offset-white"
               >
-                Proceed <ArrowRight className="w-3.5 h-3.5" />
+                Checkout <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
