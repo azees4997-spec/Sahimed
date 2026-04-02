@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { 
   Loader2, 
-  Wand2 
+  Wand2,
+  ImageIcon
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,13 +45,29 @@ export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: 
         {['Pending', 'Open', 'Completed'].map((status) => (<button key={status} onClick={() => setStatusFilter(status as any)} className={cn("px-8 py-2.5 rounded-full text-[10px] font-black tracking-widest transition-all", statusFilter === status ? "bg-primary text-white shadow-lg scale-105" : "text-gray-400 hover:bg-gray-50")}>{status}</button>))}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-8">
-        {isLoading ? (<div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>) : (!filteredEnquiries || filteredEnquiries.length === 0) ? (<div className="col-span-full py-20 text-center font-black text-gray-400 text-[10px]">No matches found</div>) : filteredEnquiries.map(enq => (
-          <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white p-6 hover:shadow-2xl transition-all">
-            <div className="aspect-[3/4] rounded-3xl bg-gray-50 mb-6 overflow-hidden border relative">{enq?.imageUrl && <img src={enq.imageUrl} className="w-full h-full object-cover" alt="" />}<div className="absolute top-4 right-4"><Badge className="bg-primary text-white text-[8px] font-black">{enq?.status || 'Pending'}</Badge></div></div>
-            <p className="font-black text-sm mb-6 truncate">{enq?.patientName || 'Patient'}</p>
-            {statusFilter !== 'Completed' && (<Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black text-[10px] bg-primary text-white gap-2"><Wand2 className="w-3.5 h-3.5" /> Digitize</Button>)}
-          </Card>
-        ))}
+        {isLoading ? (<div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>) : (!filteredEnquiries || filteredEnquiries.length === 0) ? (<div className="col-span-full py-20 text-center font-black text-gray-400 text-[10px]">No matches found</div>) : filteredEnquiries.map(enq => {
+          const displayImg = enq.imageUrls?.[0] || enq.imageUrl;
+          const docCount = enq.imageUrls?.length || (enq.imageUrl ? 1 : 0);
+          return (
+            <Card key={enq.id} className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white p-6 hover:shadow-2xl transition-all">
+              <div className="aspect-[3/4] rounded-3xl bg-gray-50 mb-6 overflow-hidden border relative">
+                {displayImg ? (
+                  <img src={displayImg} className="w-full h-full object-cover" alt="" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-200">
+                    <ImageIcon className="w-12 h-12" />
+                  </div>
+                )}
+                <div className="absolute top-4 right-4 flex flex-col gap-2">
+                   <Badge className="bg-primary text-white text-[8px] font-black uppercase shadow-lg">{enq?.status || 'Pending'}</Badge>
+                   {docCount > 1 && <Badge className="bg-white text-primary border border-primary/20 text-[8px] font-black uppercase shadow-sm">+{docCount - 1} DOCS</Badge>}
+                </div>
+              </div>
+              <p className="font-black text-sm mb-6 truncate uppercase tracking-tight">{enq?.patientName || 'Patient'}</p>
+              {statusFilter !== 'Completed' && (<Button onClick={() => setSelectedEnquiry(enq)} className="w-full rounded-full h-12 font-black text-[10px] bg-primary text-white gap-2"><Wand2 className="w-3.5 h-3.5" /> Digitize</Button>)}
+            </Card>
+          );
+        })}
       </div>
 
       <Dialog open={!!selectedEnquiry} onOpenChange={o => !o && setSelectedEnquiry(null)}>

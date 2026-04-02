@@ -13,7 +13,8 @@ import {
   Ticket, 
   Tag, 
   Zap, 
-  ImageIcon 
+  ImageIcon,
+  FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -46,7 +47,9 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
   const [promocode, setPromocode] = useState('');
   const [activePromo, setActivePromo] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [prescriptions, setPrescriptions] = useState<string[]>([enquiry.imageUrl].filter(Boolean));
+  const [prescriptions, setPrescriptions] = useState<string[]>(
+    enquiry.imageUrls || [enquiry.imageUrl].filter(Boolean)
+  );
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -272,12 +275,22 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
           <div className="bg-white p-6 rounded-[32px] border shadow-sm space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">Prescriptions</h4>
             <div className="flex flex-wrap gap-4">
-               {prescriptions.map((url, idx) => (
-                 <div key={idx} className="relative group">
-                   <img src={url} className="w-20 h-20 object-cover rounded-2xl border bg-gray-50" alt="" />
-                   <button onClick={() => setPrescriptions(prescriptions.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 opacity-100 shadow-lg border-2 border-white"><X className="w-2.5 h-2.5" /></button>
-                 </div>
-               ))}
+               {prescriptions.map((url, idx) => {
+                 const isPDF = url.toLowerCase().includes('.pdf') || url.includes('application%2Fpdf');
+                 return (
+                   <div key={idx} className="relative group">
+                     {isPDF ? (
+                       <div className="w-20 h-20 rounded-2xl border bg-slate-50 flex flex-col items-center justify-center text-rose-500 shadow-sm">
+                          <FileText className="w-8 h-8" />
+                          <span className="text-[8px] font-black uppercase mt-1">PDF</span>
+                       </div>
+                     ) : (
+                       <img src={url} className="w-20 h-20 object-cover rounded-2xl border bg-gray-50 shadow-sm" alt="" />
+                     )}
+                     <button onClick={() => setPrescriptions(prescriptions.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 opacity-100 shadow-lg border-2 border-white transition-transform hover:scale-110"><X className="w-2.5 h-2.5" /></button>
+                   </div>
+                 );
+               })}
                <div className="flex flex-col gap-3 w-full mt-2">
                  <div className="flex gap-2">
                    <Input 
