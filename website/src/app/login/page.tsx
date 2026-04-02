@@ -88,32 +88,31 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern flex items-center justify-center p-6 sm:p-8">
+    <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern flex items-center justify-center p-0 sm:p-8">
       <div id="recaptcha-container"></div>
       
       <motion.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        className="max-w-md w-full"
+        className="max-w-md w-full h-full sm:h-auto"
       >
-        <Card className="rounded-[40px] shadow-3xl border-none overflow-hidden bg-white/80 backdrop-blur-3xl border border-white mx-auto relative group">
+        <Card className="rounded-none sm:rounded-[40px] shadow-3xl border-none overflow-hidden bg-white/80 backdrop-blur-3xl border border-white mx-auto relative group w-full min-h-screen sm:min-h-0">
           <CardHeader className="text-center p-8 sm:p-10 bg-primary text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12 scale-150">
                <Zap className="w-48 h-48" />
             </div>
             
-            <Link href="/" className="absolute top-10 left-10 p-4 bg-white/10 rounded-full hover:bg-white/20 transition-all hover:scale-110 active:scale-95 z-10">
+            <Link href="/" className="absolute top-8 left-8 p-3 sm:top-10 sm:left-10 sm:p-4 bg-white/10 rounded-full hover:bg-white/20 transition-all hover:scale-110 active:scale-95 z-10">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             
-            <div className="w-24 h-24 sm:w-28 sm:h-28 bg-white/20 rounded-[40px] flex items-center justify-center mx-auto mb-8 backdrop-blur-md relative z-10 border border-white/20 shadow-xl group hover:scale-110 transition-transform duration-500">
-              <Smartphone className="w-12 h-12 text-white group-hover:rotate-12 transition-transform" />
+            <div className="w-20 h-20 sm:w-28 sm:h-28 bg-white/20 rounded-[32px] sm:rounded-[40px] flex items-center justify-center mx-auto mb-6 sm:mb-8 backdrop-blur-md relative z-10 border border-white/20 shadow-xl group hover:scale-110 transition-transform duration-500">
+              <Smartphone className="w-10 h-10 sm:w-12 sm:h-12 text-white group-hover:rotate-12 transition-transform" />
             </div>
             
             <div className="space-y-1 relative z-10">
               <CardTitle className="text-2xl sm:text-3xl font-black font-outfit mb-0.5 tracking-tighter uppercase leading-none">Login or Sign Up</CardTitle>
-              <CardDescription className="text-white/70 uppercase text-[9px] font-black tracking-widest leading-none">Access the Clinical Ecosystem</CardDescription>
             </div>
           </CardHeader>
           
@@ -145,7 +144,11 @@ function LoginForm() {
                       />
                     </div>
                   </div>
-                  <Button type="submit" disabled={loading} className="w-full h-20 rounded-full font-black uppercase text-xs tracking-[0.4em] gap-4 shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary hover:scale-[1.02] border-4 border-white">
+                  <Button 
+                    type="submit" 
+                    disabled={loading} 
+                    className="hidden sm:flex w-full h-20 rounded-full font-black uppercase text-xs tracking-[0.4em] gap-4 shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary hover:scale-[1.02] border-4 border-white"
+                  >
                     {loading ? <Loader2 className="animate-spin" /> : (
                       <>
                         <Sparkles className="w-4 h-4" />
@@ -187,7 +190,11 @@ function LoginForm() {
                     </div>
                   </div>
                   
-                  <Button type="submit" disabled={loading} className="w-full h-16 rounded-full font-black uppercase tracking-widest text-xs shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary hover:scale-[1.02] border-4 border-white">
+                  <Button 
+                    type="submit" 
+                    disabled={loading} 
+                    className="hidden sm:flex w-full h-16 rounded-full font-black uppercase tracking-widest text-xs shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary hover:scale-[1.02] border-4 border-white"
+                  >
                     {loading ? <Loader2 className="animate-spin" /> : "Verify & Login"}
                   </Button>
                   
@@ -197,23 +204,35 @@ function LoginForm() {
                 </motion.form>
               )}
             </AnimatePresence>
-
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="mt-14 pt-10 border-t border-slate-100 flex items-center justify-center gap-4"
-            >
-               <div className="w-10 h-10 bg-emerald-50 rounded-2xl flex items-center justify-center">
-                 <Shield className="w-6 h-6 text-emerald-500" />
-               </div>
-               <div className="flex flex-col gap-1 leading-none">
-                 <p className="text-[9px] text-emerald-600 font-black uppercase tracking-[0.3em]">SahiMed Firewall Active</p>
-                 <p className="text-[8px] text-slate-300 font-black uppercase tracking-[0.2em]">Bank-Grade Security Layer</p>
-               </div>
-            </motion.div>
           </CardContent>
         </Card>
+
+        {/* Sticky Mobile Interaction Bar */}
+        <div className="sm:hidden fixed bottom-[5.5rem] left-0 right-0 z-[100] p-4 bg-white/80 backdrop-blur-3xl border-t border-slate-100/50 shadow-[0_-20px_40px_rgba(0,0,0,0.05)] animate-in slide-in-from-bottom-full duration-500">
+           <Button 
+             onClick={(e) => {
+               e.preventDefault();
+               if (step === 1) handleSendOtp(e as any);
+               else handleVerifyOtp(e as any);
+             }}
+             disabled={loading} 
+             className="w-full h-14 rounded-full font-black uppercase text-[10px] tracking-[0.3em] gap-4 shadow-2xl shadow-primary/40 active:scale-95 transition-all bg-primary text-white border-2 border-white/20"
+           >
+             {loading ? <Loader2 className="animate-spin" /> : (
+               <>
+                 {step === 1 ? (
+                   <>
+                    <Sparkles className="w-4 h-4 transition-transform group-hover:rotate-12" />
+                    Request OTP
+                   </>
+                 ) : (
+                   "Verify & Login"
+                 )}
+                 <ChevronRight className="w-4 h-4 ml-auto" />
+               </>
+             )}
+           </Button>
+        </div>
       </motion.div>
     </div>
   );
