@@ -33,9 +33,10 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
   });
 
   const fetchLogs = async () => {
+    if (!user) return; // Wait for authentication
     setIsLoading(true);
     try {
-      const idToken = await user?.getIdToken();
+      const idToken = await user.getIdToken();
       const res = await fetch(`/api/analytics/search?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`, {
         headers: {
           'Authorization': `Bearer ${idToken}`
@@ -52,8 +53,10 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
   };
 
   useEffect(() => {
-    fetchLogs();
-  }, [dateRange]);
+    if (user) {
+      fetchLogs();
+    }
+  }, [dateRange, user]);
 
   const downloadCSV = () => {
     if (logs.length === 0) return;

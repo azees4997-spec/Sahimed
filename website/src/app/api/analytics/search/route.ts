@@ -54,6 +54,14 @@ export async function GET(request: Request) {
 
     return NextResponse.json(logs);
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: err.message.includes('Unauthorized') ? 401 : 500 });
+    console.error("[Search Analytics GET Error]", err);
+    let status = 500;
+    if (err.message?.includes('Unauthorized')) status = 401;
+    if (err.message?.includes('Forbidden')) status = 403;
+    
+    return NextResponse.json({ 
+      error: err.message || "Unknown analytics error",
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined 
+    }, { status });
   }
 }

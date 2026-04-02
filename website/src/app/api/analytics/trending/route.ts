@@ -42,7 +42,11 @@ export async function GET() {
       salts: finalSalts
     });
   } catch (err: any) {
-    console.error("Trending API Error", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("[Trending API Error]", err);
+    return NextResponse.json({ 
+      error: "Trending Insights Inaccessible",
+      details: err.message,
+      status: "Database Syncing" 
+    }, { status: 500 });
   }
 }
