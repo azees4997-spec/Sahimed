@@ -12,8 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useState, useEffect } from 'react';
-import { useUser, useStorage } from '@/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
@@ -46,15 +45,13 @@ const itemVariants = {
 export default function CartPage() {
   const { 
     cart, removeFromCart, updateQuantity, totalPrice, totalItems, activeFees, 
-    availablePromos, appliedPromo, applyPromo, attachedPrescriptions, addPrescription, removePrescription 
+    availablePromos, appliedPromo, applyPromo 
   } = useCart();
   
   const { user } = useUser();
-  const storage = useStorage();
   const router = useRouter();
   const { toast } = useToast();
   const [isPromoDialogOpen, setIsPromoDialogOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
   useEffect(() => {
@@ -82,51 +79,6 @@ export default function CartPage() {
   const itemSavings = totalMrp - totalPrice;
   const totalSavings = itemSavings + promoDiscount;
 
-  const requiresPrescription = cart.some(item => item.prescriptionRequired);
-  const isPrescriptionReady = !requiresPrescription || attachedPrescriptions.length > 0;
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    if (!storage) {
-       toast({ variant: "destructive", title: "Storage service not ready" });
-       return;
-    }
-
-    const fileList = Array.from(files);
-    setIsUploading(true);
-
-    try {
-      for (const file of fileList) {
-        if (file.size > 5 * 1024 * 1024) {
-          toast({ variant: "destructive", title: `${file.name} is too large (>5MB)` });
-          continue;
-        }
-
-        const validTypes = ['image/jpeg', 'image/png', 'application/pdf', 'image/jpg'];
-        if (!validTypes.includes(file.type)) {
-          toast({ variant: "destructive", title: `${file.name}: Invalid format` });
-          continue;
-        }
-
-        const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
-        const userId = user?.uid || 'anonymous';
-        const storageRef = ref(storage, `prescriptions/${userId}/${fileName}`);
-        
-        await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(storageRef);
-        
-        addPrescription(downloadURL);
-      }
-      toast({ title: "Clinical files uploaded successfully" });
-    } catch (error) {
-      console.error(error);
-      toast({ variant: "destructive", title: "Upload failed" });
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   const handleApplyPromo = (promo: any) => {
     applyPromo(promo);
@@ -180,74 +132,6 @@ export default function CartPage() {
           >
             Your Cart <span className="text-primary/50 text-[10px] sm:text-xl font-black tracking-widest uppercase bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">{totalItems} Items</span>
           </motion.h1>
-
-          {requiresPrescription && (
-            <motion.div 
-              initial={{ y: -10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className={cn(
-                "border border-white/50 p-3 sm:p-4 rounded-[20px] sm:rounded-[28px] mb-6 flex flex-col gap-3 shadow-lg backdrop-blur-md relative overflow-hidden",
-                attachedPrescriptions.length > 0 ? "bg-emerald-50/20" : "bg-primary/5"
-              )}
-            >
-              <div className="flex flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-inner",
-                    attachedPrescriptions.length > 0 ? "bg-emerald-100 text-emerald-600" : "bg-primary/10 text-primary"
-                  )}>
-                     {attachedPrescriptions.length > 0 ? <ClipboardCheck className="w-4 h-4 sm:w-5 sm:h-5" /> : <FileWarning className="w-4 h-4 sm:w-5 sm:h-5" />}
-                  </div>
-                  <div>
-                    <p className="font-black text-[10px] sm:text-xs tracking-tight uppercase font-outfit">Prescription Matrix ({attachedPrescriptions.length})</p>
-                    <p className="text-[7px] sm:text-[8px] font-black tracking-widest opacity-60 uppercase">Max 5MB per file • Multiple allowed</p>
-                  </div>
-                </div>
-                
-                  <input type="file" id="cart-upload" className="hidden" accept=".jpg,.jpeg,.png,.pdf" multiple onChange={handleFileChange} />
-                  <Button 
-                    onClick={() => document.getElementById('cart-upload')?.click()} 
-                    disabled={isUploading}
-                    className="rounded-full font-black text-[8px] h-8 sm:h-10 px-4 gap-2 bg-primary text-white uppercase tracking-widest shadow-lg"
-                  >
-                    {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Camera className="w-3 h-3 sm:w-4 sm:h-4" />} 
-                    {isUploading ? "Uploading..." : "Add File"}
-                  </Button>
-                </div>
-
-                {attachedPrescriptions.length > 0 && (
-                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide pt-1 border-t border-slate-100/50">
-                    {attachedPrescriptions.map((url, idx) => {
-                      const isPDF = url.toLowerCase().includes('.pdf') || url.includes('application%2Fpdf');
-                      return (
-                        <motion.div 
-                          key={idx} 
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border border-white shadow-sm shrink-0 group bg-slate-50 flex items-center justify-center"
-                        >
-                          {isPDF ? (
-                            <div className="flex flex-col items-center justify-center w-full h-full text-rose-500">
-                               <FileText className="w-6 h-6 sm:w-8 sm:h-8" />
-                               <span className="text-[6px] font-black uppercase tracking-tighter mt-0.5">PDF</span>
-                            </div>
-                          ) : (
-                            <Image src={url} alt="prescription" fill className="object-cover" />
-                          )}
-                          <button 
-                            onClick={() => removePrescription(idx)}
-                            className="absolute top-0 right-0 bg-rose-500 text-white p-1 rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity z-20"
-                          >
-                            <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                          </button>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                )}
-            </motion.div>
-          )}
-          
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-20">
             <motion.div 
               variants={containerVariants}
@@ -407,15 +291,9 @@ export default function CartPage() {
                       </div>
                     )}
                   </div>
-                  {isPrescriptionReady ? (
-                    <Button onClick={handleCheckoutClick} className="w-full rounded-full h-12 sm:h-16 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-xl bg-primary text-white relative z-10 group hover:scale-[1.01] transition-all">
-                      Confirm Checkout <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
-                    </Button>
-                  ) : (
-                    <Button onClick={() => document.getElementById('cart-upload')?.click()} className="w-full rounded-full h-12 sm:h-16 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-lg bg-rose-600 text-white relative z-10 group transition-all">
-                      Attach clinical file <Camera className="w-4 h-4 ml-1" />
-                    </Button>
-                  )}
+                  <Button onClick={handleCheckoutClick} className="w-full rounded-full h-12 sm:h-16 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-xl bg-primary text-white relative z-10 group hover:scale-[1.01] transition-all">
+                    Confirm Checkout <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
+                  </Button>
                 </motion.div>
               </div>
             </div>
@@ -495,21 +373,12 @@ export default function CartPage() {
             </div>
 
             <div className="flex-1 max-w-[200px] sm:max-w-xs ml-4">
-              {isPrescriptionReady ? (
-                <Button 
-                  onClick={handleCheckoutClick} 
-                  className="w-full rounded-full h-12 sm:h-14 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-2xl bg-primary text-white hover:scale-[1.02] active:scale-95 transition-all gap-2"
-                >
-                  Proceed <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
-              ) : (
-                <Button 
-                  onClick={() => document.getElementById('cart-upload')?.click()} 
-                  className="w-full rounded-full h-12 sm:h-14 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-xl bg-gradient-to-r from-rose-500 to-rose-600 text-white hover:scale-[1.02] active:scale-95 transition-all gap-2"
-                >
-                  <Camera className="w-3.5 h-3.5" /> Upload Rx
-                </Button>
-              )}
+              <Button 
+                onClick={handleCheckoutClick} 
+                className="w-full rounded-full h-12 sm:h-14 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-2xl bg-primary text-white hover:scale-[1.02] active:scale-95 transition-all gap-2"
+              >
+                Proceed <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
             </div>
           </div>
         )}
