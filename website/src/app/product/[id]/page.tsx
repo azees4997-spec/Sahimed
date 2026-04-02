@@ -179,36 +179,35 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const isGeneric = product?.isGeneric === true || product?.isGeneric === "true";
   const isBranded = !isGeneric;
   
-  // Rule: Fetch Generic if current is Branded, or Branded if current is Generic
-  const { data: counterparts } = useMongoDBCollection({ 
-    moleculeId: product?.moleculeId,
-    isGeneric: isBranded ? true : false, // Invert search for counterpart
-    limit: 5 
+  // Rule: Only fetch generics if the current item is branded
+  const { data: genericAlternatives } = useMongoDBCollection({ 
+    moleculeId: isBranded ? product?.moleculeId : undefined,
+    isGeneric: true,
+    limit: 10 
   });
   
-  const counterPart = counterparts?.find((a: any) => 
+  const genericAlt = isBranded ? genericAlternatives?.find((a: any) => 
+    (a.isGeneric === true || a.isGeneric === "true") && 
     String(a.id || a._id) !== String(product?.id || product?._id)
-  );
+  ) : null;
 
-  const hasCounterPart = !!counterPart;
+  const hasGenericAlt = !!genericAlt;
   
-  // Rule: Show comparison if ANY molecular counterpart exists
-  const showComparison = hasCounterPart;
+  // Rule: Show comparison ONLY if branded AND has a mapped generic
+  const showComparison = isBranded && hasGenericAlt;
 
-  // Selection Logic: brandedItem is always the non-generic one, genericItem is always generic
-  const brandedItem = isBranded ? product : counterPart;
-  const genericItem = isBranded ? counterPart : product;
+  // In this logic, brandedItem is always the current product, and genericItem is the found alt
+  const brandedItem = product;
+  const genericItem = genericAlt;
 
   const pPriceRaw = product?.liveData?.sahimed_price || product?.price || 0;
   const pMrpRaw = product?.liveData?.mrp || product?.mrp || (Number(pPriceRaw) + 20);
 
-  // Pricing Logic (Savings always relative to Branded MRP)
-  const brandedPriceRaw = brandedItem?.liveData?.sahimed_price || brandedItem?.price || 0;
-  const brandedMrpRaw = brandedItem?.liveData?.mrp || brandedItem?.mrp || (Number(brandedPriceRaw) + 20);
-  const brandedMrp = Number(brandedMrpRaw) || 0;
+  const brandedPrice = Number(pPriceRaw) || 0;
+  const brandedMrp = Number(pMrpRaw) || (brandedPrice + 20);
   
-  const genericPriceRaw = genericItem?.liveData?.sahimed_price || genericItem?.price || 0;
-  const genericPrice = Number(genericPriceRaw) || 0;
+  const genPriceRaw = genericAlt ? (genericAlt.liveData?.sahimed_price || genericAlt.price || 0) : 0;
+  const genericPrice = Number(genPriceRaw) || 0;
   
   const switchSavingsAmt = Math.max(0, brandedMrp - genericPrice);
   const switchSavingsPct = brandedMrp > 0 ? Math.round((switchSavingsAmt / brandedMrp) * 100) : 0;
