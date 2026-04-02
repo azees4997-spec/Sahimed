@@ -4,7 +4,7 @@
 import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShoppingCart, ArrowRight, Plus, Minus, Ticket, ChevronRight, FileWarning, Camera, ClipboardCheck, Tag, PartyPopper, Sparkles, Zap, Loader2 } from 'lucide-react';
+import { Trash2, ShoppingCart, ArrowRight, Plus, Minus, Ticket, ChevronRight, FileWarning, Camera, ClipboardCheck, Tag, PartyPopper, Sparkles, Zap, Loader2, FileText } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -12,7 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useState, useEffect } from 'react';
-import { useUser } from '@/firebase';
+import { useUser, useStorage } from '@/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
@@ -49,6 +50,7 @@ export default function CartPage() {
   } = useCart();
   
   const { user } = useUser();
+  const storage = useStorage();
   const router = useRouter();
   const { toast } = useToast();
   const [isPromoDialogOpen, setIsPromoDialogOpen] = useState(false);
@@ -83,23 +85,46 @@ export default function CartPage() {
   const requiresPrescription = cart.some(item => item.prescriptionRequired);
   const isPrescriptionReady = !requiresPrescription || attachedPrescriptions.length > 0;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      Array.from(files).forEach(file => {
+    if (!files || files.length === 0) return;
+
+    if (!storage) {
+       toast({ variant: "destructive", title: "Storage service not ready" });
+       return;
+    }
+
+    const fileList = Array.from(files);
+    setIsUploading(true);
+
+    try {
+      for (const file of fileList) {
         if (file.size > 5 * 1024 * 1024) {
-          toast({ variant: "destructive", title: "Limit: 5MB per file" });
-          return;
+          toast({ variant: "destructive", title: `${file.name} is too large (>5MB)` });
+          continue;
         }
-        setIsUploading(true);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          addPrescription(reader.result as string);
-          setIsUploading(false);
-          toast({ title: "Clinical file added" });
-        };
-        reader.readAsDataURL(file);
-      });
+
+        const validTypes = ['image/jpeg', 'image/png', 'application/pdf', 'image/jpg'];
+        if (!validTypes.includes(file.type)) {
+          toast({ variant: "destructive", title: `${file.name}: Invalid format` });
+          continue;
+        }
+
+        const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+        const userId = user?.uid || 'anonymous';
+        const storageRef = ref(storage, `prescriptions/${userId}/${fileName}`);
+        
+        await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(storageRef);
+        
+        addPrescription(downloadURL);
+      }
+      toast({ title: "Clinical files uploaded successfully" });
+    } catch (error) {
+      console.error(error);
+      toast({ variant: "destructive", title: "Upload failed" });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -179,36 +204,47 @@ export default function CartPage() {
                   </div>
                 </div>
                 
-                <input type="file" id="cart-upload" className="hidden" accept="image/*" multiple onChange={handleFileChange} />
-                <Button 
-                  onClick={() => document.getElementById('cart-upload')?.click()} 
-                  className="rounded-full font-black text-[8px] h-8 sm:h-10 px-4 gap-2 bg-primary text-white uppercase tracking-widest shadow-lg"
-                >
-                  {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-3 h-3 sm:w-4 sm:h-4" />} 
-                  Add File
-                </Button>
-              </div>
-
-              {attachedPrescriptions.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide pt-1 border-t border-slate-100/50">
-                  {attachedPrescriptions.map((img, idx) => (
-                    <motion.div 
-                      key={idx} 
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border border-white shadow-sm shrink-0 group"
-                    >
-                      <Image src={img} alt="prescription" fill className="object-cover" />
-                      <button 
-                        onClick={() => removePrescription(idx)}
-                        className="absolute top-0 right-0 bg-rose-500 text-white p-0.5 rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </motion.div>
-                  ))}
+                  <input type="file" id="cart-upload" className="hidden" accept=".jpg,.jpeg,.png,.pdf" multiple onChange={handleFileChange} />
+                  <Button 
+                    onClick={() => document.getElementById('cart-upload')?.click()} 
+                    disabled={isUploading}
+                    className="rounded-full font-black text-[8px] h-8 sm:h-10 px-4 gap-2 bg-primary text-white uppercase tracking-widest shadow-lg"
+                  >
+                    {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Camera className="w-3 h-3 sm:w-4 sm:h-4" />} 
+                    {isUploading ? "Uploading..." : "Add File"}
+                  </Button>
                 </div>
-              )}
+
+                {attachedPrescriptions.length > 0 && (
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide pt-1 border-t border-slate-100/50">
+                    {attachedPrescriptions.map((url, idx) => {
+                      const isPDF = url.toLowerCase().includes('.pdf') || url.includes('application%2Fpdf');
+                      return (
+                        <motion.div 
+                          key={idx} 
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border border-white shadow-sm shrink-0 group bg-slate-50 flex items-center justify-center"
+                        >
+                          {isPDF ? (
+                            <div className="flex flex-col items-center justify-center w-full h-full text-rose-500">
+                               <FileText className="w-6 h-6 sm:w-8 sm:h-8" />
+                               <span className="text-[6px] font-black uppercase tracking-tighter mt-0.5">PDF</span>
+                            </div>
+                          ) : (
+                            <Image src={url} alt="prescription" fill className="object-cover" />
+                          )}
+                          <button 
+                            onClick={() => removePrescription(idx)}
+                            className="absolute top-0 right-0 bg-rose-500 text-white p-1 rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                          >
+                            <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                          </button>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
             </motion.div>
           )}
           
