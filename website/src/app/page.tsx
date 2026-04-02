@@ -73,7 +73,7 @@ export default function Home() {
         <Navbar />
         
         {/* Mega Banner Hero Section */}
-        <section className="relative w-full bg-[#FFF9F9] overflow-hidden pb-10 sm:pb-20 pt-20 sm:pt-32 border-b border-rose-50/50">
+        <section className="relative w-full bg-[#FFF9F9] overflow-hidden pb-10 sm:pb-20 pt-4 sm:pt-16 border-b border-rose-50/50">
           {/* Background Decorative Elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-rose-100/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none" />
@@ -218,15 +218,17 @@ export default function Home() {
           </section>
 
           {/* Free Delivery Banner (Moved below Categories) */}
-          <section className="bg-gradient-to-br from-sahi-blue/40 to-lavender/40 px-5 py-5 sm:px-12 sm:py-10 rounded-[28px] sm:rounded-[48px] text-slate-900 flex flex-row items-center justify-between gap-4 border border-white shadow-xl shadow-slate-200/20 relative overflow-hidden">
+          <section className="bg-gradient-to-br from-amber-400 via-orange-500 to-rose-600 px-5 py-5 sm:px-12 sm:py-10 rounded-[28px] sm:rounded-[48px] text-white flex flex-row items-center justify-between gap-4 border border-white/20 shadow-2xl shadow-orange-500/20 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-white/20 rounded-full blur-3xl" />
             <div className="space-y-1 relative z-10 max-w-xl text-left flex-1 min-w-0">
                <h3 className="text-lg sm:text-3xl font-black tracking-tighter uppercase leading-tight">
                  Pan India Free Delivery<br className="max-sm:hidden"/> Above ₹499
                </h3>
-               <p className="text-[8px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest truncate">
+               <p className="text-[8px] sm:text-xs font-bold text-white/80 uppercase tracking-widest truncate">
                  Order Now & Save More
                </p>
-               <Link href="/search" className="inline-block mt-2 px-5 py-2.5 bg-primary text-white font-black text-[9px] sm:text-[10px] uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-xl shadow-primary/20">
+               <Link href="/search" className="inline-block mt-2 px-5 py-2.5 bg-white text-primary font-black text-[9px] sm:text-[10px] uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-xl shadow-black/10">
                  Shop Now
                </Link>
             </div>

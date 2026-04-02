@@ -91,19 +91,17 @@ export default function Navbar() {
   }, []);
 
   const logSearch = async (keyword: string) => {
-    if (!user) return;
     try {
-      // Fetch profile to get mobile
-      const profileSnap = await getDoc(doc(db, 'userProfiles', user.uid));
-      const profile = profileSnap.data();
+      const profileSnap = user ? await getDoc(doc(db, 'userProfiles', user.uid)) : null;
+      const profile = profileSnap?.data();
       
       await fetch('/api/analytics/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           keyword,
-          mobile: profile?.phone || user.phoneNumber || 'Unknown',
-          userId: user.uid
+          mobile: profile?.phone || user?.phoneNumber || 'Anonymous',
+          userId: user?.uid || null
         })
       });
     } catch (err) {

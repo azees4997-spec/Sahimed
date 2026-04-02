@@ -268,19 +268,19 @@ export default function ProfilePage() {
           >
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
             
-            <div className="w-24 h-24 bg-primary/10 rounded-[32px] flex items-center justify-center border-4 border-white shadow-2xl shrink-0 group-hover:scale-110 transition-transform duration-500 relative z-10">
-               <User className="w-12 h-12 text-primary" />
+            <div className="w-16 h-16 bg-primary/10 rounded-[20px] flex items-center justify-center border-4 border-white shadow-xl shrink-0 group-hover:scale-110 transition-transform duration-500 relative z-10">
+               <User className="w-8 h-8 text-primary" />
             </div>
             <div className="text-center md:text-left relative z-10">
-              <h1 className="text-3xl sm:text-4xl font-black text-slate-900 mb-2 tracking-tighter font-outfit uppercase">
+              <h1 className="text-2xl sm:text-4xl font-black text-slate-900 mb-1 tracking-tighter font-outfit uppercase">
                 {profile?.name || user?.email?.split('@')[0] || 'SahiMed member'}
               </h1>
-              <div className="flex flex-col sm:flex-row items-center gap-4 opacity-60">
-                <p className="text-slate-900 font-black text-[10px] tracking-[0.2em] uppercase">
+              <div className="flex flex-col sm:flex-row items-center gap-2 opacity-60">
+                <p className="text-slate-900 font-black text-[8px] tracking-[0.2em] uppercase">
                   {user.phoneNumber || user.email || 'Verified Customer'}
                 </p>
-                <div className="hidden sm:block w-1.5 h-1.5 rounded-full bg-slate-300" />
-                <p className="text-slate-900 font-black text-[10px] tracking-[0.2em] uppercase">
+                <div className="hidden sm:block w-1 h-1 rounded-full bg-slate-300" />
+                <p className="text-slate-900 font-black text-[8px] tracking-[0.2em] uppercase">
                   Level 1 Clinical Status
                 </p>
               </div>
@@ -289,9 +289,9 @@ export default function ProfilePage() {
               <Button 
                 variant="ghost" 
                 onClick={handleLogout}
-                className="rounded-full h-14 px-10 font-black text-[10px] tracking-[0.3em] text-rose-500 hover:bg-rose-50 gap-4 uppercase"
+                className="rounded-full h-10 px-6 font-black text-[9px] tracking-[0.3em] text-rose-500 hover:bg-rose-50 gap-2 uppercase active:scale-95 transition-all"
               >
-                <LogOut className="w-5 h-5" /> Abort Session
+                <LogOut className="w-4 h-4" /> Logout
               </Button>
             </div>
           </motion.div>
@@ -304,20 +304,20 @@ export default function ProfilePage() {
                  animate="show"
                  className="space-y-8"
                >
-                  <div className="space-y-6">
-                    <h2 className="text-[10px] font-black tracking-[0.4em] text-slate-400 ml-8 uppercase">Operational History</h2>
+                  <div className="space-y-4">
+                    <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 ml-6 uppercase">Order Management</h2>
                     <motion.div variants={itemVariants}>
                       <Link href="/orders" className="block">
-                        <div className="bg-white/40 backdrop-blur-md p-8 rounded-[48px] border border-white flex items-center justify-between group active:scale-[0.98] transition-all hover:shadow-2xl shadow-xl hover:bg-white">
-                          <div className="flex items-center gap-6">
-                            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-[24px] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"><Package className="w-6 h-6" /></div>
+                        <div className="bg-white/40 backdrop-blur-md p-6 rounded-[32px] border border-white flex items-center justify-between group active:scale-[0.98] transition-all hover:shadow-2xl shadow-xl hover:bg-white">
+                          <div className="flex items-center gap-5">
+                            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-[16px] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"><Package className="w-5 h-5" /></div>
                             <div>
-                              <h3 className="text-lg font-black text-slate-900 tracking-tight font-outfit uppercase">Order Pipeline</h3>
-                              <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-1">Status of all clinical supplies</p>
+                              <h3 className="text-sm font-black text-slate-900 tracking-tight font-outfit uppercase">Order History</h3>
+                              <p className="text-[8px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-0.5">Track your clinical supplies</p>
                             </div>
                           </div>
-                          <div className="bg-slate-50 w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-primary transition-all">
-                            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-white transition-all group-hover:translate-x-1" />
+                          <div className="bg-slate-50 w-10 h-10 rounded-full flex items-center justify-center group-hover:bg-primary transition-all">
+                            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-all group-hover:translate-x-1" />
                           </div>
                         </div>
                       </Link>
@@ -325,12 +325,12 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="space-y-8">
-                    <div className="flex items-center justify-between px-8">
-                      <h2 className="text-[10px] font-black tracking-[0.4em] text-slate-400 uppercase">Registered Logistics Targets</h2>
+                    <div className="flex items-center justify-between px-6">
+                      <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 uppercase">Address Management</h2>
                       <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
                         <DialogTrigger asChild>
-                          <button onClick={() => setAddressForm({ id: '', tag: 'Home', street: '', landmark: '', pincode: '', lat: 0, lng: 0 })} className="bg-white px-6 py-3 rounded-full shadow-xl border border-white text-[10px] font-black text-primary tracking-[0.2em] flex items-center gap-3 hover:scale-105 transition-all uppercase active:scale-95">
-                            <Plus className="w-4 h-4" /> Add Protocol
+                          <button onClick={() => setAddressForm({ id: '', tag: 'Home', street: '', landmark: '', pincode: '', lat: 0, lng: 0 })} className="bg-white px-5 py-2.5 rounded-full shadow-lg border border-white text-[9px] font-black text-primary tracking-[0.2em] flex items-center gap-2 hover:scale-105 transition-all uppercase active:scale-95">
+                            <Plus className="w-3.5 h-3.5" /> Add New
                           </button>
                         </DialogTrigger>
                         <DialogContent className="max-w-2xl w-[96vw] sm:w-full rounded-[56px] border-none p-0 overflow-hidden shadow-3xl bg-white/90 backdrop-blur-3xl z-[110]">
@@ -412,25 +412,25 @@ export default function ProfilePage() {
                         <motion.div 
                           key={addr.id} 
                           variants={itemVariants}
-                          className="bg-white/40 backdrop-blur-md p-8 rounded-[48px] border border-white shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all hover:bg-white"
+                          className="bg-white/40 backdrop-blur-md p-6 rounded-[32px] border border-white shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all hover:bg-white"
                         >
                           <div className="flex items-start justify-between relative z-10">
-                            <div className="flex items-start gap-6">
-                              <div className="w-14 h-14 bg-primary/10 text-primary rounded-[20px] flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-all">
+                            <div className="flex items-start gap-5">
+                              <div className="w-12 h-12 bg-primary/10 text-primary rounded-[16px] flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-all">
                                 {getTagIcon(addr.tag)}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <span className="font-black text-[10px] text-primary tracking-[0.2em] uppercase">{addr.tag} Matrix</span>
-                                  {addr.lat !== 0 && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" title="GPS Verified" />}
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <span className="font-black text-[9px] text-primary tracking-[0.2em] uppercase">{addr.tag}</span>
+                                  {addr.lat !== 0 && <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" title="GPS Verified" />}
                                 </div>
-                                <p className="text-xs font-bold text-slate-900 leading-relaxed line-clamp-2 uppercase tracking-tight">{addr.street}</p>
-                                <p className="text-[9px] font-black text-gray-400 mt-3 tracking-[0.2em] uppercase opacity-60">PINCODE: {addr.pincode}</p>
+                                <p className="text-[11px] font-bold text-slate-900 leading-relaxed line-clamp-2 uppercase tracking-tight">{addr.street}</p>
+                                <p className="text-[8px] font-black text-gray-400 mt-2 tracking-[0.2em] uppercase opacity-60">PIN: {addr.pincode}</p>
                               </div>
                             </div>
-                            <div className="flex gap-2">
-                              <Button variant="ghost" size="icon" onClick={() => { setAddressForm(addr); setIsAddressDialogOpen(true); }} className="h-10 w-10 rounded-full bg-white shadow-sm text-slate-300 hover:text-primary active:scale-95"><Edit2 className="w-4 h-4" /></Button>
-                              <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'userProfiles', user.uid, 'addresses', addr.id))} className="h-10 w-10 rounded-full bg-white shadow-sm text-slate-300 hover:text-rose-500 active:scale-95"><Trash2 className="w-4 h-4" /></Button>
+                            <div className="flex gap-1.5">
+                              <Button variant="ghost" size="icon" onClick={() => { setAddressForm(addr); setIsAddressDialogOpen(true); }} className="h-8 w-8 rounded-full bg-white shadow-sm text-slate-300 hover:text-primary active:scale-95"><Edit2 className="w-3.5 h-3.5" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'userProfiles', user.uid, 'addresses', addr.id))} className="h-8 w-8 rounded-full bg-white shadow-sm text-slate-300 hover:text-rose-500 active:scale-95"><Trash2 className="w-3.5 h-3.5" /></Button>
                             </div>
                           </div>
                         </motion.div>
@@ -453,7 +453,7 @@ export default function ProfilePage() {
                     className="bg-primary p-12 rounded-[56px] border border-white/20 flex flex-col items-center text-center gap-8 cursor-pointer hover:shadow-primary/30 transition-all group shadow-3xl relative overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16" />
-                    <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500 relative z-10"><SmartphoneNfc className="w-10 h-10 text-primary" /></div>
+                    <div className="w-16 h-16 bg-white rounded-[24px] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500 relative z-10"><SmartphoneNfc className="w-8 h-8 text-primary" /></div>
                     <div className="relative z-10">
                       <h3 className="text-xl font-black text-white tracking-tight font-outfit uppercase">SahiMed Terminal</h3>
                       <p className="text-[10px] text-white/60 font-black mt-4 max-w-[200px] leading-relaxed tracking-widest uppercase">Install for maximum logistics optimization and push synchronicity.</p>

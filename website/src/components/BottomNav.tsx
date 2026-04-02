@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, ClipboardList, User } from 'lucide-react';
+import { Home, LayoutGrid, ClipboardList, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -12,7 +12,7 @@ export default function BottomNav() {
 
   const navItems = [
     { label: 'Home', icon: Home, path: '/' },
-    { label: 'Search', icon: Search, path: '/search' },
+    { label: 'Categories', icon: LayoutGrid, path: '/categories' },
     { label: 'Refills', icon: ClipboardList, path: '/orders' },
     { label: 'Account', icon: User, path: '/profile' },
   ];

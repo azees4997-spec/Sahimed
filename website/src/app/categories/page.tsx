@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import Navbar from '@/components/Navbar';
-import { ChevronRight, Dna, Activity, ArrowLeft, Sparkles, Zap, ArrowUpRight } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight } from 'lucide-react';
+import Footer from '@/components/Footer';
 import Link from 'next/link';
 import Image from 'next/image';
 import { CATEGORIES as LOCAL_CATEGORIES } from '@/lib/data';
@@ -75,8 +76,8 @@ export default function CategoriesPage() {
               </button>
             </Link>
             <div className="space-y-1">
-              <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Clinical Taxonomy</h1>
-              <p className="text-[10px] font-black text-primary tracking-[0.4em] uppercase leading-none opacity-70">Therapeutic Segments Directory</p>
+              <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Categories</h1>
+              <p className="text-[10px] font-black text-primary tracking-[0.4em] uppercase leading-none opacity-70">Browse by Therapeutic Segment</p>
             </div>
           </motion.div>
 
@@ -84,7 +85,7 @@ export default function CategoriesPage() {
             variants={containerVariants}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 sm:gap-8"
+            className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-8"
           >
             {displayCategories.map((cat: any, i) => (
               <motion.div key={i} variants={itemVariants}>
@@ -99,10 +100,12 @@ export default function CategoriesPage() {
                         src={cat.imageUrl} 
                         alt={cat.name} 
                         fill 
-                        className="object-contain p-6 group-hover:scale-110 transition-transform duration-700"
+                        className="object-contain p-2 sm:p-6 group-hover:scale-110 transition-transform duration-700"
                       />
                     ) : (
-                      <Activity className="w-10 h-10 text-slate-200" />
+                      <div className="w-full h-full bg-primary/5 flex items-center justify-center">
+                        <span className="text-primary font-black text-xs">{cat.name?.charAt(0)}</span>
+                      </div>
                     )}
                   </div>
                   <div className="space-y-3 flex flex-col items-center flex-1">
@@ -110,8 +113,8 @@ export default function CategoriesPage() {
                       {cat.name}
                     </span>
                     <div className="flex justify-center items-center gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 duration-500 mt-auto">
-                      <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">Explore Matrix</span>
-                      <ArrowUpRight className="w-3 h-3 text-primary" />
+                      <span className="text-[7px] font-black text-primary uppercase tracking-[0.2em]">Explore</span>
+                      <ArrowUpRight className="w-2.5 h-2.5 text-primary" />
                     </div>
                   </div>
                 </Link>
@@ -119,36 +122,8 @@ export default function CategoriesPage() {
             ))}
           </motion.div>
 
-          <motion.div 
-            initial={{ y: 40, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true }}
-            className="mt-24 bg-white/40 backdrop-blur-xl p-14 rounded-[72px] border border-white text-center max-w-3xl mx-auto shadow-3xl relative overflow-hidden group"
-          >
-            <div className="absolute top-0 right-0 p-12 opacity-5 rotate-12 group-hover:scale-110 transition-transform duration-700">
-              <Zap className="w-48 h-48 text-primary" />
-            </div>
-            
-            <div className="relative z-10 space-y-8">
-              <div className="w-20 h-20 bg-primary/10 rounded-[32px] flex items-center justify-center mx-auto shadow-inner">
-                <Dna className="w-10 h-10 text-primary" />
-              </div>
-              
-              <div className="space-y-3">
-                <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter font-outfit">Molecule Retrieval Necessary?</h2>
-                <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] leading-relaxed max-w-md mx-auto opacity-70">
-                  Our clinical database contains thousands of verified formulas. use the intelligence gateway for specific molecules.
-                </p>
-              </div>
-
-              <Link href="/search" className="inline-block">
-                <Button className="rounded-full px-12 h-18 font-black uppercase text-[11px] tracking-[0.3em] shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95 bg-primary border-4 border-white text-white">
-                  Execute Global Search
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
         </main>
+        <Footer />
       </div>
     </PageTransition>
   );

@@ -10,6 +10,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
+import { useUser, useFirestore } from '@/firebase';
+import { getDoc, doc } from 'firebase/firestore';
 
 interface MobileSearchOverlayProps {
   isOpen: boolean;
@@ -23,7 +25,49 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
   const router = useRouter();
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const { user } = useUser();
+  const db = useFirestore();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [mostSearchedMeds, setMostSearchedMeds] = useState<any[]>([]);
+  const [mostSearchedSalts, setMostSearchedSalts] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/categories?limit=6')
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setCategories(data); });
+    
+    // Placeholder data for "Most Searched" until analytics engine populates
+    setMostSearchedMeds([
+      { id: '1', name: 'Telma 40mg' },
+      { id: '2', name: 'Pan D' },
+      { id: '3', name: 'Augmentin 625' }
+    ]);
+    setMostSearchedSalts([
+      { id: 's1', name: 'Telmisartan' },
+      { id: 's2', name: 'Pantoprazole' },
+      { id: 's3', name: 'Amoxicillin' }
+    ]);
+  }, []);
+
+  const logSearch = async (keyword: string) => {
+    try {
+      const profileSnap = user ? await getDoc(doc(db, 'userProfiles', user.uid)) : null;
+      const profile = profileSnap?.data();
+      
+      await fetch('/api/analytics/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          keyword,
+          mobile: profile?.phone || user?.phoneNumber || 'Anonymous',
+          userId: user?.uid || null
+        })
+      });
+    } catch (err) {
+      console.error("Search analytics failure", err);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -72,6 +116,7 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
   }, [search]);
 
   const handleItemClick = (item: any) => {
+    logSearch(item.name || item.molecule);
     if (item._type === 'molecule') {
       router.push(`/search?moleculeId=${item._id || item.id}&q=${encodeURIComponent(item.molecule || item.name)}`);
     } else {
@@ -103,6 +148,13 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
             className="w-full pl-10 pr-10 h-11 bg-slate-50 border-none focus:ring-2 focus:ring-primary/20 rounded-xl font-bold text-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && search.trim()) {
+                logSearch(search.trim());
+                router.push(`/search?q=${encodeURIComponent(search.trim())}`);
+                onClose();
+              }
+            }}
           />
           {search && (
             <button 
@@ -192,32 +244,61 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
         )}
 
         {!search && (
-          <div className="p-6 space-y-8">
+          <div className="p-6 space-y-10 pb-20">
+            {/* Categories Section */}
             <div className="space-y-4">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Popular Categories</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {['Diabetes', 'Heart Care', 'Vitamins', 'Baby Care'].map((cat) => (
+              <div className="flex items-center justify-between">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Top Categories</h3>
+                <button onClick={() => { router.push('/categories'); onClose(); }} className="text-[9px] font-black text-primary uppercase tracking-widest">See All</button>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {categories.map((cat) => (
                   <button 
-                    key={cat}
+                    key={cat.id}
                     onClick={() => {
-                      router.push(`/search?c=${encodeURIComponent(cat)}`);
+                      router.push(`/search?c=${encodeURIComponent(cat.name)}`);
                       onClose();
                     }}
-                    className="p-4 bg-white border border-slate-100 rounded-2xl text-left hover:border-primary/20 transition-all font-bold text-sm text-slate-700"
+                    className="flex flex-col items-center gap-2 p-3 bg-white border border-slate-100 rounded-2xl hover:border-primary/20 transition-all group"
                   >
-                    {cat}
+                    <div className="w-10 h-10 relative opacity-60 group-hover:opacity-100 transition-opacity">
+                      <Image src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/100/100`} alt={cat.name} fill className="object-contain" />
+                    </div>
+                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-tighter text-center line-clamp-1">{cat.name}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="p-5 bg-primary/5 rounded-[24px] border border-primary/10 flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
-                <ShoppingCart className="w-6 h-6 text-white" />
+            {/* Most Searched Medicines */}
+            <div className="space-y-4">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Most Searched Medicines</h3>
+              <div className="flex flex-wrap gap-2">
+                {mostSearchedMeds.map((med) => (
+                  <button 
+                    key={med.id}
+                    onClick={() => { setSearch(med.name); }}
+                    className="px-4 py-2 bg-white border border-slate-100 rounded-full text-xs font-bold text-slate-600 hover:border-primary/20 transition-all"
+                  >
+                    {med.name}
+                  </button>
+                ))}
               </div>
-              <div>
-                <p className="text-xs font-black text-primary uppercase tracking-widest">Sahimed Plus</p>
-                <p className="text-[10px] font-bold text-slate-500 mt-0.5">Order medicines in just 2 clicks</p>
+            </div>
+
+            {/* Most Searched Salts */}
+            <div className="space-y-4">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Most Searched Salts</h3>
+              <div className="flex flex-wrap gap-2">
+                {mostSearchedSalts.map((salt) => (
+                  <button 
+                    key={salt.id}
+                    onClick={() => { setSearch(salt.name); }}
+                    className="px-4 py-2 bg-slate-100/50 border border-transparent rounded-full text-xs font-bold text-slate-500 hover:bg-slate-100 transition-all"
+                  >
+                    {salt.name}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
