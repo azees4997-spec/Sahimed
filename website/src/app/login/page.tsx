@@ -88,7 +88,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="h-[100dvh] bg-[#F4F7F6] pharma-bg-pattern flex flex-col items-center justify-center p-0 sm:p-8 overflow-hidden">
+    <div className="fixed inset-0 h-[100dvh] bg-[#F4F7F6] pharma-bg-pattern flex flex-col items-center justify-center p-0 sm:p-8 overflow-hidden">
       <div id="recaptcha-container"></div>
       
       <motion.div
@@ -98,7 +98,7 @@ function LoginForm() {
         className="max-w-md w-full"
       >
         <Card className="rounded-none sm:rounded-[40px] shadow-3xl border-none overflow-hidden bg-white/80 backdrop-blur-3xl border border-white mx-auto relative group w-full py-6 sm:py-0">
-          <CardHeader className="text-center p-6 sm:p-10 bg-primary text-white relative overflow-hidden">
+          <CardHeader className="text-center p-4 sm:p-10 bg-primary text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12 scale-150">
                <Zap className="w-48 h-48" />
             </div>
@@ -107,8 +107,8 @@ function LoginForm() {
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </Link>
             
-            <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white/20 rounded-[28px] sm:rounded-[40px] flex items-center justify-center mx-auto mb-4 sm:mb-8 backdrop-blur-md relative z-10 border border-white/20 shadow-xl group hover:scale-110 transition-transform duration-500">
-              <Smartphone className="w-8 h-8 sm:w-12 sm:h-12 text-white group-hover:rotate-12 transition-transform" />
+            <div className="w-14 h-14 sm:w-28 sm:h-28 bg-white/20 rounded-[24px] sm:rounded-[40px] flex items-center justify-center mx-auto mb-4 sm:mb-8 backdrop-blur-md relative z-10 border border-white/20 shadow-xl group hover:scale-110 transition-transform duration-500">
+              <Smartphone className="w-7 h-7 sm:w-12 sm:h-12 text-white group-hover:rotate-12 transition-transform" />
             </div>
             
             <div className="space-y-1 relative z-10">
@@ -116,7 +116,7 @@ function LoginForm() {
             </div>
           </CardHeader>
           
-          <CardContent className="p-8 sm:p-10 pb-12 sm:pb-10">
+          <CardContent className="p-6 sm:p-10 pb-12 sm:pb-10">
             <AnimatePresence mode="wait">
               {step === 1 ? (
                 <motion.form 
@@ -125,10 +125,10 @@ function LoginForm() {
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: -20, opacity: 0 }}
                   onSubmit={handleSendOtp} 
-                  className="space-y-6 sm:space-y-8"
+                  className="space-y-4 sm:space-y-8"
                 >
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block opacity-60">Mobile Number</label>
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block opacity-60">Mobile Number</label>
                     <div className="relative group">
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center h-full px-6 border-r-2 border-slate-100 group-focus-within:border-primary/20 transition-colors bg-slate-50/50 rounded-l-[24px]">
                         <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">+91</span>
@@ -160,7 +160,7 @@ function LoginForm() {
                           ease: "easeInOut" 
                         }
                       }}
-                      className="relative w-full h-auto max-h-[140px] sm:max-h-[220px] aspect-auto rounded-[32px] sm:rounded-[40px] overflow-hidden border-2 border-white shadow-xl bg-slate-50/50 mt-4 sm:mt-6 group flex items-center justify-center p-1"
+                      className="relative w-full h-auto max-h-[140px] sm:max-h-[200px] aspect-auto rounded-[32px] sm:rounded-[40px] overflow-hidden border-2 border-white shadow-xl bg-slate-50/50 mt-10 sm:mt-12 group flex items-center justify-center p-1"
                     >
                       <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent mix-blend-overlay z-10" />
                       <img 
@@ -191,14 +191,14 @@ function LoginForm() {
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: -20, opacity: 0 }}
                   onSubmit={handleVerifyOtp} 
-                  className="space-y-8"
+                  className="space-y-6 sm:space-y-8"
                 >
                   <div className="text-center space-y-2">
                     <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest opacity-60">OTP sent to</p>
-                    <div className="bg-primary/5 py-3 rounded-2xl border border-primary/10">
-                      <span className="text-primary font-black tracking-widest">+91 {phone}</span>
+                    <div className="flex items-center justify-between bg-primary/5 p-4 rounded-2xl border border-primary/10">
+                      <span className="text-primary font-black tracking-widest text-sm">+91 {phone}</span>
+                      <Button variant="link" onClick={() => { setStep(1); setOtp(''); }} className="text-[9px] font-black text-primary p-0 h-auto uppercase tracking-widest hover:underline">Change</Button>
                     </div>
-                    <Button variant="link" onClick={() => { setStep(1); setOtp(''); }} className="text-[9px] font-black text-primary p-0 h-auto uppercase tracking-widest mt-1 hover:underline">Change Number</Button>
                   </div>
                   
                   <div className="space-y-3">
@@ -208,7 +208,7 @@ function LoginForm() {
                         type="text"
                         placeholder="······"
                         maxLength={6}
-                        className="h-20 rounded-[28px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white font-black text-4xl text-center tracking-[0.5em] shadow-inner px-8 transition-all"
+                        className="h-16 sm:h-20 rounded-[28px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white font-black text-4xl text-center tracking-[0.2em] sm:tracking-[0.5em] shadow-inner px-4 transition-all"
                         value={otp}
                         onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                         required
@@ -216,6 +216,10 @@ function LoginForm() {
                     </div>
                   </div>
                   
+                  <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-60">
+                    Didn't receive OTP? <Button variant="link" onClick={handleSendOtp} className="text-[10px] p-0 h-auto text-primary font-black uppercase tracking-widest hover:underline">Resend</Button>
+                  </p>
+
                   <Button 
                     type="submit" 
                     disabled={loading} 
@@ -223,10 +227,6 @@ function LoginForm() {
                   >
                     {loading ? <Loader2 className="animate-spin" /> : "Verify & Login"}
                   </Button>
-                  
-                  <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-60">
-                    Didn't receive OTP? <Button variant="link" onClick={handleSendOtp} className="text-[10px] p-0 h-auto text-primary font-black uppercase tracking-widest hover:underline">Resend</Button>
-                  </p>
                 </motion.form>
               )}
             </AnimatePresence>
