@@ -482,6 +482,37 @@ export default function CartPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Sticky Checkout Bar */}
+        {cart.length > 0 && (
+          <div className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6 bg-white/80 backdrop-blur-3xl border-t border-slate-100/50 flex items-center justify-between shadow-[0_-20px_40px_rgba(0,0,0,0.03)] animate-in slide-in-from-bottom-full duration-500">
+            <div className="flex flex-col">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimated Total</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-xl sm:text-2xl font-black text-slate-900 font-outfit">₹{finalPayable.toFixed(2)}</span>
+                <span className="text-[10px] font-bold text-slate-400">({totalItems} {totalItems === 1 ? 'Item' : 'Items'})</span>
+              </div>
+            </div>
+
+            <div className="flex-1 max-w-[200px] sm:max-w-xs ml-4">
+              {isPrescriptionReady ? (
+                <Button 
+                  onClick={handleCheckoutClick} 
+                  className="w-full rounded-full h-12 sm:h-14 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-2xl bg-primary text-white hover:scale-[1.02] active:scale-95 transition-all gap-2"
+                >
+                  Proceed <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
+              ) : (
+                <Button 
+                  onClick={() => document.getElementById('cart-upload')?.click()} 
+                  className="w-full rounded-full h-12 sm:h-14 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-xl bg-gradient-to-r from-rose-500 to-rose-600 text-white hover:scale-[1.02] active:scale-95 transition-all gap-2"
+                >
+                  <Camera className="w-3.5 h-3.5" /> Upload Rx
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </PageTransition>
   );
