@@ -113,6 +113,19 @@ export async function POST(request: Request) {
     // Remove 'id' if we use _id
     delete (productData as any).id;
 
+    // INTELLIGENT MAPPING: Auto-link to molecule if missing
+    if (!productData.moleculeId && productData.saltComposition) {
+      const moleculesCol = db.collection('molecules');
+      const allMolecules = await moleculesCol.find({}).toArray();
+      const match = allMolecules.find(m => 
+        productData.saltComposition.toLowerCase().includes((m.molecule || m.name || "").toLowerCase()) ||
+        (m.molecule || m.name || "").toLowerCase().includes(productData.saltComposition.toLowerCase())
+      );
+      if (match) {
+        productData.moleculeId = match._id || match.id;
+      }
+    }
+
     const result = await db.collection("products").insertOne(productData);
     
     return NextResponse.json({ success: true, insertedId: result.insertedId });

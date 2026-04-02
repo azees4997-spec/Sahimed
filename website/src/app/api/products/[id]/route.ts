@@ -51,7 +51,20 @@ export async function PUT(
     const db = client.db("sahimed");
     
     // Remove _id from body if it exists to avoid MongoDB error on update
-    const { _id, ...updateData } = body;
+    let { _id, ...updateData } = body;
+
+    // INTELLIGENT MAPPING: Auto-link to molecule if missing
+    if (!updateData.moleculeId && updateData.saltComposition) {
+      const moleculesCol = db.collection('molecules');
+      const allMolecules = await moleculesCol.find({}).toArray();
+      const match = allMolecules.find(m => 
+        updateData.saltComposition.toLowerCase().includes((m.molecule || m.name || "").toLowerCase()) ||
+        (m.molecule || m.name || "").toLowerCase().includes(updateData.saltComposition.toLowerCase())
+      );
+      if (match) {
+        updateData.moleculeId = match._id || match.id;
+      }
+    }
 
     const result = await db.collection("products").updateOne(
       { _id: id as any },

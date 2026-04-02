@@ -88,76 +88,101 @@ const ComparisonCard = ({
     : `https://picsum.photos/seed/${product.id || 'err'}/300/300`;
 
   return (
-    <motion.div variants={scaleInVariant} className="h-full">
+    <motion.div 
+      initial={{ x: isAlt ? 20 : -20, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
+      className="h-full"
+    >
       <Card className={cn(
-        "h-full rounded-[24px] sm:rounded-[48px] p-2.5 sm:p-10 flex flex-col justify-between border shadow-sm relative overflow-hidden transition-all duration-700",
-        isAlt ? "bg-accent/[0.03] ring-2 ring-accent/10 border-accent/20" : "bg-white border-slate-100"
+        "h-full rounded-[32px] sm:rounded-[56px] p-2.5 sm:p-12 flex flex-col justify-between border-2 transition-all duration-700 relative overflow-hidden",
+        isAlt 
+          ? "bg-accent/[0.04] border-accent/20 ring-4 ring-accent/5 shadow-2xl shadow-accent/10" 
+          : "bg-white border-slate-100 shadow-xl shadow-slate-200/50"
       )}>
-        <div className="space-y-2.5 sm:space-y-8">
+        <div className="space-y-3 sm:space-y-10">
           <div className="flex items-center justify-between">
-            <Badge className={cn("rounded-full font-black text-[7px] sm:text-[10px] px-2 sm:px-3 py-0.5 sm:py-1 uppercase tracking-widest", isAlt ? "bg-accent text-white" : "bg-slate-100 text-slate-400")}>{label}</Badge>
+            <Badge className={cn(
+              "rounded-full font-black text-[7px] sm:text-[11px] px-2.5 sm:px-4 py-1 sm:py-1.5 uppercase tracking-widest shadow-sm", 
+              isAlt ? "bg-accent text-white" : "bg-slate-900 text-white"
+            )}>
+              {label}
+            </Badge>
             {displaySavingsPct > 0 && (
-              <Badge className="bg-primary text-white text-[7px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-md sm:rounded-lg shadow-sm">-{displaySavingsPct}%</Badge>
+              <Badge className="bg-primary text-white text-[7px] sm:text-[11px] font-black px-2 sm:px-3 py-1 rounded-md sm:rounded-xl shadow-lg animate-pulse">
+                -{displaySavingsPct}%
+              </Badge>
             )}
           </div>
           
           <Dialog>
             <DialogTrigger asChild>
-              <div className="relative aspect-square w-full bg-white rounded-[16px] sm:rounded-[32px] flex items-center justify-center overflow-hidden h-20 sm:h-56 p-1 sm:p-6 border border-slate-50 shadow-inner group/img cursor-zoom-in">
-                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-2 sm:p-6 transition-transform duration-700 group-hover/img:scale-110" />
+              <div className="relative aspect-square w-full bg-white rounded-[24px] sm:rounded-[40px] flex items-center justify-center overflow-hidden h-32 sm:h-72 p-2 sm:p-10 border border-slate-50 shadow-inner group/img cursor-zoom-in">
+                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-2 sm:p-10 transition-transform duration-700 group-hover/img:scale-110" />
                 <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
-                   <Maximize2 className="w-5 h-5 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                   <Maximize2 className="w-6 h-6 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
                 </div>
               </div>
             </DialogTrigger>
             <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-transparent shadow-none">
               <DialogTitle className="sr-only">{product.name}</DialogTitle>
-              <DialogDescription className="sr-only">Visual representation of {product.name}</DialogDescription>
-              <div className="relative aspect-square w-full bg-white rounded-[40px] overflow-hidden p-8 flex items-center justify-center shadow-3xl border border-white/20">
-                 <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-10" />
+              <DialogDescription className="sr-only">Detailed view of {product.name}</DialogDescription>
+              <div className="relative aspect-square w-full bg-white rounded-[48px] overflow-hidden p-10 flex items-center justify-center shadow-3xl">
+                 <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-12" />
               </div>
             </DialogContent>
           </Dialog>
 
-          <div className="space-y-0.5 sm:space-y-2">
-            <h3 className="font-extrabold text-[9px] sm:text-xl text-slate-800 leading-tight line-clamp-2 min-h-[1.8rem] sm:min-h-[2.8rem] font-outfit uppercase">
+          <div className="space-y-2 sm:space-y-4 text-center sm:text-left">
+            <h3 className="font-extrabold text-[11px] sm:text-2xl text-slate-800 leading-tight line-clamp-2 min-h-[2rem] sm:min-h-[3.5rem] font-outfit uppercase tracking-tight">
               {product.name}
             </h3>
-            <p className="text-[8px] sm:text-[12px] font-black text-slate-500 tracking-widest uppercase opacity-80">
-              {product.packSize || "N/A"}
-            </p>
-            <p className="text-[8px] sm:text-[12px] font-bold text-slate-400 truncate uppercase mt-0 sm:mt-1 tracking-tighter">
-              {product.manufacturer}
-            </p>
+            <div className="space-y-1">
+              <p className="text-[8px] sm:text-[13px] font-black text-slate-400 tracking-[0.2em] uppercase">
+                {product.packSize || "N/A"}
+              </p>
+              <p className="text-[8px] sm:text-[13px] font-bold text-slate-400 truncate uppercase mt-1 tracking-tighter opacity-60">
+                {product.manufacturer}
+              </p>
+            </div>
 
-            <div className="pt-2 sm:pt-4 border-t border-dashed mt-1.5 sm:mt-4 space-y-0.5 sm:space-y-1">
-              <div className="flex items-baseline gap-1 sm:gap-3">
-                <p className="text-base sm:text-5xl font-black tracking-tighter text-primary font-outfit">
+            <div className="pt-3 sm:pt-8 border-t-2 border-dashed border-slate-100 mt-2 sm:mt-6 space-y-1 sm:space-y-2">
+              <div className="flex items-baseline justify-center sm:justify-start gap-2 sm:gap-4">
+                <p className={cn(
+                  "text-lg sm:text-6xl font-black tracking-tighter font-outfit",
+                  isAlt ? "text-accent" : "text-primary"
+                )}>
                   ₹{Number(pPrice).toFixed(0)}
                 </p>
                 {pMrp > pPrice && (
                   <div className="flex flex-col">
-                    <span className="text-[8px] sm:text-lg text-slate-400 line-through font-bold opacity-80 decoration-1">₹{Number(pMrp).toFixed(0)}</span>
-                    <span className="text-[7px] sm:text-xs font-black text-accent uppercase bg-accent/10 px-1 sm:px-1.5 py-0.5 rounded-sm sm:rounded-md">Save ₹{Number(pMrp - pPrice).toFixed(0)}</span>
+                    <span className="text-[8px] sm:text-xl text-slate-300 line-through font-bold decoration-2">₹{Number(pMrp).toFixed(0)}</span>
+                    <span className={cn(
+                      "text-[7px] sm:text-sm font-black uppercase px-2 py-0.5 rounded-lg",
+                      isAlt ? "bg-accent/10 text-accent" : "bg-primary/10 text-primary"
+                    )}>
+                      Save ₹{Number(pMrp - pPrice).toFixed(0)}
+                    </span>
                   </div>
                 )}
               </div>
-              <p className="text-[8px] font-bold text-slate-400 tracking-tight uppercase">
+              <p className="text-[8px] sm:text-xs font-bold text-slate-300 tracking-widest uppercase">
                 ₹{unitPrice.toFixed(2)} / unit
               </p>
             </div>
           </div>
         </div>
 
-        <div className="mt-2 sm:mt-6">
+        <div className="mt-4 sm:mt-10">
           <Button 
             onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })} 
             className={cn(
-              "w-full h-7 sm:h-16 rounded-full font-black text-[7px] sm:text-xs tracking-wider sm:tracking-[0.15em] uppercase gap-1 sm:gap-3 shadow-md sm:shadow-xl active:scale-95 transition-all border-none",
-              isAlt ? "bg-accent text-white hover:bg-accent/90" : "bg-primary text-white hover:bg-primary/90"
+              "w-full h-10 sm:h-20 rounded-[20px] sm:rounded-[32px] font-black text-[9px] sm:text-base tracking-[0.1em] sm:tracking-[0.2em] uppercase gap-2 sm:gap-4 shadow-2xl active:scale-95 transition-all border-none group",
+              isAlt ? "bg-accent text-white hover:bg-accent/90 shadow-accent/20" : "bg-primary text-white hover:bg-primary/90 shadow-primary/20"
             )}
           >
-            {qty > 0 ? `CART (${qty})` : "ADD"} <ShoppingCart className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
+            {qty > 0 ? `IN CART (${qty})` : "ADD TO CART"} 
+            <ShoppingCart className="w-3.5 h-3.5 sm:w-6 sm:h-6 transition-transform group-hover:rotate-12" />
           </Button>
         </div>
       </Card>
@@ -254,19 +279,34 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 animate={{ y: 0, opacity: 1 }}
                 className="inline-flex flex-col items-center gap-1.5"
              >
-                <h2 className="text-[8px] sm:text-xs font-black text-slate-400 tracking-[0.2em] uppercase">Composition Matrix</h2>
-                <span className="text-[10px] sm:text-2xl font-black text-slate-900 tracking-tighter font-outfit uppercase leading-tight max-w-2xl px-2 line-clamp-1">
+                <h2 className="text-[10px] sm:text-xs font-black text-slate-400 tracking-[0.3em] uppercase">Composition Matrix</h2>
+                <span className="text-[14px] sm:text-2xl font-black text-slate-900 tracking-tighter font-outfit uppercase leading-tight max-w-2xl px-2 line-clamp-2">
                    {molData?.molecule || molData?.name || product.saltComposition || product.composition || "Molecular formulation info Pending"}
                 </span>
              </motion.div>
           </div>
 
-          <div className="mb-8 sm:mb-16 px-1">
+          {showComparison && switchSavingsAmt > 0 && (
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: -10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              className="mb-6 sm:mb-10 px-2"
+            >
+              <div className="bg-gradient-to-r from-primary via-primary to-accent text-white py-3 sm:py-6 px-6 sm:px-10 rounded-[20px] sm:rounded-[40px] shadow-2xl flex items-center justify-center gap-3 text-center border-b-4 border-black/10">
+                 <TrendingDown className="w-5 h-5 sm:w-7 sm:h-7 animate-bounce" />
+                 <h2 className="text-[10px] sm:text-lg font-black tracking-[0.1em] sm:tracking-[0.2em] uppercase">
+                   Switch and Save ₹{Number(switchSavingsAmt).toFixed(0)} • IDENTICAL MOLECULE
+                 </h2>
+              </div>
+            </motion.div>
+          )}
+
+          <div className="mb-12 sm:mb-20 px-1">
             {showComparison ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-10 items-stretch">
+              <div className="grid grid-cols-2 gap-3 sm:gap-12 items-stretch">
                 <ComparisonCard 
                   product={product} 
-                  label="Original Brand" 
+                  label="Original Branded" 
                   getItemQuantity={getItemQuantity}
                   addToCart={addToCart}
                   showComparison={showComparison}
@@ -274,7 +314,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 />
                 <ComparisonCard 
                   product={genericAlt} 
-                  label="Sahimed Generic" 
+                  label="Smart Switch Alternative" 
                   isAlt 
                   getItemQuantity={getItemQuantity}
                   addToCart={addToCart}
@@ -284,7 +324,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </div>
             ) : (
               <div className="flex justify-center">
-                <div className="w-full sm:max-w-md">
+                <div className="w-full sm:max-w-xl">
                   <ComparisonCard 
                     product={product} 
                     label={isBranded ? "Verified Brand" : "Verified Generic"} 
