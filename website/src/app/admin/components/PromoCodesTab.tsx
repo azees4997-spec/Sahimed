@@ -109,8 +109,9 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
     minOrderValue: initialData?.minOrderValue || 0, 
     maxDiscount: initialData?.maxDiscount || 0,
     expiryDate: initialData?.expiryDate || '',
-    scope: initialData?.scope || 'global', // global, category, product
+    scope: initialData?.scope || 'global', 
     scopeValue: initialData?.scopeValue || '',
+    isFirstOrderOnly: initialData?.isFirstOrderOnly || false,
     isActive: initialData?.isActive ?? true 
   });
   const handleSubmit = async (e: React.FormEvent) => {
@@ -131,17 +132,78 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-2 gap-6">
-        <div className="space-y-2"><Label className="text-[10px] font-black">Code</Label><Input value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase()})} required className="rounded-2xl h-14 bg-gray-50 border-none font-black text-primary" /></div>
-        <div className="space-y-2"><Label className="text-[10px] font-black">Type</Label><Select value={form.discountType} onValueChange={v => setForm({...form, discountType: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger><SelectContent className="rounded-2xl"><SelectItem value="fixed">Fixed (₹)</SelectItem><SelectItem value="percentage">Percentage (%)</SelectItem></SelectContent></Select></div>
-        <div className="space-y-2"><Label className="text-[10px] font-black">Value</Label><Input type="number" value={form.discountValue} onChange={e => setForm({...form, discountValue: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-        <div className="space-y-2"><Label className="text-[10px] font-black">Max Discount Cap (₹)</Label><Input type="number" value={form.maxDiscount} onChange={e => setForm({...form, maxDiscount: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-        <div className="space-y-2"><Label className="text-[10px] font-black">Min purchase</Label><Input type="number" value={form.minOrderValue} onChange={e => setForm({...form, minOrderValue: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-        <div className="space-y-2"><Label className="text-[10px] font-black">Expiry Date</Label><Input type="date" value={form.expiryDate} onChange={e => setForm({...form, expiryDate: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-        <div className="space-y-2"><Label className="text-[10px] font-black">Scope</Label><Select value={form.scope} onValueChange={v => setForm({...form, scope: v})}><SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger><SelectContent className="rounded-2xl"><SelectItem value="global">Global</SelectItem><SelectItem value="category">Category Wise</SelectItem><SelectItem value="product">Product Wise</SelectItem></SelectContent></Select></div>
-        <div className="space-y-2"><Label className="text-[10px] font-black">{form.scope === 'global' ? 'Description' : 'Scope Value (ID/Name)'}</Label><Input value={form.scopeValue} onChange={e => setForm({...form, scopeValue: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" placeholder={form.scope === 'global' ? 'e.g. Summer Sale' : 'Enter ID'} /></div>
-        <div className="flex items-center space-x-2 pt-2"><Checkbox id="promo-active" checked={form.isActive} onCheckedChange={c => setForm({...form, isActive: !!c})} /><Label htmlFor="promo-active" className="text-[10px] font-black cursor-pointer">Live campaign</Label></div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black">Code</Label>
+          <Input value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase()})} required className="rounded-2xl h-14 bg-gray-50 border-none font-black text-primary" />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black">Type</Label>
+          <Select value={form.discountType} onValueChange={v => setForm({...form, discountType: v})}>
+            <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
+            <SelectContent className="rounded-2xl">
+              <SelectItem value="fixed">Amount (₹)</SelectItem>
+              <SelectItem value="percentage">Percentage (%)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black">Value</Label>
+          <Input type="number" value={form.discountValue} onChange={e => setForm({...form, discountValue: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black">Max Discount Cap (₹)</Label>
+          <Input type="number" value={form.maxDiscount} onChange={e => setForm({...form, maxDiscount: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black">Min purchase</Label>
+          <Input type="number" value={form.minOrderValue} onChange={e => setForm({...form, minOrderValue: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black">Expiry Date</Label>
+          <Input type="date" value={form.expiryDate} onChange={e => setForm({...form, expiryDate: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black">Scope</Label>
+          <Select value={form.scope} onValueChange={v => setForm({...form, scope: v})}>
+            <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
+            <SelectContent className="rounded-2xl">
+              <SelectItem value="global">Global</SelectItem>
+              <SelectItem value="category">Category Wise</SelectItem>
+              <SelectItem value="product">Item Wise (Product)</SelectItem>
+              <SelectItem value="customer">Customer Wise</SelectItem>
+              <SelectItem value="branded">Branded Only</SelectItem>
+              <SelectItem value="generic">Generic Only</SelectItem>
+              <SelectItem value="order_level">Order Attribute Wise</SelectItem>
+              <SelectItem value="custom">Custom Protocol Wise</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black">
+            {form.scope === 'global' ? 'Description' : 
+             form.scope === 'order_level' ? 'Order Criteria (e.g. min_qty=5)' :
+             'Scope Identity (ID/Value)'}
+          </Label>
+          <Input value={form.scopeValue} onChange={e => setForm({...form, scopeValue: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" placeholder={
+            form.scope === 'global' ? 'e.g. Summer Sale' : 
+            form.scope === 'branded' ? 'N/A' :
+            'Enter target value'
+          } />
+        </div>
+        <div className="flex flex-col gap-4 pt-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox id="promo-first" checked={form.isFirstOrderOnly} onCheckedChange={c => setForm({...form, isFirstOrderOnly: !!c})} />
+            <Label htmlFor="promo-first" className="text-[10px] font-black cursor-pointer">First order only</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="promo-active" checked={form.isActive} onCheckedChange={c => setForm({...form, isActive: !!c})} />
+            <Label htmlFor="promo-active" className="text-[10px] font-black cursor-pointer">Live campaign</Label>
+          </div>
+        </div>
       </div>
-      <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white">Commit campaign</Button>
+      <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white shadow-3xl shadow-primary/20 active:scale-95 transition-all">
+        Commit campaign
+      </Button>
     </form>
   );
 }

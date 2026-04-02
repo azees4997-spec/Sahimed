@@ -65,7 +65,13 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
   const [cancelReason, setCancelReason] = useState('');
   const [isEditing, setIsEditing] = useState(false);
 
+  const [isUpdating, setIsUpdating] = useState(false);
   const updateOrderStatus = async (id: string, newStatus: string, extra = {}) => {
+    if (!id) {
+      toast({ variant: 'destructive', title: "Missing ID", description: "Internal selection error." });
+      return;
+    }
+    setIsUpdating(true);
     try {
       const token = await user?.getIdToken();
       const res = await fetch('/api/orders', {
@@ -76,14 +82,21 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
         },
         body: JSON.stringify({ id, status: newStatus, ...extra })
       });
+
+      const result = await res.json();
+
       if (res.ok) {
-        toast({ title: `Order ${newStatus}` });
-        fetchOrders();
+        toast({ title: `Order ${newStatus}`, description: "Status successfully updated in clinical matrix." });
+        await fetchOrders();
         setStatusUpdateTarget(null);
         setSelectedOrder(null);
+      } else {
+        throw new Error(result.error || "Update protocol failed");
       }
-    } catch (err) {
-      toast({ variant: 'destructive', title: "Update failed" });
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: "Synchronization Error", description: err.message });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -168,7 +181,13 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                 <h3 className="text-sm font-black">Update patient details</h3>
                 <Input value={selectedOrder?.patientName} onChange={e => setSelectedOrder({...selectedOrder, patientName: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
                 <Input value={selectedOrder?.phoneNumber} onChange={e => setSelectedOrder({...selectedOrder, phoneNumber: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
-                <Button onClick={() => updateOrderStatus(selectedOrder._id, selectedOrder.status, selectedOrder)} className="w-full h-16 rounded-full font-black bg-primary text-white">Save Changes</Button>
+                <Button 
+                  disabled={isUpdating}
+                  onClick={() => updateOrderStatus(selectedOrder._id, selectedOrder.status, selectedOrder)} 
+                  className="w-full h-16 rounded-full font-black bg-primary text-white shadow-xl transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {isUpdating ? <Loader2 className="w-5 h-5 animate-spin mx-auto text-white" /> : "Save Changes"}
+                </Button>
               </div>
             ) : statusUpdateTarget ? (
                <div className="space-y-6">
@@ -185,7 +204,13 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                  {statusUpdateTarget === 'Cancelled' && (
                    <Textarea placeholder="Reason for cancellation" value={cancelReason} onChange={e => setCancelReason(e.target.value)} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" />
                  )}
-                 <Button onClick={() => updateOrderStatus(selectedOrder._id, statusUpdateTarget, statusUpdateTarget === 'Shipped' ? { shipping: shippingInfo } : statusUpdateTarget === 'Cancelled' ? { cancellationReason: cancelReason } : {})} className="w-full h-16 rounded-full font-black bg-primary text-white shadow-xl">Confirm update</Button>
+                 <Button 
+                   disabled={isUpdating}
+                   onClick={() => updateOrderStatus(selectedOrder._id, statusUpdateTarget, statusUpdateTarget === 'Shipped' ? { shipping: shippingInfo } : statusUpdateTarget === 'Cancelled' ? { cancellationReason: cancelReason } : {})} 
+                   className="w-full h-16 rounded-full font-black bg-primary text-white shadow-xl transition-all active:scale-95 disabled:opacity-50"
+                 >
+                   {isUpdating ? <Loader2 className="w-5 h-5 animate-spin mx-auto text-white" /> : "Confirm update"}
+                 </Button>
                </div>
             ) : (
               <>

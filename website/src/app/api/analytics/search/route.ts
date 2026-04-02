@@ -54,6 +54,7 @@ export async function GET(request: Request) {
       }
     }
 
+    console.log(`[Search Analytics GET] Parameters: ${startDate} to ${endDate}`);
     const logs = await collection
       .find(query)
       .sort({ timestamp: -1 })
@@ -62,14 +63,19 @@ export async function GET(request: Request) {
 
     return NextResponse.json(logs);
   } catch (err: any) {
-    console.error("[Search Analytics GET Error]", err);
+    console.error("[Search Analytics GET Critical Error]", {
+      message: err.message,
+      stack: err.stack,
+      url: request.url
+    });
+    
     let status = 500;
     if (err.message?.includes('Unauthorized')) status = 401;
     if (err.message?.includes('Forbidden')) status = 403;
     
     return NextResponse.json({ 
       error: err.message || "Unknown analytics error",
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined 
+      details: process.env.NODE_ENV === 'development' ? err.stack : "Check server logs for details"
     }, { status });
   }
 }

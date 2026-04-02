@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
+import { ObjectId } from 'mongodb';
 
 export async function GET(
   request: Request,
