@@ -33,22 +33,28 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
   const [mostSearchedSalts, setMostSearchedSalts] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('/api/categories?limit=6')
+    fetch('/api/categories?limit=9')
       .then(res => res.json())
       .then(data => { if (Array.isArray(data)) setCategories(data); });
     
-    // Placeholder data for "Most Searched" until analytics engine populates
-    setMostSearchedMeds([
-      { id: '1', name: 'Telma 40mg' },
-      { id: '2', name: 'Pan D' },
-      { id: '3', name: 'Augmentin 625' }
-    ]);
-    setMostSearchedSalts([
-      { id: 's1', name: 'Telmisartan' },
-      { id: 's2', name: 'Pantoprazole' },
-      { id: 's3', name: 'Amoxicillin' }
-    ]);
+    // Fetch real trending data from MongoDB
+    fetch('/api/analytics/trending')
+      .then(res => res.json())
+      .then(data => {
+        if (data.brands) setMostSearchedMeds(data.brands);
+        if (data.salts) setMostSearchedSalts(data.salts);
+      });
   }, []);
+
+  // Debounced keystroke logging
+  useEffect(() => {
+    if (search.trim().length >= 3 && search.trim().length <= 15) {
+      const timer = setTimeout(() => {
+        logSearch(search.trim());
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [search]);
 
   const logSearch = async (keyword: string) => {
     try {
@@ -270,15 +276,19 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
               </div>
             </div>
 
-            {/* Most Searched Medicines */}
+            {/* Most Searched Brands */}
             <div className="space-y-4">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Most Searched Medicines</h3>
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Most Searched Brands</h3>
               <div className="flex flex-wrap gap-2">
-                {mostSearchedMeds.map((med) => (
+                {mostSearchedMeds.slice(0, 8).map((med, idx) => (
                   <button 
-                    key={med.id}
-                    onClick={() => { setSearch(med.name); }}
-                    className="px-4 py-2 bg-white border border-slate-100 rounded-full text-xs font-bold text-slate-600 hover:border-primary/20 transition-all"
+                    key={idx}
+                    onClick={() => { 
+                      setSearch(med.name);
+                      router.push(`/search?q=${encodeURIComponent(med.name)}`);
+                      onClose();
+                    }}
+                    className="px-4 py-2 bg-white border border-slate-100 rounded-full text-[10px] font-bold text-slate-600 hover:border-primary/20 transition-all uppercase tracking-tight"
                   >
                     {med.name}
                   </button>
@@ -286,15 +296,19 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
               </div>
             </div>
 
-            {/* Most Searched Salts */}
+            {/* Most Searched Salts (Molecules) */}
             <div className="space-y-4">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Most Searched Salts</h3>
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Most Searched Molecules</h3>
               <div className="flex flex-wrap gap-2">
-                {mostSearchedSalts.map((salt) => (
+                {mostSearchedSalts.slice(0, 8).map((salt, idx) => (
                   <button 
-                    key={salt.id}
-                    onClick={() => { setSearch(salt.name); }}
-                    className="px-4 py-2 bg-slate-100/50 border border-transparent rounded-full text-xs font-bold text-slate-500 hover:bg-slate-100 transition-all"
+                    key={idx}
+                    onClick={() => { 
+                      setSearch(salt.name);
+                      router.push(`/search?q=${encodeURIComponent(salt.name)}`);
+                      onClose();
+                    }}
+                    className="px-4 py-2 bg-slate-100/50 border border-transparent rounded-full text-[10px] font-bold text-slate-500 hover:bg-slate-100 transition-all uppercase tracking-tight"
                   >
                     {salt.name}
                   </button>

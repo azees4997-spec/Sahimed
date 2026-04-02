@@ -20,9 +20,11 @@ import { SectionHeader } from './SectionHeader';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format, startOfDay, endOfDay, subDays } from 'date-fns';
+import { useUser } from '@/firebase';
 
 export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
   const { toast } = useToast();
+  const { user } = useUser();
   const [logs, setLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dateRange, setDateRange] = useState({
@@ -33,7 +35,7 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
   const fetchLogs = async () => {
     setIsLoading(true);
     try {
-      const idToken = await (window as any).firebaseAuth?.currentUser?.getIdToken();
+      const idToken = await user?.getIdToken();
       const res = await fetch(`/api/analytics/search?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`, {
         headers: {
           'Authorization': `Bearer ${idToken}`

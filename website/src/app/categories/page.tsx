@@ -61,7 +61,7 @@ export default function CategoriesPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
+      <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-16">
         <Navbar />
         
         <main className="max-w-7xl mx-auto px-6 py-12 md:py-20">
@@ -85,45 +85,58 @@ export default function CategoriesPage() {
             variants={containerVariants}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-8"
+            className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-6"
           >
-            {displayCategories.map((cat: any, i) => (
-              <motion.div key={i} variants={itemVariants}>
-                <Link 
-                  href={`/search?c=${encodeURIComponent(cat.name)}`} 
-                  className="group bg-white/60 backdrop-blur-md p-8 rounded-[48px] border border-white shadow-xl hover:shadow-3xl transition-all duration-500 flex flex-col items-center text-center gap-6 active:scale-95 h-full"
-                >
-                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 bg-white rounded-full flex items-center justify-center border border-slate-50 overflow-hidden shadow-inner group-hover:scale-110 transition-transform duration-500">
-                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    {cat.imageUrl ? (
-                      <Image 
-                        src={cat.imageUrl} 
-                        alt={cat.name} 
-                        fill 
-                        className="object-contain p-2 sm:p-6 group-hover:scale-110 transition-transform duration-700"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-primary/5 flex items-center justify-center">
-                        <span className="text-primary font-black text-xs">{cat.name?.charAt(0)}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-3 flex flex-col items-center flex-1">
-                    <span className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight leading-tight block font-outfit">
-                      {cat.name}
-                    </span>
-                    <div className="flex justify-center items-center gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 duration-500 mt-auto">
-                      <span className="text-[7px] font-black text-primary uppercase tracking-[0.2em]">Explore</span>
-                      <ArrowUpRight className="w-2.5 h-2.5 text-primary" />
+            {displayCategories.map((cat: any, i) => {
+              const gradients = [
+                'from-blue-400 to-indigo-600',
+                'from-rose-400 to-orange-500',
+                'from-emerald-400 to-teal-600',
+                'from-violet-400 to-purple-600',
+                'from-amber-400 to-orange-600',
+                'from-cyan-400 to-blue-600'
+              ];
+              const gradient = gradients[i % gradients.length];
+              
+              return (
+                <motion.div key={i} variants={itemVariants}>
+                  <Link 
+                    href={`/search?c=${encodeURIComponent(cat.name)}`} 
+                    className="group relative bg-white border border-white/40 h-full rounded-[28px] sm:rounded-[40px] p-3 sm:p-6 flex flex-col items-center gap-3 sm:gap-4 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] active:scale-95 shadow-[0_10px_20px_-5px_rgba(0,0,0,0.05)] overflow-hidden"
+                  >
+                    {/* 3D Gradient Background Layer */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-[0.03] group-hover:opacity-[0.08] transition-opacity`} />
+                    
+                    <div className="relative w-16 h-16 sm:w-24 sm:h-24 rounded-full flex items-center justify-center overflow-hidden shadow-[inset_0_2px_10px_rgba(0,0,0,0.03)] bg-slate-50 group-hover:scale-110 transition-transform duration-700">
+                      {cat.imageUrl ? (
+                        <Image 
+                          src={cat.imageUrl} 
+                          alt={cat.name} 
+                          fill 
+                          className="object-contain p-2 sm:p-5 group-hover:scale-110 transition-transform duration-700"
+                        />
+                      ) : (
+                        <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center opacity-80`}>
+                          <span className="text-white font-black text-xs sm:text-xl">{cat.name?.charAt(0)}</span>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                    <div className="space-y-1 flex flex-col items-center flex-1 w-full text-center">
+                      <span className="text-[10px] sm:text-xs font-black text-slate-800 uppercase tracking-tighter leading-tight line-clamp-2 min-h-[2.5em] flex items-center justify-center">
+                        {cat.name}
+                      </span>
+                      <div className="flex justify-center items-center gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-y-1 group-hover:translate-y-0 duration-500 mt-auto">
+                        <span className="text-[6px] font-black text-primary uppercase tracking-widest">Select</span>
+                        <ArrowUpRight className="w-2 h-2 text-primary" />
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
           </motion.div>
 
         </main>
-        <Footer />
       </div>
     </PageTransition>
   );

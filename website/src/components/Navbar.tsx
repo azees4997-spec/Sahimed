@@ -90,6 +90,15 @@ export default function Navbar() {
     };
   }, []);
 
+  useEffect(() => {
+    if (search.trim().length >= 3 && search.trim().length <= 15) {
+      const timer = setTimeout(() => {
+        logSearch(search.trim());
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [search]);
+
   const logSearch = async (keyword: string) => {
     try {
       const profileSnap = user ? await getDoc(doc(db, 'userProfiles', user.uid)) : null;

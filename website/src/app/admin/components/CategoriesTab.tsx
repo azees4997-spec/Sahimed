@@ -45,12 +45,13 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[10px] font-black text-gray-400 border-b">
-              <tr><th className="px-10 py-8">Category Name</th><th className="px-10 py-8">Display Order</th><th className="px-10 py-8 text-right">Actions</th></tr>
+              <tr><th className="px-10 py-8">Category Name</th><th className="px-10 py-8">Image URL</th><th className="px-10 py-8">Display Order</th><th className="px-10 py-8 text-right">Actions</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (<tr><td colSpan={3} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : categories?.map(cat => (
                 <tr key={cat.id} className="hover:bg-gray-50/50">
                   <td className="px-10 py-8 font-black text-sm text-gray-900">{cat.name}</td>
+                  <td className="px-10 py-8 font-medium text-xs text-gray-400 truncate max-w-[200px]">{cat.imageUrl || 'No image'}</td>
                   <td className="px-10 py-8 font-bold text-gray-400">{cat.order || 0}</td>
                   <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => { setEditingCat(cat); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button><Button variant="ghost" size="icon" onClick={async () => { 
                     if(confirm("Delete category?")) {
@@ -87,7 +88,11 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
 }
 
 function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
-  const [form, setForm] = useState({ name: initialData?.name || '', order: initialData?.order || 0 });
+  const [form, setForm] = useState({ 
+    name: initialData?.name || '', 
+    imageUrl: initialData?.imageUrl || '',
+    order: initialData?.order || 0 
+  });
   const { user } = useUser();
   const { toast } = useToast();
   
@@ -120,6 +125,7 @@ function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: a
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2"><Label className="text-[10px] font-black">Category name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+      <div className="space-y-2"><Label className="text-[10px] font-black">Image URL</Label><Input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} placeholder="https://..." className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       <div className="space-y-2"><Label className="text-[10px] font-black">Display order</Label><Input type="number" value={form.order} onChange={e => setForm({...form, order: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
       <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white">Save class entry</Button>
     </form>
