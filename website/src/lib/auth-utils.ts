@@ -22,8 +22,8 @@ export async function verifyAdmin(request: Request) {
 
   const token = authHeader.split('Bearer ')[1];
   
-  // Use public or private project ID env
-  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
+  // Use public or private project ID env, with hardcoded fallback for robustness
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || "studio-9756314138-8403b";
 
   if (!projectId) {
     console.error('[Auth Error] FIREBASE_PROJECT_ID is missing from environment.');
