@@ -465,9 +465,6 @@ export default function CheckoutPage() {
                 </div>
               </motion.div>
 
-                  )}
-                </div>
-              </motion.div>
 
               {/* Clinical Verification Path */}
               {cart.some(i => i.prescriptionRequired) && (
