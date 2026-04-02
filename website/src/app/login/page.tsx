@@ -97,8 +97,8 @@ function LoginForm() {
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
         className="max-w-md w-full"
       >
-        <Card className="rounded-[64px] shadow-3xl border-none overflow-hidden bg-white/80 backdrop-blur-3xl border border-white mx-auto relative">
-          <CardHeader className="text-center p-12 sm:p-14 bg-primary text-white relative overflow-hidden">
+        <Card className="rounded-[40px] shadow-3xl border-none overflow-hidden bg-white/80 backdrop-blur-3xl border border-white mx-auto relative group">
+          <CardHeader className="text-center p-8 sm:p-10 bg-primary text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12 scale-150">
                <Zap className="w-48 h-48" />
             </div>
@@ -111,13 +111,13 @@ function LoginForm() {
               <Smartphone className="w-12 h-12 text-white group-hover:rotate-12 transition-transform" />
             </div>
             
-            <div className="space-y-2 relative z-10">
-              <CardTitle className="text-3xl sm:text-4xl font-black font-outfit mb-1 tracking-tighter uppercase">Welcome to SahiMed</CardTitle>
-              <CardDescription className="text-white/70 uppercase text-[10px] font-black tracking-widest leading-none">Login or Sign up to manage your health</CardDescription>
+            <div className="space-y-1 relative z-10">
+              <CardTitle className="text-2xl sm:text-3xl font-black font-outfit mb-0.5 tracking-tighter uppercase leading-none">Login or Sign Up</CardTitle>
+              <CardDescription className="text-white/70 uppercase text-[9px] font-black tracking-widest leading-none">Access the Clinical Ecosystem</CardDescription>
             </div>
           </CardHeader>
           
-          <CardContent className="p-8 sm:p-14">
+          <CardContent className="p-8 sm:p-10">
             <AnimatePresence mode="wait">
               {step === 1 ? (
                 <motion.form 
@@ -131,14 +131,14 @@ function LoginForm() {
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block opacity-60">Mobile Number</label>
                     <div className="relative group">
-                      <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3 border-r-2 pr-5 border-slate-100 group-focus-within:border-primary/20 transition-colors">
-                        <span className="text-sm font-black text-slate-400 uppercase tracking-widest">+91</span>
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center h-full px-6 border-r-2 border-slate-100 group-focus-within:border-primary/20 transition-colors bg-slate-50/50 rounded-l-[24px]">
+                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">+91</span>
                       </div>
                       <Input 
                         type="tel"
                         placeholder="Enter 10 Digit Number"
                         maxLength={10}
-                        className="h-16 pl-24 rounded-[24px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white text-base font-black tracking-widest transition-all placeholder:text-slate-300 shadow-inner px-8"
+                        className="h-16 pl-24 rounded-[24px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white text-sm font-black tracking-widest transition-all placeholder:text-slate-300 shadow-inner"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                         required
@@ -148,9 +148,9 @@ function LoginForm() {
                   <Button type="submit" disabled={loading} className="w-full h-20 rounded-full font-black uppercase text-xs tracking-[0.4em] gap-4 shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary hover:scale-[1.02] border-4 border-white">
                     {loading ? <Loader2 className="animate-spin" /> : (
                       <>
-                        <Sparkles className="w-5 h-5" />
-                        Initiate OTP
-                        <ChevronRight className="w-5 h-5" />
+                        <Sparkles className="w-4 h-4" />
+                        Request OTP
+                        <ChevronRight className="w-4 h-4 ml-auto" />
                       </>
                     )}
                   </Button>
