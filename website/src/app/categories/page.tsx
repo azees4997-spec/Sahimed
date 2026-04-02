@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -91,9 +92,9 @@ export default function CategoriesPage() {
             {isLoading ? (
               // Skeleton Grid
               Array(12).fill(0).map((_, i) => (
-                <div key={i} className="bg-white rounded-[40px] sm:rounded-[56px] p-8 flex flex-col items-center gap-6 animate-pulse border border-slate-50 shadow-sm">
+                <div key={i} className="bg-white rounded-[28px] sm:rounded-[40px] p-3 sm:p-6 flex flex-col items-center gap-3 sm:gap-4 animate-pulse border border-slate-50 shadow-sm">
                   <Skeleton className="w-24 h-24 sm:w-36 sm:h-36 rounded-full" />
-                  <Skeleton className="h-5 w-28 rounded-full" />
+                  <Skeleton className="h-3 w-16 sm:h-5 sm:w-28 rounded-full" />
                 </div>
               ))
             ) : displayCategories.map((cat: any, i) => {
@@ -111,7 +112,7 @@ export default function CategoriesPage() {
                 <motion.div key={i} variants={itemVariants}>
                   <Link 
                     href={`/search?c=${encodeURIComponent(cat.name)}`} 
-                    className="group relative bg-white border border-white/40 h-full rounded-[28px] sm:rounded-[40px] p-3 sm:p-6 flex flex-col items-center gap-3 sm:gap-4 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] active:scale-95 shadow-[0_10px_20px_-5px_rgba(0,0,0,0.05)] overflow-hidden"
+                    className="group relative bg-white border border-white/40 h-full rounded-[28px] sm:rounded-[40px] p-2.5 sm:p-6 flex flex-col items-center gap-2 sm:gap-4 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] active:scale-95 shadow-[0_10px_20px_-5px_rgba(0,0,0,0.05)] overflow-hidden"
                   >
                     {/* 3D Gradient Background Layer */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-[0.03] group-hover:opacity-[0.08] transition-opacity`} />
@@ -130,8 +131,8 @@ export default function CategoriesPage() {
                         </div>
                       )}
                     </div>
-                    <div className="space-y-1 flex flex-col items-center flex-1 w-full text-center">
-                      <span className="text-[10px] sm:text-xs font-black text-slate-800 uppercase tracking-tighter leading-tight line-clamp-2 min-h-[2.5em] flex items-center justify-center">
+                    <div className="space-y-0.5 flex flex-col items-center flex-1 w-full text-center">
+                      <span className="text-[9px] sm:text-xs font-black text-slate-800 uppercase tracking-tighter leading-[1.1] line-clamp-2 min-h-[2.2em] flex items-center justify-center">
                         {cat.name}
                       </span>
                       <div className="flex justify-center items-center gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-y-1 group-hover:translate-y-0 duration-500 mt-auto">

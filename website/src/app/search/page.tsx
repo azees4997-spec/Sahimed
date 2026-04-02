@@ -222,19 +222,27 @@ function SaveMoreStrip({ query: rawQ }: { query: string }) {
     const findGeneric = async () => {
       setLoading(true);
       try {
-        const resMain = await fetch(`/api/products?q=${encodeURIComponent(rawQ)}&limit=5`);
+        // 1. Find the best matching brand/product
+        const resMain = await fetch(`/api/products?q=${encodeURIComponent(rawQ)}&limit=10`);
         const mainProducts = await resMain.json();
-        const mainProduct = mainProducts.find((p: any) => p.name.toLowerCase().includes(rawQ.toLowerCase()));
+        if (!mainProducts || mainProducts.length === 0) return;
+
+        // Try to find a branded product (not generic) or just the first result
+        const mainProduct = mainProducts.find((p: any) => !p.isGeneric) || mainProducts[0];
         
         let targetMolId = mainProduct?.moleculeId;
 
         if (targetMolId) {
+          // 2. Find a cheaper generic alternative for that molecule
           const resGen = await fetch(`/api/products?moleculeId=${encodeURIComponent(targetMolId)}&isGeneric=true&limit=10`);
           const alternatives = await resGen.json();
+          if (!Array.isArray(alternatives)) return;
+
           const gen = alternatives.find((a: any) => 
-            (a.isGeneric === true || a.isGeneric === "true") && 
+            (a.isGeneric === true || String(a.isGeneric) === "true") && 
             (a._id || a.id) !== (mainProduct?._id || mainProduct?.id)
           );
+          
           if (gen) {
             setGenericAlt({ ...gen, id: gen._id || gen.id });
           }

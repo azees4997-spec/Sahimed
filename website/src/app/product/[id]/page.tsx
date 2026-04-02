@@ -90,21 +90,21 @@ const ComparisonCard = ({
   return (
     <motion.div variants={scaleInVariant} className="h-full">
       <Card className={cn(
-        "h-full rounded-[32px] sm:rounded-[48px] p-4 sm:p-10 flex flex-col justify-between border shadow-sm relative overflow-hidden transition-all duration-700",
+        "h-full rounded-[24px] sm:rounded-[48px] p-2.5 sm:p-10 flex flex-col justify-between border shadow-sm relative overflow-hidden transition-all duration-700",
         isAlt ? "bg-accent/[0.03] ring-2 ring-accent/10 border-accent/20" : "bg-white border-slate-100"
       )}>
-        <div className="space-y-4 sm:space-y-8">
+        <div className="space-y-2.5 sm:space-y-8">
           <div className="flex items-center justify-between">
-            <Badge className={cn("rounded-full font-black text-[8px] sm:text-[10px] px-3 py-1 uppercase tracking-widest", isAlt ? "bg-accent text-white" : "bg-slate-100 text-slate-400")}>{label}</Badge>
+            <Badge className={cn("rounded-full font-black text-[7px] sm:text-[10px] px-2 sm:px-3 py-0.5 sm:py-1 uppercase tracking-widest", isAlt ? "bg-accent text-white" : "bg-slate-100 text-slate-400")}>{label}</Badge>
             {displaySavingsPct > 0 && (
-              <Badge className="bg-primary text-white text-[8px] sm:text-[10px] font-black px-2 py-0.5 rounded-lg shadow-sm">-{displaySavingsPct}%</Badge>
+              <Badge className="bg-primary text-white text-[7px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-md sm:rounded-lg shadow-sm">-{displaySavingsPct}%</Badge>
             )}
           </div>
           
           <Dialog>
             <DialogTrigger asChild>
-              <div className="relative aspect-square w-full bg-white rounded-[24px] sm:rounded-[32px] flex items-center justify-center overflow-hidden h-24 sm:h-56 p-2 sm:p-6 border border-slate-50 shadow-inner group/img cursor-zoom-in">
-                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-3 sm:p-6 transition-transform duration-700 group-hover/img:scale-110" />
+              <div className="relative aspect-square w-full bg-white rounded-[16px] sm:rounded-[32px] flex items-center justify-center overflow-hidden h-20 sm:h-56 p-1 sm:p-6 border border-slate-50 shadow-inner group/img cursor-zoom-in">
+                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-2 sm:p-6 transition-transform duration-700 group-hover/img:scale-110" />
                 <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
                    <Maximize2 className="w-5 h-5 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
                 </div>
@@ -119,30 +119,30 @@ const ComparisonCard = ({
             </DialogContent>
           </Dialog>
 
-          <div className="space-y-1 sm:space-y-2">
-            <h3 className="font-extrabold text-xs sm:text-xl text-slate-800 leading-tight line-clamp-2 min-h-[2rem] sm:min-h-[2.8rem] font-outfit uppercase">
+          <div className="space-y-0.5 sm:space-y-2">
+            <h3 className="font-extrabold text-[9px] sm:text-xl text-slate-800 leading-tight line-clamp-2 min-h-[1.8rem] sm:min-h-[2.8rem] font-outfit uppercase">
               {product.name}
             </h3>
-            <p className="text-[10px] sm:text-[12px] font-black text-slate-600 tracking-widest uppercase opacity-100">
+            <p className="text-[8px] sm:text-[12px] font-black text-slate-500 tracking-widest uppercase opacity-80">
               {product.packSize || "N/A"}
             </p>
-            <p className="text-[10px] sm:text-[12px] font-bold text-slate-700/80 truncate opacity-100 uppercase tracking-tighter">
+            <p className="text-[8px] sm:text-[12px] font-bold text-slate-400 truncate uppercase mt-0 sm:mt-1 tracking-tighter">
               {product.manufacturer}
             </p>
 
-            <div className="pt-2 sm:pt-4 border-t border-dashed mt-2 sm:mt-4 space-y-0.5 sm:space-y-1">
-              <div className="flex items-baseline gap-2 sm:gap-3">
-                <p className="text-xl sm:text-5xl font-black tracking-tighter text-primary font-outfit">
+            <div className="pt-2 sm:pt-4 border-t border-dashed mt-1.5 sm:mt-4 space-y-0.5 sm:space-y-1">
+              <div className="flex items-baseline gap-1 sm:gap-3">
+                <p className="text-base sm:text-5xl font-black tracking-tighter text-primary font-outfit">
                   ₹{Number(pPrice).toFixed(0)}
                 </p>
                 {pMrp > pPrice && (
                   <div className="flex flex-col">
-                    <span className="text-[10px] sm:text-lg text-slate-400 line-through font-bold opacity-80 decoration-1">₹{Number(pMrp).toFixed(0)}</span>
-                    <span className="text-[9px] sm:text-xs font-black text-accent uppercase bg-accent/10 px-1.5 py-0.5 rounded-md">Save ₹{Number(pMrp - pPrice).toFixed(0)}</span>
+                    <span className="text-[8px] sm:text-lg text-slate-400 line-through font-bold opacity-80 decoration-1">₹{Number(pMrp).toFixed(0)}</span>
+                    <span className="text-[7px] sm:text-xs font-black text-accent uppercase bg-accent/10 px-1 sm:px-1.5 py-0.5 rounded-sm sm:rounded-md">Save ₹{Number(pMrp - pPrice).toFixed(0)}</span>
                   </div>
                 )}
               </div>
-              <p className="text-[9px] font-bold text-slate-400 tracking-tight uppercase">
+              <p className="text-[8px] font-bold text-slate-400 tracking-tight uppercase">
                 ₹{unitPrice.toFixed(2)} / unit
               </p>
             </div>
@@ -153,11 +153,11 @@ const ComparisonCard = ({
           <Button 
             onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })} 
             className={cn(
-              "w-full h-8 sm:h-16 rounded-full font-black text-[7px] sm:text-xs tracking-[0.1em] sm:tracking-[0.15em] uppercase gap-1 sm:gap-3 shadow-md sm:shadow-xl active:scale-95 transition-all border-none",
+              "w-full h-7 sm:h-16 rounded-full font-black text-[7px] sm:text-xs tracking-wider sm:tracking-[0.15em] uppercase gap-1 sm:gap-3 shadow-md sm:shadow-xl active:scale-95 transition-all border-none",
               isAlt ? "bg-accent text-white hover:bg-accent/90" : "bg-primary text-white hover:bg-primary/90"
             )}
           >
-            {qty > 0 ? `IN CART (${qty})` : "ADD"} <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+            {qty > 0 ? `CART (${qty})` : "ADD"} <ShoppingCart className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
           </Button>
         </div>
       </Card>
@@ -176,21 +176,24 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const product = rawProduct;
   const { data: molData } = useMongoDBMolecule(product?.moleculeId);
 
+  const isGeneric = product?.isGeneric === true || product?.isGeneric === "true";
+  const isBranded = !isGeneric;
+  
+  // Rule: Only fetch generics if this is a branded product
   const { data: genericAlternatives } = useMongoDBCollection({ 
-    moleculeId: product?.moleculeId,
+    moleculeId: isBranded ? product?.moleculeId : undefined,
     isGeneric: true,
     limit: 10 
   });
   
-  const isGeneric = product?.isGeneric === true || product?.isGeneric === "true";
-  const isBranded = !isGeneric;
-  
-  const genericAlt = genericAlternatives?.find((a: any) => 
+  const genericAlt = isBranded ? genericAlternatives?.find((a: any) => 
     (a.isGeneric === true || a.isGeneric === "true") && 
     String(a.id || a._id) !== String(product?.id || product?._id)
-  );
+  ) : null;
 
   const hasGenericAlt = !!genericAlt;
+  
+  // Rule: Show comparison ONLY if branded AND has a mapped generic
   const showComparison = isBranded && hasGenericAlt;
 
   const pPriceRaw = product?.liveData?.sahimed_price || product?.price || 0;
@@ -245,40 +248,25 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
              )}
           </div>
 
-          <div className="flex flex-col items-center justify-center mb-2 sm:mb-6 text-center px-2">
+          <div className="flex flex-col items-center justify-center mb-6 sm:mb-12 text-center px-2">
              <motion.div 
                 initial={{ y: 5, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="inline-flex flex-col items-center gap-1"
+                className="inline-flex flex-col items-center gap-1.5"
              >
-                <h2 className="text-[8px] sm:text-xs font-black text-slate-400 tracking-[0.2em] uppercase">Composition</h2>
-                <span className="text-xs md:text-2xl font-black text-slate-900 tracking-tighter font-outfit uppercase leading-tight max-w-2xl px-2 line-clamp-1">
-                   {molData?.molecule || molData?.name || product.saltComposition || product.composition || product.salt || product.molecule || "Molecular formulation info Pending"}
+                <h2 className="text-[8px] sm:text-xs font-black text-slate-400 tracking-[0.2em] uppercase">Composition Matrix</h2>
+                <span className="text-[10px] sm:text-2xl font-black text-slate-900 tracking-tighter font-outfit uppercase leading-tight max-w-2xl px-2 line-clamp-1">
+                   {molData?.molecule || molData?.name || product.saltComposition || product.composition || "Molecular formulation info Pending"}
                 </span>
              </motion.div>
           </div>
-
-          {showComparison && switchSavingsAmt > 0 && (
-            <motion.div 
-              initial={{ scale: 0.98, opacity: 0, y: -5 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              className="mb-2 sm:mb-6 px-2"
-            >
-              <div className="bg-gradient-to-r from-primary to-accent text-white py-2 sm:py-4 px-4 sm:px-8 rounded-[12px] sm:rounded-[32px] shadow-xl flex items-center justify-center gap-2 text-center">
-                 <TrendingDown className="w-3.5 h-3.5 sm:w-5 sm:h-5 animate-bounce" />
-                 <h2 className="text-[8px] sm:text-sm font-black tracking-widest uppercase line-clamp-1">
-                   Save ₹{Number(switchSavingsAmt).toFixed(0)} • IDENTICAL MOLECULE
-                 </h2>
-              </div>
-            </motion.div>
-          )}
 
           <div className="mb-8 sm:mb-16 px-1">
             {showComparison ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-10 items-stretch">
                 <ComparisonCard 
                   product={product} 
-                  label="Original Branded" 
+                  label="Original Brand" 
                   getItemQuantity={getItemQuantity}
                   addToCart={addToCart}
                   showComparison={showComparison}
@@ -286,7 +274,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 />
                 <ComparisonCard 
                   product={genericAlt} 
-                  label="Smart Switch Alternative" 
+                  label="Sahimed Generic" 
                   isAlt 
                   getItemQuantity={getItemQuantity}
                   addToCart={addToCart}
@@ -296,10 +284,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </div>
             ) : (
               <div className="flex justify-center">
-                <div className="w-full sm:w-auto">
+                <div className="w-full sm:max-w-md">
                   <ComparisonCard 
                     product={product} 
-                    label={isBranded ? "Verified Selection" : "Clinical Generic"} 
+                    label={isBranded ? "Verified Brand" : "Verified Generic"} 
                     getItemQuantity={getItemQuantity}
                     addToCart={addToCart}
                     showComparison={showComparison}
