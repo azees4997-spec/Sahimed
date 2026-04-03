@@ -259,17 +259,17 @@ export default function ProfilePage() {
     <PageTransition>
       <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
         <Navbar />
-        <main className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
+        <main className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
           
           <motion.div 
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="flex flex-col md:flex-row items-center gap-10 mb-16 bg-white/40 backdrop-blur-md p-10 sm:p-12 rounded-[56px] shadow-2xl border border-white relative overflow-hidden group"
+            className="flex flex-col md:flex-row items-center gap-6 mb-10 bg-white/40 backdrop-blur-md p-6 sm:p-8 rounded-[40px] shadow-xl border border-white relative overflow-hidden group"
           >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
+            <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -mr-24 -mt-24" />
             
-            <div className="w-16 h-16 bg-primary/10 rounded-[20px] flex items-center justify-center border-4 border-white shadow-xl shrink-0 group-hover:scale-110 transition-transform duration-500 relative z-10">
-               <User className="w-8 h-8 text-primary" />
+            <div className="w-12 h-12 bg-primary/10 rounded-[16px] flex items-center justify-center border-2 border-white shadow-lg shrink-0 group-hover:scale-110 transition-transform duration-500 relative z-10">
+               <User className="w-6 h-6 text-primary" />
             </div>
             <div className="text-center md:text-left relative z-10">
               <h1 className="text-2xl sm:text-4xl font-black text-slate-900 mb-1 tracking-tighter font-outfit uppercase">
@@ -296,104 +296,104 @@ export default function ProfilePage() {
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
-            <div className="lg:col-span-2 space-y-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            <div className="lg:col-span-2 space-y-8">
                <motion.div 
                  variants={containerVariants}
                  initial="hidden"
                  animate="show"
-                 className="space-y-8"
+                 className="space-y-6"
                >
-                  <div className="space-y-4">
-                    <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 ml-6 uppercase">Order Management</h2>
+                  <div className="space-y-3">
+                    <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 ml-4 uppercase">Order Management</h2>
                     <motion.div variants={itemVariants}>
                       <Link href="/orders" className="block">
-                        <div className="bg-white/40 backdrop-blur-md p-6 rounded-[32px] border border-white flex items-center justify-between group active:scale-[0.98] transition-all hover:shadow-2xl shadow-xl hover:bg-white">
-                          <div className="flex items-center gap-5">
-                            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-[16px] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"><Package className="w-5 h-5" /></div>
+                        <div className="bg-white/40 backdrop-blur-md p-5 rounded-[24px] border border-white flex items-center justify-between group active:scale-[0.98] transition-all hover:shadow-xl shadow-lg hover:bg-white">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-[12px] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"><Package className="w-4 h-4" /></div>
                             <div>
-                              <h3 className="text-sm font-black text-slate-900 tracking-tight font-outfit uppercase">Order History</h3>
-                              <p className="text-[8px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-0.5">Track your clinical supplies</p>
+                              <h3 className="text-xs font-black text-slate-900 tracking-tight font-outfit uppercase">Order History</h3>
+                              <p className="text-[7px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-0.5">Track items</p>
                             </div>
                           </div>
-                          <div className="bg-slate-50 w-10 h-10 rounded-full flex items-center justify-center group-hover:bg-primary transition-all">
-                            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-all group-hover:translate-x-1" />
+                          <div className="bg-slate-50 w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-primary transition-all">
+                            <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-white transition-all group-hover:translate-x-1" />
                           </div>
                         </div>
                       </Link>
                     </motion.div>
                   </div>
 
-                  <div className="space-y-8">
-                    <div className="flex items-center justify-between px-6">
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between px-4">
                       <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 uppercase">Address Management</h2>
                       <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
                         <DialogTrigger asChild>
-                          <button onClick={() => setAddressForm({ id: '', tag: 'Home', street: '', landmark: '', pincode: '', lat: 0, lng: 0 })} className="bg-white px-5 py-2.5 rounded-full shadow-lg border border-white text-[9px] font-black text-primary tracking-[0.2em] flex items-center gap-2 hover:scale-105 transition-all uppercase active:scale-95">
-                            <Plus className="w-3.5 h-3.5" /> Add New
+                          <button onClick={() => setAddressForm({ id: '', tag: 'Home', street: '', landmark: '', pincode: '', lat: 0, lng: 0 })} className="bg-white px-4 py-2 rounded-full border border-slate-100 text-[8px] font-black text-primary tracking-[0.2em] flex items-center gap-1.5 hover:bg-slate-50 transition-all uppercase active:scale-95">
+                            <Plus className="w-3 h-3" /> Add New
                           </button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl w-[96vw] sm:w-full rounded-[56px] border-none p-0 overflow-hidden shadow-3xl bg-white/90 backdrop-blur-3xl z-[110]">
-                          <div className="bg-primary p-12 text-white relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12">
-                              <MapPin className="w-32 h-32" />
+                        <DialogContent className="max-w-md w-[94vw] rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white z-[110]">
+                          <div className="bg-primary p-8 text-white relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
+                              <MapPin className="w-20 h-20" />
                             </div>
-                            <DialogTitle className="text-3xl font-black tracking-tighter uppercase font-outfit">Delivery Point Matrix</DialogTitle>
-                            <DialogDescription className="text-[10px] font-black text-white/60 tracking-[0.3em] mt-3 uppercase">
-                              Securely register destination coordinates
+                            <DialogTitle className="text-xl font-black tracking-tighter uppercase font-outfit">Delivery Point</DialogTitle>
+                            <DialogDescription className="text-[8px] font-black text-white/60 tracking-[0.2em] mt-2 uppercase">
+                              Register coordinates
                             </DialogDescription>
                           </div>
-                          <div className="p-10 space-y-8">
-                            <div className="space-y-3">
-                              <Label className="text-[10px] font-black tracking-[0.2em] text-slate-400 ml-2 uppercase opacity-60">Classification</Label>
+                          <div className="p-6 space-y-6">
+                            <div className="space-y-2">
+                              <Label className="text-[9px] font-black tracking-[0.1em] text-slate-400 ml-1 uppercase opacity-60">Classification</Label>
                               <Select value={addressForm.tag} onValueChange={(v) => setAddressForm({...addressForm, tag: v})}>
-                                <SelectTrigger className="h-16 rounded-[24px] bg-slate-50 border-none font-black text-xs px-6 uppercase tracking-widest shadow-inner">
+                                <SelectTrigger className="h-12 rounded-[16px] bg-slate-50 border-none font-black text-[10px] px-4 uppercase tracking-widest shadow-inner">
                                   <SelectValue placeholder="Select Tag" />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-[32px] border-none shadow-3xl p-2 bg-white/95 backdrop-blur-xl">
-                                  <SelectItem value="Home" className="font-black text-[10px] tracking-widest uppercase">Home Registry</SelectItem>
-                                  <SelectItem value="Office" className="font-black text-[10px] tracking-widest uppercase">Office Registry</SelectItem>
-                                  <SelectItem value="Other" className="font-black text-[10px] tracking-widest uppercase">External Base</SelectItem>
+                                <SelectContent className="rounded-[24px] border-none shadow-3xl p-1 bg-white">
+                                  <SelectItem value="Home" className="font-black text-[9px] tracking-widest uppercase">Home Registry</SelectItem>
+                                  <SelectItem value="Office" className="font-black text-[9px] tracking-widest uppercase">Office Registry</SelectItem>
+                                  <SelectItem value="Other" className="font-black text-[9px] tracking-widest uppercase">External Base</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
-                            <div className="space-y-4">
-                              <div className="flex justify-between items-center px-2">
-                                <Label className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase opacity-60">Destination Address</Label>
-                                <button onClick={handleLocate} className="text-[10px] font-black text-primary tracking-[0.2em] flex items-center gap-2 hover:underline uppercase">
-                                  {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <LocateFixed className="w-4 h-4" />}
-                                  Sync GPS
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center px-1">
+                                <Label className="text-[9px] font-black tracking-[0.1em] text-slate-400 uppercase opacity-60">Address Details</Label>
+                                <button type="button" onClick={handleLocate} className="text-[9px] font-black bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full border border-emerald-100 flex items-center gap-1.5 hover:bg-emerald-100 transition-all uppercase shadow-sm">
+                                  {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LocateFixed className="w-3.5 h-3.5" />}
+                                  Sync GPS (Autofill)
                                 </button>
                               </div>
                               <Input 
                                 value={addressForm.street} 
                                 onChange={e => setAddressForm({...addressForm, street: e.target.value})}
                                 placeholder="HOUSE NO, SECTOR, LOCALITY"
-                                className="h-16 rounded-[24px] bg-slate-50 border-none font-black text-xs px-6 uppercase tracking-tight shadow-inner"
+                                className="h-12 rounded-[16px] bg-slate-50 border-none font-black text-[10px] px-4 uppercase tracking-tight shadow-inner"
                               />
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                              <div className="space-y-3">
-                                <Label className="text-[10px] font-black tracking-[0.2em] text-slate-400 ml-2 uppercase opacity-60">Reference Marker</Label>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-[9px] font-black tracking-[0.1em] text-slate-400 ml-1 uppercase opacity-60">Reference</Label>
                                 <Input 
                                   value={addressForm.landmark} 
                                   onChange={e => setAddressForm({...addressForm, landmark: e.target.value})}
-                                  placeholder="LANDMARK (OPTIONAL)"
-                                  className="h-16 rounded-[24px] bg-slate-50 border-none font-black text-xs px-6 uppercase tracking-tight shadow-inner"
+                                  placeholder="LANDMARK"
+                                  className="h-12 rounded-[16px] bg-slate-50 border-none font-black text-[10px] px-4 uppercase tracking-tight shadow-inner"
                                 />
                               </div>
-                              <div className="space-y-3">
-                                <Label className="text-[10px] font-black tracking-[0.2em] text-slate-400 ml-2 uppercase opacity-60">Hub Code</Label>
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-black tracking-[0.1em] text-slate-400 ml-1 uppercase opacity-60">PIN Code</Label>
                                 <Input 
                                   value={addressForm.pincode} 
                                   onChange={e => setAddressForm({...addressForm, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})}
-                                  placeholder="6-DIGIT PIN"
-                                  className="h-16 rounded-[24px] bg-slate-50 border-none font-black text-xs px-6 uppercase tracking-[0.5em] text-center shadow-inner"
+                                  placeholder="6-DIGIT"
+                                  className="h-12 rounded-[16px] bg-slate-50 border-none font-black text-[10px] px-4 uppercase tracking-[0.3em] text-center shadow-inner"
                                 />
                               </div>
                             </div>
-                            <Button onClick={handleSaveAddress} className="w-full h-20 rounded-full font-black text-xs tracking-[0.3em] gap-4 shadow-2xl shadow-primary/20 bg-primary text-white uppercase active:scale-95 transition-all">
-                              <Save className="w-6 h-6" /> Commit Protocol
+                            <Button onClick={handleSaveAddress} className="w-full h-14 rounded-full font-black text-[10px] tracking-[0.2em] gap-3 shadow-xl shadow-primary/20 bg-primary text-white uppercase active:scale-95 transition-all">
+                              <Save className="w-5 h-5" /> Confirm Point
                             </Button>
                           </div>
                         </DialogContent>
@@ -447,23 +447,25 @@ export default function ProfilePage() {
                  transition={{ delay: 0.5 }}
                  className="space-y-8 sticky top-32"
                >
-                  <h2 className="text-[10px] font-black tracking-[0.4em] text-slate-400 ml-8 uppercase">Application Nexus</h2>
+                  <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 ml-4 uppercase">SahiMed App</h2>
                   <div 
                     onClick={handleInstallClick}
-                    className="bg-primary p-12 rounded-[56px] border border-white/20 flex flex-col items-center text-center gap-8 cursor-pointer hover:shadow-primary/30 transition-all group shadow-3xl relative overflow-hidden"
+                    className="bg-primary p-8 rounded-[40px] border border-white/20 flex flex-col items-center text-center gap-6 cursor-pointer hover:shadow-primary/30 transition-all group shadow-2xl relative overflow-hidden"
                   >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16" />
-                    <div className="w-16 h-16 bg-white rounded-[24px] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500 relative z-10"><SmartphoneNfc className="w-8 h-8 text-primary" /></div>
-                    <div className="relative z-10">
-                      <h3 className="text-xl font-black text-white tracking-tight font-outfit uppercase">SahiMed Terminal</h3>
-                      <p className="text-[10px] text-white/60 font-black mt-4 max-w-[200px] leading-relaxed tracking-widest uppercase">Install for maximum logistics optimization and push synchronicity.</p>
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-12 -mt-12" />
+                    <div className="w-12 h-12 bg-white rounded-[16px] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500 relative z-10">
+                      <Smartphone className="w-6 h-6 text-primary" />
                     </div>
-                    <Button className="w-full rounded-full h-18 font-black text-[10px] tracking-[0.3em] gap-4 shadow-2xl bg-white text-primary hover:bg-slate-50 uppercase active:scale-95 transition-all relative z-10">
-                      <Download className="w-5 h-5" /> Integrate Matrix
+                    <div className="relative z-10">
+                      <h3 className="text-lg font-black text-white tracking-tight font-outfit uppercase leading-none">Download SahiMed App</h3>
+                      <p className="text-[8px] text-white/50 font-black mt-3 max-w-[180px] leading-relaxed tracking-widest uppercase italic">Install for premium healthcare logistics.</p>
+                    </div>
+                    <Button className="w-full rounded-full h-14 font-black text-[9px] tracking-[0.2em] gap-3 shadow-xl bg-white text-primary hover:bg-slate-50 uppercase active:scale-95 transition-all relative z-10">
+                      <Download className="w-4 h-4" /> Download Now
                     </Button>
-                    <div className="flex items-center gap-3 opacity-40 relative z-10">
-                       <Sparkles className="w-4 h-4 text-white" />
-                       <span className="text-[8px] font-black text-white tracking-[0.4em] uppercase">Premium PWA Integration</span>
+                    <div className="flex items-center gap-2 opacity-30 relative z-10">
+                       <Zap className="w-3 h-3 text-white" />
+                       <span className="text-[7px] font-black text-white tracking-[0.3em] uppercase">PWA Optimized</span>
                     </div>
                   </div>
                   
