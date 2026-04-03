@@ -113,7 +113,7 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
   const catsQuery = useMemoFirebase(() => query(collection(db, 'categories'), orderBy('name', 'asc')), [db]);
   const { data: categories } = useCollection(catsQuery);
 
-  const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles'), orderBy('updatedAt', 'desc'), limit(500)), [db]);
+  const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles'), orderBy('phone', 'asc'), limit(500)), [db]);
   const { data: users } = useCollection(usersQuery);
 
   const [form, setForm] = useState({ 
@@ -128,7 +128,13 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
     scopeValue: initialData?.scopeValue || '',
     isFirstOrderOnly: initialData?.isFirstOrderOnly || false,
     isActive: initialData?.isActive ?? true,
-    customRules: initialData?.customRules || []
+    rules: initialData?.rules || {
+      categories: [],
+      products: [],
+      patients: [],
+      isBrandedOnly: false,
+      isGenericOnly: false
+    }
   });
 
   const [medSearch, setMedSearch] = useState('');
@@ -213,17 +219,17 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
               <SelectItem value="product">Item Level (Medicine Search)</SelectItem>
               <SelectItem value="branded">Branded Products Only</SelectItem>
               <SelectItem value="generic">Generic Products Only</SelectItem>
-              <SelectItem value="custom">Custom Protocol Wise / Custom Rules</SelectItem>
+              <SelectItem value="custom">Custom Protocol / Rule Matrix</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
           <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
             {form.scope === 'global' ? 'Marketing Description' : 
-             form.scope === 'customer' ? 'Targeted Patient Mobile' :
-             form.scope === 'category' ? 'Targeted Category' :
-             form.scope === 'product' ? 'Search Clinical Master' :
-             form.scope === 'custom' ? 'Multivariate Matrix' :
+             form.scope === 'customer' ? 'Firestore Lookup' :
+             form.scope === 'category' ? 'Firestore Taxonomy' :
+             form.scope === 'product' ? 'MongoDB Catalog' :
+             form.scope === 'custom' ? 'Multivariate Selector' :
              'Inclusion Value'}
           </Label>
 
@@ -238,20 +244,20 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
             <Popover open={isMedOpen} onOpenChange={setIsMedOpen} modal={true}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-sm uppercase text-slate-900 shadow-none overflow-hidden">
-                  <span className="truncate">{form.scopeValue || "SEARCH CATALOG..."}</span>
+                  <span className="truncate">{form.scopeValue || "SEARCH MONGODB..."}</span>
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-3xl border-none shadow-3xl bg-white/95 backdrop-blur-xl z-[250]" align="start">
                 <div className="p-4 border-b border-slate-100 flex items-center gap-3">
                   <Search className="w-4 h-4 text-slate-400" />
-                  <Input placeholder="Type medicine name..." value={medSearch} onChange={e => setMedSearch(e.target.value)} className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0 shadow-none" />
+                  <Input autoFocus placeholder="Type medicine name..." value={medSearch} onChange={e => setMedSearch(e.target.value)} className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0 shadow-none" />
                 </div>
                 <ScrollArea className="h-[300px] p-2">
                   {isMedSearching ? (
                     <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
                   ) : medSuggestions.length === 0 ? (
-                    <div className="py-6 px-4 text-center text-[10px] font-black text-slate-400 uppercase">No matches</div>
+                    <div className="py-6 px-4 text-center text-[10px] font-black text-slate-400 uppercase">Search MongoDB Registry</div>
                   ) : (
                     medSuggestions.map((med) => (
                       <button key={med._id || med.id} type="button" onClick={() => { setForm({...form, scopeValue: med.name}); setIsMedOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group">
@@ -270,54 +276,113 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
              <Popover open={isUserOpen} onOpenChange={setIsUserOpen} modal={true}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-sm uppercase text-slate-900 shadow-none">
-                  {form.scopeValue || "SELECT MOBILE..."}
+                  {form.scopeValue || "FIRESTORE SEARCH..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-3xl border-none shadow-3xl bg-white/95 backdrop-blur-xl z-[250]" align="start">
                 <div className="p-4 border-b border-slate-100 flex items-center gap-3">
                   <Search className="w-4 h-4 text-slate-400" />
-                  <Input placeholder="Type mobile..." value={userSearch} onChange={e => setUserSearch(e.target.value)} className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0 shadow-none" />
+                  <Input autoFocus placeholder="Type mobile or name..." value={userSearch} onChange={e => setUserSearch(e.target.value)} className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0 shadow-none" />
                 </div>
                 <ScrollArea className="h-[300px] p-2">
-                  {users?.filter((u: any) => u.phone?.includes(userSearch) || u.name?.toLowerCase().includes(userSearch.toLowerCase())).map((u: any) => (
-                    <button key={u.id} type="button" onClick={() => { setForm({...form, scopeValue: u.phone}); setIsUserOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-black text-[12px] uppercase truncate tracking-tight">{u.name || 'Anonymous'}</p>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase opacity-60">{u.phone}</p>
-                      </div>
-                      {form.scopeValue === u.phone && <Check className="w-4 h-4 text-primary" />}
-                    </button>
-                  ))}
+                  {!users ? (
+                    <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+                  ) : users.filter((u: any) => String(u.phone)?.includes(userSearch) || String(u.name)?.toLowerCase().includes(userSearch.toLowerCase())).length === 0 ? (
+                    <div className="py-6 px-4 text-center text-[10px] font-black text-slate-400 uppercase">No firestore matches</div>
+                  ) : (
+                    users.filter((u: any) => String(u.phone)?.includes(userSearch) || String(u.name)?.toLowerCase().includes(userSearch.toLowerCase())).map((u: any) => (
+                      <button key={u.id} type="button" onClick={() => { setForm({...form, scopeValue: u.phone}); setIsUserOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-[12px] uppercase truncate tracking-tight">{u.name || 'Anonymous'}</p>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase opacity-60 tracking-wider font-mono">{u.phone}</p>
+                        </div>
+                        {form.scopeValue === u.phone && <Check className="w-4 h-4 text-primary" />}
+                      </button>
+                    ))
+                  )}
                 </ScrollArea>
               </PopoverContent>
             </Popover>
           ) : form.scope === 'custom' ? (
             <Popover open={isCustomOpen} onOpenChange={setIsCustomOpen} modal={true}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-[10px] uppercase tracking-widest text-primary shadow-none">
-                  {form.customRules?.length > 0 ? `${form.customRules.length} CRITERIA SELECTED` : "MULTI-CRITERIA SELECT..."}
+                <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-xs uppercase tracking-widest text-primary shadow-none">
+                  AUTHORIZE RULE MATRIX
                   <Plus className="ml-2 h-4 w-4 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[300px] p-0 rounded-3xl border-none shadow-3xl bg-white z-[250] overflow-hidden" align="start">
-                <div className="p-5 border-b border-slate-50">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Logistical Constraints</p>
+              <PopoverContent className="w-[400px] p-0 rounded-[32px] border-none shadow-3xl bg-white z-[250] overflow-hidden" align="start">
+                <div className="p-6 bg-slate-50 border-b border-slate-100">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Protocol Orchestrator</p>
                 </div>
-                <ScrollArea className="h-[300px] p-2">
-                  {['Branded Mode', 'Generic Mode', 'First Order Restricted', 'VIP Exclusive', 'Flash Sale'].map(rule => (
-                    <button key={rule} type="button" className="w-full flex items-center space-x-3 p-4 rounded-xl hover:bg-slate-50 transition-all cursor-pointer text-left" onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const exists = form.customRules.includes(rule);
-                      const newRules = exists ? (form.customRules as string[]).filter(r => r !== rule) : [...form.customRules, rule];
-                      setForm({ ...form, customRules: newRules });
-                    }}>
-                      <Checkbox id={`rule-${rule}`} checked={form.customRules.includes(rule)} onCheckedChange={() => {}} className="pointer-events-none" />
-                      <Label className="text-[10px] font-black uppercase cursor-pointer flex-1 pointer-events-none">{rule}</Label>
-                    </button>
-                  ))}
+                <ScrollArea className="h-[450px] p-6">
+                  <div className="space-y-8">
+                    <div className="space-y-4">
+                      <p className="text-[9px] font-black text-primary uppercase tracking-widest">Therapeutic Constraints</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button type="button" onClick={() => setForm({...form, rules: {...form.rules, isBrandedOnly: !form.rules.isBrandedOnly, isGenericOnly: false}})} 
+                          className={cn("p-4 rounded-2xl border-2 transition-all text-left", form.rules.isBrandedOnly ? "border-primary bg-primary/5" : "border-slate-50 bg-white opacity-60")}>
+                          <p className="text-[10px] font-black uppercase">Branded Only</p>
+                        </button>
+                        <button type="button" onClick={() => setForm({...form, rules: {...form.rules, isGenericOnly: !form.rules.isGenericOnly, isBrandedOnly: false}})} 
+                          className={cn("p-4 rounded-2xl border-2 transition-all text-left", form.rules.isGenericOnly ? "border-primary bg-primary/5" : "border-slate-50 bg-white opacity-60")}>
+                          <p className="text-[10px] font-black uppercase">Generic Only</p>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 pt-4 border-t border-slate-50">
+                      <p className="text-[9px] font-black text-primary uppercase tracking-widest">Category Whitelist (Firestore)</p>
+                      <Select value={form.rules.categories?.[0]} onValueChange={v => setForm({...form, rules: {...form.rules, categories: [v]}})}>
+                        <SelectTrigger className="rounded-xl h-12 bg-slate-50 border-none font-bold text-[10px] uppercase"><SelectValue placeholder="Add Category..." /></SelectTrigger>
+                        <SelectContent className="z-[300]">
+                          {categories?.map((cat: any) => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-4 pt-4 border-t border-slate-50">
+                      <p className="text-[9px] font-black text-primary uppercase tracking-widest">Clinical Entity (MongoDB)</p>
+                      <div className="relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-300" />
+                        <Input placeholder="Search medicine..." value={medSearch} onChange={e => setMedSearch(e.target.value)} className="pl-10 rounded-xl h-12 bg-slate-50 border-none font-bold text-[10px] uppercase" />
+                      </div>
+                      {medSuggestions.length > 0 && medSearch.length >= 2 && (
+                         <div className="max-h-40 overflow-y-auto space-y-1 p-1 bg-slate-50 rounded-xl">
+                          {medSuggestions.map(med => (
+                            <button key={med._id || med.id} type="button" onClick={() => setForm({...form, rules: {...form.rules, products: [med.name]}, scopeValue: med.name})} className="w-full p-2 text-[9px] font-bold uppercase hover:bg-white rounded-lg text-left flex justify-between">
+                              {med.name}
+                              {form.rules.products?.includes(med.name) && <Check className="w-3 h-3 text-primary" />}
+                            </button>
+                          ))}
+                         </div>
+                      )}
+                    </div>
+
+                     <div className="space-y-4 pt-4 border-t border-slate-50">
+                      <p className="text-[9px] font-black text-primary uppercase tracking-widest">Patient Lock (Firestore)</p>
+                      <div className="relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-300" />
+                        <Input placeholder="Search phone..." value={userSearch} onChange={e => setUserSearch(e.target.value)} className="pl-10 rounded-xl h-12 bg-slate-50 border-none font-bold text-[10px] uppercase" />
+                      </div>
+                      {users && userSearch.length >= 2 && (
+                         <div className="max-h-40 overflow-y-auto space-y-1 p-1 bg-slate-50 rounded-xl">
+                          {users.filter((u: any) => String(u.phone)?.includes(userSearch)).map(u => (
+                            <button key={u.id} type="button" onClick={() => setForm({...form, rules: {...form.rules, patients: [u.phone]}, scopeValue: u.phone})} className="w-full p-2 text-[9px] font-bold uppercase hover:bg-white rounded-lg text-left flex justify-between">
+                              {u.phone} ({u.name || 'User'})
+                              {form.rules.patients?.includes(u.phone) && <Check className="w-3 h-3 text-primary" />}
+                            </button>
+                          ))}
+                         </div>
+                      )}
+                    </div>
+                  </div>
                 </ScrollArea>
+                <div className="p-6 bg-primary text-white flex justify-between items-center">
+                   <p className="text-[10px] font-black uppercase tracking-widest">Authorize Changes</p>
+                   <Button variant="ghost" type="button" onClick={() => setIsCustomOpen(false)} className="text-white hover:bg-white/10 rounded-full h-10 w-10 p-0 transition-transform active:scale-95"><Check className="w-5 h-5" /></Button>
+                </div>
               </PopoverContent>
             </Popover>
           ) : (
