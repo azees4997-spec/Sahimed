@@ -312,36 +312,36 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
           >
             <Tabs defaultValue="clinical" className="w-full">
               <TabsList className="bg-slate-50 p-1 rounded-full h-10 sm:h-14 w-full max-w-[500px] flex mx-auto mb-8 border border-slate-100 shadow-inner">
-                <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Intelligence</TabsTrigger>
-                <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Protocol</TabsTrigger>
-                <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Matrix</TabsTrigger>
+                <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">{product?.clinicalTabLabel || "Intelligence"}</TabsTrigger>
+                <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">{product?.safetyTabLabel || "Protocol"}</TabsTrigger>
+                <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">{product?.matrixTabLabel || "Matrix"}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="clinical" className="space-y-10 focus-visible:outline-none">
-                 <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="bg-lavender p-10 rounded-[40px] border border-white space-y-4 shadow-sm">
-                       <div className="flex items-center gap-4"><ClipboardList className="w-5 h-5 text-primary" /><h3 className="text-lg font-black text-slate-800 tracking-tighter font-outfit uppercase">Clinical Indication</h3></div>
-                       <p className="text-[11px] font-black text-slate-500 leading-relaxed uppercase opacity-70 tracking-tight">{product?.treatment || "Standard clinical protocol."}</p>
+                 <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-8">
+                    <div className="bg-lavender p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-white space-y-2 sm:space-y-4 shadow-sm">
+                       <div className="flex items-center gap-2 sm:gap-4"><ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /><h3 className="text-[10px] sm:text-lg font-black text-slate-800 tracking-tighter font-outfit uppercase">Clinical Indication</h3></div>
+                       <p className="text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase opacity-70 tracking-tight">{product?.treatment || "Standard clinical protocol."}</p>
                     </div>
-                    <div className="bg-sahi-blue p-10 rounded-[40px] border border-white space-y-4 shadow-sm">
-                       <div className="flex items-center gap-4"><Info className="w-5 h-5 text-primary" /><h3 className="text-lg font-black text-slate-800 tracking-tighter font-outfit uppercase">Pharmacology</h3></div>
-                       <p className="text-[11px] font-black text-slate-500 leading-relaxed uppercase opacity-70 tracking-tight">{product?.description || "Active medical formulation."}</p>
+                    <div className="bg-sahi-blue p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-white space-y-2 sm:space-y-4 shadow-sm">
+                       <div className="flex items-center gap-2 sm:gap-4"><Info className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /><h3 className="text-[10px] sm:text-lg font-black text-slate-800 tracking-tighter font-outfit uppercase">Pharmacology</h3></div>
+                       <p className="text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase opacity-70 tracking-tight">{product?.description || "Active medical formulation."}</p>
                     </div>
                   </div>
               </TabsContent>
 
-              <TabsContent value="safety" className="grid grid-cols-1 md:grid-cols-2 gap-8 focus-visible:outline-none">
-                 <div className="bg-sahi-pink border border-white p-10 rounded-[40px] flex gap-6 shadow-sm">
-                   <div className="w-16 h-16 bg-white rounded-[24px] flex items-center justify-center shrink-0 shadow-lg"><AlertTriangle className="w-6 h-6 text-rose-500" /></div>
-                   <div><h4 className="text-xs font-black text-rose-600 mb-2 uppercase tracking-widest">Protocol Caution</h4><p className="text-[10px] font-black text-rose-900/60 leading-relaxed uppercase tracking-tight">{product?.safetyAdvice || "Follow clinical guidance."}</p></div>
+              <TabsContent value="safety" className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-8 focus-visible:outline-none">
+                 <div className="bg-sahi-pink border border-white p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] flex flex-col sm:flex-row gap-4 sm:gap-6 shadow-sm">
+                   <div className="w-10 h-10 sm:w-16 sm:h-16 bg-white rounded-[16px] sm:rounded-[24px] flex items-center justify-center shrink-0 shadow-lg"><AlertTriangle className="w-4 h-4 sm:w-6 sm:h-6 text-rose-500" /></div>
+                   <div><h4 className="text-[8px] sm:text-xs font-black text-rose-600 mb-1 sm:mb-2 uppercase tracking-widest">Protocol Caution</h4><p className="text-[8px] sm:text-[10px] font-black text-rose-900/60 leading-tight sm:leading-relaxed uppercase tracking-tight">{product?.safetyAdvice || "Follow clinical guidance."}</p></div>
                  </div>
-                 <div className="bg-sahi-blue border border-white p-10 rounded-[40px] flex gap-6 shadow-sm">
-                   <div className="w-16 h-16 bg-white rounded-[24px] flex items-center justify-center shrink-0 shadow-lg"><Stethoscope className="w-6 h-6 text-primary" /></div>
-                   <div><h4 className="text-xs font-black text-primary mb-2 uppercase tracking-widest">Usage Gateway</h4><p className="text-[10px] font-black text-slate-500 leading-relaxed uppercase tracking-tight">{product?.howToUse || "Execute as professionally directed."}</p></div>
+                 <div className="bg-sahi-blue border border-white p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] flex flex-col sm:flex-row gap-4 sm:gap-6 shadow-sm">
+                   <div className="w-10 h-10 sm:w-16 sm:h-16 bg-white rounded-[16px] sm:rounded-[24px] flex items-center justify-center shrink-0 shadow-lg"><Stethoscope className="w-4 h-4 sm:w-6 sm:h-6 text-primary" /></div>
+                   <div><h4 className="text-[8px] sm:text-xs font-black text-primary mb-1 sm:mb-2 uppercase tracking-widest">Usage Gateway</h4><p className="text-[8px] sm:text-[10px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase tracking-tight">{product?.howToUse || "Execute as professionally directed."}</p></div>
                  </div>
               </TabsContent>
 
-              <TabsContent value="interactions" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 focus-visible:outline-none">
+              <TabsContent value="interactions" className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 focus-visible:outline-none">
                 {[
                   { icon: FlaskConical, title: "Composition", text: product?.saltComposition, color: "bg-lavender" },
                   { icon: Baby, title: "Pregnancy", text: product?.pregnancyInteraction, color: "bg-sahi-pink" },
@@ -353,12 +353,12 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                   <motion.div 
                     key={i} 
                     variants={fadeInVariant}
-                    className={cn("p-8 rounded-[32px] flex flex-col gap-5 border border-white shadow-sm", item.color)}
+                    className={cn("p-4 sm:p-8 rounded-[24px] sm:rounded-[32px] flex flex-col gap-3 sm:gap-5 border border-white shadow-sm", item.color)}
                   >
-                    <div className="w-12 h-12 bg-white rounded-[16px] flex items-center justify-center text-primary shrink-0 shadow-sm border border-slate-50"><item.icon className="w-5 h-5" /></div>
-                    <div className="flex flex-col gap-1">
-                      <h4 className="text-[9px] font-black tracking-[0.2em] text-slate-500/60 uppercase">{item.title}</h4>
-                      <p className="text-[11px] font-black text-slate-800 leading-tight uppercase tracking-tight">{item.text || "PROTOCOL APPLICABLE"}</p>
+                    <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[12px] sm:rounded-[16px] flex items-center justify-center text-primary shrink-0 shadow-sm border border-slate-50"><item.icon className="w-4 h-4 sm:w-5 sm:h-5" /></div>
+                    <div className="flex flex-col gap-0.5 sm:gap-1">
+                      <h4 className="text-[7px] sm:text-[9px] font-black tracking-[0.2em] text-slate-500/60 uppercase">{item.title}</h4>
+                      <p className="text-[9px] sm:text-[11px] font-black text-slate-800 leading-tight uppercase tracking-tight line-clamp-2">{item.text || "PROTOCOL APPLICABLE"}</p>
                     </div>
                   </motion.div>
                 ))}

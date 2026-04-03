@@ -65,8 +65,12 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const downloadTemplate = () => {
-    const headers = ['id', 'name', 'sku', 'manufacturer', 'category', 'isGeneric', 'prescriptionRequired', 'packSize', 'imageUrl', 'imageUrl2', 'imageUrl3', 'description', 'treatment'];
-    const csv = headers.join(',') + '\n"","New Product","SKU001","Manufacturer","Category","false","false","10 Tablets","","","","Description","Treatment"';
+    const headers = [
+      'id', 'name', 'sku', 'manufacturer', 'category', 'isGeneric', 'prescriptionRequired', 'packSize', 'imageUrl', 'description', 'treatment', 
+      'safetyAdvice', 'howToUse', 'saltComposition', 'pregnancyInteraction', 'lactationInteraction', 'drivingInteraction', 'kidneyInteraction', 'liverInteraction',
+      'clinicalTabLabel', 'safetyTabLabel', 'matrixTabLabel'
+    ];
+    const csv = headers.join(',') + '\n"","New Product","SKU001","Manufacturer","Category","false","false","10 Tablets","","","","Description","Treatment","","","","","","","Intelligence","Protocol","Matrix"';
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -315,13 +319,68 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
   );
 }
 
+const LimitedInput = ({ label, value, onChange, limit, placeholder = "" }: any) => (
+  <div className="space-y-1.5 flex-1">
+    <div className="flex justify-between items-center px-1">
+      <Label className="text-[9px] font-black uppercase text-slate-400">{label}</Label>
+      <span className={cn("text-[8px] font-bold", (value?.length || 0) > limit ? "text-rose-500" : "text-slate-300")}>
+        {value?.length || 0}/{limit}
+      </span>
+    </div>
+    <Input 
+      value={value} 
+      onChange={e => onChange(e.target.value)} 
+      placeholder={placeholder}
+      className={cn("rounded-xl h-11 bg-gray-50 border-none font-black text-[11px] uppercase placeholder:text-slate-200", (value?.length || 0) > limit && "ring-1 ring-rose-500")} 
+    />
+  </div>
+);
+
+const LimitedTextarea = ({ label, value, onChange, limit, placeholder = "" }: any) => (
+  <div className="space-y-1.5 flex-1">
+    <div className="flex justify-between items-center px-1">
+      <Label className="text-[9px] font-black uppercase text-slate-400">{label}</Label>
+      <span className={cn("text-[8px] font-bold", (value?.length || 0) > limit ? "text-rose-500" : "text-slate-300")}>
+        {value?.length || 0}/{limit}
+      </span>
+    </div>
+    <Textarea 
+      value={value} 
+      onChange={e => onChange(e.target.value)} 
+      placeholder={placeholder}
+      className={cn("rounded-[20px] min-h-[80px] bg-gray-50 border-none font-bold text-[11px] p-4 uppercase placeholder:text-slate-200 scrollbar-hide", (value?.length || 0) > limit && "ring-1 ring-rose-500")} 
+    />
+  </div>
+);
+
 function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
   const { user } = useUser();
   const { toast } = useToast();
-  const molsQuery = useMemoFirebase(() => query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc'), limit(1000)), [db]);
-  const { data: molecules, isLoading: isMolsLoading } = useCollection(molsQuery);
+  const [molecules, setMolecules] = useState<any[]>([]);
+  const [isMolsLoading, setIsMolsLoading] = useState(false);
   const [molSearch, setMolSearch] = useState('');
   const [isMolOpen, setIsMolOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchMols = async () => {
+      setIsMolsLoading(true);
+      try {
+        const res = await fetch(`/api/molecules?q=${encodeURIComponent(molSearch)}&limit=20`);
+        if (res.ok) {
+          const data = await res.json();
+          setMolecules(data);
+        }
+      } catch (e) {
+        console.error("Molecule search fail:", e);
+      } finally {
+        setIsMolsLoading(false);
+      }
+    };
+
+    const t = setTimeout(fetchMols, 300);
+    return () => clearTimeout(t);
+  }, [molSearch]);
+
   const [form, setForm] = useState({
     name: initialData?.name || '',
     sku: initialData?.sku || '',
@@ -335,6 +394,16 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     description: initialData?.description || '',
     howToUse: initialData?.howToUse || '',
     treatment: initialData?.treatment || '',
+    saltComposition: initialData?.saltComposition || '',
+    safetyAdvice: initialData?.safetyAdvice || '',
+    pregnancyInteraction: initialData?.pregnancyInteraction || '',
+    lactationInteraction: initialData?.lactationInteraction || '',
+    drivingInteraction: initialData?.drivingInteraction || '',
+    kidneyInteraction: initialData?.kidneyInteraction || '',
+    liverInteraction: initialData?.liverInteraction || '',
+    clinicalTabLabel: initialData?.clinicalTabLabel || 'Intelligence',
+    safetyTabLabel: initialData?.safetyTabLabel || 'Protocol',
+    matrixTabLabel: initialData?.matrixTabLabel || 'Matrix',
     imageUrl: initialData?.imageUrl || '',
     imageUrl2: initialData?.imageUrls?.[1] || '',
     imageUrl3: initialData?.imageUrls?.[2] || ''
@@ -465,16 +534,19 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
             </div>
           </div>
         </TabsContent>
-        <TabsContent value="clinical" className="space-y-6">
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Molecule mapping</Label>
+        <TabsContent value="clinical" className="space-y-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="space-y-8 bg-slate-50/50 p-6 rounded-[32px] border border-slate-100">
+              <div className="flex items-center gap-3 mb-2 px-1">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"><Search className="w-4 h-4 text-primary" /></div>
+                <h3 className="font-black text-xs uppercase tracking-widest text-slate-900 border-none">Molecule mapping</h3>
+              </div>
               <Popover open={isMolOpen} onOpenChange={setIsMolOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     role="combobox"
-                    className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-bold text-slate-900"
+                    className="w-full h-14 rounded-2xl bg-white border border-slate-200 justify-between hover:bg-gray-50 px-6 font-bold text-slate-900 shadow-sm"
                   >
                     <span className="truncate">
                       {form.moleculeId 
@@ -499,16 +571,10 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                       <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
                     ) : (
                       <div className="space-y-1">
-                        {molecules?.filter(m => 
-                          m.molecule?.toLowerCase().includes(molSearch.toLowerCase()) || 
-                          m.masterId?.toLowerCase().includes(molSearch.toLowerCase())
-                        ).length === 0 ? (
+                        {molecules?.length === 0 ? (
                           <div className="py-6 px-4 text-center text-[10px] font-black text-slate-400 uppercase">No molecule matched</div>
                         ) : (
-                          molecules?.filter(m => 
-                            m.molecule?.toLowerCase().includes(molSearch.toLowerCase()) || 
-                            m.masterId?.toLowerCase().includes(molSearch.toLowerCase())
-                          ).map((mol) => (
+                          molecules?.map((mol) => (
                             <button
                               key={mol.id}
                               onClick={() => {
@@ -539,8 +605,40 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                 </PopoverContent>
               </Popover>
             </div>
-            <div className="space-y-2"><Label className="text-[10px] font-black">Primary treatment</Label><Input value={form.treatment} onChange={e => setForm({...form, treatment: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-            <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black">Clinical description</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" /></div>
+
+            <div className="space-y-6 bg-lavender/30 p-6 rounded-[32px] border border-white">
+               <div className="flex gap-4">
+                  <LimitedInput label="Intelligence Header" value={form.clinicalTabLabel} onChange={(v: string) => setForm({...form, clinicalTabLabel: v})} limit={20} placeholder="e.g. INTELLIGENCE" />
+               </div>
+               <div className="space-y-4">
+                  <LimitedTextarea label="Clinical Indication" value={form.treatment} onChange={(v: string) => setForm({...form, treatment: v})} limit={150} placeholder="Enter clinical usage..." />
+                  <LimitedTextarea label="Pharmacology" value={form.description} onChange={(v: string) => setForm({...form, description: v})} limit={150} placeholder="Enter medical formulation details..." />
+               </div>
+            </div>
+
+            <div className="space-y-6 bg-sahi-pink/10 p-6 rounded-[32px] border border-white">
+               <div className="flex gap-4">
+                  <LimitedInput label="Protocol Header" value={form.safetyTabLabel} onChange={(v: string) => setForm({...form, safetyTabLabel: v})} limit={20} placeholder="e.g. PROTOCOL" />
+               </div>
+               <div className="space-y-4">
+                  <LimitedTextarea label="Protocol Caution" value={form.safetyAdvice} onChange={(v: string) => setForm({...form, safetyAdvice: v})} limit={150} placeholder="Enter safety advice..." />
+                  <LimitedTextarea label="Usage Gateway" value={form.howToUse} onChange={(v: string) => setForm({...form, howToUse: v})} limit={150} placeholder="Enter how to use info..." />
+               </div>
+            </div>
+
+            <div className="space-y-6 bg-sahi-blue/5 p-6 rounded-[32px] border border-white">
+               <div className="flex gap-4">
+                  <LimitedInput label="Matrix Header" value={form.matrixTabLabel} onChange={(v: string) => setForm({...form, matrixTabLabel: v})} limit={20} placeholder="e.g. MATRIX" />
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <LimitedInput label="Composition" value={form.saltComposition} onChange={(v: string) => setForm({...form, saltComposition: v})} limit={50} />
+                  <LimitedInput label="Pregnancy" value={form.pregnancyInteraction} onChange={(v: string) => setForm({...form, pregnancyInteraction: v})} limit={50} />
+                  <LimitedInput label="Lactation" value={form.lactationInteraction} onChange={(v: string) => setForm({...form, lactationInteraction: v})} limit={50} />
+                  <LimitedInput label="Driving" value={form.drivingInteraction} onChange={(v: string) => setForm({...form, drivingInteraction: v})} limit={50} />
+                  <LimitedInput label="Renal" value={form.kidneyInteraction} onChange={(v: string) => setForm({...form, kidneyInteraction: v})} limit={50} />
+                  <LimitedInput label="Hepatic" value={form.liverInteraction} onChange={(v: string) => setForm({...form, liverInteraction: v})} limit={50} />
+               </div>
+            </div>
           </div>
         </TabsContent>
       </Tabs>

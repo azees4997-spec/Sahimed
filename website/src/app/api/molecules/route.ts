@@ -12,9 +12,24 @@ const getQuery = (id: string) => {
 
 export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const q = searchParams.get('q');
+    const limit = parseInt(searchParams.get('limit') || '50');
+
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const molecules = await db.collection('molecules').find({}).toArray();
+    
+    let query = {};
+    if (q) {
+      query = { molecule: { $regex: q, $options: 'i' } };
+    }
+
+    const molecules = await db.collection('molecules')
+      .find(query)
+      .sort({ molecule: 1 })
+      .limit(limit)
+      .toArray();
+
     return NextResponse.json(molecules.map(m => ({ ...m, id: m._id.toString() })));
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
