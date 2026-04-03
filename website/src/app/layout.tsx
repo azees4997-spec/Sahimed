@@ -23,8 +23,11 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'SahiMed | Clinical Healthcare Pharmacy',
-  description: 'SahiMed Pharmacy - High-end healthcare solutions and medicine delivery at the right price. Sahi Dawai, Sahi Daam Pe.',
+  title: {
+    default: 'SahiMed - Sahi Dawai, Sahi Daam Pe',
+    template: '%s | SahiMed'
+  },
+  description: 'SahiMed - Clinical Healthcare Pharmacy. High-quality medicine delivery at the right price. Sahi Dawai, Sahi Daam Pe.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -34,6 +37,10 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  }
 };
 
 export const viewport: Viewport = {
