@@ -7,6 +7,7 @@ import MobileCartBar from '@/components/MobileCartBar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import { Outfit, Poppins } from 'next/font/google';
+import LocationSync from '@/components/LocationSync';
 
 const outfit = Outfit({ 
   subsets: ['latin'],
@@ -53,6 +54,7 @@ export default function RootLayout({
     <html lang="en" className={`${outfit.variable} ${poppins.variable}`}>
       <body className="font-outfit antialiased bg-[#F8FAFC]">
         <FirebaseClientProvider>
+          <LocationSync />
           <CartProvider>
             <div className="flex flex-col min-h-screen">
               <main className="flex-1">

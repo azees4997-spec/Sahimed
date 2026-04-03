@@ -228,27 +228,25 @@ export default function ProfilePage() {
       <PageTransition>
         <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern">
           <Navbar />
-          <main className="max-w-md mx-auto px-6 py-32 text-center">
+          <main className="max-w-md mx-auto px-6 py-20 text-center flex flex-col items-center justify-center min-h-[60vh]">
             <motion.div 
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="w-32 h-32 bg-white rounded-[48px] shadow-2xl flex items-center justify-center mx-auto mb-12 border border-white"
+              className="w-24 h-24 bg-white rounded-[32px] shadow-xl flex items-center justify-center mx-auto mb-8 border border-white"
             >
-              <User className="w-12 h-12 text-slate-100" />
+              <User className="w-10 h-10 text-slate-200" />
             </motion.div>
-            <h1 className="text-4xl font-black tracking-tighter mb-4 text-slate-900 font-outfit uppercase">SahiMed Account</h1>
-            <p className="text-slate-400 font-black text-[10px] tracking-[0.3em] mb-16 leading-relaxed max-w-[280px] mx-auto uppercase">
-              Manage your professional health journey in one secure hub.
-            </p>
+            <h1 className="text-3xl font-black tracking-tighter mb-8 text-slate-900 font-outfit uppercase">SahiMed Account</h1>
+            
             <Link href="/login" className="w-full">
-              <Button className="w-full h-20 rounded-full font-black tracking-[0.3em] shadow-2xl shadow-primary/20 text-xs gap-4 uppercase bg-primary text-white">
-                <LogIn className="w-6 h-6" /> Authenticate
+              <Button className="w-full h-16 rounded-full font-black tracking-[0.2em] shadow-xl shadow-primary/20 text-[10px] gap-3 uppercase bg-primary text-white active:scale-95 transition-all">
+                <LogIn className="w-5 h-5" /> Login or Sign Up
               </Button>
             </Link>
-            <div className="mt-24 flex items-center justify-center gap-4 py-4 bg-white/40 backdrop-blur-md rounded-[32px] border border-white shadow-xl">
-              <ShieldCheck className="w-5 h-5 text-emerald-500" />
-              <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase">Secured SahiMed Portal Matrix</span>
-            </div>
+
+            <p className="mt-12 text-[8px] font-black text-slate-300 tracking-[0.3em] uppercase">
+              Join 10L+ Trusted Users
+            </p>
           </main>
         </div>
       </PageTransition>

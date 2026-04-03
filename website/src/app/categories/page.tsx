@@ -98,48 +98,32 @@ export default function CategoriesPage() {
                 </div>
               ))
             ) : displayCategories.map((cat: any, i) => {
-              const gradients = [
-                'from-blue-400 to-indigo-600',
-                'from-rose-400 to-orange-500',
-                'from-emerald-400 to-teal-600',
-                'from-violet-400 to-purple-600',
-                'from-amber-400 to-orange-600',
-                'from-cyan-400 to-blue-600'
-              ];
-              const gradient = gradients[i % gradients.length];
+              const colors = ["bg-lavender", "bg-sahi-pink", "bg-sahi-blue", "bg-sahi-green"];
+              const colorClass = colors[i % colors.length];
               
               return (
                 <motion.div key={i} variants={itemVariants}>
                   <Link 
                     href={`/search?c=${encodeURIComponent(cat.name)}`} 
-                    className="group relative bg-white border border-white/40 h-full rounded-[28px] sm:rounded-[40px] p-2.5 sm:p-6 flex flex-col items-center gap-2 sm:gap-4 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] active:scale-95 shadow-[0_10px_20px_-5px_rgba(0,0,0,0.05)] overflow-hidden"
+                    className="flex flex-col items-center gap-3 sm:gap-4 group"
                   >
-                    {/* 3D Gradient Background Layer */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-[0.03] group-hover:opacity-[0.08] transition-opacity`} />
-                    
-                    <div className="relative w-24 h-24 sm:w-40 sm:h-40 rounded-full flex items-center justify-center overflow-hidden shadow-[inset_0_2px_15px_rgba(0,0,0,0.05)] bg-slate-50 group-hover:scale-110 transition-transform duration-700">
-                      {cat.imageUrl ? (
-                        <Image 
-                          src={cat.imageUrl} 
-                          alt={cat.name} 
-                          fill 
-                          className="object-contain p-0.5 sm:p-1 group-hover:scale-110 transition-transform duration-700"
-                        />
-                      ) : (
-                        <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center opacity-80`}>
-                          <span className="text-white font-black text-xs sm:text-xl">{cat.name?.charAt(0)}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="space-y-0.5 flex flex-col items-center flex-1 w-full text-center">
-                      <span className="text-[9px] sm:text-xs font-black text-slate-800 uppercase tracking-tighter leading-[1.1] line-clamp-2 min-h-[2.2em] flex items-center justify-center">
-                        {cat.name}
-                      </span>
-                      <div className="flex justify-center items-center gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-y-1 group-hover:translate-y-0 duration-500 mt-auto">
-                        <span className="text-[6px] font-black text-primary uppercase tracking-widest">Select</span>
-                        <ArrowUpRight className="w-2 h-2 text-primary" />
-                      </div>
-                    </div>
+                    <motion.div 
+                      whileHover={{ y: -8, scale: 1.05 }}
+                      className={cn(
+                        "w-24 h-24 sm:w-44 sm:h-44 rounded-full flex items-center justify-center border-4 border-white shadow-xl overflow-hidden p-0 transition-transform duration-500",
+                        colorClass
+                      )}>
+                      <Image 
+                        src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/300/300`} 
+                        alt={cat.name} 
+                        width={200} 
+                        height={200} 
+                        className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700" 
+                      />
+                    </motion.div>
+                    <span className="text-[10px] sm:text-sm font-black text-slate-800 tracking-tight uppercase text-center line-clamp-2 h-8 px-1">
+                      {cat.name}
+                    </span>
                   </Link>
                 </motion.div>
               );
