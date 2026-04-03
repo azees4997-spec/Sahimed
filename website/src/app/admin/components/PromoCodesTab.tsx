@@ -110,11 +110,13 @@ export function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified:
 
 function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
   const { toast } = useToast();
-  const catsQuery = useMemoFirebase(() => query(collection(db, 'categories'), orderBy('name', 'asc')), [db]);
-  const { data: categories } = useCollection(catsQuery);
+  const [mongoCategories, setMongoCategories] = useState<any[]>([]);
+  useEffect(() => {
+    fetch('/api/categories?limit=100').then(res => res.ok && res.json()).then(data => data && setMongoCategories(data));
+  }, []);
 
-  const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles'), orderBy('phone', 'asc'), limit(500)), [db]);
-  const { data: users } = useCollection(usersQuery);
+  const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles'), limit(1000)), [db]);
+  const { data: users, isLoading: isUsersLoading } = useCollection(usersQuery);
 
   const [form, setForm] = useState({ 
     code: initialData?.code || '', 
@@ -237,14 +239,14 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
             <Select value={form.scopeValue} onValueChange={v => setForm({...form, scopeValue: v})}>
               <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-black text-sm px-6 uppercase tracking-tight focus:bg-white transition-colors"><SelectValue placeholder="SELECT CATEGORY..." /></SelectTrigger>
               <SelectContent className="rounded-2xl z-[230]">
-                {categories?.map((cat: any) => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
+                {mongoCategories?.map((cat: any) => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
               </SelectContent>
             </Select>
           ) : form.scope === 'product' ? (
             <Popover open={isMedOpen} onOpenChange={setIsMedOpen} modal={true}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-sm uppercase text-slate-900 shadow-none overflow-hidden">
-                  <span className="truncate">{form.scopeValue || "SEARCH MONGODB..."}</span>
+                  <span className="truncate">{form.scopeValue || "SEARCH CLINICAL MASTER..."}</span>
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -337,7 +339,7 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
                       <Select value={form.rules.categories?.[0]} onValueChange={v => setForm({...form, rules: {...form.rules, categories: [v]}})}>
                         <SelectTrigger className="rounded-xl h-12 bg-slate-50 border-none font-bold text-[10px] uppercase"><SelectValue placeholder="Add Category..." /></SelectTrigger>
                         <SelectContent className="z-[300]">
-                          {categories?.map((cat: any) => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
+                          {mongoCategories?.map((cat: any) => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
