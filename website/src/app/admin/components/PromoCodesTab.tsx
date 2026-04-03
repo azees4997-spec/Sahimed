@@ -167,7 +167,7 @@ function PromoCodeForm({ db, isVerified, initialData, onSuccess }: { db: any, is
   const [isUserSearching, setIsUserSearching] = useState(false);
   const [isUserOpen, setIsUserOpen] = useState(false);
 
-  // Clinical Item Search Logic
+  // Search Logics
   useEffect(() => {
     if (medSearch.trim().length >= 2) {
       setIsMedSearching(true);
@@ -185,7 +185,6 @@ function PromoCodeForm({ db, isVerified, initialData, onSuccess }: { db: any, is
     }
   }, [medSearch]);
 
-  // Patient Search Logic
   useEffect(() => {
     if (userSearch.trim().length >= 3 && isVerified) {
       setIsUserSearching(true);
@@ -217,6 +216,28 @@ function PromoCodeForm({ db, isVerified, initialData, onSuccess }: { db: any, is
       onSuccess();
     } catch (err: any) {
       toast({ variant: 'destructive', title: "Commit failed", description: err.message });
+    }
+  };
+
+  const removeItem = (type: 'categories' | 'products' | 'patients', val: string) => {
+    setForm(prev => ({
+      ...prev,
+      rules: {
+        ...prev.rules,
+        [type]: prev.rules[type].filter((x: string) => x !== val)
+      }
+    }));
+  };
+
+  const addItem = (type: 'categories' | 'products' | 'patients', val: string) => {
+    if (!form.rules[type]?.includes(val)) {
+      setForm(prev => ({
+        ...prev,
+        rules: {
+          ...prev.rules,
+          [type]: [...(prev.rules[type] || []), val]
+        }
+      }));
     }
   };
 
@@ -262,76 +283,111 @@ function PromoCodeForm({ db, isVerified, initialData, onSuccess }: { db: any, is
       </div>
 
       <div className="space-y-2 pt-2 border-t border-slate-50">
-        <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Applicability scope</Label>
+        <div className="flex items-center justify-between px-1">
+          <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Allowed Application Scope</Label>
+          <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest italic">Multi-Select Enabled</p>
+        </div>
         <Select value={form.scope} onValueChange={v => setForm({...form, scope: v})}>
-          <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-none font-black text-[11px] px-4 uppercase focus:bg-white transition-colors mb-2"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-none font-black text-[10px] px-4 uppercase focus:bg-white transition-colors mb-2"><SelectValue /></SelectTrigger>
           <SelectContent className="rounded-xl z-[300]">
-            <SelectItem value="global">Global (All Users & Items)</SelectItem>
-            <SelectItem value="customer">Customer Restricted</SelectItem>
-            <SelectItem value="category">Category Restricted</SelectItem>
-            <SelectItem value="product">Item Restricted</SelectItem>
-            <SelectItem value="branded">Branded Items Only</SelectItem>
+            <SelectItem value="global">Global (No Restrictions)</SelectItem>
+            <SelectItem value="customer">Allowed Customers</SelectItem>
+            <SelectItem value="category">Allowed Categories</SelectItem>
+            <SelectItem value="product">Allowed Medicines</SelectItem>
+            <SelectItem value="branded">Branded Products Only</SelectItem>
             <SelectItem value="generic">Generics Only</SelectItem>
-            <SelectItem value="custom">Custom Rule Matrix</SelectItem>
+            <SelectItem value="custom">Combined Rule Matrix</SelectItem>
           </SelectContent>
         </Select>
 
         <div className="min-h-[44px]">
           {form.scope === 'category' ? (
-            <Select value={form.scopeValue} onValueChange={v => setForm({...form, scopeValue: v})}>
-              <SelectTrigger className="h-11 rounded-xl bg-primary/5 text-primary border-none font-black text-[11px] px-4 uppercase"><SelectValue placeholder="Select Category..." /></SelectTrigger>
-              <SelectContent className="rounded-xl z-[310]">{mongoCategories?.map((cat: any) => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}</SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Select onValueChange={v => addItem('categories', v)}>
+                <SelectTrigger className="h-11 rounded-xl bg-primary/5 text-primary border-none font-black text-[10px] px-4 uppercase"><SelectValue placeholder="+ Click to Add Category..." /></SelectTrigger>
+                <SelectContent className="rounded-xl z-[310]">{mongoCategories?.map((cat: any) => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}</SelectContent>
+              </Select>
+              <div className="flex flex-wrap gap-1">
+                {form.rules.categories?.map((c: string) => <Badge key={c} variant="secondary" className="bg-primary/5 text-primary text-[8px] py-1 px-3 rounded-lg border-none flex items-center gap-2 font-black uppercase">
+                  {c} <X className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors" onClick={() => removeItem('categories', c)} />
+                </Badge>)}
+                {(!form.rules.categories || form.rules.categories.length === 0) && <p className="text-[8px] font-bold text-red-400 uppercase italic p-1">No categories selected - campaign restricted.</p>}
+              </div>
+            </div>
           ) : form.scope === 'product' ? (
-             <div className="relative">
-                <Button variant="outline" type="button" onClick={() => setIsMedOpen(!isMedOpen)} className="w-full h-11 rounded-xl bg-primary/5 text-primary border-none justify-between px-4 font-black text-[11px] uppercase shadow-none hover:bg-primary/10">
-                  <span className="truncate">{form.scopeValue || "Search Medicines..."}</span>
-                  <Search className="w-3 h-3 opacity-30" />
-                </Button>
-                {isMedOpen && (
-                  <div className="absolute bottom-full left-0 w-full mb-2 bg-white border border-slate-100 shadow-2xl rounded-2xl z-[350] overflow-hidden">
-                    <div className="p-3 border-b flex items-center gap-2">
-                      <Input autoFocus placeholder="Type code..." value={medSearch} onChange={e => setMedSearch(e.target.value)} onKeyDown={e => e.stopPropagation()} className="h-8 border-none font-black text-[10px] px-2 uppercase shadow-none" />
-                      <Button variant="ghost" size="icon" onClick={() => setIsMedOpen(false)} className="h-6 w-6"><X className="w-3 h-3"/></Button>
+             <div className="space-y-2">
+               <div className="relative">
+                  <Button variant="outline" type="button" onClick={() => setIsMedOpen(!isMedOpen)} className="w-full h-11 rounded-xl bg-primary/5 text-primary border-none justify-between px-4 font-black text-[10px] uppercase shadow-none hover:bg-primary/10 transition-colors">
+                    <span className="truncate">+ Search & Add Medicines...</span>
+                    <Search className="w-3 h-3 opacity-30" />
+                  </Button>
+                  {isMedOpen && (
+                    <div className="absolute bottom-full left-0 w-full mb-2 bg-white border border-slate-100 shadow-2xl rounded-2xl z-[350] overflow-hidden">
+                      <div className="p-3 border-b flex items-center gap-2">
+                        <Input autoFocus placeholder="Type code/name..." value={medSearch} onChange={e => setMedSearch(e.target.value)} onKeyDown={e => e.stopPropagation()} className="h-8 border-none font-black text-[9px] px-2 uppercase shadow-none ring-0 outline-none" />
+                        <Button variant="ghost" size="icon" onClick={() => {setIsMedOpen(false); setMedSearch('');}} className="h-6 w-6"><X className="w-3 h-3"/></Button>
+                      </div>
+                      <ScrollArea className="h-44">
+                        {isMedSearching ? <div className="p-10 text-center"><Loader2 className="animate-spin mx-auto w-4 h-4 text-primary" /></div> : medSuggestions.length === 0 ? (
+                          <div className="p-10 text-center text-[9px] font-black text-slate-300 uppercase tracking-widest">Type to search Catalog</div>
+                        ) : medSuggestions.map(m => (
+                          <button key={m.id || m._id} type="button" onClick={() => { addItem('products', m.name); setIsMedOpen(false); setMedSearch(''); }} className="w-full px-4 py-3 text-left hover:bg-primary/5 text-[10px] font-black uppercase border-b border-slate-50 flex justify-between items-center group">
+                            <span>{m.name}</span>
+                            <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        ))}
+                      </ScrollArea>
                     </div>
-                    <ScrollArea className="h-40">
-                      {medSuggestions.length === 0 ? (
-                        <div className="p-10 text-center text-[9px] font-black text-slate-300 uppercase">Search MongoDB...</div>
-                      ) : medSuggestions.map(m => (
-                        <button key={m.id || m._id} type="button" onClick={() => { setForm({...form, scopeValue: m.name}); setIsMedOpen(false); }} className="w-full px-4 py-3 text-left hover:bg-slate-50 text-[10px] font-black uppercase border-b border-slate-50">{m.name}</button>
-                      ))}
-                    </ScrollArea>
-                  </div>
-                )}
+                  )}
+               </div>
+               <div className="flex flex-wrap gap-1">
+                 {form.rules.products?.map((i: string) => <Badge key={i} variant="secondary" className="bg-primary/5 text-primary text-[8px] py-1 px-3 rounded-lg border-none flex items-center gap-2 font-black uppercase max-w-[150px] truncate">
+                   {i} <X className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors" onClick={() => removeItem('products', i)} />
+                 </Badge>)}
+                 {(!form.rules.products || form.rules.products.length === 0) && <p className="text-[8px] font-bold text-red-400 uppercase italic p-1">No medicines selected - campaign restricted.</p>}
+               </div>
              </div>
           ) : form.scope === 'customer' ? (
-             <div className="relative">
-                <Button variant="outline" type="button" onClick={() => setIsUserOpen(!isUserOpen)} className="w-full h-11 rounded-xl bg-primary/5 text-primary border-none justify-between px-4 font-black text-[11px] uppercase shadow-none hover:bg-primary/10">
-                  <span className="truncate">{form.scopeValue || "Find Patient..."}</span>
-                  <Search className="w-3 h-3 opacity-30" />
-                </Button>
-                {isUserOpen && (
-                  <div className="absolute bottom-full left-0 w-full mb-2 bg-white border border-slate-100 shadow-2xl rounded-2xl z-[350] overflow-hidden">
-                    <div className="p-3 border-b flex items-center gap-2">
-                      <Input autoFocus placeholder="Mobile..." value={userSearch} onChange={e => setUserSearch(e.target.value)} onKeyDown={e => e.stopPropagation()} className="h-8 border-none font-black text-[10px] px-2 uppercase shadow-none" />
-                      <Button variant="ghost" size="icon" onClick={() => setIsUserOpen(false)} className="h-6 w-6"><X className="w-3 h-3"/></Button>
+             <div className="space-y-2">
+               <div className="relative">
+                  <Button variant="outline" type="button" onClick={() => setIsUserOpen(!isUserOpen)} className="w-full h-11 rounded-xl bg-primary/5 text-primary border-none justify-between px-4 font-black text-[10px] uppercase shadow-none hover:bg-primary/10 transition-colors">
+                    <span className="truncate">+ Search & Add Patients...</span>
+                    <Search className="w-3 h-3 opacity-30" />
+                  </Button>
+                  {isUserOpen && (
+                    <div className="absolute bottom-full left-0 w-full mb-2 bg-white border border-slate-100 shadow-2xl rounded-2xl z-[350] overflow-hidden">
+                      <div className="p-3 border-b flex items-center gap-2">
+                        <Input autoFocus placeholder="Mobile number..." value={userSearch} onChange={e => setUserSearch(e.target.value)} onKeyDown={e => e.stopPropagation()} className="h-8 border-none font-black text-[9px] px-2 uppercase shadow-none" />
+                        <Button variant="ghost" size="icon" onClick={() => {setIsUserOpen(false); setUserSearch('');}} className="h-6 w-6"><X className="w-3 h-3"/></Button>
+                      </div>
+                      <ScrollArea className="h-44">
+                        {isUserSearching ? <div className="p-10 text-center"><Loader2 className="animate-spin mx-auto w-4 h-4 text-primary" /></div> : userSuggestions.length === 0 ? (
+                           <div className="p-10 text-center text-[9px] font-black text-slate-300 uppercase tracking-widest">Type to search Patients</div>
+                        ) : userSuggestions.map(u => (
+                          <button key={u.id} type="button" onClick={() => { addItem('patients', u.phone); setIsUserOpen(false); setUserSearch(''); }} className="w-full px-4 py-3 text-left hover:bg-primary/5 border-b border-slate-50 group flex justify-between items-center transition-colors">
+                            <div className="min-w-0">
+                              <p className="text-[10px] font-black uppercase tracking-tight truncate">{u.name || 'Patient'}</p>
+                              <p className="text-[8px] font-mono opacity-40 font-bold">{u.phone}</p>
+                            </div>
+                            <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        ))}
+                      </ScrollArea>
                     </div>
-                    <ScrollArea className="h-40">
-                      {userSuggestions.map(u => (
-                        <button key={u.id} type="button" onClick={() => { setForm({...form, scopeValue: u.phone}); setIsUserOpen(false); }} className="w-full px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-50">
-                          <p className="text-[10px] font-black uppercase tracking-tight">{u.name || 'Anonymous Patient'}</p>
-                          <p className="text-[9px] font-mono opacity-40 font-bold">{u.phone}</p>
-                        </button>
-                      ))}
-                    </ScrollArea>
-                  </div>
-                )}
+                  )}
+               </div>
+               <div className="flex flex-wrap gap-1">
+                 {form.rules.patients?.map((p: string) => <Badge key={p} variant="secondary" className="bg-primary/5 text-primary text-[8px] py-1 px-3 rounded-lg border-none flex items-center gap-2 font-black uppercase">
+                   {p} <X className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors" onClick={() => removeItem('patients', p)} />
+                 </Badge>)}
+                 {(!form.rules.patients || form.rules.patients.length === 0) && <p className="text-[8px] font-bold text-red-400 uppercase italic p-1">No patients selected - campaign restricted.</p>}
+               </div>
              </div>
           ) : form.scope === 'custom' ? (
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-4">
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-4 shadow-inner">
               <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">Rule Matrix Configuration</p>
-                <Button variant="ghost" type="button" onClick={() => setForm({...form, rules:{categories:[], products:[], patients:[], isBrandedOnly:false, isGenericOnly:false}})} className="h-5 text-[8px] font-black uppercase text-red-500 px-2 hover:bg-transparent">Reset Matrix</Button>
+                <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">Matrix configuration</p>
+                <Button variant="ghost" type="button" onClick={() => setForm({...form, rules:{categories:[], products:[], patients:[], isBrandedOnly:false, isGenericOnly:false}})} className="h-5 text-[8px] font-black uppercase text-red-500 px-2 hover:bg-transparent transition-colors">Clear All</Button>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -342,37 +398,56 @@ function PromoCodeForm({ db, isVerified, initialData, onSuccess }: { db: any, is
               </div>
 
               <div className="space-y-4">
-                <div className="space-y-1">
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Categories</p>
-                  <Select onValueChange={v => !form.rules.categories?.includes(v) && setForm({...form, rules: {...form.rules, categories: [...(form.rules.categories || []), v]}})}>
-                    <SelectTrigger className="h-8 rounded-lg bg-white border-slate-200 font-bold text-[10px] px-3 uppercase"><SelectValue placeholder="+ Category" /></SelectTrigger>
+                 <div className="space-y-1">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Allowed categories</p>
+                  <Select onValueChange={v => addItem('categories', v)}>
+                    <SelectTrigger className="h-8 rounded-lg bg-white border-slate-200 font-bold text-[9px] px-3 uppercase"><SelectValue placeholder="+ Category" /></SelectTrigger>
                     <SelectContent className="rounded-xl z-[310]">{mongoCategories?.map((cat: any) => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}</SelectContent>
                   </Select>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {form.rules.categories?.map((c: string) => <Badge key={c} variant="secondary" className="bg-white text-[8px] py-1 px-2 rounded-md border-slate-100 flex items-center gap-1 font-black">{c} <X className="w-2.5 h-2.5 cursor-pointer ml-1" onClick={() => setForm({...form, rules: {...form.rules, categories: form.rules.categories.filter((x: string) => x !== c)}})} /></Badge>)}
+                    {form.rules.categories?.map((c: string) => <Badge key={c} variant="secondary" className="bg-white text-[7px] py-1 px-2 rounded-md border-slate-100 flex items-center gap-1 font-black">{c} <X className="w-2.5 h-2.5 cursor-pointer ml-1 hover:text-red-500" onClick={() => removeItem('categories', c)} /></Badge>)}
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Medicines</p>
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Allowed medicines</p>
                   <div className="relative">
-                    <Input placeholder="Search catalog..." value={medSearch} onChange={e => setMedSearch(e.target.value)} className="h-8 rounded-lg bg-white border-slate-200 font-bold text-[10px] px-3 uppercase focus:bg-white" />
+                    <Input placeholder="Search catalog..." value={medSearch} onChange={e => setMedSearch(e.target.value)} className="h-8 rounded-lg bg-white border-slate-200 font-bold text-[9px] px-3 uppercase focus:bg-white transition-all shadow-none" />
                     {medSuggestions.length > 0 && medSearch.length >= 2 && (
                       <div className="absolute bottom-full left-0 w-full mb-1 bg-white border border-slate-100 shadow-2xl rounded-xl z-[400] max-h-32 overflow-y-auto">
                         {medSuggestions.map(m => (
-                          <button key={m.id || m._id} type="button" onClick={() => { if(!form.rules.products?.includes(m.name)) setForm({...form, rules: {...form.rules, products: [...(form.rules.products || []), m.name]}}); setMedSearch(''); }} className="w-full p-2.5 text-left hover:bg-primary/5 text-[9px] font-bold uppercase border-b border-slate-50">{m.name}</button>
+                          <button key={m.id || m._id} type="button" onClick={() => { addItem('products', m.name); setMedSearch(''); }} className="w-full p-2.5 text-left hover:bg-primary/5 text-[9px] font-bold uppercase border-b border-slate-50 transition-colors">{m.name}</button>
                         ))}
                       </div>
                     )}
                   </div>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {form.rules.products?.map((i: string) => <Badge key={i} variant="secondary" className="bg-white text-[8px] py-1 px-2 rounded-md border-slate-100 flex items-center gap-1 font-black max-w-[140px] truncate">{i} <X className="w-2.5 h-2.5 cursor-pointer ml-1" onClick={() => setForm({...form, rules: {...form.rules, products: form.rules.products.filter((x: string) => x !== i)}})} /></Badge>)}
+                    {form.rules.products?.map((i: string) => <Badge key={i} variant="secondary" className="bg-white text-[8px] py-1 px-2 rounded-md border-slate-100 flex items-center gap-1 font-black max-w-[140px] truncate">{i} <X className="w-2.5 h-2.5 cursor-pointer ml-1 hover:text-red-500" onClick={() => removeItem('products', i)} /></Badge>)}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Allowed patients</p>
+                  <div className="relative">
+                    <Input placeholder="Search phone..." value={userSearch} onChange={e => setUserSearch(e.target.value)} className="h-8 rounded-lg bg-white border-slate-200 font-bold text-[9px] px-3 uppercase focus:bg-white transition-all shadow-none" />
+                    {userSuggestions.length > 0 && userSearch.length >= 2 && (
+                      <div className="absolute bottom-full left-0 w-full mb-1 bg-white border border-slate-100 shadow-2xl rounded-xl z-[400] max-h-32 overflow-y-auto">
+                        {userSuggestions.map(u => (
+                          <button key={u.id} type="button" onClick={() => { addItem('patients', u.phone); setUserSearch(''); }} className="w-full p-2.5 text-left hover:bg-primary/5 text-[9px] font-bold uppercase border-b border-slate-50 transition-colors">
+                            {u.phone} <span className="opacity-40 ml-1">({u.name || 'User'})</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {form.rules.patients?.map((p: string) => <Badge key={p} variant="secondary" className="bg-white text-[8px] py-1 px-2 rounded-md border-slate-100 flex items-center gap-1 font-mono font-black">{p} <X className="w-2.5 h-2.5 cursor-pointer ml-1 hover:text-red-500" onClick={() => removeItem('patients', p)} /></Badge>)}
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            <Input value={form.scopeValue} onChange={e => setForm({...form, scopeValue: e.target.value})} className="h-11 rounded-xl bg-slate-50 border-none font-black text-[11px] px-4 uppercase focus:bg-white transition-all shadow-none" placeholder={form.scope === 'global' ? 'E.G. SUMMER BLITZ' : 'Enter Strategy Value'} />
+            <Input value={form.scopeValue} onChange={e => setForm({...form, scopeValue: e.target.value})} className="h-11 rounded-xl bg-slate-50 border-none font-black text-[10px] px-4 uppercase focus:bg-white transition-all shadow-none" placeholder={form.scope === 'global' ? 'E.G. SUMMER BLITZ 2024' : 'Enter target value...'} />
           )}
         </div>
       </div>
