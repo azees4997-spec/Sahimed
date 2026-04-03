@@ -311,7 +311,16 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
             </DialogDescription>
           </div>
           <div className="p-8 max-h-[80vh] overflow-y-auto scrollbar-hide">
-            {isFormOpen && <ItemForm db={db} initialData={editingItem} onSuccess={() => setIsFormOpen(false)} />}
+            {isFormOpen && (
+        <ItemForm 
+          db={db} 
+          initialData={editingItem} 
+          onSuccess={() => {
+            setIsFormOpen(false);
+            refetch?.();
+          }} 
+        />
+      )}
           </div>
         </DialogContent>
       </Dialog>
@@ -360,6 +369,47 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
   const [isMolsLoading, setIsMolsLoading] = useState(false);
   const [molSearch, setMolSearch] = useState('');
   const [isMolOpen, setIsMolOpen] = useState(false);
+  const [selectedMoleculeTitle, setSelectedMoleculeTitle] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Fix: Load initial molecule name on mount & Refresh latest data
+  useEffect(() => {
+    const docId = initialData?.id || initialData?._id;
+    if (!docId) return;
+
+    const refreshProduct = async () => {
+       setIsRefreshing(true);
+       try {
+          const res = await fetch(`/api/products/${docId}`);
+          if (res.ok) {
+             const data = await res.json();
+             // Merge/Reset form with latest data
+             setForm(prev => ({
+                ...prev,
+                ...data,
+                imageUrl2: data.imageUrls?.[1] || data.imageUrl2 || '',
+                imageUrl3: data.imageUrls?.[2] || data.imageUrl3 || '',
+                id: data.id || data._id?.toString()
+             }));
+             
+             // Fetch molecule name if mapped
+             if (data.moleculeId) {
+                const mRes = await fetch(`/api/molecules/${data.moleculeId.toString()}`);
+                if (mRes.ok) {
+                   const mData = await mRes.json();
+                   if (mData.molecule || mData.name) setSelectedMoleculeTitle(mData.molecule || mData.name);
+                }
+             }
+          }
+       } catch (e) {
+          console.error("Refresh error:", e);
+       } finally {
+          setIsRefreshing(false);
+       }
+    };
+
+    refreshProduct();
+  }, [initialData?.id, initialData?._id]);
 
   useEffect(() => {
     const fetchMols = async () => {
@@ -549,9 +599,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                     className="w-full h-14 rounded-2xl bg-white border border-slate-200 justify-between hover:bg-gray-50 px-6 font-bold text-slate-900 shadow-sm"
                   >
                     <span className="truncate">
-                      {form.moleculeId 
-                        ? molecules?.find((m) => m.id === form.moleculeId)?.molecule 
-                        : "SEARCH & SELECT MOLECULE..."}
+                      {selectedMoleculeTitle || "SEARCH & SELECT MOLECULE..."}
                     </span>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -579,6 +627,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                               key={mol.id}
                               onClick={() => {
                                 setForm({...form, moleculeId: mol.id});
+                                setSelectedMoleculeTitle(mol.molecule);
                                 setIsMolOpen(false);
                                 setMolSearch('');
                               }}
