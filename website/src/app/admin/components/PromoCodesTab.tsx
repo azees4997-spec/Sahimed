@@ -1,12 +1,16 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Loader2, 
   Plus, 
   Edit2, 
   Trash2, 
-  Tag 
+  Tag,
+  Search,
+  Check,
+  ChevronsUpDown,
+  X
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Dialog, 
   DialogContent, 
@@ -104,6 +110,12 @@ export function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified:
 
 function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
   const { toast } = useToast();
+  const catsQuery = useMemoFirebase(() => query(collection(db, 'categories'), orderBy('name', 'asc')), [db]);
+  const { data: categories } = useCollection(catsQuery);
+
+  const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles'), orderBy('updatedAt', 'desc'), limit(500)), [db]);
+  const { data: users } = useCollection(usersQuery);
+
   const [form, setForm] = useState({ 
     code: initialData?.code || '', 
     description: initialData?.description || '', 
@@ -115,8 +127,34 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
     scope: initialData?.scope || 'global', 
     scopeValue: initialData?.scopeValue || '',
     isFirstOrderOnly: initialData?.isFirstOrderOnly || false,
-    isActive: initialData?.isActive ?? true 
+    isActive: initialData?.isActive ?? true,
+    customRules: initialData?.customRules || []
   });
+
+  const [medSearch, setMedSearch] = useState('');
+  const [medSuggestions, setMedSuggestions] = useState<any[]>([]);
+  const [isMedSearching, setIsMedSearching] = useState(false);
+  const [isMedOpen, setIsMedOpen] = useState(false);
+
+  const [isUserOpen, setIsUserOpen] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+
+  const [isCustomOpen, setIsCustomOpen] = useState(false);
+
+  useEffect(() => {
+    if (medSearch.trim().length >= 2) {
+      setIsMedSearching(true);
+      const t = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/products?q=${encodeURIComponent(medSearch)}&limit=10`);
+          if (res.ok) setMedSuggestions(await res.json());
+        } finally {
+          setIsMedSearching(false);
+        }
+      }, 300);
+      return () => clearTimeout(t);
+    }
+  }, [medSearch]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const payload = { ...form, updatedAt: serverTimestamp() };
@@ -131,51 +169,50 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
     } catch (err: any) {
       toast({ variant: 'destructive', title: "Commit failed", description: err.message });
     }
-  };
-  return (
+  };  return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label className="text-[10px] font-black">Code</Label>
+          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Coupon Code</Label>
           <Input value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase()})} required className="rounded-2xl h-14 bg-gray-50 border-none font-black text-primary" />
         </div>
         <div className="space-y-2">
           <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pricing Type</Label>
           <Select value={form.discountType} onValueChange={v => setForm({...form, discountType: v})}>
              <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-black text-sm px-6 uppercase tracking-tight focus:bg-white transition-colors"><SelectValue /></SelectTrigger>
-            <SelectContent className="rounded-2xl">
+            <SelectContent className="rounded-2xl z-[220]">
               <SelectItem value="fixed">Amount (Flat ₹)</SelectItem>
               <SelectItem value="percentage">Percentage (%)</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label className="text-[10px] font-black">Value</Label>
+          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Benefit Value</Label>
           <Input type="number" value={form.discountValue} onChange={e => setForm({...form, discountValue: Number(e.target.value)})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
         </div>
         <div className="space-y-2">
-          <Label className="text-[10px] font-black">Max Discount Cap (₹)</Label>
+          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Max Discount Cap (₹)</Label>
           <Input type="number" value={form.maxDiscount} onChange={e => setForm({...form, maxDiscount: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
         </div>
         <div className="space-y-2">
-          <Label className="text-[10px] font-black">Min purchase</Label>
+          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Threshold Order Value</Label>
           <Input type="number" value={form.minOrderValue} onChange={e => setForm({...form, minOrderValue: Number(e.target.value)})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
         </div>
         <div className="space-y-2">
-          <Label className="text-[10px] font-black">Expiry Date</Label>
+          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Expiry Date</Label>
           <Input type="date" value={form.expiryDate} onChange={e => setForm({...form, expiryDate: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
         </div>
         <div className="space-y-2">
-          <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Logistical Scope</Label>
+          <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inclusion Mode</Label>
           <Select value={form.scope} onValueChange={v => setForm({...form, scope: v})}>
-            <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-black text-sm px-6 uppercase tracking-tight focus:bg-white transition-colors"><SelectValue /></SelectTrigger>
-            <SelectContent className="rounded-2xl">
+             <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-black text-sm px-6 uppercase tracking-tight focus:bg-white transition-colors"><SelectValue /></SelectTrigger>
+            <SelectContent className="rounded-2xl z-[220]">
               <SelectItem value="global">Global (Every Order)</SelectItem>
               <SelectItem value="customer">Patient Level (Mobile Number)</SelectItem>
-              <SelectItem value="category">Category Level (e.g. Wellness)</SelectItem>
-              <SelectItem value="product">Item Level (Medicine ID)</SelectItem>
+              <SelectItem value="category">Category Level</SelectItem>
+              <SelectItem value="product">Item Level (Medicine Search)</SelectItem>
               <SelectItem value="branded">Branded Products Only</SelectItem>
-              <SelectItem value="generic">Generic Products Only (High Margin)</SelectItem>
+              <SelectItem value="generic">Generic Products Only</SelectItem>
               <SelectItem value="custom">Custom Protocol Wise / Custom Rules</SelectItem>
             </SelectContent>
           </Select>
@@ -183,36 +220,124 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
         <div className="space-y-2">
           <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
             {form.scope === 'global' ? 'Marketing Description' : 
-             form.scope === 'customer' ? 'Target Mobile Number' :
-             form.scope === 'category' ? 'Category Name' :
-             form.scope === 'product' ? 'Target Medicine ID' :
-             'Target Value / Protocol ID'}
+             form.scope === 'customer' ? 'Targeted Patient Mobile' :
+             form.scope === 'category' ? 'Targeted Category' :
+             form.scope === 'product' ? 'Search Clinical Master' :
+             form.scope === 'custom' ? 'Multivariate Matrix' :
+             'Inclusion Value'}
           </Label>
-          <Input 
-            value={form.scopeValue} 
-            onChange={e => setForm({...form, scopeValue: e.target.value})} 
-            className="rounded-2xl h-14 bg-gray-50 border-none font-black text-sm px-6" 
-            placeholder={
-              form.scope === 'global' ? 'e.g. Summer Blitz' : 
-              form.scope === 'customer' ? 'e.g. 9876543210' :
-              form.scope === 'branded' ? 'N/A' :
-              'Injection payload or ID'
-            } 
-          />
-        </div>
-        <div className="flex flex-col gap-4 pt-2">
-          <div className="flex items-center space-x-2">
-            <Checkbox id="promo-first" checked={form.isFirstOrderOnly} onCheckedChange={c => setForm({...form, isFirstOrderOnly: !!c})} />
-            <Label htmlFor="promo-first" className="text-[10px] font-black cursor-pointer">First order only</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox id="promo-active" checked={form.isActive} onCheckedChange={c => setForm({...form, isActive: !!c})} />
-            <Label htmlFor="promo-active" className="text-[10px] font-black cursor-pointer">Live campaign</Label>
-          </div>
+
+          {form.scope === 'category' ? (
+            <Select value={form.scopeValue} onValueChange={v => setForm({...form, scopeValue: v})}>
+              <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-black text-sm px-6 uppercase tracking-tight focus:bg-white transition-colors"><SelectValue placeholder="SELECT CATEGORY..." /></SelectTrigger>
+              <SelectContent className="rounded-2xl z-[230]">
+                {categories?.map((cat: any) => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          ) : form.scope === 'product' ? (
+            <Popover open={isMedOpen} onOpenChange={setIsMedOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-sm uppercase text-slate-900 shadow-none overflow-hidden">
+                  <span className="truncate">{form.scopeValue || "SEARCH CATALOG..."}</span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-3xl border-none shadow-3xl bg-white/95 backdrop-blur-xl z-[250]" align="start">
+                <div className="p-4 border-b border-slate-100 flex items-center gap-3">
+                  <Search className="w-4 h-4 text-slate-400" />
+                  <Input placeholder="Type medicine name..." value={medSearch} onChange={e => setMedSearch(e.target.value)} className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0 shadow-none" />
+                </div>
+                <ScrollArea className="h-[300px] p-2">
+                  {isMedSearching ? (
+                    <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+                  ) : medSuggestions.length === 0 ? (
+                    <div className="py-6 px-4 text-center text-[10px] font-black text-slate-400 uppercase">No matches</div>
+                  ) : (
+                    medSuggestions.map((med) => (
+                      <button key={med._id || med.id} type="button" onClick={() => { setForm({...form, scopeValue: med.name}); setIsMedOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-[12px] uppercase truncate tracking-tight">{med.name}</p>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase opacity-60 truncate">{med.sku} • {med.manufacturer}</p>
+                        </div>
+                        {form.scopeValue === med.name && <Check className="w-4 h-4 text-primary" />}
+                      </button>
+                    ))
+                  )}
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+          ) : form.scope === 'customer' ? (
+             <Popover open={isUserOpen} onOpenChange={setIsUserOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-sm uppercase text-slate-900 shadow-none">
+                  {form.scopeValue || "SELECT MOBILE..."}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-3xl border-none shadow-3xl bg-white/95 backdrop-blur-xl z-[250]" align="start">
+                <div className="p-4 border-b border-slate-100 flex items-center gap-3">
+                  <Search className="w-4 h-4 text-slate-400" />
+                  <Input placeholder="Type mobile..." value={userSearch} onChange={e => setUserSearch(e.target.value)} className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0 shadow-none" />
+                </div>
+                <ScrollArea className="h-[300px] p-2">
+                  {users?.filter((u: any) => u.phone?.includes(userSearch) || u.name?.toLowerCase().includes(userSearch.toLowerCase())).map((u: any) => (
+                    <button key={u.id} type="button" onClick={() => { setForm({...form, scopeValue: u.phone}); setIsUserOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-[12px] uppercase truncate tracking-tight">{u.name || 'Anonymous'}</p>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase opacity-60">{u.phone}</p>
+                      </div>
+                      {form.scopeValue === u.phone && <Check className="w-4 h-4 text-primary" />}
+                    </button>
+                  ))}
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+          ) : form.scope === 'custom' ? (
+            <Popover open={isCustomOpen} onOpenChange={setIsCustomOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-[10px] uppercase tracking-widest text-primary shadow-none">
+                  {form.customRules?.length > 0 ? `${form.customRules.length} CRITERIA SELECTED` : "MULTI-CRITERIA SELECT..."}
+                  <Plus className="ml-2 h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-4 rounded-3xl border-none shadow-3xl bg-white z-[250] space-y-2" align="start">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 px-2">Logistical Constraints</p>
+                {['Branded Mode', 'Generic Mode', 'First Order Restricted', 'VIP Exclusive', 'Flash Sale'].map(rule => (
+                  <div key={rule} className="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 transition-all cursor-pointer" onClick={() => {
+                    const exists = form.customRules.includes(rule);
+                    const newRules = exists ? (form.customRules as string[]).filter(r => r !== rule) : [...form.customRules, rule];
+                    setForm({ ...form, customRules: newRules });
+                  }}>
+                    <Checkbox id={`rule-${rule}`} checked={form.customRules.includes(rule)} onCheckedChange={() => {}} />
+                    <Label className="text-[10px] font-black uppercase cursor-pointer flex-1">{rule}</Label>
+                  </div>
+                ))}
+              </PopoverContent>
+            </Popover>
+          ) : (
+            <Input 
+              value={form.scopeValue} 
+              onChange={e => setForm({...form, scopeValue: e.target.value})} 
+              className="rounded-2xl h-14 bg-gray-50 border-none font-black text-sm px-6" 
+              placeholder={form.scope === 'global' ? 'e.g. Summer Blitz' : 'Target Value'} 
+            />
+          )}
         </div>
       </div>
-      <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white shadow-3xl shadow-primary/20 active:scale-95 transition-all">
-        Commit campaign
+
+      <div className="flex flex-wrap gap-8 py-4 px-2 border-y border-slate-50">
+        <div className="flex items-center space-x-3">
+          <Checkbox id="promo-first" checked={form.isFirstOrderOnly} onCheckedChange={c => setForm({...form, isFirstOrderOnly: !!c})} />
+          <Label htmlFor="promo-first" className="text-[11px] font-black cursor-pointer uppercase tracking-tighter">First order only</Label>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Checkbox id="promo-active" checked={form.isActive} onCheckedChange={c => setForm({...form, isActive: !!c})} />
+          <Label htmlFor="promo-active" className="text-[11px] font-black cursor-pointer uppercase tracking-tighter">Active campaign</Label>
+        </div>
+      </div>
+
+      <Button type="submit" className="w-full h-20 rounded-[32px] font-black tracking-widest bg-primary text-white shadow-3xl shadow-primary/20 active:scale-95 transition-all text-xs uppercase">
+        Authorize & Commit Campaign
       </Button>
     </form>
   );
