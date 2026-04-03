@@ -272,7 +272,7 @@ function PromoCodeForm({ db, isVerified, initialData, onSuccess }: { db: any, is
               </SelectContent>
             </Select>
           ) : form.scope === 'product' ? (
-            <Popover open={isMedOpen} onOpenChange={setIsMedOpen} modal={true}>
+            <Popover open={isMedOpen} onOpenChange={setIsMedOpen} modal={false}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-sm uppercase text-slate-900 shadow-none overflow-hidden">
                   <span className="truncate">{form.scopeValue || "SEARCH CLINICAL MASTER..."}</span>
@@ -304,7 +304,7 @@ function PromoCodeForm({ db, isVerified, initialData, onSuccess }: { db: any, is
               </PopoverContent>
             </Popover>
           ) : form.scope === 'customer' ? (
-             <Popover open={isUserOpen} onOpenChange={setIsUserOpen} modal={true}>
+             <Popover open={isUserOpen} onOpenChange={setIsUserOpen} modal={false}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-sm uppercase text-slate-900 shadow-none">
                   {form.scopeValue || "FIRESTORE SEARCH..."}
@@ -336,7 +336,7 @@ function PromoCodeForm({ db, isVerified, initialData, onSuccess }: { db: any, is
               </PopoverContent>
             </Popover>
           ) : form.scope === 'custom' ? (
-            <Popover open={isCustomOpen} onOpenChange={setIsCustomOpen} modal={true}>
+            <Popover open={isCustomOpen} onOpenChange={setIsCustomOpen} modal={false}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-xs uppercase tracking-widest text-primary shadow-none">
                   AUTHORIZE RULE MATRIX
