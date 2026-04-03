@@ -83,11 +83,14 @@ export function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified:
         </div>
       </Card>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden">
-          <div className="bg-primary p-8 text-white">
-            <DialogTitle className="text-2xl font-black">Coupon config</DialogTitle>
-            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
-              Configure promotional scope and discount parameters
+        <DialogContent className="rounded-[40px] max-w-3xl border-none p-0 overflow-hidden">
+          <div className="bg-primary p-10 text-white relative">
+            <div className="absolute top-0 right-0 p-10 opacity-10">
+              <Tag className="w-24 h-24 rotate-12" />
+            </div>
+            <DialogTitle className="text-3xl font-black tracking-tighter uppercase font-outfit">Campaign configuration</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-[0.4em] mt-3 uppercase">
+              Control promotional scope and cashflow parameters
             </DialogDescription>
           </div>
           <div className="p-8">
@@ -137,11 +140,11 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
           <Input value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase()})} required className="rounded-2xl h-14 bg-gray-50 border-none font-black text-primary" />
         </div>
         <div className="space-y-2">
-          <Label className="text-[10px] font-black">Type</Label>
+          <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pricing Type</Label>
           <Select value={form.discountType} onValueChange={v => setForm({...form, discountType: v})}>
-            <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
+             <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-black text-sm px-6 uppercase tracking-tight focus:bg-white transition-colors"><SelectValue /></SelectTrigger>
             <SelectContent className="rounded-2xl">
-              <SelectItem value="fixed">Amount (₹)</SelectItem>
+              <SelectItem value="fixed">Amount (Flat ₹)</SelectItem>
               <SelectItem value="percentage">Percentage (%)</SelectItem>
             </SelectContent>
           </Select>
@@ -163,32 +166,39 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
           <Input type="date" value={form.expiryDate} onChange={e => setForm({...form, expiryDate: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
         </div>
         <div className="space-y-2">
-          <Label className="text-[10px] font-black">Scope</Label>
+          <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Logistical Scope</Label>
           <Select value={form.scope} onValueChange={v => setForm({...form, scope: v})}>
-            <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-black text-sm px-6 uppercase tracking-tight focus:bg-white transition-colors"><SelectValue /></SelectTrigger>
             <SelectContent className="rounded-2xl">
-              <SelectItem value="global">Global</SelectItem>
-              <SelectItem value="category">Category Wise</SelectItem>
-              <SelectItem value="product">Item Wise (Product)</SelectItem>
-              <SelectItem value="customer">Customer Wise</SelectItem>
-              <SelectItem value="branded">Branded Only</SelectItem>
-              <SelectItem value="generic">Generic Only</SelectItem>
-              <SelectItem value="order_level">Order Attribute Wise</SelectItem>
-              <SelectItem value="custom">Custom Protocol Wise</SelectItem>
+              <SelectItem value="global">Global (Every Order)</SelectItem>
+              <SelectItem value="customer">Patient Level (Mobile Number)</SelectItem>
+              <SelectItem value="category">Category Level (e.g. Wellness)</SelectItem>
+              <SelectItem value="product">Item Level (Medicine ID)</SelectItem>
+              <SelectItem value="branded">Branded Products Only</SelectItem>
+              <SelectItem value="generic">Generic Products Only (High Margin)</SelectItem>
+              <SelectItem value="custom">Custom Protocol Wise / Custom Rules</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label className="text-[10px] font-black">
-            {form.scope === 'global' ? 'Description' : 
-             form.scope === 'order_level' ? 'Order Criteria (e.g. min_qty=5)' :
-             'Scope Identity (ID/Value)'}
+          <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            {form.scope === 'global' ? 'Marketing Description' : 
+             form.scope === 'customer' ? 'Target Mobile Number' :
+             form.scope === 'category' ? 'Category Name' :
+             form.scope === 'product' ? 'Target Medicine ID' :
+             'Target Value / Protocol ID'}
           </Label>
-          <Input value={form.scopeValue} onChange={e => setForm({...form, scopeValue: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" placeholder={
-            form.scope === 'global' ? 'e.g. Summer Sale' : 
-            form.scope === 'branded' ? 'N/A' :
-            'Enter target value'
-          } />
+          <Input 
+            value={form.scopeValue} 
+            onChange={e => setForm({...form, scopeValue: e.target.value})} 
+            className="rounded-2xl h-14 bg-gray-50 border-none font-black text-sm px-6" 
+            placeholder={
+              form.scope === 'global' ? 'e.g. Summer Blitz' : 
+              form.scope === 'customer' ? 'e.g. 9876543210' :
+              form.scope === 'branded' ? 'N/A' :
+              'Injection payload or ID'
+            } 
+          />
         </div>
         <div className="flex flex-col gap-4 pt-2">
           <div className="flex items-center space-x-2">
