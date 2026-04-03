@@ -26,7 +26,11 @@ export async function POST(request: Request) {
     const body = await request.json();
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const result = await db.collection('banners').insertOne({ ...body, createdAt: new Date() });
+    const result = await db.collection('banners').insertOne({ 
+      _id: body.id,
+      ...body, 
+      createdAt: new Date() 
+    });
     return NextResponse.json({ success: true, id: result.insertedId });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

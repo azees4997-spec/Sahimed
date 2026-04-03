@@ -10,7 +10,20 @@ export async function GET(req: Request) {
     const db = client.db('sahimed');
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status');
-    const query = status ? { status: { $regex: new RegExp(status, 'i') } } : {};
+    const start = searchParams.get('start');
+    const end = searchParams.get('end');
+    
+    const query: any = status ? { status: { $regex: new RegExp(status, 'i') } } : {};
+    
+    if (start || end) {
+      query.orderDate = {};
+      if (start) query.orderDate.$gte = new Date(start);
+      if (end) {
+        const endDate = new Date(end);
+        endDate.setHours(23, 59, 59, 999);
+        query.orderDate.$lte = endDate;
+      }
+    }
     
     const orders = await db.collection('orders').find(query).sort({ orderDate: -1 }).limit(100).toArray();
     return NextResponse.json(orders);

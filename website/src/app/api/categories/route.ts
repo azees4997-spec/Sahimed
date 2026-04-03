@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
     const result = await db.collection('categories').insertOne({
+      _id: body.id,
       ...body,
       createdAt: new Date(),
       updatedAt: new Date()

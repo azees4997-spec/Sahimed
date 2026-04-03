@@ -111,6 +111,10 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
           if (h === 'isGeneric' || h === 'prescriptionRequired') val = val.toLowerCase() === 'true';
           obj[h] = val;
         });
+        // Ensure ID consistency with SKU if missing
+        if (!obj.id && obj.sku) {
+          obj.id = obj.sku.trim().toLowerCase().replace(/[^a-z0-9]/g, '-');
+        }
         return obj;
       });
 

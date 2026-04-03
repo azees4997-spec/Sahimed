@@ -4,9 +4,9 @@ import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
 const getQuery = (id: string) => {
-  try {
-    if (id.length === 24) return { _id: new ObjectId(id) };
-  } catch (e) {}
+  if (/^[0-9a-fA-F]{24}$/.test(id)) {
+    return { _id: new ObjectId(id) };
+  }
   return { _id: id as any };
 };
 

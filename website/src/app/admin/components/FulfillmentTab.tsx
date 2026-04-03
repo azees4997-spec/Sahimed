@@ -2,10 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  Loader2, 
+  Loader2,
   Download, 
   Eye, 
-  Edit2 
+  Edit2,
+  X,
+  Plus,
+  ChevronRight,
+  Package,
+  Search
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,18 +41,24 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
   const [statusFilter, setStatusFilter] = useState('All');
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const { user } = useUser();
   const { toast } = useToast();
 
   const fetchOrders = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/orders?status=${statusFilter === 'All' ? '' : statusFilter}`);
+      const sp = new URLSearchParams();
+      if (statusFilter !== 'All') sp.append('status', statusFilter);
+      if (startDate) sp.append('start', startDate);
+      if (endDate) sp.append('end', endDate);
+      
+      const res = await fetch(`/api/orders?${sp.toString()}`);
       const data = await res.json();
       if (Array.isArray(data)) {
         setOrders(data);
       } else {
-        console.error("Orders API returned non-array:", data);
         setOrders([]);
       }
     } catch (err) {
@@ -57,7 +68,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
     }
   };
 
-  useEffect(() => { fetchOrders(); }, [statusFilter]);
+  useEffect(() => { fetchOrders(); }, [statusFilter, startDate, endDate]);
 
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [statusUpdateTarget, setStatusUpdateTarget] = useState<any>(null);
@@ -204,9 +215,42 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
   return (
     <div className="space-y-10">
       <SectionHeader title="Fulfillment Matrix" subtitle="Operational Logistics Monitoring" onBack={onBack}>
-        <Button onClick={handleExport} variant="outline" className="rounded-full h-14 px-8 font-black text-[10px] border-2 gap-3 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
-          <Download className="w-4 h-4" /> Export Ledger
-        </Button>
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2 bg-slate-100 rounded-full px-5 h-14 border border-slate-200 shadow-inner">
+             <div className="flex items-center gap-2 group/date">
+              <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest group-hover/date:text-primary transition-colors">Start Date</span>
+              <input 
+                type="date" 
+                value={startDate} 
+                onChange={e => setStartDate(e.target.value)}
+                className="bg-transparent border-none text-[10px] font-black outline-none focus:ring-0 uppercase cursor-pointer"
+              />
+            </div>
+            <div className="w-px h-6 bg-slate-200 mx-2" />
+            <div className="flex items-center gap-2 group/date">
+              <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest group-hover/date:text-primary transition-colors">End Date</span>
+              <input 
+                type="date" 
+                value={endDate} 
+                onChange={e => setEndDate(e.target.value)}
+                className="bg-transparent border-none text-[10px] font-black outline-none focus:ring-0 uppercase cursor-pointer"
+              />
+            </div>
+            {(startDate || endDate) && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => { setStartDate(''); setEndDate(''); }}
+                className="h-8 w-8 ml-2 hover:bg-red-50 text-red-500 rounded-full transition-all"
+              >
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            )}
+          </div>
+          <Button onClick={handleExport} variant="outline" className="rounded-full h-14 px-8 font-black text-[10px] border-2 gap-3 uppercase tracking-widest hover:bg-white transition-all active:scale-95 border-primary/20 text-primary">
+            <Download className="w-4 h-4" /> Export Ledger
+          </Button>
+        </div>
       </SectionHeader>
 
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
