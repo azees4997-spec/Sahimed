@@ -42,12 +42,10 @@ export default function ProductCard({ product }: { product: Product }) {
       className="pharma-card flex flex-col h-full group relative p-3 sm:p-5 bg-white border border-slate-100/60 rounded-[24px] sm:rounded-[32px] gap-2 sm:gap-0 shadow-sm hover:shadow-2xl transition-all duration-500"
     >
       {savingsPct > 0 && (
-        <div className="absolute top-3 right-3 sm:top-5 sm:right-5 z-20 pointer-events-none">
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] sm:text-[18px] font-black text-emerald-500 uppercase italic tracking-tighter drop-shadow-[0_2px_4px_rgba(16,185,129,0.4)] animate-pulse">
-              SAVE {savingsPct}%
-            </span>
-          </div>
+        <div className="absolute top-3 left-3 sm:top-5 sm:left-5 z-20">
+          <Badge className="bg-emerald-500 text-white font-black text-[7px] sm:text-[9px] px-2.5 py-1 rounded-full tracking-[0.1em] border-none shadow-lg shadow-emerald-500/20 uppercase">
+            SAVE {savingsPct}%
+          </Badge>
         </div>
       )}
  

@@ -97,11 +97,7 @@ const ComparisonCard = ({
           <div className="flex items-center justify-between">
             <Badge className={cn("rounded-full font-black text-[7px] sm:text-[9px] px-2 py-0.5 uppercase tracking-widest", isAlt ? "bg-accent text-white" : "bg-slate-100 text-slate-400")}>{label}</Badge>
             {displaySavingsPct > 0 && (
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] sm:text-lg font-black text-emerald-500 uppercase italic tracking-tighter drop-shadow-[0_2px_2px_rgba(16,185,129,0.3)] animate-pulse">
-                  SAVE {displaySavingsPct}%
-                </span>
-              </div>
+              <Badge className="bg-primary text-white text-[7px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-lg shadow-sm">-{displaySavingsPct}%</Badge>
             )}
           </div>
           
@@ -142,7 +138,7 @@ const ComparisonCard = ({
                 {pMrp > pPrice && (
                   <div className="flex flex-col">
                     <span className="text-[8px] sm:text-sm text-slate-400 line-through font-bold opacity-80 decoration-1">₹{Number(pMrp).toFixed(0)}</span>
-                    <span className="text-[9px] sm:text-[13px] font-black text-emerald-600 uppercase tracking-tighter drop-shadow-[0_1px_1px_rgba(16,185,129,0.4)]">SAVE ₹{Number(pMrp - pPrice).toFixed(0)}</span>
+                    <span className="text-[7px] sm:text-[10px] font-black text-emerald-600 uppercase bg-emerald-50 px-1 py-0.5 rounded-md">SAVE ₹{Number(pMrp - pPrice).toFixed(0)}</span>
                   </div>
                 )}
               </div>
@@ -260,13 +256,13 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
             <motion.div 
               initial={{ scale: 0.98, opacity: 0, y: -5 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              className="mb-2 sm:mb-6 px-2 text-center"
+              className="mb-2 sm:mb-6 px-2"
             >
-              <div className="relative inline-block group">
-                <div className="absolute inset-0 bg-emerald-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                <h2 className="text-xs sm:text-2xl font-black text-emerald-600 tracking-tighter font-outfit uppercase drop-shadow-[0_3px_5px_rgba(16,185,129,0.35)] relative z-10 transition-transform group-hover:scale-105">
-                   SWITCH AND SAVE ₹{Number(switchSavingsAmt).toFixed(0)} • {switchSavingsPct}% OFF
-                </h2>
+              <div className="bg-gradient-to-r from-primary to-accent text-white py-1.5 sm:py-2.5 px-4 sm:px-8 rounded-[12px] sm:rounded-[20px] shadow-lg flex items-center justify-center gap-2 text-center">
+                 <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-bounce" />
+                 <h2 className="text-[8px] sm:text-[11px] font-black tracking-widest uppercase line-clamp-1">
+                   Switch and save ₹{Number(switchSavingsAmt).toFixed(0)} • IDENTICAL MOLECULE
+                 </h2>
               </div>
             </motion.div>
           )}
