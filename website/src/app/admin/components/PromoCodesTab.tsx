@@ -89,7 +89,7 @@ export function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified:
         </div>
       </Card>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="rounded-[40px] max-w-3xl border-none p-0 overflow-hidden">
+        <DialogContent className="rounded-[40px] max-w-3xl border-none p-0">
           <div className="bg-primary p-10 text-white relative">
             <div className="absolute top-0 right-0 p-10 opacity-10">
               <Tag className="w-24 h-24 rotate-12" />
@@ -272,69 +272,71 @@ function PromoCodeForm({ db, isVerified, initialData, onSuccess }: { db: any, is
               </SelectContent>
             </Select>
           ) : form.scope === 'product' ? (
-            <Popover open={isMedOpen} onOpenChange={setIsMedOpen} modal={false}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-sm uppercase text-slate-900 shadow-none overflow-hidden">
+              <div className="relative w-full">
+                <Button variant="outline" type="button" onClick={() => setIsMedOpen(!isMedOpen)} className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-sm uppercase text-slate-900 shadow-none overflow-hidden">
                   <span className="truncate">{form.scopeValue || "SEARCH CLINICAL MASTER..."}</span>
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-3xl border-none shadow-3xl bg-white/95 backdrop-blur-xl z-[250]" align="start">
-                <div className="p-4 border-b border-slate-100 flex items-center gap-3">
-                  <Search className="w-4 h-4 text-slate-400" />
-                  <Input autoFocus placeholder="Type medicine name..." value={medSearch} onChange={e => setMedSearch(e.target.value)} onKeyDown={e => e.stopPropagation()} className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0 shadow-none" />
-                </div>
-                <ScrollArea className="h-[300px] p-2">
-                  {isMedSearching ? (
-                    <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-                  ) : medSuggestions.length === 0 ? (
-                    <div className="py-6 px-4 text-center text-[10px] font-black text-slate-400 uppercase">Search MongoDB Registry</div>
-                  ) : (
-                    medSuggestions.map((med) => (
-                      <button key={med._id || med.id} type="button" onClick={() => { setForm({...form, scopeValue: med.name}); setIsMedOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-black text-[12px] uppercase truncate tracking-tight">{med.name}</p>
-                          <p className="text-[9px] font-bold text-slate-400 uppercase opacity-60 truncate">{med.sku} • {med.manufacturer}</p>
-                        </div>
-                        {form.scopeValue === med.name && <Check className="w-4 h-4 text-primary" />}
-                      </button>
-                    ))
-                  )}
-                </ScrollArea>
-              </PopoverContent>
-            </Popover>
+                {isMedOpen && (
+                  <div className="absolute top-full left-0 w-full mt-2 p-0 rounded-3xl border border-slate-100 shadow-3xl bg-white z-[300] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="p-4 border-b border-slate-100 flex items-center gap-3">
+                      <Search className="w-4 h-4 text-slate-400" />
+                      <Input autoFocus placeholder="Type medicine name..." value={medSearch} onChange={e => setMedSearch(e.target.value)} onKeyDown={e => e.stopPropagation()} className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0 shadow-none" />
+                      <Button variant="ghost" size="icon" onClick={() => setIsMedOpen(false)} className="rounded-full h-8 w-8"><X className="w-3 h-3"/></Button>
+                    </div>
+                    <ScrollArea className="h-[300px] p-2">
+                      {isMedSearching ? (
+                        <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+                      ) : medSuggestions.length === 0 ? (
+                        <div className="py-6 px-4 text-center text-[10px] font-black text-slate-400 uppercase">Search MongoDB Registry</div>
+                      ) : (
+                        medSuggestions.map((med) => (
+                          <button key={med._id || med.id} type="button" onClick={() => { setForm({...form, scopeValue: med.name}); setIsMedOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-black text-[12px] uppercase truncate tracking-tight">{med.name}</p>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase opacity-60 truncate">{med.sku} • {med.manufacturer}</p>
+                            </div>
+                            {form.scopeValue === med.name && <Check className="w-4 h-4 text-primary" />}
+                          </button>
+                        ))
+                      )}
+                    </ScrollArea>
+                  </div>
+                )}
+              </div>
           ) : form.scope === 'customer' ? (
-             <Popover open={isUserOpen} onOpenChange={setIsUserOpen} modal={false}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-sm uppercase text-slate-900 shadow-none">
+              <div className="relative w-full">
+                <Button variant="outline" type="button" onClick={() => setIsUserOpen(!isUserOpen)} className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-sm uppercase text-slate-900 shadow-none">
                   {form.scopeValue || "FIRESTORE SEARCH..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-3xl border-none shadow-3xl bg-white/95 backdrop-blur-xl z-[250]" align="start">
-                <div className="p-4 border-b border-slate-100 flex items-center gap-3">
-                  <Search className="w-4 h-4 text-slate-400" />
-                  <Input autoFocus placeholder="Type mobile number..." value={userSearch} onChange={e => setUserSearch(e.target.value)} onKeyDown={e => e.stopPropagation()} className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0 shadow-none" />
-                </div>
-                <ScrollArea className="h-[300px] p-2">
-                  {isUserSearching ? (
-                    <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-                  ) : userSuggestions.length === 0 ? (
-                    <div className="py-6 px-4 text-center text-[10px] font-black text-slate-400 uppercase">Search Patient Registry</div>
-                  ) : (
-                    userSuggestions.map((u: any) => (
-                      <button key={u.id} type="button" onClick={() => { setForm({...form, scopeValue: u.phone}); setIsUserOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group" onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && e.stopPropagation()}>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-black text-[12px] uppercase truncate tracking-tight">{u.name || 'Anonymous Patient'}</p>
-                          <p className="text-[9px] font-bold text-slate-400 uppercase opacity-60 tracking-wider font-mono">{u.phone}</p>
-                        </div>
-                        {form.scopeValue === u.phone && <Check className="w-4 h-4 text-primary" />}
-                      </button>
-                    ))
-                  )}
-                </ScrollArea>
-              </PopoverContent>
-            </Popover>
+                {isUserOpen && (
+                  <div className="absolute top-full left-0 w-full mt-2 p-0 rounded-3xl border border-slate-100 shadow-3xl bg-white z-[300] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="p-4 border-b border-slate-100 flex items-center gap-3">
+                      <Search className="w-4 h-4 text-slate-400" />
+                      <Input autoFocus placeholder="Type mobile number..." value={userSearch} onChange={e => setUserSearch(e.target.value)} onKeyDown={e => e.stopPropagation()} className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0 shadow-none" />
+                      <Button variant="ghost" size="icon" onClick={() => setIsUserOpen(false)} className="rounded-full h-8 w-8"><X className="w-3 h-3"/></Button>
+                    </div>
+                    <ScrollArea className="h-[300px] p-2">
+                      {isUserSearching ? (
+                        <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+                      ) : userSuggestions.length === 0 ? (
+                        <div className="py-6 px-4 text-center text-[10px] font-black text-slate-400 uppercase">Search Patient Registry</div>
+                      ) : (
+                        userSuggestions.map((u: any) => (
+                          <button key={u.id} type="button" onClick={() => { setForm({...form, scopeValue: u.phone}); setIsUserOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group" onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && e.stopPropagation()}>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-black text-[12px] uppercase truncate tracking-tight">{u.name || 'Anonymous Patient'}</p>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase opacity-60 tracking-wider font-mono">{u.phone}</p>
+                            </div>
+                            {form.scopeValue === u.phone && <Check className="w-4 h-4 text-primary" />}
+                          </button>
+                        ))
+                      )}
+                    </ScrollArea>
+                  </div>
+                )}
+              </div>
           ) : form.scope === 'custom' ? (
             <Popover open={isCustomOpen} onOpenChange={setIsCustomOpen} modal={false}>
               <PopoverTrigger asChild>
@@ -347,7 +349,7 @@ function PromoCodeForm({ db, isVerified, initialData, onSuccess }: { db: any, is
                 <div className="p-6 bg-slate-50 border-b border-slate-100">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Protocol Orchestrator</p>
                 </div>
-                <ScrollArea className="h-[450px] p-6">
+                <ScrollArea className="max-h-[60vh] p-6 overflow-y-auto">
                   <div className="space-y-8">
                     <div className="space-y-4">
                       <p className="text-[9px] font-black text-primary uppercase tracking-widest">Therapeutic Constraints</p>
