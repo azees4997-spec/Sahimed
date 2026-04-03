@@ -41,7 +41,7 @@ import {
   addDocumentNonBlocking,
   updateDocumentNonBlocking
 } from '@/firebase';
-import { doc, collection, query, orderBy, serverTimestamp, limit } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, limit, getDocs, startAt, endAt } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { SectionHeader } from './SectionHeader';
 
@@ -100,7 +100,7 @@ export function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified:
             </DialogDescription>
           </div>
           <div className="p-8">
-            <PromoCodeForm db={db} initialData={editingPromo} onSuccess={() => setIsFormOpen(false)} />
+            <PromoCodeForm db={db} isVerified={isVerified} initialData={editingPromo} onSuccess={() => setIsFormOpen(false)} />
           </div>
         </DialogContent>
       </Dialog>
@@ -108,14 +108,14 @@ export function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified:
   );
 }
 
-function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+function PromoCodeForm({ db, isVerified, initialData, onSuccess }: { db: any, isVerified: boolean, initialData?: any, onSuccess: () => void }) {
   const { toast } = useToast();
   const [mongoCategories, setMongoCategories] = useState<any[]>([]);
   useEffect(() => {
     fetch('/api/categories?limit=100').then(res => res.ok && res.json()).then(data => data && setMongoCategories(data));
   }, []);
 
-  const usersQuery = useMemoFirebase(() => query(collection(db, 'userProfiles'), limit(1000)), [db]);
+  const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles'), limit(1000)) : null, [db, isVerified]);
   const { data: users, isLoading: isUsersLoading } = useCollection(usersQuery);
 
   const [form, setForm] = useState({ 
@@ -143,12 +143,14 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
   const [medSuggestions, setMedSuggestions] = useState<any[]>([]);
   const [isMedSearching, setIsMedSearching] = useState(false);
   const [isMedOpen, setIsMedOpen] = useState(false);
-
   const [isUserOpen, setIsUserOpen] = useState(false);
   const [userSearch, setUserSearch] = useState('');
+  const [userSuggestions, setUserSuggestions] = useState<any[]>([]);
+  const [isUserSearching, setIsUserSearching] = useState(false);
 
   const [isCustomOpen, setIsCustomOpen] = useState(false);
 
+  // Medicine Search Logic (MongoDB)
   useEffect(() => {
     if (medSearch.trim().length >= 2) {
       setIsMedSearching(true);
@@ -156,6 +158,8 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
         try {
           const res = await fetch(`/api/products?q=${encodeURIComponent(medSearch)}&limit=10`);
           if (res.ok) setMedSuggestions(await res.json());
+        } catch (e) {
+          console.error("Clinical Search Fail:", e);
         } finally {
           setIsMedSearching(false);
         }
@@ -163,6 +167,31 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
       return () => clearTimeout(t);
     }
   }, [medSearch]);
+
+  // Patient Search Logic (Firestore)
+  useEffect(() => {
+    if (userSearch.trim().length >= 3 && isVerified) {
+      setIsUserSearching(true);
+      const t = setTimeout(async () => {
+        try {
+          // Since Firestore doesn't support easy case-insensitive/or queries without multiple indexes,
+          // we pull a larger sorted subset and filter locally for maximum accuracy.
+          // This is much faster than a complex live query for every letter.
+          const q = query(collection(db, 'userProfiles'), orderBy('phone'), startAt(userSearch), endAt(userSearch + '\uf8ff'), limit(20));
+          const snap = await getDocs(q);
+          const results = snap.docs.map(d => ({id: d.id, ...d.data()}));
+          setUserSuggestions(results);
+        } catch (e) {
+          console.error("Patient Search Fail:", e);
+        } finally {
+          setIsUserSearching(false);
+        }
+      }, 300);
+      return () => clearTimeout(t);
+    } else if (userSearch.length === 0) {
+      setUserSuggestions([]);
+    }
+  }, [userSearch, isVerified, db]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const payload = { ...form, updatedAt: serverTimestamp() };
@@ -253,7 +282,7 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
               <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-3xl border-none shadow-3xl bg-white/95 backdrop-blur-xl z-[250]" align="start">
                 <div className="p-4 border-b border-slate-100 flex items-center gap-3">
                   <Search className="w-4 h-4 text-slate-400" />
-                  <Input autoFocus placeholder="Type medicine name..." value={medSearch} onChange={e => setMedSearch(e.target.value)} className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0 shadow-none" />
+                  <Input autoFocus placeholder="Type medicine name..." value={medSearch} onChange={e => setMedSearch(e.target.value)} onKeyDown={e => e.stopPropagation()} className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0 shadow-none" />
                 </div>
                 <ScrollArea className="h-[300px] p-2">
                   {isMedSearching ? (
@@ -285,18 +314,18 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
               <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-3xl border-none shadow-3xl bg-white/95 backdrop-blur-xl z-[250]" align="start">
                 <div className="p-4 border-b border-slate-100 flex items-center gap-3">
                   <Search className="w-4 h-4 text-slate-400" />
-                  <Input autoFocus placeholder="Type mobile or name..." value={userSearch} onChange={e => setUserSearch(e.target.value)} className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0 shadow-none" />
+                  <Input autoFocus placeholder="Type mobile number..." value={userSearch} onChange={e => setUserSearch(e.target.value)} onKeyDown={e => e.stopPropagation()} className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0 shadow-none" />
                 </div>
                 <ScrollArea className="h-[300px] p-2">
-                  {!users ? (
+                  {isUserSearching ? (
                     <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-                  ) : users.filter((u: any) => String(u.phone)?.includes(userSearch) || String(u.name)?.toLowerCase().includes(userSearch.toLowerCase())).length === 0 ? (
-                    <div className="py-6 px-4 text-center text-[10px] font-black text-slate-400 uppercase">No firestore matches</div>
+                  ) : userSuggestions.length === 0 ? (
+                    <div className="py-6 px-4 text-center text-[10px] font-black text-slate-400 uppercase">Search Patient Registry</div>
                   ) : (
-                    users.filter((u: any) => String(u.phone)?.includes(userSearch) || String(u.name)?.toLowerCase().includes(userSearch.toLowerCase())).map((u: any) => (
-                      <button key={u.id} type="button" onClick={() => { setForm({...form, scopeValue: u.phone}); setIsUserOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group">
+                    userSuggestions.map((u: any) => (
+                      <button key={u.id} type="button" onClick={() => { setForm({...form, scopeValue: u.phone}); setIsUserOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group" onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && e.stopPropagation()}>
                         <div className="flex-1 min-w-0">
-                          <p className="font-black text-[12px] uppercase truncate tracking-tight">{u.name || 'Anonymous'}</p>
+                          <p className="font-black text-[12px] uppercase truncate tracking-tight">{u.name || 'Anonymous Patient'}</p>
                           <p className="text-[9px] font-bold text-slate-400 uppercase opacity-60 tracking-wider font-mono">{u.phone}</p>
                         </div>
                         {form.scopeValue === u.phone && <Check className="w-4 h-4 text-primary" />}
