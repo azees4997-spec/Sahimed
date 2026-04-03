@@ -196,6 +196,14 @@ export default function CheckoutPage() {
       toast({ variant: 'destructive', title: "Locality required", description: "Please enter your street or area name." });
       return false;
     }
+    if (!orderInfo.city.trim()) {
+      toast({ variant: 'destructive', title: "City required", description: "City/District is mandatory for delivery." });
+      return false;
+    }
+    if (!orderInfo.state.trim()) {
+      toast({ variant: 'destructive', title: "State required", description: "State is mandatory." });
+      return false;
+    }
     if (!orderInfo.pincode.trim() || orderInfo.pincode.length !== 6) {
       toast({ variant: 'destructive', title: "Pincode required", description: "A valid 6-digit pincode is mandatory." });
       return false;
@@ -323,6 +331,8 @@ export default function CheckoutPage() {
       shippingDetails: {
         houseNumber: orderInfo.houseNumber,
         street: orderInfo.buildingLocality,
+        city: orderInfo.city,
+        state: orderInfo.state,
         pincode: orderInfo.pincode,
         lat: orderInfo.lat,
         lng: orderInfo.lng,
@@ -332,11 +342,13 @@ export default function CheckoutPage() {
         medicineId: item.id,
         quantity: item.quantity,
         unitPrice: item.price,
+        mrp: item.mrp || item.price + 50,
         name: item.name
       })),
       billingBreakdown: {
         grossMrp: totalMrp,
         campaignDiscount: promoDiscount,
+        deliveryFees: feeTotal,
         savings: totalSavings
       }
     };
