@@ -235,7 +235,7 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
               </SelectContent>
             </Select>
           ) : form.scope === 'product' ? (
-            <Popover open={isMedOpen} onOpenChange={setIsMedOpen}>
+            <Popover open={isMedOpen} onOpenChange={setIsMedOpen} modal={true}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-sm uppercase text-slate-900 shadow-none overflow-hidden">
                   <span className="truncate">{form.scopeValue || "SEARCH CATALOG..."}</span>
@@ -267,7 +267,7 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
               </PopoverContent>
             </Popover>
           ) : form.scope === 'customer' ? (
-             <Popover open={isUserOpen} onOpenChange={setIsUserOpen}>
+             <Popover open={isUserOpen} onOpenChange={setIsUserOpen} modal={true}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-sm uppercase text-slate-900 shadow-none">
                   {form.scopeValue || "SELECT MOBILE..."}
@@ -293,25 +293,31 @@ function PromoCodeForm({ db, initialData, onSuccess }: { db: any, initialData?: 
               </PopoverContent>
             </Popover>
           ) : form.scope === 'custom' ? (
-            <Popover open={isCustomOpen} onOpenChange={setIsCustomOpen}>
+            <Popover open={isCustomOpen} onOpenChange={setIsCustomOpen} modal={true}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full h-14 rounded-2xl bg-gray-50 border-none justify-between hover:bg-gray-100 px-6 font-black text-[10px] uppercase tracking-widest text-primary shadow-none">
                   {form.customRules?.length > 0 ? `${form.customRules.length} CRITERIA SELECTED` : "MULTI-CRITERIA SELECT..."}
                   <Plus className="ml-2 h-4 w-4 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[300px] p-4 rounded-3xl border-none shadow-3xl bg-white z-[250] space-y-2" align="start">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 px-2">Logistical Constraints</p>
-                {['Branded Mode', 'Generic Mode', 'First Order Restricted', 'VIP Exclusive', 'Flash Sale'].map(rule => (
-                  <div key={rule} className="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 transition-all cursor-pointer" onClick={() => {
-                    const exists = form.customRules.includes(rule);
-                    const newRules = exists ? (form.customRules as string[]).filter(r => r !== rule) : [...form.customRules, rule];
-                    setForm({ ...form, customRules: newRules });
-                  }}>
-                    <Checkbox id={`rule-${rule}`} checked={form.customRules.includes(rule)} onCheckedChange={() => {}} />
-                    <Label className="text-[10px] font-black uppercase cursor-pointer flex-1">{rule}</Label>
-                  </div>
-                ))}
+              <PopoverContent className="w-[300px] p-0 rounded-3xl border-none shadow-3xl bg-white z-[250] overflow-hidden" align="start">
+                <div className="p-5 border-b border-slate-50">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Logistical Constraints</p>
+                </div>
+                <ScrollArea className="h-[300px] p-2">
+                  {['Branded Mode', 'Generic Mode', 'First Order Restricted', 'VIP Exclusive', 'Flash Sale'].map(rule => (
+                    <button key={rule} type="button" className="w-full flex items-center space-x-3 p-4 rounded-xl hover:bg-slate-50 transition-all cursor-pointer text-left" onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const exists = form.customRules.includes(rule);
+                      const newRules = exists ? (form.customRules as string[]).filter(r => r !== rule) : [...form.customRules, rule];
+                      setForm({ ...form, customRules: newRules });
+                    }}>
+                      <Checkbox id={`rule-${rule}`} checked={form.customRules.includes(rule)} onCheckedChange={() => {}} className="pointer-events-none" />
+                      <Label className="text-[10px] font-black uppercase cursor-pointer flex-1 pointer-events-none">{rule}</Label>
+                    </button>
+                  ))}
+                </ScrollArea>
               </PopoverContent>
             </Popover>
           ) : (
