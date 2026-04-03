@@ -48,9 +48,30 @@ export function PagesTab({ db, isVerified, onBack }: { db: any, isVerified: bool
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <SectionHeader title="Compliance Matrix" subtitle="Legal & Privacy Document Management" onBack={onBack}>
-        <Button onClick={() => { setEditingPage(null); setIsFormOpen(true); }} className="rounded-full h-14 px-10 font-black text-[10px] bg-primary text-white shadow-2xl shadow-primary/30 uppercase tracking-widest hover:scale-105 transition-all border-4 border-white active:scale-95">
-          <Plus className="w-5 h-5 mr-3" /> Issue Document
-        </Button>
+        <div className="flex gap-4">
+          <Button 
+            variant="outline" 
+            onClick={async () => {
+              const standards = [
+                { id: 'faq', title: 'Frequently Asked Questions', content: '<h1>FAQs</h1><p>Welcome to our FAQ section.</p>', placement: 'footer' },
+                { id: 'contact-us', title: 'Contact Us', content: '<h1>Contact Us</h1><p>Reach out to us at support@sahimed.com</p>', placement: 'footer' },
+                { id: 'offers', title: 'Promotional Offers', content: '<h1>Offers</h1><p>Check out our latest healthcare deals.</p>', placement: 'footer' },
+                { id: 'policies', title: 'Privacy & Terms', content: '<h1>Policies</h1><p>Legal framework and user privacy guidelines.</p>', placement: 'footer' },
+              ];
+              toast({ title: "Bootstrapping Protocols..." });
+              for (const page of standards) {
+                await setDocumentNonBlocking(doc(db, 'pages', page.id), { ...page, lastUpdated: new Date().toISOString() }, { merge: true });
+              }
+              toast({ title: "Standard Footer Provisioned" });
+            }}
+            className="rounded-full h-14 px-8 font-black text-[9px] bg-white text-slate-400 border-slate-100 hover:text-primary transition-all uppercase tracking-widest active:scale-95"
+          >
+            Provision Defaults
+          </Button>
+          <Button onClick={() => { setEditingPage(null); setIsFormOpen(true); }} className="rounded-full h-14 px-10 font-black text-[10px] bg-primary text-white shadow-2xl shadow-primary/30 uppercase tracking-widest hover:scale-105 transition-all border-4 border-white active:scale-95">
+            <Plus className="w-5 h-5 mr-3" /> Issue Document
+          </Button>
+        </div>
       </SectionHeader>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

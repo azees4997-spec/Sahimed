@@ -66,20 +66,20 @@ export default function CategoriesPage() {
       <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-16">
         <Navbar />
         
-        <main className="max-w-7xl mx-auto px-6 py-12 md:py-20">
+        <main className="max-w-7xl mx-auto px-6 py-8 md:py-12">
           <motion.div 
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="flex items-center gap-6 mb-16"
+            className="flex items-center gap-4 mb-10"
           >
             <Link href="/">
-              <button className="rounded-full bg-white shadow-xl h-16 w-16 hover:scale-110 transition-transform flex items-center justify-center border border-white active:scale-95">
-                <ArrowLeft className="w-6 h-6 text-slate-900" />
+              <button className="rounded-full bg-white shadow-lg h-10 w-10 hover:scale-110 transition-transform flex items-center justify-center border border-slate-100 active:scale-95">
+                <ArrowLeft className="w-5 h-5 text-slate-900" />
               </button>
             </Link>
-            <div className="space-y-1">
-              <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Categories</h1>
-              <p className="text-[10px] font-black text-primary tracking-[0.4em] uppercase leading-none opacity-70">Browse by Therapeutic Segment</p>
+            <div className="space-y-0.5">
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Categories</h1>
+              <p className="text-[8px] font-black text-primary tracking-[0.2em] uppercase leading-none opacity-60">Therapeutic Segments</p>
             </div>
           </motion.div>
 

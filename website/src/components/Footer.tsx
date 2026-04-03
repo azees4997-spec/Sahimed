@@ -35,17 +35,13 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-[10px] font-black tracking-widest text-gray-400">
-          <Link href="/search" className="hover:text-white transition-colors">Shop generic</Link>
-          <Link href="#" className="hover:text-white transition-colors">Health articles</Link>
-          <Link href="#" className="hover:text-white transition-colors">Offers</Link>
-          <Link href="#" className="hover:text-white transition-colors">Contact us</Link>
-          <Link href="#" className="hover:text-white transition-colors">FAQs</Link>
+          <Link href="/search" className="hover:text-white transition-colors">SHOP ALL</Link>
+          <Link href="/categories" className="hover:text-white transition-colors">CATEGORIES</Link>
           {footerPages?.map((page: any) => (
             <Link key={page.id} href={`/p/${page.id}`} className="hover:text-white transition-colors uppercase">
               {page.title}
             </Link>
           ))}
-          {!footerPages && <Link href="#" className="hover:text-white transition-colors">Policies</Link>}
         </div>
 
         <div className="w-full pt-4 border-t border-white/5 text-center">

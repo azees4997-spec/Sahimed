@@ -123,8 +123,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         console.error("Failed to load cart", e);
       }
     }
-    const savedLoc = localStorage.getItem('hl_location');
-    if (savedLoc) setLocation(savedLoc);
+    const savedLoc = localStorage.getItem('sahimed_location');
+    if (savedLoc) {
+      try {
+        const parsed = JSON.parse(savedLoc);
+        if (parsed.city) setLocation(parsed.city);
+        else setLocation(savedLoc);
+      } catch (e) {
+        setLocation(savedLoc);
+      }
+    }
 
     const savedPrescriptions = localStorage.getItem('hl_prescriptions');
     if (savedPrescriptions) {
@@ -141,7 +149,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [cart]);
 
   useEffect(() => {
-    localStorage.setItem('hl_location', location);
+    // Only save string representation if not already JSON-like
+    if (location.includes('{')) return; 
+    localStorage.setItem('hl_location', location); // Legacy support
+    localStorage.setItem('sahimed_location', location); 
   }, [location]);
 
   useEffect(() => {

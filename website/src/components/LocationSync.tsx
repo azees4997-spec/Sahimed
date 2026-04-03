@@ -2,22 +2,26 @@
 
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useCart } from '@/context/CartContext';
 
 export default function LocationSync() {
   const { toast } = useToast();
+  const { setLocation } = useCart();
 
   useEffect(() => {
     const syncLocation = async () => {
       // Check if location is already captured
       const savedLocation = localStorage.getItem('sahimed_location');
-      if (savedLocation) return;
+      if (savedLocation && savedLocation !== "Mumbai, MH") return;
 
       const saveLocationData = (data: any) => {
+        const cityValue = data.city || data.region || 'Unknown';
         localStorage.setItem('sahimed_location', JSON.stringify({
           ...data,
           timestamp: new Date().getTime()
         }));
-        console.log('[Location Intelligence] Position synchronized:', data.city || data.region);
+        setLocation(cityValue);
+        console.log('[Location Intelligence] Position synchronized:', cityValue);
       };
 
       // 1. Primary: Browser Geolocation
