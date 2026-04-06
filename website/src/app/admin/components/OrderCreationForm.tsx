@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { 
@@ -29,6 +29,8 @@ import {
   useCollection 
 } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { useStorage } from '@/firebase';
 
 export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db: any, onSuccess: () => void }) {
   const { toast } = useToast();
@@ -51,6 +53,8 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
     enquiry.imageUrls || [enquiry.imageUrl].filter(Boolean)
   );
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const storage = useStorage();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Pincode lookup logic
@@ -76,10 +80,21 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPrescriptions([...prescriptions, url]);
-    toast({ title: "Prescription attached", description: file.name });
+    if (!file || !storage) return;
+
+    setIsUploading(true);
+    try {
+      const fileName = `admin_attachments/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+      const storageRef = ref(storage, fileName);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      setPrescriptions(prev => [...prev, url]);
+      toast({ title: "Cloud sync complete", description: "Prescription attached and uploaded." });
+    } catch (err) {
+      toast({ variant: 'destructive', title: "Upload failed", description: "Could not sync file to storage." });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const promosQuery = useMemoFirebase(() => query(collection(db, 'promocodes'), where('isActive', '==', true)), [db]);
@@ -263,7 +278,7 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
                         <p className="text-xs font-black">{p.name}</p>
                         {p.prescriptionRequired && <Badge className="bg-red-50 text-red-500 text-[8px] border-none font-black uppercase">RX</Badge>}
                       </div>
-                      <p className="text-[10px] font-bold text-gray-400">₹{p.sahimed_price} <span className="line-through opacity-50 ml-1">₹{p.mrp}</span></p>
+                      <p className="text-[10px] font-bold text-gray-400">â‚¹{p.sahimed_price} <span className="line-through opacity-50 ml-1">â‚¹{p.mrp}</span></p>
                     </div>
                     <Plus className="w-4 h-4 text-primary opacity-0 group-hover:opacity-100 transition-all" />
                   </button>
@@ -348,8 +363,8 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
                       <div className="flex-1">
                         <p className="text-sm font-black text-gray-900 leading-tight mb-1">{it.name}</p>
                         <div className="flex items-center gap-2">
-                           <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded-full">Unit: ₹{it.price}</span>
-                           <span className="text-[9px] font-bold text-gray-400 line-through">MRP: ₹{it.mrp}</span>
+                           <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded-full">Unit: â‚¹{it.price}</span>
+                           <span className="text-[9px] font-bold text-gray-400 line-through">MRP: â‚¹{it.mrp}</span>
                         </div>
                       </div>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-red-100 hover:text-red-500 hover:bg-red-50 transition-all" onClick={() => removeItem(i)}><Trash2 className="w-4 h-4" /></Button>
@@ -357,8 +372,8 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
                     
                     <div className="flex items-center justify-between pt-3 border-t border-gray-50 mt-1">
                       <div className="flex flex-col">
-                        <p className="text-[9px] font-black text-green-600 uppercase tracking-tighter">Savings: ₹{(it.mrp - it.price).toFixed(0)} ({discPc}%)</p>
-                        <p className="text-xs font-black text-gray-900 mt-0.5">Subtotal: ₹{(it.price * it.qty).toFixed(2)}</p>
+                        <p className="text-[9px] font-black text-green-600 uppercase tracking-tighter">Savings: â‚¹{(it.mrp - it.price).toFixed(0)} ({discPc}%)</p>
+                        <p className="text-xs font-black text-gray-900 mt-0.5">Subtotal: â‚¹{(it.price * it.qty).toFixed(2)}</p>
                       </div>
                       <div className="flex items-center gap-1 bg-gray-50 rounded-2xl p-1.5 border">
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl hover:bg-white" onClick={() => updateQty(i, it.qty - 1)}>-</Button>
@@ -404,12 +419,12 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
 
           <div className="bg-primary/5 p-6 rounded-[32px] border border-primary/10 space-y-4">
              <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest"><span>Summary</span><span>Amount</span></div>
-             <div className="flex justify-between text-sm font-bold"><span>Total MRP</span><span>₹{totals.mrp.toFixed(2)}</span></div>
-             <div className="flex justify-between text-sm font-bold text-green-600"><span>Product Discount</span><span>-₹{totals.discount.toFixed(2)}</span></div>
-             <div className="flex justify-between text-sm font-bold text-blue-600"><span>Promo Discount</span><span>-₹{totals.promo.toFixed(2)}</span></div>
+             <div className="flex justify-between text-sm font-bold"><span>Total MRP</span><span>â‚¹{totals.mrp.toFixed(2)}</span></div>
+             <div className="flex justify-between text-sm font-bold text-green-600"><span>Product Discount</span><span>-â‚¹{totals.discount.toFixed(2)}</span></div>
+             <div className="flex justify-between text-sm font-bold text-blue-600"><span>Promo Discount</span><span>-â‚¹{totals.promo.toFixed(2)}</span></div>
              <div className="flex justify-between items-center pt-4 border-t border-primary/20">
-               <div><p className="text-base font-black text-primary">Payable</p><p className="text-[8px] font-black text-green-600 uppercase">You saved ₹{totals.discount.toFixed(0)} ({((totals.discount/totals.mrp)*100 || 0).toFixed(0)}%)</p></div>
-               <p className="text-2xl font-black text-primary">₹{totals.total.toFixed(2)}</p>
+               <div><p className="text-base font-black text-primary">Payable</p><p className="text-[8px] font-black text-green-600 uppercase">You saved â‚¹{totals.discount.toFixed(0)} ({((totals.discount/totals.mrp)*100 || 0).toFixed(0)}%)</p></div>
+               <p className="text-2xl font-black text-primary">â‚¹{totals.total.toFixed(2)}</p>
              </div>
           </div>
           
@@ -421,3 +436,4 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
     </div>
   );
 }
+
