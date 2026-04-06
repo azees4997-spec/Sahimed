@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
@@ -37,11 +37,13 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp, doc, getDoc, query, orderBy } from 'firebase/firestore';
+import { collection, serverTimestamp, doc, getDoc, query, orderBy, addDoc } from 'firebase/firestore';
+import AddressForm from '@/components/AddressForm';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
+import Link from 'next/link';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -568,7 +570,7 @@ export default function CheckoutPage() {
                     >
                       <div className="flex items-center gap-6 relative z-10">
                         <div className={cn("w-14 h-14 rounded-[20px] flex items-center justify-center shadow-inner", clinicalPath === 'consult' ? "bg-emerald-500 text-white" : "bg-white text-slate-300")}>
-                          <Stethoscope, Lock className="w-7 h-7" />
+                          <Stethoscope className="w-7 h-7" />
                         </div>
                         <div>
                           <p className="font-black text-sm tracking-tight font-outfit uppercase">Consult Doctor</p>
@@ -686,7 +688,7 @@ export default function CheckoutPage() {
                         className="overflow-hidden"
                       >
                        <div className="bg-emerald-50/50 p-10 rounded-[48px] border-2 border-emerald-100 text-center space-y-4">
-                          <Stethoscope, Lock className="w-12 h-12 text-emerald-300 mx-auto" />
+                          <Stethoscope className="w-12 h-12 text-emerald-300 mx-auto" />
                           <h4 className="text-sm font-black text-emerald-900 tracking-tight font-outfit uppercase">Doctor Consultation Requested</h4>
                           <p className="text-[10px] font-bold text-emerald-700 leading-relaxed max-w-sm mx-auto uppercase tracking-wider">
                             Our medical team will contact you to confirm your prescription and authorize your order via free digital consult.
