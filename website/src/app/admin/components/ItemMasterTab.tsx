@@ -652,6 +652,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                   <div className="p-4 border-b border-slate-100 flex items-center gap-3">
                     <Search className="w-4 h-4 text-slate-400" />
                     <Input 
+                      autoFocus
                       placeholder="Type molecule name..."
                       value={molSearch}
                       onChange={(e) => setMolSearch(e.target.value)}
@@ -666,31 +667,35 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                         {molecules?.length === 0 ? (
                           <div className="py-6 px-4 text-center text-[10px] font-black text-slate-400 uppercase">No molecule matched</div>
                         ) : (
-                          molecules?.map((mol) => (
-                            <button
-                              key={mol.id}
-                              onClick={() => {
-                                setForm({...form, moleculeId: mol.id, saltComposition: mol.molecule});
-                                setSelectedMoleculeTitle(mol.molecule);
-                                setIsMolOpen(false);
-                                setMolSearch('');
-                              }}
-                              className={cn(
-                                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group",
-                                form.moleculeId === mol.id ? "bg-primary/10 text-primary" : "text-slate-600"
-                              )}
-                            >
-                              <div className={cn(
-                                "w-2 h-2 rounded-full",
-                                form.moleculeId === mol.id ? "bg-primary" : "bg-transparent group-hover:bg-slate-200"
-                              )} />
-                              <div className="flex-1 min-w-0">
-                                <p className="font-black text-[12px] uppercase truncate tracking-tight">{mol.molecule}</p>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase opacity-60">{mol.masterId} • {mol.form}</p>
-                              </div>
-                              {form.moleculeId === mol.id && <Check className="w-4 h-4" />}
-                            </button>
-                          ))
+                          molecules?.map((mol) => {
+                            const molId = mol._id || mol.id;
+                            const isSelected = form.moleculeId === molId;
+                            return (
+                              <button
+                                key={molId}
+                                onClick={() => {
+                                  setForm({...form, moleculeId: molId, saltComposition: mol.molecule || mol.name});
+                                  setSelectedMoleculeTitle(mol.molecule || mol.name);
+                                  setIsMolOpen(false);
+                                  setMolSearch('');
+                                }}
+                                className={cn(
+                                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group",
+                                  isSelected ? "bg-primary/10 text-primary" : "text-slate-600"
+                                )}
+                              >
+                                <div className={cn(
+                                  "w-2 h-2 rounded-full",
+                                  isSelected ? "bg-primary" : "bg-transparent group-hover:bg-slate-200"
+                                )} />
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-black text-[12px] uppercase truncate tracking-tight">{mol.molecule || mol.name}</p>
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase opacity-60">{mol.masterId} • {mol.form}</p>
+                                </div>
+                                {isSelected && <Check className="w-4 h-4" />}
+                              </button>
+                            );
+                          })
                         )}
                       </div>
                     )}

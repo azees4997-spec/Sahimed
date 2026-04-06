@@ -2,11 +2,16 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
+function escapeRegExp(string: string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const limitValue = parseInt(searchParams.get('limit') || '50');
   const category = searchParams.get('category');
-  const q = searchParams.get('q');
+  const qStr = searchParams.get('q');
+  const q = qStr ? escapeRegExp(qStr) : null;
   const moleculeId = searchParams.get('moleculeId');
   const isGeneric = searchParams.get('isGeneric');
   const isBestSeller = searchParams.get('isBestSeller');

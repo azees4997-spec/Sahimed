@@ -10,10 +10,15 @@ const getQuery = (id: string) => {
   return { _id: id as any };
 };
 
+function escapeRegExp(string: string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const q = searchParams.get('q');
+    const qRaw = searchParams.get('q');
+    const q = qRaw ? escapeRegExp(qRaw) : null;
     const limit = parseInt(searchParams.get('limit') || '50');
 
     const client = await clientPromise;
