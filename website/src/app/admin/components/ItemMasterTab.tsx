@@ -390,7 +390,8 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                 clinicalTabLabel: data.clinicalTabLabel || 'Intelligence',
                 safetyTabLabel: data.safetyTabLabel || 'Protocol',
                 matrixTabLabel: data.matrixTabLabel || 'Matrix',
-                saltComposition: data.saltComposition || '',
+                // PULL COMPOSITION FROM LEGACY FALLBACKS
+                saltComposition: data.saltComposition || data.composition || data.salt || data.molecule || '',
                 imageUrl2: data.imageUrls?.[1] || '',
                 imageUrl3: data.imageUrls?.[2] || '',
                 id: data.id || data._id?.toString()
@@ -406,13 +407,22 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                 }));
              }
              
-             // Fetch molecule name if mapped
+             // Fetch molecule name if mapped and set as saltComposition if empty
              if (data.moleculeId) {
-                const mRes = await fetch(`/api/molecules/${data.moleculeId.toString()}`);
-                if (mRes.ok) {
-                   const mData = await mRes.json();
-                   if (mData.molecule || mData.name) setSelectedMoleculeTitle(mData.molecule || mData.name);
-                }
+                const fetchMol = async () => {
+                   try {
+                      const mRes = await fetch(`/api/molecules/${data.moleculeId}`);
+                      if (mRes.ok) {
+                         const mData = await mRes.json();
+                         const molName = mData.molecule || mData.name;
+                         if (molName) {
+                            setSelectedMoleculeTitle(molName);
+                            setForm(f => ({ ...f, saltComposition: f.saltComposition || molName }));
+                         }
+                      }
+                   } catch (e) { console.error("Error fetching molecule", e); }
+                };
+                fetchMol();
              }
           }
        } catch (e) {
@@ -494,9 +504,19 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       return;
     }
 
-    // MANDATORY VALIDATION
-    if (!form.clinicalTabLabel || !form.safetyTabLabel || !form.matrixTabLabel || !form.saltComposition) {
-      toast({ variant: 'destructive', title: "Missing fields", description: "All tab labels and salt composition are required" });
+    // MANDATORY VALIDATION WITH SPECIFIC FEEDBACK
+    const missing = [];
+    if (!form.clinicalTabLabel) missing.push("Clinical Label");
+    if (!form.safetyTabLabel) missing.push("Safety Label");
+    if (!form.matrixTabLabel) missing.push("Matrix Label");
+    if (!form.saltComposition) missing.push("Salt Composition");
+
+    if (missing.length > 0) {
+      toast({ 
+        variant: 'destructive', 
+        title: "Incomplete Profile", 
+        description: `Please fill required fields: ${missing.join(', ')}` 
+      });
       return;
     }
 
