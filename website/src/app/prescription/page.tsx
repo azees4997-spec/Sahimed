@@ -79,9 +79,14 @@ export default function PrescriptionPage() {
         setAttachedFiles(prev => [...prev, downloadURL]);
       }
       toast({ title: "Prescription files added" });
-    } catch (error) {
-      console.error(error);
-      toast({ variant: "destructive", title: "Upload failed" });
+    } catch (error: any) {
+      console.error("[Prescription Upload Error]", error);
+      const errorCode = error.code || 'unknown';
+      toast({ 
+        variant: "destructive", 
+        title: "Upload failed", 
+        description: `Error: ${errorCode}. Please ensure you are logged in and the file is under 5MB.` 
+      });
     } finally {
       setIsUploading(false);
     }
