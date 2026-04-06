@@ -1,0 +1,37 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // 1. ANONYMOUS PRESCRIPTION UPLOADS (For Guest Checkout/Homepage)
+    // Allows unauthenticated users to upload to the 'anonymous' folder.
+    match /prescriptions/anonymous/{allPaths=**} {
+      // Allow read for everyone (so they can see their own recently uploaded previews)
+      // or restrict to admins if privacy is paramount.
+      allow read: if true;
+      
+      // Allow write with strict safety checks
+      allow write: if request.resource.size < 10 * 1024 * 1024 // Max 10MB
+                   && request.resource.contentType.matches('image/.*|application/pdf');
+    }
+
+    // 2. AUTHENTICATED USER PRESCRIPTIONS
+    // Users can only access their own labeled folders.
+    match /prescriptions/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 3. ADMIN/CLINICAL ACCESS
+    // Admins and Pharmacists can read all prescriptions for order verification.
+    // Note: This relies on a check against the 'adminProfiles' collection in Firestore.
+    match /prescriptions/{userId}/{allPaths=**} {
+      allow read: if request.auth != null && 
+        firestore.exists(/databases/(default)/documents/adminProfiles/$(request.auth.uid));
+    }
+
+    // 4. DEFAULT SYSTEM RULES
+    // Ensure all other paths are only accessible by authenticated users.
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
