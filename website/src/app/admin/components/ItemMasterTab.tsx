@@ -387,6 +387,10 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
              setForm(prev => ({
                 ...prev,
                 ...data,
+                clinicalTabLabel: data.clinicalTabLabel || 'Intelligence',
+                safetyTabLabel: data.safetyTabLabel || 'Protocol',
+                matrixTabLabel: data.matrixTabLabel || 'Matrix',
+                saltComposition: data.saltComposition || '',
                 imageUrl2: data.imageUrls?.[1] || '',
                 imageUrl3: data.imageUrls?.[2] || '',
                 id: data.id || data._id?.toString()
