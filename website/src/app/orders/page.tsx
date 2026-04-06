@@ -325,6 +325,37 @@ export default function OrdersPage() {
                   </div>
 
                   <div className="space-y-6">
+                    <h4 className="text-[10px] font-black tracking-[0.4em] text-slate-400 flex items-center gap-4 uppercase opacity-60">
+                      <MapPin className="w-4 h-4" /> Delivery Address
+                    </h4>
+                    <div className="bg-white/60 backdrop-blur-md p-8 rounded-[40px] border border-white shadow-xl">
+                      <div className="flex items-start gap-4">
+                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-2xl flex items-center justify-center shrink-0">
+                          <MapPin className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[9px] font-black text-primary tracking-[0.2em] mb-1.5 uppercase">{selectedOrder?.shippingDetails?.tag || 'Delivery Point'}</p>
+                          <p className="text-sm font-black text-slate-900 tracking-tighter font-outfit uppercase">
+                            {selectedOrder?.shippingDetails?.houseNumber}
+                            {selectedOrder?.shippingDetails?.apartmentName ? `, ${selectedOrder?.shippingDetails?.apartmentName}` : ''}
+                          </p>
+                          <p className="text-[11px] font-bold text-slate-600 uppercase tracking-tight mt-1">
+                            {selectedOrder?.shippingDetails?.street}
+                          </p>
+                          {selectedOrder?.shippingDetails?.landmark && (
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-1 italic">
+                              Near: {selectedOrder?.shippingDetails?.landmark}
+                            </p>
+                          )}
+                          <p className="text-[10px] font-black text-slate-400 mt-3 tracking-[0.1em] uppercase opacity-60">
+                            {selectedOrder?.shippingDetails?.city}, {selectedOrder?.shippingDetails?.state} - {selectedOrder?.shippingDetails?.pincode}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
                     <h4 className="text-[10px] font-black tracking-[0.3em] text-slate-400 flex items-center gap-4 uppercase opacity-60">
                       <Receipt className="w-4 h-4" /> Bill Details
                     </h4>

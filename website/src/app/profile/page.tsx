@@ -57,6 +57,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
+import AddressForm from '@/components/AddressForm';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -100,15 +101,7 @@ export default function ProfilePage() {
   const addressesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'addresses'), orderBy('createdAt', 'desc')) : null, [db, user]);
   const { data: addresses, isLoading: addressesLoading } = useCollection(addressesQuery);
 
-  const [addressForm, setAddressForm] = useState({
-    id: '',
-    tag: 'Home',
-    street: '',
-    landmark: '',
-    pincode: '',
-    lat: 0,
-    lng: 0
-  });
+  const [addressForm, setAddressForm] = useState<any>(null);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -169,24 +162,26 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSaveAddress = () => {
+  const handleSaveAddress = (data: any) => {
     if (!user || !db) return;
-    if (!addressForm.street || !addressForm.pincode) {
-      toast({ variant: 'destructive', title: "Missing data", description: "Street and Pincode are required." });
-      return;
-    }
 
     const payload = {
-      tag: addressForm.tag,
-      street: addressForm.street,
-      landmark: addressForm.landmark,
-      pincode: addressForm.pincode,
-      lat: addressForm.lat,
-      lng: addressForm.lng,
+      patientName: data.patientName,
+      phoneNumber: data.phoneNumber,
+      houseNumber: data.houseNumber,
+      apartmentName: data.apartmentName || '',
+      street: data.street,
+      landmark: data.landmark || '',
+      city: data.city,
+      state: data.state,
+      pincode: data.pincode,
+      tag: data.tag,
+      lat: data.lat || 0,
+      lng: data.lng || 0,
       updatedAt: serverTimestamp()
     };
 
-    if (addressForm.id) {
+    if (addressForm?.id) {
       setDocumentNonBlocking(doc(db, 'userProfiles', user.uid, 'addresses', addressForm.id), payload, { merge: true });
     } else {
       addDocumentNonBlocking(collection(db, 'userProfiles', user.uid, 'addresses'), { ...payload, createdAt: serverTimestamp() });
@@ -194,7 +189,7 @@ export default function ProfilePage() {
 
     setIsAddressDialogOpen(false);
     toast({ title: "Address secured" });
-    setAddressForm({ id: '', tag: 'Home', street: '', landmark: '', pincode: '', lat: 0, lng: 0 });
+    setAddressForm(null);
   };
 
   const handleLogout = async () => {
@@ -203,11 +198,9 @@ export default function ProfilePage() {
   };
 
   const getTagIcon = (tag: string) => {
-    switch (tag) {
-      case 'Home': return <Home className="w-5 h-5" />;
-      case 'Office': return <Briefcase className="w-5 h-5" />;
-      default: return <MoreHorizontal className="w-5 h-5" />;
-    }
+    if (tag === 'Home') return <Home className="w-5 h-5" />;
+    if (tag === 'Office') return <Briefcase className="w-5 h-5" />;
+    return <MoreHorizontal className="w-5 h-5" />;
   };
 
   if (isUserLoading) {
@@ -279,7 +272,7 @@ export default function ProfilePage() {
                 </p>
                 <div className="hidden sm:block w-1 h-1 rounded-full bg-slate-300" />
                 <p className="text-slate-900 font-black text-[8px] tracking-[0.2em] uppercase">
-                  Level 1 Clinical Status
+                  Verified Profile
                 </p>
               </div>
             </div>
@@ -336,63 +329,17 @@ export default function ProfilePage() {
                             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
                               <MapPin className="w-20 h-20" />
                             </div>
-                            <DialogTitle className="text-xl font-black tracking-tighter uppercase font-outfit">Delivery Point</DialogTitle>
+                            <DialogTitle className="text-xl font-black tracking-tighter uppercase font-outfit">Address Details</DialogTitle>
                             <DialogDescription className="text-[8px] font-black text-white/60 tracking-[0.2em] mt-2 uppercase">
-                              Register coordinates
+                              Save Delivery Information
                             </DialogDescription>
                           </div>
-                          <div className="p-6 space-y-6">
-                            <div className="space-y-2">
-                              <Label className="text-[9px] font-black tracking-[0.1em] text-slate-400 ml-1 uppercase opacity-60">Classification</Label>
-                              <Select value={addressForm.tag} onValueChange={(v) => setAddressForm({...addressForm, tag: v})}>
-                                <SelectTrigger className="h-12 rounded-[16px] bg-slate-50 border-none font-black text-[10px] px-4 uppercase tracking-widest shadow-inner">
-                                  <SelectValue placeholder="Select Tag" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-[24px] border-none shadow-3xl p-1 bg-white">
-                                  <SelectItem value="Home" className="font-black text-[9px] tracking-widest uppercase">Home Registry</SelectItem>
-                                  <SelectItem value="Office" className="font-black text-[9px] tracking-widest uppercase">Office Registry</SelectItem>
-                                  <SelectItem value="Other" className="font-black text-[9px] tracking-widest uppercase">External Base</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-3">
-                              <div className="flex justify-between items-center px-1">
-                                <Label className="text-[9px] font-black tracking-[0.1em] text-slate-400 uppercase opacity-60">Address Details</Label>
-                                <button type="button" onClick={handleLocate} className="text-[9px] font-black bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full border border-emerald-100 flex items-center gap-1.5 hover:bg-emerald-100 transition-all uppercase shadow-sm">
-                                  {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LocateFixed className="w-3.5 h-3.5" />}
-                                  Sync GPS (Autofill)
-                                </button>
-                              </div>
-                              <Input 
-                                value={addressForm.street} 
-                                onChange={e => setAddressForm({...addressForm, street: e.target.value})}
-                                placeholder="HOUSE NO, SECTOR, LOCALITY"
-                                className="h-12 rounded-[16px] bg-slate-50 border-none font-black text-[10px] px-4 uppercase tracking-tight shadow-inner"
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label className="text-[9px] font-black tracking-[0.1em] text-slate-400 ml-1 uppercase opacity-60">Reference</Label>
-                                <Input 
-                                  value={addressForm.landmark} 
-                                  onChange={e => setAddressForm({...addressForm, landmark: e.target.value})}
-                                  placeholder="LANDMARK"
-                                  className="h-12 rounded-[16px] bg-slate-50 border-none font-black text-[10px] px-4 uppercase tracking-tight shadow-inner"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-[10px] font-black tracking-[0.1em] text-slate-400 ml-1 uppercase opacity-60">PIN Code</Label>
-                                <Input 
-                                  value={addressForm.pincode} 
-                                  onChange={e => setAddressForm({...addressForm, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})}
-                                  placeholder="6-DIGIT"
-                                  className="h-12 rounded-[16px] bg-slate-50 border-none font-black text-[10px] px-4 uppercase tracking-[0.3em] text-center shadow-inner"
-                                />
-                              </div>
-                            </div>
-                            <Button onClick={handleSaveAddress} className="w-full h-14 rounded-full font-black text-[10px] tracking-[0.2em] gap-3 shadow-xl shadow-primary/20 bg-primary text-white uppercase active:scale-95 transition-all">
-                              <Save className="w-5 h-5" /> Confirm Point
-                            </Button>
+                          <div className="p-6 overflow-y-auto max-h-[70vh]">
+                            <AddressForm 
+                              initialData={addressForm || {}}
+                              onSave={handleSaveAddress}
+                              isLoading={false}
+                            />
                           </div>
                         </DialogContent>
                       </Dialog>
@@ -404,7 +351,7 @@ export default function ProfilePage() {
                       ) : (!addresses || addresses.length === 0) ? (
                         <div className="bg-white/40 backdrop-blur-md p-16 rounded-[48px] border border-white shadow-xl text-center">
                           <MapPin className="w-12 h-12 text-slate-200 mx-auto mb-6" />
-                          <p className="text-[10px] font-black text-slate-300 tracking-[0.4em] uppercase">No Logistics Protocol Saved</p>
+                          <p className="text-[10px] font-black text-slate-300 tracking-[0.4em] uppercase">No saved addresses</p>
                         </div>
                       ) : addresses.map((addr) => (
                         <motion.div 
@@ -422,8 +369,11 @@ export default function ProfilePage() {
                                   <span className="font-black text-[9px] text-primary tracking-[0.2em] uppercase">{addr.tag}</span>
                                   {addr.lat !== 0 && <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" title="GPS Verified" />}
                                 </div>
-                                <p className="text-[11px] font-bold text-slate-900 leading-relaxed line-clamp-2 uppercase tracking-tight">{addr.street}</p>
-                                <p className="text-[8px] font-black text-gray-400 mt-2 tracking-[0.2em] uppercase opacity-60">PIN: {addr.pincode}</p>
+                                <p className="text-[11px] font-bold text-slate-900 leading-tight uppercase tracking-tight">
+                                  {addr.houseNumber}{addr.apartmentName ? `, ${addr.apartmentName}` : ''}
+                                </p>
+                                <p className="text-[10px] font-medium text-slate-600 leading-tight uppercase tracking-tight mt-1">{addr.street}</p>
+                                <p className="text-[8px] font-black text-gray-400 mt-2 tracking-[0.2em] uppercase opacity-60">{addr.city}, {addr.state} - {addr.pincode}</p>
                               </div>
                             </div>
                             <div className="flex gap-1.5">

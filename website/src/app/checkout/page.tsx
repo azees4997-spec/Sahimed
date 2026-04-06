@@ -37,7 +37,8 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp, doc, getDoc, query, orderBy } from 'firebase/firestore';
+import { collection, serverTimestamp, doc, getDoc, query, orderBy, addDoc } from 'firebase/firestore';
+import AddressForm from '@/components/AddressForm';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -83,7 +84,7 @@ export default function CheckoutPage() {
   const { user } = useUser();
   const db = useFirestore();
   const [loading, setLoading] = useState(false);
-  const [isLocating, setIsLocating] = useState(false);
+  const [isAddressFormLoading, setIsAddressFormLoading] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'COD' | 'Online'>('COD');
@@ -211,69 +212,43 @@ export default function CheckoutPage() {
     return true;
   };
 
-  const handleLocateMe = () => {
-    setIsLocating(true);
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
-            const data = await response.json();
-            
-            if (data && data.address) {
-              setOrderInfo(prev => ({
-                ...prev,
-                buildingLocality: data.address.suburb || data.address.neighbourhood || data.display_name,
-                city: data.address.city || data.address.town || data.address.village || '',
-                state: data.address.state || '',
-                pincode: data.address.postcode?.replace(/\s/g, '') || prev.pincode,
-                lat,
-                lng
-              }));
-              toast({ title: "Live position locked" });
-            }
-          } catch (e) {
-            toast({ variant: 'destructive', title: 'GPS sync failed' });
-          } finally {
-            setIsLocating(false);
-          }
-        },
-        () => setIsLocating(false),
-        { enableHighAccuracy: true }
-      );
-    }
-  };
-
-  const handleSaveNewAddress = async () => {
+  const handleAddAddress = async (data: any) => {
     if (!user || !db) return;
-    
-    if (!orderInfo.houseNumber.trim() || !orderInfo.buildingLocality.trim() || !orderInfo.pincode.trim()) {
-      toast({ variant: 'destructive', title: "Incomplete address", description: "House No, Locality and Pincode are mandatory." });
-      return;
-    }
-
-    const fullStreet = `${orderInfo.buildingLocality}${orderInfo.city ? ', ' + orderInfo.city : ''}${orderInfo.state ? ', ' + orderInfo.state : ''}`;
-    const finalTag = orderInfo.tag === 'Other' ? (orderInfo.otherTag || 'Other') : orderInfo.tag;
-
-    const payload = {
-      houseNumber: orderInfo.houseNumber,
-      street: fullStreet,
-      pincode: orderInfo.pincode,
-      lat: orderInfo.lat,
-      lng: orderInfo.lng,
-      tag: finalTag,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
+    setIsAddressFormLoading(true);
 
     try {
-      addDocumentNonBlocking(collection(db, 'userProfiles', user.uid, 'addresses'), payload);
+      const payload = {
+        patientName: data.patientName,
+        phoneNumber: data.phoneNumber,
+        houseNumber: data.houseNumber,
+        apartmentName: data.apartmentName || '',
+        street: data.street,
+        landmark: data.landmark || '',
+        city: data.city,
+        state: data.state,
+        pincode: data.pincode,
+        tag: data.tag,
+        lat: data.lat || 0,
+        lng: data.lng || 0,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      await addDoc(collection(db, 'userProfiles', user.uid, 'addresses'), payload);
+      
       setIsAddressModalOpen(false);
-      toast({ title: "Address secured", description: `Saved to your ${finalTag} registry.` });
-    } catch (err) {
-      toast({ variant: 'destructive', title: "Save error" });
+      toast({
+        title: "Address Saved",
+        description: "Your new delivery point is ready."
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save address. Please try again."
+      });
+    } finally {
+      setIsAddressFormLoading(false);
     }
   };
 
@@ -400,10 +375,7 @@ export default function CheckoutPage() {
                 <div className="flex items-center justify-between px-2">
                   <h3 className="text-lg font-black text-slate-900 tracking-tight font-outfit uppercase">Shipping Addresses</h3>
                   <button 
-                    onClick={() => {
-                      setOrderInfo({ patientName: orderInfo.patientName, phoneNumber: orderInfo.phoneNumber, houseNumber: '', buildingLocality: '', city: '', state: '', pincode: '', lat: 0, lng: 0, tag: 'Home', otherTag: '' });
-                      setIsAddressModalOpen(true);
-                    }}
+                    onClick={() => setIsAddressModalOpen(true)}
                     className="bg-white/60 backdrop-blur-md px-6 py-3 rounded-full border border-white text-primary font-black text-[10px] tracking-[0.2em] flex items-center gap-3 uppercase hover:bg-white shadow-xl transition-all active:scale-95"
                   >
                     <Plus className="w-4 h-4" /> Add Address
@@ -723,152 +695,26 @@ export default function CheckoutPage() {
         </main>
 
         <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
-          <DialogContent className="max-w-2xl w-[96vw] sm:w-full rounded-[56px] border-none p-0 overflow-hidden shadow-3xl bg-white/90 backdrop-blur-3xl mx-auto z-[110]">
-            <div className="max-h-[85vh] overflow-y-auto scrollbar-hide">
-              <div className="bg-primary p-12 text-white relative overflow-hidden shrink-0">
-                <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12">
-                  <MapPin className="w-32 h-32" />
-                </div>
-                <DialogTitle className="text-3xl font-black tracking-tighter uppercase font-outfit">Delivery Address</DialogTitle>
-                <DialogDescription className="text-[10px] font-black text-white/60 tracking-[0.3em] mt-3 uppercase">
-                  Enter your shipping details below
-                </DialogDescription>
+          <DialogContent className="max-w-md w-[94vw] rounded-[40px] p-0 border-none shadow-3xl bg-white z-[110] overflow-hidden">
+            <div className="bg-primary p-8 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
+                <MapPin className="w-20 h-20" />
               </div>
-
-              <div className="p-10 space-y-8">
-                <Button 
-                  onClick={handleLocateMe}
-                  variant="outline" 
-                  type="button"
-                  className="h-16 w-full rounded-[32px] border-2 border-primary/20 text-primary bg-white hover:bg-primary/5 font-black text-xs gap-4 transition-all hover:scale-[1.02] shadow-xl uppercase tracking-widest"
-                >
-                  {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Target className="w-5 h-5" />}
-                  Use Current Location
-                </Button>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Customer Name *</Label>
-                    <Input 
-                      placeholder="Enter Name" 
-                      value={orderInfo.patientName} 
-                      onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})}
-                      className="h-14 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm px-6 uppercase tracking-tight focus:bg-white transition-colors"
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Mobile Number *</Label>
-                    <div className="relative">
-                      <div className="absolute left-6 top-1/2 -translate-y-1/2 text-xs font-black text-primary border-r border-slate-200 pr-4">IN +91</div>
-                      <Input 
-                        placeholder="MOBILE" 
-                        value={orderInfo.phoneNumber} 
-                        maxLength={10}
-                        onChange={e => setOrderInfo({...orderInfo, phoneNumber: e.target.value.replace(/\D/g, '')})}
-                        className="h-14 pl-24 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm uppercase tracking-widest focus:bg-white transition-colors"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">House / Flat No. *</Label>
-                  <Input 
-                    placeholder="HOUSE / BUILDING / APARTMENT" 
-                    value={orderInfo.houseNumber} 
-                    onChange={e => setOrderInfo({...orderInfo, houseNumber: e.target.value})}
-                    className="h-14 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm px-6 uppercase focus:bg-white transition-colors"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Street / Locality / Area *</Label>
-                  <Input 
-                    placeholder="LOCALITY / STREET / LANDMARK" 
-                    value={orderInfo.buildingLocality} 
-                    onChange={e => setOrderInfo({...orderInfo, buildingLocality: e.target.value})}
-                    className="h-14 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm px-6 uppercase focus:bg-white transition-colors"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Pincode *</Label>
-                    <Input 
-                      placeholder="PINCODE" 
-                      value={orderInfo.pincode} 
-                      maxLength={6}
-                      onChange={e => setOrderInfo({...orderInfo, pincode: e.target.value.replace(/\D/g, '')})}
-                      className="h-14 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm px-6 text-center focus:bg-white transition-colors"
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Zone *</Label>
-                    <Input 
-                      placeholder="CITY" 
-                      value={orderInfo.city} 
-                      onChange={e => setOrderInfo({...orderInfo, city: e.target.value})}
-                      className="h-14 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm px-6 text-center uppercase focus:bg-white transition-colors"
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Territory *</Label>
-                    <Input 
-                      placeholder="STATE" 
-                      value={orderInfo.state} 
-                      onChange={e => setOrderInfo({...orderInfo, state: e.target.value})}
-                      className="h-14 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm px-6 text-center uppercase focus:bg-white transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-6 bg-slate-50 p-8 rounded-[40px] border border-slate-100 shadow-inner">
-                  <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Destination Classification</Label>
-                  <RadioGroup 
-                    value={orderInfo.tag} 
-                    onValueChange={(v) => setOrderInfo({...orderInfo, tag: v})}
-                    className="flex flex-wrap gap-8 items-center"
-                  >
-                    {['Home', 'Office', 'Other'].map(t => (
-                      <div key={t} className="flex items-center space-x-3">
-                        <RadioGroupItem value={t} id={`type-${t}`} className="border-primary text-primary h-5 w-5" />
-                        <Label htmlFor={`type-${t}`} className="text-sm font-black tracking-tight cursor-pointer uppercase font-outfit">{t}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                  
-                  {orderInfo.tag === 'Other' && (
-                    <motion.div 
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      className="pt-4 overflow-hidden"
-                    >
-                      <Input 
-                        placeholder="SPECIFY SECTOR NAME" 
-                        value={orderInfo.otherTag} 
-                        onChange={e => setOrderInfo({...orderInfo, otherTag: e.target.value})}
-                        className="h-14 rounded-[24px] bg-white border-primary/20 font-black text-xs px-8 uppercase tracking-widest shadow-lg"
-                      />
-                    </motion.div>
-                  )}
-                </div>
-
-                <div className="flex gap-6 pt-6">
-                  <Button 
-                    onClick={handleSaveNewAddress}
-                    className="flex-1 h-20 rounded-full bg-primary text-white font-black tracking-[0.3em] text-xs shadow-2xl shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all uppercase"
-                  >
-                    Commit Matrix
-                  </Button>
-                  <Button 
-                    onClick={() => setIsAddressModalOpen(false)}
-                    variant="outline"
-                    className="flex-1 h-20 rounded-full border-2 border-slate-100 text-slate-400 font-black tracking-[0.3em] text-xs hover:bg-slate-50 active:scale-95 transition-all uppercase"
-                  >
-                    Abort
-                  </Button>
-                </div>
-              </div>
+              <DialogTitle className="text-xl font-black tracking-tighter uppercase font-outfit">New Address</DialogTitle>
+              <DialogDescription className="text-[8px] font-black text-white/60 tracking-[0.2em] mt-2 uppercase">
+                Add delivery information
+              </DialogDescription>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[70vh]">
+              <AddressForm 
+                initialData={{
+                  patientName: orderInfo?.patientName || '',
+                  phoneNumber: orderInfo?.phoneNumber || ''
+                }}
+                onSave={handleAddAddress}
+                isLoading={isAddressFormLoading}
+              />
             </div>
           </DialogContent>
         </Dialog>
