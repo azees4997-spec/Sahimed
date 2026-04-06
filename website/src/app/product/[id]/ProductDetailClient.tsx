@@ -312,9 +312,9 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
           >
             <Tabs defaultValue="clinical" className="w-full">
               <TabsList className="bg-slate-50 p-1 rounded-full h-10 sm:h-14 w-full max-w-[500px] flex mx-auto mb-8 border border-slate-100 shadow-inner">
-                <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">{product?.clinicalTabLabel || "Information"}</TabsTrigger>
-                <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">{product?.safetyTabLabel || "Safety Advice"}</TabsTrigger>
-                <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">{product?.matrixTabLabel || "Interactions"}</TabsTrigger>
+                <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Information</TabsTrigger>
+                <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Safety Advice</TabsTrigger>
+                <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Interactions</TabsTrigger>
               </TabsList>
 
               <TabsContent value="clinical" className="space-y-10 focus-visible:outline-none">
