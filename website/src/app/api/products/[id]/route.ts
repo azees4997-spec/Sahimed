@@ -49,8 +49,8 @@ export async function PUT(
     const client = await clientPromise;
     const db = client.db("sahimed");
     
-    // Remove _id from body if it exists to avoid MongoDB error on update
-    let { _id, ...updateData } = body;
+    // Remove _id and id from body if it exists to avoid MongoDB error on update
+    let { _id, id: _bodyId, liveData, ...updateData } = body;
 
     // Build the query to handle both string and ObjectId
     const query: any = {
@@ -79,7 +79,10 @@ export async function PUT(
 
     const result = await db.collection("products").updateOne(
       query,
-      { $set: { ...updateData, updatedAt: new Date() } }
+      { 
+        $set: { ...updateData, updatedAt: new Date() },
+        $unset: { liveData: "", id: "" }
+      }
     );
 
     if (result.matchedCount === 0) {

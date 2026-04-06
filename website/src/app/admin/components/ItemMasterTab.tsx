@@ -387,10 +387,20 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
              setForm(prev => ({
                 ...prev,
                 ...data,
-                imageUrl2: data.imageUrls?.[1] || data.imageUrl2 || '',
-                imageUrl3: data.imageUrls?.[2] || data.imageUrl3 || '',
+                imageUrl2: data.imageUrls?.[1] || '',
+                imageUrl3: data.imageUrls?.[2] || '',
                 id: data.id || data._id?.toString()
              }));
+
+             // Pull prices/stock from root if available
+             if (data.mrp !== undefined || data.price !== undefined || data.availableQuantity !== undefined) {
+                setLiveData(prev => ({
+                   ...prev,
+                   mrp: data.mrp ?? prev.mrp,
+                   price: data.price ?? prev.price,
+                   availableQuantity: data.availableQuantity ?? prev.availableQuantity
+                }));
+             }
              
              // Fetch molecule name if mapped
              if (data.moleculeId) {
@@ -437,7 +447,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     manufacturer: initialData?.manufacturer || '',
     category: initialData?.category || '',
     isGeneric: initialData?.isGeneric || false,
-    isBestSeller: initialData?.isBestSeller || false,
+    isBestSeller: initialData?.isBestSeller ?? false,
     prescriptionRequired: initialData?.prescriptionRequired || false,
     moleculeId: initialData?.moleculeId || '',
     packSize: initialData?.packSize || '',
@@ -480,21 +490,25 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       return;
     }
 
-    const staticPayload = { 
-      ...form, 
-      imageUrls: [form.imageUrl, form.imageUrl2, form.imageUrl3].filter(Boolean) 
-    };
-    const livePayload = { 
-      mrp: Number(liveData.mrp), 
-      sahimed_price: Number(liveData.price), 
-      stock_quantity: Number(liveData.availableQuantity) 
-    };
+    // MANDATORY VALIDATION
+    if (!form.clinicalTabLabel || !form.safetyTabLabel || !form.matrixTabLabel || !form.saltComposition) {
+      toast({ variant: 'destructive', title: "Missing fields", description: "All tab labels and salt composition are required" });
+      return;
+    }
+
+    const { imageUrl2, imageUrl3, ...payloadBase } = form;
 
     const combinedPayload = {
-      ...staticPayload,
-      liveData: livePayload,
+      ...payloadBase,
+      imageUrls: [form.imageUrl, imageUrl2, imageUrl3].filter(Boolean),
+      mrp: Number(liveData.mrp), 
+      price: Number(liveData.price), 
+      availableQuantity: Number(liveData.availableQuantity),
       id: docId
     };
+
+    // Remove legacy liveData object if it exists in the spread
+    delete (combinedPayload as any).liveData;
 
     try {
       const method = initialData ? 'PUT' : 'POST';
@@ -512,10 +526,16 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       
       if (!res.ok) throw new Error('Failed to sync with MongoDB');
 
-      const firestoreDocPromise = setDocumentNonBlocking(doc(db, 'medicines', docId), { ...staticPayload, updatedAt: serverTimestamp() }, { merge: true });
+      const firestoreDocPromise = setDocumentNonBlocking(doc(db, 'medicines', docId), { ...combinedPayload, updatedAt: serverTimestamp() }, { merge: true });
       let liveDataPromise = Promise.resolve();
       if (form.sku) {
-        liveDataPromise = setDocumentNonBlocking(doc(db, 'product_live_data', form.sku), { ...livePayload, updatedAt: serverTimestamp() }, { merge: true });
+        // Sync to live data collection in Firestore for backwards compatibility/real-time stock
+        liveDataPromise = setDocumentNonBlocking(doc(db, 'product_live_data', form.sku), { 
+           mrp: Number(liveData.mrp), 
+           sahimed_price: Number(liveData.price), 
+           stock_quantity: Number(liveData.availableQuantity),
+           updatedAt: serverTimestamp() 
+        }, { merge: true });
       }
 
       await Promise.all([firestoreDocPromise, liveDataPromise]);
@@ -626,7 +646,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                             <button
                               key={mol.id}
                               onClick={() => {
-                                setForm({...form, moleculeId: mol.id});
+                                setForm({...form, moleculeId: mol.id, saltComposition: mol.molecule});
                                 setSelectedMoleculeTitle(mol.molecule);
                                 setIsMolOpen(false);
                                 setMolSearch('');
@@ -657,7 +677,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
 
             <div className="space-y-6 bg-lavender/30 p-6 rounded-[32px] border border-white">
                <div className="flex gap-4">
-                  <LimitedInput label="Intelligence Header" value={form.clinicalTabLabel} onChange={(v: string) => setForm({...form, clinicalTabLabel: v})} limit={20} placeholder="e.g. INTELLIGENCE" />
+                  <LimitedInput label="Intelligence Header (Required)" value={form.clinicalTabLabel} onChange={(v: string) => setForm({...form, clinicalTabLabel: v})} limit={20} placeholder="e.g. INTELLIGENCE" required />
                </div>
                <div className="space-y-4">
                   <LimitedTextarea label="Clinical Indication" value={form.treatment} onChange={(v: string) => setForm({...form, treatment: v})} limit={150} placeholder="Enter clinical usage..." />
@@ -667,7 +687,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
 
             <div className="space-y-6 bg-sahi-pink/10 p-6 rounded-[32px] border border-white">
                <div className="flex gap-4">
-                  <LimitedInput label="Protocol Header" value={form.safetyTabLabel} onChange={(v: string) => setForm({...form, safetyTabLabel: v})} limit={20} placeholder="e.g. PROTOCOL" />
+                  <LimitedInput label="Protocol Header (Required)" value={form.safetyTabLabel} onChange={(v: string) => setForm({...form, safetyTabLabel: v})} limit={20} placeholder="e.g. PROTOCOL" required />
                </div>
                <div className="space-y-4">
                   <LimitedTextarea label="Protocol Caution" value={form.safetyAdvice} onChange={(v: string) => setForm({...form, safetyAdvice: v})} limit={150} placeholder="Enter safety advice..." />
@@ -677,10 +697,10 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
 
             <div className="space-y-6 bg-sahi-blue/5 p-6 rounded-[32px] border border-white">
                <div className="flex gap-4">
-                  <LimitedInput label="Matrix Header" value={form.matrixTabLabel} onChange={(v: string) => setForm({...form, matrixTabLabel: v})} limit={20} placeholder="e.g. MATRIX" />
+                  <LimitedInput label="Matrix Header (Required)" value={form.matrixTabLabel} onChange={(v: string) => setForm({...form, matrixTabLabel: v})} limit={20} placeholder="e.g. MATRIX" required />
                </div>
                <div className="grid grid-cols-2 gap-4">
-                  <LimitedInput label="Composition" value={form.saltComposition} onChange={(v: string) => setForm({...form, saltComposition: v})} limit={50} />
+                  <LimitedInput label="Composition (Required)" value={form.saltComposition} onChange={(v: string) => setForm({...form, saltComposition: v})} limit={50} required />
                   <LimitedInput label="Pregnancy" value={form.pregnancyInteraction} onChange={(v: string) => setForm({...form, pregnancyInteraction: v})} limit={50} />
                   <LimitedInput label="Lactation" value={form.lactationInteraction} onChange={(v: string) => setForm({...form, lactationInteraction: v})} limit={50} />
                   <LimitedInput label="Driving" value={form.drivingInteraction} onChange={(v: string) => setForm({...form, drivingInteraction: v})} limit={50} />

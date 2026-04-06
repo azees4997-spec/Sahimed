@@ -10,14 +10,14 @@ export async function GET() {
     const headers = [
       'id', 'name', 'sku', 'manufacturer', 'category', 'isGeneric', 'prescriptionRequired', 'packSize', 'imageUrl', 'description', 'treatment', 
       'safetyAdvice', 'howToUse', 'saltComposition', 'pregnancyInteraction', 'lactationInteraction', 'drivingInteraction', 'kidneyInteraction', 'liverInteraction',
-      'clinicalTabLabel', 'safetyTabLabel', 'matrixTabLabel'
+      'clinicalTabLabel', 'safetyTabLabel', 'matrixTabLabel', 'price', 'mrp', 'availableQuantity'
     ];
 
     const csvContent = [
       headers.join(','),
       ...products.map(p => {
         return headers.map(h => {
-          let val = p[h] || p.liveData?.[h] || '';
+          let val = p[h] ?? ''; // Standardize on root access
           if (typeof val === 'string') {
             val = val.replace(/"/g, '""');
             if (val.includes(',') || val.includes('\n')) val = `"${val}"`;
@@ -64,9 +64,10 @@ export async function POST(request: Request) {
         }
       }
 
+      const { id, _id, liveData, ...rest } = p;
       return {
-        ...p,
-        _id: p.id || p._id,
+        ...rest,
+        _id: id || _id,
         moleculeId,
         updatedAt: new Date()
       };
@@ -76,7 +77,10 @@ export async function POST(request: Request) {
     const ops = preparedProducts.map((p: any) => ({
       updateOne: {
         filter: { _id: p._id },
-        update: { $set: p },
+        update: { 
+          $set: p,
+          $unset: { liveData: "", id: "" }
+        },
         upsert: true
       }
     }));

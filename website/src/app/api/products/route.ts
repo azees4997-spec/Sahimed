@@ -109,15 +109,13 @@ export async function POST(request: Request) {
 
     // Ensure the document has an _id that matches Firestore's ID if provided
     const docId = body.id || body._id;
+    const { id, _id, ...rest } = body;
     const productData = { 
-      ...body, 
+      ...rest, 
       _id: docId as any,
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    
-    // Remove 'id' if we use _id
-    delete (productData as any).id;
 
     // INTELLIGENT MAPPING: Auto-link to molecule if missing
     if (!productData.moleculeId && productData.saltComposition) {
