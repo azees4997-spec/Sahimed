@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
@@ -30,7 +30,7 @@ import {
   Camera,
   FileText,
   Trash2,
-  Stethoscope
+  Stethoscope, Lock
 } from 'lucide-react';
 import { useStorage } from '@/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -161,6 +161,8 @@ export default function CheckoutPage() {
         houseNumber: defaultAddr.houseNumber || '',
         buildingLocality: defaultAddr.street,
         pincode: defaultAddr.pincode,
+        city: defaultAddr.city || '',
+        state: defaultAddr.state || '',
         lat: defaultAddr.lat || 0,
         lng: defaultAddr.lng || 0,
         tag: defaultAddr.tag,
@@ -369,6 +371,47 @@ export default function CheckoutPage() {
     }
   };
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 py-max-h-screen flex items-center justify-center pt-20">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-xl w-full"
+          >
+            <Card className="rounded-[56px] border-none shadow-3xl bg-white overflow-hidden text-center p-12 sm:p-20 relative">
+              <div className="absolute top-0 right-0 p-12 opacity-5 rotate-12">
+                 <Lock className="w-48 h-48" />
+              </div>
+              <div className="w-24 h-24 bg-primary/10 text-primary rounded-[32px] flex items-center justify-center mx-auto mb-10 shadow-xl shadow-primary/5 relative z-10">
+                <Lock className="w-10 h-10" />
+              </div>
+              <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit uppercase mb-6 relative z-10">Checkout Restricted</h1>
+              <p className="text-[11px] font-black text-slate-400 tracking-[0.3em] uppercase max-w-sm mx-auto mb-12 relative z-10 leading-relaxed">
+                Please login to your Sahimed account to complete your purchase.
+              </p>
+              <div className="space-y-4 relative z-10">
+                <Button 
+                  onClick={() => router.push('/login?redirect=/checkout')}
+                  className="w-full h-20 rounded-full font-black tracking-widest text-xs uppercase gap-4 shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary"
+                >
+                  <User className="w-6 h-6" />
+                  Sign In to Checkout
+                </Button>
+                <Link href="/">
+                  <Button variant="ghost" className="w-full h-14 rounded-full font-black text-[10px] tracking-widest text-slate-400 uppercase gap-2">
+                    <ArrowRight className="w-4 h-4 rotate-180" /> Continue Shopping
+                  </Button>
+                </Link>
+              </div>
+            </Card>
+          </motion.div>
+        </main>
+      </div>
+    );
+  }
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
@@ -423,6 +466,8 @@ export default function CheckoutPage() {
                             houseNumber: addr.houseNumber || '',
                             buildingLocality: addr.street,
                             pincode: addr.pincode,
+                            city: addr.city || '',
+                            state: addr.state || '',
                             lat: addr.lat || 0,
                             lng: addr.lng || 0,
                             tag: addr.tag
@@ -523,7 +568,7 @@ export default function CheckoutPage() {
                     >
                       <div className="flex items-center gap-6 relative z-10">
                         <div className={cn("w-14 h-14 rounded-[20px] flex items-center justify-center shadow-inner", clinicalPath === 'consult' ? "bg-emerald-500 text-white" : "bg-white text-slate-300")}>
-                          <Stethoscope className="w-7 h-7" />
+                          <Stethoscope, Lock className="w-7 h-7" />
                         </div>
                         <div>
                           <p className="font-black text-sm tracking-tight font-outfit uppercase">Consult Doctor</p>
@@ -563,7 +608,48 @@ export default function CheckoutPage() {
                             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                               {attachedPrescriptions.map((url, idx) => {
                                 const isPDF = url.toLowerCase().includes('.pdf') || url.includes('application%2Fpdf');
-                                return (
+                                if (!user) {
+    return (
+      <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 py-max-h-screen flex items-center justify-center pt-20">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-xl w-full"
+          >
+            <Card className="rounded-[56px] border-none shadow-3xl bg-white overflow-hidden text-center p-12 sm:p-20 relative">
+              <div className="absolute top-0 right-0 p-12 opacity-5 rotate-12">
+                 <Lock className="w-48 h-48" />
+              </div>
+              <div className="w-24 h-24 bg-primary/10 text-primary rounded-[32px] flex items-center justify-center mx-auto mb-10 shadow-xl shadow-primary/5 relative z-10">
+                <Lock className="w-10 h-10" />
+              </div>
+              <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit uppercase mb-6 relative z-10">Checkout Restricted</h1>
+              <p className="text-[11px] font-black text-slate-400 tracking-[0.3em] uppercase max-w-sm mx-auto mb-12 relative z-10 leading-relaxed">
+                Please login to your Sahimed account to complete your purchase.
+              </p>
+              <div className="space-y-4 relative z-10">
+                <Button 
+                  onClick={() => router.push('/login?redirect=/checkout')}
+                  className="w-full h-20 rounded-full font-black tracking-widest text-xs uppercase gap-4 shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary"
+                >
+                  <User className="w-6 h-6" />
+                  Sign In to Checkout
+                </Button>
+                <Link href="/">
+                  <Button variant="ghost" className="w-full h-14 rounded-full font-black text-[10px] tracking-widest text-slate-400 uppercase gap-2">
+                    <ArrowRight className="w-4 h-4 rotate-180" /> Continue Shopping
+                  </Button>
+                </Link>
+              </div>
+            </Card>
+          </motion.div>
+        </main>
+      </div>
+    );
+  }
+  return (
                                   <motion.div key={idx} initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="relative shrink-0 group">
                                     {isPDF ? (
                                       <div className="w-24 h-24 rounded-3xl bg-slate-50 border-2 border-slate-100 flex flex-col items-center justify-center text-rose-500">
@@ -600,7 +686,7 @@ export default function CheckoutPage() {
                         className="overflow-hidden"
                       >
                        <div className="bg-emerald-50/50 p-10 rounded-[48px] border-2 border-emerald-100 text-center space-y-4">
-                          <Stethoscope className="w-12 h-12 text-emerald-300 mx-auto" />
+                          <Stethoscope, Lock className="w-12 h-12 text-emerald-300 mx-auto" />
                           <h4 className="text-sm font-black text-emerald-900 tracking-tight font-outfit uppercase">Doctor Consultation Requested</h4>
                           <p className="text-[10px] font-bold text-emerald-700 leading-relaxed max-w-sm mx-auto uppercase tracking-wider">
                             Our medical team will contact you to confirm your prescription and authorize your order via free digital consult.
@@ -662,37 +748,37 @@ export default function CheckoutPage() {
                 <div className="space-y-4 sm:space-y-6 mb-8 relative z-10 pt-8 border-t border-slate-100">
                   <div className="flex justify-between text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-widest">
                     <span>Total MRP</span>
-                    <span>₹{totalMrp.toFixed(2)}</span>
+                    <span>â‚¹{totalMrp.toFixed(2)}</span>
                   </div>
                   {itemSavings > 0 && (
                     <div className="flex justify-between text-xs sm:text-sm font-bold text-primary uppercase tracking-widest">
                       <span>Discount Amount</span>
-                      <span>-₹{itemSavings.toFixed(2)}</span>
+                      <span>-â‚¹{itemSavings.toFixed(2)}</span>
                     </div>
                   )}
                   {appliedPromo && (
                     <div className="flex justify-between text-xs sm:text-sm font-bold text-primary uppercase tracking-widest">
                       <span className="flex items-center gap-2"><Tag className="w-3.5 h-3.5" /> Promocode Saving</span>
-                      <span>-₹{promoDiscount.toFixed(2)}</span>
+                      <span>-â‚¹{promoDiscount.toFixed(2)}</span>
                     </div>
                   )}
                   {feeTotal > 0 && (
                     <div className="flex justify-between text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-widest">
                       <span>Delivery Fees</span>
-                      <span>₹{feeTotal.toFixed(2)}</span>
+                      <span>â‚¹{feeTotal.toFixed(2)}</span>
                     </div>
                   )}
 
                   <div className="pt-6 sm:pt-8 border-t border-slate-100 flex justify-between items-baseline">
                     <span className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-widest">Total Payable</span>
-                    <span className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit">₹{finalPayable.toFixed(2)}</span>
+                    <span className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit">â‚¹{finalPayable.toFixed(2)}</span>
                   </div>
                   
                   {totalSavings > 0 && (
                     <div className="mt-6 flex justify-between items-center text-xs sm:text-sm font-black text-emerald-700 bg-emerald-50 p-4 rounded-[16px] border border-emerald-100 shadow-inner">
                       <span className="flex items-center gap-2 uppercase tracking-widest">Total Savings</span>
                       <span className="bg-emerald-100 px-3 py-1.5 rounded-md text-[10px] sm:text-xs uppercase tracking-widest border border-emerald-200">
-                        Saved ₹{totalSavings.toFixed(2)} ({Math.round((totalSavings / totalMrp) * 100)}%)
+                        Saved â‚¹{totalSavings.toFixed(2)} ({Math.round((totalSavings / totalMrp) * 100)}%)
                       </span>
                     </div>
                   )}
@@ -876,3 +962,4 @@ export default function CheckoutPage() {
     </PageTransition>
   );
 }
+

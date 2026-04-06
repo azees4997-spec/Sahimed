@@ -18,7 +18,8 @@ import {
   ClipboardCheck,
   ShieldCheck,
   User,
-  FileText
+  FileText,
+  Lock
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
@@ -126,6 +127,50 @@ export default function PrescriptionPage() {
       setSubmitting(false);
     }
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#F8F8F8] pb-16 page-transition-wrapper">
+        <Navbar />
+        <main className="max-w-2xl mx-auto px-4 py-max-h-screen flex items-center justify-center pt-20">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full"
+          >
+            <Card className="rounded-[48px] border-none shadow-3xl bg-white overflow-hidden text-center p-12 sm:p-20 relative">
+              <div className="absolute top-0 right-0 p-12 opacity-5 rotate-12">
+                <Lock className="w-32 h-32" />
+              </div>
+              
+              <div className="w-24 h-24 bg-primary/10 text-primary rounded-[32px] flex items-center justify-center mx-auto mb-10 shadow-xl shadow-primary/5">
+                <Lock className="w-10 h-10" />
+              </div>
+              
+              <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight font-outfit uppercase mb-4">Login Required</h1>
+              <p className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase max-w-xs mx-auto mb-12">
+                Secure your health history. Please login to upload clinical documents.
+              </p>
+              
+              <Button 
+                onClick={() => router.push('/login?redirect=/prescription')}
+                className="w-full h-20 rounded-full font-black tracking-widest text-xs uppercase gap-4 shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary"
+              >
+                <User className="w-5 h-5" />
+                Login to Continue
+              </Button>
+              
+              <Link href="/">
+                <Button variant="ghost" className="mt-6 font-black text-[10px] tracking-widest text-slate-400 uppercase gap-2">
+                  <Home className="w-4 h-4" /> Back to Home
+                </Button>
+              </Link>
+            </Card>
+          </motion.div>
+        </main>
+      </div>
+    );
+  }
 
   if (isSuccess) {
     return (
