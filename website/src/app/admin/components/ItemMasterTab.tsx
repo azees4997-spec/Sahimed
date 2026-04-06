@@ -638,6 +638,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
               <Popover open={isMolOpen} onOpenChange={setIsMolOpen}>
                 <PopoverTrigger asChild>
                   <Button
+                    type="button"
                     variant="outline"
                     role="combobox"
                     className="w-full h-14 rounded-2xl bg-white border border-slate-200 justify-between hover:bg-gray-50 px-6 font-bold text-slate-900 shadow-sm"
@@ -656,6 +657,8 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                       placeholder="Type molecule name..."
                       value={molSearch}
                       onChange={(e) => setMolSearch(e.target.value)}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
                       onPointerDown={(e) => e.stopPropagation()}
                       className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0"
                     />
@@ -674,7 +677,9 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                             return (
                               <button
                                 key={molId}
-                                onClick={() => {
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setForm({...form, moleculeId: molId, saltComposition: mol.molecule || mol.name});
                                   setSelectedMoleculeTitle(mol.molecule || mol.name);
                                   setIsMolOpen(false);
