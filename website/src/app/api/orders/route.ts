@@ -6,6 +6,7 @@ import { ObjectId } from 'mongodb';
 
 export async function GET(req: Request) {
   try {
+    await verifyAdmin(req);
     const client = await clientPromise;
     const db = client.db('sahimed');
     const { searchParams } = new URL(req.url);
@@ -58,14 +59,19 @@ export async function POST(req: Request) {
       try {
         const { getDbAdmin } = await import('@/lib/firebase-admin');
         const dbAdmin = getDbAdmin();
-        await dbAdmin.doc(enquiryPath).update({
+        
+        // Critical Sync: Update status and link orderId
+        await dbAdmin.doc(enquiryPath).set({
           status: 'Digitized',
           orderId: nextId,
+          mongoId: result.insertedId.toString(),
           updatedAt: new Date()
-        });
-      } catch (fsErr) {
-        console.error('Firestore sync failed', fsErr);
-        // We don't fail the whole request because the order is already in MongoDB
+        }, { merge: true });
+        
+        console.log(`[Order Sync] Successfully linked MongoDB Order ${nextId} to Firestore Enquiry ${enquiryPath}`);
+      } catch (fsErr: any) {
+        console.error(`[Order Sync Error] Failed to sync MongoDB order ${nextId} to Firestore path ${enquiryPath}:`, fsErr.message);
+        // Note: MongoDB insert was successful, so the order exists, but visibility in Firestore is pending.
       }
     }
 

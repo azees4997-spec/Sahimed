@@ -9,13 +9,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Badge } from "@/components/ui/badge";
 import { hoverVariant, springTransition, tapVariant } from '@/lib/animations';
-import { useMongoDBMolecule } from '@/hooks/use-mongodb';
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
   const { toast } = useToast();
   
-  const { data: molData } = useMongoDBMolecule(product.moleculeId);
+  // 1. Performance Fix: Use pre-fetched moleculeData from the server-side join (no more client-side waterfall)
+  const molData = (product as any).moleculeData;
   const moleculeName = molData?.molecule || product.saltComposition || (product as any).composition || (product as any).salt || (product as any).moleculeName || (product as any).molecule;
 
   const quantity = getItemQuantity(product.id);

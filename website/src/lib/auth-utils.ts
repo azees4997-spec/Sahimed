@@ -43,6 +43,15 @@ export async function verifyAdmin(request: Request) {
 
     if (!uid) throw new Error('Invalid token payload: missing sub');
 
+    // 1.5 MASTER UID OVERRIDE: Always allow these UIDs (Owner)
+    const MASTER_UIDS = [
+      "BM9HheYflheT0Wyj6olaEnyCAHl1",
+      "RzB6nqlQumg1VEniFcZrgbcDdRA2"
+    ];
+    if (MASTER_UIDS.includes(uid)) {
+      return { uid, role: 'admin', email };
+    }
+
     // 2. Fetch the admin profile from MongoDB instead of Firestore
     const client = await clientPromise;
     const db = client.db('sahimed');

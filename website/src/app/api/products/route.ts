@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { verifyAdmin } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 
 function escapeRegExp(string: string) {
@@ -90,14 +91,40 @@ export async function GET(request: Request) {
       query.$or = searchOr;
     }
 
-    const startTime = Date.now();
-    const products = await collection
-      .find(query)
-      .limit(limitValue)
-      .toArray();
+    const pipeline: any[] = [
+      { $match: query },
+      { $limit: limitValue },
+      {
+        $lookup: {
+          from: 'molecules',
+          let: { mId: '$moleculeId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    { $eq: ['$_id', '$$mId'] },
+                    { $eq: [{ $toString: '$_id' }, '$$mId'] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: 'moleculeData'
+        }
+      },
+      {
+        $addFields: {
+          moleculeData: { $arrayElemAt: ['$moleculeData', 0] }
+        }
+      }
+    ];
 
+    const startTime = Date.now();
+    const products = await collection.aggregate(pipeline).toArray();
     const duration = Date.now() - startTime;
-    console.log(`[Search API] Params: mol=${moleculeId || 'none'}, q=${q || 'none'} | Result: ${products.length} in ${duration}ms`);
+    
+    console.log(`[Search API] Aggregation Params: mol=${moleculeId || 'none'}, q=${q || 'none'} | Result: ${products.length} in ${duration}ms`);
 
     return NextResponse.json(products);
   } catch (err: any) {
@@ -108,6 +135,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    await verifyAdmin(request);
     const body = await request.json();
     const client = await clientPromise;
     const db = client.db("sahimed");

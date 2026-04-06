@@ -121,7 +121,6 @@ service cloud.firestore {
     match /adminProfiles/{adminId} {
       allow get: if isSignedIn();
       allow list: if isAdmin();
-      allow create: if isSignedIn() && request.resource.data.id == request.auth.uid; 
       allow update, delete: if isAdmin();
     }
 
