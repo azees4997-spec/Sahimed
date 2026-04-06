@@ -81,7 +81,7 @@ export async function PUT(
       query,
       { 
         $set: { ...updateData, updatedAt: new Date() },
-        $unset: { liveData: "", id: "" }
+        $unset: { liveData: "", id: "", imageUrl2: "", imageUrl3: "" }
       }
     );
 

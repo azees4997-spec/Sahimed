@@ -79,7 +79,7 @@ export async function POST(request: Request) {
         filter: { _id: p._id },
         update: { 
           $set: p,
-          $unset: { liveData: "", id: "" }
+          $unset: { liveData: "", id: "", imageUrl2: "", imageUrl3: "" }
         },
         upsert: true
       }
