@@ -635,79 +635,99 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"><Search className="w-4 h-4 text-primary" /></div>
                 <h3 className="font-black text-xs uppercase tracking-widest text-slate-900 border-none">Molecule mapping</h3>
               </div>
-              <Popover open={isMolOpen} onOpenChange={setIsMolOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    role="combobox"
-                    className="w-full h-14 rounded-2xl bg-white border border-slate-200 justify-between hover:bg-gray-50 px-6 font-bold text-slate-900 shadow-sm"
-                  >
-                    <span className="truncate">
-                      {selectedMoleculeTitle || "SEARCH & SELECT MOLECULE..."}
-                    </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-3xl border-none shadow-3xl bg-white/95 backdrop-blur-xl z-[150]" align="start">
-                  <div className="p-4 border-b border-slate-100 flex items-center gap-3">
+              <div className="relative group">
+                <div className="relative">
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
                     <Search className="w-4 h-4 text-slate-400" />
-                    <Input 
-                      autoFocus
-                      placeholder="Type molecule name..."
-                      value={molSearch}
-                      onChange={(e) => setMolSearch(e.target.value)}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onClick={(e) => e.stopPropagation()}
-                      onPointerDown={(e) => e.stopPropagation()}
-                      className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0"
-                    />
                   </div>
-                  <ScrollArea className="h-[350px] p-2" onPointerDown={(e) => e.stopPropagation()}>
-                    {isMolsLoading ? (
-                      <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-                    ) : (
-                      <div className="space-y-1">
-                        {molecules?.length === 0 ? (
-                          <div className="py-6 px-4 text-center text-[10px] font-black text-slate-400 uppercase">No molecule matched</div>
-                        ) : (
-                          molecules?.map((mol) => {
-                            const molId = mol._id || mol.id;
-                            const isSelected = form.moleculeId === molId;
-                            return (
-                              <button
-                                key={molId}
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setForm({...form, moleculeId: molId, saltComposition: mol.molecule || mol.name});
-                                  setSelectedMoleculeTitle(mol.molecule || mol.name);
-                                  setIsMolOpen(false);
-                                  setMolSearch('');
-                                }}
-                                className={cn(
-                                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-primary/5 group",
-                                  isSelected ? "bg-primary/10 text-primary" : "text-slate-600"
-                                )}
-                              >
-                                <div className={cn(
-                                  "w-2 h-2 rounded-full",
-                                  isSelected ? "bg-primary" : "bg-transparent group-hover:bg-slate-200"
-                                )} />
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-black text-[12px] uppercase truncate tracking-tight">{mol.molecule || mol.name}</p>
-                                  <p className="text-[9px] font-bold text-slate-400 uppercase opacity-60">{mol.masterId} • {mol.form}</p>
-                                </div>
-                                {isSelected && <Check className="w-4 h-4" />}
-                              </button>
-                            );
-                          })
-                        )}
-                      </div>
-                    )}
-                  </ScrollArea>
-                </PopoverContent>
-              </Popover>
+                  <Input 
+                    placeholder={selectedMoleculeTitle || "SEARCH PRODUCT REGISTRY..."}
+                    value={molSearch}
+                    onChange={(e) => {
+                      setMolSearch(e.target.value);
+                      if (!isMolOpen) setIsMolOpen(true);
+                    }}
+                    onFocus={() => setIsMolOpen(true)}
+                    className="w-full h-14 rounded-2xl bg-white border border-slate-200 pl-16 pr-10 font-bold text-slate-900 shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-300 uppercase text-[11px]"
+                  />
+                  {selectedMoleculeTitle && (
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setSelectedMoleculeTitle("");
+                        setForm(f => ({ ...f, moleculeId: "" }));
+                        setMolSearch("");
+                      }}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 hover:bg-slate-100 rounded-lg text-slate-400"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {isMolOpen && molSearch.length > 0 && (
+                  <div className="absolute top-[calc(100%+8px)] left-0 right-0 z-[100] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="p-2 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                      <span className="text-[9px] font-black uppercase tracking-tighter text-slate-400 pl-3">Registry Matches ({molecules?.length || 0})</span>
+                      <Button type="button" variant="ghost" className="h-6 w-6 p-0 rounded-lg" onClick={() => setIsMolOpen(false)}><Plus className="w-3 h-3 rotate-45" /></Button>
+                    </div>
+                    <ScrollArea className="h-[320px]">
+                      {isMolsLoading ? (
+                        <div className="flex flex-col items-center justify-center py-12 gap-3">
+                          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                          <span className="text-[10px] font-bold text-slate-300 uppercase">Fetching Registry...</span>
+                        </div>
+                      ) : (
+                        <div className="p-2 space-y-1">
+                          {molecules?.length === 0 ? (
+                            <div className="py-10 px-4 text-center">
+                              <p className="text-[10px] font-black text-slate-300 uppercase">No Match in Registry</p>
+                              <Button type="button" variant="link" className="text-[9px] font-bold text-primary p-0 h-auto mt-2">ADD TO REGISTRY</Button>
+                            </div>
+                          ) : (
+                            molecules?.map((mol) => {
+                              const molId = mol._id || mol.id;
+                              const isSelected = form.moleculeId === molId;
+                              return (
+                                <button
+                                  key={molId}
+                                  type="button"
+                                  onClick={() => {
+                                    setForm({...form, moleculeId: molId, saltComposition: mol.molecule || mol.name});
+                                    setSelectedMoleculeTitle(mol.molecule || mol.name);
+                                    setIsMolOpen(false);
+                                    setMolSearch('');
+                                  }}
+                                  className={cn(
+                                    "w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-left transition-all group",
+                                    isSelected ? "bg-primary text-white" : "hover:bg-slate-50 text-slate-600"
+                                  )}
+                                >
+                                  <div className={cn(
+                                    "w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px]",
+                                    isSelected ? "bg-white/20 text-white" : "bg-slate-100 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
+                                  )}>
+                                    {mol.form?.[0] || 'M'}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className={cn("font-black text-[11px] uppercase truncate", isSelected ? "text-white" : "text-slate-900")}>
+                                      {mol.molecule || mol.name}
+                                    </p>
+                                    <p className={cn("text-[9px] font-bold uppercase opacity-60", isSelected ? "text-white/80" : "text-slate-400")}>
+                                      {mol.masterId} • {mol.form || 'Active Ingredient'}
+                                    </p>
+                                  </div>
+                                  {isSelected && <Check className="w-4 h-4 text-white" />}
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-6 bg-lavender/30 p-6 rounded-[32px] border border-white">
