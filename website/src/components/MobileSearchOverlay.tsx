@@ -104,12 +104,39 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
         const meds = resMeds.ok ? await resMeds.json() : [];
         const mols = resMols.ok ? await resMols.json() : [];
 
-        const normalized = [
-          ...meds.map((m: any) => ({ ...m, _type: 'medicine' })),
-          ...mols.map((m: any) => ({ ...m, _type: 'molecule' }))
-        ];
+        const seenCompositionTerms = new Set<string>();
+        const seenBrandTerms = new Set<string>();
+        const results: any[] = [];
 
-        setSuggestions(normalized);
+        // Process Molecules first (registry)
+        mols.forEach((m: any) => {
+          const key = (m.molecule || m.name || "").toLowerCase().trim();
+          if (key && !seenCompositionTerms.has(key)) {
+            results.push({ ...m, _type: 'molecule' });
+            seenCompositionTerms.add(key);
+          }
+        });
+
+        // Process Medicines
+        meds.forEach((m: any) => {
+          const brandName = (m.name || "").toLowerCase().trim();
+          if (brandName && !seenBrandTerms.has(brandName)) {
+            results.push({ ...m, _type: 'medicine' });
+            seenBrandTerms.add(brandName);
+          }
+
+          const saltName = (m.saltComposition || m.composition || m.salt || "").toLowerCase().trim();
+          if (saltName && !seenCompositionTerms.has(saltName)) {
+            results.push({ 
+              ...m, 
+              name: m.saltComposition || m.composition || m.salt,
+              _type: 'salt' 
+            });
+            seenCompositionTerms.add(saltName);
+          }
+        });
+
+        setSuggestions(results);
       } catch (err) {
         console.error("Search failed", err);
       } finally {
@@ -123,8 +150,13 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
 
   const handleItemClick = (item: any) => {
     logSearch(item.name || item.molecule);
-    if (item._type === 'molecule') {
-      router.push(`/search?moleculeId=${item._id || item.id}&q=${encodeURIComponent(item.molecule || item.name)}`);
+    if (item._type === 'molecule' || item._type === 'salt') {
+      if (item.moleculeId || item._id || item.id) {
+        const molId = item.moleculeId || item._id || item.id;
+        router.push(`/search?moleculeId=${molId}`);
+      } else {
+        router.push(`/search?q=${encodeURIComponent(item.molecule || item.name)}`);
+      }
     } else {
       router.push(`/product/${item._id || item.id}`);
     }

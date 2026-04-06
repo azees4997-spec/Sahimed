@@ -129,10 +129,17 @@ export default function Navbar() {
 
   const handleSuggestionClick = (item: any) => {
     logSearch(item.term);
-    if (item.type === 'Salt' && item.moleculeId) {
-      router.push(`/search?moleculeId=${item.moleculeId}&q=${encodeURIComponent(item.term)}`);
+    if (item.type === 'Salt') {
+      // For Salts/Molecules, go to search results. If we have a moleculeId, use it and drop the 'q' to avoid conflicts.
+      if (item.moleculeId) {
+        router.push(`/search?moleculeId=${item.moleculeId}`);
+      } else {
+        router.push(`/search?q=${encodeURIComponent(item.term)}`);
+      }
     } else {
-      router.push(`/product/${item.product?._id || item.product?.id || item.id.replace('brand-', '').replace('mol-', '').replace('salt-', '')}`);
+      // For Brands (medicines), go to the product page.
+      const productId = item.product?._id || item.product?.id || item.id.replace('brand-', '').replace('mol-', '').replace('salt-', '');
+      router.push(`/product/${productId}`);
     }
     setShowSuggestions(false);
   };
@@ -195,28 +202,31 @@ export default function Navbar() {
     
     const term = search.toLowerCase();
     const items: SuggestionItem[] = [];
-    const seenTerms = new Set<string>();
+    const seenCompositionTerms = new Set<string>();
+    const seenBrandTerms = new Set<string>();
 
     rawSuggestions.forEach(p => {
       const type = p._type || (p.molecule ? 'molecule' : 'medicine');
-      const id = p.id;
+      const id = p._id || p.id;
       const name = p.name || p.molecule || '';
       const salt = p.saltComposition || p.composition || p.liveData?.composition || p.salt || '';
       const price = p.price || p.liveData?.sahimed_price || 0;
       const imageUrl = p.imageUrl || `https://picsum.photos/seed/${id}/200/200`;
 
       if (type === 'molecule') {
-        if (name.toLowerCase().includes(term) && !seenTerms.has(`mol-${name}`)) {
+        const compKey = name.toLowerCase().trim();
+        if (name.toLowerCase().includes(term) && !seenCompositionTerms.has(compKey)) {
           items.push({ 
             id: `mol-${id}`, 
             term: name, 
             type: 'Salt',
             moleculeId: id 
           } as any);
-          seenTerms.add(`mol-${name}`);
+          seenCompositionTerms.add(compKey);
         }
       } else {
-        if (name.toLowerCase().includes(term) && !seenTerms.has(`brand-${name}`)) {
+        // Handle Brand Match
+        if (name.toLowerCase().includes(term) && !seenBrandTerms.has(name.toLowerCase())) {
           items.push({ 
             id: `brand-${id}`, 
             term: name, 
@@ -225,15 +235,20 @@ export default function Navbar() {
             imageUrl,
             product: p 
           } as any);
-          seenTerms.add(`brand-${name}`);
+          seenBrandTerms.add(name.toLowerCase());
         }
-        if (salt.toLowerCase().includes(term) && !seenTerms.has(`salt-${salt}`)) {
-          items.push({ 
-            id: `salt-${id}`, 
-            term: salt, 
-            type: 'Salt'
-          } as any);
-          seenTerms.add(`salt-${salt}`);
+        
+        // Handle Salt/Composition Match from Medicine
+        if (salt.toLowerCase().includes(term)) {
+          const compKey = salt.toLowerCase().trim();
+          if (!seenCompositionTerms.has(compKey)) {
+            items.push({ 
+              id: `salt-${id}`, 
+              term: salt, 
+              type: 'Salt'
+            } as any);
+            seenCompositionTerms.add(compKey);
+          }
         }
       }
     });
