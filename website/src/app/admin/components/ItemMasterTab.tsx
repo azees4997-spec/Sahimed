@@ -656,10 +656,11 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                       placeholder="Type molecule name..."
                       value={molSearch}
                       onChange={(e) => setMolSearch(e.target.value)}
+                      onPointerDown={(e) => e.stopPropagation()}
                       className="h-10 border-none bg-transparent font-black text-xs uppercase focus-visible:ring-0 p-0"
                     />
                   </div>
-                  <ScrollArea className="h-[350px] p-2">
+                  <ScrollArea className="h-[350px] p-2" onPointerDown={(e) => e.stopPropagation()}>
                     {isMolsLoading ? (
                       <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
                     ) : (
