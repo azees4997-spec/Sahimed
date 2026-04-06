@@ -132,7 +132,7 @@ export default function Navbar() {
     if (item.type === 'Salt' && item.moleculeId) {
       router.push(`/search?moleculeId=${item.moleculeId}&q=${encodeURIComponent(item.term)}`);
     } else {
-      router.push(`/product/${item.product?.id || item.id.replace('brand-', '').replace('mol-', '')}`);
+      router.push(`/product/${item.product?._id || item.product?.id || item.id.replace('brand-', '').replace('mol-', '').replace('salt-', '')}`);
     }
     setShowSuggestions(false);
   };
