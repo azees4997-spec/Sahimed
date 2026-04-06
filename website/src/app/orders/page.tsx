@@ -104,12 +104,12 @@ export default function OrdersPage() {
               </Link>
               <div className="space-y-1">
                 <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Order History</h1>
-                <p className="text-[10px] font-black text-slate-400 tracking-[0.4em] uppercase leading-none opacity-60">Clinical Logistics Logs</p>
+                <p className="text-[10px] font-black text-slate-400 tracking-[0.4em] uppercase leading-none opacity-60">View & Track Your Orders</p>
               </div>
             </div>
             <div className="hidden sm:flex items-center gap-4 py-3 px-6 bg-white rounded-full shadow-xl border border-white">
                 <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase">Encrypted Matrix</span>
+                <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase">Secure Delivery</span>
             </div>
           </motion.div>
 
@@ -123,7 +123,7 @@ export default function OrdersPage() {
                 >
                   <Loader2 className="w-12 h-12 text-primary" />
                 </motion.div>
-                <p className="text-slate-400 font-black text-[10px] tracking-[0.3em] uppercase">Syncing Health Record Matrix...</p>
+                <p className="text-slate-400 font-black text-[10px] tracking-[0.3em] uppercase">Fetching your orders...</p>
               </div>
             ) : orders && orders.length > 0 ? (
               <motion.div 
@@ -148,13 +148,13 @@ export default function OrdersPage() {
                               {order.status === 'Delivered' ? <CheckCircle2 className="w-8 h-8" /> : <Package className="w-8 h-8" />}
                             </div>
                             <div>
-                              <p className="text-[9px] font-black text-slate-400 tracking-[0.3em] mb-1.5 uppercase opacity-60">Operational Ref</p>
+                              <p className="text-[9px] font-black text-slate-400 tracking-[0.3em] mb-1.5 uppercase opacity-60">Order ID</p>
                               <h3 className="font-black text-lg text-slate-900 tracking-tight font-outfit uppercase">#{order.id.substring(0, 12).toUpperCase()}</h3>
                             </div>
                           </div>
                           <div className="flex items-center gap-8">
                             <div className="text-right hidden sm:block">
-                              <p className="text-[9px] font-black text-slate-400 tracking-[0.3em] mb-1.5 uppercase opacity-60">Final Settlement</p>
+                              <p className="text-[9px] font-black text-slate-400 tracking-[0.3em] mb-1.5 uppercase opacity-60">Order Total</p>
                               <p className="font-black text-2xl text-primary tracking-tighter">₹{formatCurrency(order.totalAmount)}</p>
                             </div>
                             <div className="flex items-center gap-6">
@@ -191,7 +191,7 @@ export default function OrdersPage() {
                           {order.prescriptionUrl && (
                             <div className="flex items-center gap-3 text-primary bg-primary/5 px-4 py-2 rounded-full border border-primary/10">
                               <ImageIcon className="w-4 h-4" />
-                              <span className="text-[9px] font-black tracking-[0.2em] uppercase">Clinical Attachment</span>
+                              <span className="text-[9px] font-black tracking-[0.2em] uppercase">Prescription Attached</span>
                             </div>
                           )}
                         </div>
@@ -209,10 +209,10 @@ export default function OrdersPage() {
                  <div className="w-28 h-28 bg-white rounded-[40px] flex items-center justify-center mx-auto mb-10 shadow-xl border border-white">
                    <Package className="w-14 h-14 text-slate-100" />
                  </div>
-                 <h2 className="text-3xl font-black mb-4 tracking-tighter text-slate-900 font-outfit uppercase">Logistics Void</h2>
-                 <p className="text-slate-400 font-black mb-12 text-[10px] tracking-[0.3em] uppercase opacity-60">No history of clinical medical transfer detected</p>
+                 <h2 className="text-3xl font-black mb-4 tracking-tighter text-slate-900 font-outfit uppercase">No Orders Found</h2>
+                 <p className="text-slate-400 font-black mb-12 text-[10px] tracking-[0.3em] uppercase opacity-60">You haven't placed any orders yet</p>
                  <Link href="/">
-                   <Button className="rounded-full px-16 h-20 font-black text-xs shadow-2xl shadow-primary/30 tracking-[0.3em] active:scale-95 text-white bg-primary uppercase hover:scale-105 transition-all">Start Health Mission</Button>
+                   <Button className="rounded-full px-16 h-20 font-black text-xs shadow-2xl shadow-primary/30 tracking-[0.3em] active:scale-95 text-white bg-primary uppercase hover:scale-105 transition-all">Shop Now</Button>
                  </Link>
               </motion.div>
             )}
@@ -230,9 +230,9 @@ export default function OrdersPage() {
                   <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start gap-6">
                     <div className="space-y-3">
                       <DialogDescription className="text-[10px] font-black tracking-[0.4em] text-white/60 uppercase">
-                        Technical Order Manifest
+                        Order Status & History
                       </DialogDescription>
-                      <DialogTitle className="text-3xl font-black tracking-tighter uppercase font-outfit">Transaction Intel</DialogTitle>
+                      <DialogTitle className="text-3xl font-black tracking-tighter uppercase font-outfit">Order Details</DialogTitle>
                     </div>
                     <Badge className="bg-white/20 text-white border-2 border-white/20 font-black text-[10px] tracking-[0.2em] px-8 py-3 rounded-full backdrop-blur-md uppercase">
                       {selectedOrder?.status || 'Active'}
@@ -244,7 +244,7 @@ export default function OrdersPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <div className="space-y-6">
                       <h4 className="text-[10px] font-black tracking-[0.3em] text-slate-400 flex items-center gap-4 uppercase opacity-60">
-                        <User className="w-4 h-4" /> Personnel
+                        <User className="w-4 h-4" /> Customer Details
                       </h4>
                       <div className="bg-slate-50/50 p-8 rounded-[32px] border border-white shadow-inner">
                         <p className="font-black text-base text-slate-900 uppercase tracking-tight">{selectedOrder?.patientName}</p>
@@ -255,7 +255,7 @@ export default function OrdersPage() {
                     </div>
                     <div className="space-y-6">
                       <h4 className="text-[10px] font-black tracking-[0.3em] text-slate-400 flex items-center gap-4 uppercase opacity-60">
-                        <MapPin className="w-4 h-4" /> Drop-off Point
+                        <MapPin className="w-4 h-4" /> Delivery Address
                       </h4>
                       <div className="bg-slate-50/50 p-8 rounded-[32px] border border-white shadow-inner">
                         <p className="text-[11px] font-bold text-slate-900 leading-relaxed uppercase tracking-tight">
@@ -270,7 +270,7 @@ export default function OrdersPage() {
                   {selectedOrder?.prescriptionUrl && (
                     <div className="space-y-6">
                       <h4 className="text-[10px] font-black tracking-[0.3em] text-slate-400 flex items-center gap-4 uppercase opacity-60">
-                        <ImageIcon className="w-4 h-4" /> Verified Documentation
+                        <ImageIcon className="w-4 h-4" /> Prescription Attached
                       </h4>
                       <Dialog>
                         <DialogTrigger asChild>
@@ -300,15 +300,15 @@ export default function OrdersPage() {
 
                   <div className="space-y-6">
                     <h4 className="text-[10px] font-black tracking-[0.3em] text-slate-400 flex items-center gap-4 uppercase opacity-60">
-                      <ClipboardList className="w-4 h-4" /> Manifest Registry
+                      <ClipboardList className="w-4 h-4" /> Items Ordered
                     </h4>
                     <div className="bg-white rounded-[40px] border border-white shadow-xl overflow-hidden">
                       <table className="w-full text-left">
                         <thead className="bg-slate-50/50 border-b border-white">
                           <tr>
-                            <th className="px-10 py-6 text-[9px] font-black text-slate-400 uppercase tracking-widest">Clinical Unit</th>
-                            <th className="px-10 py-6 text-[9px] font-black text-slate-400 text-center uppercase tracking-widest">Volume</th>
-                            <th className="px-10 py-6 text-[9px] font-black text-slate-400 text-right uppercase tracking-widest">Net Value</th>
+                            <th className="px-10 py-6 text-[9px] font-black text-slate-400 uppercase tracking-widest">Medicine</th>
+                            <th className="px-10 py-6 text-[9px] font-black text-slate-400 text-center uppercase tracking-widest">Qty</th>
+                            <th className="px-10 py-6 text-[9px] font-black text-slate-400 text-right uppercase tracking-widest">Amount</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -326,26 +326,26 @@ export default function OrdersPage() {
 
                   <div className="space-y-6">
                     <h4 className="text-[10px] font-black tracking-[0.3em] text-slate-400 flex items-center gap-4 uppercase opacity-60">
-                      <Receipt className="w-4 h-4" /> Settlement Breakdown
+                      <Receipt className="w-4 h-4" /> Bill Details
                     </h4>
                     <div className="bg-primary/5 p-12 rounded-[56px] border border-primary/10 space-y-6 relative overflow-hidden shadow-inner">
                       <div className="absolute bottom-0 right-0 p-8 opacity-5">
                          <Zap className="w-32 h-32 text-primary" />
                       </div>
                       <div className="flex justify-between text-[11px] font-black text-slate-400 uppercase tracking-widest">
-                        <span>Gross Evaluation (MRP)</span>
+                        <span>Total MRP</span>
                         <span className="text-rose-400 line-through">₹{formatCurrency(selectedOrder?.billingBreakdown?.grossMrp || selectedOrder?.totalAmount)}</span>
                       </div>
                       <div className="flex justify-between text-[11px] font-black text-emerald-600 uppercase tracking-widest">
-                        <span className="flex items-center gap-3"><Tag className="w-4 h-4" /> Campaign Subsidy</span>
+                        <span className="flex items-center gap-3"><Tag className="w-4 h-4" /> Discount</span>
                         <span>-₹{formatCurrency(selectedOrder?.billingBreakdown?.campaignDiscount || 0)}</span>
                       </div>
                       <div className="flex justify-between text-[11px] font-black text-slate-900 uppercase tracking-widest">
-                        <span>Clinical Logistics Fee</span>
-                        <span className="text-emerald-600 font-black">WAVED</span>
+                        <span>Delivery Charges</span>
+                        <span className="text-emerald-600 font-black">FREE</span>
                       </div>
                       <div className="pt-8 border-t border-dashed border-primary/20 flex flex-col items-end gap-2">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] opacity-60">Calculated Net Payable</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] opacity-60">Total Payable Amount</span>
                         <span className="text-5xl font-black text-primary tracking-tighter">₹{formatCurrency(selectedOrder?.totalAmount)}</span>
                       </div>
                       <div className="pt-6 flex items-center justify-center sm:justify-start gap-4 p-4 bg-white/60 rounded-[24px] border border-white">
@@ -361,7 +361,7 @@ export default function OrdersPage() {
                     onClick={() => setSelectedOrder(null)}
                     className="w-full h-20 rounded-full font-black tracking-[0.4em] text-[11px] bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-2xl uppercase active:scale-95 border-4 border-white"
                   >
-                    Release Record
+                    Close Details
                   </Button>
                 </div>
               </DialogContent>

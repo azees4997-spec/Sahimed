@@ -380,10 +380,10 @@ export default function CheckoutPage() {
             className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-12 sm:mb-20"
           >
              <div className="space-y-4">
-               <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tighter font-outfit uppercase">Logistics Pipeline</h1>
+               <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tighter font-outfit uppercase">Checkout</h1>
                <div className="flex items-center gap-3">
                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                 <p className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase">Confirm final clinical destination</p>
+                 <p className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase">Confirm your delivery address</p>
                </div>
              </div>
           </motion.div>
@@ -398,7 +398,7 @@ export default function CheckoutPage() {
                 className="space-y-10"
               >
                 <div className="flex items-center justify-between px-2">
-                  <h3 className="text-lg font-black text-slate-900 tracking-tight font-outfit uppercase">Secure Delivery Points</h3>
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight font-outfit uppercase">Shipping Addresses</h3>
                   <button 
                     onClick={() => {
                       setOrderInfo({ patientName: orderInfo.patientName, phoneNumber: orderInfo.phoneNumber, houseNumber: '', buildingLocality: '', city: '', state: '', pincode: '', lat: 0, lng: 0, tag: 'Home', otherTag: '' });
@@ -406,7 +406,7 @@ export default function CheckoutPage() {
                     }}
                     className="bg-white/60 backdrop-blur-md px-6 py-3 rounded-full border border-white text-primary font-black text-[10px] tracking-[0.2em] flex items-center gap-3 uppercase hover:bg-white shadow-xl transition-all active:scale-95"
                   >
-                    <Plus className="w-4 h-4" /> Add Protocol
+                    <Plus className="w-4 h-4" /> Add Address
                   </button>
                 </div>
 
@@ -470,8 +470,8 @@ export default function CheckoutPage() {
                       <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-2xl border border-white">
                         <MapPin className="w-10 h-10 text-slate-200" />
                       </div>
-                      <p className="text-[10px] font-black text-slate-400 tracking-[0.4em] uppercase" >No Logistical Targets Saved</p>
-                      <p className="text-xs font-black text-primary mt-4 tracking-[0.2em] uppercase transition-all group-hover:scale-110">+ Register Delivery Point</p>
+                      <p className="text-[10px] font-black text-slate-400 tracking-[0.4em] uppercase" >No saved addresses found</p>
+                      <p className="text-xs font-black text-primary mt-4 tracking-[0.2em] uppercase transition-all group-hover:scale-110">+ Add Delivery Address</p>
                     </motion.div>
                   )}
                 </div>
@@ -487,7 +487,7 @@ export default function CheckoutPage() {
                 >
                   <div className="flex items-center gap-4 px-2">
                     <div className="w-1 h-6 bg-rose-500 rounded-full" />
-                    <h3 className="text-lg font-black text-slate-900 tracking-tight font-outfit uppercase">Clinical Protocol Choice</h3>
+                    <h3 className="text-lg font-black text-slate-900 tracking-tight font-outfit uppercase">Prescription Options</h3>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -547,14 +547,14 @@ export default function CheckoutPage() {
                       >
                         <div className="bg-white p-10 rounded-[48px] border-2 border-primary/5 shadow-2xl space-y-8">
                           <div className="flex items-center justify-between">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Clinical Document Repository</h4>
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Upload Prescription</h4>
                             <Button 
                               onClick={() => document.getElementById('checkout-rx-upload')?.click()} 
                               disabled={isUploading}
                               className="rounded-full bg-primary/10 hover:bg-primary/20 text-primary font-black text-[9px] tracking-widest px-6 h-10 border-none uppercase flex gap-2"
                             >
                               {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
-                              Inject Clinical File
+                              Upload File
                             </Button>
                             <input id="checkout-rx-upload" type="file" multiple className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
                           </div>
@@ -601,9 +601,9 @@ export default function CheckoutPage() {
                       >
                        <div className="bg-emerald-50/50 p-10 rounded-[48px] border-2 border-emerald-100 text-center space-y-4">
                           <Stethoscope className="w-12 h-12 text-emerald-300 mx-auto" />
-                          <h4 className="text-sm font-black text-emerald-900 tracking-tight font-outfit uppercase">Medical Review Requested</h4>
+                          <h4 className="text-sm font-black text-emerald-900 tracking-tight font-outfit uppercase">Doctor Consultation Requested</h4>
                           <p className="text-[10px] font-bold text-emerald-700 leading-relaxed max-w-sm mx-auto uppercase tracking-wider">
-                            Our medical desk will contact you to synchronize clinical details and authorize this fulfillment via digital consult.
+                            Our medical team will contact you to confirm your prescription and authorize your order via free digital consult.
                           </p>
                        </div>
                       </motion.div>
@@ -619,7 +619,7 @@ export default function CheckoutPage() {
               >
                 <div className="flex items-center gap-4 px-2">
                    <div className="w-1 h-6 bg-primary rounded-full" />
-                   <h3 className="text-lg font-black text-slate-900 tracking-tight font-outfit uppercase">Settlement Protocol</h3>
+                   <h3 className="text-lg font-black text-slate-900 tracking-tight font-outfit uppercase">Payment Method</h3>
                 </div>
                 <div 
                   className={cn(
@@ -633,8 +633,8 @@ export default function CheckoutPage() {
                       <Banknote className="w-8 h-8" />
                     </div>
                     <div>
-                      <p className="font-black text-lg tracking-tight font-outfit uppercase">Doorstep Fulfillment</p>
-                      <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-1">Settle at delivery matrix</p>
+                      <p className="font-black text-lg tracking-tight font-outfit uppercase">Cash on Delivery</p>
+                      <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-1">Pay when you receive your order</p>
                     </div>
                   </div>
                   <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-inner relative z-10", paymentMethod === 'COD' ? "bg-primary" : "bg-white")}>
@@ -706,7 +706,7 @@ export default function CheckoutPage() {
                   >
                     {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
                       <>
-                        Initiate Fulfillment
+                        Place Order
                         <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
                       </>
                     )}
@@ -714,7 +714,7 @@ export default function CheckoutPage() {
                   
                   <div className="flex items-center justify-center gap-3 py-4 bg-slate-50 rounded-[28px] border border-slate-100 shadow-inner">
                      <ShieldCheck className="w-4 h-4 text-primary" />
-                     <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase">Clinical Vault Encryption</span>
+                     <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase">100% Safe & Secure</span>
                   </div>
                 </div>
               </motion.div>
@@ -729,9 +729,9 @@ export default function CheckoutPage() {
                 <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12">
                   <MapPin className="w-32 h-32" />
                 </div>
-                <DialogTitle className="text-3xl font-black tracking-tighter uppercase font-outfit">Logistical Target</DialogTitle>
+                <DialogTitle className="text-3xl font-black tracking-tighter uppercase font-outfit">Delivery Address</DialogTitle>
                 <DialogDescription className="text-[10px] font-black text-white/60 tracking-[0.3em] mt-3 uppercase">
-                  Precision Clinical Destination Matrix
+                  Enter your shipping details below
                 </DialogDescription>
               </div>
 
@@ -743,21 +743,21 @@ export default function CheckoutPage() {
                   className="h-16 w-full rounded-[32px] border-2 border-primary/20 text-primary bg-white hover:bg-primary/5 font-black text-xs gap-4 transition-all hover:scale-[1.02] shadow-xl uppercase tracking-widest"
                 >
                   {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Target className="w-5 h-5" />}
-                  Synchronize GPS Coordinates
+                  Use Current Location
                 </Button>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Recipient Identity *</Label>
+                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Customer Name *</Label>
                     <Input 
-                      placeholder="e.g. CLINICAL DIRECTOR" 
+                      placeholder="Enter Name" 
                       value={orderInfo.patientName} 
                       onChange={e => setOrderInfo({...orderInfo, patientName: e.target.value})}
                       className="h-14 rounded-[24px] bg-slate-50 border-slate-100 font-black text-sm px-6 uppercase tracking-tight focus:bg-white transition-colors"
                     />
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Secure Contact *</Label>
+                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Mobile Number *</Label>
                     <div className="relative">
                       <div className="absolute left-6 top-1/2 -translate-y-1/2 text-xs font-black text-primary border-r border-slate-200 pr-4">IN +91</div>
                       <Input 
@@ -772,7 +772,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Structural Identifier *</Label>
+                  <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">House / Flat No. *</Label>
                   <Input 
                     placeholder="HOUSE / BUILDING / APARTMENT" 
                     value={orderInfo.houseNumber} 
@@ -782,7 +782,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Logistical Sector *</Label>
+                  <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Street / Locality / Area *</Label>
                   <Input 
                     placeholder="LOCALITY / STREET / LANDMARK" 
                     value={orderInfo.buildingLocality} 
@@ -793,7 +793,7 @@ export default function CheckoutPage() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">HUB Code *</Label>
+                    <Label className="text-[10px] font-black text-slate-400 ml-2 tracking-widest uppercase opacity-60">Pincode *</Label>
                     <Input 
                       placeholder="PINCODE" 
                       value={orderInfo.pincode} 

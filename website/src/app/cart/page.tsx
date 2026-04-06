@@ -111,9 +111,9 @@ export default function CartPage() {
             >
               <ShoppingCart className="w-10 h-10 sm:w-12 sm:h-12 text-slate-200" />
             </motion.div>
-            <h1 className="text-3xl sm:text-4xl font-black mb-4 tracking-tighter font-outfit">Your cart is empty</h1>
-            <p className="text-slate-500 font-bold mb-12 tracking-tight uppercase text-[10px]">Add clinical supplies to start your order</p>
-            <Link href="/"><Button className="rounded-full px-16 h-20 font-black tracking-[0.2em] shadow-2xl shadow-primary/20 bg-primary uppercase text-sm">Start Discovering</Button></Link>
+            <h1 className="text-3xl sm:text-4xl font-black mb-4 tracking-tighter font-outfit uppercase">Your cart is empty</h1>
+            <p className="text-slate-500 font-bold mb-12 tracking-tight uppercase text-[10px]">Add medicines to start your order</p>
+            <Link href="/"><Button className="rounded-full px-16 h-20 font-black tracking-[0.2em] shadow-2xl shadow-primary/20 bg-primary uppercase text-sm">Start Shopping</Button></Link>
           </main>
         </div>
       </PageTransition>
@@ -210,7 +210,7 @@ export default function CartPage() {
                     </div>
                     <div>
                       <p className="font-black text-[10px] tracking-widest uppercase">
-                        {appliedPromo ? `REWARD: ${appliedPromo.code}` : "Coupon Gateway"}
+                        {appliedPromo ? `COUPON: ${appliedPromo.code}` : "Apply Coupon"}
                       </p>
                     </div>
                   </div>
@@ -239,8 +239,8 @@ export default function CartPage() {
                       <div className="absolute inset-0 bg-white/20 animate-pulse" />
                       <PartyPopper className="w-6 h-6 animate-bounce shrink-0" />
                       <div className="text-center relative z-10">
-                        <p className="text-[10px] font-black tracking-[0.2em] leading-none uppercase mb-2">Clinical Bonus Applied</p>
-                        <p className="text-xl font-black tracking-tighter font-outfit">Extra ₹{promoDiscount.toFixed(2)} Saved!</p>
+                      <p className="text-[10px] font-black tracking-[0.2em] leading-none uppercase mb-2">Coupon Applied Successfully</p>
+                      <p className="text-xl font-black tracking-tighter font-outfit">Extra ₹{promoDiscount.toFixed(2)} Saved!</p>
                       </div>
                       <Sparkles className="w-6 h-6 animate-pulse shrink-0" />
                     </motion.div>
@@ -255,27 +255,27 @@ export default function CartPage() {
                 >
                   <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -mr-24 -mt-24" />
                   
-                  <h2 className="text-[7px] sm:text-[9px] font-black mb-4 sm:mb-6 tracking-[0.2em] text-slate-400 uppercase relative z-10">Matrix Summary</h2>
+                  <h2 className="text-[7px] sm:text-[9px] font-black mb-4 sm:mb-6 tracking-[0.2em] text-slate-400 uppercase relative z-10">Order Summary</h2>
                   <div className="space-y-2 sm:space-y-4 mb-6 relative z-10">
                     <div className="flex justify-between text-[9px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">
-                      <span>Gross MRP</span>
+                      <span>Total MRP</span>
                       <span>₹{totalMrp.toFixed(2)}</span>
                     </div>
                     {itemSavings > 0 && (
                       <div className="flex justify-between text-[9px] sm:text-xs font-bold text-primary uppercase tracking-widest">
-                        <span>Optimization</span>
+                        <span>Price Discount</span>
                         <span>-₹{itemSavings.toFixed(2)}</span>
                       </div>
                     )}
                     {appliedPromo && (
                       <div className="flex justify-between text-[9px] sm:text-xs font-bold text-primary uppercase tracking-widest">
-                        <span>Coupon Reward</span>
+                        <span>Coupon Savings</span>
                         <span>-₹{promoDiscount.toFixed(2)}</span>
                       </div>
                     )}
                     {feeTotal > 0 && (
                       <div className="flex justify-between text-[9px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">
-                        <span>Handling Feed</span>
+                        <span>Delivery Fee</span>
                         <span>₹{feeTotal.toFixed(2)}</span>
                       </div>
                     )}
@@ -287,7 +287,7 @@ export default function CartPage() {
                     
                     {totalSavings > 0 && (
                       <div className="mt-2 flex justify-between items-center text-[9px] sm:text-xs font-black text-emerald-700 bg-emerald-50 p-2 sm:p-3 rounded-[16px] border border-emerald-100">
-                        <span className="uppercase tracking-widest">Savings Matrix</span>
+                        <span className="uppercase tracking-widest">Total Savings</span>
                         <span className="bg-emerald-100 px-2 py-0.5 rounded text-[8px] sm:text-[10px] uppercase tracking-widest font-black">
                           ₹{totalSavings.toFixed(2)}
                         </span>
@@ -296,7 +296,7 @@ export default function CartPage() {
                   </div>
                   <div className="hidden lg:flex">
                     <Button onClick={handleCheckoutClick} className="w-full rounded-full h-12 sm:h-16 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-xl bg-primary text-white relative z-10 group hover:scale-[1.01] transition-all">
-                      Confirm Checkout <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
+                      Proceed to Checkout <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </div>
                 </motion.div>
@@ -311,9 +311,9 @@ export default function CartPage() {
               <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12">
                 <Ticket className="w-32 h-32" />
               </div>
-              <DialogTitle className="text-3xl font-black tracking-tighter font-outfit uppercase">Medical Privileges</DialogTitle>
+              <DialogTitle className="text-3xl font-black tracking-tighter font-outfit uppercase">Apply Coupon</DialogTitle>
               <DialogDescription className="text-[10px] font-black text-white/60 tracking-[0.2em] mt-3 uppercase">
-                Select a clinical discount to optimize your healthcare budget
+                Select a discount code to save on your order
               </DialogDescription>
             </div>
             <div className="p-10 space-y-6 max-h-[60vh] overflow-y-auto scrollbar-hide">
@@ -356,7 +356,7 @@ export default function CartPage() {
                           </p>
                         </div>
                       ) : (
-                        <p className="text-[9px] font-black text-primary/40 tracking-[0.3em] mt-4 uppercase group-hover:text-primary transition-colors">Select Reward Matrix</p>
+                        <p className="text-[9px] font-black text-primary/40 tracking-[0.3em] mt-4 uppercase group-hover:text-primary transition-colors">Apply Coupon Now</p>
                       )}
                     </motion.div>
                   );

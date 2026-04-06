@@ -77,10 +77,10 @@ export default function PrescriptionPage() {
         
         setAttachedFiles(prev => [...prev, downloadURL]);
       }
-      toast({ title: "Clinical files added remotely" });
+      toast({ title: "Prescription files added" });
     } catch (error) {
       console.error(error);
-      toast({ variant: "destructive", title: "Cloud sync failed" });
+      toast({ variant: "destructive", title: "Upload failed" });
     } finally {
       setIsUploading(false);
     }
@@ -94,7 +94,7 @@ export default function PrescriptionPage() {
     }
 
     if (attachedFiles.length === 0) {
-      toast({ variant: "destructive", title: "No clinical files", description: "Please attach your prescription documents." });
+      toast({ variant: "destructive", title: "No files attached", description: "Please upload your prescription documents." });
       return;
     }
 
@@ -145,7 +145,7 @@ export default function PrescriptionPage() {
           </Link>
           <Link href="/orders">
             <Button variant="outline" className="w-full h-16 rounded-full font-black tracking-widest text-[11px] border-2">
-              Track requests
+              Track order
             </Button>
           </Link>
         </div>
@@ -181,8 +181,8 @@ export default function PrescriptionPage() {
                     <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-[32px] flex items-center justify-center shadow-lg mb-6 group-hover:scale-110 transition-transform">
                       <ClipboardCheck className="w-10 h-10" />
                     </div>
-                    <p className="font-extrabold text-slate-900 text-2xl tracking-tight mb-2 uppercase">{attachedFiles.length} Documents Matrixed</p>
-                    <p className="text-[10px] font-black tracking-widest leading-relaxed uppercase max-w-[240px]">Cloud sync completed • Clinical verification pending</p>
+                    <p className="font-extrabold text-slate-900 text-2xl tracking-tight mb-2 uppercase">{attachedFiles.length} Prescription(s) Uploaded</p>
+                    <p className="text-[10px] font-black tracking-widest leading-relaxed uppercase max-w-[240px]">Files uploaded • Verification pending</p>
                     
                     <Button variant="outline" className="mt-8 rounded-full font-black text-[9px] px-8 h-12 border-2 uppercase tracking-widest gap-2 bg-white">
                       <RotateCcw className="w-4 h-4" /> Add more documents
@@ -193,7 +193,7 @@ export default function PrescriptionPage() {
                     <div className="w-20 h-20 bg-primary/10 text-primary rounded-[32px] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-primary/5">
                       <Camera className="w-10 h-10" />
                     </div>
-                    <p className="font-black text-gray-900 tracking-tight text-xl mb-2">Scan clinical file</p>
+                    <p className="font-black text-gray-900 tracking-tight text-xl mb-2">Upload Prescription</p>
                     <p className="text-[10px] text-gray-400 font-bold tracking-widest">Image, PDF up to 5MB supported</p>
                   </div>
                 )}
@@ -201,7 +201,7 @@ export default function PrescriptionPage() {
                 {isUploading && (
                   <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-50 flex flex-col items-center justify-center animate-in fade-in duration-300">
                     <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
-                    <p className="font-black text-[10px] tracking-widest uppercase text-primary">Cloud verification in progress...</p>
+                    <p className="font-black text-[10px] tracking-widest uppercase text-primary">Uploading your files...</p>
                   </div>
                 )}
               </div>
@@ -283,7 +283,7 @@ export default function PrescriptionPage() {
                 
                 <div className="flex items-center justify-center gap-2">
                    <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-                   <p className="text-[9px] text-gray-400 font-black tracking-[0.2em]">Secure checkout guaranteed</p>
+                   <p className="text-[9px] text-gray-400 font-black tracking-[0.2em]">100% Secure & Reliable</p>
                 </div>
               </div>
             </div>

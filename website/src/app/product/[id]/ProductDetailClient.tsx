@@ -245,9 +245,9 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                 animate={{ y: 0, opacity: 1 }}
                 className="inline-flex flex-col items-center gap-0.5 sm:gap-1"
              >
-                <h2 className="text-[8px] sm:text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase mb-0">Molecular Formula</h2>
+                <h2 className="text-[8px] sm:text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase mb-0">Salt Composition</h2>
                 <span className="text-xs md:text-xl font-black text-slate-900 tracking-tighter font-outfit uppercase leading-tight max-w-2xl px-2 line-clamp-1">
-                   {molData?.molecule || molData?.name || product?.saltComposition || product?.composition || product?.salt || product?.molecule || "Molecular formulation info Pending"}
+                   {molData?.molecule || molData?.name || product?.saltComposition || product?.composition || product?.salt || product?.molecule || "Information coming soon"}
                 </span>
              </motion.div>
           </div>
@@ -261,7 +261,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
               <div className="bg-gradient-to-r from-primary to-accent text-white py-1.5 sm:py-2.5 px-4 sm:px-8 rounded-[12px] sm:rounded-[20px] shadow-lg flex items-center justify-center gap-2 text-center">
                  <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-bounce" />
                  <h2 className="text-[8px] sm:text-[11px] font-black tracking-widest uppercase line-clamp-1">
-                   Switch and save ₹{Number(switchSavingsAmt).toFixed(0)} • IDENTICAL MOLECULE
+                   Switch and save ₹{Number(switchSavingsAmt).toFixed(0)} • Same Medicine
                  </h2>
               </div>
             </motion.div>
@@ -272,7 +272,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
               <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-6 items-stretch">
                 <ComparisonCard 
                   product={brandedItem} 
-                  label="Original Branded" 
+                  label="Branded Version" 
                   getItemQuantity={getItemQuantity}
                   addToCart={addToCart}
                   showComparison={showComparison}
@@ -280,7 +280,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                 />
                 <ComparisonCard 
                   product={genericItem} 
-                  label="Smart Switch Alternative" 
+                  label="Save with Generic" 
                   isAlt 
                   getItemQuantity={getItemQuantity}
                   addToCart={addToCart}
@@ -293,7 +293,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                 <div className="w-full sm:w-[480px]">
                   <ComparisonCard 
                     product={product} 
-                    label={isBranded ? "Verified Selection" : "Clinical Generic"} 
+                    label={isBranded ? "Branded" : "Generic Solution"} 
                     getItemQuantity={getItemQuantity}
                     addToCart={addToCart}
                     showComparison={showComparison}
@@ -312,20 +312,20 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
           >
             <Tabs defaultValue="clinical" className="w-full">
               <TabsList className="bg-slate-50 p-1 rounded-full h-10 sm:h-14 w-full max-w-[500px] flex mx-auto mb-8 border border-slate-100 shadow-inner">
-                <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">{product?.clinicalTabLabel || "Intelligence"}</TabsTrigger>
-                <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">{product?.safetyTabLabel || "Protocol"}</TabsTrigger>
-                <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">{product?.matrixTabLabel || "Matrix"}</TabsTrigger>
+                <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">{product?.clinicalTabLabel || "Information"}</TabsTrigger>
+                <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">{product?.safetyTabLabel || "Safety Advice"}</TabsTrigger>
+                <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">{product?.matrixTabLabel || "Interactions"}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="clinical" className="space-y-10 focus-visible:outline-none">
                  <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-8">
                     <div className="bg-lavender p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-white space-y-2 sm:space-y-4 shadow-sm">
-                       <div className="flex items-center gap-2 sm:gap-4"><ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /><h3 className="text-[10px] sm:text-lg font-black text-slate-800 tracking-tighter font-outfit uppercase">Clinical Indication</h3></div>
-                       <p className="text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase opacity-70 tracking-tight">{product?.treatment || "Standard clinical protocol."}</p>
+                       <div className="flex items-center gap-2 sm:gap-4"><ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /><h3 className="text-[10px] sm:text-lg font-black text-slate-800 tracking-tighter font-outfit uppercase">Medical Uses</h3></div>
+                       <p className="text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase opacity-70 tracking-tight">{product?.treatment || "Standard medical use."}</p>
                     </div>
                     <div className="bg-sahi-blue p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-white space-y-2 sm:space-y-4 shadow-sm">
-                       <div className="flex items-center gap-2 sm:gap-4"><Info className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /><h3 className="text-[10px] sm:text-lg font-black text-slate-800 tracking-tighter font-outfit uppercase">Pharmacology</h3></div>
-                       <p className="text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase opacity-70 tracking-tight">{product?.description || "Active medical formulation."}</p>
+                       <div className="flex items-center gap-2 sm:gap-4"><Info className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /><h3 className="text-[10px] sm:text-lg font-black text-slate-800 tracking-tighter font-outfit uppercase">Product Info</h3></div>
+                       <p className="text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase opacity-70 tracking-tight">{product?.description || "Medicine details."}</p>
                     </div>
                   </div>
               </TabsContent>
@@ -333,11 +333,11 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
               <TabsContent value="safety" className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-8 focus-visible:outline-none">
                  <div className="bg-sahi-pink border border-white p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] flex flex-col sm:flex-row gap-4 sm:gap-6 shadow-sm">
                    <div className="w-10 h-10 sm:w-16 sm:h-16 bg-white rounded-[16px] sm:rounded-[24px] flex items-center justify-center shrink-0 shadow-lg"><AlertTriangle className="w-4 h-4 sm:w-6 sm:h-6 text-rose-500" /></div>
-                   <div><h4 className="text-[8px] sm:text-xs font-black text-rose-600 mb-1 sm:mb-2 uppercase tracking-widest">Protocol Caution</h4><p className="text-[8px] sm:text-[10px] font-black text-rose-900/60 leading-tight sm:leading-relaxed uppercase tracking-tight">{product?.safetyAdvice || "Follow clinical guidance."}</p></div>
+                   <div><h4 className="text-[8px] sm:text-xs font-black text-rose-600 mb-1 sm:mb-2 uppercase tracking-widest">Safety Advice</h4><p className="text-[8px] sm:text-[10px] font-black text-rose-900/60 leading-tight sm:leading-relaxed uppercase tracking-tight">{product?.safetyAdvice || "Follow medical guidance."}</p></div>
                  </div>
                  <div className="bg-sahi-blue border border-white p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] flex flex-col sm:flex-row gap-4 sm:gap-6 shadow-sm">
                    <div className="w-10 h-10 sm:w-16 sm:h-16 bg-white rounded-[16px] sm:rounded-[24px] flex items-center justify-center shrink-0 shadow-lg"><Stethoscope className="w-4 h-4 sm:w-6 sm:h-6 text-primary" /></div>
-                   <div><h4 className="text-[8px] sm:text-xs font-black text-primary mb-1 sm:mb-2 uppercase tracking-widest">Usage Gateway</h4><p className="text-[8px] sm:text-[10px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase tracking-tight">{product?.howToUse || "Execute as professionally directed."}</p></div>
+                   <div><h4 className="text-[8px] sm:text-xs font-black text-primary mb-1 sm:mb-2 uppercase tracking-widest">How to Use</h4><p className="text-[8px] sm:text-[10px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase tracking-tight">{product?.howToUse || "Take as directed by your doctor."}</p></div>
                  </div>
               </TabsContent>
 
@@ -358,7 +358,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                     <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[12px] sm:rounded-[16px] flex items-center justify-center text-primary shrink-0 shadow-sm border border-slate-50"><item.icon className="w-4 h-4 sm:w-5 sm:h-5" /></div>
                     <div className="flex flex-col gap-0.5 sm:gap-1">
                       <h4 className="text-[7px] sm:text-[9px] font-black tracking-[0.2em] text-slate-500/60 uppercase">{item.title}</h4>
-                      <p className="text-[9px] sm:text-[11px] font-black text-slate-800 leading-tight uppercase tracking-tight line-clamp-2">{item.text || "PROTOCOL APPLICABLE"}</p>
+                      <p className="text-[9px] sm:text-[11px] font-black text-slate-800 leading-tight uppercase tracking-tight line-clamp-2">{item.text || "CONSULT DOCTOR"}</p>
                     </div>
                   </motion.div>
                 ))}
