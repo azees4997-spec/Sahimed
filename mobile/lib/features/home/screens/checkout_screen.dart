@@ -36,9 +36,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (address == null || address.isEmpty) {
       address = await _locationService.getCurrentAddress();
     }
-    if (address != null && mounted) {
+    if (mounted) {
       setState(() {
-        _addressController.text = address;
+        _addressController.text = address ?? '';
       });
     }
   }
@@ -321,7 +321,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ],
             ),
           ),
-          Icon(LucideIcons.checkCircle, color: SahimedColors.primary, size: 24),
+          Icon(LucideIcons.check, color: SahimedColors.primary, size: 24),
         ],
       ),
     );

@@ -123,8 +123,8 @@ class CartScreen extends StatelessWidget {
   }
 
   Widget _buildCartItem(BuildContext context, CartProvider cart, CartItem item) {
-    final double price = double.tryParse(item.product.liveData?.price.toString() ?? '0') ?? 0.0;
-    final double mrp = double.tryParse(item.product.liveData?.mrp.toString() ?? '0') ?? 0.0;
+    final double price = item.product.price;
+    final double mrp = item.product.mrp;
     final double discount = mrp > price ? ((mrp - price) / mrp * 100) : 0;
 
     return Container(
@@ -172,7 +172,7 @@ class CartScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  item.product.molName,
+                                  item.product.molName ?? 'Unknown Product',
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: GoogleFonts.outfit(
@@ -183,7 +183,7 @@ class CartScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  item.product.company,
+                                  item.product.company ?? 'Unknown Manufacturer',
                                   style: GoogleFonts.outfit(
                                     fontSize: 12,
                                     color: SahimedColors.textSecondary,

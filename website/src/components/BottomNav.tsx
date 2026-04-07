@@ -10,7 +10,7 @@ export default function BottomNav() {
   const pathname = usePathname();
   if (pathname.startsWith('/Sahi-admin')) return null;
 
-  const hideOnPaths = ['/cart', '/checkout', '/Sahi-admin', '/login', '/prescription'];
+  const hideOnPaths = ['/Sahi-admin', '/login', '/prescription'];
   if (hideOnPaths.some(path => pathname.startsWith(path))) return null;
 
   const navItems = [

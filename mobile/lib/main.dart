@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'core/theme/theme.dart';
 import 'package:provider/provider.dart';
 import 'core/providers/cart_provider.dart';
 import 'features/auth/screens/splash_screen.dart';
-import 'features/auth/screens/login_screen.dart';
 import 'firebase_options.dart';
 
 void main() async {

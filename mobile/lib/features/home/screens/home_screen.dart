@@ -1,20 +1,16 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
-import '../../../core/providers/cart_provider.dart';
 import '../../../shared/models/models.dart';
 import '../widgets/home_header.dart';
 import '../../products/screens/category_products_screen.dart';
 import '../../products/screens/product_detail_screen.dart';
 import '../../products/screens/search_screen.dart';
-import '../screens/cart_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
   List<BannerModel> _banners = [];
   List<ProductModel> _bestSellers = [];
   bool _isLoading = true;
-  int _currentBannerIndex = 0;
 
   @override
   void initState() {
