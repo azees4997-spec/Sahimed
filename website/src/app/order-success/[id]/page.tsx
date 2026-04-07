@@ -6,64 +6,24 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   CheckCircle2, 
-  ArrowRight, 
-  Package, 
-  ShieldCheck, 
+  MapPin, 
   Banknote,
   Zap,
-  Sparkles
+  Clock,
+  ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 import BottomNav from '@/components/BottomNav';
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.3
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, scale: 0.9, y: 20 },
-  show: { 
-    opacity: 1, 
-    scale: 1, 
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 260,
-      damping: 20
-    }
-  }
-};
 
 export default function OrderSuccessPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const orderId = resolvedParams?.id;
   const { user } = useUser();
   const db = useFirestore();
-
-  useEffect(() => {
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
-    audio.volume = 0.4;
-    
-    audio.play().catch(e => {
-      console.log("Clinical chime standby: waiting for session interaction.");
-    });
-
-    if (typeof navigator !== 'undefined' && "vibrate" in navigator) {
-      navigator.vibrate([100, 50, 100]);
-    }
-  }, []);
 
   const orderRef = useMemoFirebase(() => {
     if (!db || !user || !orderId) return null;
@@ -74,137 +34,116 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
 
   const breakdown = order?.billingBreakdown;
   const totalSaved = breakdown?.savings || 0;
+  const isPendingConsult = order?.status === 'Pending Consult';
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern flex flex-col">
+      <div className="min-h-screen bg-white flex flex-col">
         <Navbar />
         
-        <main className="flex-1 max-w-2xl mx-auto px-6 py-12 md:py-20 text-center flex flex-col justify-center w-full">
+        <main className="flex-1 max-w-lg mx-auto px-6 py-6 md:py-10 flex flex-col items-center w-full">
           <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="space-y-10"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full space-y-6"
           >
-            <motion.div variants={itemVariants} className="relative">
-              <div className="w-32 h-32 bg-primary text-white rounded-[40px] flex items-center justify-center mx-auto mb-8 shadow-3xl rotate-12 group hover:rotate-0 transition-transform duration-500 border-4 border-white relative z-10 overflow-hidden">
-                <CheckCircle2 className="w-16 h-16" />
-                <motion.div 
-                   animate={{ scale: [1, 1.5, 1], opacity: [0.1, 0.3, 0.1] }}
-                   transition={{ duration: 2, repeat: Infinity }}
-                   className="absolute inset-0 bg-white"
-                />
+            {/* Confirmation Header */}
+            <div className="text-center space-y-4">
+              <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto shadow-sm border border-blue-100">
+                <CheckCircle2 className="w-10 h-10" />
               </div>
-              <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-48 h-48 bg-primary/10 rounded-full blur-3xl -z-10 animate-pulse" />
-              
-              <div className="space-y-4">
-                <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Priority Secured!</h1>
-                <p className="text-primary font-black text-[11px] tracking-[0.5em] uppercase opacity-70">Your SahiMed Procurement is verified & active</p>
+              <div className="space-y-1.5">
+                <h1 className="text-2xl font-black text-slate-900 tracking-tight font-outfit uppercase">
+                  {isPendingConsult ? "Order Received" : "Order Confirmed!"}
+                </h1>
+                {isPendingConsult ? (
+                  <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider border border-amber-100">
+                    <Clock className="w-3 h-3" />
+                    Waiting for doctor consultation
+                  </div>
+                ) : (
+                  <p className="text-slate-500 font-bold text-xs uppercase tracking-wider opacity-70">Your health essentials are being prepared</p>
+                )}
               </div>
-            </motion.div>
+            </div>
 
-            {totalSaved > 0 && (
-              <motion.div variants={itemVariants}>
-                <Card className="rounded-[56px] border-none bg-gradient-to-br from-emerald-500 to-emerald-700 overflow-hidden shadow-3xl relative group active:scale-[0.98] transition-all">
-                  <div className="absolute top-0 right-0 p-8 opacity-20 rotate-12 group-hover:scale-110 transition-transform duration-700">
-                    <Sparkles className="w-32 h-32 text-white" />
-                  </div>
-                  <CardContent className="p-10 relative z-10">
-                    <div className="flex items-center justify-center gap-3 mb-6 font-outfit">
-                      <Zap className="w-5 h-5 text-amber-300 animate-pulse" />
-                      <h2 className="text-[10px] font-black text-white/80 tracking-[0.4em] uppercase font-outfit">Intelligence Savings Unlocked</h2>
-                    </div>
-                    
-                    <div className="flex flex-col items-center gap-1 mb-8">
-                      <p className="text-6xl sm:text-7xl font-black text-white tracking-tighter uppercase font-outfit flex items-center gap-3">
-                        <span className="text-4xl opacity-50 font-normal">₹</span>
-                        {Number(totalSaved).toFixed(2)}
-                      </p>
-                      <span className="text-[10px] font-black text-white/60 tracking-[0.3em] uppercase">Total Smart Savings from this Order</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-8 border-t border-white/10 pt-8 mt-2">
-                      <div className="text-center space-y-1 border-r border-white/10">
-                        <p className="text-[8px] font-black text-white/60 tracking-[0.3em] uppercase">Market Delta</p>
-                        <p className="font-black text-xl text-white font-outfit">₹{((breakdown?.grossMrp || 0) - (order?.totalAmount || 0) + (breakdown?.campaignDiscount || 0)).toFixed(2)}</p>
-                      </div>
-                      <div className="text-center space-y-1">
-                        <p className="text-[8px] font-black text-white/60 tracking-[0.3em] uppercase">Campaign Bonus</p>
-                        <p className="font-black text-xl text-white font-outfit">₹{Number(breakdown?.campaignDiscount || 0).toFixed(2)}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            <motion.div variants={itemVariants}>
-              <Card className="rounded-[56px] border-none shadow-xl bg-white/80 backdrop-blur-xl overflow-hidden border border-white">
-                <CardContent className="p-0">
-                    <div className="bg-slate-50/50 p-8 flex flex-col items-center gap-4 border-b border-slate-100">
-                      <div className="bg-primary/5 px-6 py-2.5 rounded-full flex items-center gap-3 border border-primary/10">
-                        <Package className="w-4 h-4 text-primary" />
-                        <span className="text-[10px] font-black text-primary tracking-[0.3em] uppercase">Order Reference: {orderId?.toUpperCase()}</span>
-                      </div>
-                    </div>
-
-                  <div className="p-10 space-y-10">
-                    <div className="grid grid-cols-2 gap-8">
-                      <div className="text-left space-y-2">
-                        <p className="text-[9px] font-black text-slate-400 tracking-[0.3em] uppercase opacity-60">Total Payable</p>
-                        <p className="font-black text-3xl text-slate-900 leading-none font-outfit">₹{Number(order?.totalAmount || 0).toFixed(2)}</p>
-                      </div>
-                      <div className="text-right space-y-2">
-                        <p className="text-[9px] font-black text-slate-400 tracking-[0.3em] uppercase opacity-60">Protocol</p>
-                        <div className="flex items-center justify-end gap-2.5">
-                          <Banknote className="w-5 h-5 text-emerald-500" />
-                          <p className="font-black text-lg text-emerald-600 uppercase tracking-tight">{order?.paymentType || 'COD'}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-blue-50/50 p-6 rounded-[32px] border border-blue-100/50 flex items-start gap-4 text-left shadow-inner">
-                       <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shrink-0 border border-blue-100 shadow-sm">
-                         <ShieldCheck className="w-5 h-5 text-blue-600" />
-                       </div>
-                       <div>
-                          <p className="text-[10px] font-black text-slate-900 tracking-[0.2em] uppercase mb-1">Health Delivery Protocol: Secured</p>
-                          <p className="text-[9px] font-black text-slate-400 uppercase leading-relaxed tracking-wider opacity-60">
-                            Our team is finalizing your health package. Expect transmission updates and shipping notifications shortly.
-                          </p>
-                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-5">
-              <Link href="/" className="flex-1">
-                <Button className="w-full rounded-[24px] h-20 font-black text-[11px] tracking-[0.3em] shadow-2xl shadow-primary/30 uppercase gap-4 active:scale-95 transition-all bg-primary hover:scale-[1.02] border-4 border-white text-white">
-                  Continue Procurement
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </Link>
-              <Link href="/orders" className="flex-1">
-                <Button variant="outline" className="w-full rounded-[24px] h-20 font-black text-[11px] tracking-[0.3em] border-2 uppercase hover:bg-white active:scale-95 transition-all shadow-xl shadow-slate-100">
-                  Track Inventory
-                </Button>
-              </Link>
-            </motion.div>
-
-            <motion.div 
-              variants={itemVariants}
-              className="mt-12 pt-10 border-t border-slate-100 flex items-center justify-center gap-4"
-            >
-               <div className="w-10 h-10 bg-emerald-50 rounded-2xl flex items-center justify-center border border-emerald-100">
-                 <ShieldCheck className="w-6 h-6 text-emerald-500" />
+            {/* Payment & Savings Card */}
+            <Card className="rounded-[40px] border-none shadow-2xl shadow-blue-900/10 bg-blue-600 overflow-hidden text-white relative">
+               <div className="absolute top-0 right-0 p-8 opacity-10">
+                 <Zap className="w-32 h-32" />
                </div>
-               <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em] opacity-60">SahiMed Secure Gateway • Verified Encryption</p>
-            </motion.div>
+               <CardContent className="p-8 space-y-8 relative z-10">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60">Amount Paid</p>
+                    <p className="text-4xl font-black font-outfit tracking-tighter">₹{Number(order?.totalAmount || 0).toFixed(2)}</p>
+                  </div>
+                  {totalSaved > 0 && (
+                    <div className="text-right space-y-1">
+                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60">Smart Savings</p>
+                      <p className="text-xl font-black font-outfit flex items-center justify-end gap-1.5 text-blue-100">
+                        <Zap className="w-4 h-4 fill-blue-100" />
+                        ₹{Number(totalSaved).toFixed(2)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-6 pt-6 border-t border-white/10">
+                  <div className="space-y-1">
+                    <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/60">Payment Mode</p>
+                    <div className="flex items-center gap-2">
+                      <Banknote className="w-3.5 h-3.5 text-white/60" />
+                      <p className="text-xs font-black uppercase">{order?.paymentType || 'COD'}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/60">Order ID</p>
+                    <p className="text-xs font-black uppercase truncate">#{orderId?.substring(0, 8).toUpperCase()}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Delivery Address Card */}
+            <Card className="rounded-[32px] border border-slate-100 shadow-sm bg-slate-50/50">
+              <CardContent className="p-5 flex gap-4 items-start">
+                <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-100 shrink-0">
+                  <MapPin className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="space-y-1 min-w-0">
+                  <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Delivering to</p>
+                  <p className="text-[11px] font-black text-slate-700 leading-tight uppercase truncate">
+                    {order?.shippingDetails?.street || 'Default Address'}
+                  </p>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase">
+                    {order?.shippingDetails?.city} - {order?.shippingDetails?.pincode}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-3">
+              <Link href="/orders" className="w-full">
+                <Button className="w-full h-16 rounded-2xl bg-slate-900 text-white font-black text-xs uppercase tracking-widest hover:scale-[1.01] active:scale-95 transition-all shadow-xl shadow-slate-200 gap-3">
+                  Track Order
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </Link>
+              <Link href="/" className="w-full">
+                <Button variant="outline" className="w-full h-16 rounded-2xl border-2 font-black text-xs uppercase tracking-widest hover:bg-slate-50 active:scale-95 transition-all">
+                  Continue Shopping
+                </Button>
+              </Link>
+            </div>
+
+            <div className="pt-6 text-center">
+              <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em]">SahiMed Secure Gateway</p>
+            </div>
           </motion.div>
         </main>
+        
         <BottomNav />
       </div>
     </PageTransition>
