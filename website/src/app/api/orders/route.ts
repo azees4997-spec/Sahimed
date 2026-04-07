@@ -16,13 +16,24 @@ export async function GET(req: Request) {
     const query: any = status ? { status: { $regex: new RegExp(status, 'i') } } : {};
     
     if (start || end) {
-      query.orderDate = {};
-      if (start) query.orderDate.$gte = new Date(start);
+      query.$or = [{ orderDate: { $exists: true } }, { createdAt: { $exists: true } }];
+      const dateField = query.orderDate ? 'orderDate' : 'createdAt'; // Fallback logic
+      
+      const dateQuery: any = {};
+      if (start) dateQuery.$gte = new Date(start);
       if (end) {
         const endDate = new Date(end);
         endDate.setHours(23, 59, 59, 999);
-        query.orderDate.$lte = endDate;
+        dateQuery.$lte = endDate;
       }
+      
+      // We'll apply it to both for safety if they exist
+      query.$and = [
+        { $or: [
+          { orderDate: dateQuery },
+          { createdAt: dateQuery }
+        ]}
+      ];
     }
     
     const orders = await db.collection('orders').find(query).sort({ orderDate: -1 }).limit(100).toArray();
@@ -49,6 +60,7 @@ export async function POST(req: Request) {
     const orderData = {
       ...body,
       orderId: nextId,
+      orderDate: body.orderDate || new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),
       status: body.status || 'Confirmed'

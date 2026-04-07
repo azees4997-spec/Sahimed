@@ -47,7 +47,7 @@ export function PagesTab({ db, isVerified, onBack }: { db: any, isVerified: bool
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <SectionHeader title="Compliance Matrix" subtitle="Legal & Privacy Document Management" onBack={onBack}>
+      <SectionHeader title="Content Pages" subtitle="Manage site pages and policies" onBack={onBack}>
         <div className="flex gap-4">
           <Button 
             variant="outline" 
@@ -69,7 +69,7 @@ export function PagesTab({ db, isVerified, onBack }: { db: any, isVerified: bool
             Provision Defaults
           </Button>
           <Button onClick={() => { setEditingPage(null); setIsFormOpen(true); }} className="rounded-full h-14 px-10 font-black text-[10px] bg-primary text-white shadow-2xl shadow-primary/30 uppercase tracking-widest hover:scale-105 transition-all border-4 border-white active:scale-95">
-            <Plus className="w-5 h-5 mr-3" /> Issue Document
+            <Plus className="w-5 h-5 mr-3" /> Create Page
           </Button>
         </div>
       </SectionHeader>
@@ -148,6 +148,7 @@ function PageEditor({ db, initialData, onSuccess }: { db: any, initialData?: any
     id: initialData?.id || '',
     content: initialData?.content || '',
     placement: initialData?.placement || 'footer',
+    autoFormat: initialData?.autoFormat ?? false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -216,11 +217,19 @@ function PageEditor({ db, initialData, onSuccess }: { db: any, initialData?: any
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Content Matrix (HTML/Markdown Supported)</Label>
-            <Globe className="w-4 h-4 text-slate-300" />
+            <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Content Matrix</Label>
+            <label className="flex items-center gap-2 cursor-pointer group bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+               <input 
+                 type="checkbox" 
+                 checked={form.autoFormat} 
+                 onChange={e => setForm({...form, autoFormat: e.target.checked})}
+                 className="w-3 h-3 accent-primary"
+               />
+               <span className="text-[9px] font-black uppercase text-slate-400 group-hover:text-primary transition-colors">Standard Text Mode (No HTML)</span>
+            </label>
           </div>
           <Textarea 
-            placeholder="Write document content here..." 
+            placeholder={form.autoFormat ? "Paste your plain text here. Spacing will be preserved automatically." : "Write HTML/Markdown content here..."} 
             value={form.content} 
             onChange={e => setForm({...form, content: e.target.value})}
             className="min-h-[300px] rounded-3xl bg-slate-50 border-none font-medium p-8 leading-relaxed resize-none focus:ring-2 ring-primary/10" 

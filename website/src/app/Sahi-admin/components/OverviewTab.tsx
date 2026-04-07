@@ -24,19 +24,19 @@ import { containerVariants, itemVariants } from '../constants';
 
 export function OverviewTab({ setTab, role }: { setTab: (t: AdminTab) => void, role: string }) {
   const allStats = [
-    { label: 'Inquiries', icon: FileText, desc: 'Prescription digitization', tab: 'enquiries', color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Digitize', icon: FileText, desc: 'Prescription processing', tab: 'enquiries', color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Orders', icon: ShoppingBag, desc: 'Fulfillment & logistics', tab: 'fulfillment', color: 'text-sky-500', bg: 'bg-sky-50' },
     { label: 'Coupons', icon: Ticket, desc: 'Marketing campaigns', tab: 'promocodes', color: 'text-purple-500', bg: 'bg-purple-50' },
     { label: 'Fees', icon: Receipt, desc: 'Billing adjustments', tab: 'fees', color: 'text-orange-500', bg: 'bg-orange-50' },
     { label: 'Banners', icon: ImageIcon, desc: 'Storefront promotions', tab: 'banners', color: 'text-amber-500', bg: 'bg-amber-50' },
-    { label: 'Categories', icon: Tag, desc: 'Therapeutic taxonomy', tab: 'categories', color: 'text-rose-500', bg: 'bg-rose-50' },
-    { label: 'Customers', icon: Users, desc: 'Patient registry', tab: 'customers', color: 'text-indigo-500', bg: 'bg-indigo-50' },
-    { label: 'Alerts', icon: Megaphone, desc: 'System broadcasts', tab: 'stockAlerts', color: 'text-red-500', bg: 'bg-red-50' },
-    { label: 'Catalog', icon: Package, desc: 'Product master data', tab: 'itemMaster', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Formulas', icon: Dna, desc: 'Molecule registry', tab: 'moleculeMaster', color: 'text-teal-500', bg: 'bg-teal-50' },
-    { label: 'Insights', icon: LineChart, desc: 'Search analytics', tab: 'searchAnalytics', color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Pages', icon: FileCode, desc: 'Policy & Compliance', tab: 'pages', color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
-    { label: 'Team', icon: Shield, desc: 'Admin hierarchy', tab: 'admins', color: 'text-indigo-600', bg: 'bg-indigo-50', restricted: true }
+    { label: 'Categories', icon: Tag, desc: 'Shop categories', tab: 'categories', color: 'text-rose-500', bg: 'bg-rose-50' },
+    { label: 'Customers', icon: Users, desc: 'Customer directory', tab: 'customers', color: 'text-indigo-500', bg: 'bg-indigo-50' },
+    { label: 'Alerts', icon: Megaphone, desc: 'Store broadcasts', tab: 'stockAlerts', color: 'text-red-500', bg: 'bg-red-50' },
+    { label: 'Products', icon: Package, desc: 'Inventory management', tab: 'itemMaster', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Ingredients', icon: Dna, desc: 'Molecule database', tab: 'moleculeMaster', color: 'text-teal-500', bg: 'bg-teal-50' },
+    { label: 'Analytics', icon: LineChart, desc: 'Search insights', tab: 'searchAnalytics', color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Pages', icon: FileCode, desc: 'Content & Legal', tab: 'pages', color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
+    { label: 'Staff', icon: Shield, desc: 'Team permissions', tab: 'admins', color: 'text-indigo-600', bg: 'bg-indigo-50', restricted: true }
   ];
 
   const filteredStats = allStats.filter(card => {

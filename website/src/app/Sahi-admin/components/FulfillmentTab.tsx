@@ -179,7 +179,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
         </head>
         <body>
           <div class="header">
-            <div class="branding"><h1>Sahi<span>Med</span></h1><p style="margin: 4px 0 0; font-weight: 800; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #666;">Clinical Fulfillment Hub</p></div>
+            <div class="branding"><h1>Sahi<span>Med</span></h1><p style="margin: 4px 0 0; font-weight: 800; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #666;">Store Order Summary</p></div>
             <div class="order-meta">
               <div style="font-weight: 900; font-size: 18px;">ORDER #${order.orderId}</div>
               <div style="font-weight: 600; font-size: 12px; color: #666;">DATE: ${format(new Date(order.orderDate), 'dd MMM yyyy HH:mm')}</div>
@@ -220,7 +220,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
 
   return (
     <div className="space-y-10">
-      <SectionHeader title="Fulfillment Matrix" subtitle="Operational Logistics Monitoring" onBack={onBack}>
+      <SectionHeader title="Order Fulfillment" subtitle="Manage and track customer orders" onBack={onBack}>
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2 bg-slate-100 rounded-full px-5 h-14 border border-slate-200 shadow-inner">
              <div className="flex items-center gap-2 group/date">
@@ -365,7 +365,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                   </div>
                 </div>
                 <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
-                  <h4 className="text-[10px] font-black text-gray-400">Status Migration</h4>
+                  <h4 className="text-[10px] font-black text-gray-400">Order Status</h4>
                   <div className="grid grid-cols-2 gap-3">
                     {['Packing', 'Packed', 'Shipped', 'Delivered', 'Cancelled'].map(s => (
                       <Button key={s} variant="outline" onClick={() => setStatusUpdateTarget(s)} className={cn("rounded-2xl h-12 font-black text-[10px] border-2", selectedOrder?.status === s ? "border-primary bg-primary/5 text-primary" : "text-gray-400")}>{s}</Button>
@@ -411,7 +411,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                     onClick={() => handlePrint(selectedOrder)}
                     className="w-full h-14 rounded-2xl bg-slate-900 border-4 border-white text-white font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl mt-4"
                   >
-                    Print Protocol Order
+                    Print Order Summary
                   </Button>
                 </div>
               </>

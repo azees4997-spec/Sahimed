@@ -35,7 +35,7 @@ export function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: 
 
   const handleUpdateUser = (id: string, updates: any) => {
     updateDocumentNonBlocking(doc(db, 'userProfiles', id), { ...updates, updatedAt: serverTimestamp() });
-    toast({ title: "Patient record updated" });
+    toast({ title: "Customer profile updated" });
     setSelectedUser(null);
   };
 
@@ -48,8 +48,8 @@ export function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: 
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Patient registry" subtitle="Verified account sync" onBack={onBack} />
-      <div className="relative"><Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Search registry..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 rounded-2xl h-12 bg-white border-none font-bold text-xs" /></div>
+      <SectionHeader title="Customer Directory" subtitle="Manage profiles and demographics" onBack={onBack} />
+      <div className="relative"><Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Search customers..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 rounded-2xl h-12 bg-white border-none font-bold text-xs" /></div>
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -76,9 +76,9 @@ export function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: 
       <Dialog open={!!selectedUser} onOpenChange={o => !o && setSelectedUser(null)}>
         <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden">
           <div className="bg-primary p-8 text-white">
-            <DialogTitle className="text-2xl font-black">Patient profile</DialogTitle>
+            <DialogTitle className="text-2xl font-black">Customer Card</DialogTitle>
             <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
-              Verified clinical identity and administrative tags
+              User profile summary and administrative tags
             </DialogDescription>
           </div>
           <div className="p-8 space-y-6">

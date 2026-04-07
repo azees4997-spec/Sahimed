@@ -52,9 +52,9 @@ export function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified:
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Clinical coupons" subtitle="Manage patient offers" onBack={onBack}>
+      <SectionHeader title="Promotions & Offers" subtitle="Manage discount codes and campaigns" onBack={onBack}>
         <Button onClick={() => { setEditingPromo(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] bg-primary text-white">
-          <Plus className="w-4 h-4 mr-2" /> New campaign
+          <Plus className="w-5 h-5 mr-3" /> Create Promotion
         </Button>
       </SectionHeader>
       
@@ -115,9 +115,9 @@ export function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified:
             <div className="absolute top-0 right-0 p-10 opacity-10">
               <Tag className="w-24 h-24 rotate-12" />
             </div>
-            <DialogTitle className="text-3xl font-black tracking-tighter uppercase font-outfit">Campaign configuration</DialogTitle>
+            <DialogTitle className="text-3xl font-black tracking-tighter uppercase font-outfit">Promotion Settings</DialogTitle>
             <DialogDescription className="text-[10px] font-black text-white/60 tracking-[0.4em] mt-3 uppercase">
-              Control promotional scope and cashflow parameters
+              Define discount rules and limits
             </DialogDescription>
           </div>
           <ScrollArea className="max-h-[70vh] p-8">

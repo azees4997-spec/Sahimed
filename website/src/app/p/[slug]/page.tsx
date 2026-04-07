@@ -45,6 +45,10 @@ export default async function DynamicPage({ params }: PageProps) {
     notFound();
   }
 
+  const content = page.autoFormat 
+    ? (page.content || '').replace(/\n/g, '<br />') 
+    : (page.content || '');
+
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       <Navbar />
@@ -69,7 +73,7 @@ export default async function DynamicPage({ params }: PageProps) {
                prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-lg
                prose-strong:text-slate-900 prose-strong:font-black
                prose-ul:list-disc prose-li:text-slate-600"
-             dangerouslySetInnerHTML={{ __html: page.content || '' }}
+             dangerouslySetInnerHTML={{ __html: content }}
            />
         </div>
       </main>

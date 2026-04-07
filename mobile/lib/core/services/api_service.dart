@@ -78,11 +78,12 @@ class ApiService {
     return [];
   }
 
-  Future<List<Map<String, dynamic>>> getBanners() async {
+  Future<List<BannerModel>> getBanners() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/banners'));
       if (response.statusCode == 200) {
-        return List<Map<String, dynamic>>.from(json.decode(response.body));
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((item) => BannerModel.fromJson(item)).toList();
       }
     } catch (e) {
       debugPrint('Error fetching banners: $e');

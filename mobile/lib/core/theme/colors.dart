@@ -11,6 +11,7 @@ class SahimedColors {
   static const Color slate300 = Color(0xFFCBD5E1);
   static const Color slate200 = Color(0xFFE2E8F0);
   static const Color slate100 = Color(0xFFF1F5F9);
+  static const Color slate50 = Color(0xFFF8FAFC);
   static const Color emerald500 = Color(0xFF10B981);
   static const Color rose500 = Color(0xFFEF4444);
   

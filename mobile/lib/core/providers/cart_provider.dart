@@ -31,13 +31,11 @@ class CartProvider with ChangeNotifier {
   List<CartItem> get items => _items;
 
   double get subtotal => _items.fold(0.0, (sum, item) {
-    final mrpValue = double.tryParse(item.product.liveData?.mrp.toString() ?? '0') ?? 0.0;
-    return sum + (mrpValue * item.quantity);
+    return sum + (item.product.mrp * item.quantity);
   });
 
   double get total => _items.fold(0.0, (sum, item) {
-    final priceValue = double.tryParse(item.product.liveData?.price.toString() ?? '0') ?? 0.0;
-    return sum + (priceValue * item.quantity);
+    return sum + (item.product.price * item.quantity);
   });
   
   double get totalSavings => (subtotal - total) > 0 ? (subtotal - total) : 0.0;

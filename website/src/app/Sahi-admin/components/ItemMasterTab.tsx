@@ -186,7 +186,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
 
   return (
     <div className="space-y-10">
-      <SectionHeader title="Clinical Catalog" subtitle="Master Inventory Intelligence" onBack={onBack}>
+      <SectionHeader title="Product Inventory" subtitle="Manage and organize your store products" onBack={onBack}>
         <div className="flex flex-wrap items-center gap-4">
           <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".csv" />
           <Button onClick={downloadTemplate} variant="ghost" className="rounded-full h-14 px-8 font-black text-[10px] text-slate-400 hover:text-primary gap-3 uppercase tracking-widest transition-all">
@@ -210,7 +210,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
           <Search className="w-6 h-6" />
         </div>
         <Input 
-          placeholder="SEARCH CLINICAL REGISTRY (E.G. D-VENIZ)..." 
+          placeholder="SEARCH PRODUCT INVENTORY (E.G. D-VENIZ)..." 
           value={searchTerm} 
           onChange={e => setSearchTerm(e.target.value)} 
           className="h-20 pl-20 rounded-[40px] border-none bg-white shadow-xl font-black text-sm tracking-tight placeholder:text-slate-300 focus:ring-4 focus:ring-primary/10 transition-all uppercase" 
@@ -226,7 +226,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
         {suggestions.length > 0 && (
           <div className="absolute top-[calc(100%+20px)] left-0 right-0 bg-white/95 backdrop-blur-2xl rounded-[48px] shadow-3xl border border-white overflow-hidden z-[110] animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="px-10 py-5 bg-slate-50/50 border-b border-white">
-              <p className="text-[9px] font-black text-slate-400 tracking-[0.4em] uppercase opacity-60">Intelligence Matches</p>
+              <p className="text-[9px] font-black text-slate-400 tracking-[0.4em] uppercase opacity-60">Product Matches</p>
             </div>
             <div className="max-h-[400px] overflow-y-auto no-scrollbar">
               {suggestions.map((item) => (
@@ -259,7 +259,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[800px]">
             <thead className="bg-gray-50 text-[10px] font-black text-gray-400 border-b">
-              <tr><th className="px-10 py-8">Clinical item</th><th className="px-10 py-8">Category</th><th className="px-10 py-8 text-right">Manage</th></tr>
+              <tr><th className="px-10 py-8">Product detail</th><th className="px-10 py-8">Category</th><th className="px-10 py-8 text-right">Manage</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (<tr><td colSpan={3} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : medicines?.length === 0 ? (<tr><td colSpan={3} className="p-20 text-center font-bold text-gray-300">No entries found</td></tr>) : medicines?.map(med => (
@@ -307,7 +307,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
           <div className="bg-primary p-8 text-white">
             <DialogTitle className="text-2xl font-black">Product profile</DialogTitle>
             <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
-              Configure clinical identity and live inventory status
+              Configure product details and live inventory status
             </DialogDescription>
           </div>
           <div className="p-8 max-h-[80vh] overflow-y-auto scrollbar-hide">
