@@ -22,7 +22,7 @@ import {
   setDocumentNonBlocking,
 } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 
@@ -109,6 +109,23 @@ export default function AdminConsole() {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!email) {
+      toast({ variant: 'destructive', title: 'Email Required', description: 'Please enter your admin email to reset the password.' });
+      return;
+    }
+    setAuthLoading(true);
+    try {
+      if (!auth) throw new Error("Auth system inactive");
+      await sendPasswordResetEmail(auth, email);
+      toast({ title: 'Reset Link Sent', description: 'Check your email to set a new master password.' });
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Reset Failed', description: err.message });
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     setIsVerified(false);
     signOut(auth);
@@ -171,6 +188,15 @@ export default function AdminConsole() {
                   </div>
                   <Button type="submit" disabled={authLoading} className="w-full h-20 rounded-full font-black tracking-[0.3em] mt-4 shadow-2xl shadow-primary/30 uppercase active:scale-95 text-xs bg-primary hover:scale-[1.02] transition-all">
                     {authLoading ? <Loader2 className="animate-spin" /> : "Authorize Protocol"}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    onClick={handleResetPassword}
+                    disabled={authLoading}
+                    className="w-full text-[10px] font-black tracking-widest text-slate-400 hover:text-primary uppercase"
+                  >
+                    Set / Reset Master Password
                   </Button>
                 </form>
               </CardContent>
