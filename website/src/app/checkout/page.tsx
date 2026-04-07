@@ -721,37 +721,37 @@ export default function CheckoutPage() {
                 <div className="space-y-4 sm:space-y-6 mb-8 relative z-10 pt-8 border-t border-slate-100">
                   <div className="flex justify-between text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-widest">
                     <span>Total MRP</span>
-                    <span>â‚¹{totalMrp.toFixed(2)}</span>
+                    <span>₹{totalMrp.toFixed(2)}</span>
                   </div>
                   {itemSavings > 0 && (
                     <div className="flex justify-between text-xs sm:text-sm font-bold text-primary uppercase tracking-widest">
                       <span>Discount Amount</span>
-                      <span>-â‚¹{itemSavings.toFixed(2)}</span>
+                      <span>-₹{itemSavings.toFixed(2)}</span>
                     </div>
                   )}
                   {appliedPromo && (
                     <div className="flex justify-between text-xs sm:text-sm font-bold text-primary uppercase tracking-widest">
                       <span className="flex items-center gap-2"><Tag className="w-3.5 h-3.5" /> Promocode Saving</span>
-                      <span>-â‚¹{promoDiscount.toFixed(2)}</span>
+                      <span>-₹{promoDiscount.toFixed(2)}</span>
                     </div>
                   )}
                   {feeTotal > 0 && (
                     <div className="flex justify-between text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-widest">
                       <span>Delivery Fees</span>
-                      <span>â‚¹{feeTotal.toFixed(2)}</span>
+                      <span>₹{feeTotal.toFixed(2)}</span>
                     </div>
                   )}
 
                   <div className="pt-6 sm:pt-8 border-t border-slate-100 flex justify-between items-baseline">
                     <span className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-widest">Total Payable</span>
-                    <span className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit">â‚¹{finalPayable.toFixed(2)}</span>
+                    <span className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit">₹{finalPayable.toFixed(2)}</span>
                   </div>
                   
                   {totalSavings > 0 && (
                     <div className="mt-6 flex justify-between items-center text-xs sm:text-sm font-black text-emerald-700 bg-emerald-50 p-4 rounded-[16px] border border-emerald-100 shadow-inner">
                       <span className="flex items-center gap-2 uppercase tracking-widest">Total Savings</span>
                       <span className="bg-emerald-100 px-3 py-1.5 rounded-md text-[10px] sm:text-xs uppercase tracking-widest border border-emerald-200">
-                        Saved â‚¹{totalSavings.toFixed(2)} ({Math.round((totalSavings / totalMrp) * 100)}%)
+                        Saved ₹{totalSavings.toFixed(2)} ({Math.round((totalSavings / totalMrp) * 100)}%)
                       </span>
                     </div>
                   )}

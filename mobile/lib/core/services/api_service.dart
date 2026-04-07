@@ -91,19 +91,39 @@ class ApiService {
     return [];
   }
 
-  Future<Map<String, dynamic>?> createOrder(Map<String, dynamic> orderData) async {
+  Future<bool> createOrder({
+    required List<CartItem> items,
+    required double total,
+    required String address,
+    required String name,
+    required String phone,
+  }) async {
     try {
+      final orderData = {
+        'items': items.map((item) => {
+          'productId': item.product.id,
+          'quantity': item.quantity,
+          'price': item.product.price,
+        }).toList(),
+        'totalAmount': total,
+        'shippingAddress': address,
+        'customerName': name,
+        'customerPhone': phone,
+        'paymentMethod': 'COD',
+        'status': 'Pending',
+        'createdAt': DateTime.now().toIso8601String(),
+      };
+
       final response = await http.post(
         Uri.parse('$baseUrl/orders'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(orderData),
       );
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        return json.decode(response.body);
-      }
+
+      return response.statusCode == 201 || response.statusCode == 200;
     } catch (e) {
       debugPrint('Error creating order: $e');
+      return false;
     }
-    return null;
   }
 }

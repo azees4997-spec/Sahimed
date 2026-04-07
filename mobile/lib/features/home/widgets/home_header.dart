@@ -4,8 +4,9 @@ import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/location_service.dart';
+import '../../../core/providers/cart_provider.dart';
 import '../../products/screens/search_screen.dart';
-import '../screens/cart_screen_placeholder.dart'; // Will create the real one soon
+import '../screens/cart_screen.dart';
 
 class HomeHeader extends StatefulWidget {
   const HomeHeader({super.key});
@@ -16,20 +17,49 @@ class HomeHeader extends StatefulWidget {
 
 class _HomeHeaderState extends State<HomeHeader> {
   String _currentAddress = 'Fetching location...';
+  bool _isSaved = false;
   final LocationService _locationService = LocationService();
 
   @override
   void initState() {
     super.initState();
-    _fetchLocation();
+    _initLocation();
+  }
+
+  Future<void> _initLocation() async {
+    final saved = await _locationService.getSavedAddress();
+    if (saved != null) {
+      if (mounted) {
+        setState(() {
+          _currentAddress = saved;
+          _isSaved = true;
+        });
+      }
+    } else {
+      _fetchLocation();
+    }
   }
 
   Future<void> _fetchLocation() async {
     final address = await _locationService.getCurrentAddress();
+    final hasSaved = await _locationService.hasSavedAddress();
     if (mounted) {
       setState(() {
         _currentAddress = address;
+        _isSaved = hasSaved;
       });
+    }
+  }
+
+  Future<void> _saveCurrentLocation() async {
+    await _locationService.saveAddress(_currentAddress);
+    if (mounted) {
+      setState(() {
+        _isSaved = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Address saved successfully!')),
+      );
     }
   }
 
@@ -53,14 +83,14 @@ class _HomeHeaderState extends State<HomeHeader> {
                     children: [
                       Row(
                         children: [
-                          const Icon(
-                            Icons.location_on_rounded,
+                          Icon(
+                            _isSaved ? Icons.home_rounded : Icons.location_on_rounded,
                             color: SahimedColors.primary,
                             size: 16,
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'DELIVERING TO',
+                            _isSaved ? 'HOME ADDRESS' : 'DELIVERING TO',
                             style: GoogleFonts.outfit(
                               fontSize: 10,
                               fontWeight: FontWeight.w900,
@@ -73,6 +103,21 @@ class _HomeHeaderState extends State<HomeHeader> {
                             color: SahimedColors.primary,
                             size: 16,
                           ),
+                          if (!_isSaved) ...[
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: _saveCurrentLocation,
+                              child: Text(
+                                'SAVE',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                  color: SahimedColors.accent,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 2),
@@ -97,7 +142,10 @@ class _HomeHeaderState extends State<HomeHeader> {
                   _HeaderAction(
                     icon: Icons.search_rounded,
                     onTap: () {
-                      // Navigate to search
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SearchScreen()),
+                      );
                     },
                   ),
                   const SizedBox(width: 12),

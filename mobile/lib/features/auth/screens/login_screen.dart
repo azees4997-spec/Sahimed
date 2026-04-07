@@ -14,10 +14,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _phoneController = TextEditingController();
-  bool _isLoading = false;
 
   Future<void> _loginWithWhatsApp() async {
-    // User's provided number for support/login redirect
     final whatsappUrl = Uri.parse("https://wa.me/918985969860?text=I%20want%20to%20login%20to%20Sahimed");
     if (await canLaunchUrl(whatsappUrl)) {
       await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
@@ -35,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // 1. Dynamic Background with Floating Blobs
+          // 1. Dynamic Background
           Container(
             decoration: const BoxDecoration(color: SahimedColors.background),
           ),
@@ -56,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 30),
                   // App Branding
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -81,13 +79,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 30),
 
                   // Premium Illustration
                   Hero(
                     tag: 'login_illustration',
                     child: Container(
-                      height: 280,
+                      height: 260,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(32),
                         boxShadow: [
@@ -99,63 +97,108 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       child: Image.asset(
-                        'assets/images/login_illustration_premium.png',
+                        'assets/images/login_illustration_wellness_premium_1775573518342.png',
+                        height: 280,
                         fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                           // Fallback if asset isn't matched yet
+                           return const Center(child: Icon(Icons.medical_services_outlined, size: 80, color: SahimedColors.primary));
+                        },
                       ),
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 30),
 
-                  // 3. Glassmorphic Login Card
+                  // 3. Primary Start Flow
+                  Text(
+                    'Welcome to Wellness',
+                    style: GoogleFonts.outfit(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: SahimedColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'The fastest way to your healthcare needs.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: SahimedColors.slate500,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // WHATSAPP LOGIN - PRIMARY ACTION
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: _loginWithWhatsApp,
+                      icon: const Icon(Icons.chat_bubble_rounded, size: 20),
+                      label: Text(
+                        'LOGIN VIA WHATSAPP',
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 16,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF25D366),
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shadowColor: const Color(0xFF25D366).withValues(alpha: 0.3),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'OR USE PHONE NUMBER',
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: SahimedColors.slate400,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // 4. Glassmorphic Phone Input
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(32),
+                    borderRadius: BorderRadius.circular(24),
                     child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                       child: Container(
-                        padding: const EdgeInsets.all(28),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: SahimedColors.white.withValues(alpha: 0.8),
-                          borderRadius: BorderRadius.circular(32),
+                          color: SahimedColors.white.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: SahimedColors.white.withValues(alpha: 0.5),
+                            color: SahimedColors.white.withValues(alpha: 0.4),
                             width: 1.5,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
                         ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Quick Login',
-                              style: GoogleFonts.outfit(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: SahimedColors.primary,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Enter your phone number to proceed with a secure OTP.',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                color: SahimedColors.slate500,
-                                height: 1.4,
-                              ),
-                            ),
-                            const SizedBox(height: 28),
-
-                            // Phone Input
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                               decoration: BoxDecoration(
                                 color: SahimedColors.white,
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: SahimedColors.slate100),
                               ),
                               child: Row(
@@ -195,13 +238,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 20),
-
-                            // Continue Button
+                            const SizedBox(height: 16),
                             SizedBox(
                               width: double.infinity,
-                              height: 56,
-                              child: ElevatedButton(
+                              height: 50,
+                              child: TextButton(
                                 onPressed: () {
                                   if (_phoneController.text.length == 10) {
                                     Navigator.push(
@@ -216,19 +257,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                     );
                                   }
                                 },
-                                style: ElevatedButton.styleFrom(
+                                style: TextButton.styleFrom(
                                   backgroundColor: SahimedColors.primary,
                                   foregroundColor: Colors.white,
-                                  elevation: 8,
-                                  shadowColor: SahimedColors.primary.withValues(alpha: 0.4),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 ),
                                 child: Text(
                                   'SEND OTP',
                                   style: GoogleFonts.outfit(
                                     fontWeight: FontWeight.w900,
-                                    fontSize: 16,
-                                    letterSpacing: 1.5,
+                                    fontSize: 14,
+                                    letterSpacing: 1.2,
                                   ),
                                 ),
                               ),
@@ -240,51 +279,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
 
                   const SizedBox(height: 32),
-
-                  // Alternative Social Logins
-                  Row(
-                    children: [
-                      const Expanded(child: Divider()),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'PREFER WHATSAPP?',
-                          style: GoogleFonts.outfit(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: SahimedColors.slate400,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                      ),
-                      const Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-
-                  // WhatsApp Button - High Contrast
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: OutlinedButton.icon(
-                      onPressed: _loginWithWhatsApp,
-                      icon: const Icon(Icons.chat_bubble_rounded, size: 20),
-                      label: Text(
-                        'LOGIN VIA WHATSAPP',
-                        style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 14,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF25D366),
-                        side: const BorderSide(color: Color(0xFF25D366), width: 2),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
 
                   // Terms
                   Text(

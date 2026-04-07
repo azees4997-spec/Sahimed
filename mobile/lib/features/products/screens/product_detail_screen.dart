@@ -98,34 +98,41 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> with SingleTi
             // Switch & Save Banner
             if (hasGeneric && switchSavings > 0)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [SahimedColors.primary, SahimedColors.accent],
+                    gradient: LinearGradient(
+                      colors: [
+                        SahimedColors.primary,
+                        SahimedColors.primary.withValues(alpha: 0.8),
+                        SahimedColors.accent.withValues(alpha: 0.8),
+                        SahimedColors.accent,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: SahimedColors.accent.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+                        color: SahimedColors.accent.withValues(alpha: 0.2),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
                       ),
                     ],
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.trending_down_rounded, color: Colors.white, size: 20),
-                      const SizedBox(width: 12),
+                      const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 16),
+                      const SizedBox(width: 10),
                       Text(
-                        'SWITCH AND SAVE ₹$switchSavings • SAME MEDICINE',
+                        'SWITCH AND SAVE ₹$switchSavings • SAME FORMULA',
                         style: GoogleFonts.outfit(
-                          fontSize: 11,
+                          fontSize: 10,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
-                          letterSpacing: 0.5,
+                          letterSpacing: 0.8,
                         ),
                       ),
                     ],
@@ -135,29 +142,35 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> with SingleTi
 
             // Comparison Cards
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator(color: SahimedColors.primary))
-                  : Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  : Column(
                       children: [
-                        Expanded(
-                          child: _ComparisonCard(
-                            product: widget.product,
-                            label: 'BRANDED',
-                            isAlt: false,
-                          ),
-                        ),
-                        if (hasGeneric) ...[
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _ComparisonCard(
-                              product: _genericAlt!,
-                              label: 'SH-GENERIC',
-                              isAlt: true,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _ComparisonCard(
+                                product: widget.product,
+                                label: 'BRANDED',
+                                isGenericAlt: false,
+                              ),
                             ),
-                          ),
-                        ],
+                            if (hasGeneric) ...[
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _ComparisonCard(
+                                  product: _genericAlt!,
+                                  label: 'SH-GENERIC',
+                                  isGenericAlt: true,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        if (!hasGeneric && !widget.product.isGeneric)
+                          const SizedBox.shrink(), // No comparison available
                       ],
                     ),
             ),
@@ -176,32 +189,34 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> with SingleTi
 class _ComparisonCard extends StatelessWidget {
   final ProductModel product;
   final String label;
-  final bool isAlt;
+  final bool isGenericAlt;
 
   const _ComparisonCard({
     required this.product,
     required this.label,
-    required this.isAlt,
+    required this.isGenericAlt,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isGeneric = product.isGeneric || isGenericAlt;
+    final cardBg = isGeneric ? SahimedColors.sahiPink : SahimedColors.sahiBlue;
+    final accentColor = isGeneric ? SahimedColors.accent : SahimedColors.primary;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isAlt ? SahimedColors.accent.withValues(alpha: 0.05) : SahimedColors.white,
-        borderRadius: BorderRadius.circular(32),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isAlt
-              ? SahimedColors.accent.withValues(alpha: 0.25)
-              : SahimedColors.slate100,
-          width: isAlt ? 2 : 1,
+          color: accentColor.withValues(alpha: 0.15),
+          width: isGeneric ? 1.5 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
+            color: accentColor.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -209,9 +224,9 @@ class _ComparisonCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: isAlt ? SahimedColors.accent : SahimedColors.slate100,
+              color: accentColor,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -219,7 +234,7 @@ class _ComparisonCard extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontSize: 8,
                 fontWeight: FontWeight.w900,
-                color: isAlt ? Colors.white : SahimedColors.slate400,
+                color: Colors.white,
                 letterSpacing: 1,
               ),
             ),
@@ -229,14 +244,14 @@ class _ComparisonCard extends StatelessWidget {
             aspectRatio: 1,
             child: Container(
               decoration: BoxDecoration(
-                color: SahimedColors.background,
-                borderRadius: BorderRadius.circular(20),
+                color: SahimedColors.white.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(16),
               ),
               padding: const EdgeInsets.all(12),
               child: CachedNetworkImage(
                 imageUrl: product.imageUrl,
                 fit: BoxFit.contain,
-                errorWidget: (c, u, e) => const Icon(Icons.medication_rounded, color: SahimedColors.primary, size: 48),
+                errorWidget: (c, u, e) => Icon(Icons.medication_rounded, color: accentColor, size: 40),
               ),
             ),
           ),
@@ -253,24 +268,35 @@ class _ComparisonCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             '₹${product.price.round()}',
-            style: GoogleFonts.outfit(fontSize: 26, fontWeight: FontWeight.w900, color: isAlt ? SahimedColors.accent : SahimedColors.primary, letterSpacing: -1),
+            style: GoogleFonts.outfit(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: SahimedColors.slate950,
+              letterSpacing: -1,
+            ),
           ),
           Text(
-            '₹${product.mrp.round()}',
-            style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: SahimedColors.slate400, decoration: TextDecoration.lineThrough),
+            'M.R.P. ₹${product.mrp.round()}',
+            style: GoogleFonts.outfit(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: SahimedColors.slate400,
+              decoration: TextDecoration.lineThrough,
+            ),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {},
             style: ElevatedButton.styleFrom(
-              backgroundColor: isAlt ? SahimedColors.accent : SahimedColors.primary,
-              minimumSize: const Size(double.infinity, 44),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              backgroundColor: accentColor,
+              minimumSize: const Size(double.infinity, 40),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               elevation: 0,
+              shadowColor: accentColor.withValues(alpha: 0.3),
             ),
             child: Text(
-              'ADD TO BASKET',
-              style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1),
+              'ADD TO CART',
+              style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.white),
             ),
           ),
         ],

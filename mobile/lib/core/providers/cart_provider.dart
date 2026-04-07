@@ -3,22 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../shared/models/models.dart';
 
-class CartItem {
-  final ProductModel product;
-  int quantity;
-
-  CartItem({required this.product, this.quantity = 1});
-
-  Map<String, dynamic> toJson() => {
-    'product': product.toJson(),
-    'quantity': quantity,
-  };
-
-  factory CartItem.fromJson(Map<String, dynamic> json) => CartItem(
-    product: ProductModel.fromJson(json['product']),
-    quantity: json['quantity'],
-  );
-}
+// CartItem is now imported from models.dart
 
 class CartProvider with ChangeNotifier {
   List<CartItem> _items = [];

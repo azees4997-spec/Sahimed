@@ -62,12 +62,12 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
           : _products.isEmpty
               ? _buildEmptyState()
               : GridView.builder(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(12),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.65,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 0.62,
                   ),
                   itemCount: _products.length,
                   itemBuilder: (context, index) {
@@ -113,9 +113,8 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final savingsPct = product.mrp > 0
-        ? ((product.mrp - product.price) / product.mrp * 100).round()
-        : 0;
+    final cardBg = product.isGeneric ? SahimedColors.sahiPink : SahimedColors.sahiBlue;
+    final accentColor = product.isGeneric ? SahimedColors.accent : SahimedColors.primary;
 
     return GestureDetector(
       onTap: () {
@@ -128,14 +127,14 @@ class _ProductCard extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: SahimedColors.white,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: SahimedColors.slate100),
+          color: cardBg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: accentColor.withValues(alpha: 0.1)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+              color: accentColor.withValues(alpha: 0.03),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -145,38 +144,46 @@ class _ProductCard extends StatelessWidget {
             Stack(
               children: [
                 Container(
-                  height: 130,
+                  height: 110,
                   width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
-                    color: SahimedColors.background,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(28),
-                      topRight: Radius.circular(28),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: SahimedColors.white.withValues(alpha: 0.5),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
                     ),
                   ),
                   child: Image.network(
                     product.imageUrl,
                     fit: BoxFit.contain,
-                    errorBuilder: (c, e, s) => const Icon(Icons.medication_rounded, color: SahimedColors.primary, size: 48),
+                    errorBuilder: (c, e, s) => Icon(Icons.medication_rounded, color: accentColor, size: 40),
                   ),
                 ),
                 if (savingsPct > 0)
                   Positioned(
-                    top: 10,
-                    left: 10,
+                    top: 8,
+                    left: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: SahimedColors.emerald500,
                         borderRadius: BorderRadius.circular(100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: SahimedColors.emerald500.withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Text(
                         'SAVE $savingsPct%',
                         style: GoogleFonts.outfit(
-                          fontSize: 8,
+                          fontSize: 9,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ),
@@ -184,7 +191,7 @@ class _ProductCard extends StatelessWidget {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -197,19 +204,43 @@ class _ProductCard extends StatelessWidget {
                       fontWeight: FontWeight.w900,
                       color: SahimedColors.slate950,
                       height: 1.1,
+                      letterSpacing: -0.2,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    product.brand,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(
-                      fontSize: 9,
-                      color: SahimedColors.slate400,
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          product.isGeneric ? 'GENERIC' : 'BRANDED',
+                          style: GoogleFonts.outfit(
+                            fontSize: 7,
+                            fontWeight: FontWeight.w900,
+                            color: accentColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          product.brand,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.outfit(
+                            fontSize: 9,
+                            color: SahimedColors.slate500,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
+                  const Spacer(),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -221,28 +252,36 @@ class _ProductCard extends StatelessWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 18,
                               fontWeight: FontWeight.w900,
-                              color: SahimedColors.primary,
+                              color: SahimedColors.slate950,
                               letterSpacing: -0.5,
                             ),
                           ),
-                          Text(
-                            '₹${product.mrp.round()}',
-                            style: GoogleFonts.outfit(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: SahimedColors.slate400,
-                              decoration: TextDecoration.lineThrough,
+                          if (savingsPct > 0)
+                            Text(
+                              '₹${product.mrp.round()}',
+                              style: GoogleFonts.outfit(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: SahimedColors.slate400,
+                                decoration: TextDecoration.lineThrough,
+                              ),
                             ),
-                          ),
                         ],
                       ),
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: SahimedColors.primary,
+                          color: accentColor,
                           borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: accentColor.withValues(alpha: 0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        child: const Icon(Icons.add_shopping_cart_rounded, color: Colors.white, size: 18),
+                        child: const Icon(Icons.add_shopping_cart_rounded, color: Colors.white, size: 16),
                       ),
                     ],
                   ),

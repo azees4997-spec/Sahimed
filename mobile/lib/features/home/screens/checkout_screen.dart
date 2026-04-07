@@ -22,6 +22,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _nameController = TextEditingController();
   bool _isProcessing = false;
   final ApiService _apiService = ApiService();
+  final LocationService _locationService = LocationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _initAddress();
+  }
+
+  Future<void> _initAddress() async {
+    final savedAddress = await _locationService.getSavedAddress();
+    if (savedAddress != null) {
+      setState(() {
+        _addressController.text = savedAddress;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -132,7 +148,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         _buildTextField(
                           controller: _addressController,
                           label: 'Delivery Address',
-                          hint: 'House No, Building, Street, Area',
+                          hint: 'Fetching address...',
                           icon: LucideIcons.mapPin,
                           maxLines: 3,
                         ),

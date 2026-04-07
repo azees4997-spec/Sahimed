@@ -1,14 +1,36 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LocationService {
+  static const String _addressKey = 'user_saved_address';
+
+  Future<void> saveAddress(String address) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_addressKey, address);
+  }
+
+  Future<String?> getSavedAddress() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_addressKey);
+  }
+
+  Future<bool> hasSavedAddress() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.containsKey(_addressKey);
+  }
+
   Future<String> getCurrentAddress() async {
     try {
+      // 1. Check if we have a saved address first
+      final saved = await getSavedAddress();
+      if (saved != null) return saved;
+
+      // 2. Otherwise, fetch via GPS
       bool serviceEnabled;
       LocationPermission permission;
 
-      // Test if location services are enabled.
       serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         return 'Location services disabled';
@@ -26,8 +48,6 @@ class LocationService {
         return 'Location permissions permanently denied';
       }
 
-      // When we reach here, permissions are granted and we can
-      // continue accessing the position of the device.
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
@@ -39,7 +59,6 @@ class LocationService {
 
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
-        // Combine parts of the address for a concise top-bar display
         String address = '${place.subLocality ?? place.locality}, ${place.administrativeArea}';
         if (address.startsWith(', ')) address = address.substring(2);
         return address.isEmpty ? 'Unknown Location' : address;
