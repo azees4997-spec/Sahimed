@@ -35,7 +35,11 @@ export async function GET(request: Request) {
       .limit(limit)
       .toArray();
 
-    return NextResponse.json(molecules.map(m => ({ ...m, id: m._id.toString() })));
+    return NextResponse.json(molecules.map(m => ({ ...m, id: m._id.toString() })), {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60',
+      },
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

@@ -126,7 +126,11 @@ export async function GET(request: Request) {
     
     console.log(`[Search API] Aggregation Params: mol=${moleculeId || 'none'}, q=${q || 'none'} | Result: ${products.length} in ${duration}ms`);
 
-    return NextResponse.json(products);
+    return NextResponse.json(products, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',
+      },
+    });
   } catch (err: any) {
     console.error("[Search API Error]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });

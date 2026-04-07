@@ -16,7 +16,11 @@ export async function GET(request: Request) {
       .limit(limitValue)
       .toArray();
 
-    return NextResponse.json(categories.map(c => ({ ...c, id: c._id.toString() })));
+    return NextResponse.json(categories.map(c => ({ ...c, id: c._id.toString() })), {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60',
+      },
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
