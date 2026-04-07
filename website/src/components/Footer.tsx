@@ -18,7 +18,8 @@ export default function Footer() {
   ), [db]);
   const { data: footerPages } = useCollection(footerPagesQuery);
 
-  if (pathname.startsWith('/admin')) return null;
+  const hideOnPaths = ['/cart', '/checkout', '/Sahi-admin', '/login', '/prescription'];
+  if (hideOnPaths.some(path => pathname.startsWith(path))) return null;
 
   return (
     <footer className="bg-[#020617] text-white pt-6 pb-32 sm:pb-10 px-6 border-t-2 border-primary">

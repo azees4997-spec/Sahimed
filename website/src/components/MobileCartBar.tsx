@@ -10,7 +10,7 @@ export default function MobileCartBar() {
   const { totalItems, totalPrice } = useCart();
   const pathname = usePathname();
 
-  const hideOnPaths = ['/cart', '/checkout', '/admin', '/login', '/prescription'];
+  const hideOnPaths = ['/cart', '/checkout', '/Sahi-admin', '/login', '/prescription'];
   if (hideOnPaths.includes(pathname) || totalItems === 0) return null;
 
   return (

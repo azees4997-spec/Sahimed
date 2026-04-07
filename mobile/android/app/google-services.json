@@ -1,0 +1,28 @@
+{
+  "project_info": {
+    "project_number": "503492891847",
+    "project_id": "studio-9756314138-8403b",
+    "storage_bucket": "studio-9756314138-8403b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:503492891847:android:343468087943cc979c09ee",
+        "android_client_info": {
+          "package_name": "com.sahimed.sahimed_app"
+        }
+      },
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZjPHZjLz6TgXIAkqQ3uCsaAfO0HUj4qc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
