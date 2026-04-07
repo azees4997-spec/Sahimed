@@ -64,7 +64,7 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
     const headers = ["Mobile", "Keyword", "Timestamp"];
     const csvContent = [
       headers.join(","),
-      ...logs.map(log => `"${log.mobile}","${(log.keyword || '').replace(/"/g, '""')}","${format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss')}"`)
+      ...logs.map(log => `"${log.mobile}","${(log.keyword || '').replace(/"/g, '""')}","${log.timestamp ? format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss') : 'N/A'}"`)
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -170,9 +170,25 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-xs text-slate-500">{format(new Date(log.timestamp), 'MMM dd, yyyy')}</span>
-                        <span className="text-[10px] font-medium text-slate-300">{format(new Date(log.timestamp), 'HH:mm:ss')}</span>
+                      <div className="text-right">
+                        <span className="font-bold text-xs text-slate-500">
+                          {(() => {
+                            if (!log.timestamp) return 'N/A';
+                            try {
+                              const d = new Date(log.timestamp);
+                              return isNaN(d.getTime()) ? 'N/A' : format(d, 'MMM dd, yyyy');
+                            } catch (e) { return 'N/A'; }
+                          })()}
+                        </span>
+                        <span className="text-[10px] font-medium text-slate-300">
+                          {(() => {
+                            if (!log.timestamp) return '';
+                            try {
+                              const d = new Date(log.timestamp);
+                              return isNaN(d.getTime()) ? '' : format(d, 'HH:mm:ss');
+                            } catch (e) { return ''; }
+                          })()}
+                        </span>
                       </div>
                     </td>
                   </tr>

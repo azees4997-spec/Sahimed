@@ -251,9 +251,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             viewportFraction: 0.9,
                             autoPlay: true,
                             enlargeCenterPage: true,
-                            onPageChanged: (index, reason) {
-                              setState(() => _currentBannerIndex = index);
-                            },
                           ),
                           items: _banners.map((banner) {
                             return Container(
