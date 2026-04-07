@@ -5,12 +5,16 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/providers/cart_provider.dart';
 import '../../../shared/models/models.dart';
 import '../widgets/home_header.dart';
 import '../../products/screens/category_products_screen.dart';
 import '../../products/screens/product_detail_screen.dart';
+import '../../products/screens/search_screen.dart';
+import '../screens/cart_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -93,17 +97,163 @@ class _HomeScreenState extends State<HomeScreen> {
               // Sticky Header
               const SliverToBoxAdapter(child: HomeHeader()),
 
+              // Mega Banner Hero Section (Website Mirror)
+              SliverToBoxAdapter(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF9F9),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.pink.withValues(alpha: 0.05),
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(color: Colors.white),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(LucideIcons.shieldCheck, color: Color(0xFF25D366), size: 14),
+                            const SizedBox(width: 8),
+                            Text(
+                              'TRUSTED BY 10L+ USERS',
+                              style: GoogleFonts.outfit(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.0,
+                                color: SahimedColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Title
+                      RichText(
+                        text: TextSpan(
+                          style: GoogleFonts.outfit(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            height: 1.0,
+                            letterSpacing: -1.0,
+                            color: SahimedColors.primary,
+                          ),
+                          children: [
+                            const TextSpan(text: 'AFFORDABLE\nSOLUTIONS FOR\n'),
+                            TextSpan(
+                              text: 'EVERYDAY CARE',
+                              style: GoogleFonts.outfit(
+                                fontStyle: FontStyle.italic,
+                                color: SahimedColors.accent,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Search Bar
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SearchScreen()),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(100),
+                            boxShadow: [
+                              BoxShadow(
+                                color: SahimedColors.primary.withValues(alpha: 0.1),
+                                blurRadius: 30,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: Text(
+                                  'SEARCH MEDICINES...',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: SahimedColors.slate300,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: const BoxDecoration(
+                                  color: SahimedColors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(LucideIcons.search, color: Colors.white, size: 20),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Action Buttons
+                      Row(
+                        children: [
+                          _buildModernAction(
+                            'Upload Rx',
+                            LucideIcons.fileText,
+                            const Color(0xFFF3F0FF),
+                            SahimedColors.primary,
+                            () {},
+                          ),
+                          const SizedBox(width: 12),
+                          _buildModernAction(
+                            'WhatsApp',
+                            LucideIcons.messageCircle,
+                            const Color(0xFFEFFFF5),
+                            const Color(0xFF25D366),
+                            _launchWhatsApp,
+                          ),
+                          const SizedBox(width: 12),
+                          _buildModernAction(
+                            'Call Now',
+                            LucideIcons.phone,
+                            const Color(0xFFFFF0F3),
+                            SahimedColors.accent,
+                            _makeCall,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
               // Hero Banners
               if (_banners.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Column(
                       children: [
                         CarouselSlider(
                           options: CarouselOptions(
-                            height: 180,
-                            viewportFraction: 0.92,
+                            height: 160,
+                            viewportFraction: 0.9,
                             autoPlay: true,
                             enlargeCenterPage: true,
                             onPageChanged: (index, reason) {
@@ -127,25 +277,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: CachedNetworkImage(
                                   imageUrl: banner.imageUrl,
                                   fit: BoxFit.cover,
-                                  placeholder: (context, url) => Container(color: SahimedColors.slate100),
+                                  placeholder: (context, url) => Container(color: SahimedColors.slate50),
                                 ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: _banners.asMap().entries.map((entry) {
-                            return Container(
-                              width: _currentBannerIndex == entry.key ? 16 : 6,
-                              height: 6,
-                              margin: const EdgeInsets.symmetric(horizontal: 3),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(3),
-                                color: _currentBannerIndex == entry.key
-                                    ? SahimedColors.primary
-                                    : SahimedColors.slate200,
                               ),
                             );
                           }).toList(),
@@ -155,62 +288,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-              // Action Tiles
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      _buildActionTile(
-                        'Upload Rx',
-                        LucideIcons.filePlus2,
-                        SahimedColors.primary,
-                        () {},
-                      ),
-                      const SizedBox(width: 12),
-                      _buildActionTile(
-                        'WhatsApp',
-                        LucideIcons.messageCircle,
-                        const Color(0xFF25D366),
-                        _launchWhatsApp,
-                      ),
-                      const SizedBox(width: 12),
-                      _buildActionTile(
-                        'Call Now',
-                        LucideIcons.phoneCall,
-                        SahimedColors.accent,
-                        _makeCall,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
               // Categories Header
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Shop by Category',
+                        'SHOP BY CATEGORY',
                         style: GoogleFonts.outfit(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.w900,
                           color: SahimedColors.primary,
-                          letterSpacing: -0.5,
+                          letterSpacing: 0.5,
                         ),
                       ),
-                      TextButton(
-                        onPressed: () {},
-                        child: Text(
-                          'View All',
-                          style: GoogleFonts.outfit(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: SahimedColors.accent,
-                          ),
+                      Text(
+                        'EXPLORE ALL',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: SahimedColors.accent,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ],
@@ -218,19 +318,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // 4-Column Category Grid
+              // 4-Column Category Grid (Compact)
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 4,
                     mainAxisSpacing: 16,
-                    crossAxisSpacing: 8,
-                    childAspectRatio: 0.72,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.75,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final category = _categories[index];
+                      final colors = [
+                        const Color(0xFFF3F0FF), // Lavender
+                        const Color(0xFFFFF0F3), // Pink
+                        const Color(0xFFEBF8FF), // Blue
+                        const Color(0xFFEFFFF5), // Green
+                      ];
+                      final bgColor = colors[index % colors.length];
+
                       return GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -243,39 +351,39 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Column(
                           children: [
                             Container(
-                              height: 75,
+                              height: 70,
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                color: SahimedColors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: SahimedColors.slate100),
+                                color: bgColor,
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(color: Colors.white, width: 2),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.03),
+                                    color: bgColor.withValues(alpha: 0.5),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(22),
                                 child: CachedNetworkImage(
                                   imageUrl: category.imageUrl,
-                                  fit: BoxFit.contain,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              category.name,
+                              category.name.toUpperCase(),
                               textAlign: TextAlign.center,
-                              maxLines: 2,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.outfit(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: SahimedColors.primary.withValues(alpha: 0.8),
-                                height: 1.1,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                color: SahimedColors.primary,
+                                letterSpacing: 0.2,
                               ),
                             ),
                           ],
@@ -287,26 +395,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // Best Sellers Header
+              // Trending Header
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
+                  padding: const EdgeInsets.fromLTRB(20, 40, 20, 16),
                   child: Text(
-                    'Trending Now',
+                    'OUR MOST POPULAR BRANDS',
                     style: GoogleFonts.outfit(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w900,
                       color: SahimedColors.primary,
-                      letterSpacing: -0.5,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
               ),
 
-              // Horizontal Best Sellers
+              // Horizontal Trending
               SliverToBoxAdapter(
                 child: SizedBox(
-                  height: 240,
+                  height: 230,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -327,21 +435,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildActionTile(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildModernAction(String title, IconData icon, Color bgColor, Color iconColor, VoidCallback onTap) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: SahimedColors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: SahimedColors.slate100),
+            color: bgColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white, width: 2),
             boxShadow: [
               BoxShadow(
-                color: color.withValues(alpha: 0.08),
+                color: SahimedColors.primary.withValues(alpha: 0.05),
                 blurRadius: 20,
-                offset: const Offset(0, 8),
+                offset: const Offset(0, 10),
               ),
             ],
           ),
@@ -350,19 +458,19 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
+                  color: iconColor,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 22),
+                child: Icon(icon, color: Colors.white, size: 18),
               ),
               const SizedBox(height: 8),
               Text(
-                title,
-                textAlign: TextAlign.center,
+                title.toUpperCase(),
                 style: GoogleFonts.outfit(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
                   color: SahimedColors.primary,
+                  letterSpacing: -0.2,
                 ),
               ),
             ],
@@ -373,6 +481,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTrendingCard(ProductModel product) {
+    // Top-level property access
+    final price = product.price;
+    final mrp = product.mrp;
+    final discount = mrp > 0 ? (((mrp - price) / mrp) * 100).round() : 0;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -381,8 +494,8 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
       child: Container(
-        width: 160,
-        margin: const EdgeInsets.only(right: 16, bottom: 8),
+        width: 150,
+        margin: const EdgeInsets.only(right: 12, bottom: 8),
         decoration: BoxDecoration(
           color: SahimedColors.white,
           borderRadius: BorderRadius.circular(24),
@@ -403,47 +516,61 @@ class _HomeScreenState extends State<HomeScreen> {
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                   child: AspectRatio(
-                    aspectRatio: 1.1,
+                    aspectRatio: 1.0,
                     child: CachedNetworkImage(
-                      imageUrl: product.imageUrls.isNotEmpty ? product.imageUrls[0] : '',
+                      imageUrl: product.imageUrl,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => Container(color: SahimedColors.slate50),
                     ),
                   ),
                 ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: SahimedColors.accent,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'SAVE ${(((product.liveData?.mrp ?? 1) - (product.liveData?.price ?? 0)) / (product.liveData?.mrp ?? 1) * 100).round()}%',
-                      style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                if (discount > 0)
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: SahimedColors.accent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'SAVE $discount%',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    product.molName,
+                    product.name.toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: SahimedColors.primary),
+                    style: GoogleFonts.outfit(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: SahimedColors.primary,
+                      letterSpacing: -0.2,
+                    ),
                   ),
                   Text(
-                    product.company,
+                    product.brand.toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(fontSize: 10, color: SahimedColors.slate400),
+                    style: GoogleFonts.outfit(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
+                      color: SahimedColors.slate400,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -453,20 +580,33 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '₹${product.liveData?.price}',
-                            style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w900, color: SahimedColors.primary),
-                          ),
-                          Text(
-                            '₹${product.liveData?.mrp}',
-                            style: TextStyle(
-                              fontSize: 10,
-                              decoration: TextDecoration.lineThrough,
-                              color: SahimedColors.slate300,
+                            '₹${price.toStringAsFixed(0)}',
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: SahimedColors.primary,
                             ),
                           ),
+                          if (mrp > price)
+                            Text(
+                              '₹${mrp.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                fontSize: 9,
+                                decoration: TextDecoration.lineThrough,
+                                color: SahimedColors.slate300,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                         ],
                       ),
-                      const Icon(LucideIcons.plusCircle, color: SahimedColors.primary, size: 24),
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: SahimedColors.primary.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(LucideIcons.plus, color: SahimedColors.primary, size: 16),
+                      ),
                     ],
                   ),
                 ],

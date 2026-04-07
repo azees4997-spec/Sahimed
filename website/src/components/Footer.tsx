@@ -24,19 +24,22 @@ export default function Footer() {
 
   const footerPagesQuery = useMemoFirebase(() => query(
     collection(db, 'pages'), 
-    where('placement', 'in', ['footer', 'both']),
     orderBy('lastUpdated', 'desc')
   ), [db]);
-  const { data: footerPages } = useCollection(footerPagesQuery);
+  const { data: allPages } = useCollection(footerPagesQuery);
+  const footerPages = allPages?.filter((p: any) => p.placement === 'footer' || p.placement === 'both');
 
   const hideOnPaths = ['/cart', '/checkout', '/Sahi-admin', '/login', '/prescription'];
   if (hideOnPaths.some(path => pathname.startsWith(path))) return null;
 
   return (
-    <footer className="relative bg-[#020617] text-white pt-24 pb-32 sm:pb-12 border-t border-white/5 overflow-hidden">
+    <footer className="relative bg-[#0A0E21] text-white pt-24 pb-32 sm:pb-12 border-t border-white/5 overflow-hidden">
+      {/* Premium Gradient Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+      
       {/* Abstract Background Design */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -mr-64 -mt-64 opacity-50 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-accent/10 rounded-full blur-[100px] -ml-32 -mb-32 opacity-30 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[140px] -mr-64 -mt-64 opacity-40 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-accent/20 rounded-full blur-[120px] -ml-32 -mb-32 opacity-30 pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-20">
