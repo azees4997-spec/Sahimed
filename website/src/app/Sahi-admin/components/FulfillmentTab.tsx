@@ -36,8 +36,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { format } from "date-fns";
 import { useUser } from '@/firebase';
+import { safeFormat } from '@/lib/safe-date';
 import { SectionHeader } from './SectionHeader';
 
 export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
@@ -129,7 +129,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
       
       return [
         order.orderId, 
-        order.orderDate ? format(new Date(order.orderDate), 'yyyy-MM-dd HH:mm') : 'N/A', 
+        safeFormat(order.orderDate, 'yyyy-MM-dd HH:mm'), 
         order.patientName, 
         order.phoneNumber, 
         `"${fullAddr.replace(/"/g, '""')}"`, 
@@ -148,7 +148,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `orders_${format(new Date(), 'yyyyMMdd')}.csv`;
+    a.download = `orders_${safeFormat(new Date(), 'yyyyMMdd')}.csv`;
     a.click();
   };
 
@@ -185,7 +185,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
             <div class="branding"><h1>Sahi<span>Med</span></h1><p style="margin: 4px 0 0; font-weight: 800; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #666;">Store Order Summary</p></div>
             <div class="order-meta">
               <div style="font-weight: 900; font-size: 18px;">ORDER #${order.orderId}</div>
-              <div style="font-weight: 600; font-size: 12px; color: #666;">DATE: ${order.orderDate ? format(new Date(order.orderDate), 'dd MMM yyyy HH:mm') : 'N/A'}</div>
+                              return safeFormat(d, 'dd MMM yyyy HH:mm');
             </div>
           </div>
           <div style="display: flex; gap: 60px; margin-bottom: 40px;">
@@ -280,7 +280,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
               {isLoading ? (<tr><td colSpan={6} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : (!Array.isArray(orders) || orders.length === 0) ? (<tr><td colSpan={6} className="p-20 text-center font-bold text-gray-400 text-[10px]">No orders found</td></tr>) : orders.map(order => (
                 <tr key={order._id || order.id} className="hover:bg-gray-50/50">
                   <td className="px-8 py-6 font-black text-xs uppercase">{order.orderId}</td>
-                  <td className="px-8 py-6 text-[10px] font-black">{order.orderDate ? format(new Date(order.orderDate), 'dd MMM yyyy') : 'N/A'}</td>
+                  <td className="px-8 py-6 text-[10px] font-black">{safeFormat(order.orderDate, 'dd MMM yyyy')}</td>
                   <td className="px-8 py-6"><p className="font-bold text-xs">{order.patientName}</p><p className="text-[10px] text-gray-400">{order.phoneNumber}</p></td>
                   <td className="px-8 py-6 max-w-[250px]">
                     <p className="text-[10px] font-bold text-gray-600 line-clamp-1 uppercase">

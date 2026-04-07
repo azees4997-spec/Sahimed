@@ -91,9 +91,19 @@ export default function AdminConsole() {
     e.preventDefault();
     setAuthLoading(true);
     try {
+      if (!auth) throw new Error("Auth system inactive");
       await signInWithEmailAndPassword(auth, email, password);
+      toast({ title: 'Authorization Granting', description: 'Establishing session link...' });
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Access denied', description: 'Invalid admin credentials.' });
+      console.error("ADMIN_AUTH_FAILURE:", err);
+      const errorCode = err.code || 'unknown-matrix-error';
+      const errorMessage = err.message || 'Invalid credentials or network rejection.';
+      
+      toast({ 
+        variant: 'destructive', 
+        title: 'Access Denied', 
+        description: `Code: ${errorCode}. ${errorMessage}` 
+      });
     } finally {
       setAuthLoading(false);
     }

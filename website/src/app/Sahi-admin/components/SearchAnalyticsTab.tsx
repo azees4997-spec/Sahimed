@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format, startOfDay, endOfDay, subDays } from 'date-fns';
 import { useUser } from '@/firebase';
+import { safeFormat } from '@/lib/safe-date';
 
 export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
   const { toast } = useToast();
@@ -172,22 +173,10 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
                     <td className="px-8 py-6">
                       <div className="text-right">
                         <span className="font-bold text-xs text-slate-500">
-                          {(() => {
-                            if (!log.timestamp) return 'N/A';
-                            try {
-                              const d = new Date(log.timestamp);
-                              return isNaN(d.getTime()) ? 'N/A' : format(d, 'MMM dd, yyyy');
-                            } catch (e) { return 'N/A'; }
-                          })()}
+                          {safeFormat(log.timestamp, 'MMM dd, yyyy')}
                         </span>
                         <span className="text-[10px] font-medium text-slate-300">
-                          {(() => {
-                            if (!log.timestamp) return '';
-                            try {
-                              const d = new Date(log.timestamp);
-                              return isNaN(d.getTime()) ? '' : format(d, 'HH:mm:ss');
-                            } catch (e) { return ''; }
-                          })()}
+                          {safeFormat(log.timestamp, 'HH:mm:ss')}
                         </span>
                       </div>
                     </td>

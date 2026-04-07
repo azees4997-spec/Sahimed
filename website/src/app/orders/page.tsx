@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react';
+import { safeFormat } from '@/lib/safe-date';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -177,7 +178,7 @@ export default function OrdersPage() {
                           <div className="flex items-center gap-3">
                             <Calendar className="w-4 h-4 text-slate-400" />
                             <span className="text-[10px] font-black text-slate-500 tracking-[0.2em] uppercase">
-                              {order.orderDate?.toDate ? order.orderDate.toDate().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'PROCESSING'}
+                              {safeFormat(order.orderDate, 'dd MMM yyyy')}
                             </span>
                           </div>
                           <div className="flex items-center gap-3">

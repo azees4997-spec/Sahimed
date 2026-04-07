@@ -33,7 +33,7 @@ import { useEffect } from 'react';
 import { useUser } from '@/firebase'; // Added user hook
 import { SectionHeader } from './SectionHeader';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { safeFormat } from '@/lib/safe-date';
 
 export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const { toast } = useToast();
@@ -187,16 +187,7 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
               <div className="flex items-center justify-between pt-4">
                 <div className="flex items-center gap-2 text-[9px] font-bold text-slate-400">
                   <Clock className="w-3 h-3" />
-                  {(() => {
-                    if (!admin.activatedAt) return 'No date';
-                    try {
-                      const d = new Date(admin.activatedAt);
-                      if (isNaN(d.getTime())) return 'Invalid date';
-                      return format(d, 'MMM dd, yyyy');
-                    } catch (e) {
-                      return 'Invalid date';
-                    }
-                  })()}
+                  {safeFormat(admin.activatedAt, 'MMM dd, yyyy')}
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => deleteAdmin(admin.id || admin.uid)} className="text-red-300 hover:text-red-500 hover:bg-red-50 rounded-xl">
                   <Trash2 className="w-4 h-4" />
