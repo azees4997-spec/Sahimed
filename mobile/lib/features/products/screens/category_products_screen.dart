@@ -115,6 +115,9 @@ class _ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cardBg = product.isGeneric ? SahimedColors.sahiPink : SahimedColors.sahiBlue;
     final accentColor = product.isGeneric ? SahimedColors.accent : SahimedColors.primary;
+    final savingsPct = product.mrp > product.price 
+        ? (((product.mrp - product.price) / product.mrp) * 100).round() 
+        : 0;
 
     return GestureDetector(
       onTap: () {
