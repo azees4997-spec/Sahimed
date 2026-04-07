@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/colors.dart';
 
 class OrderStatusScreen extends StatelessWidget {
@@ -152,7 +152,7 @@ class OrderStatusScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(LucideIcons.info, color: SahimedColors.accent),
+          Icon(LucideIcons.info, color: SahimedColors.accent),
           const SizedBox(width: 16),
           Expanded(
             child: Text(

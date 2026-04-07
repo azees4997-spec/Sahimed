@@ -16,6 +16,7 @@ import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
+import BottomNav from '@/components/BottomNav';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -396,6 +397,7 @@ export default function CartPage() {
             </div>
           </div>
         )}
+        <BottomNav />
       </div>
     </PageTransition>
   );

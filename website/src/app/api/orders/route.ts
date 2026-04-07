@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
-import { verifyAdmin } from '@/lib/auth-utils';
+import { verifyAdmin, verifyAuth } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 
 export async function GET(req: Request) {
@@ -47,15 +47,34 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    await verifyAdmin(req);
+    // 1. Try Admin Verification first, fallback to standard Auth
+    let user;
+    let isAdmin = false;
+    try {
+      user = await verifyAdmin(req);
+      isAdmin = true;
+    } catch (err) {
+      user = await verifyAuth(req);
+    }
+
     const { enquiryPath, ...body } = await req.json();
+    
+    // 2. Security Check: Non-admins can only create orders for themselves
+    if (!isAdmin && body.userId !== user.uid) {
+      return NextResponse.json({ error: "Forbidden: You can only create orders for your own account." }, { status: 403 });
+    }
+
     const client = await clientPromise;
     const db = client.db('sahimed');
     
-    // Add unique orderId if not present
+    // 3. Generate Unique Order ID (ORDxxxx)
     const lastOrder = await db.collection('orders').find().sort({ createdAt: -1 }).limit(1).toArray();
     const lastId = lastOrder[0]?.orderId || "ORD0000";
     const nextId = "ORD" + (parseInt(lastId.replace("ORD", "")) + 1).toString().padStart(4, '0');
+
+    // 4. Clinical Status Logic
+    const isConsultation = body.clinicalPath === 'consult' || body.isConsultationRequired === true;
+    const initialStatus = isConsultation ? 'Pending Consult' : (body.status || 'Confirmed');
 
     const orderData = {
       ...body,
@@ -63,7 +82,7 @@ export async function POST(req: Request) {
       orderDate: body.orderDate || new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),
-      status: body.status || 'Confirmed'
+      status: initialStatus
     };
 
     const result = await db.collection('orders').insertOne(orderData);

@@ -41,6 +41,7 @@ import { collection, serverTimestamp, doc, getDoc, query, orderBy, addDoc } from
 import AddressForm from '@/components/AddressForm';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import BottomNav from '@/components/BottomNav';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 import Link from 'next/link';
@@ -332,18 +333,44 @@ export default function CheckoutPage() {
     };
 
     try {
-      const newOrderRef = doc(collection(db, 'userProfiles', user.uid, 'orders'));
-      setDocumentNonBlocking(newOrderRef, orderData, { merge: false });
+      // 1. Get Authentication Token
+      const idToken = await user.getIdToken();
+
+      // 2. Transmit to MongoDB Backend
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Clinical transmission failed');
+      }
+
+      const mongoOrderId = result.orderId; // The ORD00xx ID
+
+      // 3. Sync to User Profile (Firestore) using the SAME ID
+      const newOrderRef = doc(db, 'userProfiles', user.uid, 'orders', mongoOrderId);
+      setDocumentNonBlocking(newOrderRef, { 
+        ...orderData, 
+        orderId: mongoOrderId,
+        mongoId: result.id 
+      }, { merge: false });
       
-      toast({ title: "Order processed", description: "Redirecting to success page..." });
+      toast({ title: "Order processed", description: `Order ID ${mongoOrderId} generated.` });
       
+      // 4. Success Navigation
       setTimeout(() => {
         clearCart();
-        router.push(`/order-success/${newOrderRef.id}`);
-      }, 800);
-    } catch (err) {
+        router.push(`/order-success/${mongoOrderId}`);
+      }, 1000);
+    } catch (err: any) {
       setLoading(false);
-      toast({ variant: 'destructive', title: "Order failed", description: "Failed to sync order with clinical hub." });
+      toast({ variant: 'destructive', title: "Order failed", description: err.message || "Failed to sync order with clinical hub." });
     }
   };
 
@@ -780,6 +807,7 @@ export default function CheckoutPage() {
             </div>
           </div>
         </main>
+        <BottomNav />
 
         <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
           <DialogContent className="max-w-md w-[94vw] rounded-[40px] p-0 border-none shadow-3xl bg-white z-[110] overflow-hidden">

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import '../../../core/providers/cart_provider.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/location_service.dart';
-import '../../../core/providers/cart_provider.dart';
+import '../../../shared/models/models.dart';
 import '../../products/screens/search_screen.dart';
 import '../screens/cart_screen.dart';
 

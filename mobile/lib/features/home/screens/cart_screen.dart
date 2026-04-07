@@ -2,10 +2,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/providers/cart_provider.dart';
+import '../../../shared/models/models.dart';
 import 'checkout_screen.dart';
 
 class CartScreen extends StatelessWidget {
@@ -31,7 +32,7 @@ class CartScreen extends StatelessWidget {
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(LucideIcons.chevronLeft, color: SahimedColors.textPrimary),
+          icon: Icon(LucideIcons.chevronLeft, color: SahimedColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -194,7 +195,7 @@ class CartScreen extends StatelessWidget {
                           ),
                           IconButton(
                             onPressed: () => cart.removeItem(item.product.id),
-                            icon: const Icon(LucideIcons.trash2, size: 18, color: SahimedColors.accent),
+                            icon: Icon(LucideIcons.trash2, size: 20, color: SahimedColors.accent),
                             visualDensity: VisualDensity.compact,
                           ),
                         ],

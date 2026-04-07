@@ -7,6 +7,40 @@ const JWKS = createRemoteJWKSet(
 );
 
 /**
+ * Verifies the Firebase ID token and returns the user's UID and email.
+ * Does NOT check for administrative privileges.
+ */
+export async function verifyAuth(request: Request) {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    throw new Error('Unauthorized: Missing or invalid token');
+  }
+
+  const token = authHeader.split('Bearer ')[1];
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || "studio-9756314138-8403b";
+
+  if (!projectId) {
+    throw new Error('Server Configuration Error: Missing Project ID');
+  }
+
+  try {
+    const { payload } = await jwtVerify(token, JWKS, {
+      issuer: `https://securetoken.google.com/${projectId}`,
+      audience: projectId,
+    });
+
+    const uid = payload.sub;
+    const email = payload.email as string;
+
+    if (!uid) throw new Error('Invalid token payload: missing sub');
+
+    return { uid, email };
+  } catch (error: any) {
+    throw new Error(error.message || 'Unauthorized access attempt');
+  }
+}
+
+/**
  * Verifies if the request is from a legitimate admin or pharmacist.
  * Uses manual JWT verification to remove dependency on Firebase Admin SDK (Service Account).
  * Checks the 'adminProfiles' collection in MongoDB for authorization.
@@ -31,24 +65,14 @@ export async function verifyAdmin(request: Request) {
   }
 
   try {
-    // 1. Verify the ID token signature and claims manually
-    // This does NOT require a private key, only the project ID (public).
-    const { payload } = await jwtVerify(token, JWKS, {
-      issuer: `https://securetoken.google.com/${projectId}`,
-      audience: projectId,
-    });
-
-    const uid = payload.sub;
-    const email = payload.email as string;
-
-    if (!uid) throw new Error('Invalid token payload: missing sub');
+    const { uid, email } = await verifyAuth(request);
 
     // 1.5 MASTER UID OVERRIDE: Always allow these UIDs (Owner)
     const MASTER_UIDS = [
       "BM9HheYflheT0Wyj6olaEnyCAHl1",
       "RzB6nqlQumg1VEniFcZrgbcDdRA2"
     ];
-    if (MASTER_UIDS.includes(uid)) {
+    if (uid && MASTER_UIDS.includes(uid)) {
       return { uid, role: 'admin', email };
     }
 
@@ -78,9 +102,6 @@ export async function verifyAdmin(request: Request) {
     return { uid, role, email };
   } catch (error: any) {
     console.warn(`[Auth Security] Verification failed: ${error.message}`);
-    
-    // Propagate specific errors back to the caller
-    const msg = error.message || 'Unauthorized access attempt';
-    throw new Error(msg);
+    throw new Error(error.message || 'Unauthorized access attempt');
   }
 }

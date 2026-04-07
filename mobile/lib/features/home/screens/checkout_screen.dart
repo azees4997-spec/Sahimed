@@ -2,10 +2,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/services/location_service.dart';
 import 'order_status_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -31,10 +32,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _initAddress() async {
-    final savedAddress = await _locationService.getSavedAddress();
-    if (savedAddress != null) {
+    String? address = await _locationService.getSavedAddress();
+    if (address == null || address.isEmpty) {
+      address = await _locationService.getCurrentAddress();
+    }
+    if (address != null && mounted) {
       setState(() {
-        _addressController.text = savedAddress;
+        _addressController.text = address;
       });
     }
   }
@@ -112,7 +116,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(LucideIcons.chevronLeft, color: SahimedColors.textPrimary),
+          icon: Icon(LucideIcons.chevronLeft, color: SahimedColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -317,7 +321,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ],
             ),
           ),
-          const Icon(LucideIcons.checkCircle, color: SahimedColors.primary, size: 24),
+          Icon(LucideIcons.checkCircle, color: SahimedColors.primary, size: 24),
         ],
       ),
     );

@@ -10,7 +10,10 @@ import {
   Plus,
   ChevronRight,
   Package,
-  Search
+  Search,
+  Stethoscope,
+  CheckCircle,
+  FileCheck
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -261,7 +264,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
 
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
         <div className="bg-white/60 backdrop-blur-md p-1.5 rounded-full border border-white shadow-xl flex w-fit gap-1.5 overflow-x-auto no-scrollbar">
-          {['All', 'Confirmed', 'Packing', 'Shipped', 'Delivered', 'Cancelled'].map((status) => (
+          {['All', 'Pending Consult', 'Confirmed', 'Packing', 'Shipped', 'Delivered', 'Cancelled'].map((status) => (
             <button key={status} onClick={() => setStatusFilter(status)} className={cn("px-8 py-3.5 rounded-full text-[9px] font-black tracking-[0.2em] transition-all uppercase whitespace-nowrap", statusFilter === status ? "bg-primary text-white shadow-lg shadow-primary/30" : "text-slate-400 hover:bg-white/80")}>{status}</button>
           ))}
         </div>
@@ -289,6 +292,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                   </td>
                   <td className="px-8 py-6">
                     <Badge className={cn("font-black text-[8px]", 
+                      order.status === 'Pending Consult' ? "bg-emerald-100 text-emerald-600 border border-emerald-200" :
                       order.status === 'Confirmed' ? "bg-blue-100 text-blue-600" :
                       order.status === 'Shipped' ? "bg-purple-100 text-purple-600" :
                       order.status === 'Delivered' ? "bg-green-100 text-green-600" :
@@ -365,11 +369,21 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                   </div>
                 </div>
                 <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
-                  <h4 className="text-[10px] font-black text-gray-400">Order Status</h4>
+                  <h4 className="text-[10px] font-black text-gray-400">Manage Fulfillment Pipeline</h4>
                   <div className="grid grid-cols-2 gap-3">
-                    {['Packing', 'Packed', 'Shipped', 'Delivered', 'Cancelled'].map(s => (
-                      <Button key={s} variant="outline" onClick={() => setStatusUpdateTarget(s)} className={cn("rounded-2xl h-12 font-black text-[10px] border-2", selectedOrder?.status === s ? "border-primary bg-primary/5 text-primary" : "text-gray-400")}>{s}</Button>
-                    ))}
+                    {selectedOrder?.status === 'Pending Consult' ? (
+                      <Button 
+                        onClick={() => updateOrderStatus(selectedOrder._id, 'Confirmed')}
+                        className="col-span-2 rounded-2xl h-16 bg-emerald-600 text-white font-black text-xs uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-100 gap-3"
+                      >
+                         <Stethoscope className="w-5 h-5" />
+                         Clinical Approval Granted
+                      </Button>
+                    ) : (
+                      ['Packing', 'Packed', 'Shipped', 'Delivered', 'Cancelled'].map(s => (
+                        <Button key={s} variant="outline" onClick={() => setStatusUpdateTarget(s)} className={cn("rounded-2xl h-12 font-black text-[10px] border-2", selectedOrder?.status === s ? "border-primary bg-primary/5 text-primary" : "text-gray-400")}>{s}</Button>
+                      ))
+                    )}
                   </div>
                 </div>
                 <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
@@ -124,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(LucideIcons.shieldCheck, color: Color(0xFF25D366), size: 14),
+                            Icon(LucideIcons.shieldCheck, color: Color(0xFF25D366), size: 14),
                             const SizedBox(width: 8),
                             Text(
                               'TRUSTED BY 10L+ USERS',
@@ -203,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: SahimedColors.primary,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(LucideIcons.search, color: Colors.white, size: 20),
+                                child: Icon(LucideIcons.search, color: Colors.white, size: 20),
                               ),
                             ],
                           ),
@@ -605,7 +605,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: SahimedColors.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(LucideIcons.plus, color: SahimedColors.primary, size: 16),
+                        child: Icon(LucideIcons.plus, color: SahimedColors.primary, size: 16),
                       ),
                     ],
                   ),
