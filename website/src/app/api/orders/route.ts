@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
@@ -29,12 +28,15 @@ export async function GET(req: Request) {
     const orders = await db.collection('orders').find(query).sort({ orderDate: -1 }).limit(100).toArray();
     return NextResponse.json(orders);
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("[Orders API Error]", err);
+    const status = err.message?.includes('Unauthorized') || err.message?.includes('Forbidden') ? 401 : 500;
+    return NextResponse.json({ error: err.message }, { status });
   }
 }
 
 export async function POST(req: Request) {
   try {
+    await verifyAdmin(req);
     const { enquiryPath, ...body } = await req.json();
     const client = await clientPromise;
     const db = client.db('sahimed');
@@ -77,7 +79,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, id: result.insertedId, orderId: nextId });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("[Orders API Error]", err);
+    const status = err.message?.includes('Unauthorized') || err.message?.includes('Forbidden') ? 401 : 500;
+    return NextResponse.json({ error: err.message }, { status });
   }
 }
 
@@ -96,6 +100,8 @@ export async function PUT(req: Request) {
     
     return NextResponse.json({ success: true, modifiedCount: result.modifiedCount });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("[Orders API Error]", err);
+    const status = err.message?.includes('Unauthorized') || err.message?.includes('Forbidden') ? 401 : 500;
+    return NextResponse.json({ error: err.message }, { status });
   }
 }

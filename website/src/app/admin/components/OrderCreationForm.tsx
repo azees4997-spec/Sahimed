@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { 
@@ -24,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { 
+  useUser,
   useFirestore, 
   useMemoFirebase, 
   useCollection 
@@ -34,6 +35,7 @@ import { useStorage } from '@/firebase';
 
 export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db: any, onSuccess: () => void }) {
   const { toast } = useToast();
+  const { user } = useUser();
   const [customer, setCustomer] = useState({ 
     name: enquiry.patientName || '', 
     mobile: enquiry.phoneNumber || '', 
@@ -190,9 +192,13 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
         prescriptionUrls: prescriptions
       };
 
+      const token = await user?.getIdToken();
       const res = await fetch('/api/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(orderData)
       });
 

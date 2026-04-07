@@ -54,7 +54,12 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
       if (startDate) sp.append('start', startDate);
       if (endDate) sp.append('end', endDate);
       
-      const res = await fetch(`/api/orders?${sp.toString()}`);
+      const token = await user?.getIdToken();
+      const res = await fetch(`/api/orders?${sp.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await res.json();
       if (Array.isArray(data)) {
         setOrders(data);
@@ -63,6 +68,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
       }
     } catch (err) {
       toast({ variant: 'destructive', title: "Fetch failed" });
+      setOrders([]);
     } finally {
       setIsLoading(false);
     }
