@@ -66,11 +66,10 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
 
   const downloadTemplate = () => {
     const headers = [
-      'id', 'name', 'sku', 'manufacturer', 'category', 'isGeneric', 'prescriptionRequired', 'packSize', 'imageUrl', 'description', 'treatment', 
-      'safetyAdvice', 'howToUse', 'saltComposition', 'pregnancyInteraction', 'lactationInteraction', 'drivingInteraction', 'kidneyInteraction', 'liverInteraction',
-      'clinicalTabLabel', 'safetyTabLabel', 'matrixTabLabel'
+      'name', 'sku', 'manufacturer', 'category', 'isGeneric', 'isBestSeller', 'prescriptionRequired', 'packSize', 'imageUrl', 'imageUrl2', 'imageUrl3', 'description', 'treatment', 
+      'safetyAdvice', 'howToUse', 'saltComposition', 'moleculeCode', 'price', 'mrp', 'availableQuantity'
     ];
-    const csv = headers.join(',') + '\n"","New Product","SKU001","Manufacturer","Category","false","false","10 Tablets","","","","Description","Treatment","","","","","","","Intelligence","Protocol","Matrix"';
+    const csv = headers.join(',') + '\n"New Product","SKU001","Manufacturer","Category","false","false","false","10 Tablets","","","","Description","Treatment","Advice","How to use","Salt","MM0001","0","0","0"';
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -91,6 +90,8 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
     reader.onload = async (event) => {
       const text = event.target?.result as string;
       const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+      if (lines.length < 2) return;
+      
       const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
       
       const products = lines.slice(1).map(line => {
@@ -112,13 +113,14 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
         const obj: any = {};
         headers.forEach((h, i) => {
           let val: any = values[i]?.replace(/^"|"$/g, '') || '';
-          if (h === 'isGeneric' || h === 'prescriptionRequired') val = val.toLowerCase() === 'true';
+          if (['isGeneric', 'isBestSeller', 'prescriptionRequired'].includes(h)) {
+            val = val.toLowerCase() === 'true';
+          } else if (['price', 'mrp', 'availableQuantity'].includes(h)) {
+            val = Number(val) || 0;
+          }
           obj[h] = val;
         });
-        // Ensure ID consistency with SKU if missing
-        if (!obj.id && obj.sku) {
-          obj.id = obj.sku.trim().toLowerCase().replace(/[^a-z0-9]/g, '-');
-        }
+
         return obj;
       });
 
@@ -371,6 +373,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
   const [isMolOpen, setIsMolOpen] = useState(false);
   const [selectedMoleculeTitle, setSelectedMoleculeTitle] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
 
   // Fix: Load initial molecule name on mount & Refresh latest data
   useEffect(() => {
@@ -433,6 +436,20 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     };
 
     refreshProduct();
+
+    // Fetch categories for dropdown
+    const fetchCats = async () => {
+      try {
+        const res = await fetch('/api/categories');
+        if (res.ok) {
+           const data = await res.json();
+           setCategories(data);
+        }
+      } catch (e) {
+        console.error("Error fetching categories", e);
+      }
+    };
+    fetchCats();
   }, [initialData?.id, initialData?._id]);
 
   useEffect(() => {
@@ -582,6 +599,12 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
         </TabsList>
         <TabsContent value="basic" className="space-y-6">
           <div className="grid grid-cols-2 gap-6">
+            {initialData?._id && (
+              <div className="col-span-2 space-y-1">
+                <Label className="text-[9px] font-black uppercase text-slate-300">System ID (Auto-generated)</Label>
+                <p className="text-[10px] font-mono font-bold text-slate-400 bg-slate-50 p-3 rounded-xl border border-dashed">{initialData._id}</p>
+              </div>
+            )}
             <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black">Medicine name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black">Sku</Label><Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black">Manufacturer</Label><Input value={form.manufacturer} onChange={e => setForm({...form, manufacturer: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
@@ -687,13 +710,13 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                           ) : (
                             molecules?.map((mol) => {
                               const molId = mol._id || mol.id;
-                              const isSelected = form.moleculeId === molId;
+                              const isSelected = form.moleculeId === mol.masterId || form.moleculeId === molId;
                               return (
                                 <button
                                   key={molId}
                                   type="button"
                                   onClick={() => {
-                                    setForm({...form, moleculeId: molId, saltComposition: mol.molecule || mol.name});
+                                    setForm({...form, moleculeId: mol.masterId || molId, saltComposition: mol.molecule || mol.name});
                                     setSelectedMoleculeTitle(mol.molecule || mol.name);
                                     setIsMolOpen(false);
                                     setMolSearch('');
@@ -731,6 +754,23 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
             </div>
 
             <div className="space-y-6 bg-lavender/30 p-6 rounded-[32px] border border-white">
+               <div className="flex gap-4">
+                  <div className="flex-1 space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Category Architecture</Label>
+                    <Select value={form.category} onValueChange={(v) => setForm({...form, category: v})}>
+                      <SelectTrigger className="rounded-2xl h-14 bg-white border-none font-bold">
+                        <SelectValue placeholder="Select Category" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl z-[150]">
+                        {categories.map(cat => (
+                          <SelectItem key={cat.id || cat._id} value={cat.name} className="font-bold uppercase text-[11px]">
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+               </div>
                <div className="flex gap-4">
                   <LimitedInput label="Intelligence Header (Required)" value={form.clinicalTabLabel} onChange={(v: string) => setForm({...form, clinicalTabLabel: v})} limit={20} placeholder="e.g. INTELLIGENCE" required />
                </div>

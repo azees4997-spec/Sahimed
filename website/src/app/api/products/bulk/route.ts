@@ -8,16 +8,25 @@ export async function GET() {
     const products = await db.collection('products').find({}).toArray();
 
     const headers = [
-      'id', 'name', 'sku', 'manufacturer', 'category', 'isGeneric', 'prescriptionRequired', 'packSize', 'imageUrl', 'description', 'treatment', 
-      'safetyAdvice', 'howToUse', 'saltComposition', 'pregnancyInteraction', 'lactationInteraction', 'drivingInteraction', 'kidneyInteraction', 'liverInteraction',
-      'clinicalTabLabel', 'safetyTabLabel', 'matrixTabLabel', 'price', 'mrp', 'availableQuantity'
+      'name', 'sku', 'manufacturer', 'category', 'isGeneric', 'isBestSeller', 'prescriptionRequired', 'packSize', 'imageUrl', 'imageUrl2', 'imageUrl3', 'description', 'treatment', 
+      'safetyAdvice', 'howToUse', 'saltComposition', 'moleculeCode', 'price', 'mrp', 'availableQuantity'
     ];
 
     const csvContent = [
       headers.join(','),
       ...products.map(p => {
         return headers.map(h => {
-          let val = p[h] ?? ''; // Standardize on root access
+          let val = '';
+          if (h === 'moleculeCode') {
+            val = p.moleculeId || ''; // This should ideally be the masterId, but we'll export what we have
+          } else if (h === 'imageUrl2') {
+            val = p.imageUrls?.[1] || '';
+          } else if (h === 'imageUrl3') {
+            val = p.imageUrls?.[2] || '';
+          } else {
+            val = p[h] ?? '';
+          }
+          
           if (typeof val === 'string') {
             val = val.replace(/"/g, '""');
             if (val.includes(',') || val.includes('\n')) val = `"${val}"`;
@@ -47,11 +56,10 @@ export async function POST(request: Request) {
     const productsCol = db.collection('products');
     const moleculesCol = db.collection('molecules');
 
-    // INTELLIGENT MAPPING: Fetch molecules for auto-linking based on saltComposition
     const allMolecules = await moleculesCol.find({}).toArray();
 
     const preparedProducts = products.map((p: any) => {
-      let moleculeId = p.moleculeId;
+      let moleculeId = p.moleculeId || p.moleculeCode;
 
       // If missing moleculeId, try to find a match in the moleculeMaster
       if (!moleculeId && p.saltComposition) {
@@ -60,23 +68,28 @@ export async function POST(request: Request) {
           (m.molecule || m.name || "").toLowerCase().includes(p.saltComposition.toLowerCase())
         );
         if (match) {
-          moleculeId = match._id || match.id;
+          moleculeId = match.masterId || match._id || match.id;
         }
       }
 
-      const { id, _id, liveData, ...rest } = p;
+      const { id, _id, liveData, moleculeCode, imageUrl2, imageUrl3, ...rest } = p;
+      
+      // Reconstruct imageUrls array
+      const imageUrls = [p.imageUrl, imageUrl2, imageUrl3].filter(Boolean);
+
       return {
         ...rest,
-        _id: id || _id,
+        imageUrls,
+        _id: id || _id || p.sku, // Use SKU as _id if missing, or let MongoDB auto-gen if we change the write ops
         moleculeId,
         updatedAt: new Date()
       };
     });
 
-    // Bulk Write
+    // Bulk Write using SKU as filter if _id is missing or if we want to ensure upsert by SKU
     const ops = preparedProducts.map((p: any) => ({
       updateOne: {
-        filter: { _id: p._id },
+        filter: { $or: [{ _id: p._id }, { sku: p.sku }] },
         update: { 
           $set: p,
           $unset: { liveData: "", id: "", imageUrl2: "", imageUrl3: "" }

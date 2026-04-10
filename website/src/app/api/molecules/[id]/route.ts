@@ -5,10 +5,23 @@ import { verifyAdmin } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 
 const getQuery = (id: string) => {
+  const query: any = {
+    $or: [
+      { masterId: id },
+      { id: id }
+    ]
+  };
+
   try {
-    if (id.length === 24) return { _id: new ObjectId(id) };
+    if (id.length === 24) {
+      query.$or.push({ _id: new ObjectId(id) });
+    }
   } catch (e) {}
-  return { _id: id as any };
+
+  // Fallback for simple string _id
+  query.$or.push({ _id: id as any });
+
+  return query;
 };
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
