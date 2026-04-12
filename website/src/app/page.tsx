@@ -129,11 +129,7 @@ export default function Home() {
               >
                 <div 
                   onClick={() => { 
-                    if (window.innerWidth < 1024) {
-                      window.dispatchEvent(new CustomEvent('open-mobile-search'));
-                    } else {
-                      document.querySelector('input')?.focus();
-                    }
+                    window.dispatchEvent(new CustomEvent('open-mobile-search'));
                   }}
                   className="w-full bg-white text-slate-900 rounded-full p-1 shadow-2xl shadow-slate-200/50 flex items-center border border-slate-100 cursor-pointer hover:scale-[1.01] active:scale-95 transition-all group"
                 >

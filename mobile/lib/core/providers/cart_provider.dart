@@ -15,15 +15,25 @@ class CartProvider with ChangeNotifier {
 
   List<CartItem> get items => _items;
 
-  double get subtotal => _items.fold(0.0, (sum, item) {
-    return sum + (item.product.mrp * item.quantity);
-  });
+  double get subtotal => _items.fold(0, (sum, item) => sum + (item.product.mrp * item.quantity));
+  double get total => _items.fold(0, (sum, item) => sum + (item.product.price * item.quantity));
 
-  double get total => _items.fold(0.0, (sum, item) {
-    return sum + (item.product.price * item.quantity);
-  });
+  double get deliveryFee => (total > 0 && total < 499) ? 49.0 : 0.0;
+  double get packingFee => total > 0 ? 10.0 : 0.0;
+  
+  double get finalTotal => total + deliveryFee + packingFee;
   
   double get totalSavings => (subtotal - total) > 0 ? (subtotal - total) : 0.0;
+
+  bool get isRxRequired => _items.any((item) => item.product.rxRequired || item.product.prescriptionRequired);
+
+  Map<String, dynamic> get billingBreakdown => {
+    'grossMrp': subtotal,
+    'campaignDiscount': totalSavings,
+    'deliveryFees': deliveryFee,
+    'packingFees': packingFee,
+    'netPayable': finalTotal,
+  };
 
   void addItem(ProductModel product) {
     final index = _items.indexWhere((item) => item.product.id == product.id);
@@ -70,9 +80,14 @@ class CartProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final cartData = prefs.getString(_prefKey);
     if (cartData != null) {
-      final List<dynamic> decoded = json.decode(cartData);
-      _items = decoded.map((item) => CartItem.fromJson(item)).toList();
-      notifyListeners();
+      try {
+        final List<dynamic> decoded = json.decode(cartData);
+        _items = decoded.map((item) => CartItem.fromJson(item)).toList();
+        notifyListeners();
+      } catch (e) {
+        debugPrint('Error loading cart: $e');
+        _items = [];
+      }
     }
   }
 }

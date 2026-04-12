@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class SahimedColors {
-  static const Color primary = Color(0xFF1B4B66);
-  static const Color accent = Color(0xFFFF4B6C);
+  static const Color primary = Color(0xFF2563EB); // Tailwind blue-600 logic
+  static const Color accent = Color(0xFFFB3E7A);  // Tailwind pink-500 logic
   static const Color background = Color(0xFFF8FAFC);
   static const Color white = Colors.white;
   static const Color slate950 = Color(0xFF020617);

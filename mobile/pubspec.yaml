@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   firebase_core: ^4.6.0
   firebase_auth: ^6.3.0
+  firebase_app_check: ^0.4.2
   cloud_firestore: ^6.2.0
   google_fonts: ^8.0.2
   lucide_icons_flutter: ^3.1.12
@@ -50,6 +51,8 @@ dependencies:
   geocoding: ^3.0.0
   shared_preferences: ^2.3.5
   carousel_slider: ^5.1.2
+  image_picker: 1.1.2
+  truecaller_sdk: 1.2.0
 
 dev_dependencies:
   flutter_test:

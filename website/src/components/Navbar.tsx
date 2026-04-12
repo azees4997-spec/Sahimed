@@ -359,7 +359,7 @@ export default function Navbar() {
               <button 
                 onClick={() => setIsSearchOverlayOpen(true)}
                 className={cn(
-                  "lg:hidden flex items-center justify-center p-2 rounded-full border transition-all h-9 w-9",
+                  "flex items-center justify-center p-2 rounded-full border transition-all h-9 w-9",
                   scrolled 
                     ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
                     : isHome 
@@ -391,9 +391,9 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Desktop Search Section (Tier 2) */}
+          {/* Desktop Search Section (Tier 2) - Hidden for premium look */}
           <div className={cn(
-            "relative w-full transition-all duration-300 hidden lg:block mt-4",
+            "relative w-full transition-all duration-300 hidden mt-4",
             scrolled ? "max-w-xl mx-auto" : ""
           )} ref={searchRef}>
             <form onSubmit={handleSearch} className="relative">

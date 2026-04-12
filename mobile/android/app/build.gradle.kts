@@ -54,3 +54,9 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // [SECURITY FIX] Native dependencies for App Check providers
+    implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    implementation("com.google.firebase:firebase-appcheck-debug")
+}

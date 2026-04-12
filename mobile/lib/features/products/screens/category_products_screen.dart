@@ -25,7 +25,10 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
   }
 
   Future<void> _fetchProducts() async {
-    final products = await _apiService.getProductsByCategory(widget.category.id);
+    final products = await _apiService.getProductsByCategory(
+      widget.category.id, 
+      categoryName: widget.category.name,
+    );
     if (mounted) {
       setState(() {
         _products = products;

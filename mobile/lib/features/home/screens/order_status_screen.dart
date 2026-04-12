@@ -105,7 +105,7 @@ class OrderStatusScreen extends StatelessWidget {
               ],
             ),
             child: Icon(
-              isSuccess ? LucideIcons.check : LucideIcons.x,
+              isSuccess ? Icons.check_circle_rounded : Icons.cancel_rounded,
               size: 80,
               color: isSuccess ? Colors.green : SahimedColors.accent,
             ),

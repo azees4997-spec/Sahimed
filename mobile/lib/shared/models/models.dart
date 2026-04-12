@@ -51,6 +51,9 @@ class ProductModel {
   final Map<String, dynamic>? liveData;
   final Map<String, dynamic>? moleculeData;
 
+  final bool rxRequired;
+  final bool prescriptionRequired;
+
   ProductModel({
     required this.id,
     required this.name,
@@ -62,6 +65,8 @@ class ProductModel {
     this.imageUrls = const [],
     this.saltComposition,
     this.isGeneric = false,
+    this.rxRequired = false,
+    this.prescriptionRequired = false,
     this.moleculeId,
     this.molName,
     this.company,
@@ -78,12 +83,14 @@ class ProductModel {
       name: json['name'] ?? '',
       brand: json['brand'] ?? '',
       packSize: json['packSize'],
-      price: (live?['sahimed_price'] ?? json['price'] ?? 0).toDouble(),
-      mrp: (live?['mrp'] ?? json['mrp'] ?? 0).toDouble(),
-      imageUrl: images.isNotEmpty ? images.first : (json['imageUrl'] ?? 'https://picsum.photos/seed/${json['_id']}/300/300'),
+      price: num.tryParse((live?['sahimed_price'] ?? json['price'] ?? 0).toString())?.toDouble() ?? 0.0,
+      mrp: num.tryParse((live?['mrp'] ?? json['mrp'] ?? 0).toString())?.toDouble() ?? 0.0,
+      imageUrl: images.isNotEmpty ? images.first : (json['imageUrl'] ?? 'https://picsum.photos/seed/${json['_id'] ?? json['id']}/300/300'),
       imageUrls: images,
       saltComposition: json['saltComposition'] ?? json['composition'],
-      isGeneric: json['isGeneric'] == true,
+      isGeneric: json['isGeneric'] == true || json['isGeneric'] == "true",
+      rxRequired: json['rxRequired'] == true || json['prescriptionRequired'] == true || json['isRxRequired'] == true,
+      prescriptionRequired: json['prescriptionRequired'] == true || json['rxRequired'] == true,
       moleculeId: json['moleculeId'],
       molName: json['molName'] ?? json['moleculeName'],
       company: json['company'] ?? json['manufacturer'],
@@ -104,6 +111,8 @@ class ProductModel {
       'imageUrls': imageUrls,
       'saltComposition': saltComposition,
       'isGeneric': isGeneric,
+      'rxRequired': rxRequired,
+      'prescriptionRequired': prescriptionRequired,
       'moleculeId': moleculeId,
       'molName': molName,
       'company': company,
@@ -130,29 +139,45 @@ class CartItem {
 }
 
 class OrderModel {
-  final List<ProductModel> items;
-  final double total;
-  final String address;
-  final String name;
-  final String phone;
+  final String? userId;
+  final String patientName;
+  final String phoneNumber;
+  final Map<String, dynamic> shippingDetails;
+  final List<Map<String, dynamic>> items;
+  final double totalAmount;
+  final Map<String, dynamic> billingBreakdown;
+  final List<String> imageUrls;
+  final String paymentMethod;
+  final String status;
+  final bool isConsultationRequired;
 
   OrderModel({
+    this.userId,
+    required this.patientName,
+    required this.phoneNumber,
+    required this.shippingDetails,
     required this.items,
-    required this.total,
-    required this.address,
-    required this.name,
-    required this.phone,
+    required this.totalAmount,
+    required this.billingBreakdown,
+    this.imageUrls = const [],
+    this.paymentMethod = 'COD',
+    this.status = 'Confirmed',
+    this.isConsultationRequired = false,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'items': items.map((e) => e.toJson()).toList(),
-      'total': total,
-      'shippingAddress': address,
-      'customerName': name,
-      'customerPhone': phone,
-      'paymentMethod': 'COD',
-      'status': 'Pending',
+      'userId': userId,
+      'patientName': patientName,
+      'phoneNumber': phoneNumber,
+      'shippingDetails': shippingDetails,
+      'items': items,
+      'totalAmount': totalAmount,
+      'billingBreakdown': billingBreakdown,
+      'imageUrls': imageUrls,
+      'paymentMethod': paymentMethod,
+      'status': status,
+      'isConsultationRequired': isConsultationRequired,
       'orderDate': DateTime.now().toIso8601String(),
     };
   }

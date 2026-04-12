@@ -1,25 +1,45 @@
 {
   "project_info": {
     "project_number": "503492891847",
+    "firebase_url": "https://studio-9756314138-8403b-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "studio-9756314138-8403b",
     "storage_bucket": "studio-9756314138-8403b.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:503492891847:android:343468087943cc979c09ee",
+        "mobilesdk_app_id": "1:503492891847:android:62ff74f81195823f5c9ae2",
         "android_client_info": {
           "package_name": "com.sahimed.sahimed_app"
         }
       },
+      "oauth_client": [
+        {
+          "client_id": "503492891847-dmbkgn77veikue59unahhmkbni2ojp9d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sahimed.sahimed_app",
+            "certificate_hash": "8e49cfe2005d0c85060db1bb88e052dc27e555eb"
+          }
+        },
+        {
+          "client_id": "503492891847-v1uej3e1ke9o4v7ta2219nrbumf639a7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyBZjPHZjLz6TgXIAkqQ3uCsaAfO0HUj4qc"
+          "current_key": "AIzaSyDmytFXM4JPh0BwF7vWZzRZ5i5C6tqa8hA"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "503492891847-v1uej3e1ke9o4v7ta2219nrbumf639a7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

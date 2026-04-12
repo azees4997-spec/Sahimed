@@ -1,8 +1,10 @@
 import 'dart:ui';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../core/services/api_service.dart';
@@ -22,8 +24,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _phoneController = TextEditingController();
   final _nameController = TextEditingController();
   bool _isProcessing = false;
+  File? _prescriptionImage;
+  final ImagePicker _picker = ImagePicker();
   final ApiService _apiService = ApiService();
   final LocationService _locationService = LocationService();
+
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() => _prescriptionImage = File(image.path));
+    }
+  }
 
   @override
   void initState() {
@@ -54,20 +65,52 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<void> _placeOrder() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isProcessing = true);
     final cart = context.read<CartProvider>();
+    List<String> prescriptions = [];
+
+    // Prescription check
+    if (cart.isRxRequired && _prescriptionImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please upload a valid prescription for Rx medicines'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isProcessing = true);
 
     try {
-      final success = await _apiService.createOrder(
+      // 1. Upload Rx if exists
+      if (_prescriptionImage != null) {
+        final url = await _apiService.uploadPrescription(_prescriptionImage!);
+        if (url != null) prescriptions.add(url);
+      }
+
+      // 2. Prepare Billing Breakdown
+      final billingBreakdown = {
+        'subtotal': cart.subtotal,
+        'packingFee': 10.0,
+        'deliveryFee': cart.subtotal < 499 ? 49.0 : 0.0,
+        'couponDiscount': 0.0,
+        'genericSavings': cart.totalSavings,
+        'total': cart.total,
+      };
+
+      // 3. Create Order
+      final orderId = await _apiService.createOrder(
         items: cart.items,
         total: cart.total,
         address: _addressController.text,
         name: _nameController.text,
         phone: _phoneController.text,
+        billingBreakdown: billingBreakdown,
+        prescriptions: prescriptions,
       );
 
       if (mounted) {
-        if (success) {
+        if (orderId != null) {
           cart.clearCart();
           Navigator.pushAndRemoveUntil(
             context,
@@ -171,6 +214,69 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
+                  if (cart.isRxRequired)
+                    _buildSectionCard(
+                      title: 'Upload Prescription',
+                      icon: LucideIcons.fileText,
+                      child: Column(
+                        children: [
+                          Text(
+                            'One or more medicines in your cart require a valid prescription.',
+                            style: GoogleFonts.outfit(fontSize: 13, color: SahimedColors.slate500),
+                          ),
+                          const SizedBox(height: 16),
+                          GestureDetector(
+                            onTap: _pickImage,
+                            child: Container(
+                              width: double.infinity,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: SahimedColors.background,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: _prescriptionImage == null ? SahimedColors.primary.withValues(alpha: 0.3) : SahimedColors.emerald500,
+                                  style: _prescriptionImage == null ? BorderStyle.none : BorderStyle.solid,
+                                  width: 2,
+                                ),
+                              ),
+                              child: _prescriptionImage != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(18),
+                                      child: Stack(
+                                        children: [
+                                          Image.file(_prescriptionImage!, width: double.infinity, height: 120, fit: BoxFit.cover),
+                                          Positioned(
+                                            top: 8,
+                                            right: 8,
+                                            child: GestureDetector(
+                                              onTap: () => setState(() => _prescriptionImage = null),
+                                              child: Container(
+                                                padding: const EdgeInsets.all(4),
+                                                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                                child: const Icon(LucideIcons.x, color: Colors.white, size: 16),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.upload_file_rounded, color: SahimedColors.primary, size: 32),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Tap to upload Prescription',
+                                          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: SahimedColors.primary),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (cart.isRxRequired) const SizedBox(height: 24),
                   _buildOrderSummary(cart),
                 ],
               ),
@@ -338,7 +444,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       child: Column(
         children: [
           _summaryRow('Price (${cart.items.length} items)', '₹${cart.subtotal.toStringAsFixed(2)}'),
-          _summaryRow('Delivery Charge', 'FREE', isGreen: true),
+          _summaryRow('Packing/Service Fee', '₹${cart.packingFee.toStringAsFixed(0)}'),
+          _summaryRow('Delivery Charge', cart.deliveryFee == 0 ? 'FREE' : '₹${cart.deliveryFee.toStringAsFixed(0)}', isGreen: cart.deliveryFee == 0),
           if (cart.totalSavings > 0)
             _summaryRow('Generic Savings', '- ₹${cart.totalSavings.toStringAsFixed(2)}', isGreen: true),
           const Padding(
@@ -357,7 +464,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
               Text(
-                '₹${cart.total.toStringAsFixed(2)}',
+                '₹${cart.finalTotal.toStringAsFixed(2)}',
                 style: GoogleFonts.outfit(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
@@ -434,7 +541,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                   ),
                   Text(
-                    '₹${cart.total.toStringAsFixed(2)}',
+                    '₹${cart.finalTotal.toStringAsFixed(2)}',
                     style: GoogleFonts.outfit(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,

@@ -1,8 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:truecaller_sdk/truecaller_sdk.dart';
+import 'package:flutter/services.dart';
+import 'dart:async';
 import '../../../core/theme/colors.dart';
+import '../../../core/layout/main_layout.dart';
 import 'otp_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -13,286 +17,352 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _phoneController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final TextEditingController _phoneController = TextEditingController();
+  
+  bool _agreedToTerms = false;
+  bool _isLoading = false;
+  bool _isTruecallerReady = false;
+  StreamSubscription? _tcSubscription;
 
-  Future<void> _loginWithWhatsApp() async {
-    final whatsappUrl = Uri.parse("https://wa.me/918985969860?text=I%20want%20to%20login%20to%20Sahimed");
-    if (await canLaunchUrl(whatsappUrl)) {
-      await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
-    } else {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize Truecaller non-blockingly
+    _initializeAuthServices();
+  }
+
+  @override
+  void dispose() {
+    _tcSubscription?.cancel();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeAuthServices() async {
+    try {
+      // 1. Initialize Truecaller SDK
+      await TcSdk.initializeSDK(sdkOption: TcSdkOptions.OPTION_VERIFY_ONLY_TC_USERS);
+      
+      // 2. Check usability
+      final isUsable = await TcSdk.isOAuthFlowUsable;
+      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch WhatsApp')),
-        );
+        setState(() => _isTruecallerReady = isUsable);
       }
+
+      if (isUsable) {
+        // 3. Listen for callbacks
+        _tcSubscription = TcSdk.streamCallbackData.listen((callback) {
+          _handleTruecallerCallback(callback);
+        });
+      }
+    } catch (e) {
+      debugPrint("Auth Init Error: $e");
+    }
+  }
+
+  void _handleTruecallerCallback(TcSdkCallback callback) {
+    switch (callback.result) {
+      case TcSdkCallbackResult.success:
+        debugPrint("Truecaller Success!");
+        _navigateToHome();
+        break;
+      case TcSdkCallbackResult.failure:
+        debugPrint("Truecaller Failure: ${callback.error?.message}");
+        _showError("Truecaller Error: ${callback.error?.message ?? 'Unknown error'}");
+        break;
+      case TcSdkCallbackResult.verification:
+        debugPrint("Truecaller: Manual verification required");
+        break;
+      default:
+        break;
+    }
+  }
+
+  Future<void> _loginWithTruecaller() async {
+    if (!_agreedToTerms) {
+      _showError("Please agree to the Terms & Conditions first");
+      return;
+    }
+
+    try {
+      await HapticFeedback.mediumImpact();
+
+      if (!_isTruecallerReady) {
+        // Try to initialize/check usability again on tap
+        _showError("Truecaller is still initializing. Please wait...");
+        _initializeAuthServices();
+        return;
+      }
+
+      final state = "state_${DateTime.now().millisecondsSinceEpoch}";
+      await TcSdk.setOAuthState(state);
+      await TcSdk.setOAuthScopes(['profile', 'phone', 'openid']);
+      await TcSdk.getAuthorizationCode;
+    } catch (e) {
+      _showError("Truecaller Launch Error: $e");
+    }
+  }
+
+  Future<void> _sendOtp() async {
+    if (!_agreedToTerms) {
+      _showError("Please agree to the Terms & Conditions first");
+      return;
+    }
+
+    final phone = _phoneController.text.trim();
+    if (phone.length != 10) {
+      _showError("Please enter a valid 10-digit mobile number");
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _auth.verifyPhoneNumber(
+        phoneNumber: '+91$phone',
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await _auth.signInWithCredential(credential);
+          _navigateToHome();
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          setState(() => _isLoading = false);
+          _showError(e.message ?? "Verification failed");
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          setState(() => _isLoading = false);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpScreen(
+                phoneNumber: phone,
+                verificationId: verificationId,
+              ),
+            ),
+          );
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {},
+      );
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showError("Error: $e");
+    }
+  }
+
+  void _navigateToHome() {
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const MainLayout()), 
+        (route) => false,
+      );
+    }
+  }
+
+  void _showError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: SahimedColors.background,
       body: Stack(
         children: [
-          // 1. Dynamic Background
-          Container(
-            decoration: const BoxDecoration(color: SahimedColors.background),
-          ),
+          // Background Aesthetic
           Positioned(
             top: -100,
             right: -50,
-            child: _buildBlob(300, SahimedColors.primary.withValues(alpha: 0.1)),
+            child: _buildBlob(300, SahimedColors.primary.withValues(alpha: 0.08)),
           ),
-          Positioned(
-            bottom: 100,
-            left: -100,
-            child: _buildBlob(400, SahimedColors.accent.withValues(alpha: 0.05)),
-          ),
-
-          // 2. Main Content
+          
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 28),
               child: Column(
                 children: [
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 40),
+                  
                   // App Branding
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Sahi',
-                        style: GoogleFonts.outfit(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          color: SahimedColors.primary,
-                          letterSpacing: -1,
-                        ),
-                      ),
-                      Text(
-                        'Med',
-                        style: GoogleFonts.outfit(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          color: SahimedColors.accent,
-                          letterSpacing: -1,
-                        ),
-                      ),
+                      Text('Sahi', style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: SahimedColors.primary, letterSpacing: -1)),
+                      Text('Med', style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: SahimedColors.accent, letterSpacing: -1)),
                     ],
                   ),
-                  const SizedBox(height: 30),
+                  
+                  const SizedBox(height: 40),
 
-                  // Premium Illustration
-                  Hero(
-                    tag: 'login_illustration',
-                    child: Container(
-                      height: 260,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(32),
-                        boxShadow: [
-                          BoxShadow(
-                            color: SahimedColors.primary.withValues(alpha: 0.1),
-                            blurRadius: 40,
-                            offset: const Offset(0, 20),
-                          ),
-                        ],
-                      ),
-                      child: Image.asset(
-                        'assets/images/login_illustration_wellness_premium_1775573518342.png',
-                        height: 280,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                           // Fallback if asset isn't matched yet
-                           return const Center(child: Icon(Icons.medical_services_outlined, size: 80, color: SahimedColors.primary));
-                        },
-                      ),
+                  // Hero Illustration (Simplified)
+                  Container(
+                    height: 220,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(32),
+                      boxShadow: [
+                        BoxShadow(color: SahimedColors.primary.withValues(alpha: 0.05), blurRadius: 40, offset: const Offset(0, 10)),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 30),
-
-                  // 3. Primary Start Flow
-                  Text(
-                    'Welcome to Wellness',
-                    style: GoogleFonts.outfit(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: SahimedColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'The fastest way to your healthcare needs.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: SahimedColors.slate500,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // WHATSAPP LOGIN - PRIMARY ACTION
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton.icon(
-                      onPressed: _loginWithWhatsApp,
-                      icon: const Icon(Icons.chat_bubble_rounded, size: 20),
-                      label: Text(
-                        'LOGIN VIA WHATSAPP',
-                        style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF25D366),
-                        foregroundColor: Colors.white,
-                        elevation: 4,
-                        shadowColor: const Color(0xFF25D366).withValues(alpha: 0.3),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Row(
-                    children: [
-                      const Expanded(child: Divider()),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'OR USE PHONE NUMBER',
-                          style: GoogleFonts.outfit(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: SahimedColors.slate400,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                      ),
-                      const Expanded(child: Divider()),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // 4. Glassmorphic Phone Input
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: SahimedColors.white.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: SahimedColors.white.withValues(alpha: 0.4),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: SahimedColors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: SahimedColors.slate100),
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '+91',
-                                    style: GoogleFonts.outfit(
-                                      fontWeight: FontWeight.bold,
-                                      color: SahimedColors.primary,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const SizedBox(
-                                    height: 24,
-                                    child: VerticalDivider(width: 1, color: SahimedColors.slate100),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _phoneController,
-                                      keyboardType: TextInputType.phone,
-                                      style: GoogleFonts.outfit(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                      decoration: InputDecoration(
-                                        hintText: 'Mobile Number',
-                                        border: InputBorder.none,
-                                        hintStyle: GoogleFonts.outfit(
-                                          color: SahimedColors.slate300,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 50,
-                              child: TextButton(
-                                onPressed: () {
-                                  if (_phoneController.text.length == 10) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => OtpScreen(phoneNumber: _phoneController.text),
-                                      ),
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Please enter a valid 10-digit number')),
-                                    );
-                                  }
-                                },
-                                style: TextButton.styleFrom(
-                                  backgroundColor: SahimedColors.primary,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
-                                child: Text(
-                                  'SEND OTP',
-                                  style: GoogleFonts.outfit(
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 14,
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    child: Center(
+                      child: Icon(Icons.security_rounded, size: 80, color: SahimedColors.primary.withValues(alpha: 0.6)),
                     ),
                   ),
 
                   const SizedBox(height: 32),
 
-                  // Terms
-                  Text(
-                    'By continuing, you agree to our Terms of Service\nand Privacy Policy.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: SahimedColors.slate400,
-                      height: 1.5,
-                    ),
-                  ),
+                  Text('Welcome Back', style: GoogleFonts.outfit(fontSize: 26, fontWeight: FontWeight.bold, color: SahimedColors.primary)),
+                  const SizedBox(height: 8),
+                  Text('Quick and secure access to your health records.', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 14, color: SahimedColors.slate500)),
+                  
+                  const SizedBox(height: 32),
+
+                  // T&C Checkbox
+                  _buildTermsCheckbox(),
+
+                  const SizedBox(height: 20),
+
+                  // Truecaller Primary Action
+                  _buildTruecallerButton(),
+                  const SizedBox(height: 24),
+                  _buildDivider(),
+                  const SizedBox(height: 24),
+
+                  // Phone Input Fallback
+                  _buildPhoneInput(),
+
                   const SizedBox(height: 40),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTermsCheckbox() {
+    return GestureDetector(
+      onTap: () => setState(() => _agreedToTerms = !_agreedToTerms),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Checkbox(
+            value: _agreedToTerms,
+            onChanged: (v) => setState(() => _agreedToTerms = v ?? false),
+            activeColor: SahimedColors.primary,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          ),
+          Flexible(
+            child: Text(
+              'I agree to the Terms & Conditions',
+              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: SahimedColors.slate500),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTruecallerButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 58,
+      child: ElevatedButton.icon(
+        onPressed: _loginWithTruecaller,
+        icon: const Icon(Icons.verified_user_rounded, size: 22),
+        label: Text(
+          _isTruecallerReady ? '1-TAP LOGIN WITH TRUECALLER' : 'TRUECALLER (CHECKING...)',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 1.2),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _isTruecallerReady ? const Color(0xFF0087FF) : Colors.grey.shade400,
+          foregroundColor: Colors.white,
+          elevation: _isTruecallerReady ? 2 : 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: [
+        const Expanded(child: Divider()),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text('OR USE PHONE NUMBER', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w800, color: SahimedColors.slate400, letterSpacing: 1.5)),
+        ),
+        const Expanded(child: Divider()),
+      ],
+    );
+  }
+
+  Widget _buildPhoneInput() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: SahimedColors.slate100),
+        boxShadow: [
+          BoxShadow(color: SahimedColors.primary.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 5)),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: SahimedColors.slate50.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Text('+91', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: SahimedColors.primary, fontSize: 16)),
+                const SizedBox(width: 12),
+                const SizedBox(height: 24, child: VerticalDivider(width: 1, color: SahimedColors.slate200)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+                    decoration: InputDecoration(
+                      hintText: 'Mobile Number',
+                      border: InputBorder.none,
+                      hintStyle: GoogleFonts.outfit(color: SahimedColors.slate300, fontSize: 14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _sendOtp,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: SahimedColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+              child: _isLoading
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : Text('SEND OTP', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 1)),
             ),
           ),
         ],
@@ -304,10 +374,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }
