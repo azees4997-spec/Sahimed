@@ -151,8 +151,8 @@ export default function Home() {
               >
                 {[
                   { label: 'Upload Rx', href: '/prescription', color: 'bg-lavender', icon: FileText, iconColor: 'bg-primary' },
-                  { label: 'WhatsApp', href: 'https://wa.me/91XXXXXXXXXX', color: 'bg-green-50', icon: MessageCircle, iconColor: 'bg-[#25D366]' },
-                  { label: 'Order on Call', href: 'tel:+91XXXXXXXXXX', color: 'bg-sahi-pink', icon: Phone, iconColor: 'bg-rose-500' }
+                  { label: 'WhatsApp', href: 'https://wa.me/917349499898', color: 'bg-green-50', icon: MessageCircle, iconColor: 'bg-[#25D366]' },
+                  { label: 'Order on Call', href: 'tel:+917349499898', color: 'bg-sahi-pink', icon: Phone, iconColor: 'bg-rose-500' }
                 ].map((action, i) => (
                   <Link key={i} href={action.href} className={cn("group p-3 sm:p-6 rounded-2xl border border-white shadow-xl shadow-slate-200/40 flex flex-col items-center justify-center text-center gap-1.5 transition-all active:scale-95", action.color)}>
                     <div className={cn("w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl shadow-md", action.iconColor)}>

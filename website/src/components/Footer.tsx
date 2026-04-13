@@ -118,7 +118,7 @@ export default function Footer() {
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Direct Line</p>
-                  <p className="text-sm font-bold text-gray-200">+91 9152331557</p>
+                  <p className="text-sm font-bold text-gray-200">+91 7349499898</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
