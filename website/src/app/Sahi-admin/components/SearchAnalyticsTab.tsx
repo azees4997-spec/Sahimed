@@ -1,16 +1,15 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   BarChart3, 
   Download, 
-  Calendar, 
   Search, 
-  User as UserIcon, 
   Smartphone,
-  ChevronLeft,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,45 +18,92 @@ import { Label } from '@/components/ui/label';
 import { SectionHeader } from './SectionHeader';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { format, startOfDay, endOfDay, subDays } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { useUser } from '@/firebase';
 import { safeFormat } from '@/lib/safe-date';
+
+const MAX_RETRIES = 5;
+const HEARTBEAT_INTERVAL_MS = 30_000;
 
 export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
   const { toast } = useToast();
   const { user } = useUser();
   const [logs, setLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [connectionStatus, setConnectionStatus] = useState<'live' | 'retrying' | 'error'>('live');
+  const [retryCount, setRetryCount] = useState(0);
   const [dateRange, setDateRange] = useState({
     startDate: format(subDays(new Date(), 7), 'yyyy-MM-dd'),
     endDate: format(new Date(), 'yyyy-MM-dd')
   });
 
-  const fetchLogs = async () => {
-    if (!user) return; // Wait for authentication
-    setIsLoading(true);
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchLogs = useCallback(async (attempt = 0): Promise<void> => {
+    if (!user) return;
+    if (attempt === 0) setIsLoading(true);
+
     try {
-      const idToken = await user.getIdToken();
-      const res = await fetch(`/api/analytics/search?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`, {
-        headers: {
-          'Authorization': `Bearer ${idToken}`
+      // Force-refresh token if retrying (handles expiry)
+      const idToken = await user.getIdToken(attempt > 0);
+      const res = await fetch(
+        `/api/analytics/search?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`,
+        { headers: { 'Authorization': `Bearer ${idToken}` } }
+      );
+
+      if (!res.ok) {
+        if (res.status === 401 && attempt < MAX_RETRIES) {
+          // Token expired — schedule retry with exponential backoff
+          const delay = Math.min(Math.pow(2, attempt) * 1000, 32_000);
+          setConnectionStatus('retrying');
+          setRetryCount(attempt + 1);
+          retryTimeoutRef.current = setTimeout(() => fetchLogs(attempt + 1), delay);
+          return;
         }
-      });
-      if (!res.ok) throw new Error("Verification Failed");
+        throw new Error(`HTTP ${res.status}`);
+      }
+
       const data = await res.json();
       setLogs(data);
+      setConnectionStatus('live');
+      setRetryCount(0);
     } catch (err) {
-      toast({ variant: 'destructive', title: "Insight Error", description: "Could not retrieve clinical trends." });
+      if (attempt < MAX_RETRIES) {
+        const delay = Math.min(Math.pow(2, attempt) * 1000, 32_000);
+        setConnectionStatus('retrying');
+        setRetryCount(attempt + 1);
+        retryTimeoutRef.current = setTimeout(() => fetchLogs(attempt + 1), delay);
+      } else {
+        setConnectionStatus('error');
+        toast({ variant: 'destructive', title: "Insight Error", description: "Could not retrieve clinical trends after multiple attempts." });
+      }
     } finally {
-      setIsLoading(false);
+      if (attempt === 0) setIsLoading(false);
     }
-  };
+  }, [user, dateRange, toast]);
 
+  // Initial fetch + re-fetch on date/user change
   useEffect(() => {
     if (user) {
       fetchLogs();
     }
+    return () => {
+      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+    };
   }, [dateRange, user]);
+
+  // 30-second heartbeat
+  useEffect(() => {
+    if (!user) return;
+    heartbeatRef.current = setInterval(() => {
+      fetchLogs();
+    }, HEARTBEAT_INTERVAL_MS);
+
+    return () => {
+      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
+    };
+  }, [user, fetchLogs]);
 
   const downloadCSV = () => {
     if (logs.length === 0) return;
@@ -84,6 +130,28 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <SectionHeader title="Clinical Interest Engine" subtitle="Direct Customer Search Analytics" onBack={onBack}>
+        {/* Connection Status Indicator */}
+        <div className="flex items-center gap-3 mr-4">
+          {connectionStatus === 'live' ? (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full border border-emerald-100">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Live</span>
+            </div>
+          ) : connectionStatus === 'retrying' ? (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 rounded-full border border-amber-100">
+              <Loader2 className="w-3 h-3 text-amber-500 animate-spin" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-amber-600">Retry {retryCount}/{MAX_RETRIES}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 rounded-full border border-red-100">
+              <WifiOff className="w-3 h-3 text-red-500" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-red-600">Disconnected</span>
+            </div>
+          )}
+        </div>
         <Button onClick={downloadCSV} disabled={logs.length === 0} className="rounded-full h-14 px-10 font-black text-[10px] bg-primary text-white shadow-2xl shadow-primary/30 uppercase tracking-widest hover:scale-105 transition-all border-4 border-white active:scale-95 disabled:opacity-50">
           <Download className="w-5 h-5 mr-3" /> Export Matrix
         </Button>
@@ -107,7 +175,7 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
             </div>
           </div>
 
-          <Button onClick={fetchLogs} variant="ghost" className="w-full h-14 rounded-2xl font-black text-[10px] uppercase tracking-widest text-primary bg-primary/5 hover:bg-primary/10 transition-all gap-3 border border-primary/20">
+          <Button onClick={() => fetchLogs(0)} variant="ghost" className="w-full h-14 rounded-2xl font-black text-[10px] uppercase tracking-widest text-primary bg-primary/5 hover:bg-primary/10 transition-all gap-3 border border-primary/20">
             <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} /> Update Stream
           </Button>
         </Card>

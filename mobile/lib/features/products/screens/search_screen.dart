@@ -1,6 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
@@ -25,29 +27,32 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(() {
-      final query = _searchController.text.trim();
-      if (_currentQuery != query) {
-        setState(() => _currentQuery = query);
-        if (query.length >= 3 && query.length <= 40) {
-          _performSearch(query);
-        } else if (query.isEmpty) {
-          setState(() {
-            _results = [];
-          });
-        }
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.trim();
+    if (_currentQuery != query) {
+      setState(() => _currentQuery = query);
+      if (query.length >= 3) {
+        _performSearch(query);
+      } else {
+        setState(() => _results = []);
       }
-    });
+    }
   }
 
   Future<void> _performSearch(String query) async {
-    if (query.isEmpty) return;
     setState(() => _isLoading = true);
     final results = await _apiService.searchProducts(query);
-    if (mounted) {
-      if (results.isNotEmpty || query.length >= 5) {
-        _apiService.logSearch(query, results.length);
-      }
+    if (mounted && _currentQuery == query) {
       setState(() {
         _results = results;
         _isLoading = false;
@@ -57,78 +62,33 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isValidLength = _currentQuery.length >= 3 && _currentQuery.length <= 40;
-    final isSearching = _currentQuery.isNotEmpty;
-
     return Scaffold(
-      backgroundColor: SahimedColors.background,
-      appBar: AppBar(
-        backgroundColor: SahimedColors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: SahimedColors.primary, size: 18),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Container(
-          height: 48,
-          decoration: BoxDecoration(
-            color: SahimedColors.background,
-            borderRadius: BorderRadius.circular(100),
-            border: Border.all(color: SahimedColors.slate100),
-          ),
-          child: TextField(
-            controller: _searchController,
-            autofocus: true,
-            maxLength: 40,
-            style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold),
-            decoration: InputDecoration(
-              counterText: '',
-              hintText: 'Search medicines (min 3 chars)..',
-              hintStyle: GoogleFonts.outfit(color: SahimedColors.slate400, fontWeight: FontWeight.normal),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              prefixIcon: const Icon(Icons.search_rounded, color: SahimedColors.slate400),
-              suffixIcon: isSearching ? IconButton(
-                icon: const Icon(Icons.close_rounded, color: SahimedColors.slate400, size: 20),
-                onPressed: () {
-                  _searchController.clear();
-                },
-              ) : null,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ),
-      ),
-      body: isSearching 
-          ? (!isValidLength 
-              ? _buildInvalidLengthState() 
-              : _buildSearchResults())
-          : _buildDiscoveryLanding(),
-    );
-  }
-
-  Widget _buildInvalidLengthState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: Colors.transparent,
+      body: Stack(
         children: [
-          Icon(Icons.keyboard_alt_outlined, size: 48, color: SahimedColors.slate200),
-          const SizedBox(height: 16),
-          Text(
-            'Keep typing...',
-            style: GoogleFonts.outfit(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: SahimedColors.slate400,
+          // 1. Blurred Background (Glassmorphism Overlay)
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                color: Colors.white.withOpacity(0.4),
+              ),
             ),
           ),
-          Text(
-            'Please enter at least 3 characters.',
-            style: GoogleFonts.outfit(
-              fontSize: 12,
-              color: SahimedColors.slate400,
+
+          // 2. Search UI Container
+          SafeArea(
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                _buildSearchInput(),
+                Expanded(
+                  child: _currentQuery.isEmpty
+                      ? _buildSearchDiscovery()
+                      : _buildSearchResults(),
+                ),
+              ],
             ),
           ),
         ],
@@ -136,29 +96,74 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildSearchResults() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: SahimedColors.primary));
-    }
-    
-    if (_results.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search_off_rounded, size: 80, color: SahimedColors.slate200),
-            const SizedBox(height: 16),
-            Text(
-              'NO RESULTS FOUND',
-              style: GoogleFonts.outfit(
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: SahimedColors.slate400,
+  Widget _buildSearchInput() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(100),
+        boxShadow: [
+          BoxShadow(color: SahimedColors.primary.withOpacity(0.1), blurRadius: 40, offset: const Offset(0, 15))
+        ],
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(LucideIcons.arrowLeft, color: SahimedColors.primary, size: 20),
+            onPressed: () => Navigator.pop(context),
+          ),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              autofocus: true,
+              style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: SahimedColors.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Search medicines or generics...',
+                hintStyle: GoogleFonts.outfit(color: SahimedColors.slate400, fontWeight: FontWeight.w500),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
             ),
-          ],
-        ),
-      );
+          ),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.only(right: 12),
+              child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.5, color: SahimedColors.primary)),
+            )
+          else if (_currentQuery.isNotEmpty)
+            IconButton(
+              icon: const Icon(LucideIcons.x, color: SahimedColors.slate400, size: 18),
+              onPressed: () => _searchController.clear(),
+            ),
+          const SizedBox(width: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchDiscovery() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(color: SahimedColors.primary.withOpacity(0.1), shape: BoxShape.circle),
+            child: const Icon(LucideIcons.search, size: 40, color: SahimedColors.primary),
+          ),
+          const SizedBox(height: 16),
+          Text('Search SahiMed Database', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
+          const SizedBox(height: 8),
+          Text('Get real-time prices and availability.', style: GoogleFonts.inter(fontSize: 13, color: SahimedColors.slate500)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchResults() {
+    if (_results.isEmpty && !_isLoading && _currentQuery.length >= 3) {
+      return _buildNoResults();
     }
 
     return ListView.builder(
@@ -166,217 +171,129 @@ class _SearchScreenState extends State<SearchScreen> {
       itemCount: _results.length,
       itemBuilder: (context, index) {
         final product = _results[index];
-        return _SearchResultTile(product: product);
+        return _SearchEntryTile(product: product);
       },
     );
   }
 
-  Widget _buildDiscoveryLanding() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: SahimedColors.primary.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: SahimedColors.primary.withValues(alpha: 0.1)),
-        ),
-        child: Column(
-          children: [
-            const Icon(Icons.manage_search_rounded, size: 48, color: SahimedColors.primary),
-            const SizedBox(height: 16),
-            Text(
-              'Live Database Search',
-              style: GoogleFonts.outfit(
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                color: SahimedColors.primary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Search by item name, molecules name, or brand to pull real-time availability and prices from our datastore.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
-                fontSize: 12,
-                color: SahimedColors.slate500,
-              ),
-            ),
-          ],
-        ),
+  Widget _buildNoResults() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(LucideIcons.circleAlert, size: 48, color: SahimedColors.slate300),
+          const SizedBox(height: 16),
+          Text('No matches found for "$_currentQuery"', style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: SahimedColors.slate500)),
+        ],
       ),
     );
   }
 }
 
-class _SearchResultTile extends StatelessWidget {
+class _SearchEntryTile extends StatelessWidget {
   final ProductModel product;
-  const _SearchResultTile({required this.product});
+  const _SearchEntryTile({required this.product});
 
   @override
   Widget build(BuildContext context) {
     final discount = product.mrp > 0 ? (((product.mrp - product.price) / product.mrp) * 100).round() : 0;
-    
+
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProductDetailScreen(product: product),
-          ),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailScreen(product: product)));
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: SahimedColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: SahimedColors.slate100),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ]
+          color: Colors.white.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 8))],
         ),
         child: Row(
           children: [
-            // Compact Image
+            // Medicine Image
             Container(
-              width: 44,
-              height: 44,
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: SahimedColors.background,
-                borderRadius: BorderRadius.circular(8),
-              ),
+              width: 52,
+              height: 52,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: SahimedColors.slate50, borderRadius: BorderRadius.circular(15)),
               child: CachedNetworkImage(
                 imageUrl: product.imageUrl,
                 fit: BoxFit.contain,
-                errorWidget: (c, u, e) => const Icon(Icons.medication_rounded, color: SahimedColors.primary, size: 20),
+                errorWidget: (c, u, e) => const Icon(LucideIcons.pill, color: SahimedColors.primary, size: 24),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             
-            // Name & Molecule
+            // Name & Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     product.name.toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.outfit(
-                      fontSize: 12,
+                      fontSize: product.name.length > 20 ? 11 : 13,
                       fontWeight: FontWeight.w900,
-                      color: SahimedColors.slate950,
+                      color: SahimedColors.textPrimary,
                       letterSpacing: -0.2,
                     ),
                   ),
+                  const SizedBox(height: 2),
                   Row(
                     children: [
-                      Flexible(
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(color: SahimedColors.slate100, borderRadius: BorderRadius.circular(6)),
                         child: Text(
-                          (product.molName ?? product.brand).toUpperCase(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.outfit(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: SahimedColors.slate400,
-                          ),
+                          (product.brand).toUpperCase(),
+                          style: GoogleFonts.outfit(fontSize: 8, fontWeight: FontWeight.bold, color: SahimedColors.slate500),
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 6),
                       if (discount > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: SahimedColors.emerald500.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            '$discount% OFF',
-                            style: GoogleFonts.outfit(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w900,
-                              color: SahimedColors.emerald500,
-                            ),
-                          ),
+                        Text(
+                          '₹${product.mrp.toStringAsFixed(0)}',
+                          style: TextStyle(fontSize: 10, color: SahimedColors.slate300, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.bold),
                         ),
                     ],
                   ),
                 ],
               ),
             ),
-            
-            // Prices
+
+            // Price & Add
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   '₹${product.price.toStringAsFixed(0)}',
-                  style: GoogleFonts.outfit(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    color: SahimedColors.slate950,
+                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900, color: SahimedColors.primary),
+                ),
+                const SizedBox(height: 6),
+                GestureDetector(
+                  onTap: () {
+                    context.read<CartProvider>().addItem(product);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Added ${product.name}', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                        backgroundColor: SahimedColors.primary,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(color: SahimedColors.primary, borderRadius: BorderRadius.circular(8)),
+                    child: Text('ADD', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white)),
                   ),
                 ),
-                if (product.mrp > product.price)
-                  Text(
-                    '₹${product.mrp.toStringAsFixed(0)}',
-                    style: TextStyle(
-                      fontSize: 10,
-                      decoration: TextDecoration.lineThrough,
-                      color: SahimedColors.slate300,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
               ],
-            ),
-            const SizedBox(width: 12),
-            
-            // Add Button
-            GestureDetector(
-              onTap: () {
-                final cartProvider = Provider.of<CartProvider>(context, listen: false);
-                cartProvider.addItem(product);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    duration: const Duration(seconds: 1),
-                    backgroundColor: SahimedColors.primary,
-                    content: Text('Added ${product.name} to Cart', style: GoogleFonts.outfit()),
-                  ),
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: SahimedColors.primary,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: SahimedColors.primary.withValues(alpha: 0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  'ADD',
-                  style: GoogleFonts.outfit(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
             ),
           ],
         ),

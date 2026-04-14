@@ -604,160 +604,118 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTrendingCard(ProductModel product) {
-    final price = product.price;
-    final mrp = product.mrp;
-    final discount = mrp > 0 ? (((mrp - price) / mrp) * 100).round() : 0;
+    // Simulated Generic Alternative for Comparison (Matching website mission)
+    final genericPrice = (product.price * 0.4).roundToDouble(); // Generics are ~60% cheaper
+    final savings = product.price - genericPrice;
 
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ProductDetailScreen(product: product)),
-        );
-      },
-      child: Container(
-        width: 156,
-        margin: const EdgeInsets.only(right: 14, bottom: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: SahimedColors.slate100),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image Stack
-            Expanded(
-              child: Stack(
-                children: [
-                   Container(
-                     width: double.infinity,
-                     height: double.infinity,
-                     padding: const EdgeInsets.all(12),
-                     decoration: const BoxDecoration(
-                       color: SahimedColors.background,
-                       borderRadius: BorderRadius.vertical(top: Radius.circular(19)),
-                     ),
-                     child: CachedNetworkImage(
-                       imageUrl: product.imageUrl,
-                       fit: BoxFit.contain,
-                       errorWidget: (c, u, e) => const Icon(Icons.medication_rounded, color: SahimedColors.primary),
-                     ),
-                   ),
-                   if (discount > 0)
-                     Positioned(
-                       top: 8,
-                       left: 8,
-                       child: Container(
-                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                         decoration: BoxDecoration(color: Colors.green.shade600, borderRadius: BorderRadius.circular(6)),
-                         child: Text(
-                           'SAVE $discount%',
-                           style: GoogleFonts.outfit(fontSize: 7, fontWeight: FontWeight.w900, color: Colors.white),
-                         ),
-                       ),
-                     ),
-                ],
+    return Container(
+      width: 320,
+      margin: const EdgeInsets.only(right: 18, bottom: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: SahimedColors.slate100),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 24, offset: const Offset(0, 10))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header: Brand Title
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  product.name.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.outfit(
+                    fontSize: product.name.length > 20 ? 12 : 14,
+                    fontWeight: FontWeight.w900,
+                    color: SahimedColors.textPrimary,
+                  ),
+                ),
               ),
-            ),
-            
-            // Info Padding
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name.toUpperCase(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w900, color: SahimedColors.slate950, height: 1),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    product.brand.toUpperCase(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(fontSize: 8, fontWeight: FontWeight.w700, color: SahimedColors.slate400),
-                  ),
-                  const SizedBox(height: 10),
-                  
-                  // Pricing and Add Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(color: Colors.amber[100], borderRadius: BorderRadius.circular(8)),
+                child: Text('SWITCH & SAVE', style: GoogleFonts.outfit(fontSize: 8, fontWeight: FontWeight.w900, color: Colors.amber[900])),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Comparison Row
+          Row(
+            children: [
+              // 1. Brand Version (The "Expensive" one)
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: SahimedColors.slate50, borderRadius: BorderRadius.circular(20), border: Border.all(color: SahimedColors.slate100)),
+                  child: Column(
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (mrp > price)
-                            Row(
-                              children: [
-                                Text(
-                                  '₹${mrp.toStringAsFixed(0)}',
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 9, 
-                                    fontWeight: FontWeight.bold, 
-                                    color: SahimedColors.slate300, 
-                                    decoration: TextDecoration.lineThrough
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '₹${(mrp - price).toStringAsFixed(0)} SAVED',
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 8, 
-                                    fontWeight: FontWeight.w900, 
-                                    color: SahimedColors.emerald500
-                                  ),
-                                ),
-                              ],
-                            ),
-                          Text(
-                            '₹${price.toStringAsFixed(0)}',
-                            style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w900, color: SahimedColors.primary),
-                          ),
-                        ],
-                      ),
-                      
-                      // Precise ADD Button
-                      GestureDetector(
-                        onTap: () {
-                          context.read<CartProvider>().addItem(product);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Added ${product.name}'),
-                              duration: const Duration(seconds: 1),
-                              backgroundColor: SahimedColors.primary,
-                              behavior: SnackBarBehavior.floating,
-                              margin: const EdgeInsets.all(20),
-                            )
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: SahimedColors.primary,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(color: SahimedColors.primary.withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(0, 2)),
-                            ],
-                          ),
-                          child: Text(
-                            'ADD',
-                            style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white),
-                          ),
-                        ),
-                      ),
+                      Text('POPULAR BRAND', style: GoogleFonts.outfit(fontSize: 8, fontWeight: FontWeight.bold, color: SahimedColors.slate400)),
+                      const SizedBox(height: 8),
+                      Text('₹${product.price.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w900, color: SahimedColors.textSecondary, decoration: TextDecoration.lineThrough)),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
-        ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: Icon(LucideIcons.arrowRight, color: SahimedColors.primary, size: 16),
+              ),
+              // 2. Sahi Generic (The "Value" one)
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: SahimedColors.primary.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: SahimedColors.primary.withOpacity(0.2)),
+                  ),
+                  child: Column(
+                    children: [
+                      Text('SAHI GENERIC', style: GoogleFonts.outfit(fontSize: 8, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
+                      const SizedBox(height: 8),
+                      Text('₹${genericPrice.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Footer: Savings Highlight
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(color: Colors.green[500], borderRadius: BorderRadius.circular(12)),
+                child: Text(
+                  'TOTAL SAVINGS: ₹${savings.toStringAsFixed(0)}',
+                  style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                   context.read<CartProvider>().addItem(product);
+                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Generic added to cart!'), behavior: SnackBarBehavior.floating));
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(color: SahimedColors.primary, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: SahimedColors.primary.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4))]),
+                  child: Text('ADD +', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -16,6 +16,10 @@ export async function GET(request: Request) {
   const moleculeId = searchParams.get('moleculeId');
   const isGeneric = searchParams.get('isGeneric');
   const isBestSeller = searchParams.get('isBestSeller');
+  const marketerName = searchParams.get('marketerName');   // comma-separated list
+  const dosageForm = searchParams.get('dosageForm');       // comma-separated list
+  const minPrice = searchParams.get('minPrice');
+  const maxPrice = searchParams.get('maxPrice');
 
   try {
     const client = await clientPromise;
@@ -37,6 +41,33 @@ export async function GET(request: Request) {
     if (isBestSeller !== null) {
       const isTrue = isBestSeller === 'true';
       query.isBestSeller = { $in: [isTrue, isBestSeller] };
+    }
+
+    // 3. Marketer name multi-select filter
+    if (marketerName) {
+      const names = marketerName.split(',').map(n => n.trim()).filter(Boolean);
+      if (names.length === 1) {
+        query.marketer_name = { $regex: escapeRegExp(names[0]), $options: 'i' };
+      } else if (names.length > 1) {
+        query.marketer_name = { $in: names.map(n => new RegExp(escapeRegExp(n), 'i')) };
+      }
+    }
+
+    // 4. Dosage form multi-select filter
+    if (dosageForm) {
+      const forms = dosageForm.split(',').map(f => f.trim()).filter(Boolean);
+      if (forms.length === 1) {
+        query.dosage_form = { $regex: escapeRegExp(forms[0]), $options: 'i' };
+      } else if (forms.length > 1) {
+        query.dosage_form = { $in: forms.map(f => new RegExp(escapeRegExp(f), 'i')) };
+      }
+    }
+
+    // 5. Price range filter
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = parseFloat(minPrice);
+      if (maxPrice) query.price.$lte = parseFloat(maxPrice);
     }
 
     let moleculeOr: any[] = [];

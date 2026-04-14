@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -19,11 +20,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final ApiService _apiService = ApiService();
   ProductModel? _genericAlt;
   bool _isLoading = true;
+  int _currentImageIndex = 0;
+  late final PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
     _fetchGenericAlternative();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchGenericAlternative() async {
@@ -46,6 +56,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
+  List<String> get _allImages {
+    final imgs = widget.product.imageUrls.isNotEmpty
+        ? widget.product.imageUrls
+        : [widget.product.imageUrl];
+    return imgs.where((u) => u.isNotEmpty).toList();
+  }
+
+  void _showFullScreen(BuildContext context, String imageUrl) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => _FullScreenImageViewer(
+      imageUrl: imageUrl,
+      product: widget.product,
+    )));
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasGeneric = _genericAlt != null;
@@ -53,6 +77,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ? (widget.product.mrp - _genericAlt!.price).round()
         : 0;
     final isRx = widget.product.rxRequired || widget.product.prescriptionRequired;
+    final images = _allImages;
 
     return Scaffold(
       backgroundColor: SahimedColors.background,
@@ -112,6 +137,71 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                 const SizedBox(height: 16),
 
+                // ── Image Carousel ──────────────────────────────────────
+                SizedBox(
+                  height: 220,
+                  child: Stack(
+                    children: [
+                      PageView.builder(
+                        controller: _pageController,
+                        itemCount: images.length,
+                        onPageChanged: (i) => setState(() => _currentImageIndex = i),
+                        itemBuilder: (ctx, i) {
+                          return GestureDetector(
+                            onTap: () => _showFullScreen(ctx, images[i]),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(24),
+                                child: CachedNetworkImage(
+                                  imageUrl: images[i],
+                                  fit: BoxFit.contain,
+                                  errorWidget: (c, u, e) => Icon(Icons.medication_rounded, color: SahimedColors.primary, size: 60),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      // Page indicator dots
+                      if (images.length > 1)
+                        Positioned(
+                          bottom: 8,
+                          left: 0,
+                          right: 0,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(images.length, (i) => AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
+                              width: _currentImageIndex == i ? 16 : 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: _currentImageIndex == i ? SahimedColors.primary : SahimedColors.slate200,
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            )),
+                          ),
+                        ),
+                      // Tap-to-expand hint
+                      Positioned(
+                        top: 8,
+                        right: 24,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text('TAP TO EXPAND', style: GoogleFonts.outfit(fontSize: 7, color: Colors.white, fontWeight: FontWeight.w900)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
                 // Switch & Save Banner
                 if (hasGeneric && switchSavings > 0)
                   Padding(
@@ -157,7 +247,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
 
-                // Side-by-Side Comparison
+                // ── Comparison Cards ─────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: _isLoading
@@ -169,7 +259,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               Expanded(
                                 child: _ComparisonCard(
                                   product: widget.product,
-                                  label: 'BRANDED',
+                                  label: 'YOUR CHOICE',
                                   isGenericAlt: false,
                                 ),
                               ),
@@ -178,8 +268,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 Expanded(
                                   child: _ComparisonCard(
                                     product: _genericAlt!,
-                                    label: 'SAHI GENERIC',
+                                    label: 'SAHI RECOMMEND',
                                     isGenericAlt: true,
+                                    savingsAmount: switchSavings,
                                   ),
                                 ),
                               ],
@@ -198,7 +289,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
           ),
           
-          // Sticky Bottom Checkout Interaction
+          // Sticky Bottom Checkout
           Positioned(
             bottom: 0,
             left: 0,
@@ -272,114 +363,88 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 }
 
-class _ComparisonCard extends StatelessWidget {
+// ── Full-Screen Viewer ──────────────────────────────────────────────────────
+class _FullScreenImageViewer extends StatelessWidget {
+  final String imageUrl;
   final ProductModel product;
-  final String label;
-  final bool isGenericAlt;
 
-  const _ComparisonCard({
-    required this.product,
-    required this.label,
-    required this.isGenericAlt,
-  });
+  const _FullScreenImageViewer({required this.imageUrl, required this.product});
 
   @override
   Widget build(BuildContext context) {
-    final isGeneric = product.isGeneric || isGenericAlt;
-    final accentColor = isGeneric ? SahimedColors.accent : SahimedColors.primary;
-    final discount = product.mrp > 0 ? (((product.mrp - product.price) / product.mrp) * 100).round() : 0;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: accentColor.withValues(alpha: 0.1),
-          width: 1.5,
+    final savings = (product.mrp - product.price).round();
+    return Scaffold(
+      backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close_rounded, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Stack(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              label,
-              style: GoogleFonts.outfit(
-                fontSize: 8,
-                fontWeight: FontWeight.w900,
-                color: accentColor,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
+          // Zoomable image
           Center(
-            child: AspectRatio(
-              aspectRatio: 1,
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
               child: CachedNetworkImage(
-                imageUrl: product.imageUrl,
+                imageUrl: imageUrl,
                 fit: BoxFit.contain,
-                errorWidget: (c, u, e) => Icon(Icons.medication_rounded, color: accentColor, size: 40),
+                errorWidget: (c, u, e) => Icon(Icons.medication_rounded, color: Colors.white54, size: 80),
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          Text(
-            product.name.toUpperCase(),
-            style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w900, color: SahimedColors.slate950, height: 1.1),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            (product.brand.isNotEmpty ? product.brand : 'SAHIMED').toUpperCase(),
-            style: GoogleFonts.outfit(fontSize: 8, color: SahimedColors.slate400, fontWeight: FontWeight.bold),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis
-          ),
-          const Spacer(),
-          const SizedBox(height: 12),
-          if (discount > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                'SAVE $discount%',
-                style: GoogleFonts.outfit(fontSize: 8, fontWeight: FontWeight.w900, color: Colors.green.shade700),
-              ),
-            ),
-          const SizedBox(height: 4),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '₹${product.price.round()}',
-                style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w900, color: SahimedColors.slate950),
-              ),
-              if (product.mrp > product.price) ...[
-                const SizedBox(width: 4),
-                Text(
-                  '₹${product.mrp.round()}',
-                  style: GoogleFonts.outfit(fontSize: 10, color: SahimedColors.slate300, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.bold),
+
+          // Frosted glass data overlay at bottom
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: ClipRRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
+                  color: Colors.white.withValues(alpha: 0.15),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name.toUpperCase(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.outfit(
+                          fontSize: product.name.length > 20 ? 14 : 16,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          _DataChip(label: 'MRP', value: '₹${product.mrp.round()}', color: Colors.white54),
+                          const SizedBox(width: 12),
+                          _DataChip(label: 'SAHI PRICE', value: '₹${product.price.round()}', color: Colors.white),
+                          const SizedBox(width: 12),
+                          if (savings > 0)
+                            _DataChip(
+                              label: 'SAVINGS',
+                              value: '₹$savings',
+                              color: const Color(0xFF4ADE80),
+                              highlighted: true,
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ],
+              ),
+            ),
           ),
         ],
       ),
@@ -387,6 +452,178 @@ class _ComparisonCard extends StatelessWidget {
   }
 }
 
+class _DataChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  final bool highlighted;
+
+  const _DataChip({
+    required this.label,
+    required this.value,
+    required this.color,
+    this.highlighted = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: highlighted ? const Color(0xFF4ADE80).withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: highlighted ? Border.all(color: const Color(0xFF4ADE80).withValues(alpha: 0.5)) : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: GoogleFonts.outfit(fontSize: 7, fontWeight: FontWeight.w900, color: color.withValues(alpha: 0.7), letterSpacing: 1)),
+          const SizedBox(height: 2),
+          Text(value, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w900, color: color)),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Comparison Card ───────────────────────────────────────────────────────
+class _ComparisonCard extends StatelessWidget {
+  final ProductModel product;
+  final String label;
+  final bool isGenericAlt;
+  final int? savingsAmount;
+
+  const _ComparisonCard({
+    required this.product,
+    required this.label,
+    required this.isGenericAlt,
+    this.savingsAmount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isGeneric = product.isGeneric || isGenericAlt;
+    final accentColor = isGeneric ? SahimedColors.accent : SahimedColors.primary;
+    final nameStyle = GoogleFonts.outfit(
+      fontSize: product.name.length > 20 ? 9 : 11,
+      fontWeight: FontWeight.w900,
+      color: SahimedColors.slate950,
+      height: 1.1,
+    );
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: accentColor.withValues(alpha: 0.1),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  label,
+                  style: GoogleFonts.outfit(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                    color: accentColor,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: CachedNetworkImage(
+                    imageUrl: product.imageUrl,
+                    fit: BoxFit.contain,
+                    errorWidget: (c, u, e) => Icon(Icons.medication_rounded, color: accentColor, size: 40),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                product.name.toUpperCase(),
+                style: nameStyle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                (product.brand.isNotEmpty ? product.brand : 'SAHIMED').toUpperCase(),
+                style: GoogleFonts.outfit(fontSize: 8, color: SahimedColors.slate400, fontWeight: FontWeight.bold),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const Spacer(),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '₹${product.price.round()}',
+                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w900, color: SahimedColors.slate950),
+                  ),
+                  if (product.mrp > product.price) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      '₹${product.mrp.round()}',
+                      style: GoogleFonts.outfit(fontSize: 10, color: SahimedColors.slate300, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // Savings ribbon — top-right, only on "Sahi Recommend" card
+        if (isGenericAlt && savingsAmount != null && savingsAmount! > 0)
+          Positioned(
+            top: -6,
+            right: -6,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.green.shade500,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(color: Colors.green.withValues(alpha: 0.35), blurRadius: 8, offset: const Offset(0, 3)),
+                ],
+              ),
+              child: Text(
+                'SAVE ₹$savingsAmount',
+                style: GoogleFonts.outfit(fontSize: 8, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 0.3),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ── Molecule Details ──────────────────────────────────────────────────────
 class _MoleculeDetails extends StatelessWidget {
   final ProductModel product;
   const _MoleculeDetails({required this.product});

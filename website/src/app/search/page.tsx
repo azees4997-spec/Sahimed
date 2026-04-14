@@ -4,7 +4,8 @@ import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
-import { Filter, Search as SearchIcon, SlidersHorizontal, Info, Loader2, TrendingDown, Zap, ArrowRight, Sparkles } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Filter, Search as SearchIcon, SlidersHorizontal, Info, Loader2, TrendingDown, Zap, ArrowRight, Sparkles, X, ChevronDown } from 'lucide-react';
 import { Suspense, useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,6 +34,16 @@ function SearchResults() {
   const [catsLoading, setCatsLoading] = useState(true);
   const [moleculeName, setMoleculeName] = useState<string | null>(null);
 
+  // Advanced filter state
+  const [filterMarketer, setFilterMarketer] = useState<string[]>([]);
+  const [filterDosageForm, setFilterDosageForm] = useState<string[]>([]);
+  const [filterMinPrice, setFilterMinPrice] = useState('');
+  const [filterMaxPrice, setFilterMaxPrice] = useState('');
+  const [availableMarketers, setAvailableMarketers] = useState<string[]>([]);
+  const [availableDosageForms, setAvailableDosageForms] = useState<string[]>([]);
+  const [marketerExpanded, setMarketerExpanded] = useState(false);
+  const [dosageExpanded, setDosageExpanded] = useState(false);
+
   useEffect(() => {
     if (moleculeId) {
       fetch(`/api/molecules/${moleculeId}`)
@@ -46,6 +57,10 @@ function SearchResults() {
     q: rawQ, 
     category: c || undefined, 
     moleculeId: moleculeId || undefined,
+    marketerName: filterMarketer.length > 0 ? filterMarketer.join(',') : undefined,
+    dosageForm: filterDosageForm.length > 0 ? filterDosageForm.join(',') : undefined,
+    minPrice: filterMinPrice || undefined,
+    maxPrice: filterMaxPrice || undefined,
     limit: 60 
   });
 
@@ -70,6 +85,34 @@ function SearchResults() {
       });
   }, []);
 
+  // Fetch distinct marketer names and dosage forms for filter panel
+  useEffect(() => {
+    fetch('/api/products/filters')
+      .then(res => res.ok ? res.json() : { marketers: [], dosageForms: [] })
+      .then(data => {
+        if (data.marketers) setAvailableMarketers(data.marketers.filter(Boolean).sort());
+        if (data.dosageForms) setAvailableDosageForms(data.dosageForms.filter(Boolean).sort());
+      })
+      .catch(() => {});
+  }, []);
+
+  const toggleMarketer = (name: string) => {
+    setFilterMarketer(prev => prev.includes(name) ? prev.filter(m => m !== name) : [...prev, name]);
+  };
+
+  const toggleDosageForm = (form: string) => {
+    setFilterDosageForm(prev => prev.includes(form) ? prev.filter(f => f !== form) : [...prev, form]);
+  };
+
+  const clearAllFilters = () => {
+    setFilterMarketer([]);
+    setFilterDosageForm([]);
+    setFilterMinPrice('');
+    setFilterMaxPrice('');
+  };
+
+  const activeFilterCount = filterMarketer.length + filterDosageForm.length + (filterMinPrice ? 1 : 0) + (filterMaxPrice ? 1 : 0);
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#F8FAFC]">
@@ -82,12 +125,24 @@ function SearchResults() {
                 animate={{ x: 0, opacity: 1 }}
                 className="bg-white border border-slate-100 rounded-[40px] p-8 shadow-sm"
               >
-                <h3 className="font-black text-[10px] tracking-[0.2em] text-slate-400 mb-8 flex items-center gap-3 uppercase">
-                  <Filter className="w-4 h-4 text-primary" /> Filter Matrix
-                </h3>
-                <div className="space-y-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-black text-[10px] tracking-[0.2em] text-slate-400 flex items-center gap-3 uppercase">
+                    <Filter className="w-4 h-4 text-primary" /> Filter Matrix
+                  </h3>
+                  {activeFilterCount > 0 && (
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-opacity"
+                    >
+                      Clear ({activeFilterCount})
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-6">
+
+                  {/* Clinical Category */}
                   <div>
-                    <label className="text-[10px] font-black tracking-[0.2em] text-slate-400 mb-4 block px-1 uppercase opacity-60">Clinical category</label>
+                    <label className="text-[10px] font-black tracking-[0.2em] text-slate-400 mb-3 block px-1 uppercase opacity-60">Clinical category</label>
                     <div className="space-y-1">
                       {catsLoading ? (
                         <div className="space-y-3">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-2xl" />)}</div>
@@ -117,6 +172,98 @@ function SearchResults() {
                       ))}
                     </div>
                   </div>
+
+                  {/* Price Range */}
+                  <div>
+                    <label className="text-[10px] font-black tracking-[0.2em] text-slate-400 mb-3 block px-1 uppercase opacity-60">Price Range (₹)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        placeholder="Min"
+                        value={filterMinPrice}
+                        onChange={e => setFilterMinPrice(e.target.value)}
+                        className="w-full h-10 rounded-2xl bg-slate-50 border border-slate-100 px-3 text-xs font-bold outline-none focus:border-primary/30 transition-colors"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Max"
+                        value={filterMaxPrice}
+                        onChange={e => setFilterMaxPrice(e.target.value)}
+                        className="w-full h-10 rounded-2xl bg-slate-50 border border-slate-100 px-3 text-xs font-bold outline-none focus:border-primary/30 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dosage Form */}
+                  {availableDosageForms.length > 0 && (
+                    <div>
+                      <button
+                        onClick={() => setDosageExpanded(p => !p)}
+                        className="w-full flex items-center justify-between text-[10px] font-black tracking-[0.2em] text-slate-400 mb-3 px-1 uppercase opacity-60 hover:opacity-100 transition-opacity"
+                      >
+                        Dosage Form {filterDosageForm.length > 0 && <span className="bg-primary text-white rounded-full px-1.5 py-0.5 text-[8px]">{filterDosageForm.length}</span>}
+                        <ChevronDown className={cn("w-3 h-3 transition-transform", dosageExpanded && "rotate-180")} />
+                      </button>
+                      {dosageExpanded && (
+                        <div className="space-y-1 max-h-40 overflow-y-auto scrollbar-hide">
+                          {availableDosageForms.map(form => (
+                            <button
+                              key={form}
+                              onClick={() => toggleDosageForm(form)}
+                              className={cn(
+                                "w-full px-4 py-2.5 rounded-xl flex items-center gap-3 transition-all text-left",
+                                filterDosageForm.includes(form) ? 'bg-primary text-white' : 'hover:bg-slate-50'
+                              )}
+                            >
+                              <div className={cn(
+                                "w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-all",
+                                filterDosageForm.includes(form) ? 'bg-white border-white' : 'border-slate-300'
+                              )}>
+                                {filterDosageForm.includes(form) && <div className="w-1.5 h-1.5 rounded-sm bg-primary" />}
+                              </div>
+                              <span className={cn("text-[9px] uppercase font-black tracking-wide truncate", filterDosageForm.includes(form) ? 'text-white' : 'text-slate-500')}>{form}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Marketer */}
+                  {availableMarketers.length > 0 && (
+                    <div>
+                      <button
+                        onClick={() => setMarketerExpanded(p => !p)}
+                        className="w-full flex items-center justify-between text-[10px] font-black tracking-[0.2em] text-slate-400 mb-3 px-1 uppercase opacity-60 hover:opacity-100 transition-opacity"
+                      >
+                        Most Searched Brands {filterMarketer.length > 0 && <span className="bg-primary text-white rounded-full px-1.5 py-0.5 text-[8px]">{filterMarketer.length}</span>}
+                        <ChevronDown className={cn("w-3 h-3 transition-transform", marketerExpanded && "rotate-180")} />
+                      </button>
+                      {marketerExpanded && (
+                        <div className="space-y-1 max-h-48 overflow-y-auto scrollbar-hide">
+                          {availableMarketers.map(name => (
+                            <button
+                              key={name}
+                              onClick={() => toggleMarketer(name)}
+                              className={cn(
+                                "w-full px-4 py-2.5 rounded-xl flex items-center gap-3 transition-all text-left",
+                                filterMarketer.includes(name) ? 'bg-primary text-white' : 'hover:bg-slate-50'
+                              )}
+                            >
+                              <div className={cn(
+                                "w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-all",
+                                filterMarketer.includes(name) ? 'bg-white border-white' : 'border-slate-300'
+                              )}>
+                                {filterMarketer.includes(name) && <div className="w-1.5 h-1.5 rounded-sm bg-primary" />}
+                              </div>
+                              <span className={cn("text-[9px] uppercase font-black tracking-wide truncate", filterMarketer.includes(name) ? 'text-white' : 'text-slate-500')}>{name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                 </div>
               </motion.div>
               
@@ -148,7 +295,7 @@ function SearchResults() {
                   <div className="flex items-center gap-3 mt-4">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                     <p className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase">
-                      {isSearching ? 'Analyzing clinical data...' : `${filteredMedicines?.length || 0} Record(s) found`}
+                      {isSearching ? 'Analyzing clinical data...' : `${filteredMedicines?.length || 0} items found`}
                     </p>
                   </div>
                 </div>

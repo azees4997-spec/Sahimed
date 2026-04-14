@@ -59,6 +59,7 @@ export default function Navbar() {
   const { data: headerPages } = useCollection(headerPagesQuery);
   const [search, setSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);
+  const [locationResolved, setLocationResolved] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -269,8 +270,14 @@ export default function Navbar() {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
             const data = await response.json();
             if (data && data.address) {
-              const neighborhood = data.address.suburb || data.address.neighbourhood || data.address.city_district || 'Current Location';
-              setLocation(neighborhood);
+              const addr = data.address;
+              const streetArea = addr.suburb || addr.neighbourhood || addr.city_district || addr.road || '';
+              const city = addr.city || addr.town || addr.state_district || addr.state || '';
+              const formatted = streetArea && city
+                ? `${streetArea}, ${city}`
+                : streetArea || city || 'Current Location';
+              setLocation(formatted);
+              setLocationResolved(true);
             }
             setIsPopoverOpen(false);
           } catch (e) {
@@ -329,31 +336,46 @@ export default function Navbar() {
             {/* Right Section: Location, Search (Mobile Trigger), & Cart */}
             <div className="flex items-center gap-2 sm:gap-4 pr-1">
               {/* Location Picker (Mobile: Show simplified or icon only if needed, but keeping text for clarity) */}
-              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <button className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-[9.5px] font-black group border",
-                    scrolled 
-                      ? "bg-slate-50 border-slate-100 text-slate-600 shadow-sm" 
-                      : isHome 
-                        ? "bg-white/40 border-slate-200/50 text-slate-800 shadow-sm" 
-                        : "bg-white/60 border-white/60 text-slate-600 shadow-sm"
-                  )}>
-                    <MapPin className={cn("w-3 h-3 transition-transform", scrolled || isHome ? "text-primary" : "text-white")} />
-                    <span className="max-w-[70px] truncate tracking-tight">{location}</span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent sideOffset={12} className="w-72 p-5 rounded-[32px] shadow-3xl border border-white/50 glass">
-                  <Button 
-                    onClick={handleGeoLocation} 
-                    disabled={isLocating}
-                    className="w-full justify-start gap-3 h-14 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black text-xs tracking-widest uppercase shadow-xl shadow-primary/20"
-                  >
-                    {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <LocateFixed className="w-5 h-5" />}
-                    Identify Location
-                  </Button>
-                </PopoverContent>
-              </Popover>
+              {locationResolved ? (
+                // Static pill — shown after location is resolved (button hidden)
+                <div className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9.5px] font-black border",
+                  scrolled 
+                    ? "bg-slate-50 border-slate-100 text-slate-600 shadow-sm" 
+                    : isHome 
+                      ? "bg-white/40 border-slate-200/50 text-slate-800 shadow-sm" 
+                      : "bg-white/60 border-white/60 text-slate-600 shadow-sm"
+                )}>
+                  <MapPin className={cn("w-3 h-3", scrolled || isHome ? "text-primary" : "text-white")} />
+                  <span className="max-w-[100px] truncate tracking-tight">{location}</span>
+                </div>
+              ) : (
+                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <button className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-[9.5px] font-black group border",
+                      scrolled 
+                        ? "bg-slate-50 border-slate-100 text-slate-600 shadow-sm" 
+                        : isHome 
+                          ? "bg-white/40 border-slate-200/50 text-slate-800 shadow-sm" 
+                          : "bg-white/60 border-white/60 text-slate-600 shadow-sm"
+                    )}>
+                      <MapPin className={cn("w-3 h-3 transition-transform", scrolled || isHome ? "text-primary" : "text-white")} />
+                      <span className="max-w-[70px] truncate tracking-tight">{location}</span>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent sideOffset={12} className="w-72 p-5 rounded-[32px] shadow-3xl border border-white/50 glass">
+                    <Button 
+                      onClick={handleGeoLocation} 
+                      disabled={isLocating}
+                      className="w-full justify-start gap-3 h-14 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black text-xs tracking-widest uppercase shadow-xl shadow-primary/20"
+                    >
+                      {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <LocateFixed className="w-5 h-5" />}
+                      Locate Me
+                    </Button>
+                  </PopoverContent>
+                </Popover>
+              )}
 
               {/* Mobile Search Overlay Trigger */}
               <button 

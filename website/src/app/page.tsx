@@ -172,7 +172,7 @@ export default function Home() {
           {(isBestLoading || (bestSellers && bestSellers.length > 0)) && (
             <section className="space-y-4 sm:space-y-8">
               <div className="flex items-center justify-between px-2">
-                <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Our Most Popular Brands</h2>
+                <h2 className="text-lg sm:text-2xl font-black text-primary tracking-tighter uppercase font-outfit">Our Most Popular Brands</h2>
                 <div className="flex items-center gap-2">
                   <Badge className="bg-yellow-100 text-yellow-700 border-none font-black px-2 py-0.5 rounded-full uppercase tracking-widest text-[7px] sm:text-[9px]">Best Sellers</Badge>
                 </div>
@@ -191,7 +191,7 @@ export default function Home() {
 
           <section className="space-y-4 sm:space-y-8">
             <div className="flex items-center justify-between px-2">
-              <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Shop by category</h2>
+              <h2 className="text-lg sm:text-2xl font-black text-primary tracking-tighter uppercase font-outfit">Top Categories</h2>
               <Link href="/categories" className="text-[9px] sm:text-[11px] font-black tracking-widest text-primary uppercase flex items-center gap-1.5">Explore All <ChevronRight className="w-3.5 h-3.5" /></Link>
             </div>
             <div className="grid grid-cols-3 sm:flex gap-3 sm:gap-10 pb-4 px-2">
