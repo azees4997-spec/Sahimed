@@ -70,7 +70,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not fetch location')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not fetch location')));
     } finally {
       setState(() => _isLocating = false);
     }
@@ -98,7 +98,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       await _apiService.saveAddress(addressData);
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving address: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving address: $e')));
     } finally {
       setState(() => _isLoading = false);
     }

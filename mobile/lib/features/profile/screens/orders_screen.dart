@@ -32,7 +32,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
       final orders = await _apiService.getUserOrders();
       setState(() => _orders = orders);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error loading orders')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error loading orders')));
     } finally {
       setState(() => _isLoading = false);
     }

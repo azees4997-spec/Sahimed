@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/colors.dart';
-import 'package:intl/intl.dart';
 
 class OrderDetailScreen extends StatelessWidget {
   final Map<String, dynamic> order;
@@ -14,9 +13,6 @@ class OrderDetailScreen extends StatelessWidget {
     final items = order['items'] as List? ?? [];
     final billing = order['billingBreakdown'] as Map? ?? {};
     final shipping = order['shippingDetails'] as Map? ?? {};
-    final orderDate = order['orderDate'] != null 
-        ? (order['orderDate'] is DateTime ? order['orderDate'] as DateTime : DateTime.parse(order['orderDate'].toString()))
-        : DateTime.now();
 
     return Scaffold(
       backgroundColor: Colors.white,

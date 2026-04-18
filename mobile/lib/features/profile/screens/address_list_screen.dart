@@ -29,7 +29,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
       final addresses = await _apiService.getUserAddresses();
       setState(() => _addresses = addresses);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading addresses: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading addresses: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -53,7 +53,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
         await _apiService.deleteAddress(id);
         _loadAddresses();
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error deleting address')));
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error deleting address')));
       }
     }
   }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
+import '../../../core/providers/cart_provider.dart';
 import '../../../shared/models/models.dart';
 import '../screens/brand_store_screen.dart';
 

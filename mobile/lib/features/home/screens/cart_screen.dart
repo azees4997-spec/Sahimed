@@ -46,7 +46,7 @@ class CartScreen extends StatelessWidget {
                   itemCount: cart.items.length + 1,
                   itemBuilder: (context, index) {
                     if (index == cart.items.length) {
-                      return _buildOrderSummary(cart);
+                      return _buildOrderSummary(context, cart);
                     }
                     final item = cart.items[index];
                     return _buildCartItem(context, cart, item);
@@ -293,7 +293,7 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOrderSummary(CartProvider cart) {
+  Widget _buildOrderSummary(BuildContext context, CartProvider cart) {
     return Column(
       children: [
         // Promo Code Section
@@ -335,7 +335,7 @@ class CartScreen extends StatelessWidget {
                 if (cart.appliedPromo != null)
                   IconButton(
                     onPressed: () => cart.removePromo(),
-                    icon: const Icon(LucideIcons.xCircle, color: SahimedColors.accent, size: 20),
+                    icon: const Icon(LucideIcons.x, color: SahimedColors.accent, size: 20),
                     visualDensity: VisualDensity.compact,
                   )
                 else
@@ -686,7 +686,7 @@ class _PromoBottomSheetState extends State<_PromoBottomSheet> {
                 ),
               ),
               if (isApplied)
-                const Icon(LucideIcons.checkCircle2, color: SahimedColors.primary, size: 24)
+                const Icon(LucideIcons.circleCheck, color: SahimedColors.primary, size: 24)
               else if (isApplicable)
                 TextButton(
                   onPressed: () {

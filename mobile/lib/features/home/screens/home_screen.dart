@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -12,9 +11,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../core/services/api_service.dart';
 import '../../../shared/models/models.dart';
-import '../../../shared/widgets/shimmer_loader.dart';
 import 'prescription_screen.dart';
-import '../widgets/home_header.dart';
 import '../../products/screens/brand_store_screen.dart';
 import '../../products/screens/product_detail_screen.dart';
 import '../../products/screens/category_products_screen.dart';
@@ -31,7 +28,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   final ApiService _apiService = ApiService();
   List<CategoryModel> _categories = [];
   List<BannerModel> _banners = [];
-  List<ProductModel> _bestSellers = [];   
   List<ProductModel> _popularBrands = [];
   List<Map<String, dynamic>> _userPrescriptions = [];
   bool _isLoading = true;
@@ -59,7 +55,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         _apiService.getBanners(),
         _apiService.getCategories(),
         _apiService.getProducts(isBestSeller: true),
-        _apiService.getProducts(),
         _apiService.getUserPrescriptions(),
       ]);
       
@@ -68,8 +63,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           _banners = results[0] as List<BannerModel>;
           _categories = results[1] as List<CategoryModel>;
           _popularBrands = results[2] as List<ProductModel>;
-          _bestSellers = results[3] as List<ProductModel>;
-          _userPrescriptions = results[4] as List<Map<String, dynamic>>;
+          _userPrescriptions = results[3] as List<Map<String, dynamic>>;
           _isLoading = false;
         });
         _animationController.forward(from: 0.0);
@@ -512,7 +506,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(24),
                           child: CachedNetworkImage(
-                            imageUrl: category.imageUrl ?? '',
+                            imageUrl: category.imageUrl,
                             fit: BoxFit.cover,
                             errorWidget: (c, u, e) => Container(color: SahimedColors.slate50, child: const Icon(LucideIcons.pill, color: SahimedColors.primary, size: 24)),
                           ),
