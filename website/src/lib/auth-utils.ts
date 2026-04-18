@@ -94,12 +94,12 @@ export async function verifyAdmin(request: Request) {
       throw new Error('Forbidden: No administrative profile found in MongoDB');
     }
 
-    const { role } = adminProfile;
+    const { role, permissions } = adminProfile;
     if (!['admin', 'pharmacist', 'sub-admin'].includes(role)) {
       throw new Error('Forbidden: Insufficient clinical clearance');
     }
 
-    return { uid, role, email };
+    return { uid, role, email, permissions: permissions || {} };
   } catch (error: any) {
     console.warn(`[Auth Security] Verification failed: ${error.message}`);
     throw new Error(error.message || 'Unauthorized access attempt');

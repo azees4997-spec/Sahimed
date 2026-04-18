@@ -13,7 +13,9 @@ import {
   Truck,
   Database,
   Users,
-  PlusCircle
+  PlusCircle,
+  KeyRound,
+  ShieldAlert
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,6 +69,8 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
       staff_manage: false
     }
   });
+
+  const [resetData, setResetData] = useState({ isOpen: false, uid: '', email: '', newPassword: '' });
 
   const fetchAdmins = async () => {
     setIsLoading(true);
@@ -152,6 +156,34 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
     }
   };
 
+  const handleForceReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (resetData.newPassword.length < 6) {
+      toast({ variant: 'destructive', title: "Security Failure", description: "Password must be 6+ characters" });
+      return;
+    }
+
+    try {
+      const token = await user?.getIdToken();
+      const res = await fetch('/api/admin/auth/reset-password', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ uid: resetData.uid, newPassword: resetData.newPassword })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Override Rejected");
+      
+      toast({ title: "Matrix Override Success", description: `Access key re-provisioned for ${resetData.email}` });
+      setResetData({ isOpen: false, uid: '', email: '', newPassword: '' });
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: "Override Failure", description: err.message });
+    }
+  };
+
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <SectionHeader title="Team Architecture" subtitle="Administrative Hierarchy & Access Control" onBack={onBack}>
@@ -233,9 +265,25 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
                   <Clock className="w-3 h-3" />
                   {safeFormat(admin.activatedAt, 'MMM dd, yyyy')}
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => deleteAdmin(admin.id || admin.uid)} className="text-red-300 hover:text-red-500 hover:bg-red-50 rounded-xl">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setResetData({ isOpen: true, uid: admin.id || admin.uid, email: admin.email, newPassword: '' })} 
+                    className="text-slate-300 hover:text-primary hover:bg-primary/5 rounded-xl"
+                    title="Manual Password Reset"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => deleteAdmin(admin.id || admin.uid)} 
+                    className="text-red-300 hover:text-red-500 hover:bg-red-50 rounded-xl"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </Card>
@@ -309,6 +357,37 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
                </div>
             </div>
             <Button type="submit" className="w-full h-16 rounded-full font-black text-xs tracking-widest bg-primary text-white shadow-xl shadow-primary/20 uppercase hover:scale-[1.02] transition-all">Activate Profile</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manual Password Reset Dialog */}
+      <Dialog open={resetData.isOpen} onOpenChange={(open) => setResetData(prev => ({ ...prev, isOpen: open }))}>
+        <DialogContent className="rounded-[48px] border-none p-0 overflow-hidden shadow-4xl max-w-sm">
+          <div className="bg-slate-900 p-8 text-white relative">
+            <div className="absolute top-0 right-0 p-6 opacity-10">
+              <ShieldAlert className="w-16 h-16" />
+            </div>
+            <DialogTitle className="text-xl font-black uppercase tracking-tight">Manual Override</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/40 tracking-widest mt-1 uppercase">
+              Re-provisioning credentials for {resetData.email}
+            </DialogDescription>
+          </div>
+          <form onSubmit={handleForceReset} className="p-8 space-y-6 text-center">
+            <div className="space-y-4">
+              <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">New Access Key (Min 6 chars)</Label>
+              <Input 
+                type="password" 
+                placeholder="ENTER NEW PASSWORD..." 
+                value={resetData.newPassword} 
+                onChange={e => setResetData({...resetData, newPassword: e.target.value})} 
+                required 
+                className="h-14 rounded-2xl bg-slate-50 border-none font-bold text-center" 
+                autoFocus
+              />
+            </div>
+            <Button type="submit" className="w-full h-14 rounded-full font-black text-[10px] tracking-widest bg-slate-900 text-white uppercase hover:bg-primary transition-all">Execute Override</Button>
+            <p className="text-[8px] font-bold text-red-400 uppercase leading-relaxed">WARNING: This action overwrites Firebase credentials instantly. Ensure you communicate the new key securely.</p>
           </form>
         </DialogContent>
       </Dialog>
