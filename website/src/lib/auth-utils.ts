@@ -68,7 +68,10 @@ export async function verifyAdmin(request: Request) {
     const { uid, email } = await verifyAuth(request);
 
     // 1.5 MASTER UID OVERRIDE: Always allow these UIDs (Owner)
-    const MASTER_UIDS = (process.env.MASTER_UIDS || "BM9HheYflheT0Wyj6olaEnyCAHl1,RzB6nqlQumg1VEniFcZrgbcDdRA2").split(',');
+    const MASTER_UIDS = (process.env.MASTER_UIDS || "BM9HheYflheT0Wyj6olaEnyCAHl1,RzB6nqlQumg1VEniFcZrgbcDdRA2")
+      .split(',')
+      .map(id => id.trim())
+      .filter(id => id.length > 0);
     if (uid && MASTER_UIDS.includes(uid)) {
       return { uid, role: 'admin', email };
     }

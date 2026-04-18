@@ -22,7 +22,13 @@ import {
   setDocumentNonBlocking,
 } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
+import { 
+  signInWithEmailAndPassword, 
+  signOut, 
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithPopup
+} from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 
@@ -109,6 +115,25 @@ export default function AdminConsole() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setAuthLoading(true);
+    try {
+      if (!auth) throw new Error("Auth system inactive");
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      toast({ title: 'Google Authority Verified', description: 'Establishing session link...' });
+    } catch (err: any) {
+      console.error("GOOGLE_AUTH_FAILURE:", err);
+      toast({ 
+        variant: 'destructive', 
+        title: 'Access Denied', 
+        description: err.message || 'Identity rejection or network protocol error.' 
+      });
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   const handleResetPassword = async () => {
     if (!email) {
       toast({ variant: 'destructive', title: 'Email Required', description: 'Please enter your admin email to reset the password.' });
@@ -188,6 +213,24 @@ export default function AdminConsole() {
                   </div>
                   <Button type="submit" disabled={authLoading} className="w-full h-20 rounded-full font-black tracking-[0.3em] mt-4 shadow-2xl shadow-primary/30 uppercase active:scale-95 text-xs bg-primary hover:scale-[1.02] transition-all">
                     {authLoading ? <Loader2 className="animate-spin" /> : "Authorize Protocol"}
+                  </Button>
+
+                  <div className="relative py-4">
+                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-100"></span></div>
+                    <div className="relative flex justify-center text-[8px] font-black uppercase tracking-[0.3em]"><span className="bg-white px-4 text-slate-300">OR</span></div>
+                  </div>
+
+                  <Button 
+                    type="button" 
+                    onClick={handleGoogleLogin} 
+                    disabled={authLoading} 
+                    variant="outline"
+                    className="w-full h-16 rounded-full font-black tracking-[0.2em] border-2 border-slate-50 hover:bg-slate-50 transition-all uppercase text-[10px] gap-3"
+                  >
+                    <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm">
+                       <Zap className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                    </div>
+                    Sign In with Google Identity
                   </Button>
                   <Button 
                     type="button" 
