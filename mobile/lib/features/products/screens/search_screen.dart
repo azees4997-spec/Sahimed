@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/providers/cart_provider.dart';
@@ -30,12 +31,40 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _showSmartBanner = false;
   Timer? _debounce;
   List<String> _searchHistory = [];
+  double? _lat;
+  double? _lng;
+  List<CategoryModel> _categories = [];
 
   @override
   void initState() {
     super.initState();
     _loadHistory();
+    _initLocation();
+    _loadCategories();
     _searchController.addListener(_onSearchChanged);
+  }
+
+  Future<void> _loadCategories() async {
+    final cats = await _apiService.getCategories();
+    if (mounted) setState(() => _categories = cats);
+  }
+
+  Future<void> _initLocation() async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+        final pos = await Geolocator.getCurrentPosition();
+        setState(() {
+          _lat = pos.latitude;
+          _lng = pos.longitude;
+        });
+      }
+    } catch (e) {
+      debugPrint('Location error in SearchScreen: $e');
+    }
   }
 
   @override
@@ -89,6 +118,7 @@ class _SearchScreenState extends State<SearchScreen> {
     
     if (mounted && _currentQuery == query) {
       _results = results;
+      _apiService.logSearch(query, lat: _lat, lng: _lng);
       
       // Intelligence Switch logic: If first result is branded, find generic alt
       if (_results.isNotEmpty) {
@@ -235,7 +265,10 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildSmartBanner() {
-    final savings = ((_results.first.price - _smartAlternative!.price) / _results.first.price * 100).round();
+    final original = _results.first;
+    final savingsAmt = (original.price - _smartAlternative!.price).round();
+    final savingsPct = original.price > 0 ? ((savingsAmt / original.price) * 100).round() : 0;
+    
     return GestureDetector(
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailScreen(product: _smartAlternative!)));
@@ -274,7 +307,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'SAVE $savings% WITH SMART CHOICE',
+                    savingsPct > 0 ? 'SAVE $savingsPct% WITH SMART CHOICE' : 'SAHIMED GENERIC AVAILABLE',
                     style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white),
                   ),
                 ],
@@ -331,7 +364,9 @@ class _SearchScreenState extends State<SearchScreen> {
           
           Text('TOP CATEGORIES', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: SahimedColors.primary, letterSpacing: 1)),
           const SizedBox(height: 16),
-          GridView.builder(
+          _categories.isEmpty 
+          ? const SizedBox(height: 100, child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: SahimedColors.primary)))
+          : GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -340,30 +375,36 @@ class _SearchScreenState extends State<SearchScreen> {
               crossAxisSpacing: 12,
               childAspectRatio: 0.8,
             ),
-            itemCount: topCategories.length,
+            itemCount: _categories.length.clamp(0, 6),
             itemBuilder: (context, i) {
-              return Column(
-                children: [
-                  Container(
-                    height: 80,
-                    width: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFF1F5F9)),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10)],
-                    ),
-                    child: ClipOval(
-                      child: CachedNetworkImage(
-                        imageUrl: topCategories[i]['img']!,
-                        fit: BoxFit.cover,
-                        errorWidget: (c, u, e) => const Icon(LucideIcons.pill, color: SahimedColors.primary, size: 24),
+              final cat = _categories[i];
+              return GestureDetector(
+                onTap: () {
+                  // Navigate to category filtering
+                },
+                child: Column(
+                  children: [
+                    Container(
+                      height: 80,
+                      width: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFF1F5F9)),
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10)],
+                      ),
+                      child: ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: cat.imageUrl,
+                          fit: BoxFit.cover,
+                          errorWidget: (c, u, e) => const Icon(LucideIcons.pill, color: SahimedColors.primary, size: 24),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(topCategories[i]['name']!, textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-                ],
+                    const SizedBox(height: 8),
+                    Text(cat.name.toUpperCase(), textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  ],
+                ),
               );
             },
           ),
@@ -615,19 +656,11 @@ class _SearchEntryTile extends StatelessWidget {
                           ],
                         ),
                         
-                        // Action Button
+                        // Redundant SnackBar removed for consistency with main optimization plan.
+                        // The Floating Cart Bar in MainLayout is the primary notification.
                         GestureDetector(
                           onTap: () {
                             context.read<CartProvider>().addItem(product);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('ADDED TO CART', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10)),
-                                backgroundColor: SahimedColors.primary,
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                margin: const EdgeInsets.all(20),
-                              ),
-                            );
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../core/services/api_service.dart';
@@ -136,7 +138,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       // Capture GPS data with graceful fallback
       Map<String, double?> coords = {'lat': null, 'lng': null};
       try {
-        coords = await _locationService.getCurrentPosition();
+        final pos = await _locationService.getCurrentPosition();
+        if (pos != null) {
+          coords = {'lat': pos.latitude, 'lng': pos.longitude};
+        }
       } catch (e) {
         debugPrint('Location access denied or failed: $e. Proceeding with manual address.');
       }
@@ -216,7 +221,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 150),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 220), // Increased padding for bottom bar
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -247,19 +252,61 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           child: Column(
                             key: const ValueKey('address_form'),
                             children: [
-                              _buildTextField(controller: _nameController, label: 'Patient Name', hint: 'Who is this medicine for?', icon: LucideIcons.user),
-                              const SizedBox(height: 12),
-                              _buildTextField(controller: _phoneController, label: 'Contact Number', hint: '10-digit mobile number', icon: LucideIcons.phone, keyboardType: TextInputType.phone),
-                              const SizedBox(height: 12),
-                              _buildTextField(controller: _houseController, label: 'Flat / House No', hint: 'e.g. 101, block A', icon: LucideIcons.house),
-                              const SizedBox(height: 12),
-                              _buildTextField(controller: _streetController, label: 'Street / Area', hint: 'e.g. MG Road', icon: LucideIcons.map),
-                              const SizedBox(height: 12),
+                              _buildTextField(controller: _nameController, label: 'PATIENT NAME', hint: 'Who is this medicine for?', icon: LucideIcons.user),
+                              const SizedBox(height: 16),
+                              _buildTextField(controller: _phoneController, label: 'CONTACT NUMBER', hint: '10-digit mobile number', icon: LucideIcons.phone, keyboardType: TextInputType.phone),
+                              const SizedBox(height: 24),
+                              
+                              // Locate Me Button for Parity
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  try {
+                                    LocationPermission permission = await Geolocator.checkPermission();
+                                    if (permission == LocationPermission.denied) {
+                                      permission = await Geolocator.requestPermission();
+                                    }
+
+                                    if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+                                      final pos = await Geolocator.getCurrentPosition();
+                                      List<Placemark> placemarks = await placemarkFromCoordinates(pos.latitude, pos.longitude);
+                                      
+                                      if (placemarks.isNotEmpty && mounted) {
+                                        Placemark place = placemarks[0];
+                                        setState(() {
+                                          _streetController.text = place.subLocality ?? place.name ?? '';
+                                          _cityController.text = place.locality ?? '';
+                                          _stateController.text = place.administrativeArea ?? 'Karnataka';
+                                          _pincodeController.text = place.postalCode ?? '';
+                                          // Note: coords are captured during _placeOrder using the same service
+                                        });
+                                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ADDRESS AUTO-FILLED'), backgroundColor: SahimedColors.success));
+                                      }
+                                    }
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('GPS ACCESS DENIED or FETCH FAILED')));
+                                  }
+                                },
+                                icon: const Icon(LucideIcons.locateFixed, size: 16),
+                                label: Text('USE CURRENT LOCATION', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 11)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: SahimedColors.primary.withValues(alpha: 0.1),
+                                  foregroundColor: SahimedColors.primary,
+                                  elevation: 0,
+                                  minimumSize: const Size(double.infinity, 50),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+
+                              _buildTextField(controller: _houseController, label: 'FLAT / HOUSE NO', hint: 'e.g. 101, block A', icon: LucideIcons.house),
+                              const SizedBox(height: 16),
+                              _buildTextField(controller: _streetController, label: 'STREET / AREA', hint: 'e.g. MG Road', icon: LucideIcons.map),
+                              const SizedBox(height: 16),
                               Row(
                                 children: [
-                                  Expanded(child: _buildTextField(controller: _cityController, label: 'City', hint: 'e.g. Bangalore', icon: LucideIcons.navigation)),
+                                  Expanded(child: _buildTextField(controller: _cityController, label: 'CITY', hint: 'e.g. Bangalore', icon: LucideIcons.navigation)),
                                   const SizedBox(width: 12),
-                                  Expanded(child: _buildTextField(controller: _pincodeController, label: 'Pincode', hint: '6 digits', icon: LucideIcons.hash, keyboardType: TextInputType.number)),
+                                  Expanded(child: _buildTextField(controller: _pincodeController, label: 'PINCODE', hint: '6 digits', icon: LucideIcons.hash, keyboardType: TextInputType.number)),
                                 ],
                               ),
                               const SizedBox(height: 16),
@@ -477,35 +524,43 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     TextInputType? keyboardType,
     int maxLines = 1,
   }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600),
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        labelStyle: GoogleFonts.outfit(color: SahimedColors.textSecondary, fontWeight: FontWeight.w500),
-        prefixIcon: Icon(icon, size: 20, color: SahimedColors.primary.withValues(alpha: 0.5)),
-        filled: true,
-        fillColor: SahimedColors.background.withValues(alpha: 0.5),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide.none,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(label, style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.slate400, letterSpacing: 1.5)),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide.none,
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          maxLines: maxLines,
+          style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.outfit(color: SahimedColors.textSecondary.withValues(alpha: 0.5), fontSize: 13),
+            prefixIcon: Icon(icon, size: 20, color: SahimedColors.primary.withValues(alpha: 0.5)),
+            filled: true,
+            fillColor: SahimedColors.background.withValues(alpha: 0.5),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: const BorderSide(color: SahimedColors.primary, width: 2),
+            ),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'REQUIRED';
+            return null;
+          },
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: SahimedColors.primary, width: 2),
-        ),
-      ),
-      validator: (value) {
-        if (value == null || value.isEmpty) return 'This field is required';
-        return null;
-      },
+      ],
     );
   }
 

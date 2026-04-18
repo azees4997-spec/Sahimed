@@ -228,3 +228,54 @@ class OrderModel {
     };
   }
 }
+class PromoModel {
+  final String id;
+  final String code;
+  final String description;
+  final String discountType; // 'fixed' | 'percentage'
+  final double discountValue;
+  final double? maxDiscount;
+  final double minOrderValue;
+  final String applyTo; // 'cart' | 'product'
+  final bool isActive;
+
+  PromoModel({
+    required this.id,
+    required this.code,
+    required this.description,
+    required this.discountType,
+    required this.discountValue,
+    this.maxDiscount,
+    required this.minOrderValue,
+    required this.applyTo,
+    this.isActive = true,
+  });
+
+  factory PromoModel.fromJson(Map<String, dynamic> json) {
+    return PromoModel(
+      id: json['id'] ?? json['_id'] ?? '',
+      code: json['code'] ?? '',
+      description: json['description'] ?? '',
+      discountType: json['discountType'] ?? 'percentage',
+      discountValue: (json['discountValue'] ?? 0).toDouble(),
+      maxDiscount: json['maxDiscount'] != null ? (json['maxDiscount'] as num).toDouble() : null,
+      minOrderValue: (json['minOrderValue'] ?? 0).toDouble(),
+      applyTo: json['applyTo'] ?? 'cart',
+      isActive: json['isActive'] ?? true,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'code': code,
+      'description': description,
+      'discountType': discountType,
+      'discountValue': discountValue,
+      'maxDiscount': maxDiscount,
+      'minOrderValue': minOrderValue,
+      'applyTo': applyTo,
+      'isActive': isActive,
+    };
+  }
+}

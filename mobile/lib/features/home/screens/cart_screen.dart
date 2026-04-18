@@ -7,6 +7,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../shared/models/models.dart';
+import '../../../core/services/api_service.dart';
 import 'checkout_screen.dart';
 
 class CartScreen extends StatelessWidget {
@@ -296,26 +297,51 @@ class CartScreen extends StatelessWidget {
     return Column(
       children: [
         // Promo Code Section
-        Container(
-          margin: const EdgeInsets.only(bottom: 20),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: SahimedColors.slate100),
-          ),
-          child: Row(
-            children: [
-              const Icon(LucideIcons.ticket, color: SahimedColors.accent),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'APPLY PROMO CODE',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1, color: SahimedColors.slate950),
+        InkWell(
+          onTap: () => _showPromoBottomSheet(context, cart),
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cart.appliedPromo != null ? Colors.green.shade50 : Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: cart.appliedPromo != null ? Colors.green.withValues(alpha: 0.2) : SahimedColors.slate100),
+            ),
+            child: Row(
+              children: [
+                Icon(LucideIcons.ticket, color: cart.appliedPromo != null ? Colors.green : SahimedColors.accent),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        cart.appliedPromo != null ? 'PROMO APPLIED: ${cart.appliedPromo!.code}' : 'APPLY PROMO CODE',
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w900, 
+                          fontSize: 13, 
+                          letterSpacing: 1, 
+                          color: cart.appliedPromo != null ? Colors.green.shade900 : SahimedColors.slate950
+                        ),
+                      ),
+                      if (cart.appliedPromo != null)
+                        Text(
+                          'You saved ₹${cart.promoDiscount.toStringAsFixed(0)} with this code',
+                          style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green.shade700),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              const Icon(LucideIcons.chevronRight, color: SahimedColors.slate300),
-            ],
+                if (cart.appliedPromo != null)
+                  IconButton(
+                    onPressed: () => cart.removePromo(),
+                    icon: const Icon(LucideIcons.xCircle, color: SahimedColors.accent, size: 20),
+                    visualDensity: VisualDensity.compact,
+                  )
+                else
+                  const Icon(LucideIcons.chevronRight, color: SahimedColors.slate300),
+              ],
+            ),
           ),
         ),
 
@@ -346,9 +372,11 @@ class CartScreen extends StatelessWidget {
               const SizedBox(height: 24),
               _summaryRow('MRP Total', '₹${cart.subtotal.toStringAsFixed(2)}'),
               _summaryRow('Delivery Fee', cart.deliveryFee == 0 ? 'FREE' : '₹${cart.deliveryFee}', isGreen: cart.deliveryFee == 0),
-              _summaryRow('Packing/Service Fee', '₹${cart.packingFee}'),
-              if (cart.totalSavings > 0)
-                _summaryRow('Sahi Savings', '- ₹${cart.totalSavings.toStringAsFixed(2)}', isGreen: true),
+              _summaryRow('Packing Fee', '₹${cart.packingFee}'),
+              if (cart.subtotal - cart.total > 0)
+                _summaryRow('Campaign Discount', '- ₹${(cart.subtotal - cart.total).toStringAsFixed(2)}', isGreen: true),
+              if (cart.appliedPromo != null)
+                _summaryRow('Promocode Saving', '- ₹${cart.promoDiscount.toStringAsFixed(2)}', isGreen: true),
               
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 20),
@@ -530,6 +558,154 @@ class CartScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showPromoBottomSheet(BuildContext context, CartProvider cart) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _PromoBottomSheet(cart: cart),
+    );
+  }
+}
+
+class _PromoBottomSheet extends StatefulWidget {
+  final CartProvider cart;
+  const _PromoBottomSheet({required this.cart});
+
+  @override
+  State<_PromoBottomSheet> createState() => _PromoBottomSheetState();
+}
+
+class _PromoBottomSheetState extends State<_PromoBottomSheet> {
+  final ApiService _apiService = ApiService();
+  List<PromoModel> _promos = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPromos();
+  }
+
+  Future<void> _fetchPromos() async {
+    final promos = await _apiService.getPromos();
+    if (mounted) {
+      setState(() {
+        _promos = promos;
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: const BoxDecoration(
+        color: SahimedColors.background,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(40),
+          topRight: Radius.circular(40),
+        ),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(width: 40, height: 4, decoration: BoxDecoration(color: SahimedColors.slate200, borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                const Icon(LucideIcons.ticket, color: SahimedColors.primary),
+                const SizedBox(width: 12),
+                Text(
+                  'AVAILABLE OFFERS',
+                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w900, color: SahimedColors.textPrimary, letterSpacing: -0.5),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: SahimedColors.primary))
+                : _promos.isEmpty
+                    ? _buildEmptyPromos()
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: _promos.length,
+                        itemBuilder: (context, index) => _buildPromoCard(_promos[index]),
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyPromos() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(LucideIcons.frown, size: 48, color: SahimedColors.slate300),
+        const SizedBox(height: 16),
+        Text('No active promocodes', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: SahimedColors.slate400)),
+      ],
+    );
+  }
+
+  Widget _buildPromoCard(PromoModel promo) {
+    final isApplicable = widget.cart.total >= promo.minOrderValue;
+    final isApplied = widget.cart.appliedPromo?.id == promo.id;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: SahimedColors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: isApplied ? SahimedColors.primary : SahimedColors.slate100),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(color: SahimedColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                child: Text(
+                  promo.code,
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: SahimedColors.primary, fontSize: 14, letterSpacing: 1),
+                ),
+              ),
+              if (isApplied)
+                const Icon(LucideIcons.checkCircle2, color: SahimedColors.primary, size: 24)
+              else if (isApplicable)
+                TextButton(
+                  onPressed: () {
+                    widget.cart.applyPromo(promo);
+                    Navigator.pop(context);
+                  },
+                  child: Text('APPLY', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: SahimedColors.primary)),
+                )
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(promo.description, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: SahimedColors.textPrimary)),
+          const SizedBox(height: 8),
+          if (!isApplicable)
+            Text(
+              'Add ₹${(promo.minOrderValue - widget.cart.total).toStringAsFixed(0)} more to apply',
+              style: GoogleFonts.outfit(fontSize: 11, color: SahimedColors.accent, fontWeight: FontWeight.w900),
+            ),
+        ],
       ),
     );
   }

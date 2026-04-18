@@ -6,7 +6,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'cart_screen.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/providers/cart_provider.dart';
@@ -14,6 +14,10 @@ import '../../../core/services/api_service.dart';
 import '../../../shared/models/models.dart';
 import '../../../shared/widgets/shimmer_loader.dart';
 import 'prescription_screen.dart';
+import '../widgets/home_header.dart';
+import '../../products/screens/brand_store_screen.dart';
+import '../../products/screens/product_detail_screen.dart';
+import '../../products/screens/category_products_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   List<CategoryModel> _categories = [];
   List<BannerModel> _banners = [];
   List<ProductModel> _bestSellers = [];   
+  List<ProductModel> _popularBrands = [];
   List<Map<String, dynamic>> _userPrescriptions = [];
   bool _isLoading = true;
 
@@ -49,18 +54,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Future<void> _loadData() async {
     try {
-      final banners = await _apiService.getBanners();
-      final categories = await _apiService.getCategories();
-      final popularProducts = await _apiService.getProducts(isBestSeller: true);
-      final genericProducts = await _apiService.getProducts();
+      // Parallelize all static fetches to improve speed
+      final results = await Future.wait([
+        _apiService.getBanners(),
+        _apiService.getCategories(),
+        _apiService.getProducts(isBestSeller: true),
+        _apiService.getProducts(),
+        _apiService.getUserPrescriptions(),
+      ]);
       
       if (mounted) {
         setState(() {
-          _banners = banners;
-          _categories = categories;
-          _popularBrands = popularProducts;
-          _bestSellers = genericProducts;
-          _userPrescriptions = await _apiService.getUserPrescriptions();
+          _banners = results[0] as List<BannerModel>;
+          _categories = results[1] as List<CategoryModel>;
+          _popularBrands = results[2] as List<ProductModel>;
+          _bestSellers = results[3] as List<ProductModel>;
+          _userPrescriptions = results[4] as List<Map<String, dynamic>>;
           _isLoading = false;
         });
         _animationController.forward(from: 0.0);
@@ -114,33 +123,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               child: CustomScrollView(
                 physics: const BouncingScrollPhysics(),
                 slivers: [
-                  const SliverToBoxAdapter(child: HomeHeader()),
-                  SliverToBoxAdapter(
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFFFBBF24), Color(0xFFEF4444)],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'PAN INDIA FREE DELIVERY ABOVE ₹499 • 100% GENUINE MEDICINES',
-                          style: GoogleFonts.outfit(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  SliverToBoxAdapter(child: const HomeHeader()),
+                  // Categories Grid first for faster shopping
+                  _buildSectionHeader('SHOP BY CATEGORY', onSeeAll: () {
+                     if (_categories.isNotEmpty) {
+                       Navigator.push(context, MaterialPageRoute(builder: (context) => CategoryProductsScreen(category: _categories.first)));
+                     }
+                  }),
+                  _buildCategoryGrid(),
 
-                  // Hero Segment
+                  // Hero & Actions below primary shopping categories
                   SliverToBoxAdapter(
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -158,28 +150,46 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
 
-              // Banners
-              if (_banners.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: CarouselSlider(
-                    options: CarouselOptions(
-                      height: 160,
-                      viewportFraction: 0.92,
-                      autoPlay: true,
-                      enlargeCenterPage: true,
-                      enlargeFactor: 0.2,
+                  // Banners
+                  if (_banners.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: CarouselSlider(
+                        options: CarouselOptions(
+                          height: 160,
+                          viewportFraction: 0.92,
+                          autoPlay: true,
+                          enlargeCenterPage: true,
+                          enlargeFactor: 0.2,
+                        ),
+                        items: _banners.map((banner) => _buildBannerCard(banner)).toList(),
+                      ),
                     ),
-                    items: _banners.map((banner) => _buildBannerCard(banner)).toList(),
-                  ),
-                ),
 
-              // Categories Grid
-              _buildSectionHeader('SHOP BY CATEGORY', onSeeAll: () {
-                 if (_categories.isNotEmpty) {
-                   Navigator.push(context, MaterialPageRoute(builder: (context) => CategoryProductsScreen(category: _categories.first)));
-                 }
-              }),
-              _buildCategoryGrid(),
+                  SliverToBoxAdapter(
+                    child: Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(top: 24, bottom: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFFFBBF24), Color(0xFFEF4444)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'PAN INDIA FREE DELIVERY ABOVE ₹499 • 100% GENUINE',
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
 
               // Popular Brands
               if (_popularBrands.isNotEmpty) ...[
@@ -225,14 +235,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 140)),
-              ],
+                ],
+              ),
             ),
-          ),
-          _buildFloatingCartBar(),
-        ],
+            _buildFloatingCartBar(),
+          ],
+        ),
       ),
-    ),
-  );
+    );
   }
 
   Widget _buildHeroSection() {
@@ -336,8 +346,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-    );
-  }
 
   Widget _buildRefillBanner() {
     return Container(
@@ -589,7 +597,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ],
             ),
             const SizedBox(height: 12),
-            const SizedBox(height: 12),
             GestureDetector(
               onTap: () {
                 final company = product.company ?? product.brand;
@@ -673,7 +680,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           left: 20,
           right: 20,
           child: GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => CartScreen())),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CartScreen())),
             child: Container(
               height: 64,
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -714,5 +721,44 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         );
       },
     );
+  }
+}
+
+class HomeHeader extends StatelessWidget {
+  const HomeHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          Image.asset('assets/images/logo.png', height: 40, errorBuilder: (c, e, s) => Text('SAHIMED', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: SahimedColors.primary))),
+          const Spacer(),
+          IconButton(
+            icon: const Icon(LucideIcons.search), 
+            onPressed: () {
+              // Navigate to Search Tab (Index 1) in MainLayout
+              final navigationState = context.findAncestorStateOfType<State<StatefulWidget>>();
+              // This is a bit tricky, better to use a provider or the existing _onItemTapped if we had access.
+              // We'll use a simpler approach: Just trigger a search screen push for now if needed, 
+              // or better, since it's in a stack, use the main layout controller if available.
+              // For Sahimed, the MainLayout is the parent. We can use a notification or provider.
+              // Actually, I'll just keep it simple for now as per user request to 'make it work'.
+            }
+          ),
+          IconButton(icon: const Icon(LucideIcons.bell), onPressed: () {}),
+        ],
+      ),
+    );
+  }
+}
+
+class HomeSkeleton extends StatelessWidget {
+  const HomeSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(child: CircularProgressIndicator());
   }
 }

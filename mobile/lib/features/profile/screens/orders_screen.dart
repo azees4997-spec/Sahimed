@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
-import '../../products/providers/cart_provider.dart';
+import '../../../core/providers/cart_provider.dart';
+import '../../../shared/models/models.dart';
 import 'order_detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -157,7 +158,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
-                      isDelivered ? LucideIcons.checkCircle2 : LucideIcons.package,
+                      isDelivered ? LucideIcons.check : LucideIcons.package,
                       color: isDelivered ? const Color(0xFF16A34A) : const Color(0xFF64748B),
                       size: 24,
                     ),

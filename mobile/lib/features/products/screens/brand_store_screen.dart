@@ -25,7 +25,7 @@ class _BrandStoreScreenState extends State<BrandStoreScreen> {
   }
 
   Future<void> _fetchProducts() async {
-    final products = await _apiService.getProductsByCompany(widget.brandName);
+    final products = await _apiService.getProductsByMarketer(widget.brandName);
     if (mounted) {
       setState(() {
         _products = products;
@@ -222,7 +222,7 @@ class _ProductCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: SahimedColors.emerald500,
+                        color: SahimedColors.accent,
                         borderRadius: BorderRadius.circular(100),
                       ),
                       child: Text(

@@ -65,7 +65,7 @@ class SahimedProductCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: SahimedColors.emerald500,
+                      color: SahimedColors.accent,
                       borderRadius: BorderRadius.circular(100),
                     ),
                     child: Text(
@@ -164,16 +164,8 @@ class SahimedProductCard extends StatelessWidget {
                     GestureDetector(
                       onTap: () {
                         context.read<CartProvider>().addItem(product);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('ADDED TO CART', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10, color: Colors.white)),
-                            backgroundColor: SahimedColors.primary,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            margin: const EdgeInsets.all(20),
-                            duration: const Duration(seconds: 1),
-                          ),
-                        );
+                        // Redundant SnackBar removed for premium feel. 
+                        // The floating cart summary is the primary notification.
                       },
                       child: Container(
                         width: 44,

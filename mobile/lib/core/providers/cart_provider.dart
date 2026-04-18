@@ -7,6 +7,7 @@ import '../../../shared/models/models.dart';
 
 class CartProvider with ChangeNotifier {
   List<CartItem> _items = [];
+  PromoModel? _appliedPromo;
   final String _prefKey = 'sahimed_cart';
 
   CartProvider() {
@@ -14,27 +15,53 @@ class CartProvider with ChangeNotifier {
   }
 
   List<CartItem> get items => _items;
+  PromoModel? get appliedPromo => _appliedPromo;
 
   double get subtotal => _items.fold(0, (sum, item) => sum + (item.product.mrp * item.quantity));
   double get total => _items.fold(0, (sum, item) => sum + (item.product.price * item.quantity));
 
+  double get promoDiscount {
+    if (_appliedPromo == null || total < _appliedPromo!.minOrderValue) return 0.0;
+    
+    if (_appliedPromo!.discountType == 'fixed') {
+      return _appliedPromo!.discountValue;
+    } else {
+      double discount = total * (_appliedPromo!.discountValue / 100);
+      if (_appliedPromo!.maxDiscount != null && _appliedPromo!.maxDiscount! > 0) {
+        discount = discount > _appliedPromo!.maxDiscount! ? _appliedPromo!.maxDiscount! : discount;
+      }
+      return discount;
+    }
+  }
+
   double get deliveryFee => (total > 0 && total < 499) ? 49.0 : 0.0;
   double get packingFee => total > 0 ? 10.0 : 0.0;
   
-  double get finalTotal => total + deliveryFee + packingFee;
+  double get finalTotal => (total - promoDiscount) + deliveryFee + packingFee;
   
-  double get totalSavings => (subtotal - total) > 0 ? (subtotal - total) : 0.0;
+  double get totalSavings => (subtotal - total) + promoDiscount;
 
   bool get isRxRequired => _items.any((item) => item.product.rxRequired || item.product.prescriptionRequired);
 
   Map<String, dynamic> get billingBreakdown => {
     'grossMrp': subtotal,
-    'campaignDiscount': totalSavings,
+    'campaignDiscount': subtotal - total,
+    'promocodeDiscount': promoDiscount,
     'deliveryFees': deliveryFee,
     'packingFees': packingFee,
     'savings': totalSavings,
     'netPayable': finalTotal,
   };
+
+  void applyPromo(PromoModel promo) {
+    _appliedPromo = promo;
+    notifyListeners();
+  }
+
+  void removePromo() {
+    _appliedPromo = null;
+    notifyListeners();
+  }
 
   void addItem(ProductModel product) {
     final index = _items.indexWhere((item) => item.product.id == product.id);

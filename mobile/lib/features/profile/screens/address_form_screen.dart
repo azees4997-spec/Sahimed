@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import '../../../core/theme/colors.dart';
@@ -131,11 +131,11 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  _buildTagOption('Home', LucideIcons.home),
+                  _buildTagOption('Home', LucideIcons.house),
                   const SizedBox(width: 12),
                   _buildTagOption('Office', LucideIcons.briefcase),
                   const SizedBox(width: 12),
-                  _buildTagOption('Other', LucideIcons.moreHorizontal),
+                  _buildTagOption('Other', LucideIcons.ellipsis),
                 ],
               ),
               const SizedBox(height: 32),
@@ -149,7 +149,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                   foregroundColor: SahimedColors.primary,
                   elevation: 0,
                   minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), border: BorderSide(color: SahimedColors.primary.withOpacity(0.1))),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: SahimedColors.primary.withOpacity(0.1))),
                 ),
               ),
               const SizedBox(height: 32),
@@ -240,7 +240,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, mb: 8),
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(label, style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.w900, color: SahimedColors.slate400, letterSpacing: 1.5)),
         ),
         TextFormField(

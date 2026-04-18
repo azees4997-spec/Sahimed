@@ -127,7 +127,7 @@ function SearchResults() {
               >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="font-black text-[10px] tracking-[0.2em] text-slate-400 flex items-center gap-3 uppercase">
-                    <Filter className="w-4 h-4 text-primary" /> Filter Matrix
+                    <Filter className="w-4 h-4 text-primary" /> Filter Results
                   </h3>
                   {activeFilterCount > 0 && (
                     <button
@@ -295,7 +295,7 @@ function SearchResults() {
                   <div className="flex items-center gap-3 mt-4">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                     <p className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase">
-                      {isSearching ? 'Analyzing clinical data...' : `${filteredMedicines?.length || 0} items found`}
+                      {isSearching ? 'Finding best medicines...' : `${filteredMedicines?.length || 0} items found`}
                     </p>
                   </div>
                 </div>
@@ -347,7 +347,7 @@ function SearchResults() {
                     <p className="text-slate-400 font-bold mb-10 text-[10px] uppercase tracking-[0.2em] max-w-xs mx-auto opacity-70">
                       Our database couldn't find matches for your query. Try searching by Salt or Therapeutic category.
                     </p>
-                    <Button onClick={() => window.location.href = '/search'} className="rounded-full px-10 h-16 font-black tracking-widest uppercase bg-slate-900 text-white shadow-xl active:scale-95 transition-all">Reset Matrix Search</Button>
+                    <Button onClick={() => window.location.href = '/search'} className="rounded-full px-10 h-16 font-black tracking-widest uppercase bg-slate-900 text-white shadow-xl active:scale-95 transition-all">Clear All Filters</Button>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -417,7 +417,7 @@ function SaveMoreStrip({ query: rawQ }: { query: string }) {
         <div className="p-2 px-8 bg-white/10 flex items-center justify-between border-b border-white/10">
            <div className="flex items-center gap-3">
               <TrendingDown className="w-4 h-4 text-white animate-bounce" />
-              <span className="text-[10px] font-black text-white tracking-[0.2em] uppercase">Intelligence Switch</span>
+               <span className="text-[10px] font-black text-white tracking-[0.2em] uppercase">Smart Savings</span>
            </div>
            <Badge variant="outline" className="text-[9px] font-black text-white border-white/20 px-3 py-1 bg-white/10 uppercase tracking-widest">Identical Composition</Badge>
         </div>

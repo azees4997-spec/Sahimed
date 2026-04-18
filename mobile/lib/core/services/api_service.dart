@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import '../../shared/models/models.dart';
 
@@ -10,6 +11,27 @@ class ApiService {
   static const String baseUrl = 'https://sahimed.com/api';
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // --- Memory Caching Layer ---
+  static final Map<String, dynamic> _cache = {};
+  static final Map<String, DateTime> _cacheTime = {};
+  static const Duration _cacheDuration = Duration(minutes: 15);
+
+  dynamic _getCached(String key) {
+    if (_cache.containsKey(key)) {
+      final time = _cacheTime[key];
+      if (time != null && DateTime.now().difference(time) < _cacheDuration) {
+        return _cache[key];
+      }
+    }
+    return null;
+  }
+
+  void _setCache(String key, dynamic data) {
+    _cache[key] = data;
+    _cacheTime[key] = DateTime.now();
+  }
 
   Future<Map<String, String>> _getHeaders() async {
     final user = _auth.currentUser;
@@ -24,11 +46,16 @@ class ApiService {
   }
 
   Future<List<CategoryModel>> getCategories() async {
+    final cached = _getCached('categories');
+    if (cached != null) return cached;
+
     try {
       final response = await http.get(Uri.parse('$baseUrl/categories?limit=12'));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        return data.map((item) => CategoryModel.fromJson(item)).toList();
+        final list = data.map((item) => CategoryModel.fromJson(item)).toList();
+        _setCache('categories', list);
+        return list;
       }
     } catch (e) {
       debugPrint('Error fetching categories: $e');
@@ -102,7 +129,37 @@ class ApiService {
     return [];
   }
 
-  Future<void> logSearch(String query, int resultsCount) async {
+  Future<List<ProductModel>> getProductsByMarketer(String marketerName) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/products?marketerName=${Uri.encodeComponent(marketerName)}&limit=50'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((item) => ProductModel.fromJson(item)).toList();
+      }
+    } catch (e) {
+      debugPrint('Error fetching products by marketer: $e');
+    }
+    return [];
+  }
+
+  Future<List<ProductModel>> getSimilarMedicines(String moleculeId, {String? excludeId}) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/products?moleculeId=$moleculeId&limit=10'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        final products = data.map((item) => ProductModel.fromJson(item)).toList();
+        if (excludeId != null) {
+          products.removeWhere((p) => p.id == excludeId);
+        }
+        return products;
+      }
+    } catch (e) {
+      debugPrint('Error fetching similar medicines: $e');
+    }
+    return [];
+  }
+
+  Future<void> logSearch(String query, {double? lat, double? lng, String? pincode}) async {
     try {
       final user = _auth.currentUser;
       final headers = await _getHeaders();
@@ -111,10 +168,13 @@ class ApiService {
         headers: headers,
         body: json.encode({
           'keyword': query,
-          'resultsCount': resultsCount,
+          'lat': lat,
+          'lng': lng,
+          'pincode': pincode,
           'userId': user?.uid,
           'mobile': user?.phoneNumber ?? 'Anonymous',
           'platform': 'mobile',
+          'timestamp': DateTime.now().toIso8601String(),
         }),
       );
     } catch (e) {
@@ -123,16 +183,37 @@ class ApiService {
   }
 
   Future<List<BannerModel>> getBanners() async {
+    final cached = _getCached('banners');
+    if (cached != null) return cached;
+
     try {
       final response = await http.get(Uri.parse('$baseUrl/banners'));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        return data.map((item) => BannerModel.fromJson(item)).toList();
+        final list = data.map((item) => BannerModel.fromJson(item)).toList();
+        _setCache('banners', list);
+        return list;
       }
     } catch (e) {
       debugPrint('Error fetching banners: $e');
     }
     return [];
+  }
+
+  Future<List<PromoModel>> getPromos() async {
+    try {
+      final snapshot = await _firestore.collection('promocodes')
+          .where('isActive', isEqualTo: true)
+          .get();
+      
+      return snapshot.docs.map((doc) => PromoModel.fromJson({
+        ...doc.data(),
+        'id': doc.id,
+      })).toList();
+    } catch (e) {
+      debugPrint('Error fetching promos: $e');
+      return [];
+    }
   }
 
   Future<String?> uploadPrescription(File file) async {
@@ -184,11 +265,16 @@ class ApiService {
         clinicalPath: isConsultationRequired ? 'consult' : 'normal',
       );
 
+      final orderPayload = {
+        ...order.toJson(),
+        'platform': 'mobile',
+      };
+
       final headers = await _getHeaders();
       final response = await http.post(
         Uri.parse('$baseUrl/orders'),
         headers: headers,
-        body: json.encode(order.toJson()),
+        body: json.encode(orderPayload),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -200,8 +286,6 @@ class ApiService {
     }
     return null;
   }
-
-  // --- MongoDB Address Management (Via Centralized API) ---
 
   Future<List<Map<String, dynamic>>> getUserAddresses() async {
     try {
@@ -251,7 +335,11 @@ class ApiService {
       if (user == null) return [];
       
       final headers = await _getHeaders();
-      final response = await http.get(Uri.parse('$baseUrl/orders?userId=${user.uid}'), headers: headers);
+      // Fetch by userId OR phone for maximum compatibility during migration
+      final response = await http.get(
+        Uri.parse('$baseUrl/orders?userId=${user.uid}&phone=${Uri.encodeComponent(user.phoneNumber ?? "")}'), 
+        headers: headers
+      );
       if (response.statusCode == 200) {
         return List<Map<String, dynamic>>.from(json.decode(response.body));
       }
@@ -260,8 +348,6 @@ class ApiService {
     }
     return [];
   }
-
-  // --- MongoDB Prescription Management (Records in Mongo, Files in Firebase) ---
 
   Future<bool> submitPrescription({
     required List<String> imageUrls,
@@ -298,5 +384,29 @@ class ApiService {
       debugPrint('Error fetching prescriptions from MongoDB: $e');
     }
     return [];
+  }
+
+  Future<List<Map<String, dynamic>>> getPages() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/analytics/pages'));
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(json.decode(response.body));
+      }
+    } catch (e) {
+      debugPrint('Error fetching CMS pages: $e');
+    }
+    
+    return [
+      {
+        'title': 'Privacy Policy',
+        'content': 'Your privacy is our priority. We handle your medical data with enterprise-grade encryption.',
+        'lastUpdated': DateTime.now().toIso8601String(),
+      },
+      {
+        'title': 'Terms & Conditions',
+        'content': 'Sahimed provides a platform for medical procurement. Users must provide valid clinical prescriptions where required.',
+        'lastUpdated': DateTime.now().toIso8601String(),
+      }
+    ];
   }
 }

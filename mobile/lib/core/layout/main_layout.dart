@@ -40,31 +40,40 @@ class _MainLayoutState extends State<MainLayout> {
     final cart = context.watch<CartProvider>();
     final cartItemCount = cart.items.length;
 
-    return Scaffold(
-      backgroundColor: SahimedColors.background,
-      body: Stack(
-        children: [
-          IndexedStack(
-            index: _currentIndex,
-            children: _screens,
-          ),
-          
-          // Persistent Cart Summary (Floating above Bottom Nav)
-          if (cartItemCount > 0 && _currentIndex != 2)
-            Positioned(
-              bottom: 100, // Above Bottom Nav
-              left: 20,
-              right: 20,
-              child: _buildCartSummary(cart),
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_currentIndex != 0) {
+          setState(() => _currentIndex = 0);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: SahimedColors.background,
+        body: Stack(
+          children: [
+            IndexedStack(
+              index: _currentIndex,
+              children: _screens,
             ),
-
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: _buildBottomNavigationBar(cartItemCount),
-          ),
-        ],
+            
+            // Persistent Cart Summary (Floating above Bottom Nav)
+            if (cartItemCount > 0 && _currentIndex != 2)
+              Positioned(
+                bottom: 110, // Slightly higher for better hit area
+                left: 20,
+                right: 20,
+                child: _buildCartSummary(cart),
+              ),
+  
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: _buildBottomNavigationBar(cartItemCount),
+            ),
+          ],
+        ),
       ),
     );
   }

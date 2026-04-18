@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart'; // Using image_picker which is more stable in this environment
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -17,6 +17,7 @@ class PrescriptionScreen extends StatefulWidget {
 
 class _PrescriptionScreenState extends State<PrescriptionScreen> {
   final ApiService _apiService = ApiService();
+  final ImagePicker _picker = ImagePicker();
   final List<File> _selectedFiles = [];
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
@@ -24,16 +25,21 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
   bool _isSuccess = false;
 
   Future<void> _pickFiles() async {
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
-      type: FileType.custom,
-      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
-    );
+    try {
+      final List<XFile> results = await _picker.pickMultiImage();
 
-    if (result != null) {
-      setState(() {
-        _selectedFiles.addAll(result.paths.where((path) => path != null).map((path) => File(path!)));
-      });
+      if (results.isNotEmpty) {
+        setState(() {
+          _selectedFiles.addAll(results.map((xfile) => File(xfile.path)));
+        });
+      }
+    } catch (e) {
+      debugPrint('ImagePicker error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error selecting images: $e')),
+        );
+      }
     }
   }
 
@@ -43,9 +49,11 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
 
   Future<void> _submitRequest() async {
     if (_selectedFiles.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one prescription')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select at least one prescription')),
+        );
+      }
       return;
     }
 
@@ -129,7 +137,7 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                 width: double.infinity,
                 height: 240,
                 decoration: BoxDecoration(
-                  color: _selectedFiles.isEmpty ? Colors.white : Colors.slate[900]?.withOpacity(0.05),
+                  color: _selectedFiles.isEmpty ? Colors.white : SahimedColors.slate950.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(40),
                   border: _selectedFiles.isEmpty 
                     ? Border.all(color: Colors.grey[200]!, width: 2, style: BorderStyle.solid)
@@ -145,7 +153,7 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                           color: SahimedColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(32),
                         ),
-                        child: Icon(LucideIcons.camera, color: SahimedColors.primary, size: 32),
+                        child: const Icon(LucideIcons.camera, color: SahimedColors.primary, size: 32),
                       ).animate().scale(delay: 200.ms),
                       const SizedBox(height: 16),
                       Text(
@@ -153,14 +161,14 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                         style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800),
                       ),
                       Text(
-                        'IMAGE, PDF UP TO 5MB',
+                        'JPG, PNG (IMAGE ONLY)',
                         style: GoogleFonts.outfit(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w900, letterSpacing: 1),
                       ),
                     ] else ...[
-                      Icon(LucideIcons.clipboardCheck, color: SahimedColors.success, size: 40),
+                      const Icon(LucideIcons.clipboardCheck, color: SahimedColors.success, size: 40),
                       const SizedBox(height: 12),
                       Text(
-                        '${_selectedFiles.length} FILES SELECTED',
+                        '${_selectedFiles.length} IMAGES SELECTED',
                         style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w900),
                       ),
                       TextButton.icon(
@@ -182,7 +190,6 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                   scrollDirection: Axis.horizontal,
                   itemCount: _selectedFiles.length,
                   itemBuilder: (context, index) {
-                    final isPdf = _selectedFiles[index].path.toLowerCase().endsWith('.pdf');
                     return Container(
                       width: 90,
                       margin: const EdgeInsets.only(right: 12),
@@ -194,18 +201,10 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                       child: Stack(
                         children: [
                           Center(
-                            child: isPdf 
-                              ? Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(LucideIcons.fileText, color: Colors.red, size: 30),
-                                    Text('PDF', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900)),
-                                  ],
-                                )
-                              : ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: Image.file(_selectedFiles[index], fit: BoxFit.cover, width: double.infinity, height: double.infinity),
-                                ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: Image.file(_selectedFiles[index], fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+                            ),
                           ),
                           Positioned(
                             top: 4,
@@ -298,15 +297,14 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
               end: const Offset(0.98, 0.98),
               duration: 1.seconds,
               curve: Curves.easeInOut,
-              when: _isUploading,
-            ),
+            ).animate(target: _isUploading ? 1 : 0),
             
             const SizedBox(height: 20),
             Center(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(LucideIcons.shieldCheck, color: SahimedColors.success, size: 16),
+                  const Icon(LucideIcons.shieldCheck, color: SahimedColors.success, size: 16),
                   const SizedBox(width: 8),
                   Text(
                     '100% SECURE & RELIABLE',
@@ -354,7 +352,7 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(LucideIcons.checkCircle2, color: SahimedColors.success, size: 80)
+              const Icon(LucideIcons.circleCheck, color: SahimedColors.success, size: 80)
                 .animate()
                 .scale(duration: 600.ms, curve: Curves.elasticOut),
               const SizedBox(height: 24),

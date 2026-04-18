@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/colors.dart';
 import 'package:intl/intl.dart';
 
@@ -28,6 +28,7 @@ class OrderDetailScreen extends StatelessWidget {
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   _buildOrderStepper(status),
                   const SizedBox(height: 32),
                   
@@ -253,14 +254,17 @@ class OrderDetailScreen extends StatelessWidget {
         ),
         child: Text('CLOSE DETAILS', style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
       ),
+    );
+  }
+
   Widget _buildOrderStepper(String status) {
     // Standardize status
     final currentStatus = status.toLowerCase();
     final steps = [
-      {'label': 'Confirmed', 'icon': LucideIcons.checkCircle2},
+      {'label': 'Confirmed', 'icon': LucideIcons.check},
       {'label': 'Packed', 'icon': LucideIcons.package},
       {'label': 'Shipped', 'icon': LucideIcons.truck},
-      {'label': 'Delivered', 'icon': LucideIcons.home},
+      {'label': 'Delivered', 'icon': LucideIcons.house},
     ];
 
     int activeIndex = 0;

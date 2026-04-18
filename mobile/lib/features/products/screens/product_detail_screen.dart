@@ -101,133 +101,193 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> with SingleTi
 
   @override
   Widget build(BuildContext context) {
-    // Logic for Website Parity
     final isBranded = !widget.product.isGeneric;
     final hasGeneric = isBranded && _genericAlt != null;
-    
-    // Switch savings calculated based on Branded MRP - Generic Sahi Price
-    final switchSavings = hasGeneric
-        ? (widget.product.mrp - _genericAlt!.price).round()
-        : 0;
-
+    final switchSavings = hasGeneric ? (widget.product.mrp - _genericAlt!.price).round() : 0;
     final isRx = widget.product.rxRequired || widget.product.prescriptionRequired;
     final images = _allImages;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: SahimedColors.primary, size: 18),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
-          children: [
-            Text(
-              'SALT COMPOSITION',
-              style: GoogleFonts.outfit(fontSize: 8, fontWeight: FontWeight.w900, color: SahimedColors.slate400, letterSpacing: 1.5),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              (widget.product.molName ?? widget.product.saltComposition ?? 'Pharmaceutical Info').toUpperCase(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: SahimedColors.slate950),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.share_rounded, color: SahimedColors.primary),
-          ),
-        ],
-      ),
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                if (isRx)
-                  _buildRxBadge(),
+          CustomScrollView(
+            slivers: [
+              // 1. Premium Image Header
+              SliverAppBar(
+                expandedHeight: 400,
+                pinned: true,
+                backgroundColor: Colors.white,
+                elevation: 0,
+                leading: Container(
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.8), shape: BoxShape.circle),
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded, color: SahimedColors.primary, size: 18),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+                actions: [
+                  Container(
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.8), shape: BoxShape.circle),
+                    child: IconButton(onPressed: () {}, icon: const Icon(Icons.share_outlined, color: SahimedColors.primary)),
+                  ),
+                ],
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Stack(
+                    children: [
+                      _buildImageCarousel(images),
+                      if (isRx)
+                        Positioned(top: 100, left: 0, right: 0, child: _buildRxBadge()),
+                    ],
+                  ),
+                ),
+              ),
 
-                const SizedBox(height: 16),
+              SliverToBoxAdapter(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.only(topLeft: Radius.circular(40), topRight: Radius.circular(40)),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 24),
+                      
+                      // 2. Product Core Info
+                      _buildProductPrimaryInfo(),
+                      
+                      const SizedBox(height: 24),
 
-                // Illustration / Image Carousel (Premium Glass View)
-                _buildImageCarousel(images),
-
-                const SizedBox(height: 16),
-
-                // Switch & Save Banner (Website Gradient Style)
-                if (hasGeneric && switchSavings > 0)
-                  _buildSwitchBanner(switchSavings),
-
-                // ── Comparison Cards (Grid layout) ────────────────────────
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: _isLoading
-                      ? const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator(color: SahimedColors.primary)))
-                      : Column(
-                          children: [
-                            if (hasGeneric)
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: _ComparisonCard(
-                                      product: widget.product,
-                                      label: 'STANDARD BRAND',
-                                      isGenericAlt: false,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: _ComparisonCard(
-                                      product: _genericAlt!,
-                                      label: 'SMART CHOICE',
-                                      isGenericAlt: true,
-                                      savingsAmount: switchSavings,
-                                    ),
-                                  ),
-                                ],
-                              )
-                            else ...[
-                              Center(
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(maxWidth: 240),
-                                  child: _ComparisonCard(
-                                    product: widget.product,
-                                    label: widget.product.isGeneric ? 'SMART CHOICE' : 'STANDARD BRAND',
-                                    isGenericAlt: false,
-                                  ),
+                      // 3. Switch & Save Section
+                      if (hasGeneric) ...[
+                        if (switchSavings > 0)
+                          _buildSwitchBanner(switchSavings),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _ComparisonCard(
+                                  product: widget.product,
+                                  label: 'BRANDED VERSION',
+                                  isGenericAlt: false,
                                 ),
                               ),
-                              if (_similarMedicines.isNotEmpty) ...[
-                                const SizedBox(height: 32),
-                                _buildSimilarMedicinesHeader(),
-                                const SizedBox(height: 16),
-                                _buildSimilarMedicinesList(),
-                              ],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _ComparisonCard(
+                                  product: _genericAlt!,
+                                  label: 'SAHIMED GENERIC',
+                                  isGenericAlt: true,
+                                  savingsAmount: switchSavings > 0 ? switchSavings : null,
+                                ),
+                              ),
                             ],
-                          ],
+                          ),
                         ),
+                      ] else if (_isLoading)
+                        const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator(color: SahimedColors.primary)))
+                      else ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 40),
+                          child: _ComparisonCard(
+                            product: widget.product,
+                            label: widget.product.isGeneric ? 'SMART CHOICE' : 'STANDARD BRAND',
+                            isGenericAlt: false,
+                          ),
+                        ),
+                        if (_similarMedicines.isNotEmpty) ...[
+                          const SizedBox(height: 32),
+                          _buildSimilarMedicinesHeader(),
+                          const SizedBox(height: 16),
+                          _buildSimilarMedicinesList(),
+                        ],
+                      ],
+
+                      const SizedBox(height: 32),
+
+                      // 4. Clinical Details
+                      _buildInfoTabs(),
+                      
+                      const SizedBox(height: 140),
+                    ],
+                  ),
                 ),
-
-                const SizedBox(height: 24),
-
-                // ── Clinical Tabs (Information, Safety, Interactions) ────
-                _buildInfoTabs(),
-                
-                const SizedBox(height: 140), // Spacing for sticky bottom
-              ],
-            ),
+              ),
+            ],
           ),
           
           // Sticky Bottom Checkout
           _buildStickyBottom(context, hasGeneric),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductPrimaryInfo() {
+    final savings = (widget.product.mrp - widget.product.price).round();
+    final discount = widget.product.mrp > 0 ? ((savings / widget.product.mrp) * 100).round() : 0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  final company = widget.product.company ?? widget.product.brand;
+                  if (company.isNotEmpty) Navigator.push(context, MaterialPageRoute(builder: (context) => BrandStoreScreen(brandName: company)));
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(color: SahimedColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(100)),
+                  child: Text(
+                    (widget.product.company ?? widget.product.brand).toUpperCase(),
+                    style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.primary, letterSpacing: 1),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              if (discount > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(color: SahimedColors.accent, borderRadius: BorderRadius.circular(100)),
+                  child: Text('SAVE $discount%', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            widget.product.name.toUpperCase(),
+            style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), height: 1.1),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            (widget.product.molName ?? widget.product.saltComposition ?? 'Pharmaceutical Info').toUpperCase(),
+            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: SahimedColors.slate500),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('₹${widget.product.price.round()}', style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
+              const SizedBox(width: 12),
+              if (widget.product.mrp > widget.product.price)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text(
+                    'MRP ₹${widget.product.mrp.round()}',
+                    style: GoogleFonts.inter(fontSize: 14, color: SahimedColors.slate300, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.w700),
+                  ),
+                ),
+            ],
+          ),
+          if (savings > 0)
+            Text('TOTAL SAVINGS ₹$savings', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: SahimedColors.success)),
         ],
       ),
     );
@@ -738,13 +798,30 @@ class _ComparisonCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: isGeneric ? const Color(0xFFF0F9FF) : const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(8)),
-            child: Text(
-              label.toUpperCase(),
-              style: GoogleFonts.outfit(fontSize: 7, fontWeight: FontWeight.w900, color: accentColor, letterSpacing: 1),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(color: isGeneric ? const Color(0xFFF0F9FF) : const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(8)),
+                child: Text(
+                  label.toUpperCase(),
+                  style: GoogleFonts.outfit(fontSize: 7, fontWeight: FontWeight.w900, color: accentColor, letterSpacing: 1),
+                ),
+              ),
+              if (isGeneric)
+                 Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(color: const Color(0xFFF1FDF9), borderRadius: BorderRadius.circular(6), border: Border.all(color: SahimedColors.success.withValues(alpha: 0.1))),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.verified_rounded, color: SahimedColors.success, size: 8),
+                      const SizedBox(width: 4),
+                      Text('MOLECULE MATCHED', style: GoogleFonts.outfit(fontSize: 5, fontWeight: FontWeight.w900, color: SahimedColors.success)),
+                    ],
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 12),
           Container(

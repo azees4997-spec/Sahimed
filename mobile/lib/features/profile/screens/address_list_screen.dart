@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
 import 'address_form_screen.dart';
@@ -147,7 +147,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
   }
 
   Widget _buildAddressCard(Map<String, dynamic> addr) {
-    IconData icon = LucideIcons.home;
+    IconData icon = LucideIcons.house;
     Color color = const Color(0xFFEEF2FF);
     Color iconColor = const Color(0xFF4338CA);
 
@@ -156,7 +156,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
       color = const Color(0xFFF0FDF4);
       iconColor = const Color(0xFF16A34A);
     } else if (addr['tag'] == 'Other') {
-      icon = LucideIcons.moreHorizontal;
+      icon = LucideIcons.ellipsis;
       color = const Color(0xFFFEF2F2);
       iconColor = const Color(0xFFEF4444);
     }
@@ -182,10 +182,10 @@ class _AddressListScreenState extends State<AddressListScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.between,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text((addr['tag'] ?? 'HOME').toUpperCase(), style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.primary, letterSpacing: 1.5)),
-                          const Icon(LucideIcons.checkCircle, color: SahimedColors.emerald500, size: 16),
+                          const Icon(LucideIcons.check, color: SahimedColors.emerald500, size: 16),
                         ],
                       ),
                       const SizedBox(height: 6),
@@ -213,7 +213,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
                     final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => AddressFormScreen(initialAddress: addr)));
                     if (result == true) _loadAddresses();
                   },
-                  icon: const Icon(LucideIcons.edit3, size: 14),
+                  icon: const Icon(LucideIcons.pencil, size: 14),
                   label: Text('EDIT', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1)),
                 ),
                 TextButton.icon(

@@ -40,7 +40,7 @@ class _GlobalErrorHandlerState extends State<GlobalErrorHandler> {
                   color: SahimedColors.accent.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(LucideIcons.alertTriangle, color: SahimedColors.accent, size: 48),
+                child: const Icon(LucideIcons.triangleAlert, color: SahimedColors.accent, size: 48),
               ),
               const SizedBox(height: 32),
               Text(

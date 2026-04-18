@@ -64,7 +64,7 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
                 MaterialPageRoute(builder: (context) => const PrescriptionScreen())
               ).then((_) => _loadPrescriptions());
             },
-            icon: const Icon(LucideIcons.plusCircle, color: SahimedColors.primary),
+            icon: const Icon(LucideIcons.circlePlus, color: SahimedColors.primary),
           ),
         ],
       ),
@@ -135,9 +135,21 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
       itemCount: _prescriptions.length,
       itemBuilder: (context, index) {
         final rx = _prescriptions[index];
-        final date = (rx['uploadDate'] != null) 
-            ? DateFormat('dd MMM yyyy').format(rx['uploadDate'].toDate()) 
-            : 'Unknown Date';
+        final dynamic uploadDate = rx['uploadDate'];
+        String formattedDate = 'Unknown Date';
+        if (uploadDate != null) {
+          try {
+            if (uploadDate is String) {
+              formattedDate = DateFormat('dd MMM yyyy').format(DateTime.parse(uploadDate));
+            } else if (uploadDate is DateTime) {
+              formattedDate = DateFormat('dd MMM yyyy').format(uploadDate);
+            } else if (uploadDate.runtimeType.toString().contains('Timestamp')) {
+              formattedDate = DateFormat('dd MMM yyyy').format(uploadDate.toDate());
+            }
+          } catch (e) {
+            debugPrint('Error parsing date: $e');
+          }
+        }
         final status = rx['status'] ?? 'Pending';
         final isPdf = (rx['imageUrl'] ?? '').toLowerCase().contains('.pdf');
         
@@ -185,7 +197,7 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      date,
+                      formattedDate,
                       style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),

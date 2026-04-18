@@ -329,7 +329,8 @@ export default function CheckoutPage() {
         campaignDiscount: promoDiscount,
         deliveryFees: feeTotal,
         savings: totalSavings
-      }
+      },
+      platform: 'website'
     };
 
     try {
