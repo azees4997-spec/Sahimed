@@ -143,9 +143,14 @@ export default function AdminConsole() {
     try {
       if (!auth) throw new Error("Auth system inactive");
       await sendPasswordResetEmail(auth, email);
-      toast({ title: 'Reset Link Sent', description: 'Check your email to set a new master password.' });
+      toast({ title: 'Reset Link Processed', description: `A security link has been dispatched to ${email}. Please examine your inbox and spam folder.` });
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Reset Failed', description: err.message });
+      console.error("RESET_FAILURE:", err);
+      const msg = err.code === 'auth/user-not-found' 
+        ? "This email is not registered as an administrative identity in this sector."
+        : err.message || "Protocol rejection during reset transmission.";
+      
+      toast({ variant: 'destructive', title: 'Transmission Failure', description: msg });
     } finally {
       setAuthLoading(false);
     }
