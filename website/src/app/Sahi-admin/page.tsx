@@ -51,6 +51,8 @@ import { AdminProfilesTab } from './components/AdminProfilesTab';
 import { PagesTab } from './components/PagesTab';
 import { SearchAnalyticsTab } from './components/SearchAnalyticsTab';
 
+const MASTER_UIDS = ["BM9HheYflheT0Wyj6olaEnyCAHl1", "RzB6nqlQumg1VEniFcZrgbcDdRA2"];
+
 export default function AdminConsole() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
@@ -60,6 +62,7 @@ export default function AdminConsole() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [isVerified, setIsVerified] = useState(false);
   const [userRole, setUserRole] = useState<string>('');
+  const [permissions, setPermissions] = useState<Record<string, boolean>>({});
   const [isVerifying, setIsVerifying] = useState(false);
   
   const [email, setEmail] = useState('');
@@ -68,15 +71,32 @@ export default function AdminConsole() {
 
   const performVerification = async () => {
     if (!db || !user) return;
+    // 1. MASTER BYPASS: Immediate verification for owners
+    if (MASTER_UIDS.includes(user.uid)) {
+      setIsVerified(true);
+      setUserRole('admin');
+      setPermissions({
+        orders_view: true,
+        orders_create: true,
+        shipping_edit: true,
+        inventory_manage: true,
+        staff_manage: true
+      });
+      setIsVerifying(false);
+      return;
+    }
+
     setIsVerifying(true);
     try {
       const snap = await getDoc(doc(db, 'adminProfiles', user.uid));
       if (snap.exists() && (snap.data().role === 'admin' || snap.data().role === 'pharmacist' || snap.data().role === 'sub-admin')) {
         setIsVerified(true);
         setUserRole(snap.data().role);
+        setPermissions(snap.data().permissions || {});
       } else {
         setIsVerified(false);
         setUserRole('');
+        setPermissions({});
       }
     } catch (err) {
       setIsVerified(false);
@@ -202,9 +222,12 @@ export default function AdminConsole() {
                 <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
                    <ShieldCheck className="w-32 h-32" />
                 </div>
-                <Lock className="w-14 h-14 mx-auto mb-6 text-white/40 relative z-10" />
+                <Lock className="w-14 h-14 mx-auto mb-4 text-white/40 relative z-10" />
                 <CardTitle className="text-3xl font-black tracking-tighter text-white uppercase font-outfit relative z-10">Administrative Port</CardTitle>
                 <p className="text-[10px] font-black text-white/50 tracking-[0.3em] uppercase relative z-10">SahiMed Systems Console</p>
+                <div className="mt-4 pt-4 border-t border-white/10 relative z-10">
+                  <p className="text-[8px] font-black text-white/40 tracking-[0.2em] uppercase">Matrix Identity: {auth?.app.options.projectId || 'Unknown Sector'}</p>
+                </div>
               </CardHeader>
               <CardContent className="p-10">
                 <form onSubmit={handleLogin} className="space-y-6">
@@ -327,19 +350,19 @@ export default function AdminConsole() {
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             >
               {activeTab === 'overview' && <OverviewTab setTab={setActiveTab} role={userRole} />}
-              {activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {(userRole === 'admin' || userRole === 'pharmacist') && activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {(userRole === 'admin' || userRole === 'pharmacist') && activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {(userRole === 'admin' || userRole === 'pharmacist') && activeTab === 'categories' && <CategoriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {activeTab === 'stockAlerts' && <AlertsTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {activeTab === 'banners' && <BannersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {userRole === 'admin' && activeTab === 'admins' && <AdminProfilesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {(userRole === 'admin' || userRole === 'pharmacist') && activeTab === 'pages' && <PagesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {(userRole === 'admin' || userRole === 'pharmacist') && activeTab === 'searchAnalytics' && <SearchAnalyticsTab onBack={() => setActiveTab('overview')} />}
+              {permissions.orders_view && activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {permissions.orders_view && activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {permissions.inventory_manage && activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {permissions.inventory_manage && activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {permissions.inventory_manage && activeTab === 'categories' && <CategoriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {permissions.orders_view && activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {permissions.inventory_manage && activeTab === 'stockAlerts' && <AlertsTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {permissions.inventory_manage && activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {permissions.inventory_manage && activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {permissions.inventory_manage && activeTab === 'banners' && <BannersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {permissions.staff_manage && activeTab === 'admins' && <AdminProfilesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {permissions.inventory_manage && activeTab === 'pages' && <PagesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
+              {permissions.inventory_manage && activeTab === 'searchAnalytics' && <SearchAnalyticsTab onBack={() => setActiveTab('overview')} />}
             </motion.div>
           </AnimatePresence>
         </main>

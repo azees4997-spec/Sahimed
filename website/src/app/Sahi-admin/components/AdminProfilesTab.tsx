@@ -8,7 +8,12 @@ import {
   Shield, 
   UserCircle,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Box,
+  Truck,
+  Database,
+  Users,
+  PlusCircle
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,13 +40,33 @@ import { SectionHeader } from './SectionHeader';
 import { cn } from '@/lib/utils';
 import { safeFormat } from '@/lib/safe-date';
 
+const PERMISSIONS = [
+  { key: 'orders_view', label: 'Order Processing', icon: Box, desc: 'View and search matrix orders' },
+  { key: 'orders_create', label: 'Manual Creation', icon: PlusCircle, desc: 'Initiate manual procurement' },
+  { key: 'shipping_edit', label: 'Shipment Control', icon: Truck, desc: 'Manage tracking and dispatch' },
+  { key: 'inventory_manage', label: 'Product Catalog', icon: Database, desc: 'Edit items and molecule master' },
+  { key: 'staff_manage', label: 'Team Architecture', icon: Users, desc: 'Master Access: Manage admin roles' },
+];
+
 export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const { toast } = useToast();
   const { user } = useUser();
   const [adminList, setAdminList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [newAdmin, setNewAdmin] = useState({ uid: '', role: 'sub-admin', name: '', email: '' });
+  const [newAdmin, setNewAdmin] = useState({ 
+    uid: '', 
+    role: 'sub-admin', 
+    name: '', 
+    email: '',
+    permissions: {
+      orders_view: true,
+      orders_create: false,
+      shipping_edit: false,
+      inventory_manage: false,
+      staff_manage: false
+    }
+  });
 
   const fetchAdmins = async () => {
     setIsLoading(true);
@@ -90,7 +115,7 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
     }
   };
 
-  const updateRole = async (uid: string, newRole: string) => {
+  const updateProfile = async (uid: string, updates: any) => {
     try {
       const token = await user?.getIdToken();
       const res = await fetch('/api/admin/profiles', {
@@ -99,14 +124,14 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify({ id: uid, role: newRole })
+        body: JSON.stringify({ id: uid, ...updates })
       });
       if (res.ok) {
-        toast({ title: "Access Level Updated" });
+        toast({ title: "Authority Matrix Updated" });
         fetchAdmins();
       }
     } catch (err) {
-      toast({ variant: 'destructive', title: "Update failed" });
+      toast({ variant: 'destructive', title: "Protocol update failed" });
     }
   };
 
@@ -172,7 +197,7 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
               </div>
 
               <div className="pt-4 border-t border-slate-50">
-                <Select defaultValue={admin.role} onValueChange={(val) => updateRole(admin.id || admin.uid, val)}>
+                <Select defaultValue={admin.role} onValueChange={(val) => updateProfile(admin.id || admin.uid, { role: val })}>
                   <SelectTrigger className="w-full h-12 rounded-2xl bg-slate-50 border-none font-bold text-[10px] uppercase shadow-none">
                     <SelectValue />
                   </SelectTrigger>
@@ -182,6 +207,25 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
                     <SelectItem value="sub-admin">Sub-Admin</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="grid grid-cols-5 gap-2 pt-2">
+                {PERMISSIONS.map(p => (
+                  <button
+                    key={p.key}
+                    onClick={() => {
+                        const current = admin.permissions || {};
+                        updateProfile(admin.id || admin.uid, { permissions: { ...current, [p.key]: !current[p.key] } });
+                    }}
+                    className={cn(
+                        "h-8 rounded-xl flex items-center justify-center transition-all",
+                        (admin.permissions?.[p.key]) ? "bg-primary/10 text-primary shadow-sm" : "bg-slate-50 text-slate-200 grayscale"
+                    )}
+                    title={p.label}
+                  >
+                    <p.icon className="w-3.5 h-3.5" />
+                  </button>
+                ))}
               </div>
 
               <div className="flex items-center justify-between pt-4">
@@ -236,6 +280,33 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
             <div className="space-y-4">
               <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Registered Email</Label>
               <Input type="email" placeholder="EMAIL@SAHIMED.COM" value={newAdmin.email} onChange={e => setNewAdmin({...newAdmin, email: e.target.value})} className="h-14 rounded-2xl bg-slate-50 border-none font-bold" />
+            </div>
+
+            <div className="space-y-4 pt-4">
+               <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Functional Permissions</Label>
+               <div className="grid grid-cols-1 gap-3">
+                  {PERMISSIONS.map(p => (
+                    <div 
+                        key={p.key} 
+                        onClick={() => setNewAdmin({...newAdmin, permissions: { ...newAdmin.permissions, [p.key]: !newAdmin.permissions[p.key as keyof typeof newAdmin.permissions] } })}
+                        className={cn(
+                            "p-4 rounded-[24px] flex items-center gap-4 cursor-pointer transition-all border-2",
+                            newAdmin.permissions[p.key as keyof typeof newAdmin.permissions] ? "bg-primary/5 border-primary/20" : "bg-slate-50 border-transparent text-slate-400"
+                        )}
+                    >
+                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", newAdmin.permissions[p.key as keyof typeof newAdmin.permissions] ? "bg-primary text-white" : "bg-white text-slate-300")}>
+                            <p.icon className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="font-black text-[10px] uppercase tracking-wider">{p.label}</p>
+                            <p className="text-[9px] opacity-60 font-medium">{p.desc}</p>
+                        </div>
+                        <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", newAdmin.permissions[p.key as keyof typeof newAdmin.permissions] ? "border-primary bg-primary text-white" : "border-slate-200")}>
+                            {newAdmin.permissions[p.key as keyof typeof newAdmin.permissions] && <CheckCircle2 className="w-3 h-3" />}
+                        </div>
+                    </div>
+                  ))}
+               </div>
             </div>
             <Button type="submit" className="w-full h-16 rounded-full font-black text-xs tracking-widest bg-primary text-white shadow-xl shadow-primary/20 uppercase hover:scale-[1.02] transition-all">Activate Profile</Button>
           </form>

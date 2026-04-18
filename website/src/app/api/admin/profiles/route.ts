@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       await verifyAdmin(req);
     }
 
-    const { id, uid, ...profile } = await req.json();
+    const { id, uid, permissions, ...profile } = await req.json();
     const finalId = id || uid;
 
     if (!finalId) throw new Error('Missing identification (UID/ID)');
@@ -47,6 +47,7 @@ export async function POST(req: Request) {
       { 
         $set: { 
           ...profile, 
+          permissions: permissions || {}, // Persist granular matrix
           uid: finalId, 
           id: finalId, 
           updatedAt: new Date().toISOString() 
