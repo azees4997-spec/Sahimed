@@ -53,6 +53,18 @@ class ProductModel {
 
   final bool rxRequired;
   final bool prescriptionRequired;
+  final bool isBestSeller;
+
+  // Clinical Metadata for Website Parity
+  final String? treatment;
+  final String? description;
+  final String? safetyAdvice;
+  final String? howToUse;
+  final String? pregnancyInteraction;
+  final String? lactationInteraction;
+  final String? drivingInteraction;
+  final String? kidneyInteraction;
+  final String? liverInteraction;
 
   ProductModel({
     required this.id,
@@ -72,6 +84,16 @@ class ProductModel {
     this.company,
     this.liveData,
     this.moleculeData,
+    this.isBestSeller = false,
+    this.treatment,
+    this.description,
+    this.safetyAdvice,
+    this.howToUse,
+    this.pregnancyInteraction,
+    this.lactationInteraction,
+    this.drivingInteraction,
+    this.kidneyInteraction,
+    this.liverInteraction,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -96,6 +118,16 @@ class ProductModel {
       company: json['company'] ?? json['manufacturer'],
       liveData: live,
       moleculeData: json['moleculeData'],
+      isBestSeller: json['isBestSeller'] == true || json['isBestSeller'] == "true",
+      treatment: json['treatment'],
+      description: json['description'] ?? json['medicalDescription'],
+      safetyAdvice: json['safetyAdvice'],
+      howToUse: json['howToUse'],
+      pregnancyInteraction: json['pregnancyInteraction'],
+      lactationInteraction: json['lactationInteraction'],
+      drivingInteraction: json['drivingInteraction'],
+      kidneyInteraction: json['kidneyInteraction'],
+      liverInteraction: json['liverInteraction'],
     );
   }
 
@@ -117,6 +149,15 @@ class ProductModel {
       'molName': molName,
       'company': company,
       'liveData': liveData,
+      'treatment': treatment,
+      'description': description,
+      'safetyAdvice': safetyAdvice,
+      'howToUse': howToUse,
+      'pregnancyInteraction': pregnancyInteraction,
+      'lactationInteraction': lactationInteraction,
+      'drivingInteraction': drivingInteraction,
+      'kidneyInteraction': kidneyInteraction,
+      'liverInteraction': liverInteraction,
     };
   }
 }
@@ -142,14 +183,15 @@ class OrderModel {
   final String? userId;
   final String patientName;
   final String phoneNumber;
-  final Map<String, dynamic> shippingDetails;
+  final Map<String, dynamic> shippingDetails; 
   final List<Map<String, dynamic>> items;
   final double totalAmount;
   final Map<String, dynamic> billingBreakdown;
-  final List<String> imageUrls;
-  final String paymentMethod;
+  final List<String> prescriptionUrls;
+  final String paymentType;
   final String status;
   final bool isConsultationRequired;
+  final String clinicalPath;
 
   OrderModel({
     this.userId,
@@ -159,10 +201,11 @@ class OrderModel {
     required this.items,
     required this.totalAmount,
     required this.billingBreakdown,
-    this.imageUrls = const [],
-    this.paymentMethod = 'COD',
-    this.status = 'Confirmed',
+    this.prescriptionUrls = const [],
+    this.paymentType = 'Cash on Delivery',
+    this.status = 'Pending Consult',
     this.isConsultationRequired = false,
+    this.clinicalPath = 'consult',
   });
 
   Map<String, dynamic> toJson() {
@@ -174,11 +217,14 @@ class OrderModel {
       'items': items,
       'totalAmount': totalAmount,
       'billingBreakdown': billingBreakdown,
-      'imageUrls': imageUrls,
-      'paymentMethod': paymentMethod,
+      'prescriptionUrls': prescriptionUrls,
+      'paymentType': paymentType,
       'status': status,
       'isConsultationRequired': isConsultationRequired,
-      'orderDate': DateTime.now().toIso8601String(),
+      'clinicalPath': clinicalPath,
+      'orderDate': {
+        '_methodName': 'serverTimestamp',
+      },
     };
   }
 }

@@ -8,18 +8,26 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:503492891847:android:62ff74f81195823f5c9ae2",
+        "mobilesdk_app_id": "1:503492891847:android:cde38602bb8fcf615c9ae2",
         "android_client_info": {
-          "package_name": "com.sahimed.sahimed_app"
+          "package_name": "com.sahimed.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "503492891847-dmbkgn77veikue59unahhmkbni2ojp9d.apps.googleusercontent.com",
+          "client_id": "503492891847-k21dcf940nnu2628f2b7lrp7um4b4pe3.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.sahimed.sahimed_app",
-            "certificate_hash": "8e49cfe2005d0c85060db1bb88e052dc27e555eb"
+            "package_name": "com.sahimed.app",
+            "certificate_hash": "ad424722abc8a0911998ab3077a25472819b9282"
+          }
+        },
+        {
+          "client_id": "503492891847-mnmeaomrfh2ak6ckkdb0cks4vbc72ill.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sahimed.app",
+            "certificate_hash": "fc79720d9190016cfbffa30e4bcd02baec09e649"
           }
         },
         {
@@ -28,6 +36,9 @@
         }
       ],
       "api_key": [
+        {
+          "current_key": "AIzaSyCmWPrN8aioAPs7tMLshlIBeQN_-1aNzLs"
+        },
         {
           "current_key": "AIzaSyDmytFXM4JPh0BwF7vWZzRZ5i5C6tqa8hA"
         }
@@ -38,6 +49,60 @@
             {
               "client_id": "503492891847-v1uej3e1ke9o4v7ta2219nrbumf639a7.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "503492891847-fr2nvva5cdkuijn9nvdllvbb3e8tl1kj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.sahimed.sahimedMobile"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:503492891847:android:62ff74f81195823f5c9ae2",
+        "android_client_info": {
+          "package_name": "com.sahimed.sahimed_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "503492891847-92vot9ob6s67dp9qttem0rlcpjb9vjq0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sahimed.sahimed_app",
+            "certificate_hash": "ad424722abc8a0911998ab3077a25472819b9282"
+          }
+        },
+        {
+          "client_id": "503492891847-v1uej3e1ke9o4v7ta2219nrbumf639a7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmWPrN8aioAPs7tMLshlIBeQN_-1aNzLs"
+        },
+        {
+          "current_key": "AIzaSyDmytFXM4JPh0BwF7vWZzRZ5i5C6tqa8hA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "503492891847-v1uej3e1ke9o4v7ta2219nrbumf639a7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "503492891847-fr2nvva5cdkuijn9nvdllvbb3e8tl1kj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.sahimed.sahimedMobile"
+              }
             }
           ]
         }

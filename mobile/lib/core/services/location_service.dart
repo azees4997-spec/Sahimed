@@ -6,6 +6,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 class LocationService {
   static const String _addressKey = 'user_saved_address';
 
+  Future<Position?> getCurrentPosition() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return null;
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return null;
+      }
+      return await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high));
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<void> saveAddress(String address) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_addressKey, address);

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../core/services/api_service.dart';
@@ -12,7 +13,8 @@ import '../../../core/services/location_service.dart';
 import 'order_status_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
-  const CheckoutScreen({super.key});
+  final File? initialPrescription;
+  const CheckoutScreen({super.key, this.initialPrescription});
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -20,14 +22,65 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _addressController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _nameController = TextEditingController();
+  final _houseController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _stateController = TextEditingController();
+  final _pincodeController = TextEditingController();
+  final _landmarkController = TextEditingController();
+  final _phoneController = TextEditingController();
+  
+  String _selectedTag = 'Home';
   bool _isProcessing = false;
+  bool _isConsultationRequired = false;
   File? _prescriptionImage;
   final ImagePicker _picker = ImagePicker();
   final ApiService _apiService = ApiService();
   final LocationService _locationService = LocationService();
+
+  List<Map<String, dynamic>> _savedAddresses = [];
+  Map<String, dynamic>? _selectedAddress;
+  bool _showAddressForm = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _prescriptionImage = widget.initialPrescription;
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    // 1. Pre-fill from Firebase Auth
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      if (_nameController.text.isEmpty) _nameController.text = user.displayName ?? '';
+      if (_phoneController.text.isEmpty) _phoneController.text = user.phoneNumber ?? '';
+    }
+
+    // 2. Load Saved Addresses
+    final addresses = await _apiService.getUserAddresses();
+    if (mounted) {
+      setState(() {
+        _savedAddresses = addresses;
+        if (addresses.isNotEmpty) {
+          _selectedAddress = addresses.first;
+          _showAddressForm = false;
+          _fillFormWithAddress(addresses.first);
+        }
+      });
+    }
+  }
+
+  void _fillFormWithAddress(Map<String, dynamic> addr) {
+    _houseController.text = addr['houseNumber'] ?? '';
+    _streetController.text = addr['street'] ?? '';
+    _cityController.text = addr['city'] ?? '';
+    _stateController.text = addr['state'] ?? 'Karnataka';
+    _pincodeController.text = addr['pincode'] ?? '';
+    _landmarkController.text = addr['landmark'] ?? '';
+    _selectedTag = addr['tag'] ?? 'Home';
+  }
 
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
@@ -37,43 +90,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _initAddress();
-  }
-
-  Future<void> _initAddress() async {
-    String? address = await _locationService.getSavedAddress();
-    if (address == null || address.isEmpty) {
-      address = await _locationService.getCurrentAddress();
-    }
-    if (mounted) {
-      setState(() {
-        _addressController.text = address ?? '';
-      });
-    }
-  }
-
-  @override
   void dispose() {
-    _addressController.dispose();
-    _phoneController.dispose();
     _nameController.dispose();
+    _houseController.dispose();
+    _streetController.dispose();
+    _cityController.dispose();
+    _pincodeController.dispose();
+    _landmarkController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
   Future<void> _placeOrder() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_showAddressForm && !_formKey.currentState!.validate()) return;
+    if (!_showAddressForm && _selectedAddress == null) {
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select an address')));
+       return;
+    }
 
     final cart = context.read<CartProvider>();
     List<String> prescriptions = [];
 
-    // Prescription check
-    if (cart.isRxRequired && _prescriptionImage == null) {
+    // Soft Gate Check
+    if (cart.isRxRequired && _prescriptionImage == null && !_isConsultationRequired) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please upload a valid prescription for Rx medicines'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: Text('PRESCRIPTION REQUIRED • PLEASE UPLOAD OR TOGGLE CONSULTATION', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10)),
+          backgroundColor: SahimedColors.primary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          margin: const EdgeInsets.all(20),
         ),
       );
       return;
@@ -82,31 +128,56 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() => _isProcessing = true);
 
     try {
-      // 1. Upload Rx if exists
       if (_prescriptionImage != null) {
         final url = await _apiService.uploadPrescription(_prescriptionImage!);
         if (url != null) prescriptions.add(url);
       }
 
-      // 2. Prepare Billing Breakdown
+      // Capture GPS data with graceful fallback
+      Map<String, double?> coords = {'lat': null, 'lng': null};
+      try {
+        coords = await _locationService.getCurrentPosition();
+      } catch (e) {
+        debugPrint('Location access denied or failed: $e. Proceeding with manual address.');
+      }
+
+      final shippingDetails = _showAddressForm ? {
+        'houseNumber': _houseController.text,
+        'street': _streetController.text,
+        'landmark': _landmarkController.text,
+        'city': _cityController.text,
+        'state': _stateController.text.isNotEmpty ? _stateController.text : 'Karnataka',
+        'pincode': _pincodeController.text,
+        'lat': coords['lat'],
+        'lng': coords['lng'],
+        'tag': _selectedTag,
+      } : {
+        ..._selectedAddress!,
+        'lat': coords['lat'] ?? _selectedAddress!['lat'],
+        'lng': coords['lng'] ?? _selectedAddress!['lng'],
+      };
+
+      // Save new address if form is shown
+      if (_showAddressForm) {
+        await _apiService.saveAddress(shippingDetails);
+      }
+
       final billingBreakdown = {
         'subtotal': cart.subtotal,
         'packingFee': 10.0,
         'deliveryFee': cart.subtotal < 499 ? 49.0 : 0.0,
-        'couponDiscount': 0.0,
-        'genericSavings': cart.totalSavings,
-        'total': cart.total,
+        'total': cart.finalTotal,
       };
 
-      // 3. Create Order
       final orderId = await _apiService.createOrder(
         items: cart.items,
-        total: cart.total,
-        address: _addressController.text,
-        name: _nameController.text,
-        phone: _phoneController.text,
+        total: cart.finalTotal,
+        shippingDetails: shippingDetails,
+        name: _nameController.text.isEmpty ? 'Customer' : _nameController.text,
+        phone: _phoneController.text.isEmpty ? 'N/A' : _phoneController.text,
         billingBreakdown: billingBreakdown,
         prescriptions: prescriptions,
+        isConsultationRequired: _isConsultationRequired,
       );
 
       if (mounted) {
@@ -118,21 +189,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             (route) => route.isFirst,
           );
         } else {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const OrderStatusScreen(isSuccess: false)),
-          );
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const OrderStatusScreen(isSuccess: false)));
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Order failed: $e'),
-            backgroundColor: SahimedColors.accent,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Order failed: $e'), backgroundColor: SahimedColors.accent));
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
@@ -146,156 +208,218 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Scaffold(
       backgroundColor: SahimedColors.background,
       appBar: AppBar(
-        title: Text(
-          'Checkout',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.w800,
-            fontSize: 20,
-            color: SahimedColors.textPrimary,
-          ),
-        ),
-        backgroundColor: SahimedColors.white,
+        title: Text('Secure Checkout', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 18)),
+        backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: false,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: Icon(LucideIcons.chevronLeft, color: SahimedColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: IconButton(icon: Icon(LucideIcons.chevronLeft), onPressed: () => Navigator.pop(context)),
       ),
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 150),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 150),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Address Section
+                _buildSectionCard(
+                  title: 'Shipping Address',
+                  icon: LucideIcons.mapPin,
+                  child: Column(
+                    children: [
+                      if (_savedAddresses.isNotEmpty) ...[
+                        ..._savedAddresses.map((addr) => _buildAddressCard(addr)),
+                        TextButton.icon(
+                          onPressed: () => setState(() {
+                            _showAddressForm = true;
+                            _selectedAddress = null;
+                            _houseController.clear();
+                            _streetController.clear();
+                            _cityController.clear();
+                            _pincodeController.clear();
+                          }),
+                          icon: Icon(LucideIcons.plus, size: 16),
+                          label: Text('Add New Address', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                      if (_showAddressForm) 
+                        Form(
+                          key: _formKey,
+                          child: Column(
+                            key: const ValueKey('address_form'),
+                            children: [
+                              _buildTextField(controller: _nameController, label: 'Patient Name', hint: 'Who is this medicine for?', icon: LucideIcons.user),
+                              const SizedBox(height: 12),
+                              _buildTextField(controller: _phoneController, label: 'Contact Number', hint: '10-digit mobile number', icon: LucideIcons.phone, keyboardType: TextInputType.phone),
+                              const SizedBox(height: 12),
+                              _buildTextField(controller: _houseController, label: 'Flat / House No', hint: 'e.g. 101, block A', icon: LucideIcons.house),
+                              const SizedBox(height: 12),
+                              _buildTextField(controller: _streetController, label: 'Street / Area', hint: 'e.g. MG Road', icon: LucideIcons.map),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(child: _buildTextField(controller: _cityController, label: 'City', hint: 'e.g. Bangalore', icon: LucideIcons.navigation)),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: _buildTextField(controller: _pincodeController, label: 'Pincode', hint: '6 digits', icon: LucideIcons.hash, keyboardType: TextInputType.number)),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  _buildTagOption('Home', LucideIcons.house),
+                                  const SizedBox(width: 8),
+                                  _buildTagOption('Office', LucideIcons.briefcase),
+                                  const SizedBox(width: 8),
+                                  _buildTagOption('Other', LucideIcons.mapPin),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Consultation Section
+                if (cart.isRxRequired)
                   _buildSectionCard(
-                    title: 'Delivery Details',
-                    icon: LucideIcons.truck,
+                    title: 'Prescription',
+                    icon: LucideIcons.filePlus,
                     child: Column(
                       children: [
-                        _buildTextField(
-                          controller: _nameController,
-                          label: 'Full Name',
-                          hint: 'Enter receiver name',
-                          icon: LucideIcons.user,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          controller: _phoneController,
-                          label: 'Contact Number',
-                          hint: '10-digit mobile number',
-                          icon: LucideIcons.phone,
-                          keyboardType: TextInputType.phone,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          controller: _addressController,
-                          label: 'Delivery Address',
-                          hint: 'Fetching address...',
-                          icon: LucideIcons.mapPin,
-                          maxLines: 3,
+                        _buildPrescriptionUpload(),
+                        const SizedBox(height: 20),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(color: SahimedColors.primary.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(20)),
+                          child: Row(
+                            children: [
+                              Icon(LucideIcons.stethoscope, color: SahimedColors.primary),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Don\'t have a prescription?', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
+                                    Text('Our doctors will call you for a free consultation', style: GoogleFonts.inter(fontSize: 10, color: SahimedColors.slate500)),
+                                  ],
+                                ),
+                              ),
+                              Switch.adaptive(
+                                value: _isConsultationRequired,
+                                activeColor: SahimedColors.primary,
+                                onChanged: (v) => setState(() => _isConsultationRequired = v),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  _buildSectionCard(
-                    title: 'Payment Method',
-                    icon: LucideIcons.wallet,
-                    child: _buildPaymentOption(
-                      'Cash on Delivery',
-                      'Pay when medicines reach your doorstep',
-                      LucideIcons.banknote,
-                      true,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  if (cart.isRxRequired)
-                    _buildSectionCard(
-                      title: 'Upload Prescription',
-                      icon: LucideIcons.fileText,
-                      child: Column(
-                        children: [
-                          Text(
-                            'One or more medicines in your cart require a valid prescription.',
-                            style: GoogleFonts.outfit(fontSize: 13, color: SahimedColors.slate500),
-                          ),
-                          const SizedBox(height: 16),
-                          GestureDetector(
-                            onTap: _pickImage,
-                            child: Container(
-                              width: double.infinity,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                color: SahimedColors.background,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: _prescriptionImage == null ? SahimedColors.primary.withValues(alpha: 0.3) : SahimedColors.emerald500,
-                                  style: _prescriptionImage == null ? BorderStyle.none : BorderStyle.solid,
-                                  width: 2,
-                                ),
-                              ),
-                              child: _prescriptionImage != null
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(18),
-                                      child: Stack(
-                                        children: [
-                                          Image.file(_prescriptionImage!, width: double.infinity, height: 120, fit: BoxFit.cover),
-                                          Positioned(
-                                            top: 8,
-                                            right: 8,
-                                            child: GestureDetector(
-                                              onTap: () => setState(() => _prescriptionImage = null),
-                                              child: Container(
-                                                padding: const EdgeInsets.all(4),
-                                                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                                child: const Icon(LucideIcons.x, color: Colors.white, size: 16),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  : Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.upload_file_rounded, color: SahimedColors.primary, size: 32),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'Tap to upload Prescription',
-                                          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: SahimedColors.primary),
-                                        ),
-                                      ],
-                                    ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (cart.isRxRequired) const SizedBox(height: 24),
-                  _buildOrderSummary(cart),
+
+                const SizedBox(height: 24),
+                _buildOrderSummary(cart),
+              ],
+            ),
+          ),
+          if (_isProcessing) Container(color: Colors.black26, child: Center(child: CircularProgressIndicator(color: SahimedColors.primary))),
+          Positioned(bottom: 0, left: 0, right: 0, child: _buildGlassPlaceOrderBar(cart)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddressCard(Map<String, dynamic> addr) {
+    bool isSelected = _selectedAddress?['id'] == addr['id'];
+    return GestureDetector(
+      onTap: () => setState(() {
+        _selectedAddress = addr;
+        _showAddressForm = false;
+      }),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? SahimedColors.primary.withValues(alpha: 0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? SahimedColors.primary : SahimedColors.slate100, width: 2),
+        ),
+        child: Row(
+          children: [
+            Icon(isSelected ? LucideIcons.circleCheck : LucideIcons.circle, color: isSelected ? SahimedColors.primary : SahimedColors.slate300, size: 20),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(addr['tag']?.toUpperCase() ?? 'HOME', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10, color: SahimedColors.primary)),
+                  Text('${addr['houseNumber']}, ${addr['street']}', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold)),
+                  Text('${addr['city']} - ${addr['pincode']}', style: GoogleFonts.inter(fontSize: 11, color: SahimedColors.slate500)),
                 ],
               ),
             ),
-          ),
-          if (_isProcessing)
-            Container(
-              color: Colors.black.withValues(alpha: 0.3),
-              child: const Center(
-                child: CircularProgressIndicator(color: SahimedColors.primary),
-              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPrescriptionUpload() {
+    return GestureDetector(
+      onTap: _pickImage,
+      child: Container(
+        width: double.infinity,
+        height: 120,
+        decoration: BoxDecoration(
+          color: SahimedColors.background,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: _prescriptionImage != null ? SahimedColors.emerald500 : SahimedColors.slate200, style: BorderStyle.solid),
+        ),
+        child: _prescriptionImage != null 
+          ? ClipRRect(borderRadius: BorderRadius.circular(22), child: Image.file(_prescriptionImage!, fit: BoxFit.cover))
+          : Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(LucideIcons.camera, color: SahimedColors.primary, size: 32),
+                const SizedBox(height: 8),
+                Text('Scan/Upload Prescription', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: SahimedColors.primary)),
+              ],
             ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: _buildGlassPlaceOrderBar(cart),
+      ),
+    );
+  }
+
+  Widget _buildTagOption(String tag, IconData icon) {
+    bool isSelected = _selectedTag == tag;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedTag = tag),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? SahimedColors.primary : SahimedColors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? SahimedColors.primary : SahimedColors.slate200,
+              width: 1.5,
+            ),
           ),
-        ],
+          child: Column(
+            children: [
+              Icon(icon, size: 18, color: isSelected ? Colors.white : SahimedColors.slate400),
+              const SizedBox(height: 4),
+              Text(
+                tag,
+                style: GoogleFonts.outfit(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: isSelected ? Colors.white : SahimedColors.slate400,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -553,29 +677,35 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isProcessing ? null : _placeOrder,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: SahimedColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-                    elevation: 8,
-                    shadowColor: SahimedColors.primary.withValues(alpha: 0.4),
-                  ),
-                  child: _isProcessing
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : Text(
-                          'Place Order Now',
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
+                child: Opacity(
+                  opacity: (cart.isRxRequired && _prescriptionImage == null && !_isConsultationRequired) ? 0.6 : 1.0,
+                  child: ElevatedButton(
+                    onPressed: _isProcessing ? null : _placeOrder,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: SahimedColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                      elevation: (cart.isRxRequired && _prescriptionImage == null && !_isConsultationRequired) ? 0 : 8,
+                      shadowColor: SahimedColors.primary.withOpacity(0.4),
+                    ),
+                    child: _isProcessing
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : Text(
+                            (cart.isRxRequired && _prescriptionImage == null && !_isConsultationRequired)
+                                ? 'Upload Rx to Place Order'
+                                : 'Securely Place Order',
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                            ),
                           ),
-                        ),
+                  ),
                 ),
               ),
             ],

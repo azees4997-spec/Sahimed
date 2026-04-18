@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'core/providers/cart_provider.dart';
 import 'features/auth/screens/splash_screen.dart';
 import 'firebase_options.dart';
+import 'core/layout/main_layout.dart';
+import 'core/widgets/global_error_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,10 +21,9 @@ void main() async {
       );
     }
 
-    // [SECURITY REFACTOR] Initialize App Check immediately
-    // Using AndroidProvider.debug to allow for Debug Token registration
+    // [SECURITY REFACTOR] Initialize App Check with Play Integrity for Production
     await FirebaseAppCheck.instance.activate(
-      androidProvider: AndroidProvider.debug,
+      androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
       appleProvider: AppleProvider.deviceCheck,
     );
 
@@ -42,22 +43,35 @@ class SahimedApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => CartProvider()),
-      ],
-      child: MaterialApp(
-        title: 'Sahimed',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF2E5BFF),
-            brightness: Brightness.light,
+    return GlobalErrorHandler(
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => CartProvider()),
+        ],
+        child: MaterialApp(
+          title: 'Sahimed',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF2E5BFF),
+              brightness: Brightness.light,
+            ),
+            textTheme: GoogleFonts.outfitTextTheme(),
           ),
-          textTheme: GoogleFonts.outfitTextTheme(),
+          home: StreamBuilder<User?>(
+            stream: FirebaseAuth.instance.authStateChanges(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SplashScreen();
+              }
+              if (snapshot.hasData) {
+                return MainLayout();
+              }
+              return const SplashScreen();
+            },
+          ),
         ),
-        home: const SplashScreen(),
       ),
     );
   }

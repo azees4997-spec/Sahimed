@@ -4,6 +4,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
 import '../../../shared/models/models.dart';
 import 'product_detail_screen.dart';
+import 'brand_store_screen.dart';
 
 class CategoryProductsScreen extends StatefulWidget {
   final CategoryModel category;
@@ -223,7 +224,7 @@ class _ProductCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          product.isGeneric ? 'GENERIC' : 'BRANDED',
+                          product.isGeneric ? 'SMART CHOICE' : 'STANDARD BRAND',
                           style: GoogleFonts.outfit(
                             fontSize: 7,
                             fontWeight: FontWeight.w900,
@@ -233,14 +234,27 @@ class _ProductCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Expanded(
-                        child: Text(
-                          product.brand,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.outfit(
-                            fontSize: 9,
-                            color: SahimedColors.slate500,
-                            fontWeight: FontWeight.w600,
+                        child: GestureDetector(
+                          onTap: () {
+                            final company = product.company ?? product.brand;
+                            if (company.isNotEmpty) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BrandStoreScreen(brandName: company),
+                                ),
+                              );
+                            }
+                          },
+                          child: Text(
+                            (product.company ?? product.brand).toUpperCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.outfit(
+                              fontSize: 9,
+                              color: SahimedColors.accent,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
                         ),
                       ),

@@ -1,7 +1,12 @@
+plugins {
+    id("com.google.gms.google-services") version "4.4.1" apply false
+}
+
 allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://truesdk.jfrog.io/truesdk/release") }
     }
 }
 

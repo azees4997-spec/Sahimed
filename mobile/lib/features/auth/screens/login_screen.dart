@@ -2,9 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:truecaller_sdk/truecaller_sdk.dart';
 import 'package:flutter/services.dart';
-import 'dart:async';
 import '../../../core/theme/colors.dart';
 import '../../../core/layout/main_layout.dart';
 import 'otp_screen.dart';
@@ -22,87 +20,11 @@ class _LoginScreenState extends State<LoginScreen> {
   
   bool _agreedToTerms = false;
   bool _isLoading = false;
-  bool _isTruecallerReady = false;
-  StreamSubscription? _tcSubscription;
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize Truecaller non-blockingly
-    _initializeAuthServices();
-  }
 
   @override
   void dispose() {
-    _tcSubscription?.cancel();
     _phoneController.dispose();
     super.dispose();
-  }
-
-  Future<void> _initializeAuthServices() async {
-    try {
-      // 1. Initialize Truecaller SDK
-      await TcSdk.initializeSDK(sdkOption: TcSdkOptions.OPTION_VERIFY_ONLY_TC_USERS);
-      
-      // 2. Check usability
-      final isUsable = await TcSdk.isOAuthFlowUsable;
-      
-      if (mounted) {
-        setState(() => _isTruecallerReady = isUsable);
-      }
-
-      if (isUsable) {
-        // 3. Listen for callbacks
-        _tcSubscription = TcSdk.streamCallbackData.listen((callback) {
-          _handleTruecallerCallback(callback);
-        });
-      }
-    } catch (e) {
-      debugPrint("Auth Init Error: $e");
-    }
-  }
-
-  void _handleTruecallerCallback(TcSdkCallback callback) {
-    switch (callback.result) {
-      case TcSdkCallbackResult.success:
-        debugPrint("Truecaller Success!");
-        _navigateToHome();
-        break;
-      case TcSdkCallbackResult.failure:
-        debugPrint("Truecaller Failure: ${callback.error?.message}");
-        _showError("Truecaller Error: ${callback.error?.message ?? 'Unknown error'}");
-        break;
-      case TcSdkCallbackResult.verification:
-        debugPrint("Truecaller: Manual verification required");
-        break;
-      default:
-        break;
-    }
-  }
-
-  Future<void> _loginWithTruecaller() async {
-    if (!_agreedToTerms) {
-      _showError("Please agree to the Terms & Conditions first");
-      return;
-    }
-
-    try {
-      await HapticFeedback.mediumImpact();
-
-      if (!_isTruecallerReady) {
-        // Try to initialize/check usability again on tap
-        _showError("Truecaller is still initializing. Please wait...");
-        _initializeAuthServices();
-        return;
-      }
-
-      final state = "state_${DateTime.now().millisecondsSinceEpoch}";
-      await TcSdk.setOAuthState(state);
-      await TcSdk.setOAuthScopes(['profile', 'phone', 'openid']);
-      await TcSdk.getAuthorizationCode;
-    } catch (e) {
-      _showError("Truecaller Launch Error: $e");
-    }
   }
 
   Future<void> _sendOtp() async {
@@ -118,7 +40,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = true);
-
     try {
       await _auth.verifyPhoneNumber(
         phoneNumber: '+91$phone',
@@ -128,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
         },
         verificationFailed: (FirebaseAuthException e) {
           setState(() => _isLoading = false);
-          _showError(e.message ?? "Verification failed");
+          _showError("Auth Error: ${e.message}");
         },
         codeSent: (String verificationId, int? resendToken) {
           setState(() => _isLoading = false);
@@ -164,10 +85,10 @@ class _LoginScreenState extends State<LoginScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.redAccent,
+          content: Text(message, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+          backgroundColor: SahimedColors.accent,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       );
     }
@@ -179,69 +100,87 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: SahimedColors.background,
       body: Stack(
         children: [
-          // Background Aesthetic
+          // Background Aesthetic Blobs
           Positioned(
-            top: -100,
-            right: -50,
-            child: _buildBlob(300, SahimedColors.primary.withValues(alpha: 0.08)),
+            top: -120,
+            right: -60,
+            child: _buildBlob(350, SahimedColors.primary.withOpacity(0.08)),
+          ),
+          Positioned(
+            bottom: -80,
+            left: -40,
+            child: _buildBlob(280, SahimedColors.accent.withOpacity(0.05)),
           ),
           
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 28),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 32),
                   
                   // App Branding
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Sahi', style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: SahimedColors.primary, letterSpacing: -1)),
-                      Text('Med', style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: SahimedColors.accent, letterSpacing: -1)),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: SahimedColors.primary,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [BoxShadow(color: SahimedColors.primary.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 8))],
+                        ),
+                        child: const Icon(Icons.health_and_safety_rounded, color: Colors.white, size: 28),
+                      ),
+                      const SizedBox(width: 12),
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(text: 'Sahi', style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), letterSpacing: -1)),
+                            TextSpan(text: 'Med', style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: SahimedColors.primary, letterSpacing: -1)),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                   
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 48),
 
-                  // Hero Illustration (Simplified)
+                  // Hero Illustration
                   Container(
-                    height: 220,
+                    height: 280,
+                    width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(32),
+                      borderRadius: BorderRadius.circular(40),
                       boxShadow: [
-                        BoxShadow(color: SahimedColors.primary.withValues(alpha: 0.05), blurRadius: 40, offset: const Offset(0, 10)),
+                        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 40, offset: const Offset(0, 20)),
                       ],
                     ),
-                    child: Center(
-                      child: Icon(Icons.security_rounded, size: 80, color: SahimedColors.primary.withValues(alpha: 0.6)),
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.asset(
+                      'assets/images/login_illustration_wellness.png',
+                      fit: BoxFit.cover,
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 48),
 
-                  Text('Welcome Back', style: GoogleFonts.outfit(fontSize: 26, fontWeight: FontWeight.bold, color: SahimedColors.primary)),
-                  const SizedBox(height: 8),
-                  Text('Quick and secure access to your health records.', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 14, color: SahimedColors.slate500)),
+                  Text('Premium Healthcare', style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
+                  const SizedBox(height: 12),
+                  Text('Access your generic medicines and health records with one secure login.', 
+                    textAlign: TextAlign.center, 
+                    style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF64748B), height: 1.5)
+                  ),
                   
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 48),
 
-                  // T&C Checkbox
+                  // Phone Input
+                  _buildPhoneInput(),
+                  
+                  const SizedBox(height: 24),
                   _buildTermsCheckbox(),
 
-                  const SizedBox(height: 20),
-
-                  // Truecaller Primary Action
-                  _buildTruecallerButton(),
-                  const SizedBox(height: 24),
-                  _buildDivider(),
-                  const SizedBox(height: 24),
-
-                  // Phone Input Fallback
-                  _buildPhoneInput(),
-
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 48),
                 ],
               ),
             ),
@@ -254,57 +193,29 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildTermsCheckbox() {
     return GestureDetector(
       onTap: () => setState(() => _agreedToTerms = !_agreedToTerms),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Checkbox(
-            value: _agreedToTerms,
-            onChanged: (v) => setState(() => _agreedToTerms = v ?? false),
-            activeColor: SahimedColors.primary,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-          ),
-          Flexible(
-            child: Text(
-              'I agree to the Terms & Conditions',
-              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: SahimedColors.slate500),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: 24,
+              width: 24,
+              child: Checkbox(
+                value: _agreedToTerms,
+                onChanged: (v) => setState(() => _agreedToTerms = v ?? false),
+                activeColor: SahimedColors.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTruecallerButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 58,
-      child: ElevatedButton.icon(
-        onPressed: _loginWithTruecaller,
-        icon: const Icon(Icons.verified_user_rounded, size: 22),
-        label: Text(
-          _isTruecallerReady ? '1-TAP LOGIN WITH TRUECALLER' : 'TRUECALLER (CHECKING...)',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 1.2),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _isTruecallerReady ? const Color(0xFF0087FF) : Colors.grey.shade400,
-          foregroundColor: Colors.white,
-          elevation: _isTruecallerReady ? 2 : 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            const SizedBox(width: 10),
+            Text(
+              'I agree to the Terms & Privacy Policy',
+              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: const Color(0xFF475569)),
+            ),
+          ],
         ),
       ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Row(
-      children: [
-        const Expanded(child: Divider()),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text('OR USE PHONE NUMBER', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w800, color: SahimedColors.slate400, letterSpacing: 1.5)),
-        ),
-        const Expanded(child: Divider()),
-      ],
     );
   }
 
@@ -313,56 +224,40 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: SahimedColors.slate100),
-        boxShadow: [
-          BoxShadow(color: SahimedColors.primary.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 5)),
-        ],
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 20, offset: const Offset(0, 10))],
       ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
+      padding: const EdgeInsets.all(8),
+      child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            decoration: BoxDecoration(
-              color: SahimedColors.slate50.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              children: [
-                Text('+91', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: SahimedColors.primary, fontSize: 16)),
-                const SizedBox(width: 12),
-                const SizedBox(height: 24, child: VerticalDivider(width: 1, color: SahimedColors.slate200)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
-                    decoration: InputDecoration(
-                      hintText: 'Mobile Number',
-                      border: InputBorder.none,
-                      hintStyle: GoogleFonts.outfit(color: SahimedColors.slate300, fontSize: 14),
-                    ),
-                  ),
-                ),
-              ],
+          const SizedBox(width: 20),
+          Text('+91', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: SahimedColors.primary, fontSize: 16)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+              decoration: InputDecoration(
+                hintText: 'Mobile Number',
+                border: InputBorder.none,
+                hintStyle: GoogleFonts.outfit(color: const Color(0xFFCBD5E1), fontSize: 15),
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _sendOtp,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: SahimedColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                elevation: 0,
+          GestureDetector(
+            onTap: _isLoading ? null : _sendOtp,
+            child: Container(
+              height: 52,
+              width: 52,
+              decoration: BoxDecoration(
+                color: SahimedColors.primary, 
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [BoxShadow(color: SahimedColors.primary.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
               ),
-              child: _isLoading
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : Text('SEND OTP', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 1)),
+              child: _isLoading 
+                ? const Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)))
+                : const Icon(Icons.arrow_forward_rounded, color: Colors.white),
             ),
           ),
         ],

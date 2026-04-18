@@ -454,7 +454,7 @@ class CartScreen extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 110), // Increased bottom padding to clear nav bar
           decoration: BoxDecoration(
             color: SahimedColors.white.withValues(alpha: 0.8),
             borderRadius: const BorderRadius.only(

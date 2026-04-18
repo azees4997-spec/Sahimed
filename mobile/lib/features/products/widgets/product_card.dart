@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/colors.dart';
 import '../../../shared/models/models.dart';
+import '../screens/brand_store_screen.dart';
 
 class SahimedProductCard extends StatelessWidget {
   final ProductModel product;
@@ -85,14 +86,29 @@ class SahimedProductCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (product.brand.isNotEmpty)
-                  Text(
-                    product.brand.toUpperCase(),
-                    style: GoogleFonts.outfit(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      color: SahimedColors.primary,
-                      letterSpacing: 1,
+                if ((product.company ?? product.brand).isNotEmpty)
+                  GestureDetector(
+                    onTap: () {
+                      final company = product.company ?? product.brand;
+                      if (company.isNotEmpty) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BrandStoreScreen(brandName: company),
+                          ),
+                        );
+                      }
+                    },
+                    child: Text(
+                      (product.company ?? product.brand).toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.outfit(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        color: SahimedColors.accent,
+                        letterSpacing: 1,
+                      ),
                     ),
                   ),
                 if (product.saltComposition != null)
@@ -146,7 +162,19 @@ class SahimedProductCard extends StatelessWidget {
                       ],
                     ),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        context.read<CartProvider>().addItem(product);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('ADDED TO CART', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10, color: Colors.white)),
+                            backgroundColor: SahimedColors.primary,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            margin: const EdgeInsets.all(20),
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+                      },
                       child: Container(
                         width: 44,
                         height: 44,
@@ -161,7 +189,7 @@ class SahimedProductCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.shopping_cart_outlined, color: Colors.white, size: 22),
+                        child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
                       ),
                     ),
                   ],

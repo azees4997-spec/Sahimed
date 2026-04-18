@@ -67,17 +67,42 @@ export async function POST(req: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
     
-    // 3. Generate Unique Order ID (ORDxxxx)
-    const lastOrder = await db.collection('orders').find().sort({ createdAt: -1 }).limit(1).toArray();
-    const lastId = lastOrder[0]?.orderId || "ORD0000";
-    const nextId = "ORD" + (parseInt(lastId.replace("ORD", "")) + 1).toString().padStart(4, '0');
+    // 3. Generate Atomic Unique Order ID (ORDxxxx)
+    const counterResult = await db.collection('counters').findOneAndUpdate(
+      { _id: 'orderId' },
+      { $inc: { seq: 1 } },
+      { upsert: true, returnDocument: 'after' }
+    );
+    
+    // Ensure the sequence starts from a reasonable number if it was just created
+    let seq = counterResult?.seq;
+    if (!seq) {
+      // Fallback/Init logic if sequence was somehow missing
+      const count = await db.collection('orders').countDocuments();
+      seq = count + 1;
+      await db.collection('counters').updateOne({ _id: 'orderId' }, { $set: { seq: seq } }, { upsert: true });
+    }
+    
+    const nextId = "ORD" + seq.toString().padStart(4, '0');
 
     // 4. Clinical Status Logic
     const isConsultation = body.clinicalPath === 'consult' || body.isConsultationRequired === true;
     const initialStatus = isConsultation ? 'Pending Consult' : (body.status || 'Confirmed');
 
+    // 5. White-list Fields (Security Hardening)
+    const allowedFields = [
+      'userId', 'patientName', 'phoneNumber', 'shippingDetails', 'billingBreakdown', 
+      'items', 'totalAmount', 'prescriptionUrls', 'isConsultationRequired', 
+      'clinicalPath', 'couponCode', 'discountAmount'
+    ];
+    
+    const sanitizedBody: any = {};
+    allowedFields.forEach(field => {
+      if (body[field] !== undefined) sanitizedBody[field] = body[field];
+    });
+
     const orderData = {
-      ...body,
+      ...sanitizedBody,
       orderId: nextId,
       orderDate: body.orderDate || new Date(),
       createdAt: new Date(),

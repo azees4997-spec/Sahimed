@@ -37,7 +37,8 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   Widget build(BuildContext context) {
-    final cartItemCount = context.watch<CartProvider>().items.length;
+    final cart = context.watch<CartProvider>();
+    final cartItemCount = cart.items.length;
 
     return Scaffold(
       backgroundColor: SahimedColors.background,
@@ -47,6 +48,16 @@ class _MainLayoutState extends State<MainLayout> {
             index: _currentIndex,
             children: _screens,
           ),
+          
+          // Persistent Cart Summary (Floating above Bottom Nav)
+          if (cartItemCount > 0 && _currentIndex != 2)
+            Positioned(
+              bottom: 100, // Above Bottom Nav
+              left: 20,
+              right: 20,
+              child: _buildCartSummary(cart),
+            ),
+
           Positioned(
             bottom: 0,
             left: 0,
@@ -58,37 +69,116 @@ class _MainLayoutState extends State<MainLayout> {
     );
   }
 
-  Widget _buildBottomNavigationBar(int cartItemCount) {
-    return ClipRRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+  Widget _buildCartSummary(CartProvider cart) {
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.elasticOut,
+      tween: Tween(begin: 0.0, end: 1.0),
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 50 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
+      },
+      child: GestureDetector(
+        onTap: () => setState(() => _currentIndex = 2),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
-            color: SahimedColors.white.withValues(alpha: 0.85),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(32),
-              topRight: Radius.circular(32),
+            gradient: const LinearGradient(
+              colors: [SahimedColors.primary, Color(0xFF4F46E5)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            border: Border.all(color: SahimedColors.white.withValues(alpha: 0.5)),
+            borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: SahimedColors.primary.withValues(alpha: 0.3),
                 blurRadius: 20,
-                offset: const Offset(0, -5),
+                offset: const Offset(0, 10),
               ),
             ],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(0, Icons.home_rounded, 'Home'),
-              _buildNavItem(1, LucideIcons.search, 'Explore'),
-              _buildNavItem(2, Icons.shopping_cart_rounded, 'Cart', badge: cartItemCount),
-              _buildNavItem(3, LucideIcons.user, 'Profile'),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(LucideIcons.shoppingBag, color: Colors.white, size: 18),
+              ),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${cart.items.length} ITEMS IN CART',
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white.withValues(alpha: 0.8),
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  Text(
+                    'VIEW BASKET',
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Text(
+                '₹${cart.total.toStringAsFixed(0)}',
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigationBar(int cartItemCount) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(32),
+          topRight: Radius.circular(32),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 25,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(0, LucideIcons.house, 'Home'),
+          _buildNavItem(1, LucideIcons.search, 'Explore'),
+          _buildNavItem(2, LucideIcons.shoppingCart, 'Cart', badge: cartItemCount),
+          _buildNavItem(3, LucideIcons.user, 'Profile'),
+        ],
       ),
     );
   }
@@ -99,7 +189,9 @@ class _MainLayoutState extends State<MainLayout> {
     return GestureDetector(
       onTap: () => _onItemTapped(index),
       behavior: HitTestBehavior.opaque,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected ? SahimedColors.primary.withValues(alpha: 0.1) : Colors.transparent,
@@ -113,7 +205,7 @@ class _MainLayoutState extends State<MainLayout> {
               children: [
                 Icon(
                   icon,
-                  size: 22,
+                  size: 20,
                   color: isSelected ? SahimedColors.primary : SahimedColors.slate400,
                 ),
                 if (badge > 0)
@@ -144,7 +236,7 @@ class _MainLayoutState extends State<MainLayout> {
                 label,
                 style: GoogleFonts.outfit(
                   fontSize: 12,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w900,
                   color: SahimedColors.primary,
                 ),
               ),

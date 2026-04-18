@@ -32,6 +32,7 @@ class CartProvider with ChangeNotifier {
     'campaignDiscount': totalSavings,
     'deliveryFees': deliveryFee,
     'packingFees': packingFee,
+    'savings': totalSavings,
     'netPayable': finalTotal,
   };
 

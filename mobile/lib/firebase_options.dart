@@ -40,26 +40,30 @@ class DefaultFirebaseOptions {
     messagingSenderId: '503492891847',
     projectId: 'studio-9756314138-8403b',
     authDomain: 'studio-9756314138-8403b.firebaseapp.com',
-    storageBucket: 'studio-9756314138-8403b.firebasestorage.app',
     databaseURL: 'https://studio-9756314138-8403b-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'studio-9756314138-8403b.firebasestorage.app',
+    measurementId: 'G-WQPC12CLH3',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBZjPHZjLz6TgXIAkqQ3uCsaAfO0HUj4qc',
-    appId: '1:503492891847:android:343468087943cc979c09ee', // Found from standard conventions or needs real config
+    apiKey: 'AIzaSyDmytFXM4JPh0BwF7vWZzRZ5i5C6tqa8hA',
+    appId: '1:503492891847:android:cde38602bb8fcf615c9ae2',
     messagingSenderId: '503492891847',
     projectId: 'studio-9756314138-8403b',
-    storageBucket: 'studio-9756314138-8403b.firebasestorage.app',
     databaseURL: 'https://studio-9756314138-8403b-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'studio-9756314138-8403b.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBZjPHZjLz6TgXIAkqQ3uCsaAfO0HUj4qc',
-    appId: '1:503492891847:ios:c48972e39e623a969c09ee', // Found from standard conventions or needs real config
+    apiKey: 'AIzaSyADVmlVYeriFgPerxD5VcuXTHwiCMd9vRk',
+    appId: '1:503492891847:ios:ecc273d8d3a460265c9ae2',
     messagingSenderId: '503492891847',
     projectId: 'studio-9756314138-8403b',
-    storageBucket: 'studio-9756314138-8403b.firebasestorage.app',
     databaseURL: 'https://studio-9756314138-8403b-default-rtdb.asia-southeast1.firebasedatabase.app',
-    iosBundleId: 'com.sahimed.sahimed_app',
+    storageBucket: 'studio-9756314138-8403b.firebasestorage.app',
+    androidClientId: '503492891847-dmbkgn77veikue59unahhmkbni2ojp9d.apps.googleusercontent.com',
+    iosClientId: '503492891847-fr2nvva5cdkuijn9nvdllvbb3e8tl1kj.apps.googleusercontent.com',
+    iosBundleId: 'com.sahimed.sahimedMobile',
   );
+
 }
