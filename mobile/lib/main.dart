@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/foundation.dart';
 import 'core/providers/cart_provider.dart';
+import 'core/providers/navigation_provider.dart';
 import 'features/auth/screens/splash_screen.dart';
 import 'firebase_options.dart';
 import 'core/layout/main_layout.dart';
@@ -47,6 +48,7 @@ class SahimedApp extends StatelessWidget {
       child: MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => CartProvider()),
+          ChangeNotifierProvider(create: (_) => NavigationProvider()),
         ],
         child: MaterialApp(
           title: 'Sahimed',

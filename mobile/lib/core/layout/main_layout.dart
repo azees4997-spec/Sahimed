@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../theme/colors.dart';
 import '../providers/cart_provider.dart';
+import '../providers/navigation_provider.dart';
 
 // Screens
 import '../../../features/home/screens/home_screen.dart';
@@ -39,6 +40,14 @@ class _MainLayoutState extends State<MainLayout> {
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
     final cartItemCount = cart.items.length;
+
+    // Listen to NavigationProvider so pushed routes can switch tabs
+    final navProvider = context.watch<NavigationProvider>();
+    if (navProvider.currentIndex != _currentIndex) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _currentIndex = navProvider.currentIndex);
+      });
+    }
 
     return PopScope(
       canPop: _currentIndex == 0,

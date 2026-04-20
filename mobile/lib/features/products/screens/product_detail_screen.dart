@@ -7,7 +7,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../shared/models/models.dart';
-import '../../home/screens/cart_screen.dart';
+import '../../../core/widgets/screen_with_nav.dart';
 
 // ─── Colors matching the website's Tailwind tokens ──────────────────────────
 // primary  = SahimedColors.primary  (green)
@@ -90,68 +90,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
         p.saltComposition ??
         'Information coming soon';
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
+    return ScreenWithNav(
+      child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF0F172A)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          // Cart icon with live badge — fixes the 'go to cart' broken flow
-          Consumer<CartProvider>(
-            builder: (context, cart, _) {
-              final count = cart.items.length;
-              return Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const CartScreen()),
-                    );
-                  },
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      const Icon(LucideIcons.shoppingCart,
-                          color: Color(0xFF0F172A), size: 22),
-                      if (count > 0)
-                        Positioned(
-                          top: -6,
-                          right: -6,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: SahimedColors.accent,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              count > 9 ? '9+' : '$count',
-                              style: GoogleFonts.outfit(
-                                fontSize: 8,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              );
-            },
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFF8FAFC),
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF0F172A)),
+            onPressed: () => Navigator.pop(context),
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(8, 0, 8, 120),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 200),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             // ── 1. RX Badge (centered, if needed) ──────────────────────────
             if (isRx)
               Padding(
@@ -314,7 +269,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
           ],
         ),
       ),
-    );
+    ), // Scaffold
+    ); // ScreenWithNav
   }
 }
 
