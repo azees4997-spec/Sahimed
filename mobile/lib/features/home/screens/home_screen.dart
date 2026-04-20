@@ -526,8 +526,8 @@ class _HomeScreenState extends State<HomeScreen> {
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.85,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.9,
       ),
       itemCount: cats.length,
       itemBuilder: (_, i) {
@@ -535,27 +535,43 @@ class _HomeScreenState extends State<HomeScreen> {
         return GestureDetector(
           onTap: () => _openCategory(context, cat),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: _catBg(i),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white, width: 1.5),
-                  ),
-                  clipBehavior: Clip.antiAlias,
+              // Circle image — exactly as website
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: _catBg(i),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 4),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x14000000),
+                      blurRadius: 12,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: ClipOval(
                   child: CachedNetworkImage(
                     imageUrl: cat.imageUrl,
                     fit: BoxFit.cover,
-                    errorWidget: (c, u, e) => Icon(LucideIcons.pill,
-                        color: SahimedColors.primary, size: 28),
+                    width: 80,
+                    height: 80,
+                    errorWidget: (c, u, e) => Icon(
+                      LucideIcons.pill,
+                      color: SahimedColors.primary,
+                      size: 28,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
                 cat.name.toUpperCase(),
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
@@ -563,6 +579,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontWeight: FontWeight.w900,
                   color: const Color(0xFF64748B),
                   letterSpacing: 0.5,
+                  height: 1.2,
                 ),
               ),
             ],
@@ -571,6 +588,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
+
 
   // ── Free Delivery Banner ──────────────────────────────────────────────────
   Widget _buildDeliveryBanner(BuildContext context) {
