@@ -507,7 +507,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisCount: 3,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
-        childAspectRatio: 0.65,
+        childAspectRatio: 0.55,
       ),
       itemCount: products.length,
       itemBuilder: (_, i) => _ProductCard(
@@ -672,13 +672,13 @@ class _HomeScreenState extends State<HomeScreen> {
   // ── Horizontal product scroll (Best Sellers section) ────────────────────
   Widget _horizontalProductScroll(BuildContext context) {
     return SizedBox(
-      height: 240,
+      height: 290,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _medicines.length,
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (_, i) => SizedBox(
-          width: 145,
+          width: 148,
           child: _ProductCard(
             product: _medicines[i],
             onTap: () => _openProduct(context, _medicines[i]),
@@ -765,19 +765,24 @@ class _ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image area
-            Expanded(
+            // Image area — fixed height so info section always has room
+            Container(
+              height: 90,
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Color(0xFFF8FAFC),
+                borderRadius:
+                    BorderRadius.vertical(top: Radius.circular(20)),
+              ),
               child: Stack(
                 children: [
-                  Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF8FAFC),
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(20)),
-                    ),
+                  ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(20)),
                     child: CachedNetworkImage(
                       imageUrl: product.imageUrl,
+                      width: double.infinity,
+                      height: 90,
                       fit: BoxFit.contain,
                       errorWidget: (c, u, e) => const Icon(LucideIcons.pill,
                           color: SahimedColors.primary, size: 28),
