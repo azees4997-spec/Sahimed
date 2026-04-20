@@ -7,6 +7,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../shared/models/models.dart';
+import '../../home/screens/cart_screen.dart';
 
 // ─── Colors matching the website's Tailwind tokens ──────────────────────────
 // primary  = SahimedColors.primary  (green)
@@ -99,6 +100,52 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
           icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF0F172A)),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          // Cart icon with live badge — fixes the 'go to cart' broken flow
+          Consumer<CartProvider>(
+            builder: (context, cart, _) {
+              final count = cart.items.length;
+              return Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CartScreen()),
+                    );
+                  },
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      const Icon(LucideIcons.shoppingCart,
+                          color: Color(0xFF0F172A), size: 22),
+                      if (count > 0)
+                        Positioned(
+                          top: -6,
+                          right: -6,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: SahimedColors.accent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              count > 9 ? '9+' : '$count',
+                              style: GoogleFonts.outfit(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(8, 0, 8, 120),
