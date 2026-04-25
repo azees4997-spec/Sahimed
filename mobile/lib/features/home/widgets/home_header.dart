@@ -146,11 +146,34 @@ class _HomeHeaderState extends State<HomeHeader> {
                   TextButton.icon(
                     onPressed: () async {
                       setStateDialog(() => isLoading = true);
-                      // In a real scenario, we would parse the pincode from GPS. 
-                      // For now, we fetch address and assume serviceable or add logic to location_service.
-                      await _initLocation();
-                      setStateDialog(() => isLoading = false);
-                      if (mounted) Navigator.pop(context);
+                      try {
+                        // Fetch the address
+                        final address = await _locationService.getCurrentAddress();
+                        
+                        if (mounted) {
+                          setState(() => _currentAddress = address);
+                          // Close the dialog immediately
+                          Navigator.pop(context);
+                          
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Location updated: $address'),
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Could not fetch location')),
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          setStateDialog(() => isLoading = false);
+                        }
+                      }
                     },
                     icon: const Icon(LucideIcons.locateFixed, size: 16),
                     label: Text(

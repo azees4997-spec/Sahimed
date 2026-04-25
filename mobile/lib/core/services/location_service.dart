@@ -81,9 +81,19 @@ class LocationService {
 
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
-        String address =
-            '${place.subLocality ?? place.locality}, ${place.administrativeArea}';
-        if (address.startsWith(', ')) address = address.substring(2);
+        
+        String? city = place.locality ?? place.subLocality ?? place.subAdministrativeArea;
+        String? state = place.administrativeArea;
+        
+        String address = '';
+        if (city != null && city.isNotEmpty) {
+          address = city;
+        }
+        if (state != null && state.isNotEmpty) {
+          if (address.isNotEmpty) address += ', ';
+          address += state;
+        }
+
         return address.isEmpty ? 'Unknown Location' : address;
       }
     } catch (e) {
