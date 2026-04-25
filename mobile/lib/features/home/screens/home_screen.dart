@@ -519,10 +519,10 @@ class _HomeScreenState extends State<HomeScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 0.58, // Standard ratio for 3-col grids
+        crossAxisCount: 2, // Website-like 2-column grid on mobile
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.68, // Adjusted for 2-column grid
       ),
       itemCount: products.length,
       itemBuilder: (_, i) => SahimedProductCard(
@@ -541,7 +541,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisCount: 3,
         crossAxisSpacing: 12,
         mainAxisSpacing: 16,
-        childAspectRatio: 0.9,
+        childAspectRatio: 0.85,
       ),
       itemCount: cats.length,
       itemBuilder: (_, i) {
@@ -553,17 +553,17 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               // Circle image — exactly as website
               Container(
-                width: 80,
-                height: 80,
+                width: 74,
+                height: 74,
                 decoration: BoxDecoration(
                   color: _catBg(i),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4),
+                  border: Border.all(color: Colors.white, width: 3),
                   boxShadow: const [
                     BoxShadow(
                       color: Color(0x14000000),
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
+                      blurRadius: 10,
+                      offset: Offset(0, 3),
                     ),
                   ],
                 ),
@@ -572,12 +572,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: CachedNetworkImage(
                     imageUrl: cat.imageUrl,
                     fit: BoxFit.cover,
-                    width: 80,
-                    height: 80,
+                    width: 74,
+                    height: 74,
                     errorWidget: (c, u, e) => Icon(
                       LucideIcons.pill,
                       color: SahimedColors.primary,
-                      size: 28,
+                      size: 24,
                     ),
                   ),
                 ),
@@ -589,11 +589,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
-                  fontSize: 7.5,
+                  fontSize: 7,
                   fontWeight: FontWeight.w900,
                   color: const Color(0xFF64748B),
                   letterSpacing: 0.5,
-                  height: 1.2,
+                  height: 1.1,
                 ),
               ),
             ],
@@ -704,13 +704,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _horizontalProductScroll(BuildContext context) {
     return SizedBox(
-      height: 200, // Compact height for horizontal scroll
+      height: 245, // Increased height to prevent Add button clipping
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _medicines.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (_, i) => SizedBox(
-          width: 120,
+          width: 155, // Wider cards for 2.3 - 2.5 items per screen view
           child: SahimedProductCard(
             product: _medicines[i],
           ),

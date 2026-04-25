@@ -634,10 +634,10 @@ class _SearchScreenState extends State<SearchScreen> {
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 200),
       itemCount: _results.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 0.58,
+        crossAxisCount: 2, // Consistency with home screen
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.68,
       ),
       itemBuilder: (context, index) {
         final product = _results[index];
