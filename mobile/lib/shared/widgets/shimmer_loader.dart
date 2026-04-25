@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../../core/theme/colors.dart';
 
 class SkeletonBox extends StatelessWidget {
   final double? width;
@@ -55,7 +54,7 @@ class HomeSkeleton extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Hero Section Shimmer
           Padding(
             padding: const EdgeInsets.all(20),
@@ -87,12 +86,15 @@ class HomeSkeleton extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
-              children: List.generate(3, (index) => Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(right: index == 2 ? 0 : 12),
-                  child: const SkeletonBox(height: 80, borderRadius: 20),
+              children: List.generate(
+                3,
+                (index) => Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(right: index == 2 ? 0 : 12),
+                    child: const SkeletonBox(height: 80, borderRadius: 20),
+                  ),
                 ),
-              )),
+              ),
             ),
           ),
 
@@ -133,7 +135,8 @@ class HomeSkeleton extends StatelessWidget {
                 childAspectRatio: 0.85,
               ),
               itemCount: 6,
-              itemBuilder: (context, index) => const SkeletonBox(height: 100, borderRadius: 24),
+              itemBuilder: (context, index) =>
+                  const SkeletonBox(height: 100, borderRadius: 24),
             ),
           ),
         ],
@@ -177,8 +180,12 @@ class SearchSkeleton extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const SkeletonBox(width: 100, height: 24, borderRadius: 4),
-                        SkeletonBox(width: 60, height: 32, borderRadius: 20)
+                        const SkeletonBox(
+                          width: 100,
+                          height: 24,
+                          borderRadius: 4,
+                        ),
+                        SkeletonBox(width: 60, height: 32, borderRadius: 20),
                       ],
                     ),
                   ],

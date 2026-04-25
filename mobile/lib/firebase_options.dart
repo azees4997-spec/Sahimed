@@ -40,7 +40,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '503492891847',
     projectId: 'studio-9756314138-8403b',
     authDomain: 'studio-9756314138-8403b.firebaseapp.com',
-    databaseURL: 'https://studio-9756314138-8403b-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://studio-9756314138-8403b-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'studio-9756314138-8403b.firebasestorage.app',
     measurementId: 'G-WQPC12CLH3',
   );
@@ -50,7 +51,8 @@ class DefaultFirebaseOptions {
     appId: '1:503492891847:android:cde38602bb8fcf615c9ae2',
     messagingSenderId: '503492891847',
     projectId: 'studio-9756314138-8403b',
-    databaseURL: 'https://studio-9756314138-8403b-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://studio-9756314138-8403b-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'studio-9756314138-8403b.firebasestorage.app',
   );
 
@@ -59,11 +61,13 @@ class DefaultFirebaseOptions {
     appId: '1:503492891847:ios:ecc273d8d3a460265c9ae2',
     messagingSenderId: '503492891847',
     projectId: 'studio-9756314138-8403b',
-    databaseURL: 'https://studio-9756314138-8403b-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://studio-9756314138-8403b-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'studio-9756314138-8403b.firebasestorage.app',
-    androidClientId: '503492891847-dmbkgn77veikue59unahhmkbni2ojp9d.apps.googleusercontent.com',
-    iosClientId: '503492891847-fr2nvva5cdkuijn9nvdllvbb3e8tl1kj.apps.googleusercontent.com',
+    androidClientId:
+        '503492891847-dmbkgn77veikue59unahhmkbni2ojp9d.apps.googleusercontent.com',
+    iosClientId:
+        '503492891847-fr2nvva5cdkuijn9nvdllvbb3e8tl1kj.apps.googleusercontent.com',
     iosBundleId: 'com.sahimed.sahimedMobile',
   );
-
 }

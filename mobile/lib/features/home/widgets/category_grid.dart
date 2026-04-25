@@ -10,7 +10,9 @@ class CategoryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayCategories = categories.length > 9 ? categories.sublist(0, 9) : categories;
+    final displayCategories = categories.length > 9
+        ? categories.sublist(0, 9)
+        : categories;
     return GridView.builder(
       padding: const EdgeInsets.all(20),
       shrinkWrap: true,
@@ -48,7 +50,10 @@ class CategoryGrid extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorWidget: (context, url, error) => Container(
                       decoration: BoxDecoration(color: bgColor),
-                      child: const Icon(Icons.medical_services_outlined, color: SahimedColors.primary),
+                      child: const Icon(
+                        Icons.medical_services_outlined,
+                        color: SahimedColors.primary,
+                      ),
                     ),
                   ),
                 ),

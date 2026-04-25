@@ -65,7 +65,10 @@ class SahimedProductCard extends StatelessWidget {
                   top: 12,
                   left: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: SahimedColors.accent,
                       borderRadius: BorderRadius.circular(100),
@@ -96,7 +99,8 @@ class SahimedProductCard extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => BrandStoreScreen(brandName: company),
+                            builder: (context) =>
+                                BrandStoreScreen(brandName: company),
                           ),
                         );
                       }
@@ -166,7 +170,7 @@ class SahimedProductCard extends StatelessWidget {
                     GestureDetector(
                       onTap: () {
                         context.read<CartProvider>().addItem(product);
-                        // Redundant SnackBar removed for premium feel. 
+                        // Redundant SnackBar removed for premium feel.
                         // The floating cart summary is the primary notification.
                       },
                       child: Container(
@@ -177,13 +181,19 @@ class SahimedProductCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: SahimedColors.primary.withValues(alpha: 0.25),
+                              color: SahimedColors.primary.withValues(
+                                alpha: 0.25,
+                              ),
                               blurRadius: 12,
                               offset: const Offset(0, 6),
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+                        child: const Icon(
+                          Icons.add_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
                       ),
                     ),
                   ],

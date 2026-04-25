@@ -29,7 +29,10 @@ class _AddressListScreenState extends State<AddressListScreen> {
       final addresses = await _apiService.getUserAddresses();
       setState(() => _addresses = addresses);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading addresses: $e')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading addresses: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -39,11 +42,35 @@ class _AddressListScreenState extends State<AddressListScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('DELETE ADDRESS?', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16)),
-        content: Text('This action cannot be undone.', style: GoogleFonts.inter(fontSize: 13, color: SahimedColors.slate500)),
+        title: Text(
+          'DELETE ADDRESS?',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16),
+        ),
+        content: Text(
+          'This action cannot be undone.',
+          style: GoogleFonts.inter(fontSize: 13, color: SahimedColors.slate500),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('CANCEL', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: SahimedColors.slate400))),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text('DELETE', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: Colors.red))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'CANCEL',
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                color: SahimedColors.slate400,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              'DELETE',
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.w900,
+                color: Colors.red,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -53,7 +80,10 @@ class _AddressListScreenState extends State<AddressListScreen> {
         await _apiService.deleteAddress(id);
         _loadAddresses();
       } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error deleting address')));
+        if (mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error deleting address')),
+          );
       }
     }
   }
@@ -71,21 +101,33 @@ class _AddressListScreenState extends State<AddressListScreen> {
         ),
         title: Text(
           'SAVED ADDRESSES',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16, color: const Color(0xFF0F172A), letterSpacing: 1),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.w900,
+            fontSize: 16,
+            color: const Color(0xFF0F172A),
+            letterSpacing: 1,
+          ),
         ),
         actions: [
           IconButton(
             onPressed: () async {
-              final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddressFormScreen()));
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AddressFormScreen(),
+                ),
+              );
               if (result == true) _loadAddresses();
             },
             icon: const Icon(LucideIcons.plus, color: SahimedColors.primary),
           ),
         ],
       ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator(color: SahimedColors.primary))
-        : _addresses.isEmpty
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: SahimedColors.primary),
+            )
+          : _addresses.isEmpty
           ? _buildEmptyState()
           : ListView.builder(
               padding: const EdgeInsets.all(20),
@@ -95,26 +137,42 @@ class _AddressListScreenState extends State<AddressListScreen> {
                 return _buildAddressCard(addr);
               },
             ),
-      bottomNavigationBar: _addresses.isEmpty ? null : Padding(
-        padding: const EdgeInsets.all(20),
-        child: SizedBox(
-          width: double.infinity,
-          height: 60,
-          child: ElevatedButton.icon(
-            onPressed: () async {
-              final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddressFormScreen()));
-              if (result == true) _loadAddresses();
-            },
-            icon: const Icon(LucideIcons.plus, size: 18),
-            label: Text('ADD NEW ADDRESS', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SahimedColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      bottomNavigationBar: _addresses.isEmpty
+          ? null
+          : Padding(
+              padding: const EdgeInsets.all(20),
+              child: SizedBox(
+                width: double.infinity,
+                height: 60,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddressFormScreen(),
+                      ),
+                    );
+                    if (result == true) _loadAddresses();
+                  },
+                  icon: const Icon(LucideIcons.plus, size: 18),
+                  label: Text(
+                    'ADD NEW ADDRESS',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: SahimedColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -125,21 +183,66 @@ class _AddressListScreenState extends State<AddressListScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)]),
-            child: const Icon(LucideIcons.mapPin, size: 64, color: SahimedColors.slate200),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 20,
+                ),
+              ],
+            ),
+            child: const Icon(
+              LucideIcons.mapPin,
+              size: 64,
+              color: SahimedColors.slate200,
+            ),
           ),
           const SizedBox(height: 24),
-          Text('NO SAVED ADDRESSES', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A))),
+          Text(
+            'NO SAVED ADDRESSES',
+            style: GoogleFonts.outfit(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
           const SizedBox(height: 8),
-          Text('Add your delivery locations for faster checkout', style: GoogleFonts.inter(fontSize: 13, color: SahimedColors.slate400)),
+          Text(
+            'Add your delivery locations for faster checkout',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: SahimedColors.slate400,
+            ),
+          ),
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: () async {
-              final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddressFormScreen()));
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AddressFormScreen(),
+                ),
+              );
               if (result == true) _loadAddresses();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: SahimedColors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
-            child: Text('ADD ADDRESS', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: SahimedColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: Text(
+              'ADD ADDRESS',
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.w900,
+                fontSize: 13,
+                letterSpacing: 1,
+              ),
+            ),
           ),
         ],
       ),
@@ -163,7 +266,17 @@ class _AddressListScreenState extends State<AddressListScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 8))]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Column(
         children: [
           Padding(
@@ -173,7 +286,10 @@ class _AddressListScreenState extends State<AddressListScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Icon(icon, color: iconColor, size: 24),
                 ),
                 const SizedBox(width: 16),
@@ -184,15 +300,48 @@ class _AddressListScreenState extends State<AddressListScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text((addr['tag'] ?? 'HOME').toUpperCase(), style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.primary, letterSpacing: 1.5)),
-                          const Icon(LucideIcons.check, color: SahimedColors.emerald500, size: 16),
+                          Text(
+                            (addr['tag'] ?? 'HOME').toUpperCase(),
+                            style: GoogleFonts.outfit(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: SahimedColors.primary,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                          const Icon(
+                            LucideIcons.check,
+                            color: SahimedColors.emerald500,
+                            size: 16,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 6),
-                      Text(addr['patientName'] ?? 'Unnamed', style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
+                      Text(
+                        addr['patientName'] ?? 'Unnamed',
+                        style: GoogleFonts.outfit(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text('${addr['houseNumber']}, ${addr['street']}', style: GoogleFonts.inter(fontSize: 13, color: SahimedColors.slate500, height: 1.4)),
-                      Text('${addr['city']}, ${addr['state']} - ${addr['pincode']}', style: GoogleFonts.inter(fontSize: 12, color: SahimedColors.slate400, fontWeight: FontWeight.w500)),
+                      Text(
+                        '${addr['houseNumber']}, ${addr['street']}',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: SahimedColors.slate500,
+                          height: 1.4,
+                        ),
+                      ),
+                      Text(
+                        '${addr['city']}, ${addr['state']} - ${addr['pincode']}',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: SahimedColors.slate400,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -201,25 +350,64 @@ class _AddressListScreenState extends State<AddressListScreen> {
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: const BoxDecoration(color: Color(0xFFF8FAFC), borderRadius: BorderRadius.vertical(bottom: Radius.circular(28))),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+            ),
             child: Row(
               children: [
-                const Icon(LucideIcons.phone, size: 14, color: SahimedColors.slate400),
+                const Icon(
+                  LucideIcons.phone,
+                  size: 14,
+                  color: SahimedColors.slate400,
+                ),
                 const SizedBox(width: 8),
-                Text(addr['phoneNumber'] ?? '', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: SahimedColors.slate500)),
+                Text(
+                  addr['phoneNumber'] ?? '',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: SahimedColors.slate500,
+                  ),
+                ),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: () async {
-                    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => AddressFormScreen(initialAddress: addr)));
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            AddressFormScreen(initialAddress: addr),
+                      ),
+                    );
                     if (result == true) _loadAddresses();
                   },
                   icon: const Icon(LucideIcons.pencil, size: 14),
-                  label: Text('EDIT', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1)),
+                  label: Text(
+                    'EDIT',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 10,
+                      letterSpacing: 1,
+                    ),
+                  ),
                 ),
                 TextButton.icon(
                   onPressed: () => _deleteAddress(addr['id']!),
-                  icon: const Icon(LucideIcons.trash2, size: 14, color: Colors.red),
-                  label: Text('REMOVE', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10, color: Colors.red, letterSpacing: 1)),
+                  icon: const Icon(
+                    LucideIcons.trash2,
+                    size: 14,
+                    color: Colors.red,
+                  ),
+                  label: Text(
+                    'REMOVE',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 10,
+                      color: Colors.red,
+                      letterSpacing: 1,
+                    ),
+                  ),
                 ),
               ],
             ),

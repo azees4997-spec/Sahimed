@@ -38,7 +38,9 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     _nameController = TextEditingController(text: addr?['patientName'] ?? '');
     _phoneController = TextEditingController(text: addr?['phoneNumber'] ?? '');
     _houseController = TextEditingController(text: addr?['houseNumber'] ?? '');
-    _apartmentController = TextEditingController(text: addr?['apartmentName'] ?? '');
+    _apartmentController = TextEditingController(
+      text: addr?['apartmentName'] ?? '',
+    );
     _streetController = TextEditingController(text: addr?['street'] ?? '');
     _landmarkController = TextEditingController(text: addr?['landmark'] ?? '');
     _cityController = TextEditingController(text: addr?['city'] ?? '');
@@ -55,10 +57,14 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         permission = await Geolocator.requestPermission();
       }
 
-      if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+      if (permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always) {
         Position position = await Geolocator.getCurrentPosition();
-        List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
-        
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+
         if (placemarks.isNotEmpty) {
           Placemark place = placemarks[0];
           setState(() {
@@ -70,7 +76,10 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         }
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not fetch location')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not fetch location')),
+        );
     } finally {
       setState(() => _isLocating = false);
     }
@@ -98,7 +107,10 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       await _apiService.saveAddress(addressData);
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving address: $e')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving address: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -117,7 +129,12 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         ),
         title: Text(
           widget.initialAddress == null ? 'ADD NEW ADDRESS' : 'EDIT ADDRESS',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16, color: const Color(0xFF0F172A), letterSpacing: 1),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.w900,
+            fontSize: 16,
+            color: const Color(0xFF0F172A),
+            letterSpacing: 1,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -127,7 +144,15 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('SAVE AS', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.slate400, letterSpacing: 2)),
+              Text(
+                'SAVE AS',
+                style: GoogleFonts.outfit(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: SahimedColors.slate400,
+                  letterSpacing: 2,
+                ),
+              ),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -139,42 +164,113 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                 ],
               ),
               const SizedBox(height: 32),
-              
+
               ElevatedButton.icon(
                 onPressed: _isLocating ? null : _getCurrentLocation,
-                icon: _isLocating ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: SahimedColors.primary)) : const Icon(LucideIcons.locateFixed, size: 18),
-                label: Text('USE CURRENT LOCATION', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1)),
+                icon: _isLocating
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: SahimedColors.primary,
+                        ),
+                      )
+                    : const Icon(LucideIcons.locateFixed, size: 18),
+                label: Text(
+                  'USE CURRENT LOCATION',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 11,
+                    letterSpacing: 1,
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: SahimedColors.primary.withOpacity(0.05),
                   foregroundColor: SahimedColors.primary,
                   elevation: 0,
                   minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: SahimedColors.primary.withOpacity(0.1))),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: SahimedColors.primary.withOpacity(0.1),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 32),
 
-              _buildTextField(controller: _nameController, label: 'RECEIVER NAME', hint: 'Full Name', icon: LucideIcons.user),
+              _buildTextField(
+                controller: _nameController,
+                label: 'RECEIVER NAME',
+                hint: 'Full Name',
+                icon: LucideIcons.user,
+              ),
               const SizedBox(height: 20),
-              _buildTextField(controller: _phoneController, label: 'MOBILE NUMBER', hint: '10-digit mobile', icon: LucideIcons.phone, keyboardType: TextInputType.phone),
+              _buildTextField(
+                controller: _phoneController,
+                label: 'MOBILE NUMBER',
+                hint: '10-digit mobile',
+                icon: LucideIcons.phone,
+                keyboardType: TextInputType.phone,
+              ),
               const SizedBox(height: 20),
               Row(
                 children: [
-                  Expanded(child: _buildTextField(controller: _houseController, label: 'HOUSE / FLAT NO', hint: 'Flat 101', icon: LucideIcons.hash)),
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _houseController,
+                      label: 'HOUSE / FLAT NO',
+                      hint: 'Flat 101',
+                      icon: LucideIcons.hash,
+                    ),
+                  ),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildTextField(controller: _apartmentController, label: 'APARTMENT', hint: 'Building Name', icon: LucideIcons.building2)),
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _apartmentController,
+                      label: 'APARTMENT',
+                      hint: 'Building Name',
+                      icon: LucideIcons.building2,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
-              _buildTextField(controller: _streetController, label: 'STREET / LOCALITY', hint: 'Area Name', icon: LucideIcons.mapPin),
+              _buildTextField(
+                controller: _streetController,
+                label: 'STREET / LOCALITY',
+                hint: 'Area Name',
+                icon: LucideIcons.mapPin,
+              ),
               const SizedBox(height: 20),
-              _buildTextField(controller: _landmarkController, label: 'LANDMARK', hint: 'Near by...', icon: LucideIcons.info),
+              _buildTextField(
+                controller: _landmarkController,
+                label: 'LANDMARK',
+                hint: 'Near by...',
+                icon: LucideIcons.info,
+              ),
               const SizedBox(height: 20),
               Row(
                 children: [
-                  Expanded(child: _buildTextField(controller: _cityController, label: 'CITY', hint: 'City', icon: LucideIcons.mapPin)),
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _cityController,
+                      label: 'CITY',
+                      hint: 'City',
+                      icon: LucideIcons.mapPin,
+                    ),
+                  ),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildTextField(controller: _pincodeController, label: 'PINCODE', hint: '6-digit', icon: LucideIcons.hash, keyboardType: TextInputType.number)),
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _pincodeController,
+                      label: 'PINCODE',
+                      hint: '6-digit',
+                      icon: LucideIcons.hash,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
                 ],
               ),
 
@@ -187,13 +283,22 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: SahimedColors.primary,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(32),
+                    ),
                     elevation: 10,
                     shadowColor: SahimedColors.primary.withOpacity(0.4),
                   ),
-                  child: _isLoading 
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text('CONFIRM ADDRESS', style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          'CONFIRM ADDRESS',
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 40),
@@ -214,14 +319,39 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
           decoration: BoxDecoration(
             color: isSelected ? SahimedColors.primary : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: isSelected ? SahimedColors.primary : SahimedColors.slate200, width: 1.5),
-            boxShadow: isSelected ? [BoxShadow(color: SahimedColors.primary.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4))] : [],
+            border: Border.all(
+              color: isSelected
+                  ? SahimedColors.primary
+                  : SahimedColors.slate200,
+              width: 1.5,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: SahimedColors.primary.withOpacity(0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [],
           ),
           child: Column(
             children: [
-              Icon(icon, size: 20, color: isSelected ? Colors.white : SahimedColors.slate400),
+              Icon(
+                icon,
+                size: 20,
+                color: isSelected ? Colors.white : SahimedColors.slate400,
+              ),
               const SizedBox(height: 6),
-              Text(tag.toUpperCase(), style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.w900, color: isSelected ? Colors.white : SahimedColors.slate400, letterSpacing: 1)),
+              Text(
+                tag.toUpperCase(),
+                style: GoogleFonts.outfit(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  color: isSelected ? Colors.white : SahimedColors.slate400,
+                  letterSpacing: 1,
+                ),
+              ),
             ],
           ),
         ),
@@ -241,22 +371,58 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(label, style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.w900, color: SahimedColors.slate400, letterSpacing: 1.5)),
+          child: Text(
+            label,
+            style: GoogleFonts.outfit(
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              color: SahimedColors.slate400,
+              letterSpacing: 1.5,
+            ),
+          ),
         ),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
-          style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+          style: GoogleFonts.outfit(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF0F172A),
+          ),
           decoration: InputDecoration(
             hintText: hint.toUpperCase(),
-            hintStyle: GoogleFonts.outfit(color: SahimedColors.slate300, fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 1),
-            prefixIcon: Icon(icon, size: 18, color: SahimedColors.primary.withOpacity(0.3)),
+            hintStyle: GoogleFonts.outfit(
+              color: SahimedColors.slate300,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 1,
+            ),
+            prefixIcon: Icon(
+              icon,
+              size: 18,
+              color: SahimedColors.primary.withOpacity(0.3),
+            ),
             filled: true,
             fillColor: const Color(0xFFF8FAFC),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: SahimedColors.primary, width: 1.5)),
-            errorStyle: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: SahimedColors.primary,
+                width: 1.5,
+              ),
+            ),
+            errorStyle: GoogleFonts.outfit(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           validator: (val) => (val == null || val.isEmpty) ? 'REQUIRED' : null,
         ),

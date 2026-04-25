@@ -5,6 +5,7 @@ plugins {
 allprojects {
     repositories {
         google()
+        maven { url = uri("https://storage.googleapis.com/download.flutter.io") }
         mavenCentral()
         maven { url = uri("https://truesdk.jfrog.io/truesdk/release") }
     }

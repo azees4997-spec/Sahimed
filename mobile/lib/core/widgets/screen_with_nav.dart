@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -50,7 +49,10 @@ class ScreenWithNav extends StatelessWidget {
             child: GestureDetector(
               onTap: () => _onNavTap(context, 2),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [SahimedColors.primary, Color(0xFF4F46E5)],
@@ -74,8 +76,11 @@ class ScreenWithNav extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(LucideIcons.shoppingBag,
-                          color: Colors.white, size: 18),
+                      child: const Icon(
+                        LucideIcons.shoppingBag,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Column(
@@ -83,7 +88,7 @@ class ScreenWithNav extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '${itemCount} ITEMS IN CART',
+                          '$itemCount ITEMS IN CART',
                           style: GoogleFonts.outfit(
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
@@ -111,8 +116,11 @@ class ScreenWithNav extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Icon(Icons.arrow_forward_ios_rounded,
-                        color: Colors.white, size: 14),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: Colors.white,
+                      size: 14,
+                    ),
                   ],
                 ),
               ),

@@ -53,8 +53,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
       return;
     }
     try {
-      final generic =
-          await _apiService.getGenericAlternative(widget.product.moleculeId!);
+      final generic = await _apiService.getGenericAlternative(
+        widget.product.moleculeId!,
+      );
       if (mounted) {
         setState(() {
           // Only set as alt if it is a different product
@@ -81,14 +82,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     final brandedPrice = p.price;
     final brandedMrp = p.mrp > 0 ? p.mrp : brandedPrice + 20;
     final genericPrice = _genericAlt?.price ?? 0.0;
-    final switchSavingsAmt =
-        showComparison ? (brandedMrp - genericPrice).clamp(0, double.infinity) : 0.0;
+    final switchSavingsAmt = showComparison
+        ? (brandedMrp - genericPrice).clamp(0, double.infinity)
+        : 0.0;
     final isRx = p.rxRequired || p.prescriptionRequired;
 
     // Salt composition label (same as website: molData?.molecule || saltComposition || ...)
-    final saltLabel = p.molName ??
-        p.saltComposition ??
-        'Information coming soon';
+    final saltLabel =
+        p.molName ?? p.saltComposition ?? 'Information coming soon';
 
     return ScreenWithNav(
       child: Scaffold(
@@ -107,100 +108,105 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            // ── 1. RX Badge (centered, if needed) ──────────────────────────
-            if (isRx)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444),
-                      borderRadius: BorderRadius.circular(100),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFEF4444).withOpacity(0.2),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
-                    ),
-                    child: Text(
-                      'RX REQUIRED',
-                      style: GoogleFonts.outfit(
-                        fontSize: 8,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 2,
+              // ── 1. RX Badge (centered, if needed) ──────────────────────────
+              if (isRx)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444),
+                        borderRadius: BorderRadius.circular(100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFEF4444).withOpacity(0.2),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        'RX REQUIRED',
+                        style: GoogleFonts.outfit(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 2,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
 
-            // ── 2. Salt Composition centered (exactly as website) ──────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Column(
-                children: [
-                  Text(
-                    'Salt Composition',
-                    style: GoogleFonts.outfit(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF94A3B8),
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    saltLabel.toUpperCase(),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF0F172A),
-                      letterSpacing: -0.5,
-                      height: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // ── 3. Switch-and-save banner (only when savings > 0) ──────────
-            if (showComparison && switchSavingsAmt > 0) ...[
+              // ── 2. Salt Composition centered (exactly as website) ──────────
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [SahimedColors.primary, SahimedColors.accent],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: SahimedColors.primary.withOpacity(0.25),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Column(
+                  children: [
+                    Text(
+                      'Salt Composition',
+                      style: GoogleFonts.outfit(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF94A3B8),
+                        letterSpacing: 2,
                       ),
-                    ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      saltLabel.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF0F172A),
+                        letterSpacing: -0.5,
+                        height: 1.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // ── 3. Switch-and-save banner (only when savings > 0) ──────────
+              if (showComparison && switchSavingsAmt > 0) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 4,
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(LucideIcons.trendingDown,
-                          size: 14, color: Colors.white),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Switch and save ₹${switchSavingsAmt.toStringAsFixed(0)} • Same Medicine',
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [SahimedColors.primary, SahimedColors.accent],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: SahimedColors.primary.withOpacity(0.25),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 16,
+                    ),
+                    child: Center(
+                      child: Text(
+                        'SAHI RECOMMENDED CHOICE: SAVE ₹${switchSavingsAmt.toStringAsFixed(0)}',
+                        textAlign: TextAlign.center,
                         style: GoogleFonts.outfit(
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
@@ -208,68 +214,72 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                           letterSpacing: 1,
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-            ],
+                const SizedBox(height: 8),
+              ],
 
-            // ── 4. Comparison Cards (2 cols) OR single card ────────────────
-            if (_isLoading)
-              const Padding(
-                padding: EdgeInsets.all(40),
-                child: Center(
-                  child: CircularProgressIndicator(color: SahimedColors.primary),
-                ),
-              )
-            else if (showComparison)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
+              // ── 4. Comparison Cards (2 cols) OR single card ────────────────
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.all(40),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: SahimedColors.primary,
+                    ),
+                  ),
+                )
+              else if (showComparison)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _ComparisonCard(
+                        product: widget.product,
+                        label: 'Branded Version',
+                        isAlt: false,
+                        brandedMrp: brandedMrp,
+                        showComparison: true,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _ComparisonCard(
+                        product: _genericAlt!,
+                        label: 'Sahi Recommended',
+                        isAlt: true,
+                        brandedMrp: brandedMrp,
+                        showComparison: true,
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Center(
+                  child: SizedBox(
+                    width: double.infinity,
                     child: _ComparisonCard(
                       product: widget.product,
-                      label: 'Branded Version',
+                      label: isBranded ? 'Branded Quality' : 'Sahi Recommended',
                       isAlt: false,
                       brandedMrp: brandedMrp,
-                      showComparison: true,
+                      showComparison: false,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _ComparisonCard(
-                      product: _genericAlt!,
-                      label: 'Save with Generic',
-                      isAlt: true,
-                      brandedMrp: brandedMrp,
-                      showComparison: true,
-                    ),
-                  ),
-                ],
-              )
-            else
-              Center(
-                child: SizedBox(
-                  width: double.infinity,
-                  child: _ComparisonCard(
-                    product: widget.product,
-                    label: isBranded ? 'Branded' : 'Generic Solution',
-                    isAlt: false,
-                    brandedMrp: brandedMrp,
-                    showComparison: false,
                   ),
                 ),
+
+              const SizedBox(height: 16),
+
+              // ── 5. Clinical Tabs (Information / Safety Advice / Interactions)
+              _ClinicalTabs(
+                product: widget.product,
+                tabController: _tabController,
               ),
-
-            const SizedBox(height: 16),
-
-            // ── 5. Clinical Tabs (Information / Safety Advice / Interactions)
-            _ClinicalTabs(product: widget.product, tabController: _tabController),
-          ],
+            ],
+          ),
         ),
-      ),
-    ), // Scaffold
+      ), // Scaffold
     ); // ScreenWithNav
   }
 }
@@ -325,9 +335,7 @@ class _ComparisonCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: isAlt
-            ? SahimedColors.accent.withOpacity(0.03)
-            : Colors.white,
+        color: isAlt ? SahimedColors.accent.withOpacity(0.03) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isAlt
@@ -352,9 +360,14 @@ class _ComparisonCard extends StatelessWidget {
             children: [
               Flexible(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
-                    color: isAlt ? SahimedColors.accent : const Color(0xFFF1F5F9),
+                    color: isAlt
+                        ? SahimedColors.accent
+                        : const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Text(
@@ -371,7 +384,10 @@ class _ComparisonCard extends StatelessWidget {
               ),
               if (_displaySavingsPct > 0)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: SahimedColors.primary,
                     borderRadius: BorderRadius.circular(6),
@@ -403,13 +419,16 @@ class _ComparisonCard extends StatelessWidget {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: CachedNetworkImage(
-                  imageUrl: product.imageUrl,
-                  fit: BoxFit.contain,
-                  errorWidget: (c, u, e) => const Icon(
-                    LucideIcons.pill,
-                    color: SahimedColors.primary,
-                    size: 28,
+                child: Hero(
+                  tag: 'prod_${product.id}',
+                  child: CachedNetworkImage(
+                    imageUrl: product.imageUrl,
+                    fit: BoxFit.contain,
+                    errorWidget: (c, u, e) => const Icon(
+                      LucideIcons.pill,
+                      color: SahimedColors.primary,
+                      size: 28,
+                    ),
                   ),
                 ),
               ),
@@ -486,7 +505,10 @@ class _ComparisonCard extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 1,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFECFDF5),
                         borderRadius: BorderRadius.circular(4),
@@ -529,8 +551,9 @@ class _ComparisonCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(100),
                 boxShadow: [
                   BoxShadow(
-                    color: (isAlt ? SahimedColors.accent : SahimedColors.primary)
-                        .withOpacity(0.3),
+                    color:
+                        (isAlt ? SahimedColors.accent : SahimedColors.primary)
+                            .withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -549,8 +572,11 @@ class _ComparisonCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Icon(LucideIcons.shoppingCart,
-                      size: 12, color: Colors.white),
+                  const Icon(
+                    LucideIcons.shoppingCart,
+                    size: 12,
+                    color: Colors.white,
+                  ),
                 ],
               ),
             ),
@@ -574,8 +600,11 @@ class _ComparisonCard extends StatelessWidget {
           child: CachedNetworkImage(
             imageUrl: product.imageUrl,
             fit: BoxFit.contain,
-            errorWidget: (c, u, e) => const Icon(LucideIcons.pill,
-                color: SahimedColors.primary, size: 80),
+            errorWidget: (c, u, e) => const Icon(
+              LucideIcons.pill,
+              color: SahimedColors.primary,
+              size: 80,
+            ),
           ),
         ),
       ),
@@ -696,7 +725,9 @@ class _ClinicalTabs extends StatelessWidget {
                         child: _SafetyTile(
                           icon: LucideIcons.triangleAlert,
                           title: 'Safety Advice',
-                          text: product.safetyAdvice ?? 'Follow medical guidance.',
+                          text:
+                              product.safetyAdvice ??
+                              'Follow medical guidance.',
                           iconColor: const Color(0xFFEF4444),
                           bgColor: const Color(0xFFFFF1F2),
                           textColor: const Color(0xFF9F1239),
@@ -708,7 +739,9 @@ class _ClinicalTabs extends StatelessWidget {
                         child: _SafetyTile(
                           icon: LucideIcons.stethoscope,
                           title: 'How to Use',
-                          text: product.howToUse ?? 'Take as directed by your doctor.',
+                          text:
+                              product.howToUse ??
+                              'Take as directed by your doctor.',
                           iconColor: SahimedColors.primary,
                           bgColor: const Color(0xFFEFF6FF),
                           textColor: const Color(0xFF334155),
@@ -727,7 +760,7 @@ class _ClinicalTabs extends StatelessWidget {
                     crossAxisCount: 2,
                     mainAxisSpacing: 8,
                     crossAxisSpacing: 8,
-                    childAspectRatio: 1.5,
+                    childAspectRatio: 1.8,
                     children: [
                       _InteractionTile(
                         icon: LucideIcons.flaskConical,
@@ -795,7 +828,7 @@ class _InfoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(20),
@@ -860,7 +893,7 @@ class _SafetyTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(20),
@@ -876,10 +909,7 @@ class _SafetyTile extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 6,
-                ),
+                BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6),
               ],
             ),
             child: Icon(icon, size: 16, color: iconColor),

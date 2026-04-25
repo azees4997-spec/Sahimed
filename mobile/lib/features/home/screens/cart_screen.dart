@@ -25,13 +25,20 @@ class _CartScreenState extends State<CartScreen> {
     if (_promosLoaded) return;
     try {
       final promos = await _apiService.getPromos();
-      if (mounted) setState(() { _promos = promos; _promosLoaded = true; });
-    } catch (_) { _promosLoaded = true; }
+      if (mounted) {
+        setState(() {
+          _promos = promos;
+          _promosLoaded = true;
+        });
+      }
+    } catch (_) {
+      _promosLoaded = true;
+    }
   }
 
   void _showPromoSheet(BuildContext context, CartProvider cart) async {
     await _loadPromos();
-    if (!mounted) return;
+    if (!context.mounted) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -42,13 +49,19 @@ class _CartScreenState extends State<CartScreen> {
         onApply: (promo) {
           cart.applyPromo(promo);
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Coupon ${promo.code} applied!',
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w900)),
-            backgroundColor: SahimedColors.primary,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Coupon ${promo.code} applied!',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w900),
+              ),
+              backgroundColor: SahimedColors.primary,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          );
         },
       ),
     );
@@ -84,12 +97,16 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                   const SizedBox(width: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: SahimedColors.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(100),
                       border: Border.all(
-                          color: SahimedColors.primary.withValues(alpha: 0.15)),
+                        color: SahimedColors.primary.withValues(alpha: 0.15),
+                      ),
                     ),
                     child: Text(
                       '${cart.items.length} ITEMS',
@@ -107,7 +124,14 @@ class _CartScreenState extends State<CartScreen> {
               const SizedBox(height: 16),
 
               // ── Cart Items ─────────────────────────────────────────────
-              ...cart.items.map((item) => _CartItemTile(item: item, cart: cart)),
+              ...cart.items.map(
+                (item) => _CartItemTile(item: item, cart: cart),
+              ),
+
+              const SizedBox(height: 16),
+
+              // ── Loss Avoidance Alert (Sahi Recommended) ─────────────────
+              _SahiRecsSection(cart: cart, apiService: _apiService),
 
               const SizedBox(height: 16),
 
@@ -143,8 +167,11 @@ class _CartScreenState extends State<CartScreen> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(LucideIcons.ticket,
-                            size: 18, color: SahimedColors.primary),
+                        child: Icon(
+                          LucideIcons.ticket,
+                          size: 18,
+                          color: SahimedColors.primary,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -176,8 +203,11 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         )
                       else
-                        Icon(LucideIcons.chevronRight,
-                            size: 18, color: const Color(0xFF94A3B8)),
+                        Icon(
+                          LucideIcons.chevronRight,
+                          size: 18,
+                          color: const Color(0xFF94A3B8),
+                        ),
                     ],
                   ),
                 ),
@@ -216,40 +246,46 @@ class _CartScreenState extends State<CartScreen> {
 
                     // Total MRP
                     _SummaryRow(
-                        label: 'Total MRP',
-                        value: '₹${cart.subtotal.toStringAsFixed(2)}',
-                        valueColor: const Color(0xFF64748B)),
+                      label: 'Total MRP',
+                      value: '₹${cart.subtotal.toStringAsFixed(2)}',
+                      valueColor: const Color(0xFF64748B),
+                    ),
 
                     // Price Discount
                     if (cart.subtotal > cart.total)
                       _SummaryRow(
-                          label: 'Price Discount',
-                          value: '-₹${(cart.subtotal - cart.total).toStringAsFixed(2)}',
-                          valueColor: SahimedColors.primary),
+                        label: 'Price Discount',
+                        value:
+                            '-₹${(cart.subtotal - cart.total).toStringAsFixed(2)}',
+                        valueColor: SahimedColors.primary,
+                      ),
 
                     // Coupon savings
                     if (cart.appliedPromo != null && cart.promoDiscount > 0)
                       _SummaryRow(
-                          label: 'Coupon Savings',
-                          value: '-₹${cart.promoDiscount.toStringAsFixed(2)}',
-                          valueColor: SahimedColors.primary),
+                        label: 'Coupon Savings',
+                        value: '-₹${cart.promoDiscount.toStringAsFixed(2)}',
+                        valueColor: SahimedColors.primary,
+                      ),
 
                     // Delivery fee
                     _SummaryRow(
-                        label: 'Delivery Fee',
-                        value: cart.deliveryFee > 0
-                            ? '₹${cart.deliveryFee.toStringAsFixed(2)}'
-                            : 'FREE',
-                        valueColor: cart.deliveryFee > 0
-                            ? const Color(0xFF64748B)
-                            : const Color(0xFF059669)),
+                      label: 'Delivery Fee',
+                      value: cart.deliveryFee > 0
+                          ? '₹${cart.deliveryFee.toStringAsFixed(2)}'
+                          : 'FREE',
+                      valueColor: cart.deliveryFee > 0
+                          ? const Color(0xFF64748B)
+                          : const Color(0xFF059669),
+                    ),
 
                     // Packing
                     if (cart.packingFee > 0)
                       _SummaryRow(
-                          label: 'Packing Fee',
-                          value: '₹${cart.packingFee.toStringAsFixed(2)}',
-                          valueColor: const Color(0xFF64748B)),
+                        label: 'Packing Fee',
+                        value: '₹${cart.packingFee.toStringAsFixed(2)}',
+                        valueColor: const Color(0xFF64748B),
+                      ),
 
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
@@ -288,12 +324,13 @@ class _CartScreenState extends State<CartScreen> {
                       const SizedBox(height: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFECFDF5),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                              color: const Color(0xFFD1FAE5)),
+                          border: Border.all(color: const Color(0xFFD1FAE5)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -309,7 +346,9 @@ class _CartScreenState extends State<CartScreen> {
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFD1FAE5),
                                 borderRadius: BorderRadius.circular(8),
@@ -344,9 +383,11 @@ class _CartScreenState extends State<CartScreen> {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.95),
                 borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(36)),
+                  top: Radius.circular(36),
+                ),
                 border: Border.all(
-                    color: SahimedColors.primary.withValues(alpha: 0.05)),
+                  color: SahimedColors.primary.withValues(alpha: 0.05),
+                ),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x18000000),
@@ -399,12 +440,13 @@ class _CartScreenState extends State<CartScreen> {
                         Container(
                           margin: const EdgeInsets.only(top: 3),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFECFDF5),
                             borderRadius: BorderRadius.circular(100),
-                            border: Border.all(
-                                color: const Color(0xFFD1FAE5)),
+                            border: Border.all(color: const Color(0xFFD1FAE5)),
                           ),
                           child: Text(
                             'SAVED ₹${totalSavings.toStringAsFixed(0)}',
@@ -427,7 +469,8 @@ class _CartScreenState extends State<CartScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => const CheckoutScreen()),
+                          builder: (_) => const CheckoutScreen(),
+                        ),
                       ),
                       child: Container(
                         height: 52,
@@ -436,8 +479,9 @@ class _CartScreenState extends State<CartScreen> {
                           borderRadius: BorderRadius.circular(100),
                           boxShadow: [
                             BoxShadow(
-                              color:
-                                  SahimedColors.primary.withValues(alpha: 0.35),
+                              color: SahimedColors.primary.withValues(
+                                alpha: 0.35,
+                              ),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -456,8 +500,11 @@ class _CartScreenState extends State<CartScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            const Icon(LucideIcons.chevronRight,
-                                size: 16, color: Colors.white),
+                            const Icon(
+                              LucideIcons.chevronRight,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                           ],
                         ),
                       ),
@@ -518,8 +565,11 @@ class _CartItemTile extends StatelessWidget {
             child: CachedNetworkImage(
               imageUrl: p.imageUrl,
               fit: BoxFit.contain,
-              errorWidget: (c, u, e) => const Icon(LucideIcons.pill,
-                  color: SahimedColors.primary, size: 24),
+              errorWidget: (c, u, e) => const Icon(
+                LucideIcons.pill,
+                color: SahimedColors.primary,
+                size: 24,
+              ),
             ),
           ),
 
@@ -610,8 +660,10 @@ class _CartItemTile extends StatelessWidget {
               if (savingsAmt > 0)
                 Container(
                   margin: const EdgeInsets.only(top: 2),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFECFDF5),
                     borderRadius: BorderRadius.circular(6),
@@ -636,8 +688,11 @@ class _CartItemTile extends StatelessWidget {
                     color: const Color(0xFFFFF1F2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(LucideIcons.trash2,
-                      size: 14, color: Color(0xFFE11D48)),
+                  child: const Icon(
+                    LucideIcons.trash2,
+                    size: 14,
+                    color: Color(0xFFE11D48),
+                  ),
                 ),
               ),
             ],
@@ -665,9 +720,7 @@ class _QtyBtn extends StatelessWidget {
           color: Colors.white,
           shape: BoxShape.circle,
           border: Border.all(color: const Color(0xFFF1F5F9)),
-          boxShadow: const [
-            BoxShadow(color: Color(0x08000000), blurRadius: 4),
-          ],
+          boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 4)],
         ),
         child: Icon(icon, size: 12, color: SahimedColors.primary),
       ),
@@ -680,8 +733,11 @@ class _SummaryRow extends StatelessWidget {
   final String label;
   final String value;
   final Color valueColor;
-  const _SummaryRow(
-      {required this.label, required this.value, required this.valueColor});
+  const _SummaryRow({
+    required this.label,
+    required this.value,
+    required this.valueColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -738,8 +794,11 @@ class _EmptyCart extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Icon(LucideIcons.shoppingCart,
-                  size: 44, color: Color(0xFFCBD5E1)),
+              child: const Icon(
+                LucideIcons.shoppingCart,
+                size: 44,
+                color: Color(0xFFCBD5E1),
+              ),
             ),
             const SizedBox(height: 24),
             Text(
@@ -766,7 +825,9 @@ class _EmptyCart extends StatelessWidget {
               onTap: () => Navigator.pop(context),
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 36, vertical: 16),
+                  horizontal: 36,
+                  vertical: 16,
+                ),
                 decoration: BoxDecoration(
                   color: SahimedColors.primary,
                   borderRadius: BorderRadius.circular(100),
@@ -802,8 +863,11 @@ class _PromoSheet extends StatelessWidget {
   final CartProvider cart;
   final void Function(PromoModel) onApply;
 
-  const _PromoSheet(
-      {required this.promos, required this.cart, required this.onApply});
+  const _PromoSheet({
+    required this.promos,
+    required this.cart,
+    required this.onApply,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -813,7 +877,8 @@ class _PromoSheet extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
       ),
       constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.75),
+        maxHeight: MediaQuery.of(context).size.height * 0.75,
+      ),
       child: Column(
         children: [
           // Handle
@@ -833,8 +898,7 @@ class _PromoSheet extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
             decoration: const BoxDecoration(
               color: SahimedColors.primary,
-              borderRadius:
-                  BorderRadius.vertical(top: Radius.circular(40)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -868,8 +932,11 @@ class _PromoSheet extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(LucideIcons.ticket,
-                            size: 48, color: Color(0xFFE2E8F0)),
+                        const Icon(
+                          LucideIcons.ticket,
+                          size: 48,
+                          color: Color(0xFFE2E8F0),
+                        ),
                         const SizedBox(height: 12),
                         Text(
                           'NO ACTIVE REWARDS AVAILABLE',
@@ -886,15 +953,12 @@ class _PromoSheet extends StatelessWidget {
                 : ListView.separated(
                     padding: const EdgeInsets.all(20),
                     itemCount: promos.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: 12),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (_, i) {
                       final promo = promos[i];
-                      final isApplicable =
-                          cart.total >= promo.minOrderValue;
+                      final isApplicable = cart.total >= promo.minOrderValue;
                       final progressPct = promo.minOrderValue > 0
-                          ? (cart.total / promo.minOrderValue)
-                              .clamp(0.0, 1.0)
+                          ? (cart.total / promo.minOrderValue).clamp(0.0, 1.0)
                           : 1.0;
                       return GestureDetector(
                         onTap: isApplicable ? () => onApply(promo) : null,
@@ -917,7 +981,7 @@ class _PromoSheet extends StatelessWidget {
                                         color: Color(0x08000000),
                                         blurRadius: 12,
                                         offset: Offset(0, 4),
-                                      )
+                                      ),
                                     ]
                                   : null,
                             ),
@@ -930,12 +994,16 @@ class _PromoSheet extends StatelessWidget {
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 4),
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: SahimedColors.primary
-                                            .withValues(alpha: 0.1),
-                                        borderRadius:
-                                            BorderRadius.circular(100),
+                                        color: SahimedColors.primary.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          100,
+                                        ),
                                       ),
                                       child: Text(
                                         promo.code,
@@ -975,16 +1043,18 @@ class _PromoSheet extends StatelessWidget {
                                     children: [
                                       Expanded(
                                         child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(100),
+                                          borderRadius: BorderRadius.circular(
+                                            100,
+                                          ),
                                           child: LinearProgressIndicator(
                                             value: progressPct,
                                             minHeight: 6,
-                                            backgroundColor:
-                                                const Color(0xFFE2E8F0),
-                                            valueColor:
-                                                AlwaysStoppedAnimation(
-                                                    SahimedColors.primary),
+                                            backgroundColor: const Color(
+                                              0xFFE2E8F0,
+                                            ),
+                                            valueColor: AlwaysStoppedAnimation(
+                                              SahimedColors.primary,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -1007,8 +1077,9 @@ class _PromoSheet extends StatelessWidget {
                                     style: GoogleFonts.outfit(
                                       fontSize: 8,
                                       fontWeight: FontWeight.w900,
-                                      color: SahimedColors.primary
-                                          .withValues(alpha: 0.4),
+                                      color: SahimedColors.primary.withValues(
+                                        alpha: 0.4,
+                                      ),
                                       letterSpacing: 1,
                                     ),
                                   ),
@@ -1022,6 +1093,294 @@ class _PromoSheet extends StatelessWidget {
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Sahi Recommended Section (Loss Aversion) ─────────────────────────────
+class _SahiRecsSection extends StatefulWidget {
+  final CartProvider cart;
+  final ApiService apiService;
+  const _SahiRecsSection({required this.cart, required this.apiService});
+
+  @override
+  State<_SahiRecsSection> createState() => _SahiRecsSectionState();
+}
+
+class _SahiRecsSectionState extends State<_SahiRecsSection> {
+  List<Map<String, dynamic>> _recs = [];
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _findRecs();
+  }
+
+  @override
+  void didUpdateWidget(_SahiRecsSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.cart.items.length != widget.cart.items.length) {
+      _findRecs();
+    }
+  }
+
+  Future<void> _findRecs() async {
+    final brandedItems = widget.cart.items
+        .where((i) => !i.product.isGeneric)
+        .toList();
+    if (brandedItems.isEmpty) {
+      if (mounted) setState(() => _recs = []);
+      return;
+    }
+
+    if (mounted) setState(() => _loading = true);
+
+    List<Map<String, dynamic>> found = [];
+    for (var item in brandedItems) {
+      if (item.product.moleculeId != null) {
+        final alt = await widget.apiService.getGenericAlternative(
+          item.product.moleculeId!,
+        );
+        if (alt != null && alt.id != item.product.id) {
+          final loss = (item.product.mrp - alt.price).clamp(0, double.infinity);
+          if (loss > 0) {
+            found.add({
+              'original': item.product,
+              'recommended': alt,
+              'loss': loss * item.quantity,
+            });
+          }
+        }
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _recs = found;
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading)
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    if (_recs.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          child: Row(
+            children: [
+              const Icon(
+                LucideIcons.sparkles,
+                size: 16,
+                color: SahimedColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'SMART SAVINGS RECOMMENDATION',
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  color: SahimedColors.primary,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+        ..._recs.map(
+          (rec) => _LossAlertCard(
+            original: rec['original'],
+            recommended: rec['recommended'],
+            loss: rec['loss'],
+            onSwap: () {
+              widget.cart.removeItem(rec['original'].id);
+              widget.cart.addItem(rec['recommended']);
+              _findRecs();
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LossAlertCard extends StatelessWidget {
+  final ProductModel original;
+  final ProductModel recommended;
+  final double loss;
+  final VoidCallback onSwap;
+
+  const _LossAlertCard({
+    required this.original,
+    required this.recommended,
+    required this.loss,
+    required this.onSwap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFF1F2), Colors.white],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: SahimedColors.primary.withOpacity(0.2),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFE11D48).withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Loss Icon
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: SahimedColors.primary,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    LucideIcons.sparkles,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'SAVE ₹${loss.toStringAsFixed(0)} BY SWITCHING',
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: SahimedColors.primary,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'SMART CHOICE: SAME COMPOSITION, BETTER PRICE',
+                        style: GoogleFonts.outfit(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w900,
+                          color: SahimedColors.primary.withOpacity(0.7),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: CachedNetworkImage(
+                      imageUrl: recommended.imageUrl,
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          recommended.name.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF0F172A),
+                          ),
+                        ),
+                        Text(
+                          'SAME COMPOSITION • SAVE ₹${(original.mrp - recommended.price).toStringAsFixed(0)}',
+                          style: GoogleFonts.outfit(
+                            fontSize: 7,
+                            fontWeight: FontWeight.bold,
+                            color: SahimedColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: onSwap,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: SahimedColors.primary,
+                        borderRadius: BorderRadius.circular(100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: SahimedColors.primary.withOpacity(0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        'SWAP',
+                        style: GoogleFonts.outfit(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

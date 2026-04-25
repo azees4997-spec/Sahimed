@@ -16,7 +16,9 @@ class ApiService {
   // --- Memory Caching Layer ---
   static final Map<String, dynamic> _cache = {};
   static final Map<String, DateTime> _cacheTime = {};
-  static const Duration _cacheDuration = Duration(minutes: 15);
+  static const Duration _cacheDuration = Duration(
+    minutes: 30,
+  ); // Extended cache
 
   dynamic _getCached(String key) {
     if (_cache.containsKey(key)) {
@@ -35,9 +37,7 @@ class ApiService {
 
   Future<Map<String, String>> _getHeaders() async {
     final user = _auth.currentUser;
-    final Map<String, String> headers = {
-      'Content-Type': 'application/json',
-    };
+    final Map<String, String> headers = {'Content-Type': 'application/json'};
     if (user != null) {
       final token = await user.getIdToken();
       headers['Authorization'] = 'Bearer $token';
@@ -50,7 +50,9 @@ class ApiService {
     if (cached != null) return cached;
 
     try {
-      final response = await http.get(Uri.parse('$baseUrl/categories?limit=12'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/categories?limit=12'),
+      );
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         final list = data.map((item) => CategoryModel.fromJson(item)).toList();
@@ -64,13 +66,19 @@ class ApiService {
   }
 
   Future<List<ProductModel>> getProducts({bool isBestSeller = false}) async {
+    final cacheKey = 'products_${isBestSeller ? "bestseller" : "all"}';
+    final cached = _getCached(cacheKey);
+    if (cached != null) return List<ProductModel>.from(cached);
+
     try {
       String url = '$baseUrl/products?limit=20';
       if (isBestSeller) url += '&isBestSeller=true';
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        return data.map((item) => ProductModel.fromJson(item)).toList();
+        final list = data.map((item) => ProductModel.fromJson(item)).toList();
+        _setCache(cacheKey, list);
+        return list;
       }
     } catch (e) {
       debugPrint('Error fetching products: $e');
@@ -78,21 +86,40 @@ class ApiService {
     return [];
   }
 
-  Future<List<ProductModel>> getProductsByCategory(String categoryId, {String? categoryName}) async {
+  Future<List<ProductModel>> getProductsByCategory(
+    String categoryId, {
+    String? categoryName,
+  }) async {
+    final cacheKey = 'cat_products_$categoryId';
+    final cached = _getCached(cacheKey);
+    if (cached != null) return List<ProductModel>.from(cached);
+
     try {
-      final response = await http.get(Uri.parse('$baseUrl/products?category=$categoryId&limit=50'));
+      final encodedId = Uri.encodeComponent(categoryId);
+      final response = await http.get(
+        Uri.parse('$baseUrl/products?category=$encodedId&limit=50'),
+      );
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         if (data.isNotEmpty) {
-          return data.map((item) => ProductModel.fromJson(item)).toList();
+          final list = data.map((item) => ProductModel.fromJson(item)).toList();
+          _setCache(cacheKey, list);
+          return list;
         }
       }
 
       if (categoryName != null) {
-        final nameResponse = await http.get(Uri.parse('$baseUrl/products?category=${Uri.encodeComponent(categoryName)}&limit=50'));
+        final encodedName = Uri.encodeComponent(categoryName);
+        final nameResponse = await http.get(
+          Uri.parse(
+            '$baseUrl/products?category=$encodedName&limit=50',
+          ),
+        );
         if (nameResponse.statusCode == 200) {
           final List<dynamic> data = json.decode(nameResponse.body);
-          return data.map((item) => ProductModel.fromJson(item)).toList();
+          final list = data.map((item) => ProductModel.fromJson(item)).toList();
+          _setCache(cacheKey, list);
+          return list;
         }
       }
     } catch (e) {
@@ -102,26 +129,67 @@ class ApiService {
   }
 
   Future<ProductModel?> getGenericAlternative(String moleculeId) async {
+    final cacheKey = 'generic_$moleculeId';
+    final cached = _getCached(cacheKey);
+    if (cached != null) return cached;
+
     try {
-      final response = await http.get(Uri.parse('$baseUrl/products/molecule/$moleculeId?isGeneric=true&limit=1'));
+      // Updated to match website search pattern: products?moleculeId=...&isGeneric=true
+      final response = await http.get(
+        Uri.parse(
+          '$baseUrl/products?moleculeId=$moleculeId&isGeneric=true&limit=1',
+        ),
+      );
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         if (data.isNotEmpty) {
-          return ProductModel.fromJson(data.first);
+          final product = ProductModel.fromJson(data.first);
+          _setCache(cacheKey, product);
+          return product;
         }
       }
     } catch (e) {
-      debugPrint('Error fetching generic alternative: $e');
+      debugPrint('Error fetching Sahi Recommended alternative: $e');
     }
     return null;
   }
 
-  Future<List<ProductModel>> searchProducts(String query) async {
+  Future<List<ProductModel>> getGenericAlternatives(
+    String moleculeId, {
+    int limit = 5,
+  }) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/products?q=$query&limit=20'));
+      final response = await http.get(
+        Uri.parse(
+          '$baseUrl/products?moleculeId=$moleculeId&isGeneric=true&limit=$limit',
+        ),
+      );
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((item) => ProductModel.fromJson(item)).toList();
+      }
+    } catch (e) {
+      debugPrint('Error fetching Sahi Recommended alternatives: $e');
+    }
+    return [];
+  }
+
+  Future<List<ProductModel>> searchProducts(String query) async {
+    final cacheKey = 'search_${query.toLowerCase()}';
+    final cached = _getCached(cacheKey);
+    if (cached != null) return List<ProductModel>.from(cached);
+
+    try {
+      final encodedQuery = Uri.encodeComponent(query);
+      final response = await http.get(
+        Uri.parse('$baseUrl/products?q=$encodedQuery&limit=20'),
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        final list = data.map((item) => ProductModel.fromJson(item)).toList();
+        // Short-lived cache for search to balance freshness with DB load
+        _setCache(cacheKey, list);
+        return list;
       }
     } catch (e) {
       debugPrint('Error searching products: $e');
@@ -131,7 +199,11 @@ class ApiService {
 
   Future<List<ProductModel>> getProductsByMarketer(String marketerName) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/products?marketerName=${Uri.encodeComponent(marketerName)}&limit=50'));
+      final response = await http.get(
+        Uri.parse(
+          '$baseUrl/products?marketerName=${Uri.encodeComponent(marketerName)}&limit=50',
+        ),
+      );
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((item) => ProductModel.fromJson(item)).toList();
@@ -142,12 +214,19 @@ class ApiService {
     return [];
   }
 
-  Future<List<ProductModel>> getSimilarMedicines(String moleculeId, {String? excludeId}) async {
+  Future<List<ProductModel>> getSimilarMedicines(
+    String moleculeId, {
+    String? excludeId,
+  }) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/products?moleculeId=$moleculeId&limit=10'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/products?moleculeId=$moleculeId&limit=10'),
+      );
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        final products = data.map((item) => ProductModel.fromJson(item)).toList();
+        final products = data
+            .map((item) => ProductModel.fromJson(item))
+            .toList();
         if (excludeId != null) {
           products.removeWhere((p) => p.id == excludeId);
         }
@@ -159,7 +238,12 @@ class ApiService {
     return [];
   }
 
-  Future<void> logSearch(String query, {double? lat, double? lng, String? pincode}) async {
+  Future<void> logSearch(
+    String query, {
+    double? lat,
+    double? lng,
+    String? pincode,
+  }) async {
     try {
       final user = _auth.currentUser;
       final headers = await _getHeaders();
@@ -202,14 +286,14 @@ class ApiService {
 
   Future<List<PromoModel>> getPromos() async {
     try {
-      final snapshot = await _firestore.collection('promocodes')
+      final snapshot = await _firestore
+          .collection('promocodes')
           .where('isActive', isEqualTo: true)
           .get();
-      
-      return snapshot.docs.map((doc) => PromoModel.fromJson({
-        ...doc.data(),
-        'id': doc.id,
-      })).toList();
+
+      return snapshot.docs
+          .map((doc) => PromoModel.fromJson({...doc.data(), 'id': doc.id}))
+          .toList();
     } catch (e) {
       debugPrint('Error fetching promos: $e');
       return [];
@@ -224,7 +308,7 @@ class ApiService {
       final extension = file.path.split('.').last;
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.$extension';
       final storagePath = 'prescriptions/${user.uid}/$fileName';
-      
+
       final ref = _storage.ref().child(storagePath);
       final uploadTask = await ref.putFile(file);
       return await uploadTask.ref.getDownloadURL();
@@ -251,13 +335,17 @@ class ApiService {
         patientName: name,
         phoneNumber: phone,
         shippingDetails: shippingDetails,
-        items: items.map((i) => {
-          'medicineId': i.product.id,
-          'name': i.product.name,
-          'quantity': i.quantity,
-          'unitPrice': i.product.price,
-          'mrp': i.product.mrp.round(),
-        }).toList(),
+        items: items
+            .map(
+              (i) => {
+                'medicineId': i.product.id,
+                'name': i.product.name,
+                'quantity': i.quantity,
+                'unitPrice': i.product.price,
+                'mrp': i.product.mrp.round(),
+              },
+            )
+            .toList(),
         totalAmount: total,
         billingBreakdown: billingBreakdown,
         prescriptionUrls: prescriptions,
@@ -265,10 +353,7 @@ class ApiService {
         clinicalPath: isConsultationRequired ? 'consult' : 'normal',
       );
 
-      final orderPayload = {
-        ...order.toJson(),
-        'platform': 'mobile',
-      };
+      final orderPayload = {...order.toJson(), 'platform': 'mobile'};
 
       final headers = await _getHeaders();
       final response = await http.post(
@@ -290,7 +375,10 @@ class ApiService {
   Future<List<Map<String, dynamic>>> getUserAddresses() async {
     try {
       final headers = await _getHeaders();
-      final response = await http.get(Uri.parse('$baseUrl/user/addresses'), headers: headers);
+      final response = await http.get(
+        Uri.parse('$baseUrl/user/addresses'),
+        headers: headers,
+      );
       if (response.statusCode == 200) {
         return List<Map<String, dynamic>>.from(json.decode(response.body));
       }
@@ -333,12 +421,14 @@ class ApiService {
     try {
       final user = _auth.currentUser;
       if (user == null) return [];
-      
+
       final headers = await _getHeaders();
       // Fetch by userId OR phone for maximum compatibility during migration
       final response = await http.get(
-        Uri.parse('$baseUrl/orders?userId=${user.uid}&phone=${Uri.encodeComponent(user.phoneNumber ?? "")}'), 
-        headers: headers
+        Uri.parse(
+          '$baseUrl/orders?userId=${user.uid}&phone=${Uri.encodeComponent(user.phoneNumber ?? "")}',
+        ),
+        headers: headers,
       );
       if (response.statusCode == 200) {
         return List<Map<String, dynamic>>.from(json.decode(response.body));
@@ -376,7 +466,10 @@ class ApiService {
   Future<List<Map<String, dynamic>>> getUserPrescriptions() async {
     try {
       final headers = await _getHeaders();
-      final response = await http.get(Uri.parse('$baseUrl/prescriptions'), headers: headers);
+      final response = await http.get(
+        Uri.parse('$baseUrl/prescriptions'),
+        headers: headers,
+      );
       if (response.statusCode == 200) {
         return List<Map<String, dynamic>>.from(json.decode(response.body));
       }
@@ -395,18 +488,20 @@ class ApiService {
     } catch (e) {
       debugPrint('Error fetching CMS pages: $e');
     }
-    
+
     return [
       {
         'title': 'Privacy Policy',
-        'content': 'Your privacy is our priority. We handle your medical data with enterprise-grade encryption.',
+        'content':
+            'Your privacy is our priority. We handle your medical data with enterprise-grade encryption.',
         'lastUpdated': DateTime.now().toIso8601String(),
       },
       {
         'title': 'Terms & Conditions',
-        'content': 'Sahimed provides a platform for medical procurement. Users must provide valid clinical prescriptions where required.',
+        'content':
+            'Sahimed provides a platform for medical procurement. Users must provide valid clinical prescriptions where required.',
         'lastUpdated': DateTime.now().toIso8601String(),
-      }
+      },
     ];
   }
 }

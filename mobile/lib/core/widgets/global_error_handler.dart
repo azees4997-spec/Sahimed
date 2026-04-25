@@ -40,7 +40,11 @@ class _GlobalErrorHandlerState extends State<GlobalErrorHandler> {
                   color: SahimedColors.accent.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(LucideIcons.triangleAlert, color: SahimedColors.accent, size: 48),
+                child: const Icon(
+                  LucideIcons.triangleAlert,
+                  color: SahimedColors.accent,
+                  size: 48,
+                ),
               ),
               const SizedBox(height: 32),
               Text(
@@ -76,11 +80,16 @@ class _GlobalErrorHandlerState extends State<GlobalErrorHandler> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: SahimedColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
                   child: Text(
                     'RECOVER & HOME',
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: Colors.white),
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -89,10 +98,18 @@ class _GlobalErrorHandlerState extends State<GlobalErrorHandler> {
                 onPressed: () {
                   // Link to support would go here
                 },
-                icon: const Icon(LucideIcons.messageSquare, size: 16, color: SahimedColors.primary),
+                icon: const Icon(
+                  LucideIcons.messageSquare,
+                  size: 16,
+                  color: SahimedColors.primary,
+                ),
                 label: Text(
                   'REPORT TO SAHIMED SUPPORT',
-                  style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: SahimedColors.primary),
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    color: SahimedColors.primary,
+                  ),
                 ),
               ),
             ],

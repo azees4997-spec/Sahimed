@@ -19,9 +19,9 @@ class OrderStatusScreen extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              isSuccess 
-                ? Colors.green.withValues(alpha: 0.05) 
-                : SahimedColors.accent.withValues(alpha: 0.05),
+              isSuccess
+                  ? Colors.green.withValues(alpha: 0.05)
+                  : SahimedColors.accent.withValues(alpha: 0.05),
               SahimedColors.background,
             ],
           ),
@@ -46,7 +46,9 @@ class OrderStatusScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  isSuccess ? 'Order Placed Successfully' : 'Transaction Failed',
+                  isSuccess
+                      ? 'Order Placed Successfully'
+                      : 'Transaction Failed',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
                     fontSize: 20,
@@ -68,10 +70,7 @@ class OrderStatusScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 48),
-                if (isSuccess)
-                  _buildOrderCard()
-                else
-                  _buildErrorCard(),
+                if (isSuccess) _buildOrderCard() else _buildErrorCard(),
                 const Spacer(),
                 _buildActionButton(context),
                 const SizedBox(height: 24),
@@ -98,7 +97,8 @@ class OrderStatusScreen extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: (isSuccess ? Colors.green : SahimedColors.accent).withValues(alpha: 0.2),
+                  color: (isSuccess ? Colors.green : SahimedColors.accent)
+                      .withValues(alpha: 0.2),
                   blurRadius: 40,
                   spreadRadius: 10,
                 ),
@@ -214,19 +214,22 @@ class OrderStatusScreen extends StatelessWidget {
           Navigator.of(context).popUntil((route) => route.isFirst);
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: isSuccess ? SahimedColors.primary : SahimedColors.textPrimary,
+          backgroundColor: isSuccess
+              ? SahimedColors.primary
+              : SahimedColors.textPrimary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 20),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
           elevation: 10,
-          shadowColor: (isSuccess ? SahimedColors.primary : SahimedColors.textPrimary).withValues(alpha: 0.4),
+          shadowColor:
+              (isSuccess ? SahimedColors.primary : SahimedColors.textPrimary)
+                  .withValues(alpha: 0.4),
         ),
         child: Text(
           isSuccess ? 'Continue Shopping' : 'Back to Home',
-          style: GoogleFonts.outfit(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-          ),
+          style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800),
         ),
       ),
     );

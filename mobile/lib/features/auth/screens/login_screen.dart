@@ -1,8 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/services.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/layout/main_layout.dart';
 import 'otp_screen.dart';
@@ -17,7 +15,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _phoneController = TextEditingController();
-  
+
   bool _agreedToTerms = false;
   bool _isLoading = false;
 
@@ -56,10 +54,8 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => OtpScreen(
-                phoneNumber: phone,
-                verificationId: verificationId,
-              ),
+              builder: (context) =>
+                  OtpScreen(phoneNumber: phone, verificationId: verificationId),
             ),
           );
         },
@@ -75,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const MainLayout()), 
+        MaterialPageRoute(builder: (context) => const MainLayout()),
         (route) => false,
       );
     }
@@ -85,10 +81,15 @@ class _LoginScreenState extends State<LoginScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(message, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+          content: Text(
+            message,
+            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+          ),
           backgroundColor: SahimedColors.accent,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
       );
     }
@@ -111,14 +112,14 @@ class _LoginScreenState extends State<LoginScreen> {
             left: -40,
             child: _buildBlob(280, SahimedColors.accent.withOpacity(0.05)),
           ),
-          
+
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
                   const SizedBox(height: 32),
-                  
+
                   // App Branding
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -128,22 +129,48 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: BoxDecoration(
                           color: SahimedColors.primary,
                           borderRadius: BorderRadius.circular(16),
-                          boxShadow: [BoxShadow(color: SahimedColors.primary.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 8))],
+                          boxShadow: [
+                            BoxShadow(
+                              color: SahimedColors.primary.withOpacity(0.2),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                         ),
-                        child: const Icon(Icons.health_and_safety_rounded, color: Colors.white, size: 28),
+                        child: const Icon(
+                          Icons.health_and_safety_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       RichText(
                         text: TextSpan(
                           children: [
-                            TextSpan(text: 'Sahi', style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), letterSpacing: -1)),
-                            TextSpan(text: 'Med', style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: SahimedColors.primary, letterSpacing: -1)),
+                            TextSpan(
+                              text: 'Sahi',
+                              style: GoogleFonts.outfit(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF0F172A),
+                                letterSpacing: -1,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Med',
+                              style: GoogleFonts.outfit(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w900,
+                                color: SahimedColors.primary,
+                                letterSpacing: -1,
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 48),
 
                   // Hero Illustration
@@ -153,7 +180,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(40),
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 40, offset: const Offset(0, 20)),
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 40,
+                          offset: const Offset(0, 20),
+                        ),
                       ],
                     ),
                     clipBehavior: Clip.antiAlias,
@@ -165,18 +196,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 48),
 
-                  Text('Premium Healthcare', style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
-                  const SizedBox(height: 12),
-                  Text('Access your generic medicines and health records with one secure login.', 
-                    textAlign: TextAlign.center, 
-                    style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF64748B), height: 1.5)
+                  Text(
+                    'Premium Healthcare',
+                    style: GoogleFonts.outfit(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF0F172A),
+                    ),
                   ),
-                  
+                  const SizedBox(height: 12),
+                  Text(
+                    'Access your generic medicines and health records with one secure login.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      color: const Color(0xFF64748B),
+                      height: 1.5,
+                    ),
+                  ),
+
                   const SizedBox(height: 48),
 
                   // Phone Input
                   _buildPhoneInput(),
-                  
+
                   const SizedBox(height: 24),
                   _buildTermsCheckbox(),
 
@@ -205,13 +248,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 value: _agreedToTerms,
                 onChanged: (v) => setState(() => _agreedToTerms = v ?? false),
                 activeColor: SahimedColors.primary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
               ),
             ),
             const SizedBox(width: 10),
             Text(
               'I agree to the Terms & Privacy Policy',
-              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: const Color(0xFF475569)),
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF475569),
+              ),
             ),
           ],
         ),
@@ -225,23 +274,42 @@ class _LoginScreenState extends State<LoginScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 20, offset: const Offset(0, 10))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(8),
       child: Row(
         children: [
           const SizedBox(width: 20),
-          Text('+91', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: SahimedColors.primary, fontSize: 16)),
+          Text(
+            '+91',
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              color: SahimedColors.primary,
+              fontSize: 16,
+            ),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
               decoration: InputDecoration(
                 hintText: 'Mobile Number',
                 border: InputBorder.none,
-                hintStyle: GoogleFonts.outfit(color: const Color(0xFFCBD5E1), fontSize: 15),
+                hintStyle: GoogleFonts.outfit(
+                  color: const Color(0xFFCBD5E1),
+                  fontSize: 15,
+                ),
               ),
             ),
           ),
@@ -251,13 +319,31 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 52,
               width: 52,
               decoration: BoxDecoration(
-                color: SahimedColors.primary, 
+                color: SahimedColors.primary,
                 borderRadius: BorderRadius.circular(18),
-                boxShadow: [BoxShadow(color: SahimedColors.primary.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+                boxShadow: [
+                  BoxShadow(
+                    color: SahimedColors.primary.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: _isLoading 
-                ? const Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)))
-                : const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+              child: _isLoading
+                  ? const Center(
+                      child: SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      ),
+                    )
+                  : const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                    ),
             ),
           ),
         ],

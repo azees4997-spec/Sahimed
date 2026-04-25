@@ -32,7 +32,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _pincodeController = TextEditingController();
   final _landmarkController = TextEditingController();
   final _phoneController = TextEditingController();
-  
+
   String _selectedTag = 'Home';
   bool _isProcessing = false;
   bool _isConsultationRequired = false;
@@ -56,8 +56,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     // 1. Pre-fill from Firebase Auth
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      if (_nameController.text.isEmpty) _nameController.text = user.displayName ?? '';
-      if (_phoneController.text.isEmpty) _phoneController.text = user.phoneNumber ?? '';
+      if (_nameController.text.isEmpty) {
+        _nameController.text = user.displayName ?? '';
+      }
+      if (_phoneController.text.isEmpty) {
+        _phoneController.text = user.phoneNumber ?? '';
+      }
     }
 
     // 2. Load Saved Addresses
@@ -106,21 +110,33 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<void> _placeOrder() async {
     if (_showAddressForm && !_formKey.currentState!.validate()) return;
     if (!_showAddressForm && _selectedAddress == null) {
-       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select an address')));
-       return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select an address')));
+      return;
     }
 
     final cart = context.read<CartProvider>();
     List<String> prescriptions = [];
 
     // Soft Gate Check
-    if (cart.isRxRequired && _prescriptionImage == null && !_isConsultationRequired) {
+    if (cart.isRxRequired &&
+        _prescriptionImage == null &&
+        !_isConsultationRequired) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('PRESCRIPTION REQUIRED • PLEASE UPLOAD OR TOGGLE CONSULTATION', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10)),
+          content: Text(
+            'PRESCRIPTION REQUIRED • PLEASE UPLOAD OR TOGGLE CONSULTATION',
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.w900,
+              fontSize: 10,
+            ),
+          ),
           backgroundColor: SahimedColors.primary,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           margin: const EdgeInsets.all(20),
         ),
       );
@@ -143,24 +159,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           coords = {'lat': pos.latitude, 'lng': pos.longitude};
         }
       } catch (e) {
-        debugPrint('Location access denied or failed: $e. Proceeding with manual address.');
+        debugPrint(
+          'Location access denied or failed: $e. Proceeding with manual address.',
+        );
       }
 
-      final shippingDetails = _showAddressForm ? {
-        'houseNumber': _houseController.text,
-        'street': _streetController.text,
-        'landmark': _landmarkController.text,
-        'city': _cityController.text,
-        'state': _stateController.text.isNotEmpty ? _stateController.text : 'Karnataka',
-        'pincode': _pincodeController.text,
-        'lat': coords['lat'],
-        'lng': coords['lng'],
-        'tag': _selectedTag,
-      } : {
-        ..._selectedAddress!,
-        'lat': coords['lat'] ?? _selectedAddress!['lat'],
-        'lng': coords['lng'] ?? _selectedAddress!['lng'],
-      };
+      final shippingDetails = _showAddressForm
+          ? {
+              'houseNumber': _houseController.text,
+              'street': _streetController.text,
+              'landmark': _landmarkController.text,
+              'city': _cityController.text,
+              'state': _stateController.text.isNotEmpty
+                  ? _stateController.text
+                  : 'Karnataka',
+              'pincode': _pincodeController.text,
+              'lat': coords['lat'],
+              'lng': coords['lng'],
+              'tag': _selectedTag,
+            }
+          : {
+              ..._selectedAddress!,
+              'lat': coords['lat'] ?? _selectedAddress!['lat'],
+              'lng': coords['lng'] ?? _selectedAddress!['lng'],
+            };
 
       // Save new address if form is shown
       if (_showAddressForm) {
@@ -190,16 +212,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           cart.clearCart();
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (context) => const OrderStatusScreen(isSuccess: true)),
+            MaterialPageRoute(
+              builder: (context) => const OrderStatusScreen(isSuccess: true),
+            ),
             (route) => route.isFirst,
           );
         } else {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const OrderStatusScreen(isSuccess: false)));
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const OrderStatusScreen(isSuccess: false),
+            ),
+          );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Order failed: $e'), backgroundColor: SahimedColors.accent));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Order failed: $e'),
+            backgroundColor: SahimedColors.accent,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
@@ -213,15 +247,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Scaffold(
       backgroundColor: SahimedColors.background,
       appBar: AppBar(
-        title: Text('Secure Checkout', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 18)),
+        title: Text(
+          'Secure Checkout',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 18),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(icon: Icon(LucideIcons.chevronLeft), onPressed: () => Navigator.pop(context)),
+        leading: IconButton(
+          icon: Icon(LucideIcons.chevronLeft),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 220), // Increased padding for bottom bar
+            padding: const EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              220,
+            ), // Increased padding for bottom bar
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -232,7 +277,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   child: Column(
                     children: [
                       if (_savedAddresses.isNotEmpty) ...[
-                        ..._savedAddresses.map((addr) => _buildAddressCard(addr)),
+                        ..._savedAddresses.map(
+                          (addr) => _buildAddressCard(addr),
+                        ),
                         TextButton.icon(
                           onPressed: () => setState(() {
                             _showAddressForm = true;
@@ -243,70 +290,159 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             _pincodeController.clear();
                           }),
                           icon: Icon(LucideIcons.plus, size: 16),
-                          label: Text('Add New Address', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                          label: Text(
+                            'Add New Address',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ],
-                      if (_showAddressForm) 
+                      if (_showAddressForm)
                         Form(
                           key: _formKey,
                           child: Column(
                             key: const ValueKey('address_form'),
                             children: [
-                              _buildTextField(controller: _nameController, label: 'PATIENT NAME', hint: 'Who is this medicine for?', icon: LucideIcons.user),
+                              _buildTextField(
+                                controller: _nameController,
+                                label: 'PATIENT NAME',
+                                hint: 'Who is this medicine for?',
+                                icon: LucideIcons.user,
+                              ),
                               const SizedBox(height: 16),
-                              _buildTextField(controller: _phoneController, label: 'CONTACT NUMBER', hint: '10-digit mobile number', icon: LucideIcons.phone, keyboardType: TextInputType.phone),
+                              _buildTextField(
+                                controller: _phoneController,
+                                label: 'CONTACT NUMBER',
+                                hint: '10-digit mobile number',
+                                icon: LucideIcons.phone,
+                                keyboardType: TextInputType.phone,
+                              ),
                               const SizedBox(height: 24),
-                              
+
                               // Locate Me Button for Parity
                               ElevatedButton.icon(
                                 onPressed: () async {
                                   try {
-                                    LocationPermission permission = await Geolocator.checkPermission();
-                                    if (permission == LocationPermission.denied) {
-                                      permission = await Geolocator.requestPermission();
+                                    LocationPermission permission =
+                                        await Geolocator.checkPermission();
+                                    if (permission ==
+                                        LocationPermission.denied) {
+                                      permission =
+                                          await Geolocator.requestPermission();
                                     }
 
-                                    if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
-                                      final pos = await Geolocator.getCurrentPosition();
-                                      List<Placemark> placemarks = await placemarkFromCoordinates(pos.latitude, pos.longitude);
-                                      
-                                      if (placemarks.isNotEmpty && mounted) {
+                                    if (permission ==
+                                            LocationPermission.whileInUse ||
+                                        permission ==
+                                            LocationPermission.always) {
+                                      final pos =
+                                          await Geolocator.getCurrentPosition();
+                                      List<Placemark> placemarks =
+                                          await placemarkFromCoordinates(
+                                            pos.latitude,
+                                            pos.longitude,
+                                          );
+
+                                      if (placemarks.isNotEmpty && context.mounted) {
                                         Placemark place = placemarks[0];
                                         setState(() {
-                                          _streetController.text = place.subLocality ?? place.name ?? '';
-                                          _cityController.text = place.locality ?? '';
-                                          _stateController.text = place.administrativeArea ?? 'Karnataka';
-                                          _pincodeController.text = place.postalCode ?? '';
+                                          _streetController.text =
+                                              place.subLocality ??
+                                              place.name ??
+                                              '';
+                                          _cityController.text =
+                                              place.locality ?? '';
+                                          _stateController.text =
+                                              place.administrativeArea ??
+                                              'Karnataka';
+                                          _pincodeController.text =
+                                              place.postalCode ?? '';
                                           // Note: coords are captured during _placeOrder using the same service
                                         });
-                                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ADDRESS AUTO-FILLED'), backgroundColor: SahimedColors.success));
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'ADDRESS AUTO-FILLED',
+                                              ),
+                                              backgroundColor:
+                                                  SahimedColors.success,
+                                            ),
+                                          );
+                                        }
                                       }
                                     }
                                   } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('GPS ACCESS DENIED or FETCH FAILED')));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'GPS ACCESS DENIED or FETCH FAILED',
+                                        ),
+                                      ),
+                                    );
                                   }
                                 },
-                                icon: const Icon(LucideIcons.locateFixed, size: 16),
-                                label: Text('USE CURRENT LOCATION', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 11)),
+                                icon: const Icon(
+                                  LucideIcons.locateFixed,
+                                  size: 16,
+                                ),
+                                label: Text(
+                                  'USE CURRENT LOCATION',
+                                  style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 11,
+                                  ),
+                                ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: SahimedColors.primary.withValues(alpha: 0.1),
+                                  backgroundColor: SahimedColors.primary
+                                      .withValues(alpha: 0.1),
                                   foregroundColor: SahimedColors.primary,
                                   elevation: 0,
                                   minimumSize: const Size(double.infinity, 50),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 24),
 
-                              _buildTextField(controller: _houseController, label: 'FLAT / HOUSE NO', hint: 'e.g. 101, block A', icon: LucideIcons.house),
+                              _buildTextField(
+                                controller: _houseController,
+                                label: 'FLAT / HOUSE NO',
+                                hint: 'e.g. 101, block A',
+                                icon: LucideIcons.house,
+                              ),
                               const SizedBox(height: 16),
-                              _buildTextField(controller: _streetController, label: 'STREET / AREA', hint: 'e.g. MG Road', icon: LucideIcons.map),
+                              _buildTextField(
+                                controller: _streetController,
+                                label: 'STREET / AREA',
+                                hint: 'e.g. MG Road',
+                                icon: LucideIcons.map,
+                              ),
                               const SizedBox(height: 16),
                               Row(
                                 children: [
-                                  Expanded(child: _buildTextField(controller: _cityController, label: 'CITY', hint: 'e.g. Bangalore', icon: LucideIcons.navigation)),
+                                  Expanded(
+                                    child: _buildTextField(
+                                      controller: _cityController,
+                                      label: 'CITY',
+                                      hint: 'e.g. Bangalore',
+                                      icon: LucideIcons.navigation,
+                                    ),
+                                  ),
                                   const SizedBox(width: 12),
-                                  Expanded(child: _buildTextField(controller: _pincodeController, label: 'PINCODE', hint: '6 digits', icon: LucideIcons.hash, keyboardType: TextInputType.number)),
+                                  Expanded(
+                                    child: _buildTextField(
+                                      controller: _pincodeController,
+                                      label: 'PINCODE',
+                                      hint: '6 digits',
+                                      icon: LucideIcons.hash,
+                                      keyboardType: TextInputType.number,
+                                    ),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 16),
@@ -314,7 +450,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 children: [
                                   _buildTagOption('Home', LucideIcons.house),
                                   const SizedBox(width: 8),
-                                  _buildTagOption('Office', LucideIcons.briefcase),
+                                  _buildTagOption(
+                                    'Office',
+                                    LucideIcons.briefcase,
+                                  ),
                                   const SizedBox(width: 8),
                                   _buildTagOption('Other', LucideIcons.mapPin),
                                 ],
@@ -339,24 +478,45 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         const SizedBox(height: 20),
                         Container(
                           padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(color: SahimedColors.primary.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(20)),
+                          decoration: BoxDecoration(
+                            color: SahimedColors.primary.withValues(
+                              alpha: 0.05,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                           child: Row(
                             children: [
-                              Icon(LucideIcons.stethoscope, color: SahimedColors.primary),
+                              Icon(
+                                LucideIcons.stethoscope,
+                                color: SahimedColors.primary,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Don\'t have a prescription?', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
-                                    Text('Our doctors will call you for a free consultation', style: GoogleFonts.inter(fontSize: 10, color: SahimedColors.slate500)),
+                                    Text(
+                                      'Don\'t have a prescription?',
+                                      style: GoogleFonts.outfit(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Our doctors will call you for a free consultation',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 10,
+                                        color: SahimedColors.slate500,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
                               Switch.adaptive(
                                 value: _isConsultationRequired,
                                 activeColor: SahimedColors.primary,
-                                onChanged: (v) => setState(() => _isConsultationRequired = v),
+                                onChanged: (v) =>
+                                    setState(() => _isConsultationRequired = v),
                               ),
                             ],
                           ),
@@ -370,8 +530,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ],
             ),
           ),
-          if (_isProcessing) Container(color: Colors.black26, child: Center(child: CircularProgressIndicator(color: SahimedColors.primary))),
-          Positioned(bottom: 0, left: 0, right: 0, child: _buildGlassPlaceOrderBar(cart)),
+          if (_isProcessing)
+            Container(
+              color: Colors.black26,
+              child: Center(
+                child: CircularProgressIndicator(color: SahimedColors.primary),
+              ),
+            ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: _buildGlassPlaceOrderBar(cart),
+          ),
         ],
       ),
     );
@@ -388,21 +559,51 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? SahimedColors.primary.withValues(alpha: 0.1) : Colors.white,
+          color: isSelected
+              ? SahimedColors.primary.withValues(alpha: 0.1)
+              : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? SahimedColors.primary : SahimedColors.slate100, width: 2),
+          border: Border.all(
+            color: isSelected ? SahimedColors.primary : SahimedColors.slate100,
+            width: 2,
+          ),
         ),
         child: Row(
           children: [
-            Icon(isSelected ? LucideIcons.circleCheck : LucideIcons.circle, color: isSelected ? SahimedColors.primary : SahimedColors.slate300, size: 20),
+            Icon(
+              isSelected ? LucideIcons.circleCheck : LucideIcons.circle,
+              color: isSelected
+                  ? SahimedColors.primary
+                  : SahimedColors.slate300,
+              size: 20,
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(addr['tag']?.toUpperCase() ?? 'HOME', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10, color: SahimedColors.primary)),
-                  Text('${addr['houseNumber']}, ${addr['street']}', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold)),
-                  Text('${addr['city']} - ${addr['pincode']}', style: GoogleFonts.inter(fontSize: 11, color: SahimedColors.slate500)),
+                  Text(
+                    addr['tag']?.toUpperCase() ?? 'HOME',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 10,
+                      color: SahimedColors.primary,
+                    ),
+                  ),
+                  Text(
+                    '${addr['houseNumber']}, ${addr['street']}',
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    '${addr['city']} - ${addr['pincode']}',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: SahimedColors.slate500,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -421,18 +622,37 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         decoration: BoxDecoration(
           color: SahimedColors.background,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: _prescriptionImage != null ? SahimedColors.emerald500 : SahimedColors.slate200, style: BorderStyle.solid),
+          border: Border.all(
+            color: _prescriptionImage != null
+                ? SahimedColors.emerald500
+                : SahimedColors.slate200,
+            style: BorderStyle.solid,
+          ),
         ),
-        child: _prescriptionImage != null 
-          ? ClipRRect(borderRadius: BorderRadius.circular(22), child: Image.file(_prescriptionImage!, fit: BoxFit.cover))
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(LucideIcons.camera, color: SahimedColors.primary, size: 32),
-                const SizedBox(height: 8),
-                Text('Scan/Upload Prescription', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: SahimedColors.primary)),
-              ],
-            ),
+        child: _prescriptionImage != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(22),
+                child: Image.file(_prescriptionImage!, fit: BoxFit.cover),
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    LucideIcons.camera,
+                    color: SahimedColors.primary,
+                    size: 32,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Scan/Upload Prescription',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: SahimedColors.primary,
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -448,13 +668,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             color: isSelected ? SahimedColors.primary : SahimedColors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? SahimedColors.primary : SahimedColors.slate200,
+              color: isSelected
+                  ? SahimedColors.primary
+                  : SahimedColors.slate200,
               width: 1.5,
             ),
           ),
           child: Column(
             children: [
-              Icon(icon, size: 18, color: isSelected ? Colors.white : SahimedColors.slate400),
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected ? Colors.white : SahimedColors.slate400,
+              ),
               const SizedBox(height: 4),
               Text(
                 tag,
@@ -471,7 +697,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildSectionCard({required String title, required IconData icon, required Widget child}) {
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -529,7 +759,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(label, style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.slate400, letterSpacing: 1.5)),
+          child: Text(
+            label,
+            style: GoogleFonts.outfit(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              color: SahimedColors.slate400,
+              letterSpacing: 1.5,
+            ),
+          ),
         ),
         TextFormField(
           controller: controller,
@@ -538,8 +776,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.outfit(color: SahimedColors.textSecondary.withValues(alpha: 0.5), fontSize: 13),
-            prefixIcon: Icon(icon, size: 20, color: SahimedColors.primary.withValues(alpha: 0.5)),
+            hintStyle: GoogleFonts.outfit(
+              color: SahimedColors.textSecondary.withValues(alpha: 0.5),
+              fontSize: 13,
+            ),
+            prefixIcon: Icon(
+              icon,
+              size: 20,
+              color: SahimedColors.primary.withValues(alpha: 0.5),
+            ),
             filled: true,
             fillColor: SahimedColors.background.withValues(alpha: 0.5),
             border: OutlineInputBorder(
@@ -552,7 +797,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(18),
-              borderSide: const BorderSide(color: SahimedColors.primary, width: 2),
+              borderSide: const BorderSide(
+                color: SahimedColors.primary,
+                width: 2,
+              ),
             ),
           ),
           validator: (value) {
@@ -564,53 +812,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildPaymentOption(String title, String subtitle, IconData icon, bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: SahimedColors.primary.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: SahimedColors.primary, width: 2),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: SahimedColors.primary,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: SahimedColors.textPrimary,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.outfit(
-                    fontSize: 12,
-                    color: SahimedColors.textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(LucideIcons.check, color: SahimedColors.primary, size: 24),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildOrderSummary(CartProvider cart) {
     return Container(
@@ -622,11 +824,32 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
       child: Column(
         children: [
-          _summaryRow('Price (${cart.items.length} items)', '₹${cart.subtotal.toStringAsFixed(2)}'),
-          _summaryRow('Packing/Service Fee', '₹${cart.packingFee.toStringAsFixed(0)}'),
-          _summaryRow('Delivery Charge', cart.deliveryFee == 0 ? 'FREE' : '₹${cart.deliveryFee.toStringAsFixed(0)}', isGreen: cart.deliveryFee == 0),
+          _summaryRow(
+            'Price (${cart.items.length} items)',
+            '₹${cart.subtotal.toStringAsFixed(2)}',
+          ),
+          if (cart.packingFee > 0)
+            _summaryRow(
+              'Packing/Service Fee',
+              '₹${cart.packingFee.toStringAsFixed(0)}',
+            ),
+          if (cart.deliveryFee > 0)
+            _summaryRow(
+              'Delivery Charge',
+              '₹${cart.deliveryFee.toStringAsFixed(0)}',
+            ),
+          if (cart.deliveryFee == 0 && cart.items.isNotEmpty)
+            _summaryRow(
+              'Delivery Charge',
+              'FREE',
+              isGreen: true,
+            ),
           if (cart.totalSavings > 0)
-            _summaryRow('Generic Savings', '- ₹${cart.totalSavings.toStringAsFixed(2)}', isGreen: true),
+            _summaryRow(
+              'Generic Savings',
+              '- ₹${cart.totalSavings.toStringAsFixed(2)}',
+              isGreen: true,
+            ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Divider(height: 1),
@@ -696,7 +919,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               topLeft: Radius.circular(40),
               topRight: Radius.circular(40),
             ),
-            border: Border.all(color: SahimedColors.white.withValues(alpha: 0.3)),
+            border: Border.all(
+              color: SahimedColors.white.withValues(alpha: 0.3),
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.05),
@@ -733,25 +958,42 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               SizedBox(
                 width: double.infinity,
                 child: Opacity(
-                  opacity: (cart.isRxRequired && _prescriptionImage == null && !_isConsultationRequired) ? 0.6 : 1.0,
+                  opacity:
+                      (cart.isRxRequired &&
+                          _prescriptionImage == null &&
+                          !_isConsultationRequired)
+                      ? 0.6
+                      : 1.0,
                   child: ElevatedButton(
                     onPressed: _isProcessing ? null : _placeOrder,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: SahimedColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 20),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-                      elevation: (cart.isRxRequired && _prescriptionImage == null && !_isConsultationRequired) ? 0 : 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                      elevation:
+                          (cart.isRxRequired &&
+                              _prescriptionImage == null &&
+                              !_isConsultationRequired)
+                          ? 0
+                          : 8,
                       shadowColor: SahimedColors.primary.withOpacity(0.4),
                     ),
                     child: _isProcessing
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           )
                         : Text(
-                            (cart.isRxRequired && _prescriptionImage == null && !_isConsultationRequired)
+                            (cart.isRxRequired &&
+                                    _prescriptionImage == null &&
+                                    !_isConsultationRequired)
                                 ? 'Upload Rx to Place Order'
                                 : 'Securely Place Order',
                             style: GoogleFonts.outfit(

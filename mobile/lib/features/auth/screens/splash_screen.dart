@@ -12,7 +12,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
 
@@ -24,9 +25,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       duration: const Duration(milliseconds: 1500),
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
     _controller.forward();
 
@@ -36,10 +38,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         if (user == null) {
           Navigator.of(context).pushReplacement(
             PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
-              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                return FadeTransition(opacity: animation, child: child);
-              },
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  const LoginScreen(),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                    return FadeTransition(opacity: animation, child: child);
+                  },
               transitionDuration: const Duration(milliseconds: 800),
             ),
           );
@@ -109,7 +113,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 width: 40,
                 height: 40,
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(SahimedColors.primary),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    SahimedColors.primary,
+                  ),
                   strokeWidth: 3,
                 ),
               ),

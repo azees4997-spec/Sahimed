@@ -43,7 +43,9 @@ class _BrandStoreScreenState extends State<BrandStoreScreen> {
           _buildSliverAppBar(),
           if (_isLoading)
             const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator(color: SahimedColors.primary)),
+              child: Center(
+                child: CircularProgressIndicator(color: SahimedColors.primary),
+              ),
             )
           else if (_products.isEmpty)
             _buildEmptyState()
@@ -60,8 +62,12 @@ class _BrandStoreScreenState extends State<BrandStoreScreen> {
       pinned: true,
       backgroundColor: SahimedColors.white,
       elevation: 0,
-       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: SahimedColors.primary, size: 20),
+      leading: IconButton(
+        icon: const Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: SahimedColors.primary,
+          size: 20,
+        ),
         onPressed: () => Navigator.pop(context),
       ),
       flexibleSpace: FlexibleSpaceBar(
@@ -131,7 +137,11 @@ class _BrandStoreScreenState extends State<BrandStoreScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.business_rounded, size: 80, color: SahimedColors.slate200),
+            Icon(
+              Icons.business_rounded,
+              size: 80,
+              color: SahimedColors.slate200,
+            ),
             const SizedBox(height: 16),
             Text(
               'BRAND COLLECTION COMING SOON',
@@ -163,9 +173,11 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = product.isGeneric ? SahimedColors.accent : SahimedColors.primary;
-    final savingsPct = product.mrp > product.price 
-        ? (((product.mrp - product.price) / product.mrp) * 100).round() 
+    final accentColor = product.isGeneric
+        ? SahimedColors.accent
+        : SahimedColors.primary;
+    final savingsPct = product.mrp > product.price
+        ? (((product.mrp - product.price) / product.mrp) * 100).round()
         : 0;
 
     return GestureDetector(
@@ -211,7 +223,11 @@ class _ProductCard extends StatelessWidget {
                     child: Image.network(
                       product.imageUrl,
                       fit: BoxFit.contain,
-                      errorBuilder: (c, e, s) => Icon(Icons.medication_rounded, color: accentColor, size: 40),
+                      errorBuilder: (c, e, s) => Icon(
+                        Icons.medication_rounded,
+                        color: accentColor,
+                        size: 40,
+                      ),
                     ),
                   ),
                 ),
@@ -220,7 +236,10 @@ class _ProductCard extends StatelessWidget {
                     top: 8,
                     left: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: SahimedColors.accent,
                         borderRadius: BorderRadius.circular(100),
@@ -285,7 +304,11 @@ class _ProductCard extends StatelessWidget {
                           color: SahimedColors.primary,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.add_shopping_cart_rounded, color: Colors.white, size: 16),
+                        child: const Icon(
+                          Icons.add_shopping_cart_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                       ),
                     ],
                   ),

@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -38,17 +37,6 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   Widget build(BuildContext context) {
-    final cart = context.watch<CartProvider>();
-    final cartItemCount = cart.items.length;
-
-    // Listen to NavigationProvider so pushed routes can switch tabs
-    final navProvider = context.watch<NavigationProvider>();
-    if (navProvider.currentIndex != _currentIndex) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _currentIndex = navProvider.currentIndex);
-      });
-    }
-
     return PopScope(
       canPop: _currentIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
@@ -57,32 +45,42 @@ class _MainLayoutState extends State<MainLayout> {
           setState(() => _currentIndex = 0);
         }
       },
-      child: Scaffold(
-        backgroundColor: SahimedColors.background,
-        body: Stack(
-          children: [
-            IndexedStack(
-              index: _currentIndex,
-              children: _screens,
+      child: Consumer2<CartProvider, NavigationProvider>(
+        builder: (context, cart, navProvider, child) {
+          // Sync internal index with provider
+          if (navProvider.currentIndex != _currentIndex) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) setState(() => _currentIndex = navProvider.currentIndex);
+            });
+          }
+
+          final cartItemCount = cart.items.length;
+
+          return Scaffold(
+            backgroundColor: SahimedColors.background,
+            body: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 90),
+                  child: IndexedStack(
+                    index: _currentIndex,
+                    children: _screens,
+                  ),
+                ),
+
+                // Persistent Cart Summary
+                if (cartItemCount > 0 && _currentIndex != 2)
+                  Positioned(
+                    bottom: 110,
+                    left: 20,
+                    right: 20,
+                    child: _buildCartSummary(cart),
+                  ),
+              ],
             ),
-            
-            // Persistent Cart Summary (Floating above Bottom Nav)
-            if (cartItemCount > 0 && _currentIndex != 2)
-              Positioned(
-                bottom: 110, // Slightly higher for better hit area
-                left: 20,
-                right: 20,
-                child: _buildCartSummary(cart),
-              ),
-  
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: _buildBottomNavigationBar(cartItemCount),
-            ),
-          ],
-        ),
+            bottomNavigationBar: _buildBottomNavigationBar(cartItemCount),
+          );
+        },
       ),
     );
   }
@@ -95,10 +93,7 @@ class _MainLayoutState extends State<MainLayout> {
       builder: (context, value, child) {
         return Transform.translate(
           offset: Offset(0, 50 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
+          child: Opacity(opacity: value, child: child),
         );
       },
       child: GestureDetector(
@@ -128,7 +123,11 @@ class _MainLayoutState extends State<MainLayout> {
                   color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(LucideIcons.shoppingBag, color: Colors.white, size: 18),
+                child: const Icon(
+                  LucideIcons.shoppingBag,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 16),
               Column(
@@ -164,7 +163,11 @@ class _MainLayoutState extends State<MainLayout> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: Colors.white,
+                size: 14,
+              ),
             ],
           ),
         ),
@@ -194,16 +197,26 @@ class _MainLayoutState extends State<MainLayout> {
         children: [
           _buildNavItem(0, LucideIcons.house, 'Home'),
           _buildNavItem(1, LucideIcons.search, 'Explore'),
-          _buildNavItem(2, LucideIcons.shoppingCart, 'Cart', badge: cartItemCount),
+          _buildNavItem(
+            2,
+            LucideIcons.shoppingCart,
+            'Cart',
+            badge: cartItemCount,
+          ),
           _buildNavItem(3, LucideIcons.user, 'Profile'),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label, {int badge = 0}) {
+  Widget _buildNavItem(
+    int index,
+    IconData icon,
+    String label, {
+    int badge = 0,
+  }) {
     final isSelected = _currentIndex == index;
-    
+
     return GestureDetector(
       onTap: () => _onItemTapped(index),
       behavior: HitTestBehavior.opaque,
@@ -212,7 +225,9 @@ class _MainLayoutState extends State<MainLayout> {
         curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? SahimedColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+          color: isSelected
+              ? SahimedColors.primary.withValues(alpha: 0.1)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(100),
         ),
         child: Row(
@@ -224,7 +239,9 @@ class _MainLayoutState extends State<MainLayout> {
                 Icon(
                   icon,
                   size: 20,
-                  color: isSelected ? SahimedColors.primary : SahimedColors.slate400,
+                  color: isSelected
+                      ? SahimedColors.primary
+                      : SahimedColors.slate400,
                 ),
                 if (badge > 0)
                   Positioned(

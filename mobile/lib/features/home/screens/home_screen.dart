@@ -15,12 +15,12 @@ import '../../products/screens/product_detail_screen.dart';
 import '../../products/screens/category_products_screen.dart';
 
 // ─── color tokens matching the website ──────────────────────────────────────
-const _lavender   = Color(0xFFEDE9FE);
-const _sahiPink   = Color(0xFFFFF1F2);
-const _sahiBlue   = Color(0xFFEFF6FF);
-const _sahiGreen  = Color(0xFFECFDF5);
-const _bgPage     = Color(0xFFF8FAFC);
-const _waGreen    = Color(0xFF25D366);
+const _lavender = Color(0xFFEDE9FE);
+const _sahiPink = Color(0xFFFFF1F2);
+const _sahiBlue = Color(0xFFEFF6FF);
+const _sahiGreen = Color(0xFFECFDF5);
+const _bgPage = Color(0xFFF8FAFC);
+const _waGreen = Color(0xFF25D366);
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -32,9 +32,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _api = ApiService();
 
-  List<CategoryModel>  _categories   = [];
-  List<ProductModel>   _bestSellers  = [];
-  List<ProductModel>   _medicines    = [];
+  List<CategoryModel> _categories = [];
+  List<ProductModel> _bestSellers = [];
+  List<ProductModel> _medicines = [];
   bool _isLoading = true;
 
   @override
@@ -52,10 +52,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ]);
       if (mounted) {
         setState(() {
-          _categories  = results[0] as List<CategoryModel>;
+          _categories = results[0] as List<CategoryModel>;
           _bestSellers = (results[1] as List<ProductModel>).take(3).toList();
-          _medicines   = (results[2] as List<ProductModel>).take(20).toList();
-          _isLoading   = false;
+          _medicines = (results[2] as List<ProductModel>).take(20).toList();
+          _isLoading = false;
         });
       }
     } catch (e) {
@@ -85,9 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _openCategory(BuildContext context, CategoryModel cat) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => CategoryProductsScreen(category: cat),
-      ),
+      MaterialPageRoute(builder: (_) => CategoryProductsScreen(category: cat)),
     );
   }
 
@@ -104,85 +102,92 @@ class _HomeScreenState extends State<HomeScreen> {
       body: RefreshIndicator(
         onRefresh: _load,
         color: SahimedColors.primary,
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 180),
-          children: [
-            // ── 1. Hero Section ─────────────────────────────────────────────
-            _buildHero(context),
+        child: SafeArea(
+          bottom: false,
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 180),
+            children: [
+              // ── 1. Hero Section ─────────────────────────────────────────────
+              _buildHero(context),
 
-            const SizedBox(height: 28),
+              const SizedBox(height: 28),
 
-            // ── 2. Most Popular Brands (3-col grid, best sellers) ───────────
-            if (_isLoading || _bestSellers.isNotEmpty)
-              _buildSection(
-                title: 'Our Most Popular Brands',
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF9C3),
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  child: Text(
-                    'BEST SELLERS',
-                    style: GoogleFonts.outfit(
-                      fontSize: 7,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFFB45309),
-                      letterSpacing: 1,
+              // ── 2. Most Popular Brands (3-col grid, best sellers) ───────────
+              if (_isLoading || _bestSellers.isNotEmpty)
+                _buildSection(
+                  title: 'Our Most Popular Brands',
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
                     ),
-                  ),
-                ),
-                child: _isLoading
-                    ? _shimmerGrid(3)
-                    : _productGrid(_bestSellers, context),
-              ),
-
-            const SizedBox(height: 28),
-
-            // ── 3. Top Categories ───────────────────────────────────────────
-            _buildSection(
-              title: 'Top Categories',
-              trailing: GestureDetector(
-                onTap: () => _goSearch(context),
-                child: Row(
-                  children: [
-                    Text(
-                      'EXPLORE ALL',
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF9C3),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      'BEST SELLERS',
                       style: GoogleFonts.outfit(
-                        fontSize: 9,
+                        fontSize: 7,
                         fontWeight: FontWeight.w900,
-                        color: SahimedColors.primary,
+                        color: const Color(0xFFB45309),
                         letterSpacing: 1,
                       ),
                     ),
-                    const Icon(LucideIcons.chevronRight,
-                        size: 14, color: SahimedColors.primary),
-                  ],
+                  ),
+                  child: _isLoading
+                      ? _shimmerGrid(3)
+                      : _productGrid(_bestSellers, context),
                 ),
+
+              const SizedBox(height: 28),
+
+              // ── 3. Top Categories ───────────────────────────────────────────
+              _buildSection(
+                title: 'Top Categories',
+                trailing: GestureDetector(
+                  onTap: () => _goSearch(context),
+                  child: Row(
+                    children: [
+                      Text(
+                        'EXPLORE ALL',
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: SahimedColors.primary,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const Icon(
+                        LucideIcons.chevronRight,
+                        size: 14,
+                        color: SahimedColors.primary,
+                      ),
+                    ],
+                  ),
+                ),
+                child: _isLoading ? _shimmerGrid(9) : _categoryGrid(context),
               ),
-              child: _isLoading
-                  ? _shimmerGrid(9)
-                  : _categoryGrid(context),
-            ),
 
-            const SizedBox(height: 28),
+              const SizedBox(height: 28),
 
-            // ── 4. Free Delivery Banner ───────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildDeliveryBanner(context),
-            ),
+              // ── 4. Free Delivery Banner ───────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _buildDeliveryBanner(context),
+              ),
 
-            const SizedBox(height: 28),
+              const SizedBox(height: 28),
 
-            // ── 5. Best Sellers (horizontal scroll) ───────────────────────
-            _buildSection(
-              title: 'Best Sellers',
-              child: _isLoading
-                  ? _shimmerHScroll()
-                  : _horizontalProductScroll(context),
-            ),
-          ],
+              // ── 5. Best Sellers (horizontal scroll) ───────────────────────
+              _buildSection(
+                title: 'Best Sellers',
+                child: _isLoading
+                    ? _shimmerHScroll()
+                    : _horizontalProductScroll(context),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -208,12 +213,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     // "Trusted by 10L+ users" pill
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(100),
                         border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.7)),
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -225,8 +233,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               color: _waGreen,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(LucideIcons.shieldCheck,
-                                size: 9, color: Colors.white),
+                            child: const Icon(
+                              LucideIcons.shieldCheck,
+                              size: 9,
+                              color: Colors.white,
+                            ),
                           ),
                           const SizedBox(width: 6),
                           Text(
@@ -300,8 +311,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     alignment: Alignment.topCenter,
                     errorWidget: (c, u, e) => Container(
                       color: _lavender,
-                      child: const Icon(LucideIcons.heartPulse,
-                          color: SahimedColors.primary, size: 40),
+                      child: const Icon(
+                        LucideIcons.heartPulse,
+                        color: SahimedColors.primary,
+                        size: 40,
+                      ),
                     ),
                   ),
                 ),
@@ -357,8 +371,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
-                    child: const Icon(LucideIcons.search,
-                        size: 16, color: Colors.white),
+                    child: const Icon(
+                      LucideIcons.search,
+                      size: 16,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -387,7 +404,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 tileBg: const Color(0xFFF0FDF4),
                 icon: LucideIcons.messageCircle,
                 onTap: () => _launch(
-                    'https://wa.me/917349499898?text=Hi%20Sahimed%2C%20I%20would%20like%20to%20order%20medicines.'),
+                  'https://wa.me/917349499898?text=Hi%20Sahimed%2C%20I%20would%20like%20to%20order%20medicines.',
+                ),
               ),
               const SizedBox(width: 10),
               _quickAction(
@@ -507,7 +525,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisCount: 3,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
-        childAspectRatio: 0.55,
+        childAspectRatio: 0.72,
       ),
       itemCount: products.length,
       itemBuilder: (_, i) => _ProductCard(
@@ -589,7 +607,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   // ── Free Delivery Banner ──────────────────────────────────────────────────
   Widget _buildDeliveryBanner(BuildContext context) {
     return Container(
@@ -640,7 +657,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: () => _goSearch(context),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 8),
+                      horizontal: 18,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(100),
@@ -673,14 +692,14 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
               boxShadow: const [
-                BoxShadow(
-                  color: Color(0x22000000),
-                  blurRadius: 12,
-                )
+                BoxShadow(color: Color(0x22000000), blurRadius: 12),
               ],
             ),
-            child: const Icon(LucideIcons.package,
-                color: SahimedColors.primary, size: 30),
+            child: const Icon(
+              LucideIcons.package,
+              color: SahimedColors.primary,
+              size: 30,
+            ),
           ),
         ],
       ),
@@ -694,7 +713,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _medicines.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (_, i) => SizedBox(
           width: 148,
           child: _ProductCard(
@@ -718,7 +737,7 @@ class _HomeScreenState extends State<HomeScreen> {
         childAspectRatio: 0.75,
       ),
       itemCount: count,
-      itemBuilder: (_, __) => Container(
+      itemBuilder: (_, _) => Container(
         decoration: BoxDecoration(
           color: const Color(0xFFE2E8F0),
           borderRadius: BorderRadius.circular(20),
@@ -733,8 +752,8 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: 4,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (_, __) => Container(
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        itemBuilder: (_, _) => Container(
           width: 145,
           decoration: BoxDecoration(
             color: const Color(0xFFE2E8F0),
@@ -772,11 +791,11 @@ class _ProductCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFF1F5F9)),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Color(0x08000000),
-              blurRadius: 8,
-              offset: Offset(0, 2),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -789,21 +808,27 @@ class _ProductCard extends StatelessWidget {
               width: double.infinity,
               decoration: const BoxDecoration(
                 color: Color(0xFFF8FAFC),
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Stack(
                 children: [
                   ClipRRect(
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(20)),
-                    child: CachedNetworkImage(
-                      imageUrl: product.imageUrl,
-                      width: double.infinity,
-                      height: 90,
-                      fit: BoxFit.contain,
-                      errorWidget: (c, u, e) => const Icon(LucideIcons.pill,
-                          color: SahimedColors.primary, size: 28),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                    child: Hero(
+                      tag: 'prod_${product.id}',
+                      child: CachedNetworkImage(
+                        imageUrl: product.imageUrl,
+                        width: double.infinity,
+                        height: 90,
+                        fit: BoxFit.contain,
+                        errorWidget: (c, u, e) => const Icon(
+                          LucideIcons.pill,
+                          color: SahimedColors.primary,
+                          size: 28,
+                        ),
+                      ),
                     ),
                   ),
                   if (savings > 0)
@@ -812,7 +837,9 @@ class _ProductCard extends StatelessWidget {
                       left: 6,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 5, vertical: 2),
+                          horizontal: 5,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: SahimedColors.primary,
                           borderRadius: BorderRadius.circular(6),
@@ -910,8 +937,11 @@ class _ProductCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          const Icon(LucideIcons.shoppingCart,
-                              size: 10, color: Colors.white),
+                          const Icon(
+                            LucideIcons.shoppingCart,
+                            size: 10,
+                            color: Colors.white,
+                          ),
                         ],
                       ),
                     ),

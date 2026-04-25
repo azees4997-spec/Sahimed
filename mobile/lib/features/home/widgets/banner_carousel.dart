@@ -91,7 +91,10 @@ class _BannerCarouselState extends State<BannerCarousel> {
                         ),
                         const SizedBox(height: 16),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(100),
@@ -144,9 +147,8 @@ class _BannerCarouselState extends State<BannerCarousel> {
                     child: CachedNetworkImage(
                       imageUrl: banner['imageUrl'] ?? '',
                       fit: BoxFit.cover,
-                      errorWidget: (context, url, error) => Container(
-                        color: SahimedColors.sahiBlue,
-                      ),
+                      errorWidget: (context, url, error) =>
+                          Container(color: SahimedColors.sahiBlue),
                     ),
                   ),
                 ),

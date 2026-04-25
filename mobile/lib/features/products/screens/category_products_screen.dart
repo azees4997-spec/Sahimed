@@ -11,11 +11,11 @@ import '../../../shared/models/models.dart';
 import 'product_detail_screen.dart';
 
 // ── colour tokens matching website ────────────────────────────────────────────
-const _lavender  = Color(0xFFEDE9FE);
-const _sahiPink  = Color(0xFFFFF1F2);
-const _sahiBlue  = Color(0xFFEFF6FF);
+const _lavender = Color(0xFFEDE9FE);
+const _sahiPink = Color(0xFFFFF1F2);
+const _sahiBlue = Color(0xFFEFF6FF);
 const _sahiGreen = Color(0xFFECFDF5);
-const _bgPage    = Color(0xFFF8FAFC);
+const _bgPage = Color(0xFFF8FAFC);
 
 Color _catBg(int i) => [_lavender, _sahiPink, _sahiBlue, _sahiGreen][i % 4];
 
@@ -156,10 +156,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                           gradient: LinearGradient(
                             begin: Alignment.centerLeft,
                             end: Alignment.centerRight,
-                            colors: [
-                              Color(0xCC000000),
-                              Color(0x00000000),
-                            ],
+                            colors: [Color(0xCC000000), Color(0x00000000)],
                           ),
                         ),
                       ),
@@ -203,7 +200,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                 padding: const EdgeInsets.all(16),
                 sliver: SliverGrid(
                   delegate: SliverChildBuilderDelegate(
-                    (_, __) => Container(
+                    (_, _) => Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFFE2E8F0),
                         borderRadius: BorderRadius.circular(20),
@@ -211,8 +208,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                     ),
                     childCount: 6,
                   ),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
@@ -232,8 +228,11 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                         color: const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(24),
                       ),
-                      child: const Icon(LucideIcons.packageX,
-                          color: Color(0xFF94A3B8), size: 36),
+                      child: const Icon(
+                        LucideIcons.packageX,
+                        color: Color(0xFF94A3B8),
+                        size: 36,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -264,8 +263,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                     (context, i) => _CatProductCard(product: _products[i]),
                     childCount: _products.length,
                   ),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
@@ -300,7 +298,9 @@ class _CatProductCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)),
+        MaterialPageRoute(
+          builder: (_) => ProductDetailScreen(product: product),
+        ),
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -329,17 +329,22 @@ class _CatProductCard extends StatelessWidget {
               child: Stack(
                 children: [
                   ClipRRect(
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(20)),
-                    child: CachedNetworkImage(
-                      imageUrl: product.imageUrl,
-                      width: double.infinity,
-                      height: 110,
-                      fit: BoxFit.contain,
-                      errorWidget: (c, u, e) => const Icon(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                    child: Hero(
+                      tag: 'prod_${product.id}',
+                      child: CachedNetworkImage(
+                        imageUrl: product.imageUrl,
+                        width: double.infinity,
+                        height: 110,
+                        fit: BoxFit.contain,
+                        errorWidget: (c, u, e) => const Icon(
                           LucideIcons.pill,
                           color: SahimedColors.primary,
-                          size: 36),
+                          size: 36,
+                        ),
+                      ),
                     ),
                   ),
                   if (savings > 0)
@@ -348,7 +353,9 @@ class _CatProductCard extends StatelessWidget {
                       left: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: SahimedColors.primary,
                           borderRadius: BorderRadius.circular(6),
@@ -440,10 +447,11 @@ class _CatProductCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(100),
                           boxShadow: [
                             BoxShadow(
-                              color: (product.isGeneric
-                                      ? SahimedColors.accent
-                                      : SahimedColors.primary)
-                                  .withValues(alpha: 0.3),
+                              color:
+                                  (product.isGeneric
+                                          ? SahimedColors.accent
+                                          : SahimedColors.primary)
+                                      .withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -462,8 +470,11 @@ class _CatProductCard extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 5),
-                            const Icon(LucideIcons.shoppingCart,
-                                size: 12, color: Colors.white),
+                            const Icon(
+                              LucideIcons.shoppingCart,
+                              size: 12,
+                              color: Colors.white,
+                            ),
                           ],
                         ),
                       ),

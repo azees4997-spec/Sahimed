@@ -53,7 +53,10 @@ class SahimedTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: SahimedColors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 24,
+          vertical: 18,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(color: SahimedColors.slate100),

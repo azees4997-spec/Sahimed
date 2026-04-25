@@ -41,99 +41,148 @@ class _HomeHeaderState extends State<HomeHeader> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.9),
-        border: Border(bottom: BorderSide(color: const Color(0xFFF1F5F9), width: 1)),
+        border: Border(
+          bottom: BorderSide(color: const Color(0xFFF1F5F9), width: 1),
+        ),
       ),
       child: Column(
         children: [
           Row(
-             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-             children: [
-               // 1. Logo Section
-               GestureDetector(
-                 onTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                 child: Row(
-                   children: [
-                     Container(
-                       width: 32,
-                       height: 32,
-                       decoration: BoxDecoration(
-                         color: SahimedColors.primary,
-                         borderRadius: BorderRadius.circular(10),
-                         boxShadow: [BoxShadow(color: SahimedColors.primary.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4))],
-                       ),
-                       child: Center(
-                         child: SvgPicture.asset(
-                           'assets/icons/logo.svg',
-                           width: 20,
-                           height: 20,
-                           colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                         ),
-                       ),
-                     ),
-                     const SizedBox(width: 8),
-                     RichText(
-                       text: TextSpan(
-                         children: [
-                           TextSpan(text: 'Sahi', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), letterSpacing: -0.5)),
-                           TextSpan(text: 'Med', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w900, color: SahimedColors.primary, letterSpacing: -0.5)),
-                         ],
-                       ),
-                     ),
-                   ],
-                 ),
-               ),
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // 1. Logo Section
+              GestureDetector(
+                onTap: () =>
+                    Navigator.of(context).popUntil((route) => route.isFirst),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: SahimedColors.primary,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: SahimedColors.primary.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: SvgPicture.asset(
+                          'assets/icons/logo.svg',
+                          width: 20,
+                          height: 20,
+                          colorFilter: const ColorFilter.mode(
+                            Colors.white,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Sahi',
+                            style: GoogleFonts.outfit(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF0F172A),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          TextSpan(
+                            text: 'Med',
+                            style: GoogleFonts.outfit(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              color: SahimedColors.primary,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-               // 2. Right Actions
-               Row(
-                 children: [
-                   // Location Picker (Minimalist like web)
-                   GestureDetector(
-                     onTap: _initLocation,
-                     child: Container(
-                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                       decoration: BoxDecoration(
-                         color: const Color(0xFFF8FAFC),
-                         borderRadius: BorderRadius.circular(100),
-                         border: Border.all(color: const Color(0xFFF1F5F9)),
-                       ),
-                       child: Row(
-                         children: [
-                           const Icon(LucideIcons.mapPin, size: 12, color: SahimedColors.primary),
-                           const SizedBox(width: 4),
-                           ConstrainedBox(
-                             constraints: const BoxConstraints(maxWidth: 70),
-                             child: Text(
-                               _currentAddress,
-                               maxLines: 1,
-                               overflow: TextOverflow.ellipsis,
-                               style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: const Color(0xFF334155)),
-                             ),
-                           ),
-                         ],
-                       ),
-                     ),
-                   ),
-                   const SizedBox(width: 10),
-                   
-                   // Search Trigger
-                   _NavbarIcon(
-                     icon: LucideIcons.search,
-                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchScreen())),
-                     backgroundColor: SahimedColors.primary,
-                     iconColor: Colors.white,
-                     shadow: true,
-                   ),
-                   const SizedBox(width: 10),
+              // 2. Right Actions
+              Row(
+                children: [
+                  // Location Picker (Minimalist like web)
+                  GestureDetector(
+                    onTap: _initLocation,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(color: const Color(0xFFF1F5F9)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            LucideIcons.mapPin,
+                            size: 12,
+                            color: SahimedColors.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 70),
+                            child: Text(
+                              _currentAddress,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.outfit(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF334155),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
 
-                   // Cart Trigger
-                   _NavbarIcon(
-                     icon: LucideIcons.shoppingCart,
-                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CartScreen())),
-                     badgeCount: cartItems,
-                   ),
-                 ],
-               ),
-             ],
+                  // Search Trigger
+                  _NavbarIcon(
+                    icon: LucideIcons.search,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SearchScreen(),
+                      ),
+                    ),
+                    backgroundColor: SahimedColors.primary,
+                    iconColor: Colors.white,
+                    shadow: true,
+                  ),
+                  const SizedBox(width: 10),
+
+                  // Cart Trigger
+                  _NavbarIcon(
+                    icon: LucideIcons.shoppingCart,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CartScreen(),
+                      ),
+                    ),
+                    badgeCount: cartItems,
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
@@ -171,10 +220,26 @@ class _NavbarIcon extends StatelessWidget {
             decoration: BoxDecoration(
               color: backgroundColor ?? Colors.white,
               shape: BoxShape.circle,
-              border: Border.all(color: backgroundColor != null ? Colors.transparent : const Color(0xFFE2E8F0)),
-              boxShadow: shadow ? [BoxShadow(color: SahimedColors.primary.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))] : [],
+              border: Border.all(
+                color: backgroundColor != null
+                    ? Colors.transparent
+                    : const Color(0xFFE2E8F0),
+              ),
+              boxShadow: shadow
+                  ? [
+                      BoxShadow(
+                        color: SahimedColors.primary.withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : [],
             ),
-            child: Icon(icon, size: 16, color: iconColor ?? SahimedColors.primary),
+            child: Icon(
+              icon,
+              size: 16,
+              color: iconColor ?? SahimedColors.primary,
+            ),
           ),
           if (badgeCount > 0)
             Positioned(
@@ -191,7 +256,11 @@ class _NavbarIcon extends StatelessWidget {
                 child: Text(
                   '$badgeCount',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(fontSize: 8, fontWeight: FontWeight.w900, color: Colors.white),
+                  style: GoogleFonts.outfit(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),

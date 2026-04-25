@@ -60,18 +60,23 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
           IconButton(
             onPressed: () {
               Navigator.push(
-                context, 
-                MaterialPageRoute(builder: (context) => const PrescriptionScreen())
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PrescriptionScreen(),
+                ),
               ).then((_) => _loadPrescriptions());
             },
-            icon: const Icon(LucideIcons.circlePlus, color: SahimedColors.primary),
+            icon: const Icon(
+              LucideIcons.circlePlus,
+              color: SahimedColors.primary,
+            ),
           ),
         ],
       ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator()) 
-        : _prescriptions.isEmpty 
-          ? _buildEmptyState() 
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _prescriptions.isEmpty
+          ? _buildEmptyState()
           : _buildPrescriptionList(),
     );
   }
@@ -89,38 +94,62 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
                 color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(color: SahimedColors.primary.withOpacity(0.1), blurRadius: 40),
+                  BoxShadow(
+                    color: SahimedColors.primary.withOpacity(0.1),
+                    blurRadius: 40,
+                  ),
                 ],
               ),
-              child: Icon(LucideIcons.folder, size: 64, color: Colors.grey[300]),
+              child: Icon(
+                LucideIcons.folder,
+                size: 64,
+                color: Colors.grey[300],
+              ),
             ),
             const SizedBox(height: 24),
             Text(
               'No Prescriptions Yet',
-              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900),
+              style: GoogleFonts.outfit(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               'Upload your medicinal documents to keep them safe and accessible.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
-                  context, 
-                  MaterialPageRoute(builder: (context) => const PrescriptionScreen())
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PrescriptionScreen(),
+                  ),
                 ).then((_) => _loadPrescriptions());
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: SahimedColors.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
               ),
               child: Text(
-                'UPLOAD NOW', 
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: Colors.white),
+                'UPLOAD NOW',
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
@@ -140,11 +169,17 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
         if (uploadDate != null) {
           try {
             if (uploadDate is String) {
-              formattedDate = DateFormat('dd MMM yyyy').format(DateTime.parse(uploadDate));
+              formattedDate = DateFormat(
+                'dd MMM yyyy',
+              ).format(DateTime.parse(uploadDate));
             } else if (uploadDate is DateTime) {
               formattedDate = DateFormat('dd MMM yyyy').format(uploadDate);
-            } else if (uploadDate.runtimeType.toString().contains('Timestamp')) {
-              formattedDate = DateFormat('dd MMM yyyy').format(uploadDate.toDate());
+            } else if (uploadDate.runtimeType.toString().contains(
+              'Timestamp',
+            )) {
+              formattedDate = DateFormat(
+                'dd MMM yyyy',
+              ).format(uploadDate.toDate());
             }
           } catch (e) {
             debugPrint('Error parsing date: $e');
@@ -152,7 +187,7 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
         }
         final status = rx['status'] ?? 'Pending';
         final isPdf = (rx['imageUrl'] ?? '').toLowerCase().contains('.pdf');
-        
+
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),
@@ -160,7 +195,11 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 5)),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
             ],
           ),
           child: Row(
@@ -173,17 +212,23 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
                   borderRadius: BorderRadius.circular(16),
                   color: Colors.grey[50],
                 ),
-                child: isPdf 
-                  ? const Icon(LucideIcons.fileText, color: Colors.red, size: 32)
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: CachedNetworkImage(
-                        imageUrl: rx['imageUrl'] ?? '',
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(color: Colors.grey[100]),
-                        errorWidget: (context, url, error) => const Icon(LucideIcons.image, color: Colors.grey),
+                child: isPdf
+                    ? const Icon(
+                        LucideIcons.fileText,
+                        color: Colors.red,
+                        size: 32,
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: CachedNetworkImage(
+                          imageUrl: rx['imageUrl'] ?? '',
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) =>
+                              Container(color: Colors.grey[100]),
+                          errorWidget: (context, url, error) =>
+                              const Icon(LucideIcons.image, color: Colors.grey),
+                        ),
                       ),
-                    ),
               ),
               const SizedBox(width: 16),
               // Info
@@ -193,16 +238,26 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
                   children: [
                     Text(
                       rx['patientName'] ?? 'Self',
-                      style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900),
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       formattedDate,
-                      style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600),
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: _getStatusColor(status).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -210,8 +265,8 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
                       child: Text(
                         status.toUpperCase(),
                         style: GoogleFonts.outfit(
-                          fontSize: 9, 
-                          fontWeight: FontWeight.w900, 
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
                           color: _getStatusColor(status),
                           letterSpacing: 0.5,
                         ),
@@ -220,7 +275,11 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
                   ],
                 ),
               ),
-              const Icon(LucideIcons.chevronRight, color: Colors.grey, size: 20),
+              const Icon(
+                LucideIcons.chevronRight,
+                color: Colors.grey,
+                size: 20,
+              ),
             ],
           ),
         ).animate().slideX(begin: 0.1, delay: (index * 50).ms);

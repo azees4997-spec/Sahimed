@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart'; // Using image_picker which is more stable in this environment
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
@@ -36,9 +35,9 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
     } catch (e) {
       debugPrint('ImagePicker error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error selecting images: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error selecting images: $e')));
       }
     }
   }
@@ -51,7 +50,9 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
     if (_selectedFiles.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select at least one prescription')),
+          const SnackBar(
+            content: Text('Please select at least one prescription'),
+          ),
         );
       }
       return;
@@ -68,7 +69,9 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
 
       final success = await _apiService.submitPrescription(
         imageUrls: imageUrls,
-        patientName: _nameController.text.isEmpty ? 'Self' : _nameController.text,
+        patientName: _nameController.text.isEmpty
+            ? 'Self'
+            : _nameController.text,
         notes: _notesController.text,
       );
 
@@ -81,9 +84,9 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isUploading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Submission failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Submission failed: $e')));
       }
     }
   }
@@ -137,11 +140,17 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                 width: double.infinity,
                 height: 240,
                 decoration: BoxDecoration(
-                  color: _selectedFiles.isEmpty ? Colors.white : SahimedColors.slate950.withOpacity(0.05),
+                  color: _selectedFiles.isEmpty
+                      ? Colors.white
+                      : SahimedColors.slate950.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(40),
-                  border: _selectedFiles.isEmpty 
-                    ? Border.all(color: Colors.grey[200]!, width: 2, style: BorderStyle.solid)
-                    : null,
+                  border: _selectedFiles.isEmpty
+                      ? Border.all(
+                          color: Colors.grey[200]!,
+                          width: 2,
+                          style: BorderStyle.solid,
+                        )
+                      : null,
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -153,23 +162,42 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                           color: SahimedColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(32),
                         ),
-                        child: const Icon(LucideIcons.camera, color: SahimedColors.primary, size: 32),
+                        child: const Icon(
+                          LucideIcons.camera,
+                          color: SahimedColors.primary,
+                          size: 32,
+                        ),
                       ).animate().scale(delay: 200.ms),
                       const SizedBox(height: 16),
                       Text(
                         'Upload Prescription',
-                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800),
+                        style: GoogleFonts.outfit(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       Text(
                         'JPG, PNG (IMAGE ONLY)',
-                        style: GoogleFonts.outfit(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w900, letterSpacing: 1),
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1,
+                        ),
                       ),
                     ] else ...[
-                      const Icon(LucideIcons.clipboardCheck, color: SahimedColors.success, size: 40),
+                      const Icon(
+                        LucideIcons.clipboardCheck,
+                        color: SahimedColors.success,
+                        size: 40,
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         '${_selectedFiles.length} IMAGES SELECTED',
-                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w900),
+                        style: GoogleFonts.outfit(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                       TextButton.icon(
                         onPressed: _pickFiles,
@@ -203,7 +231,12 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                           Center(
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(20),
-                              child: Image.file(_selectedFiles[index], fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+                              child: Image.file(
+                                _selectedFiles[index],
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
                             ),
                           ),
                           Positioned(
@@ -213,8 +246,15 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                               onTap: () => _removeFile(index),
                               child: Container(
                                 padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                child: const Icon(LucideIcons.x, color: Colors.white, size: 12),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  LucideIcons.x,
+                                  color: Colors.white,
+                                  size: 12,
+                                ),
                               ),
                             ),
                           ),
@@ -235,16 +275,25 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(40),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 10)),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
                 ],
               ),
               child: Column(
                 children: [
-                  _buildFieldHeader(LucideIcons.user, 'ORDERING FOR (PATIENT NAME)'),
+                  _buildFieldHeader(
+                    LucideIcons.user,
+                    'ORDERING FOR (PATIENT NAME)',
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _nameController,
-                    decoration: _inputDecoration('e.g. Self or Family Member Name'),
+                    decoration: _inputDecoration(
+                      'e.g. Self or Family Member Name',
+                    ),
                     style: GoogleFonts.outfit(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 24),
@@ -253,7 +302,9 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                   TextField(
                     controller: _notesController,
                     maxLines: 4,
-                    decoration: _inputDecoration('Any specific requirements...'),
+                    decoration: _inputDecoration(
+                      'Any specific requirements...',
+                    ),
                     style: GoogleFonts.outfit(fontWeight: FontWeight.w700),
                   ),
                 ],
@@ -264,51 +315,69 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
 
             // Submit Button
             SizedBox(
-              width: double.infinity,
-              height: 70,
-              child: ElevatedButton(
-                onPressed: _isUploading ? null : _submitRequest,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: SahimedColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(35)),
-                  elevation: 10,
-                  shadowColor: SahimedColors.primary.withOpacity(0.4),
-                ),
-                child: _isUploading 
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(LucideIcons.clipboardCheck),
-                        const SizedBox(width: 12),
-                        Text(
-                          'SUBMIT ORDER REQUEST',
-                          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5),
-                        ),
-                      ],
+                  width: double.infinity,
+                  height: 70,
+                  child: ElevatedButton(
+                    onPressed: _isUploading ? null : _submitRequest,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: SahimedColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(35),
+                      ),
+                      elevation: 10,
+                      shadowColor: SahimedColors.primary.withOpacity(0.4),
                     ),
-              ),
-            ).animate(
-              adapter: ValueAdapter(_isUploading ? 0.0 : 1.0),
-              onPlay: (controller) => controller.repeat(reverse: true),
-            ).scale(
-              begin: const Offset(1, 1),
-              end: const Offset(0.98, 0.98),
-              duration: 1.seconds,
-              curve: Curves.easeInOut,
-            ).animate(target: _isUploading ? 1 : 0),
-            
+                    child: _isUploading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(LucideIcons.clipboardCheck),
+                              const SizedBox(width: 12),
+                              Text(
+                                'SUBMIT ORDER REQUEST',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                )
+                .animate(
+                  adapter: ValueAdapter(_isUploading ? 0.0 : 1.0),
+                  onPlay: (controller) => controller.repeat(reverse: true),
+                )
+                .scale(
+                  begin: const Offset(1, 1),
+                  end: const Offset(0.98, 0.98),
+                  duration: 1.seconds,
+                  curve: Curves.easeInOut,
+                )
+                .animate(target: _isUploading ? 1 : 0),
+
             const SizedBox(height: 20),
             Center(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(LucideIcons.shieldCheck, color: SahimedColors.success, size: 16),
+                  const Icon(
+                    LucideIcons.shieldCheck,
+                    color: SahimedColors.success,
+                    size: 16,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     '100% SECURE & RELIABLE',
-                    style: GoogleFonts.outfit(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w900, letterSpacing: 2),
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2,
+                    ),
                   ),
                 ],
               ),
@@ -326,7 +395,12 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
         const SizedBox(width: 8),
         Text(
           label,
-          style: GoogleFonts.outfit(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w900, letterSpacing: 1),
+          style: GoogleFonts.outfit(
+            fontSize: 10,
+            color: Colors.grey,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+          ),
         ),
       ],
     );
@@ -335,10 +409,16 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: GoogleFonts.outfit(color: Colors.grey[400], fontWeight: FontWeight.w500),
+      hintStyle: GoogleFonts.outfit(
+        color: Colors.grey[400],
+        fontWeight: FontWeight.w500,
+      ),
       filled: true,
       fillColor: const Color(0xFFF8FAFC),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide.none,
+      ),
       contentPadding: const EdgeInsets.all(20),
     );
   }
@@ -352,19 +432,29 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(LucideIcons.circleCheck, color: SahimedColors.success, size: 80)
-                .animate()
-                .scale(duration: 600.ms, curve: Curves.elasticOut),
+              const Icon(
+                LucideIcons.circleCheck,
+                color: SahimedColors.success,
+                size: 80,
+              ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
               const SizedBox(height: 24),
               Text(
                 'REQUEST SENT',
-                style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1),
+                style: GoogleFonts.outfit(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -1,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 'We have received your prescription.\nOur team is reviewing it now.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               const SizedBox(height: 48),
               SizedBox(
@@ -374,9 +464,17 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: SahimedColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
                   ),
-                  child: Text('RETURN HOME', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: Colors.white)),
+                  child: Text(
+                    'RETURN HOME',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
             ],

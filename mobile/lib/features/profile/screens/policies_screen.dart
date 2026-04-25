@@ -38,28 +38,38 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
       appBar: AppBar(
         title: Text(
           'POLICIES & SUPPORT',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.w900,
+            fontSize: 16,
+            letterSpacing: 1,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: SahimedColors.primary, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: SahimedColors.primary,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: SahimedColors.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: SahimedColors.primary),
+            )
           : _pages.isEmpty
-              ? _buildEmptyState()
-              : ListView.builder(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: _pages.length,
-                  itemBuilder: (context, index) {
-                    final page = _pages[index];
-                    return _buildPageTile(page);
-                  },
-                ),
+          ? _buildEmptyState()
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: _pages.length,
+              itemBuilder: (context, index) {
+                final page = _pages[index];
+                return _buildPageTile(page);
+              },
+            ),
     );
   }
 
@@ -68,11 +78,18 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.description_outlined, size: 64, color: SahimedColors.slate200),
+          const Icon(
+            Icons.description_outlined,
+            size: 64,
+            color: SahimedColors.slate200,
+          ),
           const SizedBox(height: 16),
           Text(
             'NO PAGES FOUND',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: SahimedColors.slate400),
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              color: SahimedColors.slate400,
+            ),
           ),
         ],
       ),
@@ -91,13 +108,20 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
         onTap: () => _showPageContent(page),
         title: Text(
           (page['title'] ?? 'Untitled').toUpperCase(),
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 13, color: SahimedColors.slate950),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.w900,
+            fontSize: 13,
+            color: SahimedColors.slate950,
+          ),
         ),
         subtitle: Text(
           'Last updated: ${page['lastUpdated']?.toString().split('T').first ?? 'N/A'}',
           style: GoogleFonts.inter(fontSize: 10, color: SahimedColors.slate400),
         ),
-        trailing: const Icon(Icons.chevron_right_rounded, color: SahimedColors.slate300),
+        trailing: const Icon(
+          Icons.chevron_right_rounded,
+          color: SahimedColors.slate300,
+        ),
       ),
     );
   }
@@ -124,13 +148,20 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
                 child: Container(
                   width: 40,
                   height: 4,
-                  decoration: BoxDecoration(color: SahimedColors.slate200, borderRadius: BorderRadius.circular(2)),
+                  decoration: BoxDecoration(
+                    color: SahimedColors.slate200,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
               Text(
                 (page['title'] ?? 'Details').toUpperCase(),
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 24, letterSpacing: -0.5),
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 24,
+                  letterSpacing: -0.5,
+                ),
               ),
               const Divider(height: 32),
               Expanded(
@@ -139,7 +170,11 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
                   child: Text(
                     // Removing basic HTML tags if any, though the admin supports plain text too
                     (page['content'] ?? '').replaceAll(RegExp(r'<[^>]*>'), ''),
-                    style: GoogleFonts.inter(fontSize: 14, color: SahimedColors.slate500, height: 1.6),
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: SahimedColors.slate500,
+                      height: 1.6,
+                    ),
                   ),
                 ),
               ),

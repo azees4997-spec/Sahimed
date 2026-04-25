@@ -14,7 +14,7 @@ import 'core/widgets/global_error_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
@@ -24,18 +24,25 @@ void main() async {
 
     // [SECURITY REFACTOR] Initialize App Check with Play Integrity for Production
     await FirebaseAppCheck.instance.activate(
-      androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+      androidProvider: kDebugMode
+          ? AndroidProvider.debug
+          : AndroidProvider.playIntegrity,
       appleProvider: AppleProvider.deviceCheck,
     );
 
     // Initializing reCAPTCHA config for Phone Auth fallback
     await FirebaseAuth.instance.initializeRecaptchaConfig();
-    
+
+    // Optimization: Expand Image Cache for smoother scrolling & better performance
+    PaintingBinding.instance.imageCache.maximumSize = 1000;
+    PaintingBinding.instance.imageCache.maximumSizeBytes =
+        100 * 1024 * 1024; // 100MB cache
+
     debugPrint("Firebase Security: App Check & Auth Config initialized.");
   } catch (e) {
     debugPrint("Firebase initialization error: $e");
   }
-  
+
   runApp(const SahimedApp());
 }
 

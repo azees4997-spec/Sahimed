@@ -16,7 +16,11 @@ class LocationService {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) return null;
       }
-      return await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high));
+      return await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
     } catch (e) {
       return null;
     }
@@ -77,7 +81,8 @@ class LocationService {
 
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
-        String address = '${place.subLocality ?? place.locality}, ${place.administrativeArea}';
+        String address =
+            '${place.subLocality ?? place.locality}, ${place.administrativeArea}';
         if (address.startsWith(', ')) address = address.substring(2);
         return address.isEmpty ? 'Unknown Location' : address;
       }

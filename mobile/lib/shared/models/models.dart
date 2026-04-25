@@ -3,17 +3,15 @@ class CategoryModel {
   final String name;
   final String imageUrl;
 
-  CategoryModel({
-    required this.id,
-    required this.name,
-    required this.imageUrl,
-  });
+  CategoryModel({required this.id, required this.name, required this.imageUrl});
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
     return CategoryModel(
       id: json['_id'] ?? json['id'] ?? '',
       name: json['name'] ?? '',
-      imageUrl: json['imageUrl'] ?? 'https://picsum.photos/seed/${json['name']}/200/200',
+      imageUrl:
+          json['imageUrl'] ??
+          'https://picsum.photos/seed/${json['name']}/200/200',
     );
   }
 }
@@ -98,27 +96,44 @@ class ProductModel {
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     final live = json['liveData'] as Map<String, dynamic>?;
-    final images = (json['imageUrls'] as List?)?.map((e) => e.toString()).toList() ?? [];
-    
+    final images =
+        (json['imageUrls'] as List?)?.map((e) => e.toString()).toList() ?? [];
+
     return ProductModel(
       id: json['_id'] ?? json['id'] ?? '',
       name: json['name'] ?? '',
       brand: json['brand'] ?? '',
       packSize: json['packSize'],
-      price: num.tryParse((live?['sahimed_price'] ?? json['price'] ?? 0).toString())?.toDouble() ?? 0.0,
-      mrp: num.tryParse((live?['mrp'] ?? json['mrp'] ?? 0).toString())?.toDouble() ?? 0.0,
-      imageUrl: images.isNotEmpty ? images.first : (json['imageUrl'] ?? 'https://picsum.photos/seed/${json['_id'] ?? json['id']}/300/300'),
+      price:
+          num.tryParse(
+            (live?['sahimed_price'] ?? json['price'] ?? 0).toString(),
+          )?.toDouble() ??
+          0.0,
+      mrp:
+          num.tryParse(
+            (live?['mrp'] ?? json['mrp'] ?? 0).toString(),
+          )?.toDouble() ??
+          0.0,
+      imageUrl: images.isNotEmpty
+          ? images.first
+          : (json['imageUrl'] ??
+                'https://picsum.photos/seed/${json['_id'] ?? json['id']}/300/300'),
       imageUrls: images,
       saltComposition: json['saltComposition'] ?? json['composition'],
       isGeneric: json['isGeneric'] == true || json['isGeneric'] == "true",
-      rxRequired: json['rxRequired'] == true || json['prescriptionRequired'] == true || json['isRxRequired'] == true,
-      prescriptionRequired: json['prescriptionRequired'] == true || json['rxRequired'] == true,
+      rxRequired:
+          json['rxRequired'] == true ||
+          json['prescriptionRequired'] == true ||
+          json['isRxRequired'] == true,
+      prescriptionRequired:
+          json['prescriptionRequired'] == true || json['rxRequired'] == true,
       moleculeId: json['moleculeId'],
       molName: json['molName'] ?? json['moleculeName'],
       company: json['company'] ?? json['manufacturer'],
       liveData: live,
       moleculeData: json['moleculeData'],
-      isBestSeller: json['isBestSeller'] == true || json['isBestSeller'] == "true",
+      isBestSeller:
+          json['isBestSeller'] == true || json['isBestSeller'] == "true",
       treatment: json['treatment'],
       description: json['description'] ?? json['medicalDescription'],
       safetyAdvice: json['safetyAdvice'],
@@ -183,7 +198,7 @@ class OrderModel {
   final String? userId;
   final String patientName;
   final String phoneNumber;
-  final Map<String, dynamic> shippingDetails; 
+  final Map<String, dynamic> shippingDetails;
   final List<Map<String, dynamic>> items;
   final double totalAmount;
   final Map<String, dynamic> billingBreakdown;
@@ -222,12 +237,11 @@ class OrderModel {
       'status': status,
       'isConsultationRequired': isConsultationRequired,
       'clinicalPath': clinicalPath,
-      'orderDate': {
-        '_methodName': 'serverTimestamp',
-      },
+      'orderDate': {'_methodName': 'serverTimestamp'},
     };
   }
 }
+
 class PromoModel {
   final String id;
   final String code;
@@ -258,7 +272,9 @@ class PromoModel {
       description: json['description'] ?? '',
       discountType: json['discountType'] ?? 'percentage',
       discountValue: (json['discountValue'] ?? 0).toDouble(),
-      maxDiscount: json['maxDiscount'] != null ? (json['maxDiscount'] as num).toDouble() : null,
+      maxDiscount: json['maxDiscount'] != null
+          ? (json['maxDiscount'] as num).toDouble()
+          : null,
       minOrderValue: (json['minOrderValue'] ?? 0).toDouble(),
       applyTo: json['applyTo'] ?? 'cart',
       isActive: json['isActive'] ?? true,
