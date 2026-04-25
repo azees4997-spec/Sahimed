@@ -60,27 +60,38 @@ export default function ProductCard({ product }: { product: Product }) {
           />
         </div>
  
-        <div className="space-y-1 sm:space-y-2 flex-1 px-1 min-w-0">
-          {product.brand && (
-            <p className="text-[9px] sm:text-[12px] font-black text-emerald-600 uppercase tracking-[0.15em] mb-0.5">
-              {product.brand}
-            </p>
-          )}
-          {moleculeName && (
-            <p className="text-[8px] sm:text-[11px] font-black text-slate-800 uppercase tracking-tight line-clamp-1 leading-none mb-1">
-              {moleculeName}
-            </p>
-          )}
-          <h3 className="font-black text-black text-[10px] sm:text-[16px] leading-tight line-clamp-2 min-h-[24px] sm:min-h-[44px] font-outfit uppercase tracking-tight group-hover:text-primary transition-colors">
-            {product.name}
-          </h3>
-          <div className="flex flex-col gap-0">
-            <p className="text-[8px] sm:text-[11px] font-black text-slate-500 tracking-tight truncate uppercase">
-              {product.packSize || '10 Units / Pack'}
-            </p>
+          <div className="space-y-1 sm:space-y-1.5 flex-1 px-1 min-w-0">
+            {/* Slot 1: Generic Badge Slot (Fixed Height) */}
+            <div className="h-4 sm:h-6 mb-1.5">
+              {product.isGeneric && (
+                <p className="text-[7px] sm:text-[9px] font-black text-emerald-600 uppercase tracking-[0.2em] bg-emerald-50 px-2 py-0.5 rounded-full w-fit">
+                  Sahi Generic Solution
+                </p>
+              )}
+            </div>
+            
+            {/* Slot 2: Title Slot (Fixed 2 lines) */}
+            <h3 className="font-extrabold text-black text-[12px] sm:text-[18px] leading-[1.2] line-clamp-2 min-h-[30px] sm:min-h-[44px] font-outfit uppercase tracking-tight group-hover:text-primary transition-colors">
+              {product.name}
+            </h3>
+
+            {/* Slot 3: Molecule Slot (Fixed height) */}
+            <div className="h-3 sm:h-4">
+              {moleculeName && (
+                <p className="text-[8px] sm:text-[12px] font-bold text-blue-600 uppercase tracking-tight line-clamp-1 leading-none opacity-90">
+                  {moleculeName}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col gap-0 pt-0.5">
+              <p className="text-[7px] sm:text-[10px] font-bold text-slate-400 tracking-tight truncate uppercase italic">
+                {product.manufacturer || product.brand || 'Pharma Division'}
+              </p>
+              <p className="text-[8px] sm:text-[11px] font-black text-slate-600 tracking-tight truncate uppercase">
+                {product.packSize || '10 Units / Pack'}
+              </p>
+            </div>
           </div>
-          
-          <div className="flex flex-col gap-1.5 pt-1 sm:pt-2">
             <div className="flex items-center gap-3">
                <span className="text-slate-400 line-through text-[10px] sm:text-[14px] font-bold decoration-1">MRP ₹{Math.round(currentMrp)}</span>
                <span className="text-emerald-500 font-black text-[10px] sm:text-[14px] uppercase tracking-tighter">Save ₹{Math.round(currentMrp - currentPrice)}</span>

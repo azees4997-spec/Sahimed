@@ -20,7 +20,7 @@ export async function GET() {
 <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
 <channel>
   <title>Sahimed Product Feed</title>
-  <link>${baseUrl}</link>
+  <link>${escapeXml(baseUrl)}</link>
   <description>Genuine medicines at honest prices - Sahimed Pharmacy</description>`;
 
     products.forEach((product: any) => {
@@ -35,11 +35,11 @@ export async function GET() {
 
       xml += `
   <item>
-    <g:id>${cleanId}</g:id>
+    <g:id>${escapeXml(cleanId)}</g:id>
     <g:title>${escapeXml(product.name)}</g:title>
     <g:description>${escapeXml(product.description || `Buy ${product.name} online at Sahimed. Genuine quality and fastest delivery.`)}</g:description>
-    <g:link>${baseUrl}/product/${cleanId}</g:link>
-    <g:image_link>${safeImageUrl}</g:image_link>
+    <g:link>${escapeXml(`${baseUrl}/product/${cleanId}`)}</g:link>
+    <g:image_link>${escapeXml(safeImageUrl)}</g:image_link>
     <g:condition>new</g:condition>
     <g:availability>${stockStatus}</g:availability>
     <g:price>${pPrice} INR</g:price>

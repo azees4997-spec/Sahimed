@@ -855,12 +855,12 @@ class _InfoTile extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            text.toUpperCase(),
-            maxLines: 10,
+            text,
+            maxLines: 4,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.outfit(
               fontSize: 9,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w600,
               color: const Color(0xFF64748B),
               height: 1.4,
             ),
@@ -927,13 +927,13 @@ class _SafetyTile extends StatelessWidget {
           const SizedBox(height: 4),
           Expanded(
             child: Text(
-              text.toUpperCase(),
-              maxLines: 6,
+              text,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: GoogleFonts.outfit(
-                fontSize: 9,
-                fontWeight: FontWeight.w900,
-                color: textColor.withOpacity(0.6),
+                fontSize: 8.5,
+                fontWeight: FontWeight.w600,
+                color: textColor.withOpacity(0.8),
                 height: 1.4,
               ),
             ),

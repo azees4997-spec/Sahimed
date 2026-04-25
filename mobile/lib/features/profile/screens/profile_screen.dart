@@ -65,12 +65,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final phone = user?.phoneNumber ?? '+91 7349499898';
     final name = (user?.displayName ?? 'Sahimed Member').toUpperCase();
 
-    return Scaffold(
-      backgroundColor: SahimedColors.background,
-      body: RefreshIndicator(
-        onRefresh: _loadProfileData,
-        color: SahimedColors.primary,
-        child: CustomScrollView(
+    return Container(
+      color: SahimedColors.background,
+      child: CustomScrollView(
         slivers: [
           SliverAppBar(
             backgroundColor: SahimedColors.white,
@@ -326,9 +323,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-    ),
-  );
-}
+    );
+  }
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(

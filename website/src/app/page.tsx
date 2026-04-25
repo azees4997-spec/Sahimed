@@ -177,11 +177,11 @@ export default function Home() {
                   <Badge className="bg-yellow-100 text-yellow-700 border-none font-black px-2 py-0.5 rounded-full uppercase tracking-widest text-[7px] sm:text-[9px]">Best Sellers</Badge>
                 </div>
               </div>
-              <div className="grid grid-cols-3 sm:flex gap-2 sm:gap-10 overflow-x-hidden sm:overflow-x-auto sm:scrollbar-hide pb-2 sm:pb-8 px-2">
+              <div className="flex gap-4 sm:gap-10 overflow-x-auto scrollbar-hide pb-2 sm:pb-8 px-2">
                 {isBestLoading ? (
-                  [...Array(3)].map((_, i) => <Skeleton className="w-full aspect-[4/5] rounded-[24px] sm:rounded-[48px]" key={i} />)
+                  [...Array(3)].map((_, i) => <Skeleton className="min-w-[140px] sm:min-w-[280px] aspect-[4/5] rounded-[24px] sm:rounded-[48px]" key={i} />)
                 ) : bestSellers?.slice(0, 3).map((p: any) => (
-                  <div key={p.id} className="w-full sm:min-w-[280px]">
+                  <div key={p.id} className="min-w-[140px] sm:min-w-[280px]">
                     <ProductCard product={p} />
                   </div>
                 ))}

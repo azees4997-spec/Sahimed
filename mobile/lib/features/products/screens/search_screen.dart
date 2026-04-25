@@ -9,9 +9,10 @@ import 'package:geolocator/geolocator.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/providers/cart_provider.dart';
-import '../../../shared/models/models.dart';
 import 'product_detail_screen.dart';
 import 'brand_store_screen.dart';
+import '../../../shared/models/models.dart';
+import '../widgets/product_card.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -153,18 +154,11 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: false,
-        titleSpacing: 0,
-        title: _buildSearchHeader(),
-      ),
-      body: Column(
+    return Container(
+      color: const Color(0xFFF8FAFC),
+      child: Column(
         children: [
+          _buildSearchHeader(),
           // Filter Chips (Website Parity)
           if (_results.isNotEmpty || _currentQuery.isNotEmpty)
             _buildFilterBar(),
@@ -636,12 +630,26 @@ class _SearchScreenState extends State<SearchScreen> {
       return _buildNoResults();
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 200),
       itemCount: _results.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 0.58,
+      ),
       itemBuilder: (context, index) {
         final product = _results[index];
-        return _SearchEntryTile(product: product, onSaltTap: onSaltTap);
+        return GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProductDetailScreen(product: product),
+            ),
+          ),
+          child: SahimedProductCard(product: product),
+        );
       },
     );
   }
@@ -662,266 +670,6 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SearchEntryTile extends StatelessWidget {
-  final ProductModel product;
-  final Function(String)? onSaltTap;
-  const _SearchEntryTile({required this.product, this.onSaltTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final savingsAmount = (product.mrp - product.price).round();
-    final discount = product.mrp > 0
-        ? ((savingsAmount / product.mrp) * 100).round()
-        : 0;
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProductDetailScreen(product: product),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Premium Floating Image Container
-              Stack(
-                children: [
-                  Container(
-                    width: 90,
-                    height: 90,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1FDF9), // Production Mint tint
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Hero(
-                      tag: 'prod_${product.id}',
-                      child: CachedNetworkImage(
-                        imageUrl: product.imageUrl,
-                        fit: BoxFit.contain,
-                        errorWidget: (c, u, e) => const Icon(
-                          LucideIcons.pill,
-                          color: SahimedColors.primary,
-                          size: 32,
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (discount >= 5)
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: const BoxDecoration(
-                          color: SahimedColors.success,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(24),
-                            bottomRight: Radius.circular(16),
-                          ),
-                        ),
-                        child: Text(
-                          '$discount% OFF',
-                          style: GoogleFonts.outfit(
-                            fontSize: 8,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(width: 16),
-
-              // Name & Detailed Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Brand / Manufacturer (Sahimed Pink)
-                    GestureDetector(
-                      onTap: () {
-                        final company = product.company ?? product.brand;
-                        if (company.isNotEmpty) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  BrandStoreScreen(brandName: company),
-                            ),
-                          );
-                        }
-                      },
-                      child: Text(
-                        (product.company ?? product.brand).toUpperCase(),
-                        style: GoogleFonts.outfit(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w900,
-                          color: SahimedColors.accent,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      product.name.toUpperCase(),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF0F172A),
-                        height: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-
-                    // Salt/Molecule (Clickable Link)
-                    if ((product.molName ?? product.saltComposition) != null)
-                      GestureDetector(
-                        onTap: () => onSaltTap?.call(
-                          product.molName ?? product.saltComposition!,
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.only(bottom: 1),
-                          decoration: const BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: Color(0xFF94A3B8),
-                                width: 0.5,
-                              ),
-                            ),
-                          ),
-                          child: Text(
-                            (product.molName ?? product.saltComposition!)
-                                .toUpperCase(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w700,
-                              color: SahimedColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                    const SizedBox(height: 10),
-
-                    // Price and Add Logic
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '₹${product.price.round()}',
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                    color: SahimedColors.primary,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                if (product.mrp > product.price)
-                                  Text(
-                                    '₹${product.mrp.round()}',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      color: const Color(0xFFCBD5E1),
-                                      decoration: TextDecoration.lineThrough,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            if (savingsAmount > 0)
-                              Text(
-                                'SAVE ₹$savingsAmount',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w900,
-                                  color: SahimedColors.success,
-                                ),
-                              ),
-                          ],
-                        ),
-
-                        // Redundant SnackBar removed for consistency with main optimization plan.
-                        // The Floating Cart Bar in MainLayout is the primary notification.
-                        GestureDetector(
-                          onTap: () {
-                            context.read<CartProvider>().addItem(product);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: SahimedColors.primary,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: SahimedColors.primary.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              'ADD',
-                              style: GoogleFonts.outfit(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

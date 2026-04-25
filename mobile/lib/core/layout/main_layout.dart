@@ -60,12 +60,9 @@ class _MainLayoutState extends State<MainLayout> {
             backgroundColor: SahimedColors.background,
             body: Stack(
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 90),
-                  child: IndexedStack(
-                    index: _currentIndex,
-                    children: _screens,
-                  ),
+                IndexedStack(
+                  index: _currentIndex,
+                  children: _screens,
                 ),
 
                 // Persistent Cart Summary

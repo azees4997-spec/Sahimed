@@ -13,6 +13,7 @@ import '../../../shared/models/models.dart';
 import 'prescription_screen.dart';
 import '../../products/screens/product_detail_screen.dart';
 import '../../products/screens/category_products_screen.dart';
+import '../../products/widgets/product_card.dart';
 
 // ─── color tokens matching the website ──────────────────────────────────────
 const _lavender = Color(0xFFEDE9FE);
@@ -52,9 +53,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ]);
       if (mounted) {
         setState(() {
-          _categories = results[0] as List<CategoryModel>;
-          _bestSellers = (results[1] as List<ProductModel>).take(3).toList();
-          _medicines = (results[2] as List<ProductModel>).take(20).toList();
+          _categories = (results[0] as List<CategoryModel>?) ?? [];
+          _bestSellers = (results[1] as List<ProductModel>?)?.take(3).toList() ?? [];
+          _medicines = (results[2] as List<ProductModel>?)?.take(20).toList() ?? [];
           _isLoading = false;
         });
       }
@@ -97,97 +98,94 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _bgPage,
-      body: RefreshIndicator(
+    return Container(
+      color: _bgPage,
+      child: RefreshIndicator(
         onRefresh: _load,
         color: SahimedColors.primary,
-        child: SafeArea(
-          bottom: false,
-          child: ListView(
-            padding: const EdgeInsets.only(bottom: 180),
-            children: [
-              // ── 1. Hero Section ─────────────────────────────────────────────
-              _buildHero(context),
+        child: ListView(
+          padding: const EdgeInsets.only(top: 0, bottom: 80),
+          children: [
+            // ── 1. Hero Section ─────────────────────────────────────────────
+            _buildHero(context),
 
-              const SizedBox(height: 28),
+            const SizedBox(height: 28),
 
-              // ── 2. Most Popular Brands (3-col grid, best sellers) ───────────
-              if (_isLoading || _bestSellers.isNotEmpty)
-                _buildSection(
-                  title: 'Our Most Popular Brands',
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEF9C3),
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      'BEST SELLERS',
-                      style: GoogleFonts.outfit(
-                        fontSize: 7,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFFB45309),
-                        letterSpacing: 1,
-                      ),
+            // ── 2. Most Popular Brands (3-col grid, best sellers) ───────────
+            if (_isLoading || _bestSellers.isNotEmpty)
+              _buildSection(
+                title: 'Our Most Popular Brands',
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF9C3),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(
+                    'BEST SELLERS',
+                    style: GoogleFonts.outfit(
+                      fontSize: 7,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFFB45309),
+                      letterSpacing: 1,
                     ),
                   ),
-                  child: _isLoading
-                      ? _shimmerGrid(3)
-                      : _productGrid(_bestSellers, context),
                 ),
-
-              const SizedBox(height: 28),
-
-              // ── 3. Top Categories ───────────────────────────────────────────
-              _buildSection(
-                title: 'Top Categories',
-                trailing: GestureDetector(
-                  onTap: () => _goSearch(context),
-                  child: Row(
-                    children: [
-                      Text(
-                        'EXPLORE ALL',
-                        style: GoogleFonts.outfit(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          color: SahimedColors.primary,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const Icon(
-                        LucideIcons.chevronRight,
-                        size: 14,
-                        color: SahimedColors.primary,
-                      ),
-                    ],
-                  ),
-                ),
-                child: _isLoading ? _shimmerGrid(9) : _categoryGrid(context),
-              ),
-
-              const SizedBox(height: 28),
-
-              // ── 4. Free Delivery Banner ───────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _buildDeliveryBanner(context),
-              ),
-
-              const SizedBox(height: 28),
-
-              // ── 5. Best Sellers (horizontal scroll) ───────────────────────
-              _buildSection(
-                title: 'Best Sellers',
                 child: _isLoading
-                    ? _shimmerHScroll()
-                    : _horizontalProductScroll(context),
+                    ? _shimmerGrid(3)
+                    : _productGrid(_bestSellers, context),
               ),
-            ],
-          ),
+
+            const SizedBox(height: 28),
+
+            // ── 3. Top Categories ───────────────────────────────────────────
+            _buildSection(
+              title: 'Top Categories',
+              trailing: GestureDetector(
+                onTap: () => _goSearch(context),
+                child: Row(
+                  children: [
+                    Text(
+                      'EXPLORE ALL',
+                      style: GoogleFonts.outfit(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: SahimedColors.primary,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const Icon(
+                      LucideIcons.chevronRight,
+                      size: 14,
+                      color: SahimedColors.primary,
+                    ),
+                  ],
+                ),
+              ),
+              child: _isLoading ? _shimmerGrid(9) : _categoryGrid(context),
+            ),
+
+            const SizedBox(height: 28),
+
+            // ── 4. Free Delivery Banner ───────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildDeliveryBanner(context),
+            ),
+
+            const SizedBox(height: 28),
+
+            // ── 5. Best Sellers (horizontal scroll) ───────────────────────
+            _buildSection(
+              title: 'Best Sellers',
+              child: _isLoading
+                  ? _shimmerHScroll()
+                  : _horizontalProductScroll(context),
+            ),
+          ],
         ),
       ),
     );
@@ -516,21 +514,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Product 3-column grid ─────────────────────────────────────────────────
   Widget _productGrid(List<ProductModel> products, BuildContext context) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 0.72,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 0.58, // Standard ratio for 3-col grids
       ),
       itemCount: products.length,
-      itemBuilder: (_, i) => _ProductCard(
+      itemBuilder: (_, i) => SahimedProductCard(
         product: products[i],
-        onTap: () => _openProduct(context, products[i]),
       ),
     );
   }
@@ -706,19 +702,17 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Horizontal product scroll (Best Sellers section) ────────────────────
   Widget _horizontalProductScroll(BuildContext context) {
     return SizedBox(
-      height: 290,
+      height: 200, // Compact height for horizontal scroll
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _medicines.length,
         separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (_, i) => SizedBox(
-          width: 148,
-          child: _ProductCard(
+          width: 120,
+          child: SahimedProductCard(
             product: _medicines[i],
-            onTap: () => _openProduct(context, _medicines[i]),
           ),
         ),
       ),
@@ -734,7 +728,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisCount: 3,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
-        childAspectRatio: 0.75,
+        childAspectRatio: 0.58,
       ),
       itemCount: count,
       itemBuilder: (_, _) => Container(
@@ -759,197 +753,6 @@ class _HomeScreenState extends State<HomeScreen> {
             color: const Color(0xFFE2E8F0),
             borderRadius: BorderRadius.circular(20),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Product Card ─────────────────────────────────────────────────────────────
-// Matching the website's ProductCard component layout
-class _ProductCard extends StatelessWidget {
-  final ProductModel product;
-  final VoidCallback onTap;
-
-  const _ProductCard({required this.product, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final cart = context.watch<CartProvider>();
-    final inCart = cart.items.any((i) => i.product.id == product.id);
-    final qty = inCart
-        ? cart.items.firstWhere((i) => i.product.id == product.id).quantity
-        : 0;
-    final savings = product.mrp > product.price
-        ? ((product.mrp - product.price) / product.mrp * 100).round()
-        : 0;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFF1F5F9)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image area — fixed height so info section always has room
-            Container(
-              height: 90,
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              child: Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                    child: Hero(
-                      tag: 'prod_${product.id}',
-                      child: CachedNetworkImage(
-                        imageUrl: product.imageUrl,
-                        width: double.infinity,
-                        height: 90,
-                        fit: BoxFit.contain,
-                        errorWidget: (c, u, e) => const Icon(
-                          LucideIcons.pill,
-                          color: SahimedColors.primary,
-                          size: 28,
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (savings > 0)
-                    Positioned(
-                      top: 6,
-                      left: 6,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 5,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: SahimedColors.primary,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          '-$savings%',
-                          style: GoogleFonts.outfit(
-                            fontSize: 7,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-
-            // Info area
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name.toUpperCase(),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF1E293B),
-                      height: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  if (product.packSize != null)
-                    Text(
-                      product.packSize!,
-                      style: GoogleFonts.outfit(
-                        fontSize: 7,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF94A3B8),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  const SizedBox(height: 4),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '₹${product.price.toStringAsFixed(0)}',
-                        style: GoogleFonts.outfit(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: SahimedColors.primary,
-                          height: 1,
-                        ),
-                      ),
-                      if (product.mrp > product.price) ...[
-                        const SizedBox(width: 4),
-                        Text(
-                          '₹${product.mrp.toStringAsFixed(0)}',
-                          style: GoogleFonts.outfit(
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF94A3B8),
-                            decoration: TextDecoration.lineThrough,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  // ADD button
-                  GestureDetector(
-                    onTap: () => context.read<CartProvider>().addItem(product),
-                    child: Container(
-                      width: double.infinity,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: SahimedColors.primary,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            qty > 0 ? 'IN CART ($qty)' : 'ADD',
-                            style: GoogleFonts.outfit(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(
-                            LucideIcons.shoppingCart,
-                            size: 10,
-                            color: Colors.white,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );

@@ -75,9 +75,9 @@ class _CartScreenState extends State<CartScreen> {
 
     final totalSavings = cart.totalSavings;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: Stack(
+    return Container(
+      color: const Color(0xFFF8FAFC),
+      child: Stack(
         children: [
           // ── scrollable content ──────────────────────────────────────────
           ListView(

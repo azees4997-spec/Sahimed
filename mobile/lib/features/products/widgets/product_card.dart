@@ -13,190 +13,228 @@ class SahimedProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final savingsPct = product.mrp > 0
+    final cart = context.watch<CartProvider>();
+    final inCart = cart.items.any((i) => i.product.id == product.id);
+    final qty = inCart
+        ? cart.items.firstWhere((i) => i.product.id == product.id).quantity
+        : 0;
+    
+    final savingsPct = product.mrp > product.price
         ? ((product.mrp - product.price) / product.mrp * 100).round()
         : 0;
 
     return Container(
-      width: 200,
       decoration: BoxDecoration(
-        color: SahimedColors.white,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: SahimedColors.slate100),
-        boxShadow: [
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Color(0x08000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Stack(
-            children: [
-              Container(
-                height: 140,
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: SahimedColors.background,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(32),
-                    topRight: Radius.circular(32),
-                  ),
-                ),
-                child: Hero(
-                  tag: 'product_${product.id}',
-                  child: CachedNetworkImage(
-                    imageUrl: product.imageUrl,
-                    fit: BoxFit.contain,
-                    errorWidget: (c, u, e) => const Icon(
-                      Icons.medication_rounded,
-                      color: SahimedColors.primary,
-                      size: 64,
-                    ),
-                  ),
-                ),
-              ),
-              if (savingsPct > 0)
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: SahimedColors.accent,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      'SAVE $savingsPct%',
-                      style: GoogleFonts.outfit(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // 1. Image slot (Fixed Height)
+          Container(
+            height: 90,
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Stack(
               children: [
-                if ((product.company ?? product.brand).isNotEmpty)
-                  GestureDetector(
-                    onTap: () {
-                      final company = product.company ?? product.brand;
-                      if (company.isNotEmpty) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                BrandStoreScreen(brandName: company),
-                          ),
-                        );
-                      }
-                    },
-                    child: Text(
-                      (product.company ?? product.brand).toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.outfit(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        color: SahimedColors.accent,
-                        letterSpacing: 1,
-                      ),
-                    ),
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
                   ),
-                if (product.saltComposition != null)
-                  Text(
-                    product.saltComposition!.toUpperCase(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                      color: SahimedColors.slate400,
-                    ),
-                  ),
-                const SizedBox(height: 4),
-                Text(
-                  product.name.toUpperCase(),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.outfit(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: SahimedColors.slate950,
-                    height: 1.15,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '₹${product.price.round()}',
-                          style: GoogleFonts.outfit(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: SahimedColors.primary,
-                            letterSpacing: -1,
-                          ),
-                        ),
-                        Text(
-                          '₹${product.mrp.round()}',
-                          style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: SahimedColors.slate400,
-                            decoration: TextDecoration.lineThrough,
-                          ),
-                        ),
-                      ],
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        context.read<CartProvider>().addItem(product);
-                        // Redundant SnackBar removed for premium feel.
-                        // The floating cart summary is the primary notification.
-                      },
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
+                  child: Hero(
+                    tag: 'prod_${product.id}',
+                    child: Center(
+                      child: CachedNetworkImage(
+                        imageUrl: product.imageUrl,
+                        width: 70,
+                        height: 70,
+                        fit: BoxFit.contain,
+                        errorWidget: (c, u, e) => const Icon(
+                          Icons.medication_rounded,
                           color: SahimedColors.primary,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: SahimedColors.primary.withValues(
-                                alpha: 0.25,
-                              ),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.add_rounded,
-                          color: Colors.white,
                           size: 28,
                         ),
                       ),
                     ),
+                  ),
+                ),
+                if (savingsPct > 0)
+                  Positioned(
+                    top: 6,
+                    left: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: SahimedColors.primary,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'SAVE $savingsPct%',
+                        style: GoogleFonts.outfit(
+                          fontSize: 6,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // 2. Info area - Unified sizing slots
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Slot 1: Badge Slot (Fixed height)
+                SizedBox(
+                  height: 14,
+                  child: product.isGeneric
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: SahimedColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'SAHI RECOMMENDED',
+                            style: GoogleFonts.outfit(
+                              fontSize: 6,
+                              fontWeight: FontWeight.w900,
+                              color: SahimedColors.primary,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(height: 3),
+
+                // Slot 2: Name Slot (Fixed 2 lines)
+                SizedBox(
+                  height: 26,
+                  child: Text(
+                    product.name.toUpperCase(),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF0F172A),
+                      height: 1.1,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ),
+
+                // Slot 3: Molecule Slot (Fixed height)
+                SizedBox(
+                  height: 10,
+                  child: product.saltComposition != null
+                      ? Text(
+                          product.saltComposition!.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.outfit(
+                            fontSize: 7,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade800,
+                            letterSpacing: 0.2,
+                          ),
+                        )
+                      : null,
+                ),
+
+                // Slot 4: Pack Slot
+                SizedBox(
+                  height: 9,
+                  child: product.packSize != null
+                      ? Text(
+                          product.packSize!.toUpperCase(),
+                          style: GoogleFonts.outfit(
+                            fontSize: 7,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF94A3B8),
+                            letterSpacing: 0.3,
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(height: 6),
+
+                // Slot 5: Price Row
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '₹${product.price.toStringAsFixed(0)}',
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF0F172A),
+                        height: 1,
+                      ),
+                    ),
+                    if (product.mrp > product.price) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        '₹${product.mrp.toStringAsFixed(0)}',
+                        style: GoogleFonts.outfit(
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF94A3B8),
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                    ],
                   ],
+                ),
+                const SizedBox(height: 8),
+
+                // Slot 6: Full-width ADD Button
+                GestureDetector(
+                  onTap: () => context.read<CartProvider>().addItem(product),
+                  child: Container(
+                    width: double.infinity,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: SahimedColors.primary,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: SahimedColors.primary.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        qty > 0 ? 'ADDED ($qty)' : 'ADD TO BASKET',
+                        style: GoogleFonts.outfit(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -206,3 +244,4 @@ class SahimedProductCard extends StatelessWidget {
     );
   }
 }
+
