@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ShieldCheck, 
   LogOut, 
@@ -53,13 +54,17 @@ import { SearchAnalyticsTab } from './components/SearchAnalyticsTab';
 
 const MASTER_UIDS = ["BM9HheYflheT0Wyj6olaEnyCAHl1", "RzB6nqlQumg1VEniFcZrgbcDdRA2"];
 
-export default function AdminConsole() {
+function AdminConsoleContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get('tab') as AdminTab) || 'overview';
+
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const auth = useAuth();
   const { toast } = useToast();
   
-  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const [activeTab, setActiveTab] = useState<AdminTab>(initialTab);
   const [isVerified, setIsVerified] = useState(false);
   const [userRole, setUserRole] = useState<string>('');
   const [permissions, setPermissions] = useState<Record<string, boolean>>({});
@@ -112,6 +117,19 @@ export default function AdminConsole() {
       setIsVerified(false);
     }
   }, [user]);
+
+  // Sync state with URL
+  useEffect(() => {
+    const tab = searchParams.get('tab') as AdminTab;
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: AdminTab) => {
+    setActiveTab(tab);
+    router.push(`/Sahi-admin?tab=${tab}`);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,8 +241,8 @@ export default function AdminConsole() {
                    <ShieldCheck className="w-32 h-32" />
                 </div>
                 <Lock className="w-14 h-14 mx-auto mb-4 text-white/40 relative z-10" />
-                <CardTitle className="text-3xl font-black tracking-tighter text-white uppercase font-outfit relative z-10">Administrative Port</CardTitle>
-                <p className="text-[10px] font-black text-white/50 tracking-[0.3em] uppercase relative z-10">SahiMed Systems Console</p>
+                <CardTitle className="text-3xl font-black tracking-tighter text-white uppercase font-outfit relative z-10">Admin Access</CardTitle>
+                <p className="text-[10px] font-black text-white/50 tracking-[0.3em] uppercase relative z-10">SahiMed Administrative Console</p>
                 <div className="mt-4 pt-4 border-t border-white/10 relative z-10">
                   <p className="text-[8px] font-black text-white/40 tracking-[0.2em] uppercase">Matrix Identity: {auth?.app.options.projectId || 'Unknown Sector'}</p>
                 </div>
@@ -232,11 +250,11 @@ export default function AdminConsole() {
               <CardContent className="p-10">
                 <form onSubmit={handleLogin} className="space-y-6">
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Credential Identity</Label>
+                    <Label className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Admin Email</Label>
                     <input type="email" placeholder="admin@sahimed.com" value={email} onChange={e => setEmail(e.target.value)} required className="w-full h-16 rounded-[24px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white px-6 font-black outline-none transition-all placeholder:text-slate-300" />
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Access Matrix Key</Label>
+                    <Label className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Password</Label>
                     <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="w-full h-16 rounded-[24px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white px-6 font-black outline-none transition-all placeholder:text-slate-300" />
                   </div>
                   <Button type="submit" disabled={authLoading} className="w-full h-20 rounded-full font-black tracking-[0.3em] mt-4 shadow-2xl shadow-primary/30 uppercase active:scale-95 text-xs bg-primary hover:scale-[1.02] transition-all">
@@ -318,14 +336,14 @@ export default function AdminConsole() {
                 </div>
                 <div className="hidden sm:block">
                   <h1 className="text-2xl font-black tracking-tighter text-slate-900 uppercase font-outfit leading-none">SahiMed</h1>
-                  <p className="text-[8px] font-black text-slate-400 tracking-[0.5em] uppercase opacity-60">Admin Core v4.0</p>
+                  <p className="text-[8px] font-black text-slate-400 tracking-[0.5em] uppercase opacity-60">Admin Dashboard 4.0</p>
                 </div>
               </Link>
             </div>
 
             <div className="flex items-center gap-6">
               <div className="hidden lg:flex flex-col items-end mr-6 border-r border-slate-200 pr-8">
-                 <p className="text-[9px] font-black text-slate-300 tracking-[0.3em] uppercase opacity-60">Operational Protocol</p>
+                 <p className="text-[9px] font-black text-slate-300 tracking-[0.3em] uppercase opacity-60">Session Active</p>
                  <p className="text-xs font-black text-primary uppercase">{user?.email}</p>
               </div>
               <Button 
@@ -349,24 +367,37 @@ export default function AdminConsole() {
               exit={{ opacity: 0, scale: 1.02, y: -10 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             >
-              {activeTab === 'overview' && <OverviewTab setTab={setActiveTab} role={userRole} />}
-              {permissions.orders_view && activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {permissions.orders_view && activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {permissions.inventory_manage && activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {permissions.inventory_manage && activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {permissions.inventory_manage && activeTab === 'categories' && <CategoriesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {permissions.orders_view && activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {permissions.inventory_manage && activeTab === 'stockAlerts' && <AlertsTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {permissions.inventory_manage && activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {permissions.inventory_manage && activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {permissions.inventory_manage && activeTab === 'banners' && <BannersTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {permissions.staff_manage && activeTab === 'admins' && <AdminProfilesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {permissions.inventory_manage && activeTab === 'pages' && <PagesTab db={db} isVerified={isVerified} onBack={() => setActiveTab('overview')} />}
-              {permissions.inventory_manage && activeTab === 'searchAnalytics' && <SearchAnalyticsTab onBack={() => setActiveTab('overview')} />}
+              {activeTab === 'overview' && <OverviewTab setTab={handleTabChange} role={userRole} />}
+              {permissions.orders_view && activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {permissions.orders_view && activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {permissions.inventory_manage && activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {permissions.inventory_manage && activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {permissions.inventory_manage && activeTab === 'categories' && <CategoriesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {permissions.orders_view && activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {permissions.inventory_manage && activeTab === 'stockAlerts' && <AlertsTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {permissions.inventory_manage && activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {permissions.inventory_manage && activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {permissions.inventory_manage && activeTab === 'banners' && <BannersTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {permissions.staff_manage && activeTab === 'admins' && <AdminProfilesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {permissions.inventory_manage && activeTab === 'pages' && <PagesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {permissions.inventory_manage && activeTab === 'searchAnalytics' && <SearchAnalyticsTab onBack={() => handleTabChange('overview')} />}
             </motion.div>
           </AnimatePresence>
         </main>
       </div>
     </PageTransition>
+  );
+}
+
+export default function AdminConsole() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F7F6] gap-6 pharma-bg-pattern">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+        <p className="text-[10px] font-black tracking-[0.4em] text-slate-400 uppercase">Loading Session...</p>
+      </div>
+    }>
+      <AdminConsoleContent />
+    </Suspense>
   );
 }
