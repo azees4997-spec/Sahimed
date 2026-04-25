@@ -385,7 +385,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                   <div className="grid grid-cols-2 gap-3">
                     {selectedOrder?.status === 'Pending Consult' ? (
                       <Button 
-                        onClick={() => updateOrderStatus(selectedOrder._id, 'Confirmed')}
+                        onClick={() => updateOrderStatus(selectedOrder._id, 'Confirmed', { shipping: { partner: 'Velocity' } })}
                         className="col-span-2 rounded-2xl h-16 bg-emerald-600 text-white font-black text-xs uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-100 gap-3"
                       >
                          <Stethoscope className="w-5 h-5" />

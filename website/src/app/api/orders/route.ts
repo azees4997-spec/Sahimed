@@ -185,43 +185,43 @@ export async function PUT(req: Request) {
       { $set: { ...updates, updatedAt: new Date() } }
     );
 
+    const currentOrder = await db.collection('orders').findOne({ _id: new ObjectId(id) });
+
     // SHIPWAY AUTOMATION: Trigger when status is Shipped and partner is Shipway
-    if (updates.status === 'Shipped' && updates.shipping?.partner === 'Shipway' && result.modifiedCount > 0) {
+    if (updates.status === 'Shipped' && (updates.shipping?.partner === 'Shipway' || currentOrder?.shipping?.partner === 'Shipway') && result.modifiedCount > 0) {
       try {
-        const order = await db.collection('orders').findOne({ _id: new ObjectId(id) });
-        if (order) {
+        if (currentOrder) {
+          const { ShipwayService } = await import('@/lib/logistics/shipway');
           await ShipwayService.createShipment({
-            orderId: order.orderId,
-            name: order.patientName,
-            phone: order.phoneNumber,
-            address: `${order.shippingDetails?.houseNumber || ''}, ${order.shippingDetails?.street || ''}`,
-            city: order.shippingDetails?.city || '',
-            state: order.shippingDetails?.state || '',
-            pincode: order.shippingDetails?.pincode || '',
-            items: (order.items || []).map((it: any) => ({
+            orderId: currentOrder.orderId,
+            name: currentOrder.patientName,
+            phone: currentOrder.phoneNumber,
+            address: `${currentOrder.shippingDetails?.houseNumber || ''}, ${currentOrder.shippingDetails?.street || ''}`,
+            city: currentOrder.shippingDetails?.city || '',
+            state: currentOrder.shippingDetails?.state || '',
+            pincode: currentOrder.shippingDetails?.pincode || '',
+            items: (currentOrder.items || []).map((it: any) => ({
               name: it.name,
               qty: it.quantity,
               price: it.unitPrice
             }))
           });
-          console.log(`[Shipway Automation] Order ${order.orderId} pushed successfully.`);
+          console.log(`[Shipway Automation] Order ${currentOrder.orderId} pushed successfully.`);
         }
       } catch (shipwayErr: any) {
         console.error(`[Shipway Automation Error] Failed to sync order ${id}:`, shipwayErr.message);
-        // Note: We don't fail the whole API call if Shipway fails, as the internal status is updated.
       }
     }
 
     // VELOCITY AUTOMATION: Trigger when partner is Velocity
-    if (updates.status === 'Shipped' && updates.shipping?.partner === 'Velocity' && result.modifiedCount > 0) {
+    if ((updates.status === 'Confirmed' || updates.status === 'Shipped') && (updates.shipping?.partner === 'Velocity' || currentOrder?.shipping?.partner === 'Velocity') && result.modifiedCount > 0) {
       try {
-        const order = await db.collection('orders').findOne({ _id: new ObjectId(id) });
-        if (order) {
+        if (currentOrder && !currentOrder.shipping?.awb) { // Double check no AWB exists to prevent duplicates
           const { VelocityService } = await import('@/lib/logistics/velocity');
           const velocityRes = await VelocityService.createForwardOrder({
-            orderId: order.orderId,
-            billingCustomerName: order.patientName,
-            orderItems: (order.items || []).map((it: any) => ({
+            orderId: currentOrder.orderId,
+            billingCustomerName: currentOrder.patientName,
+            orderItems: (currentOrder.items || []).map((it: any) => ({
               name: it.name,
               quantity: it.quantity,
               price: Number(it.unitPrice),
@@ -229,13 +229,13 @@ export async function PUT(req: Request) {
             })),
             warehouseId: 'default', // should use actual warehouse id
             shippingDetails: {
-              address: `${order.shippingDetails?.houseNumber || ''}, ${order.shippingDetails?.street || ''}`,
-              city: order.shippingDetails?.city || '',
-              state: order.shippingDetails?.state || '',
-              pincode: order.shippingDetails?.pincode || '',
-              phone: order.phoneNumber
+              address: `${currentOrder.shippingDetails?.houseNumber || ''}, ${currentOrder.shippingDetails?.street || ''}`,
+              city: currentOrder.shippingDetails?.city || '',
+              state: currentOrder.shippingDetails?.state || '',
+              pincode: currentOrder.shippingDetails?.pincode || '',
+              phone: currentOrder.phoneNumber
             },
-            totalAmount: Number(order.totalAmount),
+            totalAmount: Number(currentOrder.totalAmount),
             paymentMode: 'PREPAID'
           });
           
@@ -250,7 +250,7 @@ export async function PUT(req: Request) {
                 } 
               }
             );
-            console.log(`[Velocity Automation] Order ${order.orderId} manifested successfully. AWB: ${velocityRes.data.awb_number}`);
+            console.log(`[Velocity Automation] Order ${currentOrder.orderId} manifested successfully. AWB: ${velocityRes.data.awb_number}`);
           }
         }
       } catch (velocityErr: any) {
