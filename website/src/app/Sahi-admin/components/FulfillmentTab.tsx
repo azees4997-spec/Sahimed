@@ -264,7 +264,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
 
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
         <div className="bg-white/60 backdrop-blur-md p-1.5 rounded-full border border-white shadow-xl flex w-fit gap-1.5 overflow-x-auto no-scrollbar">
-          {['All', 'Pending Consult', 'Confirmed', 'Packing', 'Shipped', 'Delivered', 'Cancelled'].map((status) => (
+          {['All', 'Pending Consult', 'Confirmed', 'Packing', 'Packed', 'Shipped', 'Delivered', 'Cancelled'].map((status) => (
             <button key={status} onClick={() => setStatusFilter(status)} className={cn("px-8 py-3.5 rounded-full text-[9px] font-black tracking-[0.2em] transition-all uppercase whitespace-nowrap", statusFilter === status ? "bg-primary text-white shadow-lg shadow-primary/30" : "text-slate-400 hover:bg-white/80")}>{status}</button>
           ))}
         </div>
@@ -337,9 +337,19 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                    <div className="space-y-4">
                      <Select onValueChange={v => setShippingInfo({...shippingInfo, partner: v})}>
                        <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select partner" /></SelectTrigger>
-                       <SelectContent><SelectItem value="Delhivery">Delhivery</SelectItem><SelectItem value="BlueDart">BlueDart</SelectItem><SelectItem value="Post">India Post</SelectItem></SelectContent>
+                       <SelectContent>
+                         <SelectItem value="Shipway">Shipway (Automated)</SelectItem>
+                         <SelectItem value="Delhivery">Delhivery</SelectItem>
+                         <SelectItem value="BlueDart">BlueDart</SelectItem>
+                         <SelectItem value="Post">India Post</SelectItem>
+                       </SelectContent>
                      </Select>
-                     <Input placeholder="AWB Number" value={shippingInfo.awb} onChange={e => setShippingInfo({...shippingInfo, awb: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+                     <Input placeholder="AWB / Tracking Number" value={shippingInfo.awb} onChange={e => setShippingInfo({...shippingInfo, awb: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+                     {shippingInfo.partner === 'Shipway' && (
+                       <p className="text-[9px] font-black text-primary uppercase tracking-widest pl-2">
+                         ✨ Auto-fulfillment enabled for Shipway
+                       </p>
+                     )}
                    </div>
                  )}
                  {statusUpdateTarget === 'Cancelled' && (

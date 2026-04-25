@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAdmin, verifyAuth } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
+import { ShipwayService } from '@/lib/logistics/shipway';
 
 export async function GET(req: Request) {
   try {
@@ -153,6 +154,33 @@ export async function PUT(req: Request) {
       { _id: new ObjectId(id) },
       { $set: { ...updates, updatedAt: new Date() } }
     );
+
+    // SHIPWAY AUTOMATION: Trigger when status is Shipped and partner is Shipway
+    if (updates.status === 'Shipped' && updates.shipping?.partner === 'Shipway' && result.modifiedCount > 0) {
+      try {
+        const order = await db.collection('orders').findOne({ _id: new ObjectId(id) });
+        if (order) {
+          await ShipwayService.createShipment({
+            orderId: order.orderId,
+            name: order.patientName,
+            phone: order.phoneNumber,
+            address: `${order.shippingDetails?.houseNumber || ''}, ${order.shippingDetails?.street || ''}`,
+            city: order.shippingDetails?.city || '',
+            state: order.shippingDetails?.state || '',
+            pincode: order.shippingDetails?.pincode || '',
+            items: (order.items || []).map((it: any) => ({
+              name: it.name,
+              qty: it.quantity,
+              price: it.unitPrice
+            }))
+          });
+          console.log(`[Shipway Automation] Order ${order.orderId} pushed successfully.`);
+        }
+      } catch (shipwayErr: any) {
+        console.error(`[Shipway Automation Error] Failed to sync order ${id}:`, shipwayErr.message);
+        // Note: We don't fail the whole API call if Shipway fails, as the internal status is updated.
+      }
+    }
     
     return NextResponse.json({ success: true, modifiedCount: result.modifiedCount });
   } catch (err: any) {
