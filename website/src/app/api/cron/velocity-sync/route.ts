@@ -8,8 +8,7 @@ export async function GET(req: Request) {
     // Optional: Add a security token check here if requested
     const authHeader = req.headers.get('authorization');
     if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      // return new NextResponse('Unauthorized', { status: 401 });
-      // Keeping it open for now unless CRON_SECRET is strictly required
+      return new NextResponse('Unauthorized', { status: 401 });
     }
 
     const client = await clientPromise;
