@@ -36,7 +36,7 @@ export default function LocationSync() {
               const locationInfo = {
                 lat: latitude,
                 lng: longitude,
-                city: data.address?.city || data.address?.town || data.address?.village || 'Unknown City',
+                city: data.address?.city || data.address?.town || data.address?.village || data.address?.suburb || data.address?.city_district || 'Detected Location',
                 region: data.address?.state,
                 country: data.address?.country,
                 source: 'gps'

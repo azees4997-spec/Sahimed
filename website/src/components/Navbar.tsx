@@ -310,13 +310,13 @@ export default function Navbar() {
             const lng = position.coords.longitude;
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
             const data = await response.json();
+            
             if (data && data.address) {
               const addr = data.address;
-              const streetArea = addr.suburb || addr.neighbourhood || addr.city_district || addr.road || '';
-              const city = addr.city || addr.town || addr.state_district || addr.state || '';
-              const formatted = streetArea && city
-                ? `${streetArea}, ${city}`
-                : streetArea || city || 'Current Location';
+              const city = addr.city || addr.town || addr.village || addr.suburb || addr.neighbourhood || addr.city_district || addr.state_district || 'Current Location';
+              const state = addr.state || '';
+              
+              const formatted = state ? `${city}, ${state}` : city;
               
               const detectedPincode = addr.postcode?.replace(/\s/g, '');
               
@@ -330,6 +330,7 @@ export default function Navbar() {
                   const velocityData = await res.json();
                   if (!velocityData.serviceable) {
                     toast({ variant: 'destructive', title: "Not Serviceable", description: `We currently do not deliver to your detected location (${detectedPincode}).` });
+                    setIsPopoverOpen(false);
                     setIsLocating(false);
                     return;
                   }
@@ -340,12 +341,14 @@ export default function Navbar() {
 
               setLocation(formatted);
               setLocationResolved(true);
+              toast({ title: "Location detected", description: `Delivering to ${formatted}` });
             }
-            setIsPopoverOpen(false);
           } catch (e) {
             console.error("Locating failed", e);
+            toast({ variant: 'destructive', title: "Error", description: "Could not detect location automatically." });
           } finally {
             setIsLocating(false);
+            setIsPopoverOpen(false);
           }
         },
         () => setIsLocating(false),
