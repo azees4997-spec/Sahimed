@@ -88,8 +88,12 @@ export class VelocityService {
         method: 'POST',
         headers,
         body: JSON.stringify({
+          origin: fromPincode,
+          destination: toPincode,
           from: fromPincode,
           to: toPincode,
+          pickup_postcode: fromPincode,
+          delivery_postcode: toPincode,
           payment_mode: paymentMode,
           shipment_type: shipmentType
         }),
@@ -100,7 +104,18 @@ export class VelocityService {
       }
 
       const data = await response.json();
-      return { success: true, serviceable: data.is_serviceable || data.serviceable || false, carriers: data.carriers || [] };
+      // Check multiple possible field names for serviceability
+      const isServiceable = 
+        data.is_serviceable === true || 
+        data.serviceable === true || 
+        data.status === 'success' ||
+        (data.carriers && Array.isArray(data.carriers) && data.carriers.length > 0);
+
+      return { 
+        success: true, 
+        serviceable: !!isServiceable, 
+        carriers: data.carriers || [] 
+      };
     } catch (err: any) {
       console.error("[Velocity] Serviceability check failed:", err.message);
       return { success: false, serviceable: false, error: err.message };
