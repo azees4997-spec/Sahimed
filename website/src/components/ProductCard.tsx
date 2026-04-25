@@ -50,13 +50,13 @@ export default function ProductCard({ product }: { product: Product }) {
       )}
  
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 gap-2 sm:gap-4 w-full">
-        <div className="relative w-full aspect-square sm:h-40 bg-slate-50/50 rounded-[20px] sm:rounded-[28px] flex items-center justify-center overflow-hidden group-hover:bg-white border border-transparent group-hover:border-slate-100 transition-all duration-500 p-2 sm:p-4 shrink-0 mx-auto">
+        <div className="relative w-full aspect-square sm:h-40 bg-slate-50/50 rounded-[20px] sm:rounded-[28px] flex items-center justify-center overflow-hidden group-hover:bg-white border border-transparent group-hover:border-slate-100 transition-all duration-500 p-1 sm:p-2 shrink-0 mx-auto">
           <Image 
             src={safeImageUrl} 
             alt={product.name} 
             fill 
             sizes="(max-width: 768px) 40vw, 20vw"
-            className="object-contain p-2 sm:p-4 transition-transform duration-700 group-hover:scale-110" 
+            className="object-contain p-1.5 sm:p-3 transition-transform duration-700 group-hover:scale-110" 
           />
         </div>
  

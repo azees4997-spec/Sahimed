@@ -103,8 +103,8 @@ const ComparisonCard = ({
 
           <Dialog>
             <DialogTrigger asChild>
-              <div className="relative aspect-square w-full bg-white rounded-[20px] sm:rounded-[28px] flex items-center justify-center overflow-hidden h-20 sm:h-42 p-1.5 sm:p-4 border border-slate-50 shadow-inner group/img cursor-zoom-in">
-                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-2 sm:p-4 transition-transform duration-700 group-hover/img:scale-110" />
+              <div className="relative aspect-square w-full bg-white rounded-[20px] sm:rounded-[28px] flex items-center justify-center overflow-hidden h-28 sm:h-52 p-1 sm:p-2 border border-slate-50 shadow-inner group/img cursor-zoom-in">
+                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-1 sm:p-2 transition-transform duration-700 group-hover/img:scale-110" />
                 <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
                   <Maximize2 className="w-4 h-4 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
                 </div>
@@ -272,7 +272,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
               <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-6 items-stretch">
                 <ComparisonCard
                   product={brandedItem}
-                  label="Branded Version"
+                  label="BRANDED"
                   getItemQuantity={getItemQuantity}
                   addToCart={addToCart}
                   showComparison={showComparison}
@@ -280,7 +280,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                 />
                 <ComparisonCard
                   product={genericItem}
-                  label="Save with Generic"
+                  label="SAHI RECOMMENDED"
                   isAlt
                   getItemQuantity={getItemQuantity}
                   addToCart={addToCart}
