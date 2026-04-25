@@ -43,14 +43,14 @@ export default function ProductCard({ product }: { product: Product }) {
     >
       {savingsPct > 0 && (
         <div className="absolute top-3 left-3 sm:top-5 sm:left-5 z-20">
-          <Badge className="bg-accent text-white font-black text-[8px] sm:text-[11px] px-3 py-1.5 rounded-full tracking-[0.1em] border-none shadow-xl shadow-accent/30 uppercase">
+          <Badge className="bg-emerald-600 text-white font-black text-[8px] sm:text-[11px] px-3 py-1.5 rounded-full tracking-[0.1em] border-none shadow-xl shadow-emerald-200/50 uppercase">
             SAVE {savingsPct}%
           </Badge>
         </div>
       )}
  
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 gap-2 sm:gap-4 w-full">
-        <div className="relative w-full aspect-square sm:h-40 bg-slate-50/50 rounded-[20px] sm:rounded-[28px] flex items-center justify-center overflow-hidden group-hover:bg-white transition-colors duration-500 p-2 sm:p-4 shrink-0 mx-auto">
+        <div className="relative w-full aspect-square sm:h-40 bg-slate-50/50 rounded-[20px] sm:rounded-[28px] flex items-center justify-center overflow-hidden group-hover:bg-white border border-transparent group-hover:border-slate-100 transition-all duration-500 p-2 sm:p-4 shrink-0 mx-auto">
           <Image 
             src={safeImageUrl} 
             alt={product.name} 
@@ -62,32 +62,32 @@ export default function ProductCard({ product }: { product: Product }) {
  
         <div className="space-y-1 sm:space-y-2 flex-1 px-1 min-w-0">
           {product.brand && (
-            <p className="text-[9px] sm:text-[12px] font-black text-primary uppercase tracking-[0.15em] mb-0.5 opacity-90">
+            <p className="text-[9px] sm:text-[12px] font-black text-emerald-600 uppercase tracking-[0.15em] mb-0.5">
               {product.brand}
             </p>
           )}
           {moleculeName && (
-            <p className="text-[8px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-tight line-clamp-1 opacity-80 leading-none mb-1">
+            <p className="text-[8px] sm:text-[11px] font-black text-slate-800 uppercase tracking-tight line-clamp-1 leading-none mb-1">
               {moleculeName}
             </p>
           )}
-          <h3 className="font-black text-slate-950 text-[10px] sm:text-[15px] leading-tight line-clamp-2 min-h-[24px] sm:min-h-[44px] font-outfit uppercase tracking-tight group-hover:text-primary transition-colors">
+          <h3 className="font-black text-black text-[10px] sm:text-[16px] leading-tight line-clamp-2 min-h-[24px] sm:min-h-[44px] font-outfit uppercase tracking-tight group-hover:text-primary transition-colors">
             {product.name}
           </h3>
           <div className="flex flex-col gap-0">
-            <p className="text-[8px] sm:text-[11px] font-bold text-slate-400 tracking-tight truncate uppercase opacity-50">
+            <p className="text-[8px] sm:text-[11px] font-black text-slate-500 tracking-tight truncate uppercase">
               {product.packSize || '10 Units / Pack'}
             </p>
           </div>
           
           <div className="flex flex-col gap-1.5 pt-1 sm:pt-2">
             <div className="flex items-center gap-3">
-               <span className="text-slate-400 line-through text-[10px] sm:text-[14px] font-bold opacity-60 decoration-1">MRP ₹{Math.round(currentMrp)}</span>
-               <span className="text-accent font-black text-[10px] sm:text-[14px] uppercase tracking-tighter">Save ₹{Math.round(currentMrp - currentPrice)}</span>
+               <span className="text-slate-400 line-through text-[10px] sm:text-[14px] font-bold decoration-1">MRP ₹{Math.round(currentMrp)}</span>
+               <span className="text-emerald-500 font-black text-[10px] sm:text-[14px] uppercase tracking-tighter">Save ₹{Math.round(currentMrp - currentPrice)}</span>
             </div>
             <div className="flex items-center gap-2">
-               <span className="text-primary font-black text-xl sm:text-3xl font-outfit leading-none tracking-tighter">₹{Math.round(currentPrice)}</span>
-               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-40">Sahimed Price</span>
+               <span className="text-black font-black text-xl sm:text-3xl font-outfit leading-none tracking-tighter">₹{Math.round(currentPrice)}</span>
+               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-60">Sahimed Price</span>
             </div>
           </div>
         </div>

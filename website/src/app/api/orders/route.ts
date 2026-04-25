@@ -68,23 +68,26 @@ export async function POST(req: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
     
-    // 3. Generate Atomic Unique Order ID (ORDxxxx)
-    const counterResult = await db.collection('counters').findOneAndUpdate(
-      { _id: 'orderId' },
-      { $inc: { seq: 1 } },
-      { upsert: true, returnDocument: 'after' }
-    );
-    
-    // Ensure the sequence starts from a reasonable number if it was just created
-    let seq = counterResult?.seq;
-    if (!seq) {
-      // Fallback/Init logic if sequence was somehow missing
-      const count = await db.collection('orders').countDocuments();
-      seq = count + 1;
-      await db.collection('counters').updateOne({ _id: 'orderId' }, { $set: { seq: seq } }, { upsert: true });
+    // 3. GENERATE RANDOM & UNIQUE ORDER ID (SHM-XXXXX)
+    // We use a high-entropy random string and keep the counter as backup/audit
+    const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase();
+    const nextId = `SHM-${randomSuffix}`;
+
+    // 3.5. DEDUPLICATION: Prevent duplicate orders within 30 seconds
+    // (Check if same user has same amount recently)
+    const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
+    const existingOrder = await db.collection('orders').findOne({
+      userId: body.userId,
+      totalAmount: body.totalAmount,
+      createdAt: { $gte: thirtySecondsAgo }
+    });
+
+    if (existingOrder && !isAdmin) {
+      return NextResponse.json({ 
+        error: "Potential duplicate detected. Please wait 30 seconds.",
+        orderId: existingOrder.orderId 
+      }, { status: 409 });
     }
-    
-    const nextId = "ORD" + seq.toString().padStart(4, '0');
 
     // 4. Clinical Status Logic
     const isConsultation = body.clinicalPath === 'consult' || body.isConsultationRequired === true;
@@ -105,7 +108,7 @@ export async function POST(req: Request) {
     const orderData = {
       ...sanitizedBody,
       orderId: nextId,
-      orderDate: body.orderDate || new Date(),
+      orderDate: new Date(), // ALWAYS capture real server time
       createdAt: new Date(),
       updatedAt: new Date(),
       status: initialStatus

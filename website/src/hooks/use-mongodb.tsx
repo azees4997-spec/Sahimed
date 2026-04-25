@@ -3,6 +3,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+// GLOBAL MEMORY CACHE
+// Reduces API calls by storing results for 5 minutes
+const queryCache: Record<string, { data: any, timestamp: number }> = {};
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export function useMongoDBCollection<T = any>(options: { 
   limit?: number; 
   category?: string; 
@@ -20,35 +25,37 @@ export function useMongoDBCollection<T = any>(options: {
 
   useEffect(() => {
     const fetchData = async () => {
+      const params = new URLSearchParams();
+      if (options.limit) params.append('limit', options.limit.toString());
+      if (options.category) params.append('category', options.category);
+      if (options.moleculeId) params.append('moleculeId', options.moleculeId);
+      if (options.isGeneric !== undefined) params.append('isGeneric', options.isGeneric.toString());
+      if (options.isBestSeller !== undefined) params.append('isBestSeller', options.isBestSeller.toString());
+      if (options.q) params.append('q', options.q);
+      if (options.minPrice) params.append('minPrice', options.minPrice);
+      if (options.maxPrice) params.append('maxPrice', options.maxPrice);
+
+      const cacheKey = `products_${params.toString()}`;
+      const cached = queryCache[cacheKey];
+
+      // Return cached if fresh
+      if (cached && (Date.now() - cached.timestamp < CACHE_TTL) && refreshKey === 0) {
+        setData(cached.data);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       try {
-        const params = new URLSearchParams();
-        if (options.limit) params.append('limit', options.limit.toString());
-        if (options.category) params.append('category', options.category);
-        if (options.moleculeId) params.append('moleculeId', options.moleculeId);
-        if (options.isGeneric !== undefined) params.append('isGeneric', options.isGeneric.toString());
-        if (options.isBestSeller !== undefined) params.append('isBestSeller', options.isBestSeller.toString());
-        if (options.q) params.append('q', options.q);
-        if (options.minPrice) params.append('minPrice', options.minPrice);
-        if (options.maxPrice) params.append('maxPrice', options.maxPrice);
-
         const res = await fetch(`/api/products?${params.toString()}`);
         const json = await res.json();
         
-        if (!res.ok) {
-          throw new Error(json.error || json.message || 'Failed to fetch products');
-        }
+        if (!res.ok) throw new Error(json.error || json.message || 'Failed to fetch products');
         
-        if (!Array.isArray(json)) {
-          console.error("[useMongoDBCollection] Expected array but got:", json);
-          setData([]);
-          return;
-        }
-
-        const normalized = json.map((item: any) => ({
-          ...item,
-          id: item._id || item.id
-        }));
+        const normalized = json.map((item: any) => ({ ...item, id: item._id || item.id }));
+        
+        // Save to cache
+        queryCache[cacheKey] = { data: normalized, timestamp: Date.now() };
         setData(normalized);
       } catch (err: any) {
         setError(err);
@@ -80,19 +87,25 @@ export function useMongoDBDoc<T = any>(id: string | null | undefined) {
       return;
     }
 
+    const cacheKey = `doc_${id}`;
+    const cached = queryCache[cacheKey];
+
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL) && refreshKey === 0) {
+      setData(cached.data);
+      setIsLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
         const res = await fetch(`/api/products/${id}`);
-        if (!res.ok) {
-          if (res.status === 404) {
-            const errorInfo = await res.json();
-            console.error("[useMongoDBDoc 404 Detail]", errorInfo);
-          }
-          throw new Error(`Failed to fetch product (Status: ${res.status})`);
-        }
+        if (!res.ok) throw new Error(`Failed to fetch product (Status: ${res.status})`);
         const json = await res.json();
-        setData({ ...json, id: json._id || json.id });
+        const normalized = { ...json, id: json._id || json.id };
+        
+        queryCache[cacheKey] = { data: normalized, timestamp: Date.now() };
+        setData(normalized);
       } catch (err: any) {
         setError(err);
       } finally {
@@ -123,13 +136,25 @@ export function useMongoDBMolecule<T = any>(id: string | null | undefined) {
       return;
     }
 
+    const cacheKey = `molecule_${id}`;
+    const cached = queryCache[cacheKey];
+
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL) && refreshKey === 0) {
+      setData(cached.data);
+      setIsLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
         const res = await fetch(`/api/molecules/${id}`);
         if (!res.ok) throw new Error('Failed to fetch molecule');
         const json = await res.json();
-        setData({ ...json, id: json._id || json.id });
+        const normalized = { ...json, id: json._id || json.id };
+        
+        queryCache[cacheKey] = { data: normalized, timestamp: Date.now() };
+        setData(normalized);
       } catch (err: any) {
         setError(err);
       } finally {

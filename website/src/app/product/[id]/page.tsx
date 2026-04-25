@@ -11,19 +11,16 @@ interface Product {
   description?: string;
   imageUrl?: string;
   manufacturer?: string;
+  brand?: string;
   price?: number;
   mrp?: number;
   liveData?: {
     sahimed_price?: number;
     mrp?: number;
   };
+  stock?: number;
+  inStock?: boolean;
   prescriptionRequired?: boolean;
-  rxRequired?: boolean;
-  moleculeId?: string;
-  saltComposition?: string;
-  composition?: string;
-  salt?: string;
-  molecule?: string;
 }
 
 interface ProductPageProps {
@@ -36,7 +33,6 @@ async function getProduct(id: string): Promise<Product | null> {
     const db = client.db('sahimed');
     const collection = db.collection('products');
 
-    // Handle both direct string IDs and ObjectIds
     let query: any = { _id: id as any };
     const product = await collection.findOne(query);
     
@@ -44,7 +40,6 @@ async function getProduct(id: string): Promise<Product | null> {
       return { ...product, id: product._id.toString() } as unknown as Product;
     }
 
-    // Try as ObjectId if format matches
     if (id.length === 24) {
       try {
         const obId = new ObjectId(id);
@@ -52,11 +47,8 @@ async function getProduct(id: string): Promise<Product | null> {
         if (obProduct) {
           return { ...obProduct, id: obProduct._id.toString() } as unknown as Product;
         }
-      } catch (e) {
-        // Not a valid ObjectId
-      }
+      } catch (e) {}
     }
-
     return null;
   } catch (error) {
     console.error('[SSR Product Fetch Error]', error);
@@ -69,17 +61,14 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const product = await getProduct(id);
 
   if (!product) {
-    return {
-      title: 'Product Not Found | SahiMed',
-      description: 'The requested medicine could not be found in our catalog.'
-    };
+    return { title: 'Product Not Found | SahiMed' };
   }
 
   const price = product.liveData?.sahimed_price || product.price || 0;
   const description = product.description || `Buy ${product.name} at affordable prices on SahiMed. Fast delivery across India.`;
 
   return {
-    title: `${product.name} - Buy at ₹${price} | SahiMed`,
+    title: `Buy ${product.name} Online at ₹${price} | SahiMed - Authentic Medicines`,
     description: description,
     openGraph: {
       title: `${product.name} | SahiMed`,
@@ -93,29 +82,39 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
   const product = await getProduct(id);
 
-  if (!product) {
-    notFound();
-  }
+  if (!product) notFound();
 
   const price = product.liveData?.sahimed_price || product.price || 0;
-  const mrp = product.liveData?.mrp || product.mrp || (Number(price) + 20);
+  const inStock = (product.stock ?? 0) > 0 || product.inStock !== false;
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
     image: product.imageUrl || 'https://sahimed.com/logo.png',
-    description: product.description || `Buy ${product.name} online.`,
+    description: product.description || `Buy ${product.name} online at SahiMed. Genuine quality, lowest prices.`,
+    sku: id,
     brand: {
       '@type': 'Brand',
-      name: product.manufacturer || 'SahiMed',
+      name: product.manufacturer || product.brand || 'SahiMed',
     },
     offers: {
       '@type': 'Offer',
       url: `https://sahimed.com/product/${id}`,
       priceCurrency: 'INR',
       price: price,
+      priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       itemCondition: 'https://schema.org/NewCondition',
-      availability: 'https://schema.org/InStock',
+      availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'INR' },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 1, unitCode: 'd' },
+          transitTime: { '@type': 'QuantitativeValue', minValue: 1, maxValue: 3, unitCode: 'd' },
+        }
+      }
     },
   };
 
