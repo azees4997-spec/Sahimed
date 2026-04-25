@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useToast } from '@/hooks/use-toast';
 
 export interface AddressData {
   id?: string;
@@ -100,7 +101,31 @@ export default function AddressForm({ initialData, onSave, isLoading }: AddressF
     }
   };
 
-  const handleSubmit = () => {
+  const { toast } = useToast();
+
+  const handleSubmit = async () => {
+    setIsLocating(true);
+    try {
+      const res = await fetch('/api/logistics/velocity/serviceability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toPincode: formData.pincode })
+      });
+      const data = await res.json();
+      if (!data.serviceable) {
+        toast({ 
+          variant: 'destructive', 
+          title: "Not Serviceable", 
+          description: `We currently do not deliver to pincode ${formData.pincode}.` 
+        });
+        setIsLocating(false);
+        return;
+      }
+    } catch(e) {
+      console.error("Velocity check failed", e);
+    }
+    setIsLocating(false);
+
     const finalTag = formData.tag === 'Other' ? (otherTag || 'Other') : formData.tag;
     onSave({ ...formData, tag: finalTag });
   };

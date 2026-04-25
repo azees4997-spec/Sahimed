@@ -1,4 +1,26 @@
 <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M20 55C20 30 40 20 50 20C35 35 32 55 32 75C32 90 45 100 55 100C30 100 20 85 20 55Z" fill="#ff2d55"/>
-  <circle cx="65" cy="35" r="15" fill="#ff2d55" opacity="0.6" />
+  <defs>
+    <linearGradient id="cross-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+    <linearGradient id="check-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb7185" />
+      <stop offset="100%" stop-color="#f43f5e" />
+    </linearGradient>
+  </defs>
+
+  {/* Translucent Base Layer */}
+  <rect x="38" y="15" width="24" height="70" rx="12" fill="#2563eb" opacity="0.15" />
+  <rect x="15" y="38" width="70" height="24" rx="12" fill="#2563eb" opacity="0.15" />
+
+  {/* Main Cross Body */}
+  <rect x="40" y="18" width="20" height="64" rx="10" fill="url(#cross-grad)" />
+  <rect x="18" y="40" width="64" height="20" rx="10" fill="url(#cross-grad)" />
+
+  {/* Premium Checkmark */}
+  <path d="M30 55 L45 70 L85 25" stroke="url(#check-grad)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+  
+  {/* Glass Shine */}
+  <path d="M34 55 L45 66 L80 30" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.4" />
 </svg>

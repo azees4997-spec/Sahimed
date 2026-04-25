@@ -153,6 +153,33 @@ export async function PUT(req: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
     
+    // ACTION: Cancel Shipment
+    if (updates.action === 'cancel_shipment') {
+      try {
+        const order = await db.collection('orders').findOne({ _id: new ObjectId(id) });
+        if (order && (order.shipping?.partner === 'Velocity' || order.returnShipping?.partner === 'Velocity')) {
+          const { VelocityService } = await import('@/lib/logistics/velocity');
+          // If it's a return, the orderId was order.orderId + '-RET'
+          const targetOrderId = updates.isReturn ? `${order.orderId}-RET` : order.orderId;
+          const velocityRes = await VelocityService.cancelOrder(targetOrderId);
+          if (velocityRes.success) {
+            const unsetObj = updates.isReturn ? { returnShipping: "" } : { shipping: "" };
+            const nextStatus = updates.isReturn ? 'Delivered' : 'Packed'; // Revert status
+            await db.collection('orders').updateOne(
+              { _id: new ObjectId(id) },
+              { $unset: unsetObj, $set: { status: nextStatus, updatedAt: new Date() } }
+            );
+            return NextResponse.json({ success: true, message: 'Shipment cancelled' });
+          } else {
+             return NextResponse.json({ error: velocityRes.error }, { status: 400 });
+          }
+        }
+        return NextResponse.json({ error: 'Order not valid for cancellation' }, { status: 400 });
+      } catch (err: any) {
+        return NextResponse.json({ error: err.message }, { status: 500 });
+      }
+    }
+    
     const result = await db.collection('orders').updateOne(
       { _id: new ObjectId(id) },
       { $set: { ...updates, updatedAt: new Date() } }
@@ -183,6 +210,117 @@ export async function PUT(req: Request) {
         console.error(`[Shipway Automation Error] Failed to sync order ${id}:`, shipwayErr.message);
         // Note: We don't fail the whole API call if Shipway fails, as the internal status is updated.
       }
+    }
+
+    // VELOCITY AUTOMATION: Trigger when partner is Velocity
+    if (updates.status === 'Shipped' && updates.shipping?.partner === 'Velocity' && result.modifiedCount > 0) {
+      try {
+        const order = await db.collection('orders').findOne({ _id: new ObjectId(id) });
+        if (order) {
+          const { VelocityService } = await import('@/lib/logistics/velocity');
+          const velocityRes = await VelocityService.createForwardOrder({
+            orderId: order.orderId,
+            billingCustomerName: order.patientName,
+            orderItems: (order.items || []).map((it: any) => ({
+              name: it.name,
+              quantity: it.quantity,
+              price: Number(it.unitPrice),
+              sku: it.productId || it.name
+            })),
+            warehouseId: 'default', // should use actual warehouse id
+            shippingDetails: {
+              address: `${order.shippingDetails?.houseNumber || ''}, ${order.shippingDetails?.street || ''}`,
+              city: order.shippingDetails?.city || '',
+              state: order.shippingDetails?.state || '',
+              pincode: order.shippingDetails?.pincode || '',
+              phone: order.phoneNumber
+            },
+            totalAmount: Number(order.totalAmount),
+            paymentMode: 'PREPAID'
+          });
+          
+          if (velocityRes.success && velocityRes.data?.awb_number) {
+            // Update order with AWB and label
+            await db.collection('orders').updateOne(
+              { _id: new ObjectId(id) },
+              { $set: { 
+                  'shipping.awb': velocityRes.data.awb_number, 
+                  'shipping.labelUrl': velocityRes.data.label_url || velocityRes.data.manifest_url,
+                  'shipping.courier': velocityRes.data.courier_name
+                } 
+              }
+            );
+            console.log(`[Velocity Automation] Order ${order.orderId} manifested successfully. AWB: ${velocityRes.data.awb_number}`);
+          }
+        }
+      } catch (velocityErr: any) {
+        console.error(`[Velocity Automation Error] Failed to manifest order ${id}:`, velocityErr.message);
+      }
+    }
+
+    // VELOCITY REVERSE AUTOMATION: Trigger when status is Returned and partner is Velocity
+    if (updates.status === 'Returned' && result.modifiedCount > 0) {
+      try {
+        const order = await db.collection('orders').findOne({ _id: new ObjectId(id) });
+        // Assuming if they want reverse orchestration, it's done via Velocity if it was shipped via Velocity or specified.
+        if (order && (order.shipping?.partner === 'Velocity' || updates.shipping?.partner === 'Velocity')) {
+          const { VelocityService } = await import('@/lib/logistics/velocity');
+          const velocityRes = await VelocityService.createReverseOrder({
+            orderId: order.orderId + '-RET', // Append -RET for reverse order distinction
+            billingCustomerName: order.patientName,
+            orderItems: (order.items || []).map((it: any) => ({
+              name: it.name,
+              quantity: it.quantity,
+              price: Number(it.unitPrice),
+              sku: it.productId || it.name
+            })),
+            warehouseId: 'default', 
+            shippingDetails: {
+              address: `${order.shippingDetails?.houseNumber || ''}, ${order.shippingDetails?.street || ''}`,
+              city: order.shippingDetails?.city || '',
+              state: order.shippingDetails?.state || '',
+              pincode: order.shippingDetails?.pincode || '',
+              phone: order.phoneNumber
+            },
+            totalAmount: Number(order.totalAmount),
+            paymentMode: 'PREPAID'
+          });
+          
+          if (velocityRes.success && velocityRes.data?.awb_number) {
+            await db.collection('orders').updateOne(
+              { _id: new ObjectId(id) },
+              { $set: { 
+                  'returnShipping.awb': velocityRes.data.awb_number, 
+                  'returnShipping.labelUrl': velocityRes.data.label_url || velocityRes.data.manifest_url,
+                  'returnShipping.courier': velocityRes.data.courier_name
+                } 
+              }
+            );
+            console.log(`[Velocity Reverse] Return for ${order.orderId} manifested successfully.`);
+          }
+        }
+      } catch (velocityErr: any) {
+        console.error(`[Velocity Reverse Error] Failed to manifest return ${id}:`, velocityErr.message);
+      }
+    }
+    // Sync updates back to Firebase so customer can see live status changes
+    try {
+      const order = await db.collection('orders').findOne({ _id: new ObjectId(id) });
+      if (order && order.userId && order.orderId) {
+        const { getDbAdmin } = await import('@/lib/firebase-admin');
+        const dbAdmin = getDbAdmin();
+        // Construct sync object (excluding internal things that might be large or unnecessary)
+        const firebaseUpdates: any = { ...updates, updatedAt: new Date() };
+        // Merge shipping info if it was generated during this request
+        if (order.shipping) firebaseUpdates.shipping = order.shipping;
+        if (order.returnShipping) firebaseUpdates.returnShipping = order.returnShipping;
+        if (order.status) firebaseUpdates.status = order.status;
+        
+        await dbAdmin.doc(`userProfiles/${order.userId}/orders/${order.orderId}`).set(firebaseUpdates, { merge: true });
+        console.log(`[Firebase Sync] Successfully synced updates to order ${order.orderId}`);
+      }
+    } catch (fsErr: any) {
+      console.error(`[Firebase Sync Error] Failed to sync order ${id}:`, fsErr.message);
     }
     
     return NextResponse.json({ success: true, modifiedCount: result.modifiedCount });

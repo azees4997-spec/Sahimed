@@ -33,8 +33,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 
-// Types & Constants
 import { AdminTab } from './types';
+import { AdminProfile } from '@/types';
 
 // Tab Components
 import { OverviewTab } from './components/OverviewTab';
@@ -94,10 +94,17 @@ function AdminConsoleContent() {
     setIsVerifying(true);
     try {
       const snap = await getDoc(doc(db, 'adminProfiles', user.uid));
-      if (snap.exists() && (snap.data().role === 'admin' || snap.data().role === 'pharmacist' || snap.data().role === 'sub-admin')) {
-        setIsVerified(true);
-        setUserRole(snap.data().role);
-        setPermissions(snap.data().permissions || {});
+      if (snap.exists()) {
+        const data = snap.data() as AdminProfile;
+        if (['admin', 'pharmacist', 'sub-admin'].includes(data.role)) {
+          setIsVerified(true);
+          setUserRole(data.role);
+          setPermissions(data.permissions || {});
+        } else {
+          setIsVerified(false);
+          setUserRole('');
+          setPermissions({});
+        }
       } else {
         setIsVerified(false);
         setUserRole('');
@@ -138,10 +145,11 @@ function AdminConsoleContent() {
       if (!auth) throw new Error("Auth system inactive");
       await signInWithEmailAndPassword(auth, email, password);
       toast({ title: 'Authorization Granting', description: 'Establishing session link...' });
-    } catch (err: any) {
+    } catch (err) {
       console.error("ADMIN_AUTH_FAILURE:", err);
-      const errorCode = err.code || 'unknown-matrix-error';
-      const errorMessage = err.message || 'Invalid credentials or network rejection.';
+      const error = err as { code?: string; message?: string };
+      const errorCode = error.code || 'unknown-matrix-error';
+      const errorMessage = error.message || 'Invalid credentials or network rejection.';
       
       toast({ 
         variant: 'destructive', 
@@ -160,12 +168,13 @@ function AdminConsoleContent() {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       toast({ title: 'Google Authority Verified', description: 'Establishing session link...' });
-    } catch (err: any) {
+    } catch (err) {
       console.error("GOOGLE_AUTH_FAILURE:", err);
+      const error = err as { message?: string };
       toast({ 
         variant: 'destructive', 
         title: 'Access Denied', 
-        description: err.message || 'Identity rejection or network protocol error.' 
+        description: error.message || 'Identity rejection or network protocol error.' 
       });
     } finally {
       setAuthLoading(false);

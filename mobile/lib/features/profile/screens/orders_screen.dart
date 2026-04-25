@@ -32,10 +32,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
       final orders = await _apiService.getUserOrders();
       setState(() => _orders = orders);
     } catch (e) {
-      if (mounted)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Error loading orders')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error loading orders')),
+        );
+      }
     } finally {
       setState(() => _isLoading = false);
     }
@@ -182,7 +183,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -289,8 +290,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         onPressed: () => _reorder(order),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          backgroundColor: SahimedColors.primary.withOpacity(
-                            0.05,
+                          backgroundColor: SahimedColors.primary.withValues(
+                            alpha: 0.05,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),

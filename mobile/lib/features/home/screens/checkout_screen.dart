@@ -145,6 +145,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     setState(() => _isProcessing = true);
 
+    // Check serviceability
+    try {
+      final pincodeToCheck = _showAddressForm ? _pincodeController.text : _selectedAddress!['pincode'];
+      final isServiceable = await _apiService.checkServiceability(pincodeToCheck);
+      if (!isServiceable) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('We currently do not deliver to $pincodeToCheck'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        setState(() => _isProcessing = false);
+        return;
+      }
+    } catch (e) {
+      debugPrint('Serviceability check failed: $e');
+    }
+
     try {
       if (_prescriptionImage != null) {
         final url = await _apiService.uploadPrescription(_prescriptionImage!);
@@ -376,13 +396,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       }
                                     }
                                   } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'GPS ACCESS DENIED or FETCH FAILED',
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'GPS ACCESS DENIED or FETCH FAILED',
+                                          ),
                                         ),
-                                      ),
-                                    );
+                                      );
+                                    }
                                   }
                                 },
                                 icon: const Icon(
@@ -514,6 +536,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               ),
                               Switch.adaptive(
                                 value: _isConsultationRequired,
+                                activeTrackColor: SahimedColors.primary.withValues(alpha: 0.5),
                                 activeColor: SahimedColors.primary,
                                 onChanged: (v) =>
                                     setState(() => _isConsultationRequired = v),
@@ -979,7 +1002,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               !_isConsultationRequired)
                           ? 0
                           : 8,
-                      shadowColor: SahimedColors.primary.withOpacity(0.4),
+                      shadowColor: SahimedColors.primary.withValues(alpha: 0.4),
                     ),
                     child: _isProcessing
                         ? const SizedBox(

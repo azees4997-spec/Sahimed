@@ -29,10 +29,11 @@ class _AddressListScreenState extends State<AddressListScreen> {
       final addresses = await _apiService.getUserAddresses();
       setState(() => _addresses = addresses);
     } catch (e) {
-      if (mounted)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading addresses: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading addresses: $e')),
+        );
+      }
     } finally {
       setState(() => _isLoading = false);
     }
@@ -80,10 +81,11 @@ class _AddressListScreenState extends State<AddressListScreen> {
         await _apiService.deleteAddress(id);
         _loadAddresses();
       } catch (e) {
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Error deleting address')),
           );
+        }
       }
     }
   }
@@ -188,7 +190,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 20,
                 ),
               ],
@@ -271,7 +273,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),

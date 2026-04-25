@@ -54,7 +54,7 @@ export default function Footer() {
                 <span className="font-outfit font-black text-2xl tracking-tighter">
                   Sahi<span className="text-primary italic">Med</span>
                 </span>
-                <span className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-500 mt-0.5">Clinical Healthcare</span>
+                <span className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-500 mt-0.5">Sahi dawai sahi daam pe</span>
               </div>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed max-w-[280px] font-medium">

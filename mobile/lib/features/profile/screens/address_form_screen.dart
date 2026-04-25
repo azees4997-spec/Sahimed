@@ -90,6 +90,20 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
 
     setState(() => _isLoading = true);
     try {
+      final isServiceable = await _apiService.checkServiceability(_pincodeController.text);
+      if (!isServiceable) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('We currently do not deliver to ${_pincodeController.text}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        setState(() => _isLoading = false);
+        return;
+      }
+
       final addressData = {
         'id': widget.initialAddress?['id'],
         'patientName': _nameController.text,
@@ -107,10 +121,11 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       await _apiService.saveAddress(addressData);
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error saving address: $e')));
+      }
     } finally {
       setState(() => _isLoading = false);
     }

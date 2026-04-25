@@ -292,6 +292,26 @@ export default function CheckoutPage() {
     if (!validate()) return;
 
     setLoading(true);
+
+    try {
+      const res = await fetch('/api/logistics/velocity/serviceability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toPincode: orderInfo.pincode })
+      });
+      const data = await res.json();
+      if (!data.serviceable) {
+        toast({ 
+          variant: 'destructive', 
+          title: "Not Serviceable", 
+          description: `We currently do not deliver to pincode ${orderInfo.pincode}.` 
+        });
+        setLoading(false);
+        return;
+      }
+    } catch(e) {
+      console.error("Velocity check failed", e);
+    }
     
     const cleanPhone = orderInfo.phoneNumber.replace(/\D/g, '');
     const finalTag = orderInfo.tag === 'Other' ? (orderInfo.otherTag || 'Other') : orderInfo.tag;

@@ -356,6 +356,41 @@ export default function OrdersPage() {
                     </div>
                   </div>
 
+                  {(selectedOrder?.shipping?.trackingData || selectedOrder?.returnShipping?.trackingData) && (
+                    <div className="space-y-6">
+                      <h4 className="text-[10px] font-black tracking-[0.3em] text-slate-400 flex items-center gap-4 uppercase opacity-60">
+                        <Truck className="w-4 h-4" /> Logistics Tracking
+                      </h4>
+                      <div className="bg-white/60 backdrop-blur-md p-8 rounded-[40px] border border-white shadow-xl space-y-4">
+                        {selectedOrder?.shipping?.trackingData && (
+                          <div className="space-y-2">
+                            <p className="text-[9px] font-black text-primary uppercase tracking-widest">Forward Shipment (AWB: {selectedOrder.shipping.awb})</p>
+                            <div className="flex items-center gap-3">
+                              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                              <p className="font-bold text-sm uppercase text-slate-900">{selectedOrder.shipping.trackingData.status || 'In Transit'}</p>
+                            </div>
+                            {selectedOrder.shipping.trackingData.message && (
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{selectedOrder.shipping.trackingData.message}</p>
+                            )}
+                          </div>
+                        )}
+                        {selectedOrder?.returnShipping?.trackingData && (
+                          <div className="space-y-2 pt-4 border-t border-dashed">
+                            <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest">Return Shipment (AWB: {selectedOrder.returnShipping.awb})</p>
+                            <div className="flex items-center gap-3">
+                              <div className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
+                              <p className="font-bold text-sm uppercase text-slate-900">{selectedOrder.returnShipping.trackingData.status || 'In Transit'}</p>
+                            </div>
+                            {selectedOrder.returnShipping.trackingData.message && (
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{selectedOrder.returnShipping.trackingData.message}</p>
+                            )}
+                          </div>
+                        )}
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest pt-2">Tracking updates every 1 hour</p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-6">
                     <h4 className="text-[10px] font-black tracking-[0.3em] text-slate-400 flex items-center gap-4 uppercase opacity-60">
                       <Receipt className="w-4 h-4" /> Bill Details

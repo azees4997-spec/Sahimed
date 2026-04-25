@@ -17,21 +17,62 @@ import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebas
 import { collection, query, where, orderBy, getDoc, doc } from 'firebase/firestore';
 import MobileSearchOverlay from './MobileSearchOverlay';
 import { usePathname } from 'next/navigation';
+import { Product } from '@/types';
 
 export function SahiMedIcon({ className }: { className?: string }) {
   return (
-    <div className={cn("relative flex items-center justify-center bg-primary rounded-xl shadow-lg shadow-primary/20", className)}>
+    <div className={cn("relative flex items-center justify-center bg-transparent", className)}>
       <svg 
         viewBox="0 0 100 100" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg" 
-        className="w-3/4 h-3/4"
+        className="w-full h-full drop-shadow-xl"
       >
+        <defs>
+          <linearGradient id="cross-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="hsl(221 83% 65%)" />
+            <stop offset="100%" stopColor="hsl(var(--primary))" />
+          </linearGradient>
+          <linearGradient id="check-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="hsl(346 84% 75%)" />
+            <stop offset="100%" stopColor="hsl(var(--accent))" />
+          </linearGradient>
+          <filter id="glass-blur" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" />
+          </filter>
+        </defs>
+
+        {/* Translucent Base Layer for Glass Effect */}
+        <rect x="38" y="15" width="24" height="70" rx="12" fill="hsl(var(--primary))" opacity="0.15" />
+        <rect x="15" y="38" width="70" height="24" rx="12" fill="hsl(var(--primary))" opacity="0.15" />
+
+        {/* Main Medical Cross (Blue) */}
+        <rect x="40" y="18" width="20" height="64" rx="10" fill="url(#cross-grad)" />
+        <rect x="18" y="40" width="64" height="20" rx="10" fill="url(#cross-grad)" />
+
+        {/* Premium Checkmark (Pink) */}
         <path 
-          d="M20 55C20 30 40 20 50 20C35 35 32 55 32 75C32 90 45 100 55 100C30 100 20 85 20 55Z" 
-          fill="white"
+          d="M30 55 L45 70 L85 25" 
+          stroke="url(#check-grad)" 
+          strokeWidth="15" 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          className="drop-shadow-lg"
         />
-        <circle cx="65" cy="35" r="15" fill="white" opacity="0.6" />
+        
+        {/* Glass Shine Overlay */}
+        <path 
+          d="M34 55 L45 66 L80 30" 
+          stroke="white" 
+          strokeWidth="4" 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          opacity="0.4" 
+        />
+        
+        {/* Subtle Highlight on Cross Arms */}
+        <rect x="42" y="20" width="6" height="20" rx="3" fill="white" opacity="0.2" />
+        <rect x="20" y="42" width="20" height="6" rx="3" fill="white" opacity="0.2" />
       </svg>
     </div>
   );
@@ -42,7 +83,7 @@ interface SuggestionItem {
   term: string;
   type: 'Brand' | 'Salt';
   moleculeId?: string;
-  product?: any;
+  product?: Product;
 }
 
 export default function Navbar() {
@@ -276,6 +317,27 @@ export default function Navbar() {
               const formatted = streetArea && city
                 ? `${streetArea}, ${city}`
                 : streetArea || city || 'Current Location';
+              
+              const detectedPincode = addr.postcode?.replace(/\s/g, '');
+              
+              if (detectedPincode) {
+                try {
+                  const res = await fetch('/api/logistics/velocity/serviceability', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ toPincode: detectedPincode })
+                  });
+                  const velocityData = await res.json();
+                  if (!velocityData.serviceable) {
+                    toast({ variant: 'destructive', title: "Not Serviceable", description: `We currently do not deliver to your detected location (${detectedPincode}).` });
+                    setIsLocating(false);
+                    return;
+                  }
+                } catch(e) {
+                  console.error("Velocity check failed", e);
+                }
+              }
+
               setLocation(formatted);
               setLocationResolved(true);
             }
@@ -315,12 +377,13 @@ export default function Navbar() {
           )}>
             {/* Logo Section */}
             <Link href="/" className="flex items-center gap-1.5 group shrink-0 ml-1">
-              <SahiMedIcon className="w-8 h-8 sm:w-11 sm:h-11 shadow-lg shadow-primary/20" />
-              <div className="flex flex-col">
+              <SahiMedIcon className="w-8 h-8 sm:w-11 sm:h-11 shadow-lg shadow-primary/10 rounded-xl" />
+              <div className="flex flex-col ml-1">
                 <div className="flex items-center leading-none">
                   <span className={cn("font-black text-lg sm:text-2xl tracking-tight transition-colors", scrolled ? "text-slate-900" : "text-slate-900")}>Sahi</span>
                   <span className="font-black text-lg sm:text-2xl text-primary tracking-tight">Med</span>
                 </div>
+                <span className="text-[7.5px] sm:text-[9px] font-black text-slate-500 tracking-[0.15em] uppercase mt-0.5">Sahi dawai sahi daam pe</span>
               </div>
             </Link>
 
@@ -364,7 +427,56 @@ export default function Navbar() {
                       <span className="max-w-[70px] truncate tracking-tight">{location}</span>
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent sideOffset={12} className="w-72 p-5 rounded-[32px] shadow-3xl border border-white/50 glass">
+                  <PopoverContent sideOffset={12} className="w-72 p-5 rounded-[32px] shadow-3xl border border-white/50 glass space-y-3">
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Enter Pincode</p>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="e.g. 560001" 
+                          id="pincode-input"
+                          maxLength={6}
+                          className="h-12 rounded-xl bg-slate-50 border-none font-black tracking-widest text-xs"
+                        />
+                        <Button 
+                          onClick={async () => {
+                            const input = document.getElementById('pincode-input') as HTMLInputElement;
+                            if (input && input.value.length === 6) {
+                              setIsLocating(true);
+                              try {
+                                const res = await fetch('/api/logistics/velocity/serviceability', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ toPincode: input.value })
+                                });
+                                const data = await res.json();
+                                if (data.serviceable) {
+                                  setLocation(`PIN: ${input.value}`);
+                                  setLocationResolved(true);
+                                  setIsPopoverOpen(false);
+                                  toast({ title: "Location updated" });
+                                } else {
+                                  toast({ variant: 'destructive', title: "Not Serviceable", description: "We currently do not deliver to this pincode." });
+                                }
+                              } catch(e) {
+                                toast({ variant: 'destructive', title: "Error", description: "Could not verify serviceability." });
+                              } finally {
+                                setIsLocating(false);
+                              }
+                            }
+                          }}
+                          disabled={isLocating}
+                          className="h-12 w-12 shrink-0 rounded-xl bg-primary text-white"
+                        >
+                          {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="relative py-2">
+                      <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
+                      <div className="relative flex justify-center"><span className="bg-white px-2 text-[9px] font-black text-slate-300 uppercase tracking-widest">OR</span></div>
+                    </div>
+
                     <Button 
                       onClick={handleGeoLocation} 
                       disabled={isLocating}
@@ -525,5 +637,4 @@ export default function Navbar() {
       </AnimatePresence>
     </>
   );
-;
 }

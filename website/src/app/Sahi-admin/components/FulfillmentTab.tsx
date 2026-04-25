@@ -264,7 +264,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
 
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
         <div className="bg-white/60 backdrop-blur-md p-1.5 rounded-full border border-white shadow-xl flex w-fit gap-1.5 overflow-x-auto no-scrollbar">
-          {['All', 'Pending Consult', 'Confirmed', 'Packing', 'Packed', 'Shipped', 'Delivered', 'Cancelled'].map((status) => (
+          {['All', 'Pending Consult', 'Confirmed', 'Packing', 'Packed', 'Shipped', 'Delivered', 'Returned', 'Cancelled'].map((status) => (
             <button key={status} onClick={() => setStatusFilter(status)} className={cn("px-8 py-3.5 rounded-full text-[9px] font-black tracking-[0.2em] transition-all uppercase whitespace-nowrap", statusFilter === status ? "bg-primary text-white shadow-lg shadow-primary/30" : "text-slate-400 hover:bg-white/80")}>{status}</button>
           ))}
         </div>
@@ -296,6 +296,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                       order.status === 'Confirmed' ? "bg-blue-100 text-blue-600" :
                       order.status === 'Shipped' ? "bg-purple-100 text-purple-600" :
                       order.status === 'Delivered' ? "bg-green-100 text-green-600" :
+                      order.status === 'Returned' ? "bg-orange-100 text-orange-600" :
                       order.status === 'Cancelled' ? "bg-red-100 text-red-600" : "bg-gray-100"
                     )}>{order.status}</Badge>
                   </td>
@@ -333,31 +334,32 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
             ) : statusUpdateTarget ? (
                <div className="space-y-6">
                  <h3 className="text-sm font-black">Finalize status: {statusUpdateTarget}</h3>
-                 {statusUpdateTarget === 'Shipped' && (
-                   <div className="space-y-4">
-                     <Select onValueChange={v => setShippingInfo({...shippingInfo, partner: v})}>
-                       <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select partner" /></SelectTrigger>
-                       <SelectContent>
-                         <SelectItem value="Shipway">Shipway (Automated)</SelectItem>
-                         <SelectItem value="Delhivery">Delhivery</SelectItem>
-                         <SelectItem value="BlueDart">BlueDart</SelectItem>
-                         <SelectItem value="Post">India Post</SelectItem>
-                       </SelectContent>
-                     </Select>
-                     <Input placeholder="AWB / Tracking Number" value={shippingInfo.awb} onChange={e => setShippingInfo({...shippingInfo, awb: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
-                     {shippingInfo.partner === 'Shipway' && (
-                       <p className="text-[9px] font-black text-primary uppercase tracking-widest pl-2">
-                         ✨ Auto-fulfillment enabled for Shipway
-                       </p>
-                     )}
-                   </div>
+                 {(statusUpdateTarget === 'Shipped' || statusUpdateTarget === 'Returned') && (
+                     <div className="space-y-4">
+                       <Select onValueChange={v => setShippingInfo({...shippingInfo, partner: v})}>
+                         <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select partner" /></SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="Shipway">Shipway (Automated)</SelectItem>
+                           <SelectItem value="Velocity">Velocity Shipping (Automated)</SelectItem>
+                           <SelectItem value="Delhivery">Delhivery</SelectItem>
+                           <SelectItem value="BlueDart">BlueDart</SelectItem>
+                           <SelectItem value="Post">India Post</SelectItem>
+                         </SelectContent>
+                       </Select>
+                       <Input placeholder="AWB / Tracking Number (Optional for Auto)" value={shippingInfo.awb} onChange={e => setShippingInfo({...shippingInfo, awb: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+                       {(shippingInfo.partner === 'Shipway' || shippingInfo.partner === 'Velocity') && (
+                         <p className="text-[9px] font-black text-primary uppercase tracking-widest pl-2">
+                           ✨ Auto-fulfillment enabled for {shippingInfo.partner}
+                         </p>
+                       )}
+                     </div>
                  )}
                  {statusUpdateTarget === 'Cancelled' && (
                    <Textarea placeholder="Reason for cancellation" value={cancelReason} onChange={e => setCancelReason(e.target.value)} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" />
                  )}
                  <Button 
                    disabled={isUpdating}
-                   onClick={() => updateOrderStatus(selectedOrder._id, statusUpdateTarget, statusUpdateTarget === 'Shipped' ? { shipping: shippingInfo } : statusUpdateTarget === 'Cancelled' ? { cancellationReason: cancelReason } : {})} 
+                   onClick={() => updateOrderStatus(selectedOrder._id, statusUpdateTarget, (statusUpdateTarget === 'Shipped' || statusUpdateTarget === 'Returned') ? { shipping: shippingInfo } : statusUpdateTarget === 'Cancelled' ? { cancellationReason: cancelReason } : {})} 
                    className="w-full h-16 rounded-full font-black bg-primary text-white shadow-xl transition-all active:scale-95 disabled:opacity-50"
                  >
                    {isUpdating ? <Loader2 className="w-5 h-5 animate-spin mx-auto text-white" /> : "Confirm update"}
@@ -390,7 +392,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                          Clinical Approval Granted
                       </Button>
                     ) : (
-                      ['Packing', 'Packed', 'Shipped', 'Delivered', 'Cancelled'].map(s => (
+                      ['Packing', 'Packed', 'Shipped', 'Delivered', 'Returned', 'Cancelled'].map(s => (
                         <Button key={s} variant="outline" onClick={() => setStatusUpdateTarget(s)} className={cn("rounded-2xl h-12 font-black text-[10px] border-2", selectedOrder?.status === s ? "border-primary bg-primary/5 text-primary" : "text-gray-400")}>{s}</Button>
                       ))
                     )}
@@ -437,6 +439,47 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                   >
                     Print Order Summary
                   </Button>
+                  
+                  {selectedOrder?.shipping?.labelUrl && (
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => window.open(selectedOrder.shipping.labelUrl, '_blank')}
+                        variant="outline"
+                        className="flex-1 h-14 rounded-2xl border-4 text-primary font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl mt-2"
+                      >
+                        <Package className="w-4 h-4 mr-2" />
+                        Print Label
+                      </Button>
+                      <Button 
+                        onClick={() => updateOrderStatus(selectedOrder._id, selectedOrder.status, { action: 'cancel_shipment', isReturn: false })}
+                        variant="outline"
+                        className="w-14 h-14 rounded-2xl border-4 border-red-100 text-red-500 font-black text-[10px] uppercase hover:bg-red-50 active:scale-95 transition-all shadow-xl mt-2"
+                        title="Cancel Forward AWB"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                  {selectedOrder?.returnShipping?.labelUrl && (
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => window.open(selectedOrder.returnShipping.labelUrl, '_blank')}
+                        variant="outline"
+                        className="flex-1 h-14 rounded-2xl border-4 text-orange-500 border-orange-100 font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl mt-2"
+                      >
+                        <Package className="w-4 h-4 mr-2" />
+                        Print Return Label
+                      </Button>
+                      <Button 
+                        onClick={() => updateOrderStatus(selectedOrder._id, selectedOrder.status, { action: 'cancel_shipment', isReturn: true })}
+                        variant="outline"
+                        className="w-14 h-14 rounded-2xl border-4 border-red-100 text-red-500 font-black text-[10px] uppercase hover:bg-red-50 active:scale-95 transition-all shadow-xl mt-2"
+                        title="Cancel Return AWB"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </>
             )}

@@ -1166,13 +1166,14 @@ class _SahiRecsSectionState extends State<_SahiRecsSection> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading)
+    if (_loading) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(20),
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
       );
+    }
     if (_recs.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -1242,12 +1243,12 @@ class _LossAlertCard extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: SahimedColors.primary.withOpacity(0.2),
+          color: SahimedColors.primary.withValues(alpha: 0.2),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFE11D48).withOpacity(0.05),
+            color: const Color(0xFFE11D48).withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -1293,7 +1294,7 @@ class _LossAlertCard extends StatelessWidget {
                         style: GoogleFonts.outfit(
                           fontSize: 8,
                           fontWeight: FontWeight.w900,
-                          color: SahimedColors.primary.withOpacity(0.7),
+                          color: SahimedColors.primary.withValues(alpha: 0.7),
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -1359,7 +1360,7 @@ class _LossAlertCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(100),
                         boxShadow: [
                           BoxShadow(
-                            color: SahimedColors.primary.withOpacity(0.3),
+                            color: SahimedColors.primary.withValues(alpha: 0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),

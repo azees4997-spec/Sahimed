@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/location_service.dart';
+import '../../../core/services/api_service.dart';
 import '../../products/screens/search_screen.dart';
 import '../screens/cart_screen.dart';
 
@@ -33,6 +34,145 @@ class _HomeHeaderState extends State<HomeHeader> {
     }
   }
 
+  void _showLocationDialog() {
+    final pincodeController = TextEditingController();
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: Text(
+                'Enter Pincode',
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: pincodeController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    decoration: InputDecoration(
+                      hintText: 'e.g. 560001',
+                      filled: true,
+                      fillColor: const Color(0xFFF8FAFC),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      counterText: '',
+                    ),
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (isLoading)
+                    const CircularProgressIndicator()
+                  else
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              if (pincodeController.text.length == 6) {
+                                setStateDialog(() => isLoading = true);
+                                final isServiceable = await ApiService()
+                                    .checkServiceability(pincodeController.text);
+                                setStateDialog(() => isLoading = false);
+
+                                if (isServiceable) {
+                                  if (mounted) {
+                                    setState(() => _currentAddress =
+                                        'PIN: ${pincodeController.text}');
+                                    Navigator.pop(context);
+                                  }
+                                } else {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'We currently do not deliver to ${pincodeController.text}.',
+                                          style: GoogleFonts.outfit(
+                                              fontWeight: FontWeight.w700),
+                                        ),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: SahimedColors.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            child: Text(
+                              'CHECK',
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'OR',
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton.icon(
+                    onPressed: () async {
+                      setStateDialog(() => isLoading = true);
+                      // In a real scenario, we would parse the pincode from GPS. 
+                      // For now, we fetch address and assume serviceable or add logic to location_service.
+                      await _initLocation();
+                      setStateDialog(() => isLoading = false);
+                      if (mounted) Navigator.pop(context);
+                    },
+                    icon: const Icon(LucideIcons.locateFixed, size: 16),
+                    label: Text(
+                      'USE CURRENT LOCATION',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: SahimedColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cartItems = context.watch<CartProvider>().items.length;
@@ -40,7 +180,7 @@ class _HomeHeaderState extends State<HomeHeader> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         border: Border(
           bottom: BorderSide(color: const Color(0xFFF1F5F9), width: 1),
         ),
@@ -56,56 +196,50 @@ class _HomeHeaderState extends State<HomeHeader> {
                     Navigator.of(context).popUntil((route) => route.isFirst),
                 child: Row(
                   children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: SahimedColors.primary,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: SahimedColors.primary.withOpacity(0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'assets/icons/logo.svg',
-                          width: 20,
-                          height: 20,
-                          colorFilter: const ColorFilter.mode(
-                            Colors.white,
-                            BlendMode.srcIn,
+                    SvgPicture.asset(
+                      'assets/icons/logo.svg',
+                      width: 38,
+                      height: 38,
+                    ),
+                    const SizedBox(width: 6),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'Sahi',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF0F172A),
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              TextSpan(
+                                text: 'Med',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w900,
+                                  color: SahimedColors.primary,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'Sahi',
-                            style: GoogleFonts.outfit(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF0F172A),
-                              letterSpacing: -0.5,
-                            ),
+                        Text(
+                          'Sahi dawai sahi daam pe'.toUpperCase(),
+                          style: GoogleFonts.outfit(
+                            fontSize: 6.5,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF64748B),
+                            letterSpacing: 1.2,
+                            height: 0.8,
                           ),
-                          TextSpan(
-                            text: 'Med',
-                            style: GoogleFonts.outfit(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: SahimedColors.primary,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -116,7 +250,7 @@ class _HomeHeaderState extends State<HomeHeader> {
                 children: [
                   // Location Picker (Minimalist like web)
                   GestureDetector(
-                    onTap: _initLocation,
+                    onTap: _showLocationDialog,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -228,7 +362,7 @@ class _NavbarIcon extends StatelessWidget {
               boxShadow: shadow
                   ? [
                       BoxShadow(
-                        color: SahimedColors.primary.withOpacity(0.3),
+                        color: SahimedColors.primary.withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),

@@ -4,68 +4,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-
-export interface Product {
-  id: string;
-  sku?: string; 
-  moleculeId?: string; 
-  brand?: string; 
-  name: string;
-  price: number;
-  mrp: number;
-  availableQuantity: number;
-  saltComposition: string;
-  manufacturer: string;
-  category: string;
-  imageUrl: string;
-  isGeneric?: boolean;
-  prescriptionRequired?: boolean;
-  packSize?: string;
-  // Clinical Details
-  description?: string;
-  howToUse?: string;
-  treatment?: string;
-  safetyAdvice?: string;
-  sideEffects?: string;
-  alcoholInteraction?: string;
-  pregnancyInteraction?: string;
-  lactationInteraction?: string;
-  drivingInteraction?: string;
-  kidneyInteraction?: string;
-  liverInteraction?: string;
-  liveData?: {
-    mrp: number;
-    sahimed_price: number;
-    stock_quantity: number;
-  };
-}
-
-interface CartItem extends Product {
-  quantity: number;
-}
-
-export interface Fee {
-  id: string;
-  name: string;
-  originalAmount: number;
-  discountedAmount: number;
-  type: 'fixed' | 'percentage';
-  minPurchase: number;
-  isActive: boolean;
-}
-
-export interface PromoCode {
-  id: string;
-  code: string;
-  description: string;
-  discountType: 'fixed' | 'percentage';
-  discountValue: number;
-  maxDiscount?: number; 
-  minOrderValue: number;
-  applyTo: 'cart' | 'product' | 'customer' | 'both';
-  targetId?: string; 
-  isActive: boolean;
-}
+import { Product, CartItem, Fee, PromoCode } from '@/types';
 
 interface CartContextType {
   cart: CartItem[];
@@ -104,7 +43,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return query(collection(db, 'fees'), where('isActive', '==', true));
   }, [db]);
   const { data: activeFeesData } = useCollection(feesQuery);
-  const activeFees: Fee[] = (activeFeesData as any[]) || [];
+  const activeFees = (activeFeesData as Fee[]) || [];
 
   // Fetch available promos
   const promosQuery = useMemoFirebase(() => {
@@ -112,15 +51,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return query(collection(db, 'promocodes'), where('isActive', '==', true));
   }, [db]);
   const { data: availablePromosData } = useCollection(promosQuery);
-  const availablePromos: PromoCode[] = (availablePromosData as any[]) || [];
+  const availablePromos = (availablePromosData as PromoCode[]) || [];
 
   useEffect(() => {
     const savedCart = localStorage.getItem('hl_cart');
     if (savedCart) {
       try {
-        setCart(JSON.parse(savedCart));
+        const parsed = JSON.parse(savedCart);
+        if (Array.isArray(parsed)) {
+          // Basic validation: ensure items have an id and price
+          const validCart = parsed.filter(item => item.id && typeof item.price === 'number');
+          setCart(validCart);
+        }
       } catch (e) {
-        console.error("Failed to load cart", e);
+        console.error("STABILIZATION_ERROR: Corrupt cart data in localStorage.", e);
+        localStorage.removeItem('hl_cart');
       }
     }
     const savedLoc = localStorage.getItem('sahimed_location');

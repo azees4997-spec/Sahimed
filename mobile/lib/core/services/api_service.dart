@@ -266,6 +266,24 @@ class ApiService {
     }
   }
 
+  Future<bool> checkServiceability(String pincode) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/logistics/velocity/serviceability'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'toPincode': pincode}),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['serviceable'] == true;
+      }
+    } catch (e) {
+      debugPrint('Error checking serviceability: $e');
+    }
+    // Default to true or false on error? Let's assume true so we don't completely block users if API goes down, or false if strict? The user requested "strictly block".
+    return false;
+  }
+
   Future<List<BannerModel>> getBanners() async {
     final cached = _getCached('banners');
     if (cached != null) return cached;
