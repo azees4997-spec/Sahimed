@@ -65,7 +65,7 @@ export default function ProductCard({ product }: { product: Product }) {
             <div className="h-4 sm:h-6 mb-1.5">
               {product.isGeneric && (
                 <p className="text-[7px] sm:text-[9px] font-black text-emerald-600 uppercase tracking-[0.2em] bg-emerald-50 px-2 py-0.5 rounded-full w-fit">
-                  Sahi Generic Solution
+                  SAHI RECOMMENDED
                 </p>
               )}
             </div>
@@ -100,8 +100,6 @@ export default function ProductCard({ product }: { product: Product }) {
                <span className="text-black font-black text-xl sm:text-3xl font-outfit leading-none tracking-tighter">₹{Math.round(currentPrice)}</span>
                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-60">Sahimed Price</span>
             </div>
-          </div>
-        </div>
       </Link>
       
       <div className="mt-3 sm:mt-6">
