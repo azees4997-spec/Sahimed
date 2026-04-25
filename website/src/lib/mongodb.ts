@@ -28,8 +28,11 @@ if (!globalWithMongo._mongoClientPromise) {
     })
     .catch((err) => {
       console.error("[MongoDB Intelligence] CRITICAL connection error:", err);
+      if (err instanceof Error) {
+        console.error("Error Stack:", err.stack);
+      }
       // Delete the promise from global if it fails so the next request can retry
-      delete globalWithMongo._mongoClientPromise;
+      delete (global as any)._mongoClientPromise;
       throw err;
     });
 }
