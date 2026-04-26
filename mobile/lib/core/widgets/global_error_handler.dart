@@ -37,7 +37,7 @@ class _GlobalErrorHandlerState extends State<GlobalErrorHandler> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: SahimedColors.accent.withValues(alpha: 0.1),
+                  color: SahimedColors.accent.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(

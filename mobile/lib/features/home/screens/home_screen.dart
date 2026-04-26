@@ -67,9 +67,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   Future<void> _launch(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        // Fallback for some devices where canLaunchUrl returns false but it actually works
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not launch: $url'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -221,10 +235,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: Colors.white.withOpacity(0.7),
                         borderRadius: BorderRadius.circular(100),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: Colors.white.withOpacity(0.7),
                         ),
                       ),
                       child: Row(
@@ -369,7 +383,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(100),
                       boxShadow: [
                         BoxShadow(
-                          color: SahimedColors.primary.withValues(alpha: 0.3),
+                          color: SahimedColors.primary.withOpacity(0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -460,7 +474,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: iconBg.withValues(alpha: 0.35),
+                      color: iconBg.withOpacity(0.35),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -650,7 +664,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 8,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: Colors.white.withOpacity(0.8),
                     letterSpacing: 1,
                   ),
                 ),

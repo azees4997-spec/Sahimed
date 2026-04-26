@@ -86,7 +86,7 @@ class _BrandStoreScreenState extends State<BrandStoreScreen> {
             color: SahimedColors.white,
             gradient: LinearGradient(
               colors: [
-                SahimedColors.sahiPink.withValues(alpha: 0.3),
+                SahimedColors.sahiPink.withOpacity(0.3),
                 SahimedColors.white,
                 SahimedColors.white,
               ],
@@ -196,7 +196,7 @@ class _ProductCard extends StatelessWidget {
           border: Border.all(color: SahimedColors.slate100),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: Colors.black.withOpacity(0.03),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),

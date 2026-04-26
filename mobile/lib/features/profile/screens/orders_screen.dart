@@ -183,7 +183,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -290,9 +290,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         onPressed: () => _reorder(order),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          backgroundColor: SahimedColors.primary.withValues(
-                            alpha: 0.05,
-                          ),
+                          backgroundColor: SahimedColors.primary.withOpacity(0.1),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),

@@ -428,7 +428,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: SahimedColors.primary
-                                      .withValues(alpha: 0.1),
+                                      .withOpacity(0.1),
                                   foregroundColor: SahimedColors.primary,
                                   elevation: 0,
                                   minimumSize: const Size(double.infinity, 50),
@@ -509,9 +509,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: SahimedColors.primary.withValues(
-                              alpha: 0.05,
-                            ),
+                            color: SahimedColors.primary.withOpacity(0.05),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -544,7 +542,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               ),
                               Switch.adaptive(
                                 value: _isConsultationRequired,
-                                activeTrackColor: SahimedColors.primary.withValues(alpha: 0.5),
+                                activeTrackColor: SahimedColors.primary.withOpacity(0.5),
                                 activeColor: SahimedColors.primary,
                                 onChanged: (v) =>
                                     setState(() => _isConsultationRequired = v),
@@ -591,7 +589,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? SahimedColors.primary.withValues(alpha: 0.1)
+              ? SahimedColors.primary.withOpacity(0.1)
               : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
@@ -740,7 +738,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -754,7 +752,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: SahimedColors.primary.withValues(alpha: 0.1),
+                  color: SahimedColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, size: 20, color: SahimedColors.primary),
@@ -808,16 +806,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: GoogleFonts.outfit(
-              color: SahimedColors.textSecondary.withValues(alpha: 0.5),
+              color: SahimedColors.textSecondary.withOpacity(0.5),
               fontSize: 13,
             ),
             prefixIcon: Icon(
               icon,
               size: 20,
-              color: SahimedColors.primary.withValues(alpha: 0.5),
+              color: SahimedColors.primary.withOpacity(0.5),
             ),
             filled: true,
-            fillColor: SahimedColors.background.withValues(alpha: 0.5),
+            fillColor: SahimedColors.background.withOpacity(0.5),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(18),
               borderSide: BorderSide.none,
@@ -945,17 +943,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: Container(
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
           decoration: BoxDecoration(
-            color: SahimedColors.white.withValues(alpha: 0.8),
+            color: SahimedColors.white.withOpacity(0.8),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(40),
               topRight: Radius.circular(40),
             ),
             border: Border.all(
-              color: SahimedColors.white.withValues(alpha: 0.3),
+              color: SahimedColors.white.withOpacity(0.3),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: Colors.black.withOpacity(0.05),
                 blurRadius: 30,
                 offset: const Offset(0, -10),
               ),
@@ -1010,7 +1008,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               !_isConsultationRequired)
                           ? 0
                           : 8,
-                      shadowColor: SahimedColors.primary.withValues(alpha: 0.4),
+                      shadowColor: SahimedColors.primary.withOpacity(0.4),
                     ),
                     child: _isProcessing
                         ? const SizedBox(

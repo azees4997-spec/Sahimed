@@ -183,7 +183,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                                 style: GoogleFonts.outfit(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w900,
-                                  color: Colors.white.withValues(alpha: 0.7),
+                                  color: Colors.white.withOpacity(0.7),
                                   letterSpacing: 1,
                                 ),
                               ),

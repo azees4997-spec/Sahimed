@@ -43,7 +43,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: SahimedColors.primary.withValues(alpha: 0.3),
+                    color: SahimedColors.primary.withOpacity(0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -58,7 +58,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: Colors.white.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -74,7 +74,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
-                            color: Colors.white.withValues(alpha: 0.7),
+                            color: Colors.white.withOpacity(0.7),
                             letterSpacing: 2,
                           ),
                         ),
@@ -136,7 +136,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: SahimedColors.primary.withValues(alpha: 0.1),
+                        color: SahimedColors.primary.withOpacity(0.1),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),

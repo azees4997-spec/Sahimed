@@ -106,12 +106,12 @@ class _LoginScreenState extends State<LoginScreen> {
           Positioned(
             top: -120,
             right: -60,
-            child: _buildBlob(350, SahimedColors.primary.withValues(alpha: 0.08)),
+            child: _buildBlob(350, SahimedColors.primary.withOpacity(0.08)),
           ),
           Positioned(
             bottom: -80,
             left: -40,
-            child: _buildBlob(280, SahimedColors.accent.withValues(alpha: 0.05)),
+            child: _buildBlob(280, SahimedColors.accent.withOpacity(0.05)),
           ),
 
           SafeArea(
@@ -132,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: SahimedColors.primary.withValues(alpha: 0.2),
+                              color: SahimedColors.primary.withOpacity(0.2),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -182,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(40),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: Colors.black.withOpacity(0.05),
                           blurRadius: 40,
                           offset: const Offset(0, 20),
                         ),
@@ -277,7 +277,7 @@ class _LoginScreenState extends State<LoginScreen> {
         border: Border.all(color: const Color(0xFFF1F5F9)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -324,7 +324,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: SahimedColors.primary.withValues(alpha: 0.3),
+                    color: SahimedColors.primary.withOpacity(0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),

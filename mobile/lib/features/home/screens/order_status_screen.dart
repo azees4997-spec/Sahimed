@@ -20,8 +20,8 @@ class OrderStatusScreen extends StatelessWidget {
             end: Alignment.bottomCenter,
             colors: [
               isSuccess
-                  ? Colors.green.withValues(alpha: 0.05)
-                  : SahimedColors.accent.withValues(alpha: 0.05),
+                  ? Colors.green.withOpacity(0.05)
+                  : SahimedColors.accent.withOpacity(0.05),
               SahimedColors.background,
             ],
           ),
@@ -98,7 +98,7 @@ class OrderStatusScreen extends StatelessWidget {
               boxShadow: [
                 BoxShadow(
                   color: (isSuccess ? Colors.green : SahimedColors.accent)
-                      .withValues(alpha: 0.2),
+                      .withOpacity(0.2),
                   blurRadius: 40,
                   spreadRadius: 10,
                 ),
@@ -123,7 +123,7 @@ class OrderStatusScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -146,9 +146,9 @@ class OrderStatusScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: SahimedColors.accent.withValues(alpha: 0.1),
+        color: SahimedColors.accent.withOpacity(0.1),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: SahimedColors.accent.withValues(alpha: 0.2)),
+        border: Border.all(color: SahimedColors.accent.withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -225,7 +225,7 @@ class OrderStatusScreen extends StatelessWidget {
           elevation: 10,
           shadowColor:
               (isSuccess ? SahimedColors.primary : SahimedColors.textPrimary)
-                  .withValues(alpha: 0.4),
+                  .withOpacity(0.4),
         ),
         child: Text(
           isSuccess ? 'Continue Shopping' : 'Back to Home',

@@ -97,7 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         border: Border.all(color: Colors.white, width: 4),
                         boxShadow: [
                           BoxShadow(
-                            color: SahimedColors.primary.withValues(alpha: 0.2),
+                            color: SahimedColors.primary.withOpacity(0.2),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -272,14 +272,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   vertical: 8,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: SahimedColors.emerald500.withValues(
-                                    alpha: 0.05,
-                                  ),
+                                  color: SahimedColors.emerald500.withOpacity(0.05),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: SahimedColors.emerald500.withValues(
-                                      alpha: 0.2,
-                                    ),
+                                    color: SahimedColors.emerald500.withOpacity(0.2),
                                   ),
                                 ),
                                 child: Row(

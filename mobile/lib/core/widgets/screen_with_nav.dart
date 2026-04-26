@@ -62,7 +62,7 @@ class ScreenWithNav extends StatelessWidget {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: SahimedColors.primary.withValues(alpha: 0.35),
+                      color: SahimedColors.primary.withOpacity(0.35),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -73,7 +73,7 @@ class ScreenWithNav extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withOpacity(0.2),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -92,7 +92,7 @@ class ScreenWithNav extends StatelessWidget {
                           style: GoogleFonts.outfit(
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
-                            color: Colors.white.withValues(alpha: 0.8),
+                            color: Colors.white.withOpacity(0.8),
                             letterSpacing: 1.2,
                           ),
                         ),
@@ -142,7 +142,7 @@ class ScreenWithNav extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: Colors.black.withOpacity(0.05),
                   blurRadius: 25,
                   offset: const Offset(0, -5),
                 ),
@@ -222,7 +222,7 @@ class _NavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? SahimedColors.primary.withValues(alpha: 0.1)
+              ? SahimedColors.primary.withOpacity(0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(100),
         ),

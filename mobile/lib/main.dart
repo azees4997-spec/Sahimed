@@ -30,8 +30,10 @@ void main() async {
       appleProvider: AppleProvider.deviceCheck,
     );
 
-    // Initializing reCAPTCHA config for Phone Auth fallback
-    await FirebaseAuth.instance.initializeRecaptchaConfig();
+    // Initializing reCAPTCHA config for Phone Auth fallback (Web Only)
+    if (kIsWeb) {
+      await FirebaseAuth.instance.initializeRecaptchaConfig();
+    }
 
     // Optimization: Expand Image Cache for smoother scrolling & better performance
     PaintingBinding.instance.imageCache.maximumSize = 1000;

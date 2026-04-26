@@ -102,10 +102,10 @@ class _CartScreenState extends State<CartScreen> {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: SahimedColors.primary.withValues(alpha: 0.08),
+                      color: SahimedColors.primary.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(100),
                       border: Border.all(
-                        color: SahimedColors.primary.withValues(alpha: 0.15),
+                        color: SahimedColors.primary.withOpacity(0.15),
                       ),
                     ),
                     child: Text(
@@ -381,12 +381,12 @@ class _CartScreenState extends State<CartScreen> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.95),
+                color: Colors.white.withOpacity(0.95),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(36),
                 ),
                 border: Border.all(
-                  color: SahimedColors.primary.withValues(alpha: 0.05),
+                  color: SahimedColors.primary.withOpacity(0.05),
                 ),
                 boxShadow: const [
                   BoxShadow(
@@ -479,9 +479,7 @@ class _CartScreenState extends State<CartScreen> {
                           borderRadius: BorderRadius.circular(100),
                           boxShadow: [
                             BoxShadow(
-                              color: SahimedColors.primary.withValues(
-                                alpha: 0.35,
-                              ),
+                              color: SahimedColors.primary.withOpacity(0.35),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -833,7 +831,7 @@ class _EmptyCart extends StatelessWidget {
                   borderRadius: BorderRadius.circular(100),
                   boxShadow: [
                     BoxShadow(
-                      color: SahimedColors.primary.withValues(alpha: 0.35),
+                      color: SahimedColors.primary.withOpacity(0.35),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -917,7 +915,7 @@ class _PromoSheet extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 8,
                     fontWeight: FontWeight.w900,
-                    color: Colors.white.withValues(alpha: 0.6),
+                    color: Colors.white.withOpacity(0.6),
                     letterSpacing: 1,
                   ),
                 ),
@@ -998,9 +996,7 @@ class _PromoSheet extends StatelessWidget {
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: SahimedColors.primary.withValues(
-                                          alpha: 0.1,
-                                        ),
+                                        color: SahimedColors.primary.withOpacity(0.4),
                                         borderRadius: BorderRadius.circular(
                                           100,
                                         ),
@@ -1077,9 +1073,7 @@ class _PromoSheet extends StatelessWidget {
                                     style: GoogleFonts.outfit(
                                       fontSize: 8,
                                       fontWeight: FontWeight.w900,
-                                      color: SahimedColors.primary.withValues(
-                                        alpha: 0.4,
-                                      ),
+                                      color: SahimedColors.primary.withOpacity(0.4),
                                       letterSpacing: 1,
                                     ),
                                   ),
@@ -1243,12 +1237,12 @@ class _LossAlertCard extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: SahimedColors.primary.withValues(alpha: 0.2),
+          color: SahimedColors.primary.withOpacity(0.2),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFE11D48).withValues(alpha: 0.05),
+            color: const Color(0xFFE11D48).withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -1294,7 +1288,7 @@ class _LossAlertCard extends StatelessWidget {
                         style: GoogleFonts.outfit(
                           fontSize: 8,
                           fontWeight: FontWeight.w900,
-                          color: SahimedColors.primary.withValues(alpha: 0.7),
+                          color: SahimedColors.primary.withOpacity(0.7),
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -1360,7 +1354,7 @@ class _LossAlertCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(100),
                         boxShadow: [
                           BoxShadow(
-                            color: SahimedColors.primary.withValues(alpha: 0.3),
+                            color: SahimedColors.primary.withOpacity(0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),

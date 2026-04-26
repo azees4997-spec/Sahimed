@@ -72,7 +72,7 @@ class _HomeHeaderState extends State<HomeHeader> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: SahimedColors.primary.withValues(alpha: 0.1),
+                      color: SahimedColors.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -235,7 +235,7 @@ class _HomeHeaderState extends State<HomeHeader> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
+        color: Colors.white.withOpacity(0.9),
         border: Border(
           bottom: BorderSide(color: const Color(0xFFF1F5F9), width: 1),
         ),
@@ -417,7 +417,7 @@ class _NavbarIcon extends StatelessWidget {
               boxShadow: shadow
                   ? [
                       BoxShadow(
-                        color: SahimedColors.primary.withValues(alpha: 0.3),
+                        color: SahimedColors.primary.withOpacity(0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
