@@ -368,8 +368,8 @@ export default function Navbar() {
           scrolled 
             ? "bg-white shadow-xl border-b border-slate-100" 
             : isHome 
-              ? "bg-transparent" 
-              : "bg-white/40 backdrop-blur-md"
+              ? "bg-transparent border-b border-transparent" 
+              : "bg-white/40 backdrop-blur-md border-b border-transparent"
         )}
       >
         <div className="max-w-7xl mx-auto px-4 py-2 sm:py-4">
