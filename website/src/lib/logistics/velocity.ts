@@ -90,7 +90,6 @@ export class VelocityService {
 
     return this.cachedToken!;
   }
-  }
 
   private static async getHeaders(): Promise<HeadersInit> {
     const token = await this.authenticate();
