@@ -339,7 +339,6 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                        <Select onValueChange={v => setShippingInfo({...shippingInfo, partner: v})}>
                          <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select partner" /></SelectTrigger>
                          <SelectContent>
-                           <SelectItem value="Shipway">Shipway (Automated)</SelectItem>
                            <SelectItem value="Velocity">Velocity Shipping (Automated)</SelectItem>
                            <SelectItem value="Delhivery">Delhivery</SelectItem>
                            <SelectItem value="BlueDart">BlueDart</SelectItem>
@@ -347,7 +346,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                          </SelectContent>
                        </Select>
                        <Input placeholder="AWB / Tracking Number (Optional for Auto)" value={shippingInfo.awb} onChange={e => setShippingInfo({...shippingInfo, awb: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
-                       {(shippingInfo.partner === 'Shipway' || shippingInfo.partner === 'Velocity') && (
+                       {shippingInfo.partner === 'Velocity' && (
                          <p className="text-[9px] font-black text-primary uppercase tracking-widest pl-2">
                            ✨ Auto-fulfillment enabled for {shippingInfo.partner}
                          </p>

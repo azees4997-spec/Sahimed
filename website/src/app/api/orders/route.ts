@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAdmin, verifyAuth } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
-import { ShipwayService } from '@/lib/logistics/shipway';
 
 export async function GET(req: Request) {
   try {
@@ -186,32 +185,6 @@ export async function PUT(req: Request) {
     );
 
     const currentOrder = await db.collection('orders').findOne({ _id: new ObjectId(id) });
-
-    // SHIPWAY AUTOMATION: Trigger when status is Shipped and partner is Shipway
-    if (updates.status === 'Shipped' && (updates.shipping?.partner === 'Shipway' || currentOrder?.shipping?.partner === 'Shipway') && result.modifiedCount > 0) {
-      try {
-        if (currentOrder) {
-          const { ShipwayService } = await import('@/lib/logistics/shipway');
-          await ShipwayService.createShipment({
-            orderId: currentOrder.orderId,
-            name: currentOrder.patientName,
-            phone: currentOrder.phoneNumber,
-            address: `${currentOrder.shippingDetails?.houseNumber || ''}, ${currentOrder.shippingDetails?.street || ''}`,
-            city: currentOrder.shippingDetails?.city || '',
-            state: currentOrder.shippingDetails?.state || '',
-            pincode: currentOrder.shippingDetails?.pincode || '',
-            items: (currentOrder.items || []).map((it: any) => ({
-              name: it.name,
-              qty: it.quantity,
-              price: it.unitPrice
-            }))
-          });
-          console.log(`[Shipway Automation] Order ${currentOrder.orderId} pushed successfully.`);
-        }
-      } catch (shipwayErr: any) {
-        console.error(`[Shipway Automation Error] Failed to sync order ${id}:`, shipwayErr.message);
-      }
-    }
 
     // VELOCITY AUTOMATION: Trigger when partner is Velocity
     if ((updates.status === 'Confirmed' || updates.status === 'Shipped') && (updates.shipping?.partner === 'Velocity' || currentOrder?.shipping?.partner === 'Velocity') && result.modifiedCount > 0) {
