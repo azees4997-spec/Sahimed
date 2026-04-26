@@ -66,11 +66,13 @@ export class VelocityService {
       }
 
       if (!response.ok) {
+        console.error(`[Velocity] Auth failed with status ${response.status}:`, data);
         throw new Error(`Authentication failed: ${data.message || data.error || response.statusText}`);
       }
 
       if (!data.token) {
-        throw new Error(`Authentication failed: No token received in response. Body: ${JSON.stringify(data)}`);
+        console.error(`[Velocity] Token missing in response:`, data);
+        throw new Error(`Authentication failed: No token received in response.`);
       }
 
       this.cachedToken = data.token;
@@ -111,7 +113,9 @@ export class VelocityService {
       });
 
       if (!response.ok) {
-        return { success: false, serviceable: false, carriers: [] };
+        const errorText = await response.text();
+        console.error(`[Velocity] Serviceability failed (${response.status}):`, errorText);
+        return { success: false, serviceable: false, error: `Velocity API error (${response.status})` };
       }
 
       const data = await response.json();
