@@ -103,12 +103,8 @@ export class VelocityService {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          origin: fromPincode,
-          destination: toPincode,
           from: fromPincode,
           to: toPincode,
-          pickup_postcode: fromPincode,
-          delivery_postcode: toPincode,
           payment_mode: paymentMode,
           shipment_type: shipmentType
         }),

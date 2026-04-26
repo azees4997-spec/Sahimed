@@ -632,7 +632,7 @@ class _SearchScreenState extends State<SearchScreen> {
     }
 
     return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 200),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 200),
       itemCount: _results.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2, // Consistency with home screen
