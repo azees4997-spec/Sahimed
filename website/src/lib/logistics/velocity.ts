@@ -42,49 +42,54 @@ export class VelocityService {
     }
 
     try {
-      console.log(`[Velocity] Authenticating at ${this.API_URL}/custom/api/v1/auth-token`);
-      const response = await fetch(`${this.API_URL}/custom/api/v1/auth-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: this.USERNAME,
-          password: this.PASSWORD,
-        }),
-      });
-
-      const contentType = response.headers.get('content-type');
-      let data: any;
-
-      if (contentType && contentType.includes('application/json')) {
-        data = await response.json();
-      } else {
-        const text = await response.text();
-        console.error(`[Velocity] Non-JSON response: ${text.substring(0, 200)}`);
-        throw new Error(`Authentication failed: Server returned ${response.status} ${response.statusText}. Expected JSON but got ${contentType || 'plain text'}`);
+      return await this.performAuth(this.API_URL);
+    } catch (err) {
+      console.warn("[Velocity] Auth on API_URL failed, trying SERVICEABILITY_URL...");
+      try {
+        return await this.performAuth(this.SERVICEABILITY_URL);
+      } catch (err2) {
+        throw err; // Throw the original error if both fail
       }
-
-      if (!response.ok) {
-        console.error(`[Velocity] Auth failed with status ${response.status}:`, data);
-        throw new Error(`Authentication failed: ${data.message || data.error || response.statusText}`);
-      }
-
-      if (!data.token) {
-        console.error(`[Velocity] Token missing in response:`, data);
-        throw new Error(`Authentication failed: No token received in response.`);
-      }
-
-      this.cachedToken = data.token;
-      const expiry = new Date();
-      expiry.setHours(expiry.getHours() + 23);
-      this.tokenExpiry = expiry;
-
-      return this.cachedToken!;
-    } catch (err: any) {
-      console.error("[Velocity] Auth failed:", err.message);
-      throw err;
     }
+  }
+
+  private static async performAuth(baseUrl: string): Promise<string> {
+    console.log(`[Velocity] Authenticating at ${baseUrl}/custom/api/v1/auth-token`);
+    const response = await fetch(`${baseUrl}/custom/api/v1/auth-token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: this.USERNAME,
+        password: this.PASSWORD,
+      }),
+    });
+
+    const contentType = response.headers.get('content-type');
+    let data: any;
+
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      throw new Error(`Authentication failed: Server returned ${response.status}. Expected JSON.`);
+    }
+
+    if (!response.ok) {
+      throw new Error(`Authentication failed: ${data.message || data.error || response.statusText}`);
+    }
+
+    if (!data.token) {
+      throw new Error(`Authentication failed: No token received.`);
+    }
+
+    this.cachedToken = data.token;
+    const expiry = new Date();
+    expiry.setHours(expiry.getHours() + 23);
+    this.tokenExpiry = expiry;
+
+    return this.cachedToken!;
+  }
   }
 
   private static async getHeaders(): Promise<HeadersInit> {
