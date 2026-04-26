@@ -102,9 +102,11 @@ export class VelocityService {
   /**
    * Checks if a pincode is reachable and lists available carriers.
    */
-  static async checkServiceability(fromPincode: string, toPincode: string, paymentMode: string = 'prepaid', shipmentType: string = 'forward') {
+  static async checkServiceability(fromPincode: string, toPincode: string, paymentMode: string = 'cod', shipmentType: string = 'forward') {
     try {
       const headers = await this.getHeaders();
+      console.log(`[Velocity] Checking serviceability with headers:`, { ...headers, Authorization: 'REDACTED' });
+      
       const response = await fetch(`${this.SERVICEABILITY_URL}/custom/api/v1/serviceability`, {
         method: 'POST',
         headers,
@@ -119,7 +121,7 @@ export class VelocityService {
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`[Velocity] Serviceability failed (${response.status}):`, errorText);
-        return { success: false, serviceable: false, error: `Velocity API error (${response.status})` };
+        return { success: false, serviceable: false, error: `Velocity API error (${response.status}): ${errorText}` };
       }
 
       const data = await response.json();
@@ -137,7 +139,8 @@ export class VelocityService {
       return { 
         success: true, 
         serviceable: !!isServiceable, 
-        carriers: data.carriers || data.data?.carriers || [] 
+        carriers: data.carriers || data.data?.carriers || [],
+        debug: data // Include full response for debugging
       };
     } catch (err: any) {
       console.error("[Velocity] Serviceability check failed:", err.message);
