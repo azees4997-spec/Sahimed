@@ -21,8 +21,8 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="sm:hidden fixed bottom-0 left-0 right-0 z-[150] bg-white/90 backdrop-blur-xl border-t border-slate-100 shadow-[0_-8px_40px_rgba(0,0,0,0.08)] safe-bottom pointer-events-auto rounded-t-[32px]">
-      <div className="flex justify-around items-center h-[5.5rem] px-6 relative">
+    <div className="sm:hidden fixed bottom-0 left-0 right-0 z-[150] bg-white border-t border-slate-100 shadow-[0_-8px_40px_rgba(0,0,0,0.08)] safe-bottom pointer-events-auto rounded-t-2xl">
+      <div className="flex justify-around items-center h-20 px-6 relative">
         {navItems.map((item) => {
           const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
           

@@ -30,6 +30,7 @@ class _MainLayoutState extends State<MainLayout> {
   ];
 
   void _onItemTapped(int index) {
+    context.read<NavigationProvider>().switchTab(index);
     setState(() {
       _currentIndex = index;
     });
@@ -42,7 +43,7 @@ class _MainLayoutState extends State<MainLayout> {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         if (_currentIndex != 0) {
-          setState(() => _currentIndex = 0);
+          context.read<NavigationProvider>().switchTab(0);
         }
       },
       child: Consumer2<CartProvider, NavigationProvider>(
@@ -58,22 +59,28 @@ class _MainLayoutState extends State<MainLayout> {
 
           return Scaffold(
             backgroundColor: SahimedColors.background,
-            body: Stack(
-              children: [
-                IndexedStack(
-                  index: _currentIndex,
-                  children: _screens,
-                ),
-
-                // Persistent Cart Summary
-                if (cartItemCount > 0 && _currentIndex != 2)
-                  Positioned(
-                    bottom: 110,
-                    left: 20,
-                    right: 20,
-                    child: _buildCartSummary(cart),
+            body: SafeArea(
+              top: false, 
+              bottom: false,
+              child: Stack(
+                children: [
+                  SafeArea(
+                    child: IndexedStack(
+                      index: _currentIndex,
+                      children: _screens,
+                    ),
                   ),
-              ],
+
+                  // Persistent Cart Summary
+                  if (cartItemCount > 0 && _currentIndex != 2)
+                    Positioned(
+                      bottom: 12, 
+                      left: 16,
+                      right: 16,
+                      child: _buildCartSummary(cart),
+                    ),
+                ],
+              ),
             ),
             bottomNavigationBar: _buildBottomNavigationBar(cartItemCount),
           );
@@ -94,7 +101,7 @@ class _MainLayoutState extends State<MainLayout> {
         );
       },
       child: GestureDetector(
-        onTap: () => setState(() => _currentIndex = 2),
+        onTap: () => context.read<NavigationProvider>().switchTab(2),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
@@ -121,7 +128,7 @@ class _MainLayoutState extends State<MainLayout> {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  LucideIcons.shoppingBag,
+                  LucideIcons.shoppingCart,
                   color: Colors.white,
                   size: 18,
                 ),
@@ -141,7 +148,7 @@ class _MainLayoutState extends State<MainLayout> {
                     ),
                   ),
                   Text(
-                    'VIEW BASKET',
+                    'VIEW CART',
                     style: GoogleFonts.outfit(
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
@@ -174,7 +181,6 @@ class _MainLayoutState extends State<MainLayout> {
 
   Widget _buildBottomNavigationBar(int cartItemCount) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.only(
@@ -189,19 +195,25 @@ class _MainLayoutState extends State<MainLayout> {
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(0, LucideIcons.house, 'Home'),
-          _buildNavItem(1, LucideIcons.search, 'Explore'),
-          _buildNavItem(
-            2,
-            LucideIcons.shoppingCart,
-            'Cart',
-            badge: cartItemCount,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(0, LucideIcons.house, 'Home'),
+              _buildNavItem(1, LucideIcons.search, 'Explore'),
+              _buildNavItem(
+                2,
+                LucideIcons.shoppingCart,
+                'Cart',
+                badge: cartItemCount,
+              ),
+              _buildNavItem(3, LucideIcons.user, 'Profile'),
+            ],
           ),
-          _buildNavItem(3, LucideIcons.user, 'Profile'),
-        ],
+        ),
       ),
     );
   }

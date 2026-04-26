@@ -64,10 +64,14 @@
     @apply border-border;
     -webkit-tap-highlight-color: transparent;
   }
-  body {
-    @apply bg-background text-foreground font-outfit antialiased;
-    font-size: 14px; /* Reduced base for mobile app density */
-  }
+html, body {
+  @apply overflow-x-hidden;
+}
+
+body {
+  @apply bg-background text-foreground font-outfit antialiased;
+  font-size: 14px; /* Reduced base for mobile app density */
+}
 }
 
 @layer components {

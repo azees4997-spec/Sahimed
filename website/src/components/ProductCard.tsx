@@ -138,7 +138,7 @@ export default function ProductCard({ product }: { product: Product }) {
               onClick={(e) => {
                 e.preventDefault();
                 addToCart({ ...product, price: currentPrice, mrp: currentMrp });
-                toast({ title: "Added to Basket" });
+                toast({ title: "Added to Cart" });
               }} 
               className="h-8 sm:h-12 w-full bg-primary text-white font-black text-[8px] sm:text-[11px] tracking-widest uppercase rounded-[14px] sm:rounded-[20px] shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-1.5 sm:gap-2 group/btn active:scale-95"
             >

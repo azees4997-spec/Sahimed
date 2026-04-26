@@ -161,6 +161,8 @@ export default function CheckoutPage() {
       setSelectedAddressId(defaultAddr.id);
       setOrderInfo(prev => ({
         ...prev,
+        patientName: defaultAddr.patientName || prev.patientName,
+        phoneNumber: (defaultAddr.phoneNumber || prev.phoneNumber || '').replace('+91', ''),
         houseNumber: defaultAddr.houseNumber || '',
         buildingLocality: defaultAddr.street,
         pincode: defaultAddr.pincode,
@@ -484,6 +486,8 @@ export default function CheckoutPage() {
                           setSelectedAddressId(addr.id);
                           setOrderInfo(prev => ({
                             ...prev,
+                            patientName: addr.patientName || prev.patientName,
+                            phoneNumber: (addr.phoneNumber || prev.phoneNumber || '').replace('+91', ''),
                             houseNumber: addr.houseNumber || '',
                             buildingLocality: addr.street,
                             pincode: addr.pincode,

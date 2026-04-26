@@ -14,6 +14,7 @@ import 'prescription_screen.dart';
 import '../../products/screens/product_detail_screen.dart';
 import '../../products/screens/category_products_screen.dart';
 import '../../products/widgets/product_card.dart';
+import '../widgets/home_header.dart';
 
 // ─── color tokens matching the website ──────────────────────────────────────
 const _lavender = Color(0xFFEDE9FE);
@@ -98,18 +99,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: _bgPage,
-      child: RefreshIndicator(
-        onRefresh: _load,
-        color: SahimedColors.primary,
-        child: ListView(
-          padding: const EdgeInsets.only(top: 0, bottom: 80),
-          children: [
-            // ── 1. Hero Section ─────────────────────────────────────────────
-            _buildHero(context),
-
-            const SizedBox(height: 28),
+    return Scaffold(
+      backgroundColor: _bgPage,
+      body: Column(
+        children: [
+          const HomeHeader(),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _load,
+              color: SahimedColors.primary,
+              child: ListView(
+                padding: const EdgeInsets.only(top: 0, bottom: 100),
+                children: [
+                  // ── 1. Hero Section ─────────────────────────────────────────────
+                  _buildHero(context),
 
             // ── 2. Most Popular Brands (3-col grid, best sellers) ───────────
             if (_isLoading || _bestSellers.isNotEmpty)
@@ -188,8 +191,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  ],
+),
+);
+}
 
   // ── Hero Section ─────────────────────────────────────────────────────────
   Widget _buildHero(BuildContext context) {

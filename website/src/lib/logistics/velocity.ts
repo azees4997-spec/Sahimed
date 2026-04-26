@@ -25,7 +25,8 @@ export interface VelocityOrder {
 }
 
 export class VelocityService {
-  private static API_URL = process.env.VELOCITY_API_URL || 'https://api.velocity.in'; // Replace with actual base URL if different
+  private static API_URL = process.env.VELOCITY_API_URL || 'https://api.velocity.in';
+  private static SERVICEABILITY_URL = process.env.VELOCITY_SERVICEABILITY_URL || 'https://shazam.velocity.in';
   private static USERNAME = process.env.VELOCITY_USERNAME || '+917349499898';
   private static PASSWORD = process.env.VELOCITY_PASSWORD || 'Azeez@497';
   
@@ -41,6 +42,7 @@ export class VelocityService {
     }
 
     try {
+      console.log(`[Velocity] Authenticating at ${this.API_URL}/custom/api/v1/auth-token`);
       const response = await fetch(`${this.API_URL}/custom/api/v1/auth-token`, {
         method: 'POST',
         headers: {
@@ -52,13 +54,26 @@ export class VelocityService {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Authentication failed: ${response.statusText}`);
+      const contentType = response.headers.get('content-type');
+      let data: any;
+
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        console.error(`[Velocity] Non-JSON response: ${text.substring(0, 200)}`);
+        throw new Error(`Authentication failed: Server returned ${response.status} ${response.statusText}. Expected JSON but got ${contentType || 'plain text'}`);
       }
 
-      const data = await response.json();
-      this.cachedToken = data.token; // Assuming response has a 'token' field
-      // Token is valid for 24 hours, let's cache it for 23 hours to be safe
+      if (!response.ok) {
+        throw new Error(`Authentication failed: ${data.message || data.error || response.statusText}`);
+      }
+
+      if (!data.token) {
+        throw new Error(`Authentication failed: No token received in response. Body: ${JSON.stringify(data)}`);
+      }
+
+      this.cachedToken = data.token;
       const expiry = new Date();
       expiry.setHours(expiry.getHours() + 23);
       this.tokenExpiry = expiry;
@@ -74,17 +89,17 @@ export class VelocityService {
     const token = await this.authenticate();
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `${token}`
     };
   }
 
   /**
    * Checks if a pincode is reachable and lists available carriers.
    */
-  static async checkServiceability(fromPincode: string, toPincode: string, paymentMode: string = 'PREPAID', shipmentType: string = 'forward') {
+  static async checkServiceability(fromPincode: string, toPincode: string, paymentMode: string = 'prepaid', shipmentType: string = 'forward') {
     try {
       const headers = await this.getHeaders();
-      const response = await fetch(`${this.API_URL}/custom/api/v1/serviceability`, {
+      const response = await fetch(`${this.SERVICEABILITY_URL}/custom/api/v1/serviceability`, {
         method: 'POST',
         headers,
         body: JSON.stringify({

@@ -79,6 +79,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   void _fillFormWithAddress(Map<String, dynamic> addr) {
+    _nameController.text = addr['name'] ?? addr['patientName'] ?? '';
     _houseController.text = addr['houseNumber'] ?? '';
     _streetController.text = addr['street'] ?? '';
     _cityController.text = addr['city'] ?? '';
@@ -86,6 +87,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _pincodeController.text = addr['pincode'] ?? '';
     _landmarkController.text = addr['landmark'] ?? '';
     _selectedTag = addr['tag'] ?? 'Home';
+    _phoneController.text = addr['phone'] ?? addr['phoneNumber'] ?? _phoneController.text;
   }
 
   Future<void> _pickImage() async {
@@ -186,6 +188,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
       final shippingDetails = _showAddressForm
           ? {
+              'name': _nameController.text,
+              'phone': _phoneController.text,
               'houseNumber': _houseController.text,
               'street': _streetController.text,
               'landmark': _landmarkController.text,
@@ -220,8 +224,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         items: cart.items,
         total: cart.finalTotal,
         shippingDetails: shippingDetails,
-        name: _nameController.text.isEmpty ? 'Customer' : _nameController.text,
-        phone: _phoneController.text.isEmpty ? 'N/A' : _phoneController.text,
+        name: _nameController.text.isNotEmpty 
+            ? _nameController.text 
+            : (shippingDetails['name'] ?? 'Sahimed User'),
+        phone: _phoneController.text.isNotEmpty 
+            ? _phoneController.text 
+            : (shippingDetails['phone'] ?? 'N/A'),
         billingBreakdown: billingBreakdown,
         prescriptions: prescriptions,
         isConsultationRequired: _isConsultationRequired,

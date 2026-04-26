@@ -82,7 +82,11 @@ class LocationService {
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
         
-        String? city = place.locality ?? place.subLocality ?? place.subAdministrativeArea;
+        // Prefer more specific names to avoid "Unknown City"
+        String? city = place.locality ?? 
+                      place.subLocality ?? 
+                      place.subAdministrativeArea ?? 
+                      place.name;
         String? state = place.administrativeArea;
         
         String address = '';
@@ -94,7 +98,7 @@ class LocationService {
           address += state;
         }
 
-        return address.isEmpty ? 'Unknown Location' : address;
+        return address.isEmpty ? 'Tap to set location' : address;
       }
     } catch (e) {
       debugPrint('Error getting location: $e');

@@ -225,7 +225,7 @@ class SahimedProductCard extends StatelessWidget {
                     ),
                     child: Center(
                       child: Text(
-                        qty > 0 ? 'ADDED ($qty)' : 'ADD TO BASKET',
+                        qty > 0 ? 'ADDED ($qty)' : 'ADD TO CART',
                         style: GoogleFonts.outfit(
                           fontSize: 8,
                           fontWeight: FontWeight.w900,

@@ -154,10 +154,11 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFFF8FAFC),
-      child: Column(
-        children: [
+    return SafeArea(
+      child: Container(
+        color: const Color(0xFFF8FAFC),
+        child: Column(
+          children: [
           _buildSearchHeader(),
           // Filter Chips (Website Parity)
           if (_results.isNotEmpty || _currentQuery.isNotEmpty)

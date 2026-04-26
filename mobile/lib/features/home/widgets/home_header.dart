@@ -34,166 +34,198 @@ class _HomeHeaderState extends State<HomeHeader> {
     }
   }
 
-  void _showLocationDialog() {
+  void _showLocationSheet() {
     final pincodeController = TextEditingController();
     bool isLoading = false;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              title: Text(
-                'Enter Pincode',
-                style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF0F172A),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateSheet) => Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            top: 12,
+            left: 20,
+            right: 20,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag Handle
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
+              const SizedBox(height: 24),
+              Row(
                 children: [
-                  TextField(
-                    controller: pincodeController,
-                    keyboardType: TextInputType.number,
-                    maxLength: 6,
-                    decoration: InputDecoration(
-                      hintText: 'e.g. 560001',
-                      filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      counterText: '',
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: SahimedColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2,
+                    child: const Icon(
+                      LucideIcons.mapPin,
+                      color: SahimedColors.primary,
+                      size: 20,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  if (isLoading)
-                    const CircularProgressIndicator()
-                  else
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              if (pincodeController.text.length == 6) {
-                                setStateDialog(() => isLoading = true);
-                                final isServiceable = await ApiService()
-                                    .checkServiceability(pincodeController.text);
-                                setStateDialog(() => isLoading = false);
-
-                                if (isServiceable) {
-                                  if (mounted) {
-                                    setState(() => _currentAddress =
-                                        'PIN: ${pincodeController.text}');
-                                    Navigator.pop(context);
-                                  }
-                                } else {
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'We currently do not deliver to ${pincodeController.text}.',
-                                          style: GoogleFonts.outfit(
-                                              fontWeight: FontWeight.w700),
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                }
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: SahimedColors.primary,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            child: Text(
-                              'CHECK',
-                              style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  const SizedBox(height: 16),
+                  const SizedBox(width: 16),
                   Text(
-                    'OR',
+                    'Service Delivery Area',
                     style: GoogleFonts.outfit(
-                      fontSize: 10,
+                      fontSize: 18,
                       fontWeight: FontWeight.w900,
-                      color: const Color(0xFF94A3B8),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton.icon(
-                    onPressed: () async {
-                      setStateDialog(() => isLoading = true);
-                      try {
-                        // Fetch the address
-                        final address = await _locationService.getCurrentAddress();
-                        
-                        if (mounted) {
-                          setState(() => _currentAddress = address);
-                          // Close the dialog immediately
-                          Navigator.pop(context);
-                          
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Location updated: $address'),
-                              behavior: SnackBarBehavior.floating,
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Could not fetch location')),
-                          );
-                        }
-                      } finally {
-                        if (mounted) {
-                          setStateDialog(() => isLoading = false);
-                        }
-                      }
-                    },
-                    icon: const Icon(LucideIcons.locateFixed, size: 16),
-                    label: Text(
-                      'USE CURRENT LOCATION',
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: SahimedColors.primary,
+                      color: const Color(0xFF0F172A),
                     ),
                   ),
                 ],
               ),
-            );
-          },
-        );
-      },
+              const SizedBox(height: 24),
+              
+              // Pincode Input
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFF1F5F9)),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: TextField(
+                  controller: pincodeController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  onChanged: (val) {
+                    if (val.length == 6) {
+                      _handlePincodeSubmit(val, setStateSheet);
+                    }
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Enter your 6-digit Pincode',
+                    hintStyle: GoogleFonts.outfit(
+                      color: const Color(0xFF94A3B8),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    counterText: '',
+                    border: InputBorder.none,
+                    suffixIcon: isLoading 
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : null,
+                  ),
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 4,
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              Text(
+                'OR',
+                style: GoogleFonts.outfit(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFFCBD5E1),
+                  letterSpacing: 1,
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Use Current Location Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: isLoading ? null : () => _handleAutoDetect(setStateSheet),
+                  icon: const Icon(LucideIcons.locateFixed, size: 18),
+                  label: Text(
+                    'DETECT MY LOCATION',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: SahimedColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'We need your location to show available items',
+                style: GoogleFonts.outfit(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
+  }
+
+  Future<void> _handlePincodeSubmit(String pincode, StateSetter setStateSheet) async {
+    setStateSheet(() => {}); // Refresh UI for loader
+    final isServiceable = await ApiService().checkServiceability(pincode);
+    
+    if (isServiceable) {
+      if (mounted) {
+        setState(() => _currentAddress = 'PIN: $pincode');
+        Navigator.pop(context);
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Delivery not available in $pincode yet.'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleAutoDetect(StateSetter setStateSheet) async {
+    setStateSheet(() => {}); // Refresh UI
+    try {
+      final address = await _locationService.getCurrentAddress();
+      if (mounted) {
+        setState(() => _currentAddress = address);
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to detect location')),
+        );
+      }
+    }
   }
 
   @override
@@ -273,7 +305,7 @@ class _HomeHeaderState extends State<HomeHeader> {
                 children: [
                   // Location Picker (Minimalist like web)
                   GestureDetector(
-                    onTap: _showLocationDialog,
+                    onTap: _showLocationSheet,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
