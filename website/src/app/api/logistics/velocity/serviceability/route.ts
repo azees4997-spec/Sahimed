@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     // Defaulting origin to the Bengaluru warehouse pincode.
     // The user has a Bengaluru warehouse, assuming common Bengaluru pincode if not provided.
-    const fromPincode = process.env.WAREHOUSE_PINCODE || '560043'; 
+    const fromPincode = process.env.WAREHOUSE_PINCODE || '560068'; 
     console.log(`[Velocity] Checking serviceability from ${fromPincode} to ${toPincode}`);
 
     const result = await VelocityService.checkServiceability(fromPincode, toPincode);
