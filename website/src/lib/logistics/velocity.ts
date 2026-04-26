@@ -123,17 +123,21 @@ export class VelocityService {
       }
 
       const data = await response.json();
+      console.log(`[Velocity] Serviceability data:`, data);
+      
       // Check multiple possible field names for serviceability
       const isServiceable = 
         data.is_serviceable === true || 
         data.serviceable === true || 
+        data.success === true ||
         data.status === 'success' ||
-        (data.carriers && Array.isArray(data.carriers) && data.carriers.length > 0);
+        (data.carriers && Array.isArray(data.carriers) && data.carriers.length > 0) ||
+        (data.data && data.data.carriers && data.data.carriers.length > 0);
 
       return { 
         success: true, 
         serviceable: !!isServiceable, 
-        carriers: data.carriers || [] 
+        carriers: data.carriers || data.data?.carriers || [] 
       };
     } catch (err: any) {
       console.error("[Velocity] Serviceability check failed:", err.message);
