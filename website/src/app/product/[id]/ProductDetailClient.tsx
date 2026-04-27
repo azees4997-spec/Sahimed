@@ -83,9 +83,12 @@ const ComparisonCard = ({
   const unitCount = (unitMatch && parseInt(unitMatch[1]) > 0) ? parseInt(unitMatch[1]) : 1;
   const unitPrice = pPrice / unitCount;
 
-  const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
-    ? product.imageUrl
-    : `https://picsum.photos/seed/${product.id || 'err'}/300/300`;
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const images = (product.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0)
+    ? product.imageUrls
+    : (product.imageUrl ? [product.imageUrl] : [`https://picsum.photos/seed/${product.id || 'err'}/300/300`]);
+
+  const currentImage = images[currentImageIndex] || images[0];
 
   return (
     <motion.div variants={scaleInVariant} className="h-full">
@@ -101,23 +104,42 @@ const ComparisonCard = ({
             )}
           </div>
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <div className="relative aspect-[3/2] w-full bg-white rounded-[20px] sm:rounded-[32px] flex items-center justify-center overflow-hidden border border-slate-50 shadow-inner group/img cursor-zoom-in">
-                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-2 sm:p-4 transition-transform duration-700 group-hover/img:scale-110" />
-                <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
-                  <Maximize2 className="w-4 h-4 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
+          <div className="space-y-3">
+            <Dialog>
+              <DialogTrigger asChild>
+                <div className="relative aspect-[3/2] w-full bg-white rounded-[20px] sm:rounded-[32px] flex items-center justify-center overflow-hidden border border-slate-50 shadow-inner group/img cursor-zoom-in">
+                  <Image src={currentImage} alt={product.name} fill className="object-contain p-2 sm:p-4 transition-transform duration-700 group-hover/img:scale-110" />
+                  <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
+                    <Maximize2 className="w-4 h-4 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                  </div>
                 </div>
+              </DialogTrigger>
+              <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-transparent shadow-none">
+                <DialogTitle className="sr-only">{product.name}</DialogTitle>
+                <DialogDescription className="sr-only">Visual representation of {product.name}</DialogDescription>
+                <div className="relative aspect-square w-full bg-white rounded-[40px] overflow-hidden p-8 flex items-center justify-center shadow-3xl border border-white/20">
+                  <Image src={currentImage} alt={product.name} fill className="object-contain p-10" />
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                {images.map((img: string, idx: number) => (
+                  <button 
+                    key={idx}
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={cn(
+                      "relative w-10 h-10 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-2 transition-all shrink-0 bg-white",
+                      currentImageIndex === idx ? "border-primary shadow-md scale-105" : "border-slate-100 hover:border-slate-200"
+                    )}
+                  >
+                    <Image src={img} alt={`Preview ${idx + 1}`} fill className="object-contain p-1" />
+                  </button>
+                ))}
               </div>
-            </DialogTrigger>
-            <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-transparent shadow-none">
-              <DialogTitle className="sr-only">{product.name}</DialogTitle>
-              <DialogDescription className="sr-only">Visual representation of {product.name}</DialogDescription>
-              <div className="relative aspect-square w-full bg-white rounded-[40px] overflow-hidden p-8 flex items-center justify-center shadow-3xl border border-white/20">
-                <Image src={safeImageUrl} alt={product.name} fill className="object-contain p-10" />
-              </div>
-            </DialogContent>
-          </Dialog>
+            )}
+          </div>
 
           <div className="space-y-0.5 sm:space-y-1">
             <h3 className="font-extrabold text-[10px] sm:text-lg text-slate-800 leading-tight line-clamp-2 min-h-[1.6rem] sm:min-h-[2.4rem] font-outfit uppercase">
