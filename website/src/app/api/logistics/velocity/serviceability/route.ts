@@ -22,11 +22,16 @@ export async function POST(req: NextRequest) {
     if (result.success) {
       return NextResponse.json({
         serviceable: result.serviceable,
-        carriers: result.carriers
+        carriers: result.carriers,
+        debug: result.debug
       });
     } else {
       return NextResponse.json(
-        { error: 'Failed to check serviceability', details: result.error },
+        { 
+          error: 'Failed to check serviceability', 
+          details: result.error,
+          debug: result.debug 
+        },
         { status: 500 }
       );
     }
