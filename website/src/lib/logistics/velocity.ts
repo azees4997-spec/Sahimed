@@ -107,7 +107,7 @@ export class VelocityService {
   static async checkServiceability(fromPincode: string, toPincode: string, paymentMode: string = 'cod', shipmentType: string = 'forward') {
     try {
       const headers = await this.getHeaders();
-      const url = `${this.AUTH_URL}/custom/api/v1/serviceability`;
+      const url = `${this.API_URL}/custom/api/v1/serviceability`;
       console.log(`[Velocity] POST ${url}`);
       
       const response = await fetch(url, {
