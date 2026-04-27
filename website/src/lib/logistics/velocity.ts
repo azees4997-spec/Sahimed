@@ -162,16 +162,46 @@ export class VelocityService {
       const headers = await this.getHeaders();
       const payload = {
         order_id: order.orderId,
+        order_date: new Date().toISOString().split('T')[0],
+        pickup_location: order.warehouseId || 'Primary',
         billing_customer_name: order.billingCustomerName,
-        order_items: order.orderItems,
-        warehouse_id: order.warehouseId,
+        billing_last_name: "",
+        billing_address: order.shippingDetails.address,
+        billing_city: order.shippingDetails.city,
+        billing_pincode: order.shippingDetails.pincode,
+        billing_state: order.shippingDetails.state,
+        billing_country: "India",
+        billing_email: "support@sahimed.com",
+        billing_phone: order.shippingDetails.phone,
+        shipping_is_billing: true,
+        shipping_customer_name: order.billingCustomerName,
+        shipping_last_name: "",
         shipping_address: order.shippingDetails.address,
         shipping_city: order.shippingDetails.city,
-        shipping_state: order.shippingDetails.state,
         shipping_pincode: order.shippingDetails.pincode,
+        shipping_country: "India",
+        shipping_state: order.shippingDetails.state,
+        shipping_email: "support@sahimed.com",
         shipping_phone: order.shippingDetails.phone,
-        total_amount: order.totalAmount,
-        payment_mode: order.paymentMode
+        order_items: order.orderItems.map(item => ({
+          name: item.name,
+          sku: item.sku || item.name,
+          units: item.quantity,
+          selling_price: item.price,
+          discount: 0,
+          tax: 0,
+          hsn: ""
+        })),
+        payment_method: order.paymentMode === 'COD' ? 'COD' : 'Prepaid',
+        shipping_charges: 0,
+        giftwrap_charges: 0,
+        transaction_id: "",
+        total_discount: 0,
+        sub_total: order.totalAmount,
+        length: 10,
+        breadth: 10,
+        height: 10,
+        weight: 0.5
       };
       
       console.log(`[Velocity] Creating forward order:`, JSON.stringify(payload, null, 2));

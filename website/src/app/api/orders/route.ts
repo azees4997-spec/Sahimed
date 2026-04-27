@@ -200,7 +200,7 @@ export async function PUT(req: Request) {
               price: Number(it.unitPrice),
               sku: it.productId || it.name
             })),
-            warehouseId: 'default', // should use actual warehouse id
+            warehouseId: 'Primary', 
             shippingDetails: {
               address: `${currentOrder.shippingDetails?.houseNumber || ''}, ${currentOrder.shippingDetails?.street || ''}`,
               city: currentOrder.shippingDetails?.city || '',

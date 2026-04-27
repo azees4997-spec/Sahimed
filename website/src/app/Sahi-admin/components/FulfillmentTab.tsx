@@ -336,21 +336,16 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                  <h3 className="text-sm font-black">Finalize status: {statusUpdateTarget}</h3>
                  {(statusUpdateTarget === 'Shipped' || statusUpdateTarget === 'Returned') && (
                      <div className="space-y-4">
-                       <Select onValueChange={v => setShippingInfo({...shippingInfo, partner: v})}>
-                         <SelectTrigger className="rounded-2xl h-14 bg-gray-50 border-none font-bold"><SelectValue placeholder="Select partner" /></SelectTrigger>
-                         <SelectContent>
-                           <SelectItem value="Velocity">Velocity Shipping (Automated)</SelectItem>
-                           <SelectItem value="Delhivery">Delhivery</SelectItem>
-                           <SelectItem value="BlueDart">BlueDart</SelectItem>
-                           <SelectItem value="Post">India Post</SelectItem>
-                         </SelectContent>
-                       </Select>
-                       <Input placeholder="AWB / Tracking Number (Optional for Auto)" value={shippingInfo.awb} onChange={e => setShippingInfo({...shippingInfo, awb: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
-                       {shippingInfo.partner === 'Velocity' && (
-                         <p className="text-[9px] font-black text-primary uppercase tracking-widest pl-2">
-                           ✨ Auto-fulfillment enabled for {shippingInfo.partner}
+                       <div className="p-6 bg-primary/5 border-2 border-primary/20 rounded-2xl">
+                         <p className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                           <Package className="w-4 h-4" />
+                           Velocity Shipping (Default Partner)
                          </p>
-                       )}
+                         <p className="text-[9px] font-bold text-primary/60 mt-1 uppercase tracking-widest">
+                           Automated AWB orchestration will trigger on confirmation
+                         </p>
+                       </div>
+                       <Input placeholder="Manual AWB (Optional)" value={shippingInfo.awb} onChange={e => setShippingInfo({...shippingInfo, awb: e.target.value, partner: 'Velocity'})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
                      </div>
                  )}
                  {statusUpdateTarget === 'Cancelled' && (
