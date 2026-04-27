@@ -128,7 +128,7 @@ export class VelocityService {
         return { 
           success: false, 
           serviceable: false, 
-          error: `Non-JSON response (${response.status}) at ${url}: ${errorText.substring(0, 50)}...` 
+          error: `[VER-DEBUG-1] Non-JSON response (${response.status}) at ${url}: ${errorText.substring(0, 50)}...` 
         };
       }
 
