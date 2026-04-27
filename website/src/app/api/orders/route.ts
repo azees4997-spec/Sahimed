@@ -212,18 +212,32 @@ export async function PUT(req: Request) {
             paymentMode: 'PREPAID'
           });
           
-          if (velocityRes.success && velocityRes.data?.awb_number) {
-            // Update order with AWB and label
-            await db.collection('orders').updateOne(
-              { _id: new ObjectId(id) },
-              { $set: { 
-                  'shipping.awb': velocityRes.data.awb_number, 
-                  'shipping.labelUrl': velocityRes.data.label_url || velocityRes.data.manifest_url,
-                  'shipping.courier': velocityRes.data.courier_name
-                } 
-              }
-            );
-            console.log(`[Velocity Automation] Order ${currentOrder.orderId} manifested successfully. AWB: ${velocityRes.data.awb_number}`);
+          if (velocityRes.success) {
+            console.log(`[Velocity] Order creation success:`, JSON.stringify(velocityRes.data, null, 2));
+            
+            // Extract data from possible nested 'result' object
+            const vData = velocityRes.data.result || velocityRes.data;
+            const awb = vData.awb_number || vData.awb;
+            const label = vData.label_url || vData.manifest_url || vData.label;
+            const courier = vData.courier_name || vData.courier;
+
+            if (awb) {
+              // Update order with AWB and label
+              await db.collection('orders').updateOne(
+                { _id: new ObjectId(id) },
+                { $set: { 
+                    'shipping.awb': awb, 
+                    'shipping.labelUrl': label,
+                    'shipping.courier': courier
+                  } 
+                }
+              );
+              console.log(`[Velocity Automation] Order ${currentOrder.orderId} manifested successfully. AWB: ${awb}`);
+            } else {
+              console.warn(`[Velocity Automation] Success response but no AWB found for order ${currentOrder.orderId}`);
+            }
+          } else {
+            console.error(`[Velocity Automation] Failed for order ${currentOrder.orderId}:`, velocityRes.error || velocityRes.data);
           }
         }
       } catch (velocityErr: any) {

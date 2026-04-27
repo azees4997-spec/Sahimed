@@ -160,22 +160,30 @@ export class VelocityService {
   static async createForwardOrder(order: VelocityOrder) {
     try {
       const headers = await this.getHeaders();
+      const payload = {
+        order_id: order.orderId,
+        billing_customer_name: order.billingCustomerName,
+        order_items: order.orderItems,
+        warehouse_id: order.warehouseId,
+        shipping_address: order.shippingDetails.address,
+        shipping_city: order.shippingDetails.city,
+        shipping_state: order.shippingDetails.state,
+        shipping_pincode: order.shippingDetails.pincode,
+        shipping_phone: order.shippingDetails.phone,
+        total_amount: order.totalAmount,
+        payment_mode: order.paymentMode
+      };
+      
+      console.log(`[Velocity] Creating forward order:`, JSON.stringify(payload, null, 2));
+
       const response = await fetch(`${this.API_URL}/custom/api/v1/forward-order-orchestration`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          order_id: order.orderId,
-          billing_customer_name: order.billingCustomerName,
-          order_items: order.orderItems,
-          warehouse_id: order.warehouseId,
-          // Sending additional fields that might be required
-          shipping_address: order.shippingDetails,
-          total_amount: order.totalAmount,
-          payment_mode: order.paymentMode
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
+      console.log(`[Velocity] Create order response (${response.status}):`, JSON.stringify(data, null, 2));
       return { success: response.ok, data };
     } catch (err: any) {
       console.error("[Velocity] Create forward order failed:", err.message);
