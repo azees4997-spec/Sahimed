@@ -116,24 +116,24 @@ export default function HomeClient({ banners, categories, bestSellers, medicines
           <h2 className="text-base sm:text-lg font-black text-primary tracking-tighter uppercase font-outfit">Top Categories</h2>
           <Link href="/categories" className="text-[8px] sm:text-[10px] font-black tracking-widest text-primary uppercase flex items-center gap-1">Explore All <ChevronRight className="w-3 h-3" /></Link>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 sm:gap-12 md:gap-16 lg:gap-20 pb-2 sm:pb-4 px-1 sm:px-2 max-w-6xl mx-auto">
+        <div className="grid grid-cols-3 sm:flex sm:overflow-x-auto sm:scrollbar-hide gap-3 sm:gap-6 pb-2 sm:pb-4 px-1 sm:px-2 max-w-full">
           {categories.slice(0, 12).map((cat: any, i: number) => (
-            <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-2 sm:gap-4 group/cat shrink-0">
+            <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-1.5 sm:gap-2 group/cat shrink-0 sm:w-24">
               <div 
                 className={cn(
-                  "w-20 h-20 sm:w-44 sm:h-44 rounded-full flex items-center justify-center border-4 border-white shadow-xl overflow-hidden p-0 transition-all duration-300 group-hover/cat:-translate-y-2",
+                  "w-20 h-20 sm:w-20 sm:h-20 rounded-full flex items-center justify-center border-4 border-white shadow-xl overflow-hidden p-0 transition-all duration-300 group-hover/cat:-translate-y-1",
                   i % 4 === 0 ? "bg-lavender" : i % 4 === 1 ? "bg-sahi-pink" : i % 4 === 2 ? "bg-sahi-blue" : "bg-sahi-green"
                 )}>
                 <Image 
-                  src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/300/300`} 
+                  src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} 
                   alt={cat.name} 
-                  width={200} 
-                  height={200} 
+                  width={120} 
+                  height={120} 
                   className="object-cover w-full h-full transition-transform duration-700 group-hover/cat:scale-110" 
                   loading="lazy"
                 />
               </div>
-              <span className="text-[9px] sm:text-sm font-black text-slate-800 tracking-tight uppercase text-center line-clamp-2 h-10 px-1">{cat.name}</span>
+              <span className="text-[9px] sm:text-[10px] font-black text-slate-700 tracking-tight uppercase text-center line-clamp-1 h-4 px-1">{cat.name}</span>
             </Link>
           ))}
         </div>
