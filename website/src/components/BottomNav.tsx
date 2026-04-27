@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, LayoutGrid, ClipboardList, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -31,16 +30,18 @@ export default function BottomNav() {
               key={item.path} 
               href={item.path} 
               className={cn(
-                "flex-1 flex flex-col items-center justify-center gap-1.5 transition-all duration-500 relative z-10",
+                "flex-1 flex flex-col items-center justify-center gap-1.5 transition-all duration-300 relative z-10",
                 isActive ? "text-primary" : "text-slate-400"
               )}
             >
-              <motion.div
-                animate={isActive ? { scale: 1.2, y: -2 } : { scale: 1, y: 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              <div
+                className={cn(
+                  "transition-all duration-300",
+                  isActive ? "scale-110 -translate-y-0.5" : "scale-100 translate-y-0"
+                )}
               >
                 <item.icon className={cn("w-6 h-6", isActive ? "stroke-[2.5px]" : "stroke-[2px]")} />
-              </motion.div>
+              </div>
               
               <span className={cn(
                 "text-[9px] uppercase tracking-[0.15em] font-black leading-none transition-all duration-300",
@@ -50,10 +51,8 @@ export default function BottomNav() {
               </span>
 
               {isActive && (
-                <motion.div 
-                  layoutId="bottom-nav-indicator"
-                  className="absolute -top-2 w-12 h-1 bg-primary rounded-full"
-                  transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                <div 
+                  className="absolute -top-2 w-12 h-1 bg-primary rounded-full transition-all duration-300"
                 />
               )}
             </Link>

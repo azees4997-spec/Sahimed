@@ -8,13 +8,12 @@ import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Badge } from "@/components/ui/badge";
-import { hoverVariant, springTransition, tapVariant } from '@/lib/animations';
+import { tapVariant } from '@/lib/animations';
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
   const { toast } = useToast();
   
-  // 1. Performance Fix: Use pre-fetched moleculeData from the server-side join (no more client-side waterfall)
   const molData = (product as any).moleculeData;
   const moleculeName = molData?.molecule || product.saltComposition || (product as any).composition || (product as any).salt || (product as any).moleculeName || (product as any).molecule;
 
@@ -33,13 +32,8 @@ export default function ProductCard({ product }: { product: Product }) {
     : `https://picsum.photos/seed/${product.id}/300/300`;
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.98, y: 10 }}
-      whileInView={{ opacity: 1, scale: 1, y: 0 }}
-      viewport={{ once: true }}
-      whileHover={hoverVariant}
-      transition={springTransition}
-      className="pharma-card flex flex-col h-full group relative p-3 sm:p-5 bg-white border border-slate-100/60 rounded-[24px] sm:rounded-[32px] gap-2 sm:gap-0 shadow-sm hover:shadow-2xl transition-all duration-500"
+    <div 
+      className="pharma-card flex flex-col h-full group relative p-3 sm:p-5 bg-white border border-slate-100/60 rounded-[24px] sm:rounded-[32px] gap-2 sm:gap-0 shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
     >
       {savingsPct > 0 && (
         <div className="absolute top-3 left-3 sm:top-5 sm:left-5 z-20">
@@ -55,13 +49,13 @@ export default function ProductCard({ product }: { product: Product }) {
             src={safeImageUrl} 
             alt={product.name} 
             fill 
-            sizes="(max-width: 768px) 40vw, 20vw"
+            sizes="(max-width: 768px) 140px, 280px"
+            loading="lazy"
             className="object-contain p-0.5 sm:p-1.5 transition-transform duration-700 group-hover:scale-110" 
           />
         </div>
  
           <div className="space-y-1 sm:space-y-1.5 flex-1 px-1 min-w-0">
-            {/* Slot 1: Generic Badge Slot (Fixed Height) */}
             <div className="h-4 sm:h-6 mb-1.5">
               {product.isGeneric && (
                 <p className="text-[7px] sm:text-[9px] font-black text-emerald-600 uppercase tracking-[0.2em] bg-emerald-50 px-2 py-0.5 rounded-full w-fit">
@@ -70,12 +64,10 @@ export default function ProductCard({ product }: { product: Product }) {
               )}
             </div>
             
-            {/* Slot 2: Title Slot (Fixed 2 lines) */}
             <h3 className="font-extrabold text-black text-[12px] sm:text-[18px] leading-[1.2] line-clamp-2 min-h-[30px] sm:min-h-[44px] font-outfit uppercase tracking-tight group-hover:text-primary transition-colors">
               {product.name}
             </h3>
 
-            {/* Slot 3: Molecule Slot (Fixed height) */}
             <div className="h-3 sm:h-4">
               {moleculeName && (
                 <p className="text-[8px] sm:text-[12px] font-bold text-blue-600 uppercase tracking-tight line-clamp-1 leading-none opacity-90">
@@ -148,6 +140,6 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    </div>
   );
 }
