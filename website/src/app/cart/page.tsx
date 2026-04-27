@@ -123,7 +123,7 @@ export default function CartPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
+      <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-64 lg:pb-32">
         <Navbar />
         <main className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
           <motion.h1 
