@@ -186,6 +186,8 @@ export async function PUT(req: Request) {
 
     const currentOrder = await db.collection('orders').findOne({ _id: new ObjectId(id) });
 
+    let velocityStatus = null;
+
     // VELOCITY AUTOMATION: Trigger when partner is Velocity
     if ((updates.status === 'Confirmed' || updates.status === 'Shipped') && (updates.shipping?.partner === 'Velocity' || currentOrder?.shipping?.partner === 'Velocity')) {
       console.log(`[Velocity Automation] Block entered for order ${id}. Status: ${updates.status}`);
@@ -213,6 +215,8 @@ export async function PUT(req: Request) {
             paymentMode: 'PREPAID'
           });
           
+          velocityStatus = velocityRes;
+
           if (velocityRes.success) {
             console.log(`[Velocity] Order creation success:`, JSON.stringify(velocityRes.data, null, 2));
             
@@ -243,6 +247,7 @@ export async function PUT(req: Request) {
         }
       } catch (velocityErr: any) {
         console.error(`[Velocity Automation Error] Failed to manifest order ${id}:`, velocityErr.message);
+        velocityStatus = { success: false, error: velocityErr.message };
       }
     }
 
@@ -311,7 +316,11 @@ export async function PUT(req: Request) {
       console.error(`[Firebase Sync Error] Failed to sync order ${id}:`, fsErr.message);
     }
     
-    return NextResponse.json({ success: true, modifiedCount: result.modifiedCount });
+    return NextResponse.json({ 
+      success: true, 
+      modifiedCount: result.modifiedCount,
+      velocity: velocityStatus 
+    });
   } catch (err: any) {
     console.error("[Orders API Error]", err);
     const status = err.message?.includes('Unauthorized') || err.message?.includes('Forbidden') ? 401 : 500;
