@@ -109,7 +109,7 @@ export class VelocityService {
       const headers = await this.getHeaders();
       console.log(`[Velocity] Checking serviceability with headers:`, { ...headers, Authorization: 'REDACTED' });
       
-      const response = await fetch(`${this.SERVICEABILITY_URL}/custom/api/v1/forward-order-serviceability`, {
+      const response = await fetch(`${this.AUTH_URL}/custom/api/v1/serviceability`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
