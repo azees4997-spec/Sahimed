@@ -206,27 +206,48 @@ export class VelocityService {
         weight: 0.5
       };
       
-      console.log(`[Velocity] Creating forward order:`, JSON.stringify(payload, null, 2));
-
-      const response = await fetch(`${this.API_URL}/custom/api/v1/forward-order-orchestration`, {
+      // STEP 1: Create Forward Order
+      console.log(`[Velocity] Step 1: Creating forward order...`);
+      const orderResponse = await fetch(`${this.API_URL}/custom/api/v1/forward-order`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
       });
 
-      const contentType = response.headers.get('content-type');
-      let data: any;
+      const orderData = await orderResponse.json();
+      console.log(`[Velocity] Step 1 Response:`, JSON.stringify(orderData, null, 2));
 
-      if (contentType && contentType.includes('application/json')) {
-        data = await response.json();
-      } else {
-        const errorText = await response.text();
-        console.error(`[Velocity] Create order failed. Server returned non-JSON response:`, errorText.substring(0, 200));
-        return { success: false, error: `Server returned ${response.status}. Expected JSON, got: ${errorText.substring(0, 50)}...` };
+      if (!orderResponse.ok || !orderData.shipment_id) {
+        return { 
+          success: false, 
+          error: `Step 1 Failed: ${orderData.message || orderData.error || 'No shipment_id returned'}` 
+        };
       }
 
-      console.log(`[Velocity] Create order response (${response.status}):`, JSON.stringify(data, null, 2));
-      return { success: response.ok, data };
+      const shipmentId = orderData.shipment_id;
+
+      // STEP 2: Assign Courier (Shipment)
+      console.log(`[Velocity] Step 2: Assigning courier for shipment ${shipmentId}...`);
+      const shipmentResponse = await fetch(`${this.API_URL}/custom/api/v1/forward-order-shipment`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          shipment_id: shipmentId
+        }),
+      });
+
+      const shipmentData = await shipmentResponse.json();
+      console.log(`[Velocity] Step 2 Response:`, JSON.stringify(shipmentData, null, 2));
+
+      if (!shipmentResponse.ok) {
+        return { 
+          success: false, 
+          error: `Step 2 Failed: ${shipmentData.message || shipmentData.error || shipmentResponse.statusText}`,
+          data: { shipment_id: shipmentId, ...shipmentData }
+        };
+      }
+
+      return { success: true, data: shipmentData };
     } catch (err: any) {
       console.error("[Velocity] Create forward order failed:", err.message);
       return { success: false, error: err.message };
