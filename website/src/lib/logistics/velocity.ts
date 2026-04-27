@@ -45,9 +45,11 @@ export class VelocityService {
       return await this.performAuth(this.API_URL);
     } catch (err) {
       console.warn("[Velocity] Auth on API_URL failed, trying SERVICEABILITY_URL...");
+      this.cachedToken = null; // Clear cache on failure
       try {
         return await this.performAuth(this.SERVICEABILITY_URL);
       } catch (err2) {
+        this.cachedToken = null;
         throw err; // Throw the original error if both fail
       }
     }

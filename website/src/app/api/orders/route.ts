@@ -187,7 +187,8 @@ export async function PUT(req: Request) {
     const currentOrder = await db.collection('orders').findOne({ _id: new ObjectId(id) });
 
     // VELOCITY AUTOMATION: Trigger when partner is Velocity
-    if ((updates.status === 'Confirmed' || updates.status === 'Shipped') && (updates.shipping?.partner === 'Velocity' || currentOrder?.shipping?.partner === 'Velocity') && result.modifiedCount > 0) {
+    if ((updates.status === 'Confirmed' || updates.status === 'Shipped') && (updates.shipping?.partner === 'Velocity' || currentOrder?.shipping?.partner === 'Velocity')) {
+      console.log(`[Velocity Automation] Block entered for order ${id}. Status: ${updates.status}`);
       try {
         if (currentOrder && !currentOrder.shipping?.awb) { // Double check no AWB exists to prevent duplicates
           const { VelocityService } = await import('@/lib/logistics/velocity');
