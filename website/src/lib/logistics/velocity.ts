@@ -133,6 +133,7 @@ export class VelocityService {
         data.serviceable === true || 
         data.success === true ||
         data.status === 'success' ||
+        data.status === 'ok' ||
         (data.carriers && Array.isArray(data.carriers) && data.carriers.length > 0) ||
         (data.data && data.data.carriers && data.data.carriers.length > 0);
 
@@ -140,7 +141,7 @@ export class VelocityService {
         success: true, 
         serviceable: !!isServiceable, 
         carriers: data.carriers || data.data?.carriers || [],
-        debug: data // Include full response for debugging
+        debug: data 
       };
     } catch (err: any) {
       console.error("[Velocity] Serviceability check failed:", err.message);
