@@ -25,7 +25,7 @@ export interface VelocityOrder {
 }
 
 export class VelocityService {
-  private static API_URL = process.env.VELOCITY_API_URL || 'https://api.velocity.in';
+  private static API_URL = process.env.VELOCITY_API_URL || 'https://shazam.velocity.in';
   private static SERVICEABILITY_URL = process.env.VELOCITY_SERVICEABILITY_URL || 'https://shazam.velocity.in';
   private static USERNAME = process.env.VELOCITY_USERNAME || '+917349499898';
   private static PASSWORD = process.env.VELOCITY_PASSWORD || 'Azeez@497';
@@ -214,7 +214,17 @@ export class VelocityService {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get('content-type');
+      let data: any;
+
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const errorText = await response.text();
+        console.error(`[Velocity] Create order failed. Server returned non-JSON response:`, errorText.substring(0, 200));
+        return { success: false, error: `Server returned ${response.status}. Expected JSON, got: ${errorText.substring(0, 50)}...` };
+      }
+
       console.log(`[Velocity] Create order response (${response.status}):`, JSON.stringify(data, null, 2));
       return { success: response.ok, data };
     } catch (err: any) {
