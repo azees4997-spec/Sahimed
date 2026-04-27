@@ -360,17 +360,14 @@ export default function Navbar() {
 
   return (
     <>
-      <motion.nav 
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.1 }}
+      <nav 
         className={cn(
-          "sticky top-0 z-[100] transition-all duration-500",
+          "sticky top-0 z-[100] transition-all duration-300 w-full",
           scrolled 
-            ? "bg-white shadow-xl border-b border-slate-100" 
+            ? "bg-white/95 backdrop-blur-md shadow-lg border-b border-slate-100 py-1 sm:py-2" 
             : isHome 
-              ? "bg-transparent border-b border-transparent" 
-              : "bg-white/40 backdrop-blur-md border-b border-transparent"
+              ? "bg-transparent py-2 sm:py-4" 
+              : "bg-white/80 backdrop-blur-md border-b border-slate-100/50 py-2 sm:py-4"
         )}
       >
         <div className="max-w-7xl mx-auto px-4 py-2 sm:py-4">
@@ -628,7 +625,7 @@ export default function Navbar() {
             </AnimatePresence>
           </div>
         </div>
-      </motion.nav>
+      </nav>
 
       {/* Mobile Search Overlay */}
       <AnimatePresence>
