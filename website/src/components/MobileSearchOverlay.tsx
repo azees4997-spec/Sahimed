@@ -289,7 +289,7 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Top Categories</h3>
                 <button onClick={() => { router.push('/categories'); onClose(); }} className="text-[9px] font-black text-primary uppercase tracking-widest">See All</button>
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-9 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
                 {categories.map((cat) => (
                   <button 
                     key={cat.id}
@@ -297,17 +297,20 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
                       router.push(`/search?c=${encodeURIComponent(cat.name)}`);
                       onClose();
                     }}
-                    className="flex flex-col items-center gap-3 p-4 bg-white border border-slate-100 rounded-3xl hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5 transition-all group"
+                    className="flex flex-col gap-2 p-2 bg-white border border-slate-100 rounded-[20px] hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5 transition-all group overflow-hidden"
                   >
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 relative group-hover:scale-110 transition-transform duration-500">
+                    <div className="w-full aspect-[4/3] relative rounded-[14px] overflow-hidden">
                       <Image 
-                        src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/100/100`} 
+                        src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/150`} 
                         alt={cat.name} 
                         fill 
-                        className="object-contain" 
+                        className="object-cover transition-transform duration-700 group-hover:scale-110" 
                       />
+                      <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
                     </div>
-                    <span className="text-[9px] sm:text-[10px] font-black text-slate-600 uppercase tracking-tight text-center leading-tight">{cat.name}</span>
+                    <div className="px-1 pb-1">
+                      <span className="text-[9px] sm:text-[10px] font-black text-slate-700 uppercase tracking-tight text-center block truncate leading-tight">{cat.name}</span>
+                    </div>
                   </button>
                 ))}
               </div>
