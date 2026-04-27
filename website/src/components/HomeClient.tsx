@@ -116,7 +116,7 @@ export default function HomeClient({ banners, categories, bestSellers, medicines
           <h2 className="text-base sm:text-lg font-black text-primary tracking-tighter uppercase font-outfit">Top Categories</h2>
           <Link href="/categories" className="text-[8px] sm:text-[10px] font-black tracking-widest text-primary uppercase flex items-center gap-1">Explore All <ChevronRight className="w-3 h-3" /></Link>
         </div>
-        <div className="grid grid-cols-4 sm:grid-cols-4 gap-4 sm:gap-12 md:gap-16 lg:gap-20 pb-2 sm:pb-4 px-1 sm:px-2 max-w-6xl mx-auto">
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 sm:gap-12 md:gap-16 lg:gap-20 pb-2 sm:pb-4 px-1 sm:px-2 max-w-6xl mx-auto">
           {categories.slice(0, 12).map((cat: any, i: number) => (
             <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-2 sm:gap-4 group/cat shrink-0">
               <div 
