@@ -15,7 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, getDoc, doc } from 'firebase/firestore';
-import MobileSearchOverlay from './MobileSearchOverlay';
+import dynamic from 'next/dynamic';
+const MobileSearchOverlay = dynamic(() => import('./MobileSearchOverlay'), { ssr: false });
 import { usePathname } from 'next/navigation';
 import { Product } from '@/types';
 
