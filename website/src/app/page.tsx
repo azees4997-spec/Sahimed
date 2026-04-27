@@ -7,11 +7,18 @@ import { cn } from '@/lib/utils';
 import PageTransition from '@/components/PageTransition';
 import HomeClient from '@/components/HomeClient';
 import clientPromise from '@/lib/mongodb';
+import HeroSearch from '@/components/HeroSearch';
 import { getDbAdmin } from '@/lib/firebase-admin';
 
 export const revalidate = 60; // Revalidate every minute
 
 async function getBanners() {
+  // Check if Firebase Admin env vars are present to avoid build-time errors
+  if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
+    console.warn("Firebase Admin Configuration Missing: Skipping banner fetch during build.");
+    return [];
+  }
+
   try {
     const db = getDbAdmin();
     const snapshot = await db.collection('banners')
@@ -114,21 +121,7 @@ export default async function Home() {
               </div>
  
               <div className="w-full max-w-2xl mx-auto">
-                <button 
-                  onClick={() => window.dispatchEvent(new CustomEvent('open-mobile-search'))}
-                  className="block w-full group"
-                >
-                  <div 
-                    className="w-full bg-white text-slate-900 rounded-full p-0.5 sm:p-1 shadow-xl shadow-slate-200/50 flex items-center border border-slate-100 cursor-pointer hover:scale-[1.01] active:scale-95 transition-all"
-                  >
-                    <div className="flex-1 px-4 sm:px-5 text-left text-[10px] sm:text-[13px] font-bold uppercase tracking-[0.1em] text-slate-400">
-                      Search Medicines...
-                    </div>
-                    <div className="bg-primary p-2 sm:p-3 rounded-full shadow-lg shadow-primary/20">
-                      <Search className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-white" />
-                    </div>
-                  </div>
-                </button>
+                <HeroSearch />
               </div>
  
               <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-3xl mx-auto w-full">
