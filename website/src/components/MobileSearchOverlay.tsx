@@ -289,7 +289,7 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Top Categories</h3>
                 <button onClick={() => { router.push('/categories'); onClose(); }} className="text-[9px] font-black text-primary uppercase tracking-widest">See All</button>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-9 gap-3">
                 {categories.map((cat) => (
                   <button 
                     key={cat.id}
@@ -297,12 +297,17 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
                       router.push(`/search?c=${encodeURIComponent(cat.name)}`);
                       onClose();
                     }}
-                    className="flex flex-col items-center gap-2 p-3 bg-white border border-slate-100 rounded-2xl hover:border-primary/20 transition-all group"
+                    className="flex flex-col items-center gap-3 p-4 bg-white border border-slate-100 rounded-3xl hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5 transition-all group"
                   >
-                    <div className="w-10 h-10 relative opacity-60 group-hover:opacity-100 transition-opacity">
-                      <Image src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/100/100`} alt={cat.name} fill className="object-contain" />
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 relative group-hover:scale-110 transition-transform duration-500">
+                      <Image 
+                        src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/100/100`} 
+                        alt={cat.name} 
+                        fill 
+                        className="object-contain" 
+                      />
                     </div>
-                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-tighter text-center line-clamp-1">{cat.name}</span>
+                    <span className="text-[9px] sm:text-[10px] font-black text-slate-600 uppercase tracking-tight text-center leading-tight">{cat.name}</span>
                   </button>
                 ))}
               </div>
