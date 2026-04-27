@@ -87,7 +87,7 @@ export default function CategoriesPage() {
             variants={containerVariants}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-8"
+            className="grid grid-cols-3 sm:grid-cols-4 gap-4 sm:gap-12 md:gap-16 lg:gap-20 max-w-6xl mx-auto"
           >
             {isLoading ? (
               // Skeleton Grid
