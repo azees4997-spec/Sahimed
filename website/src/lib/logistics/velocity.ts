@@ -127,20 +127,25 @@ export class VelocityService {
       const data = await response.json();
       console.log(`[Velocity] Serviceability data:`, data);
       
+      // Velocity Shazam API specific: result.serviceability_results
+      const velocityCarriers = data.serviceability_results || data.result?.serviceability_results || [];
+
       // Check multiple possible field names for serviceability
       const isServiceable = 
         data.is_serviceable === true || 
         data.serviceable === true || 
         data.success === true ||
+        data.status === 'SUCCESS' ||
         data.status === 'success' ||
         data.status === 'ok' ||
+        (velocityCarriers && Array.isArray(velocityCarriers) && velocityCarriers.length > 0) ||
         (data.carriers && Array.isArray(data.carriers) && data.carriers.length > 0) ||
         (data.data && data.data.carriers && data.data.carriers.length > 0);
 
       return { 
         success: true, 
         serviceable: !!isServiceable, 
-        carriers: data.carriers || data.data?.carriers || [],
+        carriers: velocityCarriers.length > 0 ? velocityCarriers : (data.carriers || data.data?.carriers || []),
         debug: data 
       };
     } catch (err: any) {
