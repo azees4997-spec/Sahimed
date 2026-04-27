@@ -107,9 +107,10 @@ export class VelocityService {
   static async checkServiceability(fromPincode: string, toPincode: string, paymentMode: string = 'cod', shipmentType: string = 'forward') {
     try {
       const headers = await this.getHeaders();
-      console.log(`[Velocity] Checking serviceability with headers:`, { ...headers, Authorization: 'REDACTED' });
+      const url = `${this.AUTH_URL}/custom/api/v1/serviceability`;
+      console.log(`[Velocity] POST ${url}`);
       
-      const response = await fetch(`${this.AUTH_URL}/custom/api/v1/serviceability`, {
+      const response = await fetch(url, {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -121,9 +122,14 @@ export class VelocityService {
       });
 
       if (!response.ok) {
+        const contentType = response.headers.get('content-type') || '';
         const errorText = await response.text();
-        console.error(`[Velocity] Serviceability failed (${response.status}):`, errorText);
-        return { success: false, serviceable: false, error: `Velocity API error (${response.status}): ${errorText}` };
+        console.error(`[Velocity] Serviceability failed (${response.status}) at ${url}:`, errorText.substring(0, 200));
+        return { 
+          success: false, 
+          serviceable: false, 
+          error: `Non-JSON response (${response.status}) at ${url}: ${errorText.substring(0, 50)}...` 
+        };
       }
 
       const data = await response.json();
