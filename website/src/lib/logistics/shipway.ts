@@ -84,12 +84,12 @@ export class ShipwayService {
 
       const payload = {
         order_id: order.orderId,
-        products: JSON.stringify(order.orderItems.map(item => ({
+        products: order.orderItems.map(item => ({
           product_id: item.sku || item.name.replace(/\s+/g, '-').toLowerCase(),
           name: item.name,
           quantity: item.quantity,
           price: item.price
-        }))),
+        })),
         payment_type: order.paymentMode === 'COD' ? 'C' : 'P',
         email: order.shippingDetails.email || "support@sahimed.com",
         order_total: String(order.totalAmount),
@@ -124,10 +124,11 @@ export class ShipwayService {
 
       try {
         const orderData = JSON.parse(responseText);
-        if (!response.ok || orderData.status === 'error' || orderData.status === 'Failed') {
+        if (!response.ok || orderData.status === 'error' || orderData.status === 'Failed' || orderData.success === false) {
+          console.error(`[Shipway] v2orders Error Detail:`, JSON.stringify(orderData, null, 2));
           return { 
             success: false, 
-            error: `v2orders Failed: ${orderData.message || orderData.error || response.statusText}` 
+            error: `v2orders Failed: ${orderData.message || orderData.error || orderData.remark || response.statusText}` 
           };
         }
         return { success: true, data: orderData };
