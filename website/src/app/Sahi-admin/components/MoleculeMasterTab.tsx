@@ -102,7 +102,7 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
       
       const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
       
-      const moleculesData = lines.slice(1).map(line => {
+      const moleculesData = lines.slice(1).map((line, idx) => {
         const values: string[] = [];
         let current = '';
         let inQuotes = false;
@@ -125,6 +125,17 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
         return obj;
       });
 
+      // Pre-validation
+      const invalidRow = moleculesData.find((m, i) => !m.molecule || !m.form);
+      if (invalidRow) {
+        toast({ 
+          variant: 'destructive', 
+          title: "Invalid CSV Data", 
+          description: `All rows must have 'molecule' and 'form'. Check your CSV file.` 
+        });
+        return;
+      }
+
       try {
         const token = await user?.getIdToken();
         const res = await fetch('/api/molecules/bulk', {
@@ -135,11 +146,14 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
           },
           body: JSON.stringify(moleculesData)
         });
+
+        const result = await res.json();
+
         if (res.ok) {
-          toast({ title: "Bulk import success", description: "Registry updated" });
+          toast({ title: "Bulk import success", description: result.message || "Registry updated" });
           window.location.reload();
         } else {
-          throw new Error('Import failed');
+          throw new Error(result.message || result.error || 'Import failed');
         }
       } catch (err: any) {
         toast({ variant: 'destructive', title: "Import failed", description: err.message });
