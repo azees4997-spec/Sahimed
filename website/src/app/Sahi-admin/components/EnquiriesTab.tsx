@@ -201,14 +201,14 @@ export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: 
       {/* Primary Digitize/Order Form */}
       <Dialog open={actionMode === 'DIGITIZE'} onOpenChange={o => !o && setActionMode(null)}>
         <DialogContent className="rounded-[40px] max-w-5xl border-none p-0 overflow-hidden shadow-2xl">
-          <div className="bg-primary p-8 text-white flex items-center justify-between">
+          <DialogHeader className="bg-primary p-8 text-white flex flex-row items-center justify-between space-y-0">
             <div>
-              <DialogTitle className="text-2xl font-black italic tracking-tighter">CREATE MANUAL ORDER</DialogTitle>
+              <DialogTitle className="text-2xl font-black italic tracking-tighter text-white">CREATE MANUAL ORDER</DialogTitle>
               <DialogDescription className="text-[10px] font-black text-white/50 tracking-widest mt-1 uppercase">
                 Authorize terminal entry and prescription digitization
               </DialogDescription>
             </div>
-          </div>
+          </DialogHeader>
           <div className="p-8 h-[80vh] overflow-y-auto scrollbar-hide bg-white">
             {selectedEnquiry && (
               <OrderCreationForm 
@@ -224,9 +224,9 @@ export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: 
       {/* Modify Metadata Form */}
       <Dialog open={actionMode === 'EDIT'} onOpenChange={o => !o && setActionMode(null)}>
         <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden shadow-2xl">
-          <DialogHeader className="bg-blue-600 p-8 text-white">
-             <DialogTitle className="text-2xl font-black italic tracking-tighter uppercase">Modify Enquiry</DialogTitle>
-             <DialogDescription className="text-[10px] font-black text-white/50 tracking-widest mt-1 uppercase">Updates patient records and pending remarks</DialogDescription>
+          <DialogHeader className="bg-blue-600 p-8 text-white space-y-2">
+             <DialogTitle className="text-2xl font-black italic tracking-tighter uppercase text-white">Modify Enquiry</DialogTitle>
+             <DialogDescription className="text-[10px] font-black text-white/50 tracking-widest uppercase">Updates patient records and pending remarks</DialogDescription>
           </DialogHeader>
           <div className="p-8 bg-white">
              {selectedEnquiry && (
@@ -243,10 +243,10 @@ export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: 
       {/* Completion Remarks Dialog */}
       <Dialog open={actionMode === 'COMPLETE'} onOpenChange={o => !o && setActionMode(null)}>
         <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden shadow-2xl">
-          <div className="bg-green-600 p-8 text-white">
-             <DialogTitle className="text-xl font-black uppercase tracking-tighter">Close Clinical Queue</DialogTitle>
-             <p className="text-[10px] font-black text-white/50 tracking-widest mt-1 uppercase">Add final remarks to complete this entry</p>
-          </div>
+          <DialogHeader className="bg-green-600 p-8 text-white space-y-2">
+             <DialogTitle className="text-xl font-black uppercase tracking-tighter text-white">Close Clinical Queue</DialogTitle>
+             <DialogDescription className="text-[10px] font-black text-white/50 tracking-widest uppercase">Add final remarks to complete this entry</DialogDescription>
+          </DialogHeader>
           <div className="p-8 bg-white space-y-6">
              <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase text-gray-400">Final Remarks</label>

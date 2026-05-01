@@ -3,6 +3,7 @@ import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
 import { getDbAdmin } from '@/lib/firebase-admin';
 import * as admin from 'firebase-admin';
+import { generateSlug } from '@/lib/slug';
 
 export async function GET() {
   try {
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
         throw new Error(`Row ${index + 1}: 'molecule' and 'form' are mandatory fields.`);
       }
 
-      const filterId = id || _id || `${m.molecule}-${m.form}`.trim().toLowerCase().replace(/\s+/g, '-');
+      const filterId = id || _id || generateSlug(`${m.molecule}-${m.form}`);
       
       return {
         updateOne: {
@@ -110,7 +111,7 @@ export async function POST(request: Request) {
         const chunk = molecules.slice(i, i + BATCH_SIZE);
         
         chunk.forEach((m: any) => {
-          const docId = m.id || m._id || `${m.molecule}-${m.form}`.trim().toLowerCase().replace(/\s+/g, '-');
+          const docId = m.id || m._id || generateSlug(`${m.molecule}-${m.form}`);
           const docRef = firestore.collection('moleculeMaster').doc(docId);
           batch.set(docRef, {
             ...m,

@@ -333,13 +333,15 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
 
       <Dialog open={!!selectedOrder} onOpenChange={o => !o && (setSelectedOrder(null), setIsEditing(false), setStatusUpdateTarget(null))}>
         <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden">
-          <div className="bg-primary p-8 text-white flex justify-between items-center">
-            <DialogTitle className="text-2xl font-black">Order #{selectedOrder?.orderId}</DialogTitle>
-            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
-              Full transaction history and logistics status
-            </DialogDescription>
-            <Badge className="bg-white/20 text-white border-none font-black text-[10px]">{selectedOrder?.status}</Badge>
-          </div>
+          <DialogHeader className="bg-primary p-8 text-white flex flex-row items-center justify-between space-y-0">
+            <div className="flex flex-col gap-1">
+              <DialogTitle className="text-2xl font-black text-white">Order #{selectedOrder?.orderId || 'Detail'}</DialogTitle>
+              <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest uppercase">
+                Full transaction history and logistics status
+              </DialogDescription>
+            </div>
+            <Badge className="bg-white/20 text-white border-none font-black text-[10px] uppercase tracking-widest">{selectedOrder?.status}</Badge>
+          </DialogHeader>
           <div className="p-8 space-y-8 max-h-[80vh] overflow-y-auto scrollbar-hide">
             {isEditing ? (
               <div className="space-y-6">

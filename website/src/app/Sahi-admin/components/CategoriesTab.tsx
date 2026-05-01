@@ -27,6 +27,7 @@ import {
   addDocumentNonBlocking,
   updateDocumentNonBlocking
 } from '@/firebase';
+import { generateSlug } from '@/lib/utils';
 import { doc, collection, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { SectionHeader } from './SectionHeader';
 
@@ -84,12 +85,12 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
       </Card>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden">
-          <div className="bg-primary p-8 text-white">
-            <DialogTitle className="text-2xl font-black">Category definition</DialogTitle>
-            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
+          <DialogHeader className="bg-primary p-8 text-white space-y-2">
+            <DialogTitle className="text-2xl font-black text-white">Category definition</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest uppercase">
               Identify therapeutic segments for storefront navigation
             </DialogDescription>
-          </div>
+          </DialogHeader>
           <div className="p-8">
             <CategoryForm db={db} initialData={editingCat} onSuccess={() => setIsFormOpen(false)} />
           </div>
@@ -112,7 +113,7 @@ function CategoryForm({ db, initialData, onSuccess }: { db: any, initialData?: a
     e.preventDefault();
     
     try {
-      const docId = initialData?.id || initialData?._id || form.name.toLowerCase().replace(/\s+/g, '-');
+      const docId = initialData?.id || initialData?._id || generateSlug(form.name);
       const token = await user?.getIdToken();
 
       const res = await fetch(initialData ? `/api/categories/${docId}` : '/api/categories', {

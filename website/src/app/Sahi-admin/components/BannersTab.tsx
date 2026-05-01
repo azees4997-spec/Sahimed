@@ -120,15 +120,15 @@ export function BannersTab({ db, isVerified, onBack }: { db: any, isVerified: bo
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="rounded-[56px] max-w-2xl border-none p-0 overflow-hidden shadow-4xl bg-white">
-          <div className="bg-primary p-10 text-white relative">
+          <DialogHeader className="bg-primary p-10 text-white relative">
              <div className="absolute top-0 right-0 p-10 opacity-10">
                 <Maximize2 size={80} />
              </div>
-             <DialogTitle className="text-3xl font-black font-outfit uppercase tracking-tighter">Visual Configuration</DialogTitle>
+             <DialogTitle className="text-3xl font-black font-outfit uppercase tracking-tighter text-white">Visual Configuration</DialogTitle>
              <DialogDescription className="text-xs font-black text-white/60 tracking-widest mt-2 uppercase">
                 Promotion Matrix & Carousel Orchestration
              </DialogDescription>
-          </div>
+          </DialogHeader>
           <div className="p-10">
             <BannerForm db={db} initialData={editingBanner} defaultOrder={nextOrder} onSuccess={() => setIsFormOpen(false)} />
           </div>

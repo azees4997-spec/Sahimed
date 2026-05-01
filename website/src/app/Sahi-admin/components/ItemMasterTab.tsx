@@ -306,12 +306,12 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
 
       <Dialog open={isFormOpen} onOpenChange={isFormOpen => setIsFormOpen(isFormOpen)}>
         <DialogContent className="rounded-[40px] max-w-5xl border-none p-0 overflow-hidden">
-          <div className="bg-primary p-8 text-white">
-            <DialogTitle className="text-2xl font-black">Product profile</DialogTitle>
-            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
+          <DialogHeader className="bg-primary p-8 text-white space-y-2">
+            <DialogTitle className="text-2xl font-black text-white">Product profile</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest uppercase">
               Configure product details and live inventory status
             </DialogDescription>
-          </div>
+          </DialogHeader>
           <div className="p-8 max-h-[80vh] overflow-y-auto scrollbar-hide">
             {isFormOpen && (
         <ItemForm 

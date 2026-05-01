@@ -35,7 +35,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCollection, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { SectionHeader } from './SectionHeader';
-import { cn } from '@/lib/utils';
+import { cn, generateSlug } from '@/lib/utils';
 import { format } from 'date-fns';
 
 export function PagesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
@@ -134,6 +134,17 @@ export function PagesTab({ db, isVerified, onBack }: { db: any, isVerified: bool
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="rounded-[48px] border-none p-0 overflow-hidden shadow-4xl max-w-2xl bg-white">
+          <DialogHeader className="bg-primary p-10 text-white relative shrink-0 space-y-2">
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+              <Settings className="w-24 h-24" />
+            </div>
+            <DialogTitle className="text-3xl font-black font-outfit uppercase tracking-tighter text-white">
+              {editingPage ? 'Document Mutator' : 'Protocol Creation'}
+            </DialogTitle>
+            <DialogDescription className="text-xs font-black text-white/60 tracking-widest uppercase">
+              Standard Compliance & Identity Management
+            </DialogDescription>
+          </DialogHeader>
           <PageEditor db={db} initialData={editingPage} onSuccess={() => setIsFormOpen(false)} />
         </DialogContent>
       </Dialog>
@@ -172,19 +183,7 @@ function PageEditor({ db, initialData, onSuccess }: { db: any, initialData?: any
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[90vh]">
-      <div className="bg-primary p-10 text-white relative shrink-0">
-        <div className="absolute top-0 right-0 p-8 opacity-10">
-          <Settings className="w-24 h-24" />
-        </div>
-        <DialogTitle className="text-3xl font-black font-outfit uppercase tracking-tighter">
-          {initialData ? 'Document Mutator' : 'Protocol Creation'}
-        </DialogTitle>
-        <DialogDescription className="text-xs font-black text-white/60 tracking-widest mt-2 uppercase">
-          Standard Compliance & Identity Management
-        </DialogDescription>
-      </div>
-
+    <div className="flex flex-col h-full max-h-[70vh]">
       <form onSubmit={handleSubmit} className="p-10 space-y-8 overflow-y-auto scrollbar-hide">
         <div className="grid grid-cols-2 gap-8">
           <div className="space-y-4">
@@ -193,7 +192,7 @@ function PageEditor({ db, initialData, onSuccess }: { db: any, initialData?: any
           </div>
           <div className="space-y-4">
             <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Universal Slug (URL)</Label>
-            <Input placeholder="E.G. PRIVACY-POLICY..." value={form.id} onChange={e => setForm({...form, id: e.target.value.toLowerCase().replace(/\s+/g, '-')})} disabled={!!initialData} className="h-16 rounded-2xl bg-slate-50 border-none font-bold disabled:opacity-50" />
+            <Input placeholder="E.G. PRIVACY-POLICY..." value={form.id} onChange={e => setForm({...form, id: generateSlug(e.target.value)})} disabled={!!initialData} className="h-16 rounded-2xl bg-slate-50 border-none font-bold disabled:opacity-50" />
           </div>
         </div>
 

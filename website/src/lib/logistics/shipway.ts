@@ -1,3 +1,5 @@
+import { generateSlug } from '../slug';
+
 /**
  * Shipway Shipping API Integration
  * Handles authentication, serviceability, tracking, and order orchestration.
@@ -85,7 +87,7 @@ export class ShipwayService {
       const payload = {
         order_id: order.orderId,
         products: order.orderItems.map(item => ({
-          product_id: item.sku || item.name.replace(/\s+/g, '-').toLowerCase(),
+          product_id: item.sku || generateSlug(item.name),
           name: item.name,
           quantity: item.quantity,
           price: item.price
@@ -174,7 +176,7 @@ export class ShipwayService {
         shipping_lastname: lastName || "",
         shipping_phone: order.shippingDetails.phone,
         products: order.orderItems.map(item => ({
-          product_id: item.sku || item.name.replace(/\s+/g, '-').toLowerCase(),
+          product_id: item.sku || generateSlug(item.name),
           name: item.name,
           quantity: item.quantity,
           price: item.price

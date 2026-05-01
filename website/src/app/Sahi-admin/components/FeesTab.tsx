@@ -77,12 +77,12 @@ export function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boole
       </Card>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden">
-          <div className="bg-primary p-8 text-white">
-            <DialogTitle className="text-2xl font-black">Fee structure</DialogTitle>
-            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
+          <DialogHeader className="bg-primary p-8 text-white space-y-2">
+            <DialogTitle className="text-2xl font-black text-white">Fee structure</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest uppercase">
               Define shipping tiers and administrative surcharges
             </DialogDescription>
-          </div>
+          </DialogHeader>
           <div className="p-8">
             <FeeForm db={db} initialData={editingFee} onSuccess={() => setIsFormOpen(false)} />
           </div>

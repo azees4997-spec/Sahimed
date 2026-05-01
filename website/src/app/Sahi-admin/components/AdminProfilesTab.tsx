@@ -292,15 +292,15 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="rounded-[48px] border-none p-0 overflow-hidden shadow-4xl max-w-lg">
-          <div className="bg-primary p-10 text-white relative">
+          <DialogHeader className="bg-primary p-10 text-white relative">
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <ShieldCheck className="w-24 h-24" />
             </div>
-            <DialogTitle className="text-3xl font-black font-outfit uppercase tracking-tighter">Issue Credentials</DialogTitle>
+            <DialogTitle className="text-3xl font-black font-outfit uppercase tracking-tighter text-white">Issue Credentials</DialogTitle>
             <DialogDescription className="text-xs font-black text-white/60 tracking-widest mt-2 uppercase">
               Granting authority to the Sahimed Matrix
             </DialogDescription>
-          </div>
+          </DialogHeader>
           <form onSubmit={handleCreateAdmin} className="p-10 space-y-8">
             <div className="space-y-4">
               <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">User UID (from Firebase)</Label>
@@ -364,15 +364,15 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
       {/* Manual Password Reset Dialog */}
       <Dialog open={resetData.isOpen} onOpenChange={(open) => setResetData(prev => ({ ...prev, isOpen: open }))}>
         <DialogContent className="rounded-[48px] border-none p-0 overflow-hidden shadow-4xl max-w-sm">
-          <div className="bg-slate-900 p-8 text-white relative">
+          <DialogHeader className="bg-slate-900 p-8 text-white relative">
             <div className="absolute top-0 right-0 p-6 opacity-10">
               <ShieldAlert className="w-16 h-16" />
             </div>
-            <DialogTitle className="text-xl font-black uppercase tracking-tight">Manual Override</DialogTitle>
+            <DialogTitle className="text-xl font-black uppercase tracking-tight text-white">Manual Override</DialogTitle>
             <DialogDescription className="text-[10px] font-black text-white/40 tracking-widest mt-1 uppercase">
               Re-provisioning credentials for {resetData.email}
             </DialogDescription>
-          </div>
+          </DialogHeader>
           <form onSubmit={handleForceReset} className="p-8 space-y-6 text-center">
             <div className="space-y-4">
               <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">New Access Key (Min 6 chars)</Label>
