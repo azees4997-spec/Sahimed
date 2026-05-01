@@ -44,6 +44,7 @@ import {
   scaleInVariant,
   fadeInVariant
 } from '@/lib/animations';
+import RibbonBadge from '@/components/RibbonBadge';
 
 const ComparisonCard = ({
   product,
@@ -99,9 +100,12 @@ const ComparisonCard = ({
         <div className="space-y-3 sm:space-y-6">
           <div className="flex items-center justify-between">
             <Badge className={cn("rounded-full font-black text-[7px] sm:text-[9px] px-2 py-0.5 uppercase tracking-widest", isAlt ? "bg-accent text-white" : "bg-slate-100 text-slate-400")}>{label}</Badge>
-            {displaySavingsPct > 0 && (
-              <Badge className="bg-primary text-white text-[7px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-lg shadow-sm">-{displaySavingsPct}%</Badge>
-            )}
+            <RibbonBadge 
+              savingsPct={displaySavingsPct} 
+              variant={isAlt ? 'accent' : 'primary'} 
+              className="right-2 sm:right-6"
+              size="sm"
+            />
           </div>
 
           <div className="space-y-3">

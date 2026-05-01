@@ -76,8 +76,8 @@ class SahimedProductCard extends StatelessWidget {
                     child: Column(
                       children: [
                         Container(
-                          width: 24,
-                          height: 36,
+                          width: 20,
+                          height: 28,
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
@@ -97,7 +97,7 @@ class SahimedProductCard extends StatelessWidget {
                               Text(
                                 'OFF',
                                 style: GoogleFonts.outfit(
-                                  fontSize: 5,
+                                  fontSize: 4,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white70,
                                   letterSpacing: 0.5,
@@ -106,7 +106,7 @@ class SahimedProductCard extends StatelessWidget {
                               Text(
                                 '$savingsPct%',
                                 style: GoogleFonts.outfit(
-                                  fontSize: 9,
+                                  fontSize: 7.5,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                   height: 1,
@@ -118,8 +118,8 @@ class SahimedProductCard extends StatelessWidget {
                         ClipPath(
                           clipper: _SerratedClipper(),
                           child: Container(
-                            width: 24,
-                            height: 6,
+                            width: 20,
+                            height: 4,
                             color: const Color(0xFF2E5BFF),
                           ),
                         ),

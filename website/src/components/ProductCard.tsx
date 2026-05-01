@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Badge } from "@/components/ui/badge";
 import { tapVariant } from '@/lib/animations';
+import RibbonBadge from './RibbonBadge';
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
@@ -35,30 +36,12 @@ export default function ProductCard({ product }: { product: Product }) {
     <div 
       className="pharma-card flex flex-col h-full group relative p-1.5 sm:p-2.5 bg-white border border-slate-100/60 rounded-[20px] sm:rounded-[28px] gap-1 sm:gap-1.5 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-0.5"
     >
-      {savingsPct > 0 && (
-        <div className="absolute top-0 left-2.5 sm:left-4 z-20 pointer-events-none drop-shadow-md">
-          <div className="relative w-7 sm:w-10 h-10 sm:h-14">
-            {/* The Ribbon Body */}
-            <div className="absolute inset-0 bg-gradient-to-b from-primary via-primary to-[#2E5BFF] rounded-t-sm flex flex-col items-center pt-1 sm:pt-2">
-              <span className="text-[6px] sm:text-[8px] font-black text-white leading-none tracking-tighter uppercase opacity-80">Save</span>
-              <span className="text-[9px] sm:text-[13px] font-black text-white leading-tight font-outfit">
-                {savingsPct}%
-              </span>
-              <span className="text-[5px] sm:text-[7px] font-black text-white/90 uppercase tracking-widest mt-0.5">OFF</span>
-            </div>
-            
-            {/* Serrated Bottom Edge (SVG) */}
-            <div className="absolute -bottom-[6px] left-0 w-full">
-              <svg viewBox="0 0 40 10" className="w-full h-[6px] fill-primary" preserveAspectRatio="none">
-                <path d="M0 0 L5 8 L10 0 L15 8 L20 0 L25 8 L30 0 L35 8 L40 0 V10 H0 Z" />
-              </svg>
-            </div>
-
-            {/* Fold effect at top (The blue "flap") */}
-            <div className="absolute -top-[3px] left-0 w-2 h-[3px] bg-[#1E3A8A] rounded-tl-sm -skew-x-[45deg] origin-bottom-left" />
-          </div>
-        </div>
-      )}
+      <RibbonBadge 
+        savingsPct={savingsPct} 
+        variant="primary" 
+        className="left-2.5 sm:left-4"
+        size="md"
+      />
  
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 gap-1 sm:gap-1.5 w-full">
         <div className="relative w-full h-20 sm:h-28 bg-slate-50/50 rounded-[14px] sm:rounded-[20px] flex items-center justify-center overflow-hidden group-hover:bg-white border border-transparent group-hover:border-slate-100 transition-all duration-500 p-0.5 sm:p-1 shrink-0 mx-auto">
