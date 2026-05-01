@@ -17,34 +17,57 @@ export async function GET() {
       return NextResponse.json({ message: 'No active orders to sync' });
     }
 
-    const awbs = activeOrders.map(order => order.awb);
-    const trackingResult = await ShipwayService.trackOrders(awbs);
+    // Shipment Status to System Status mapping
+    const STATUS_MAP: Record<string, string> = {
+      'DEL': 'Delivered',
+      'INT': 'Shipped',
+      'UND': 'Undelivered',
+      'RTO': 'RTO',
+      'RTD': 'RTO Delivered',
+      'CAN': 'Cancelled',
+      'SCH': 'Confirmed',
+      'ONH': 'On Hold',
+      'OOD': 'out_for_delivery'
+    };
 
-    if (trackingResult.success && trackingResult.data) {
-      // Loop through tracking results and update order statuses in the database
-      // This part depends on Shipway's tracking API response structure.
-      // Usually it's an array or map of AWB to status.
-      // Mocking the update process.
-      
-      let updatedCount = 0;
-      
-      for (const order of activeOrders) {
-        // If shipway returned a status for this AWB
-        // const newStatus = trackingResult.data[order.awb]?.status;
-        // if (newStatus && newStatus !== order.status) {
-        //    await db.collection('orders').updateOne({ _id: order._id }, { $set: { status: newStatus } });
-        //    updatedCount++;
-        // }
-      }
+    let updatedCount = 0;
+    const errors: string[] = [];
 
-      return NextResponse.json({ 
-        message: 'Sync completed successfully', 
-        ordersChecked: activeOrders.length,
-        // updatedCount
+    for (const order of activeOrders) {
+      if (!order.shipping?.awb) continue;
+
+      const trackingResult = await ShipwayService.getOrders({
+        awb_number: order.shipping.awb
       });
+
+      if (trackingResult.success && trackingResult.data) {
+        // Assume data contains an array of orders or a result object with orders
+        // Shipway response for getorders typically returns an array or object containing shipment details
+        const shipwayOrders = trackingResult.data.result || trackingResult.data.orders || trackingResult.data;
+        const targetOrder = Array.isArray(shipwayOrders) ? shipwayOrders[0] : shipwayOrders;
+
+        if (targetOrder && targetOrder.shipment_status) {
+          const newStatus = STATUS_MAP[targetOrder.shipment_status] || targetOrder.shipment_status;
+          
+          if (newStatus && newStatus !== order.status && STATUS_MAP[targetOrder.shipment_status]) {
+             await db.collection('orders').updateOne(
+               { _id: order._id }, 
+               { $set: { status: newStatus } }
+             );
+             updatedCount++;
+          }
+        }
+      } else {
+        errors.push(`Failed for AWB ${order.shipping.awb}: ${trackingResult.error}`);
+      }
     }
 
-    return NextResponse.json({ error: 'Tracking API failed', details: trackingResult.error }, { status: 500 });
+    return NextResponse.json({ 
+      message: 'Sync completed', 
+      ordersChecked: activeOrders.length,
+      updatedCount,
+      errors: errors.length > 0 ? errors : undefined
+    });
 
   } catch (error: any) {
     console.error("[Shipway Cron Error]:", error);
