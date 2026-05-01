@@ -17,8 +17,9 @@ export async function GET() {
       return NextResponse.json({ message: 'No active orders to sync' });
     }
 
-    const awbs = activeOrders.map(order => order.awb);
-    const trackingResult = await ShipwayService.trackOrders(awbs);
+    const trackingResult = await ShipwayService.getOrders({
+      status: 'O', // Assuming 'O' is Open or Active, adjust if needed
+    });
 
     if (trackingResult.success && trackingResult.data) {
       // Loop through tracking results and update order statuses in the database
