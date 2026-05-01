@@ -88,9 +88,18 @@ export async function POST(req: Request) {
       }, { status: 409 });
     }
 
-    // 4. Clinical Status Logic
+    // 4. Clinical Status Logic: Check if any items require a prescription
+    const hasRxItems = (body.items || []).some((it: any) => it.prescriptionRequired === true);
     const isConsultation = body.clinicalPath === 'consult' || body.isConsultationRequired === true;
-    const initialStatus = isConsultation ? 'Pending Consult' : (body.status || 'Confirmed');
+    
+    let initialStatus = 'Confirmed';
+    if (hasRxItems) {
+      initialStatus = 'Pending Pharmacist';
+    } else if (isConsultation) {
+      initialStatus = 'Pending Consult';
+    } else if (body.status) {
+      initialStatus = body.status;
+    }
 
     // 5. White-list Fields (Security Hardening)
     const allowedFields = [
@@ -230,6 +239,31 @@ export async function PUT(req: Request) {
       }
     }
     
+    // HANDLE CUSTOM WORKFLOW ACTIONS
+    if (updates.action === 'pharmacist_accept') {
+      updates.status = 'Confirmed';
+      updates.pharmacistApproval = { approvedAt: new Date(), approvedBy: 'Pharmacist' };
+      delete updates.action;
+    } else if (updates.action === 'pharmacist_reject') {
+      updates.status = 'Cancelled';
+      updates.pharmacistApproval = { rejectedAt: new Date(), reason: updates.reason || 'Rejected by Pharmacist' };
+      delete updates.action;
+    } else if (updates.action === 'pharmacist_consult_req') {
+      updates.status = 'Pending Consult';
+      updates.pharmacistApproval = { consultRequired: true, requestedAt: new Date() };
+      delete updates.action;
+    } else if (updates.action === 'doctor_submit_rx') {
+      updates.status = 'Confirmed';
+      updates.doctorConsultation = { 
+        consultedAt: new Date(), 
+        prescriptionUrl: updates.prescriptionUrl,
+        prescriptionLink: updates.prescriptionLink 
+      };
+      // Also append to global prescriptionUrls for visibility
+      updates.prescriptionUrls = [...(currentOrder?.prescriptionUrls || []), updates.prescriptionUrl, updates.prescriptionLink].filter(Boolean);
+      delete updates.action;
+    }
+
     const result = await db.collection('orders').updateOne(
       { _id: new ObjectId(id) },
       { $set: { ...updates, updatedAt: new Date() } }
