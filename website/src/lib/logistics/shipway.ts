@@ -78,30 +78,33 @@ export class ShipwayService {
   static async createForwardOrder(order: ShipwayOrder) {
     try {
       const headers = this.getHeaders();
+      const [firstName, ...lastNames] = order.billingCustomerName.split(' ');
+      const lastName = lastNames.join(' ');
+
       const payload = {
         order_id: order.orderId,
-        customer_name: order.billingCustomerName,
-        customer_email: order.shippingDetails.email || "support@sahimed.com",
-        customer_phone: order.shippingDetails.phone,
+        payment_type: order.paymentMode === 'COD' ? 'C' : 'P',
+        email: order.shippingDetails.email || "support@sahimed.com",
+        order_total: String(order.totalAmount),
         shipping_address: order.shippingDetails.address,
         shipping_city: order.shippingDetails.city,
         shipping_state: order.shippingDetails.state,
-        shipping_zip: order.shippingDetails.pincode,
+        shipping_zipcode: order.shippingDetails.pincode,
         shipping_country: "India",
-        order_date: new Date().toISOString().split('T')[0],
-        order_amount: order.totalAmount,
-        payment_type: order.paymentMode === 'COD' ? 'COD' : 'Prepaid',
-        items: order.orderItems.map(item => ({
-          sku: item.sku || item.name.replace(/\s+/g, '-').toLowerCase(),
+        shipping_firstname: firstName || "Customer",
+        shipping_lastname: lastName || "",
+        shipping_phone: order.shippingDetails.phone,
+        order_date: new Date().toISOString().replace('T', ' ').split('.')[0],
+        products: order.orderItems.map(item => ({
+          product_id: item.sku || item.name.replace(/\s+/g, '-').toLowerCase(),
           name: item.name,
           quantity: item.quantity,
           price: item.price
-        })),
-        // By omitting carrier_id, Shipway's rule engine auto-assigns the best carrier
+        }))
       };
       
-      console.log(`[Shipway] Pushing forward order...`);
-      const response = await fetch(`${this.API_URL}/pushOrderData`, {
+      console.log(`[Shipway] Pushing forward order to v2orders...`);
+      const response = await fetch(`${this.API_URL}/v2orders`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
@@ -115,7 +118,7 @@ export class ShipwayService {
         if (!response.ok || orderData.status === 'error' || orderData.status === 'Failed') {
           return { 
             success: false, 
-            error: `PushOrderData Failed: ${orderData.message || orderData.error || response.statusText}` 
+            error: `v2orders Failed: ${orderData.message || orderData.error || response.statusText}` 
           };
         }
         return { success: true, data: orderData };
