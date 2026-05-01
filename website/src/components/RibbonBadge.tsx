@@ -19,23 +19,20 @@ export default function RibbonBadge({
   if (savingsPct <= 0) return null;
 
   const config = {
-    primary: {
-      from: 'from-[#1E40AF]',
-      via: 'via-[#1D4ED8]',
-      to: 'to-[#1E3A8A]',
-      fold: 'bg-[#172554]'
+    primary: { // Branded - Now Pink
+      from: 'from-[#FF3B8E]',
+      via: 'via-[#FF0055]',
+      to: 'to-[#CC0044]'
     },
-    accent: {
-      from: 'from-[#BE123C]',
-      via: 'via-[#E11D48]',
-      to: 'to-[#881337]',
-      fold: 'bg-[#4C0519]'
+    accent: { // Alternative/Generic - Now Green
+      from: 'from-[#00D991]',
+      via: 'via-[#00B377]',
+      to: 'to-[#008C5D]'
     },
-    success: {
-      from: 'from-[#065F46]',
-      via: 'via-[#10B981]',
-      to: 'to-[#064E3B]',
-      fold: 'bg-[#022C22]'
+    success: { // Success variant (Green)
+      from: 'from-[#00D991]',
+      via: 'via-[#00B377]',
+      to: 'to-[#008C5D]'
     }
   };
 
@@ -66,12 +63,9 @@ export default function RibbonBadge({
         {/* Serrated Bottom Edge (SVG) */}
         <div className="absolute -bottom-[5px] left-0 w-full">
           <svg viewBox="0 0 40 10" className="w-full h-[5px]" preserveAspectRatio="none">
-            <path d="M0 0 L5 8 L10 0 L15 8 L20 0 L25 8 L30 0 L35 8 L40 0 V10 H0 Z" className={cn(variant === 'primary' ? 'fill-[#1E3A8A]' : variant === 'accent' ? 'fill-[#881337]' : 'fill-[#064E3B]')} />
+            <path d="M0 0 L5 8 L10 0 L15 8 L20 0 L25 8 L30 0 L35 8 L40 0 V10 H0 Z" className={cn(variant === 'primary' ? 'fill-[#CC0044]' : 'fill-[#008C5D]')} />
           </svg>
         </div>
-
-        {/* Fold effect at top (The darker flap) */}
-        <div className={cn("absolute -top-[2px] left-0 w-1.5 h-[2px] rounded-tl-sm -skew-x-[45deg] origin-bottom-left", colors.fold)} />
       </div>
     </div>
   );

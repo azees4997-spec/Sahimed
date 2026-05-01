@@ -38,7 +38,7 @@ export default function ProductCard({ product }: { product: Product }) {
     >
       <RibbonBadge 
         savingsPct={savingsPct} 
-        variant="primary" 
+        variant={(product.isGeneric === true || product.isGeneric === "true") ? 'accent' : 'primary'} 
         className="left-2.5 sm:left-4"
         size="md"
       />

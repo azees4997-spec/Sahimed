@@ -78,16 +78,15 @@ class SahimedProductCard extends StatelessWidget {
                         Container(
                           width: 20,
                           height: 28,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [
-                                Color(0xFF1E40AF),
-                                Color(0xFF1E3A8A),
-                              ],
+                              colors: (product.isGeneric == true || product.isGeneric == "true")
+                                  ? [const Color(0xFF00D991), const Color(0xFF008C5D)]
+                                  : [const Color(0xFFFF3B8E), const Color(0xFFCC0044)],
                             ),
-                            borderRadius: BorderRadius.circular(2),
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -132,7 +131,9 @@ class SahimedProductCard extends StatelessWidget {
                           child: Container(
                             width: 20,
                             height: 4,
-                            color: const Color(0xFF1E3A8A),
+                            color: (product.isGeneric == true || product.isGeneric == "true")
+                                ? const Color(0xFF008C5D)
+                                : const Color(0xFFCC0044),
                           ),
                         ),
                       ],
