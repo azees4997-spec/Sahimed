@@ -45,14 +45,34 @@ import { doc, collection, query, orderBy, serverTimestamp, limit } from 'firebas
 import { SectionHeader } from './SectionHeader';
 
 export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const molsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'moleculeMaster'), orderBy('molecule', 'asc'), limit(50)) : null, [db, isVerified]);
-  const { data: molecules, isLoading } = useCollection(molsQuery);
+  const [molecules, setMolecules] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMol, setEditingMol] = useState<any>(null);
   const { user } = useUser();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const fetchMolecules = async (q: string = '') => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/molecules?q=${q}&limit=100`);
+      if (res.ok) {
+        const data = await res.json();
+        setMolecules(data);
+      }
+    } catch (err) {
+      console.error("Fetch failed", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMolecules(searchQuery);
+  }, [searchQuery]);
 
   const downloadTemplate = () => {
     const headers = ['molecule', 'masterId', 'form'];
@@ -162,6 +182,15 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Ingredient Database" subtitle="Manage scientific names and salt data" onBack={onBack}>
         <div className="flex flex-wrap items-center gap-4">
+           <div className="relative w-64">
+             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+             <Input 
+              placeholder="Search Ingredients..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="rounded-full pl-12 h-12 bg-white border-2 border-slate-100 font-bold text-[10px] uppercase tracking-widest focus:border-primary transition-all"
+             />
+           </div>
            <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".csv" />
            <Button onClick={downloadTemplate} variant="ghost" className="rounded-full h-12 px-6 font-black text-[10px] text-slate-400 hover:text-primary gap-2 uppercase tracking-widest transition-all">
              <Download className="w-3.5 h-3.5" /> Template
@@ -204,7 +233,7 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={5} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : molecules?.map(mol => (
+              {isLoading ? (<tr><td colSpan={5} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : molecules.length === 0 ? (<tr><td colSpan={5} className="p-20 text-center text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">No ingredients found in MongoDB</td></tr>) : molecules.map(mol => (
                 <tr key={mol.id} className={cn("hover:bg-gray-50/50 transition-colors", selectedIds.includes(mol.id) && "bg-primary/5")}>
                   <td className="px-10 py-8">
                     <Checkbox checked={selectedIds.includes(mol.id)} onCheckedChange={() => toggleSelect(mol.id)} />
@@ -250,7 +279,7 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
             </DialogDescription>
           </div>
           <div className="p-8">
-            <MoleculeForm db={db} initialData={editingMol} onSuccess={() => setIsFormOpen(false)} />
+            <MoleculeForm db={db} initialData={editingMol} onSuccess={() => { setIsFormOpen(false); fetchMolecules(searchQuery); }} />
           </div>
         </DialogContent>
       </Dialog>
