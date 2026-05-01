@@ -270,8 +270,8 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
                             
                             if (!res.ok) throw new Error('Failed to delete from MongoDB');
                             
-                            await deleteDocumentNonBlocking(doc(db, 'moleculeMaster', mol.id)); 
                             toast({ title: "Ingredient removed from database" });
+                            fetchMolecules(searchQuery);
                           } catch (err: any) {
                             toast({ variant: 'destructive', title: "Purge failed", description: err.message });
                           }
@@ -345,13 +345,6 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
       });
 
       if (!res.ok) throw new Error('Failed to sync with MongoDB');
-
-      // 2. Sync to Firestore
-      if (initialData?.id) {
-        await updateDocumentNonBlocking(doc(db, 'moleculeMaster', initialData.id), { ...payload, updatedAt: serverTimestamp() });
-      } else {
-        await addDocumentNonBlocking(collection(db, 'moleculeMaster'), { ...payload, createdAt: serverTimestamp() });
-      }
       
       toast({ title: "Ingredient updated" });
       onSuccess();
