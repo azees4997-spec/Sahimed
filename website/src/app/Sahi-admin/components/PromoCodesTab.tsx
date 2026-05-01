@@ -111,15 +111,15 @@ export function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified:
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="rounded-[40px] max-w-3xl border-none p-0 overflow-hidden">
-          <div className="bg-primary p-10 text-white relative">
+          <DialogHeader className="bg-primary p-10 text-white relative">
             <div className="absolute top-0 right-0 p-10 opacity-10">
               <Tag className="w-24 h-24 rotate-12" />
             </div>
-            <DialogTitle className="text-3xl font-black tracking-tighter uppercase font-outfit">Promotion Settings</DialogTitle>
+            <DialogTitle className="text-3xl font-black tracking-tighter uppercase font-outfit text-white">Promotion Settings</DialogTitle>
             <DialogDescription className="text-[10px] font-black text-white/60 tracking-[0.4em] mt-3 uppercase">
               Define discount rules and limits
             </DialogDescription>
-          </div>
+          </DialogHeader>
           <ScrollArea className="max-h-[70vh] p-8">
             <PromoCodeForm db={db} isVerified={isVerified} initialData={editingPromo} onSuccess={() => setIsFormOpen(false)} />
           </ScrollArea>

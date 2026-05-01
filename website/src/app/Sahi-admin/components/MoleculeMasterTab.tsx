@@ -18,12 +18,13 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
+import { cn, generateSlug } from '@/lib/utils';
 import { 
   Dialog, 
   DialogContent, 
   DialogTitle, 
-  DialogDescription 
+  DialogDescription,
+  DialogHeader
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -377,12 +378,12 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
       </Card>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden">
-          <div className="bg-primary p-8 text-white">
-            <DialogTitle className="text-2xl font-black">Ingredient Settings</DialogTitle>
-            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
+          <DialogHeader className="bg-primary p-8 text-white space-y-2">
+            <DialogTitle className="text-2xl font-black text-white">Ingredient Settings</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest uppercase">
               Configure active ingredients and mappings
             </DialogDescription>
-          </div>
+          </DialogHeader>
           <div className="p-8">
             <MoleculeForm db={db} initialData={editingMol} onSuccess={() => { setIsFormOpen(false); fetchMolecules(searchQuery); }} />
           </div>
@@ -422,7 +423,7 @@ function MoleculeForm({ db, initialData, onSuccess }: { db: any, initialData?: a
     const payload = { ...form, updatedAt: new Date() };
 
     try {
-      const docId = initialData?.id || initialData?._id || `${form.molecule}-${form.form}`.toLowerCase().replace(/\s+/g, '-');
+      const docId = initialData?.id || initialData?._id || generateSlug(`${form.molecule}-${form.form}`);
       const token = await user?.getIdToken();
       
       const res = await fetch(initialData ? `/api/molecules/${docId}` : '/api/molecules', {

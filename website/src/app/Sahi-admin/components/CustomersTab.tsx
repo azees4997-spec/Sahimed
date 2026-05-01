@@ -75,12 +75,12 @@ export function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: 
       
       <Dialog open={!!selectedUser} onOpenChange={o => !o && setSelectedUser(null)}>
         <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden">
-          <div className="bg-primary p-8 text-white">
-            <DialogTitle className="text-2xl font-black">Customer Card</DialogTitle>
-            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest mt-1 uppercase">
+          <DialogHeader className="bg-primary p-8 text-white space-y-2">
+            <DialogTitle className="text-2xl font-black text-white">Customer Card</DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest uppercase">
               User profile summary and administrative tags
             </DialogDescription>
-          </div>
+          </DialogHeader>
           <div className="p-8 space-y-6">
             <div className="space-y-2"><Label className="text-[10px] font-black">Display Name</Label><Input value={selectedUser?.name} onChange={e => setSelectedUser({...selectedUser, name: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black">Administrative Tags (Comma separated)</Label><Input value={selectedUser?.tags?.join(', ')} onChange={e => setSelectedUser({...selectedUser, tags: e.target.value.split(',').map(t => t.trim())})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" placeholder="VIP, Chronic, Priority" /></div>

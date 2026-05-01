@@ -4,6 +4,7 @@ import { verifyAdmin } from '@/lib/auth-utils';
 import { getDbAdmin } from '@/lib/firebase-admin';
 import * as admin from 'firebase-admin';
 import { ObjectId } from 'mongodb';
+import { generateSlug } from '@/lib/slug';
 
 const getQuery = (id: string) => {
   try {
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
     const db = client.db('sahimed');
     
     // Use consistent ID generation
-    const finalId = id || _id || `${rest.molecule}-${rest.form}`.trim().toLowerCase().replace(/\s+/g, '-');
+    const finalId = id || _id || generateSlug(`${rest.molecule}-${rest.form}`);
     
     const result = await db.collection('molecules').updateOne(
       { _id: finalId },
