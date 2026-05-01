@@ -5,13 +5,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
-import '../../../core/providers/cart_provider.dart';
 import '../../../core/providers/navigation_provider.dart';
 import '../../../core/services/api_service.dart';
 
 import '../../../shared/models/models.dart';
 import 'prescription_screen.dart';
-import '../../products/screens/product_detail_screen.dart';
 import '../../products/screens/category_products_screen.dart';
 import '../../products/widgets/product_card.dart';
 import '../widgets/home_header.dart';
@@ -89,13 +87,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _goSearch(BuildContext context) {
     context.read<NavigationProvider>().switchTab(1);
-  }
-
-  void _openProduct(BuildContext context, ProductModel p) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ProductDetailScreen(product: p)),
-    );
   }
 
   void _openCategory(BuildContext context, CategoryModel cat) {
@@ -524,7 +515,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   letterSpacing: -0.3,
                 ),
               ),
-              if (trailing != null) trailing,
+              ?trailing,
             ],
           ),
           const SizedBox(height: 12),

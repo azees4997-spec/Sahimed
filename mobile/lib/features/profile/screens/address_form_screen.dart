@@ -76,10 +76,11 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not fetch location')),
         );
+      }
     } finally {
       setState(() => _isLocating = false);
     }

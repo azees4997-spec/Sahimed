@@ -450,8 +450,9 @@ class OrderDetailScreen extends StatelessWidget {
 
     int activeIndex = 0;
     if (currentStatus.contains('pack')) activeIndex = 1;
-    if (currentStatus.contains('ship') || currentStatus.contains('out'))
+    if (currentStatus.contains('ship') || currentStatus.contains('out')) {
       activeIndex = 2;
+    }
     if (currentStatus.contains('deliver')) activeIndex = 3;
 
     return Row(

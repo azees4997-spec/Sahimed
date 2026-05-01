@@ -191,7 +191,9 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
             <div class="branding"><h1>Sahi<span>Med</span></h1><p style="margin: 4px 0 0; font-weight: 800; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #666;">Store Order Summary</p></div>
             <div class="order-meta">
               <div style="font-weight: 900; font-size: 18px;">ORDER #${order.orderId}</div>
-                              return safeFormat(d, 'dd MMM yyyy HH:mm');
+              <div style="font-size: 12px; font-weight: 600; color: #666; margin-top: 4px;">
+                ${safeFormat(order.orderDate || order.timestamp, 'dd MMM yyyy HH:mm')}
+              </div>
             </div>
           </div>
           <div style="display: flex; gap: 60px; margin-bottom: 40px;">

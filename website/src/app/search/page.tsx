@@ -342,7 +342,7 @@ function SearchResults() {
                       {rawQ.length > 0 && rawQ.length < 3 ? <Info className="w-8 h-8 text-orange-400" /> : <SearchIcon className="w-8 h-8 text-slate-300" />}
                     </div>
                     <h3 className="text-2xl font-black mb-3 tracking-tighter font-outfit uppercase">
-                      {rawQ.length > 0 && rawQ.length < 1 ? "Minimum Input Required" : "No clinical matches"}
+                      {rawQ.length > 0 && rawQ.length < 3 ? "Minimum Input Required" : "No clinical matches"}
                     </h3>
                     <p className="text-slate-400 font-bold mb-10 text-[10px] uppercase tracking-[0.2em] max-w-xs mx-auto opacity-70">
                       Our database couldn't find matches for your query. Try searching by Salt or Therapeutic category.
@@ -427,7 +427,7 @@ function SaveMoreStrip({ query: rawQ }: { query: string }) {
                <Zap className="w-8 h-8 fill-white" />
             </div>
             <div>
-              <h3 className="text-2xl sm:text-3xl font-black tracking-tighter leading-tight font-outfit uppercase">Save ₹{Math.round(genericAlt.mrp - genericAlt.price + 50)} instantly</h3>
+              <h3 className="text-2xl sm:text-3xl font-black tracking-tighter leading-tight font-outfit uppercase">Save ₹{Math.round(genericAlt.mrp - genericAlt.price)} instantly</h3>
               <p className="text-[10px] font-black text-white/70 tracking-widest mt-2 uppercase">Your medical budget is prioritized.</p>
             </div>
           </div>

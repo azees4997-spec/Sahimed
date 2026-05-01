@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'core/providers/cart_provider.dart';
 import 'core/providers/navigation_provider.dart';
 import 'features/auth/screens/splash_screen.dart';
+import 'features/auth/screens/login_screen.dart';
 import 'firebase_options.dart';
 import 'core/layout/main_layout.dart';
 import 'core/widgets/global_error_handler.dart';
@@ -79,7 +80,7 @@ class SahimedApp extends StatelessWidget {
               if (snapshot.hasData) {
                 return MainLayout();
               }
-              return const SplashScreen();
+              return const LoginScreen();
             },
           ),
         ),

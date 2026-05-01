@@ -113,7 +113,7 @@ class _MainLayoutState extends State<MainLayout> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: SahimedColors.primary.withOpacity(0.3),
+                color: SahimedColors.primary.withAlpha(76),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -124,7 +124,7 @@ class _MainLayoutState extends State<MainLayout> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withAlpha(51),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -143,7 +143,7 @@ class _MainLayoutState extends State<MainLayout> {
                     style: GoogleFonts.outfit(
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withAlpha(204),
                       letterSpacing: 1.2,
                     ),
                   ),
@@ -189,7 +189,7 @@ class _MainLayoutState extends State<MainLayout> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13),
             blurRadius: 25,
             offset: const Offset(0, -5),
           ),
@@ -235,7 +235,7 @@ class _MainLayoutState extends State<MainLayout> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? SahimedColors.primary.withOpacity(0.1)
+              ? SahimedColors.primary.withAlpha(25)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(100),
         ),

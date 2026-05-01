@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAuth } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
+import { ShipwayService } from '@/lib/logistics/shipway';
 
 export async function GET(req: Request) {
   try {
@@ -36,6 +37,18 @@ export async function POST(req: Request) {
       updatedAt: new Date(),
       timestamp: data.timestamp || new Date()
     };
+    
+    // Serviceability check
+    if (addressData.pincode) {
+      const fromPincode = process.env.WAREHOUSE_PINCODE || '560068';
+      const svc = await ShipwayService.checkServiceability(fromPincode, addressData.pincode);
+      if (svc.success && !svc.serviceable) {
+        return NextResponse.json({ 
+          error: `We currently do not deliver to ${addressData.pincode}. Please try another location.`,
+          unserviceable: true 
+        }, { status: 400 });
+      }
+    }
 
     if (id) {
       // Update existing

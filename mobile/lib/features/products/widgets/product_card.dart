@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../shared/models/models.dart';
-import '../screens/brand_store_screen.dart';
 
 class SahimedProductCard extends StatelessWidget {
   final ProductModel product;
@@ -72,23 +71,59 @@ class SahimedProductCard extends StatelessWidget {
                 ),
                 if (savingsPct > 0)
                   Positioned(
-                    top: 6,
-                    left: 6,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: SahimedColors.primary,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        'SAVE $savingsPct%',
-                        style: GoogleFonts.outfit(
-                          fontSize: 6,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 0.5,
+                    top: 0,
+                    left: 10,
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 36,
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                SahimedColors.primary,
+                                Color(0xFF2E5BFF),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(2),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'OFF',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 5,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white70,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              Text(
+                                '$savingsPct%',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  height: 1,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                        ClipPath(
+                          clipper: _SerratedClipper(),
+                          child: Container(
+                            width: 24,
+                            height: 6,
+                            color: const Color(0xFF2E5BFF),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
               ],
@@ -108,7 +143,7 @@ class SahimedProductCard extends StatelessWidget {
                       ? Container(
                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                           decoration: BoxDecoration(
-                            color: SahimedColors.primary.withOpacity(0.1),
+                            color: SahimedColors.primary.withAlpha(25),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -217,7 +252,7 @@ class SahimedProductCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: SahimedColors.primary.withOpacity(0.2),
+                          color: SahimedColors.primary.withAlpha(50),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -243,5 +278,26 @@ class SahimedProductCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SerratedClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    double width = size.width;
+    double height = size.height;
+    double segment = width / 6;
+    
+    path.lineTo(0, 0);
+    for (int i = 0; i < 6; i++) {
+      path.lineTo(segment * i + (segment * 0.5), height);
+      path.lineTo(segment * (i + 1), 0);
+    }
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
 
