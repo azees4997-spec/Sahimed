@@ -195,22 +195,38 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
 
         for (let i = 0; i < moleculesData.length; i += CHUNK_SIZE) {
           const chunk = moleculesData.slice(i, i + CHUNK_SIZE);
-          const res = await fetch('/api/molecules/bulk', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(chunk)
-          });
+          try {
+            const res = await fetch('/api/molecules/bulk', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify(chunk)
+            });
 
-          const result = await res.json();
-          if (!res.ok) {
-             throw new Error(result.message || result.error || `Import failed at chunk ${i/CHUNK_SIZE + 1}`);
-          }
+            let result;
+            const textResponse = await res.text();
+            try {
+              result = JSON.parse(textResponse);
+            } catch (e) {
+              result = { error: "Server Error", message: textResponse.slice(0, 100) };
+            }
 
-          if (result.errors && result.errors.length > 0) {
-            allErrors.push(...result.errors);
+            if (!res.ok) {
+              // Add all items in this chunk to failed list if the whole chunk failed
+              allErrors.push(...chunk.map(m => ({ 
+                molecule: m.molecule || 'Unknown', 
+                reason: result.message || result.error || 'Server rejected chunk' 
+              })));
+            } else if (result.errors && Array.isArray(result.errors)) {
+              allErrors.push(...result.errors);
+            }
+          } catch (chunkErr: any) {
+            allErrors.push(...chunk.map(m => ({ 
+              molecule: m.molecule || 'Unknown', 
+              reason: chunkErr.message || 'Connection lost during chunk' 
+            })));
           }
 
           processed += chunk.length;
@@ -224,11 +240,11 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
           toast({ 
             variant: 'destructive',
             title: "Import completed with issues", 
-            description: `${moleculesData.length - allErrors.length} succeeded, ${allErrors.length} failed. Check the error list below.` 
+            description: `${moleculesData.length - allErrors.length} succeeded, ${allErrors.length} failed. See the red rejection panel for details.` 
           });
         } else {
           toast({ title: "Bulk import success", description: `Successfully processed ${moleculesData.length} ingredients.` });
-          window.location.reload();
+          setTimeout(() => window.location.reload(), 2000);
         }
       } catch (err: any) {
         toast({ variant: 'destructive', title: "Import failed", description: err.message });
@@ -435,7 +451,7 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
                     </td>
                   </tr>
                 ))
-              ) : molecules.length === 0 ? (<tr><td colSpan={5} className="p-20 text-center text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">No ingredients found in MongoDB</td></tr>) : molecules.map(mol => (
+              ) : (!molecules || molecules.length === 0) ? (<tr><td colSpan={5} className="p-20 text-center text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">No ingredients found in MongoDB</td></tr>) : molecules.map(mol => (
                 <tr key={mol.id} className={cn("hover:bg-gray-50/50 transition-colors", selectedIds.includes(mol.id) && "bg-primary/5")}>
                   <td className="px-10 py-8">
                     <Checkbox checked={selectedIds.includes(mol.id)} onCheckedChange={() => toggleSelect(mol.id)} />
