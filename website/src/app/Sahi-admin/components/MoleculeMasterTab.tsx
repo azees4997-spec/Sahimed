@@ -91,6 +91,7 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
   };
 
   const [importProgress, setImportProgress] = useState<{ current: number, total: number } | null>(null);
+  const [failedList, setFailedList] = useState<{ molecule: string, reason: string }[]>([]);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -139,11 +140,13 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
       }
 
       setImportProgress({ current: 0, total: moleculesData.length });
+      setFailedList([]);
 
       try {
         const token = await user?.getIdToken();
         const CHUNK_SIZE = 100;
         let processed = 0;
+        const allErrors: any[] = [];
 
         for (let i = 0; i < moleculesData.length; i += CHUNK_SIZE) {
           const chunk = moleculesData.slice(i, i + CHUNK_SIZE);
@@ -161,12 +164,27 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
              throw new Error(result.message || result.error || `Import failed at chunk ${i/CHUNK_SIZE + 1}`);
           }
 
+          if (result.errors && result.errors.length > 0) {
+            allErrors.push(...result.errors);
+          }
+
           processed += chunk.length;
           setImportProgress({ current: processed, total: moleculesData.length });
         }
 
-        toast({ title: "Bulk import success", description: `Successfully processed ${moleculesData.length} ingredients.` });
-        window.location.reload();
+        setFailedList(allErrors);
+        setImportProgress(null);
+
+        if (allErrors.length > 0) {
+          toast({ 
+            variant: 'destructive',
+            title: "Import completed with issues", 
+            description: `${moleculesData.length - allErrors.length} succeeded, ${allErrors.length} failed. Check the error list below.` 
+          });
+        } else {
+          toast({ title: "Bulk import success", description: `Successfully processed ${moleculesData.length} ingredients.` });
+          window.location.reload();
+        }
       } catch (err: any) {
         toast({ variant: 'destructive', title: "Import failed", description: err.message });
         setImportProgress(null);
@@ -258,6 +276,39 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
            <Button onClick={() => { setEditingMol(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] bg-primary text-white"><Plus className="w-4 h-4" /> New Ingredient</Button>
         </div>
       </SectionHeader>
+
+      {failedList.length > 0 && (
+        <Card className="rounded-[40px] border-2 border-red-100 bg-red-50/30 overflow-hidden animate-in slide-in-from-top-4">
+          <div className="bg-red-500 p-6 text-white flex justify-between items-center">
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-widest">Import Exception Report</h3>
+              <p className="text-[10px] font-medium opacity-80 mt-1">The following {failedList.length} items could not be processed</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setFailedList([])} className="text-white hover:bg-white/10 rounded-full font-black text-[9px] uppercase">Dismiss</Button>
+          </div>
+          <div className="max-h-64 overflow-y-auto">
+            <table className="w-full text-left">
+              <thead className="bg-red-50 text-[9px] font-black text-red-400 uppercase tracking-widest border-b border-red-100">
+                <tr>
+                  <th className="px-10 py-4">Molecule</th>
+                  <th className="px-10 py-4">Failure Reason</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-red-50">
+                {failedList.map((fail, idx) => (
+                  <tr key={idx} className="hover:bg-red-50/50 transition-colors">
+                    <td className="px-10 py-4 font-black text-xs text-red-900 uppercase">{fail.molecule}</td>
+                    <td className="px-10 py-4 text-xs font-medium text-red-600">{fail.reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="p-6 bg-white/50 border-t border-red-100">
+             <p className="text-[9px] font-black text-red-400 uppercase tracking-tighter">Tip: Check for duplicates or missing Master IDs in your CSV file.</p>
+          </div>
+        </Card>
+      )}
 
       {selectedIds.length > 0 && (
         <div className="bg-red-50 p-4 rounded-3xl flex justify-between items-center border border-red-100 animate-in fade-in slide-in-from-top-2">

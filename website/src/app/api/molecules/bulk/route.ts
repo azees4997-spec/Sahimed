@@ -84,8 +84,20 @@ export async function POST(request: Request) {
     });
 
     // 3. Execute MongoDB Bulk
+    let writeErrors: any[] = [];
     if (ops.length > 0) {
-      await moleculesCol.bulkWrite(ops, { ordered: false });
+      try {
+        await moleculesCol.bulkWrite(ops, { ordered: false });
+      } catch (err: any) {
+        if (err.writeErrors) {
+          writeErrors = err.writeErrors.map((e: any) => ({
+            molecule: molecules[e.index]?.molecule || "Unknown",
+            reason: e.errmsg
+          }));
+        } else {
+          throw err;
+        }
+      }
     }
 
     // 4. Sync to Firestore using Admin SDK (Batching)
@@ -114,8 +126,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ 
       success: true, 
-      count: molecules.length,
-      message: `Processed ${molecules.length} molecules successfully.`
+      count: molecules.length - writeErrors.length,
+      total: molecules.length,
+      errors: writeErrors,
+      message: `Processed ${molecules.length - writeErrors.length} molecules successfully.`
     });
   } catch (err: any) {
     console.error("[Molecule Bulk Import Error]", err);
