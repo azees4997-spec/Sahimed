@@ -323,7 +323,7 @@ export default function Navbar() {
               
               if (detectedPincode) {
                 try {
-                  const res = await fetch('/api/logistics/velocity/serviceability', {
+                  const res = await fetch('/api/logistics/shipway/serviceability', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ toPincode: detectedPincode })
@@ -444,7 +444,7 @@ export default function Navbar() {
                             if (input && input.value.length === 6) {
                               setIsLocating(true);
                               try {
-                                const res = await fetch('/api/logistics/velocity/serviceability', {
+                                const res = await fetch('/api/logistics/shipway/serviceability', {
                                   method: 'POST',
                                   headers: { 'Content-Type': 'application/json' },
                                   body: JSON.stringify({ toPincode: input.value })

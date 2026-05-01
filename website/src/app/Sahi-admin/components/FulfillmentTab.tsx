@@ -339,13 +339,13 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                        <div className="p-6 bg-primary/5 border-2 border-primary/20 rounded-2xl">
                          <p className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
                            <Package className="w-4 h-4" />
-                           Velocity Shipping (Default Partner)
+                           Shipway Shipping (Default Partner)
                          </p>
                          <p className="text-[9px] font-bold text-primary/60 mt-1 uppercase tracking-widest">
                            Automated AWB orchestration will trigger on confirmation
                          </p>
                        </div>
-                       <Input placeholder="Manual AWB (Optional)" value={shippingInfo.awb} onChange={e => setShippingInfo({...shippingInfo, awb: e.target.value, partner: 'Velocity'})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
+                       <Input placeholder="Manual AWB (Optional)" value={shippingInfo.awb} onChange={e => setShippingInfo({...shippingInfo, awb: e.target.value, partner: 'Shipway'})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
                      </div>
                  )}
                  {statusUpdateTarget === 'Cancelled' && (
@@ -379,7 +379,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                   <div className="grid grid-cols-2 gap-3">
                     {selectedOrder?.status === 'Pending Consult' ? (
                       <Button 
-                        onClick={() => updateOrderStatus(selectedOrder._id, 'Confirmed', { shipping: { partner: 'Velocity' } })}
+                        onClick={() => updateOrderStatus(selectedOrder._id, 'Confirmed', { shipping: { partner: 'Shipway' } })}
                         className="col-span-2 rounded-2xl h-16 bg-emerald-600 text-white font-black text-xs uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-100 gap-3"
                       >
                          <Stethoscope className="w-5 h-5" />

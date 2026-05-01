@@ -296,7 +296,7 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/logistics/velocity/serviceability', {
+      const res = await fetch('/api/logistics/shipway/serviceability', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ toPincode: orderInfo.pincode })
@@ -312,7 +312,7 @@ export default function CheckoutPage() {
         return;
       }
     } catch(e) {
-      console.error("Velocity check failed", e);
+      console.error("Shipway check failed", e);
     }
     
     const cleanPhone = orderInfo.phoneNumber.replace(/\D/g, '');

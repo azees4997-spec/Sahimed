@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { VelocityService } from '@/lib/logistics/velocity';
+import { ShipwayService } from '@/lib/logistics/shipway';
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,11 +13,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Defaulting origin to the Bengaluru warehouse pincode.
-    // The user has a Bengaluru warehouse, assuming common Bengaluru pincode if not provided.
     const fromPincode = process.env.WAREHOUSE_PINCODE || '560068'; 
-    console.log(`[Velocity] Checking serviceability from ${fromPincode} to ${toPincode}`);
+    console.log(`[Shipway] Checking serviceability from ${fromPincode} to ${toPincode}`);
 
-    const result = await VelocityService.checkServiceability(fromPincode, toPincode);
+    const result = await ShipwayService.checkServiceability(fromPincode, toPincode);
 
     if (result.success) {
       return NextResponse.json({
@@ -36,7 +35,7 @@ export async function POST(req: NextRequest) {
       );
     }
   } catch (error: any) {
-    console.error("[Velocity API Error]:", error);
+    console.error("[Shipway API Error]:", error);
     return NextResponse.json(
       { 
         error: 'Internal server error', 

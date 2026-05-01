@@ -106,7 +106,7 @@ export default function AddressForm({ initialData, onSave, isLoading }: AddressF
   const handleSubmit = async () => {
     setIsLocating(true);
     try {
-      const res = await fetch('/api/logistics/velocity/serviceability', {
+      const res = await fetch('/api/logistics/shipway/serviceability', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ toPincode: formData.pincode })
@@ -122,7 +122,7 @@ export default function AddressForm({ initialData, onSave, isLoading }: AddressF
         return;
       }
     } catch(e) {
-      console.error("Velocity check failed", e);
+      console.error("Shipway check failed", e);
     }
     setIsLocating(false);
 

@@ -156,12 +156,12 @@ export async function PUT(req: Request) {
     if (updates.action === 'cancel_shipment') {
       try {
         const order = await db.collection('orders').findOne({ _id: new ObjectId(id) });
-        if (order && (order.shipping?.partner === 'Velocity' || order.returnShipping?.partner === 'Velocity')) {
-          const { VelocityService } = await import('@/lib/logistics/velocity');
+        if (order && (order.shipping?.partner === 'Shipway' || order.returnShipping?.partner === 'Shipway')) {
+          const { ShipwayService } = await import('@/lib/logistics/shipway');
           // If it's a return, the orderId was order.orderId + '-RET'
           const targetOrderId = updates.isReturn ? `${order.orderId}-RET` : order.orderId;
-          const velocityRes = await VelocityService.cancelOrder(targetOrderId);
-          if (velocityRes.success) {
+          const shipwayRes = await ShipwayService.cancelOrder(targetOrderId);
+          if (shipwayRes.success) {
             const unsetObj = updates.isReturn ? { returnShipping: "" } : { shipping: "" };
             const nextStatus = updates.isReturn ? 'Delivered' : 'Packed'; // Revert status
             await db.collection('orders').updateOne(
@@ -170,7 +170,7 @@ export async function PUT(req: Request) {
             );
             return NextResponse.json({ success: true, message: 'Shipment cancelled' });
           } else {
-             return NextResponse.json({ error: velocityRes.error }, { status: 400 });
+             return NextResponse.json({ error: shipwayRes.error }, { status: 400 });
           }
         }
         return NextResponse.json({ error: 'Order not valid for cancellation' }, { status: 400 });
@@ -186,15 +186,15 @@ export async function PUT(req: Request) {
 
     const currentOrder = await db.collection('orders').findOne({ _id: new ObjectId(id) });
 
-    let velocityStatus = null;
+    let shipwayStatus = null;
 
-    // VELOCITY AUTOMATION: Trigger when partner is Velocity
-    if ((updates.status === 'Confirmed' || updates.status === 'Shipped') && (updates.shipping?.partner === 'Velocity' || currentOrder?.shipping?.partner === 'Velocity')) {
-      console.log(`[Velocity Automation] Block entered for order ${id}. Status: ${updates.status}`);
+    // SHIPWAY AUTOMATION: Trigger when partner is Shipway
+    if ((updates.status === 'Confirmed' || updates.status === 'Shipped') && (updates.shipping?.partner === 'Shipway' || currentOrder?.shipping?.partner === 'Shipway')) {
+      console.log(`[Shipway Automation] Block entered for order ${id}. Status: ${updates.status}`);
       try {
         if (currentOrder && !currentOrder.shipping?.awb) { // Double check no AWB exists to prevent duplicates
-          const { VelocityService } = await import('@/lib/logistics/velocity');
-          const velocityRes = await VelocityService.createForwardOrder({
+          const { ShipwayService } = await import('@/lib/logistics/shipway');
+          const shipwayRes = await ShipwayService.createForwardOrder({
             orderId: currentOrder.orderId,
             billingCustomerName: currentOrder.patientName,
             orderItems: (currentOrder.items || []).map((it: any) => ({
@@ -215,13 +215,13 @@ export async function PUT(req: Request) {
             paymentMode: 'PREPAID'
           });
           
-          velocityStatus = velocityRes;
+          shipwayStatus = shipwayRes;
 
-          if (velocityRes.success) {
-            console.log(`[Velocity] Order creation success:`, JSON.stringify(velocityRes.data, null, 2));
+          if (shipwayRes.success) {
+            console.log(`[Shipway] Order creation success:`, JSON.stringify(shipwayRes.data, null, 2));
             
             // Extract data from possible nested 'result' object
-            const vData = velocityRes.data.result || velocityRes.data;
+            const vData = shipwayRes.data.result || shipwayRes.data;
             const awb = vData.awb_number || vData.awb;
             const label = vData.label_url || vData.manifest_url || vData.label;
             const courier = vData.courier_name || vData.courier;
@@ -237,28 +237,28 @@ export async function PUT(req: Request) {
                   } 
                 }
               );
-              console.log(`[Velocity Automation] Order ${currentOrder.orderId} manifested successfully. AWB: ${awb}`);
+              console.log(`[Shipway Automation] Order ${currentOrder.orderId} manifested successfully. AWB: ${awb}`);
             } else {
-              console.warn(`[Velocity Automation] Success response but no AWB found for order ${currentOrder.orderId}`);
+              console.warn(`[Shipway Automation] Success response but no AWB found for order ${currentOrder.orderId}`);
             }
           } else {
-            console.error(`[Velocity Automation] Failed for order ${currentOrder.orderId}:`, velocityRes.error || velocityRes.data);
+            console.error(`[Shipway Automation] Failed for order ${currentOrder.orderId}:`, shipwayRes.error || shipwayRes.data);
           }
         }
-      } catch (velocityErr: any) {
-        console.error(`[Velocity Automation Error] Failed to manifest order ${id}:`, velocityErr.message);
-        velocityStatus = { success: false, error: velocityErr.message };
+      } catch (shipwayErr: any) {
+        console.error(`[Shipway Automation Error] Failed to manifest order ${id}:`, shipwayErr.message);
+        shipwayStatus = { success: false, error: shipwayErr.message };
       }
     }
 
-    // VELOCITY REVERSE AUTOMATION: Trigger when status is Returned and partner is Velocity
+    // SHIPWAY REVERSE AUTOMATION: Trigger when status is Returned and partner is Shipway
     if (updates.status === 'Returned' && result.modifiedCount > 0) {
       try {
         const order = await db.collection('orders').findOne({ _id: new ObjectId(id) });
-        // Assuming if they want reverse orchestration, it's done via Velocity if it was shipped via Velocity or specified.
-        if (order && (order.shipping?.partner === 'Velocity' || updates.shipping?.partner === 'Velocity')) {
-          const { VelocityService } = await import('@/lib/logistics/velocity');
-          const velocityRes = await VelocityService.createReverseOrder({
+        // Assuming if they want reverse orchestration, it's done via Shipway if it was shipped via Shipway or specified.
+        if (order && (order.shipping?.partner === 'Shipway' || updates.shipping?.partner === 'Shipway')) {
+          const { ShipwayService } = await import('@/lib/logistics/shipway');
+          const shipwayRes = await ShipwayService.createReverseOrder({
             orderId: order.orderId + '-RET', // Append -RET for reverse order distinction
             billingCustomerName: order.patientName,
             orderItems: (order.items || []).map((it: any) => ({
@@ -279,21 +279,21 @@ export async function PUT(req: Request) {
             paymentMode: 'PREPAID'
           });
           
-          if (velocityRes.success && velocityRes.data?.awb_number) {
+          if (shipwayRes.success && shipwayRes.data?.awb_number) {
             await db.collection('orders').updateOne(
               { _id: new ObjectId(id) },
               { $set: { 
-                  'returnShipping.awb': velocityRes.data.awb_number, 
-                  'returnShipping.labelUrl': velocityRes.data.label_url || velocityRes.data.manifest_url,
-                  'returnShipping.courier': velocityRes.data.courier_name
+                  'returnShipping.awb': shipwayRes.data.awb_number, 
+                  'returnShipping.labelUrl': shipwayRes.data.label_url || shipwayRes.data.manifest_url,
+                  'returnShipping.courier': shipwayRes.data.courier_name
                 } 
               }
             );
-            console.log(`[Velocity Reverse] Return for ${order.orderId} manifested successfully.`);
+            console.log(`[Shipway Reverse] Return for ${order.orderId} manifested successfully.`);
           }
         }
-      } catch (velocityErr: any) {
-        console.error(`[Velocity Reverse Error] Failed to manifest return ${id}:`, velocityErr.message);
+      } catch (shipwayErr: any) {
+        console.error(`[Shipway Reverse Error] Failed to manifest return ${id}:`, shipwayErr.message);
       }
     }
     // Sync updates back to Firebase so customer can see live status changes
@@ -319,7 +319,7 @@ export async function PUT(req: Request) {
     return NextResponse.json({ 
       success: true, 
       modifiedCount: result.modifiedCount,
-      velocity: velocityStatus 
+      shipway: shipwayStatus 
     });
   } catch (err: any) {
     console.error("[Orders API Error]", err);

@@ -66,10 +66,10 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
 
   const downloadTemplate = () => {
     const headers = [
-      'name', 'sku', 'manufacturer', 'category', 'isGeneric', 'isBestSeller', 'prescriptionRequired', 'packSize', 'imageUrl', 'imageUrl2', 'imageUrl3', 'description', 'treatment', 
+      'name', 'sku', 'manufacturer', 'category', 'hsnCode', 'gstPercentage', 'isGeneric', 'isBestSeller', 'prescriptionRequired', 'packSize', 'imageUrl', 'imageUrl2', 'imageUrl3', 'description', 'treatment', 
       'safetyAdvice', 'howToUse', 'saltComposition', 'moleculeCode', 'price', 'mrp', 'availableQuantity'
     ];
-    const csv = headers.join(',') + '\n"New Product","SKU001","Manufacturer","Category","false","false","false","10 Tablets","","","","Description","Treatment","Advice","How to use","Salt","MM0001","0","0","0"';
+    const csv = headers.join(',') + '\n"New Product","SKU001","Manufacturer","Category","3004","12","false","false","false","10 Tablets","","","","Description","Treatment","Advice","How to use","Salt","MM0001","0","0","0"';
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -115,7 +115,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
           let val: any = values[i]?.replace(/^"|"$/g, '') || '';
           if (['isGeneric', 'isBestSeller', 'prescriptionRequired'].includes(h)) {
             val = val.toLowerCase() === 'true';
-          } else if (['price', 'mrp', 'availableQuantity'].includes(h)) {
+          } else if (['price', 'mrp', 'availableQuantity', 'gstPercentage'].includes(h)) {
             val = Number(val) || 0;
           }
           obj[h] = val;
@@ -472,11 +472,24 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     return () => clearTimeout(t);
   }, [molSearch]);
 
+  const HSN_GST_MAP: Record<string, number> = {
+    '3004': 12, // Medicaments
+    '3002': 5,  // Human blood, vaccines
+    '3003': 12, // Medicaments (unmixed)
+    '3005': 12, // Wadding, gauze, bandages
+    '3006': 12, // Pharmaceutical goods
+    '3304': 18, // Beauty or make-up preparations
+    '2106': 18, // Food preparations (supplements)
+    '3401': 18, // Soap
+  };
+
   const [form, setForm] = useState({
     name: initialData?.name || '',
     sku: initialData?.sku || '',
     manufacturer: initialData?.manufacturer || '',
     category: initialData?.category || '',
+    hsnCode: initialData?.hsnCode || '',
+    gstPercentage: initialData?.gstPercentage || 0,
     isGeneric: initialData?.isGeneric || false,
     isBestSeller: initialData?.isBestSeller ?? false,
     prescriptionRequired: initialData?.prescriptionRequired || false,
@@ -608,6 +621,32 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
             <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black">Medicine name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black">Sku</Label><Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black">Manufacturer</Label><Input value={form.manufacturer} onChange={e => setForm({...form, manufacturer: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black">HSN Code</Label>
+              <Input 
+                value={form.hsnCode} 
+                onChange={e => {
+                  const val = e.target.value;
+                  const prefix = val.substring(0, 4);
+                  const autoGst = HSN_GST_MAP[prefix];
+                  setForm({
+                    ...form, 
+                    hsnCode: val,
+                    ...(autoGst !== undefined ? { gstPercentage: autoGst } : {})
+                  });
+                }} 
+                className="rounded-2xl h-14 bg-gray-50 border-none font-bold" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black">GST (%)</Label>
+              <Input 
+                type="number"
+                value={form.gstPercentage} 
+                onChange={e => setForm({...form, gstPercentage: Number(e.target.value)})} 
+                className="rounded-2xl h-14 bg-gray-50 border-none font-bold" 
+              />
+            </div>
             <div className="col-span-2 flex items-center space-x-10 pt-4">
               <div className="flex items-center space-x-2"><Checkbox id="rx-req" checked={form.prescriptionRequired} onCheckedChange={(c) => setForm({...form, prescriptionRequired: !!c})} /><Label htmlFor="rx-req" className="text-[10px] font-black text-red-500">Rx required</Label></div>
               <div className="flex items-center space-x-2"><Checkbox id="is-generic" checked={form.isGeneric} onCheckedChange={(c) => setForm({...form, isGeneric: !!c})} /><Label htmlFor="is-generic" className="text-[10px] font-black text-accent">SahiMed generic</Label></div>
