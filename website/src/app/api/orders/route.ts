@@ -211,6 +211,7 @@ export async function PUT(req: Request) {
     const { id, ...updates } = body;
     const client = await clientPromise;
     const db = client.db('sahimed');
+    const currentOrder = await db.collection('orders').findOne({ _id: new ObjectId(id) });
     
     // ACTION: Cancel Shipment
     if (updates.action === 'cancel_shipment') {
@@ -269,20 +270,20 @@ export async function PUT(req: Request) {
       { $set: { ...updates, updatedAt: new Date() } }
     );
 
-    const currentOrder = await db.collection('orders').findOne({ _id: new ObjectId(id) });
-
+    // Refresh currentOrder after update for automation logic
+    const refreshedOrder = await db.collection('orders').findOne({ _id: new ObjectId(id) });
     let shipwayStatus = null;
 
     // SHIPWAY AUTOMATION: Trigger when status is Confirmed or Shipped
     if ((updates.status === 'Confirmed' || updates.status === 'Shipped')) {
       console.log(`[Shipway Automation] Block entered for order ${id}. Status: ${updates.status}`);
       try {
-        if (currentOrder && !currentOrder.shipping?.awb) { // Double check no AWB exists to prevent duplicates
+        if (refreshedOrder && !refreshedOrder.shipping?.awb) { // Double check no AWB exists to prevent duplicates
           const { ShipwayService } = await import('@/lib/logistics/shipway');
           const shipwayRes = await ShipwayService.createForwardOrder({
-            orderId: currentOrder.orderId,
-            billingCustomerName: currentOrder.patientName,
-            orderItems: (currentOrder.items || []).map((it: any) => ({
+            orderId: refreshedOrder.orderId,
+            billingCustomerName: refreshedOrder.patientName,
+            orderItems: (refreshedOrder.items || []).map((it: any) => ({
               name: it.name,
               quantity: it.quantity,
               price: Number(it.unitPrice),
@@ -290,13 +291,13 @@ export async function PUT(req: Request) {
             })),
             warehouseId: '93743', 
             shippingDetails: {
-              address: `${currentOrder.shippingDetails?.houseNumber || ''}, ${currentOrder.shippingDetails?.street || ''}`,
-              city: currentOrder.shippingDetails?.city || '',
-              state: currentOrder.shippingDetails?.state || '',
-              pincode: currentOrder.shippingDetails?.pincode || '',
-              phone: currentOrder.phoneNumber
+              address: `${refreshedOrder.shippingDetails?.houseNumber || ''}, ${refreshedOrder.shippingDetails?.street || ''}`,
+              city: refreshedOrder.shippingDetails?.city || '',
+              state: refreshedOrder.shippingDetails?.state || '',
+              pincode: refreshedOrder.shippingDetails?.pincode || '',
+              phone: refreshedOrder.phoneNumber
             },
-            totalAmount: Number(currentOrder.totalAmount),
+            totalAmount: Number(refreshedOrder.totalAmount),
             paymentMode: 'PREPAID'
           });
           
