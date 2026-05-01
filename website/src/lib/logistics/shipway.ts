@@ -110,7 +110,8 @@ export class ShipwayService {
         billing_phone: String(order.shippingDetails.phone),
         billing_zipcode: String(order.shippingDetails.pincode),
         warehouse_id: 93743,
-        return_warehouse_id: 93743
+        return_warehouse_id: 93743,
+        carrier_id: 0
       };
       
       console.log(`[Shipway] Pushing forward order to v2orders...`);
