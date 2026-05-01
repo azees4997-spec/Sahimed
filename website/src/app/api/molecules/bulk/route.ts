@@ -41,7 +41,12 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     // 1. Authorize the user
-    await verifyAdmin(request);
+    try {
+      await verifyAdmin(request);
+    } catch (authErr: any) {
+      console.error("[Bulk Auth Error]", authErr.message);
+      return NextResponse.json({ error: "Authorization failed", details: authErr.message }, { status: 401 });
+    }
 
     const molecules = await request.json();
     
@@ -53,9 +58,14 @@ export async function POST(request: Request) {
     const db = client.db('sahimed');
     const moleculesCol = db.collection('molecules');
 
-    // 2. Prepare MongoDB Bulk Ops
-    const ops = molecules.map((m: any) => {
+    // 2. Prepare MongoDB Bulk Ops with Validation
+    const ops = molecules.map((m: any, index: number) => {
       const { id, _id, ...rest } = m;
+      
+      if (!m.molecule || !m.form) {
+        throw new Error(`Row ${index + 1}: 'molecule' and 'form' are mandatory fields.`);
+      }
+
       const filterId = id || _id || `${m.molecule}-${m.form}`.trim().toLowerCase().replace(/\s+/g, '-');
       
       return {
@@ -100,19 +110,19 @@ export async function POST(request: Request) {
       }
     } catch (fsErr: any) {
       console.error("[Firestore Sync Error]", fsErr);
-      // We don't fail the whole request if Firestore sync fails, but we log it
     }
 
     return NextResponse.json({ 
       success: true, 
       count: molecules.length,
-      message: `Processed ${molecules.length} molecules and synced to cloud registry.`
+      message: `Processed ${molecules.length} molecules successfully.`
     });
   } catch (err: any) {
     console.error("[Molecule Bulk Import Error]", err);
     return NextResponse.json({ 
       error: "Import failed", 
-      details: err.message 
+      message: err.message,
+      details: err.toString()
     }, { status: 500 });
   }
 }
