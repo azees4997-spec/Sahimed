@@ -274,7 +274,15 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[1000px]">
             <thead className="bg-gray-50 text-[10px] font-black text-gray-400 border-b">
-              <tr><th className="px-8 py-6">Order id</th><th className="px-8 py-6">Date</th><th className="px-8 py-6">Patient</th><th className="px-8 py-6">Address</th><th className="px-8 py-6">Amount</th><th className="px-8 py-6 text-right">Action</th></tr>
+              <tr>
+                <th className="px-8 py-6">Order id</th>
+                <th className="px-8 py-6">Date</th>
+                <th className="px-8 py-6">Patient</th>
+                <th className="px-8 py-6">Address</th>
+                <th className="px-8 py-6">Status</th>
+                <th className="px-8 py-6 text-right">Amount</th>
+                <th className="px-8 py-6 text-right">Action</th>
+              </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (<tr><td colSpan={6} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : (!Array.isArray(orders) || orders.length === 0) ? (<tr><td colSpan={6} className="p-20 text-center font-bold text-gray-400 text-[10px]">No orders found</td></tr>) : orders.map(order => (
@@ -291,7 +299,8 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                     </p>
                   </td>
                   <td className="px-8 py-6">
-                    <Badge className={cn("font-black text-[8px]", 
+                    <Badge className={cn("font-black text-[8px] whitespace-nowrap", 
+                      order.status === 'Pending Pharmacist' ? "bg-orange-500 text-white shadow-sm" :
                       order.status === 'Pending Consult' ? "bg-emerald-100 text-emerald-600 border border-emerald-200" :
                       order.status === 'Confirmed' ? "bg-blue-100 text-blue-600" :
                       order.status === 'Shipped' ? "bg-purple-100 text-purple-600" :
@@ -300,7 +309,15 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                       order.status === 'Cancelled' ? "bg-red-100 text-red-600" : "bg-gray-100"
                     )}>{order.status}</Badge>
                   </td>
-                  <td className="px-8 py-6 text-right"><div className="flex justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)}><Eye className="w-4 h-4 text-primary" /></Button><Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(order); setIsEditing(true); }}><Edit2 className="w-4 h-4 text-gray-300" /></Button></div></td>
+                  <td className="px-8 py-6 text-right font-black text-xs">
+                    ₹{Number(order.totalAmount || 0).toFixed(2)}
+                  </td>
+                  <td className="px-8 py-6 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)}><Eye className="w-4 h-4 text-primary" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(order); setIsEditing(true); }}><Edit2 className="w-4 h-4 text-gray-300" /></Button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -377,14 +394,51 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                 <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
                   <h4 className="text-[10px] font-black text-gray-400">Manage Fulfillment Pipeline</h4>
                   <div className="grid grid-cols-2 gap-3">
-                    {selectedOrder?.status === 'Pending Consult' ? (
-                      <Button 
-                        onClick={() => updateOrderStatus(selectedOrder._id, 'Confirmed', { shipping: { partner: 'Shipway' } })}
-                        className="col-span-2 rounded-2xl h-16 bg-emerald-600 text-white font-black text-xs uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-100 gap-3"
-                      >
-                         <Stethoscope className="w-5 h-5" />
-                         Clinical Approval Granted
-                      </Button>
+                    {selectedOrder?.status === 'Pending Pharmacist' ? (
+                      <>
+                        <Button 
+                          disabled={isUpdating}
+                          onClick={() => updateOrderStatus(selectedOrder._id, 'Confirmed', { action: 'pharmacist_accept' })}
+                          className="col-span-2 rounded-2xl h-14 bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 shadow-lg shadow-emerald-100 gap-2"
+                        >
+                           <CheckCircle className="w-4 h-4" /> Pharmacist Accept
+                        </Button>
+                        <Button 
+                          disabled={isUpdating}
+                          onClick={() => updateOrderStatus(selectedOrder._id, 'Pending Consult', { action: 'pharmacist_consult_req' })}
+                          className="rounded-2xl h-12 bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-blue-600"
+                        >
+                           <Stethoscope className="w-3.5 h-3.5 mr-2" /> Consult Req
+                        </Button>
+                        <Button 
+                          disabled={isUpdating}
+                          onClick={() => updateOrderStatus(selectedOrder._id, 'Cancelled', { action: 'pharmacist_reject' })}
+                          className="rounded-2xl h-12 bg-red-50 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-100"
+                        >
+                           <X className="w-3.5 h-3.5 mr-2" /> Reject
+                        </Button>
+                      </>
+                    ) : selectedOrder?.status === 'Pending Consult' ? (
+                      <div className="col-span-2 space-y-4">
+                        <div className="grid grid-cols-1 gap-3">
+                           <Input 
+                            placeholder="Paste Prescription Link (Google Drive/S3)" 
+                            value={shippingInfo.awb} // Reuse awb state temporarily or use new one
+                            onChange={e => setShippingInfo({...shippingInfo, awb: e.target.value})} 
+                            className="rounded-2xl h-12 bg-white border font-bold text-xs" 
+                          />
+                          <Button 
+                            disabled={isUpdating}
+                            onClick={() => updateOrderStatus(selectedOrder._id, 'Confirmed', { 
+                              action: 'doctor_submit_rx', 
+                              prescriptionLink: shippingInfo.awb 
+                            })}
+                            className="rounded-2xl h-14 bg-primary text-white font-black text-[10px] uppercase tracking-widest hover:bg-primary/90 shadow-xl shadow-primary/10 gap-3"
+                          >
+                             <FileCheck className="w-4 h-4" /> Submit Doctor RX
+                          </Button>
+                        </div>
+                      </div>
                     ) : (
                       ['Packing', 'Packed', 'Shipped', 'Delivered', 'Returned', 'Cancelled'].map(s => (
                         <Button key={s} variant="outline" onClick={() => setStatusUpdateTarget(s)} className={cn("rounded-2xl h-12 font-black text-[10px] border-2", selectedOrder?.status === s ? "border-primary bg-primary/5 text-primary" : "text-gray-400")}>{s}</Button>
