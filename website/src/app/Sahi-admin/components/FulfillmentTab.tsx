@@ -492,6 +492,16 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                     Print Order Summary
                   </Button>
                   
+                  {selectedOrder?.shipping?.awb && !selectedOrder?.shipping?.labelUrl && (
+                    <Button 
+                      disabled={isUpdating}
+                      onClick={() => updateOrderStatus(selectedOrder._id, selectedOrder.status, { action: 'manifest_order' })}
+                      className="w-full h-14 rounded-2xl bg-emerald-600 border-4 border-white text-white font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl mt-2"
+                    >
+                      <FileText className="w-4 h-4 mr-2" /> Generate Shipping Label
+                    </Button>
+                  )}
+                  
                   {selectedOrder?.shipping?.labelUrl && (
                     <div className="flex gap-2">
                       <Button 

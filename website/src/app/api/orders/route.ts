@@ -263,6 +263,27 @@ export async function PUT(req: Request) {
       // Also append to global prescriptionUrls for visibility
       updates.prescriptionUrls = [...(currentOrder?.prescriptionUrls || []), updates.prescriptionUrl, updates.prescriptionLink].filter(Boolean);
       delete updates.action;
+    } else if (updates.action === 'manifest_order') {
+      try {
+        const { ShipwayService } = await import('@/lib/logistics/shipway');
+        const manifestRes = await ShipwayService.createManifest([currentOrder.orderId]);
+        if (manifestRes.success) {
+          const mData = manifestRes.data.result || manifestRes.data;
+          const labelUrl = mData.manifest_url || mData.label_url || mData.url;
+          
+          if (labelUrl) {
+            await db.collection('orders').updateOne(
+              { _id: new ObjectId(id) },
+              { $set: { 'shipping.labelUrl': labelUrl, updatedAt: new Date() } }
+            );
+            return NextResponse.json({ success: true, labelUrl });
+          }
+          return NextResponse.json({ error: 'Manifest created but no URL returned' }, { status: 400 });
+        }
+        return NextResponse.json({ error: manifestRes.error || 'Manifest failed' }, { status: 400 });
+      } catch (err: any) {
+        return NextResponse.json({ error: err.message }, { status: 500 });
+      }
     }
 
     const result = await db.collection('orders').updateOne(
