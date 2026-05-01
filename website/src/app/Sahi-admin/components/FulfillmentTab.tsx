@@ -395,6 +395,46 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                     </p>
                   </div>
                 </div>
+
+                {((selectedOrder?.prescriptionUrls?.length > 0) || (selectedOrder?.doctorConsultation?.prescriptionLink)) && (
+                  <div className="bg-emerald-50/50 p-6 rounded-[32px] border border-emerald-100 space-y-3">
+                    <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
+                      <FileCheck className="w-4 h-4" /> Clinical Attachments
+                    </h4>
+                    <div className="grid grid-cols-1 gap-2">
+                      {selectedOrder?.prescriptionUrls?.map((url: string, idx: number) => (
+                        <a 
+                          key={idx} 
+                          href={url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-3 bg-white rounded-2xl border border-emerald-100 text-[10px] font-black text-emerald-700 hover:bg-emerald-50 transition-all uppercase tracking-wider"
+                        >
+                          <span className="flex items-center gap-2">
+                            <FileText className="w-3.5 h-3.5" />
+                            Prescription #{idx + 1}
+                          </span>
+                          <span className="text-[8px] bg-emerald-100 px-2 py-1 rounded-lg">VIEW FILE</span>
+                        </a>
+                      ))}
+                      {selectedOrder?.doctorConsultation?.prescriptionLink && (
+                         <a 
+                          href={selectedOrder.doctorConsultation.prescriptionLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-3 bg-white rounded-2xl border border-emerald-100 text-[10px] font-black text-emerald-700 hover:bg-emerald-50 transition-all uppercase tracking-wider"
+                        >
+                          <span className="flex items-center gap-2">
+                            <Stethoscope className="w-3.5 h-3.5" />
+                            Doctor Consult Link
+                          </span>
+                          <span className="text-[8px] bg-emerald-100 px-2 py-1 rounded-lg">OPEN LINK</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
                   <h4 className="text-[10px] font-black text-gray-400">Manage Fulfillment Pipeline</h4>
                   <div className="grid grid-cols-2 gap-3">
