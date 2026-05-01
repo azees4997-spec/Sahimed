@@ -21,6 +21,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Dialog, 
   DialogContent, 
+  DialogHeader,
   DialogTitle, 
   DialogDescription 
 } from '@/components/ui/dialog';
@@ -71,7 +72,14 @@ export function PromoCodesTab({ db, isVerified, onBack }: { db: any, isVerified:
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
-                <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
+                Array(3).fill(0).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-10 py-8"><div className="w-32 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-10 py-8"><div className="w-16 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-10 py-8"><div className="w-20 h-6 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><div className="w-8 h-8 bg-slate-50 animate-pulse rounded-lg" /></div></td>
+                  </tr>
+                ))
               ) : (!promos || promos.length === 0) ? (
                 <tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300">No active campaigns</td></tr>
               ) : promos?.map(promo => (

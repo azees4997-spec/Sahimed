@@ -40,7 +40,7 @@ class _MainLayoutState extends State<MainLayout> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: _currentIndex == 0,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         if (_currentIndex != 0) {
           context.read<NavigationProvider>().switchTab(0);

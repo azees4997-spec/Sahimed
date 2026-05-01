@@ -10,7 +10,8 @@ import {
   Download,
   Upload,
   X,
-  Search
+  Search,
+  ShieldAlert
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,7 +61,7 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
   const fetchMolecules = async (q: string = '') => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/molecules?q=${q}&limit=100`);
+      const res = await fetch(`/api/molecules?q=${q}&limit=500`);
       if (res.ok) {
         const data = await res.json();
         setMolecules(data);
@@ -77,7 +78,7 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
   }, [searchQuery]);
 
   const downloadTemplate = () => {
-    const headers = ['molecule', 'masterId', 'form'];
+    const headers = ['molecule', 'masterId', 'form', 'imageUrl'];
     const csv = headers.join(',') + '\n"Paracetamol","MM0001","Tablet"';
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -101,19 +102,43 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
     const reader = new FileReader();
     reader.onload = async (event) => {
       const text = event.target?.result as string;
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-      if (lines.length < 2) return;
+      const csvLines: string[] = [];
+      let currentLine = '';
+      let lineInQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        if (char === '"') lineInQuotes = !lineInQuotes;
+        if (char === '\n' && !lineInQuotes) {
+          csvLines.push(currentLine.trim());
+          currentLine = '';
+        } else {
+          currentLine += char;
+        }
+      }
+      if (currentLine) csvLines.push(currentLine.trim());
+      const filteredLines = csvLines.filter(l => l);
+
+      if (filteredLines.length < 2) return;
       
-      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      const headers = filteredLines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
       
-      const moleculesData = lines.slice(1).map((line, idx) => {
+      const moleculesData = filteredLines.slice(1).map((line, idx) => {
         const values: string[] = [];
         let current = '';
         let inQuotes = false;
         for (let i = 0; i < line.length; i++) {
           const char = line[i];
-          if (char === '"') inQuotes = !inQuotes;
-          else if (char === ',' && !inQuotes) {
+          const nextChar = line[i + 1];
+          
+          if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+              // Escaped quote
+              current += '"';
+              i++; // Skip next quote
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === ',' && !inQuotes) {
             values.push(current.trim());
             current = '';
           } else {
@@ -124,10 +149,12 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
 
         const obj: any = {};
         headers.forEach((h, i) => {
-          obj[h] = values[i]?.replace(/^"|"$/g, '').trim() || '';
+          let val: any = values[i]?.replace(/^"|"$/g, '') || '';
+          obj[h] = val;
         });
+
         return obj;
-      }).filter(m => m.molecule || m.masterId || m.form); // Skip completely empty rows
+      }).filter(m => m.molecule || m.masterId || m.form); 
 
       // Pre-validation: Only validate rows that have at least one field filled
       const invalidRowIdx = moleculesData.findIndex((m, i) => !m.molecule || !m.form);
@@ -230,27 +257,58 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
     <div className="space-y-8 animate-in slide-in-from-bottom-2 relative">
       {importProgress && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <Card className="w-[400px] p-10 rounded-[40px] border-none shadow-2xl bg-white text-center space-y-6">
-            <div className="relative w-24 h-24 mx-auto">
-              <Loader2 className="w-24 h-24 text-primary animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center font-black text-xs">
-                {Math.round((importProgress.current / importProgress.total) * 100)}%
-              </div>
+          <Card className="w-[450px] p-10 rounded-[48px] border-none shadow-3xl bg-white/80 backdrop-blur-2xl text-center space-y-8 border border-white/20">
+            <div className="relative w-28 h-28 mx-auto">
+               <div className="absolute inset-0 rounded-full border-4 border-primary/10" />
+               <motion.div 
+                className="absolute inset-0 rounded-full border-t-4 border-primary" 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+               />
+               <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="font-black text-2xl text-primary">{Math.round((importProgress.current / importProgress.total) * 100)}%</span>
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Sync</span>
+               </div>
             </div>
             <div>
-              <h3 className="text-xl font-black text-gray-900">Importing Data</h3>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">
-                Processing {importProgress.current} of {importProgress.total} ingredients
+              <h3 className="text-2xl font-black text-slate-900 font-outfit uppercase tracking-tighter">Updating Ingredients</h3>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3 bg-slate-50 py-2 rounded-full">
+                Processing {importProgress.current} of {importProgress.total} records
               </p>
             </div>
-            <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary transition-all duration-500 ease-out" 
-                style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+            <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden p-1 shadow-inner">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full shadow-lg" 
+                initial={{ width: 0 }}
+                animate={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+                transition={{ duration: 0.5 }}
               />
             </div>
-            <p className="text-[9px] font-medium text-gray-400 italic">Please do not close this tab until completion...</p>
+            <p className="text-[10px] font-bold text-slate-400 italic">Syncing with global matrix... Please wait.</p>
           </Card>
+        </div>
+      )}
+
+      {failedList.length > 0 && (
+        <div className="fixed bottom-10 right-10 z-[150] w-[350px] animate-in slide-in-from-right-10 duration-500">
+           <Card className="rounded-[32px] shadow-3xl border-none overflow-hidden bg-red-600 text-white">
+              <div className="p-6 bg-red-700/50 flex items-center justify-between">
+                 <h4 className="font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+                    <ShieldAlert className="w-4 h-4" /> Import Rejections
+                 </h4>
+                 <Button variant="ghost" size="icon" onClick={() => setFailedList([])} className="h-8 w-8 text-white hover:bg-white/10"><X className="w-4 h-4" /></Button>
+              </div>
+              <ScrollArea className="h-64 p-6 pt-0">
+                 <div className="space-y-4 pt-4">
+                    {failedList.map((err, i) => (
+                       <div key={i} className="space-y-1 pb-4 border-b border-white/10 last:border-none">
+                          <p className="font-black text-[10px] uppercase truncate">{err.molecule || err.item || 'Unknown Ingredient'}</p>
+                          <p className="text-[9px] font-medium text-white/60 leading-relaxed">{err.reason}</p>
+                       </div>
+                    ))}
+                 </div>
+              </ScrollArea>
+           </Card>
         </div>
       )}
       <SectionHeader title="Ingredient Database" subtitle="Manage scientific names and salt data" onBack={onBack}>
@@ -339,7 +397,29 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={5} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : molecules.length === 0 ? (<tr><td colSpan={5} className="p-20 text-center text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">No ingredients found in MongoDB</td></tr>) : molecules.map(mol => (
+              {isLoading ? (
+                Array(5).fill(0).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-10 py-8" colSpan={2}>
+                       <div className="flex flex-col space-y-2">
+                          <div className="w-48 h-4 bg-slate-100 animate-pulse rounded-full" />
+                          <div className="w-32 h-2 bg-slate-50 animate-pulse rounded-full" />
+                       </div>
+                    </td>
+                    <td className="px-10 py-8">
+                       <div className="w-20 h-4 bg-slate-100 animate-pulse rounded-full" />
+                    </td>
+                    <td className="px-10 py-8">
+                       <div className="w-16 h-4 bg-slate-100 animate-pulse rounded-full" />
+                    </td>
+                    <td className="px-10 py-8 text-right">
+                       <div className="flex justify-end gap-2">
+                          <div className="w-8 h-8 bg-slate-50 animate-pulse rounded-lg" />
+                       </div>
+                    </td>
+                  </tr>
+                ))
+              ) : molecules.length === 0 ? (<tr><td colSpan={5} className="p-20 text-center text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">No ingredients found in MongoDB</td></tr>) : molecules.map(mol => (
                 <tr key={mol.id} className={cn("hover:bg-gray-50/50 transition-colors", selectedIds.includes(mol.id) && "bg-primary/5")}>
                   <td className="px-10 py-8">
                     <Checkbox checked={selectedIds.includes(mol.id)} onCheckedChange={() => toggleSelect(mol.id)} />
@@ -377,7 +457,7 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
         </div>
       </Card>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden">
+        <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden">
           <DialogHeader className="bg-primary p-8 text-white space-y-2">
             <DialogTitle className="text-2xl font-black text-white">Ingredient Settings</DialogTitle>
             <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest uppercase">

@@ -3,13 +3,18 @@ import clientPromise from '@/lib/mongodb';
 import { verifyAdmin, verifyAuth } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 
+function escapeRegExp(string: string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export async function GET(req: Request) {
   try {
     await verifyAdmin(req);
     const client = await clientPromise;
     const db = client.db('sahimed');
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get('status');
+    const statusRaw = searchParams.get('status');
+    const status = statusRaw ? escapeRegExp(statusRaw) : null;
     const start = searchParams.get('start');
     const end = searchParams.get('end');
     
@@ -20,11 +25,16 @@ export async function GET(req: Request) {
       const dateField = query.orderDate ? 'orderDate' : 'createdAt'; // Fallback logic
       
       const dateQuery: any = {};
-      if (start) dateQuery.$gte = new Date(start);
+      if (start) {
+        const startDate = new Date(start);
+        if (!isNaN(startDate.getTime())) dateQuery.$gte = startDate;
+      }
       if (end) {
         const endDate = new Date(end);
-        endDate.setHours(23, 59, 59, 999);
-        dateQuery.$lte = endDate;
+        if (!isNaN(endDate.getTime())) {
+          endDate.setHours(23, 59, 59, 999);
+          dateQuery.$lte = endDate;
+        }
       }
       
       // We'll apply it to both for safety if they exist
@@ -150,11 +160,11 @@ export async function POST(req: Request) {
           paymentMode: 'PREPAID' // Defaulting to Prepaid for website orders for now, can be adjusted
         });
 
-        if (shipwayRes.success) {
+        if (shipwayRes.success && shipwayRes.data) {
           const vData = shipwayRes.data.result || shipwayRes.data;
-          const awb = vData.awb_number || vData.awb;
-          const label = vData.label_url || vData.manifest_url || vData.label;
-          const courier = vData.courier_name || vData.courier;
+          const awb = vData?.awb_number || vData?.awb;
+          const label = vData?.label_url || vData?.manifest_url || vData?.label;
+          const courier = vData?.courier_name || vData?.courier;
 
           if (awb) {
             await db.collection('orders').updateOne(
@@ -328,14 +338,14 @@ export async function PUT(req: Request) {
           
           shipwayStatus = shipwayRes;
 
-          if (shipwayRes.success) {
+          if (shipwayRes.success && shipwayRes.data) {
             console.log(`[Shipway] Order creation success:`, JSON.stringify(shipwayRes.data, null, 2));
             
             // Extract data from possible nested 'result' object
             const vData = shipwayRes.data.result || shipwayRes.data;
-            const awb = vData.awb_number || vData.awb;
-            const label = vData.label_url || vData.manifest_url || vData.label;
-            const courier = vData.courier_name || vData.courier;
+            const awb = vData?.awb_number || vData?.awb;
+            const label = vData?.label_url || vData?.manifest_url || vData?.label;
+            const courier = vData?.courier_name || vData?.courier;
 
             if (awb) {
               // Update order with AWB and label

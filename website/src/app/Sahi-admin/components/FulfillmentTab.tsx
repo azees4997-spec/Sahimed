@@ -291,7 +291,19 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={6} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : (!Array.isArray(orders) || orders.length === 0) ? (<tr><td colSpan={6} className="p-20 text-center font-bold text-gray-400 text-[10px]">No orders found</td></tr>) : orders.map(order => (
+              {isLoading ? (
+                Array(5).fill(0).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-8 py-6"><div className="w-24 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-8 py-6"><div className="w-20 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-8 py-6"><div className="w-32 h-6 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-8 py-6"><div className="w-48 h-4 bg-slate-50 animate-pulse rounded-full" /></td>
+                    <td className="px-8 py-6"><div className="w-24 h-6 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-8 py-6 text-right"><div className="w-16 h-4 bg-slate-100 animate-pulse rounded-full ml-auto" /></td>
+                    <td className="px-8 py-6 text-right"><div className="w-8 h-8 bg-slate-50 animate-pulse rounded-lg ml-auto" /></td>
+                  </tr>
+                ))
+              ) : (!Array.isArray(orders) || orders.length === 0) ? (<tr><td colSpan={7} className="p-20 text-center font-bold text-gray-400 text-[10px]">No orders found</td></tr>) : orders.map(order => (
                 <tr key={order._id || order.id} className="hover:bg-gray-50/50">
                   <td className="px-8 py-6 font-black text-xs uppercase">{order.orderId}</td>
                   <td className="px-8 py-6 text-[10px] font-black">{safeFormat(order.orderDate, 'dd MMM yyyy')}</td>

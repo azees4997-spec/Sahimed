@@ -22,20 +22,27 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const qRaw = searchParams.get('q');
     const q = qRaw ? escapeRegExp(qRaw) : null;
-    const limit = parseInt(searchParams.get('limit') || '50');
+    let limitValue = parseInt(searchParams.get('limit') || '50');
+    if (isNaN(limitValue) || limitValue < 1) limitValue = 50;
+    if (limitValue > 500) limitValue = 500;
 
     const client = await clientPromise;
     const db = client.db('sahimed');
     
     let query = {};
     if (q) {
-      query = { molecule: { $regex: q, $options: 'i' } };
+      query = { 
+        $or: [
+          { molecule: { $regex: q, $options: 'i' } },
+          { masterId: { $regex: q, $options: 'i' } }
+        ]
+      };
     }
 
     const molecules = await db.collection('molecules')
       .find(query)
       .sort({ molecule: 1 })
-      .limit(limit)
+      .limit(limitValue)
       .toArray();
 
     return NextResponse.json(molecules.map(m => ({ ...m, id: m._id.toString() })), {

@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { 
   Dialog, 
   DialogContent, 
+  DialogHeader,
   DialogTitle, 
   DialogDescription 
 } from '@/components/ui/dialog';
@@ -57,7 +58,16 @@ export function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: 
               <tr><th className="px-10 py-8">Name</th><th className="px-10 py-8">Identifier</th><th className="px-10 py-8">Tags</th><th className="px-10 py-8 text-right">Action</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={4} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : filteredUsers?.map(patient => (
+              {isLoading ? (
+                Array(5).fill(0).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-10 py-8"><div className="w-32 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-10 py-8"><div className="w-24 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-10 py-8"><div className="flex gap-2"><div className="w-12 h-4 bg-slate-50 animate-pulse rounded-full" /><div className="w-12 h-4 bg-slate-50 animate-pulse rounded-full" /></div></td>
+                    <td className="px-10 py-8 text-right"><div className="flex justify-end"><div className="w-8 h-8 bg-slate-50 animate-pulse rounded-lg" /></div></td>
+                  </tr>
+                ))
+              ) : filteredUsers?.map(patient => (
                 <tr key={patient.id} className="hover:bg-gray-50/50">
                   <td className="px-10 py-8 font-black text-sm">{patient.name || 'SahiMed member'}</td>
                   <td className="px-10 py-8 font-bold text-sm text-primary">{patient.phone || patient.email}</td>

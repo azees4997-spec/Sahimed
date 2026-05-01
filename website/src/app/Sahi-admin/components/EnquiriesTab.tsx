@@ -112,7 +112,13 @@ export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: 
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         {isLoading ? (
-          <div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>
+          Array(4).fill(0).map((_, i) => (
+            <div key={i} className="aspect-[3/4] rounded-[40px] bg-white animate-pulse shadow-sm border border-slate-50 p-6 flex flex-col space-y-4">
+              <div className="flex-1 bg-slate-50 rounded-3xl" />
+              <div className="h-4 bg-slate-100 rounded-full w-3/4" />
+              <div className="h-4 bg-slate-50 rounded-full w-1/2" />
+            </div>
+          ))
         ) : (!filteredEnquiries || filteredEnquiries.length === 0) ? (
           <div className="col-span-full py-20 text-center font-black text-gray-400 text-[10px] uppercase tracking-widest">No entries in queue</div>
         ) : filteredEnquiries.map(enq => {

@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { 
   Dialog, 
   DialogContent, 
+  DialogHeader,
   DialogTitle, 
   DialogDescription 
 } from '@/components/ui/dialog';
@@ -49,7 +50,16 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
               <tr><th className="px-10 py-8">Category Name</th><th className="px-10 py-8">Image URL</th><th className="px-10 py-8">Display Order</th><th className="px-10 py-8 text-right">Actions</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={4} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : categories?.map(cat => (
+              {isLoading ? (
+                Array(5).fill(0).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-10 py-8"><div className="w-48 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-10 py-8"><div className="w-32 h-2 bg-slate-50 animate-pulse rounded-full" /></td>
+                    <td className="px-10 py-8"><div className="w-12 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><div className="w-8 h-8 bg-slate-50 animate-pulse rounded-lg" /></div></td>
+                  </tr>
+                ))
+              ) : categories?.map(cat => (
                 <tr key={cat.id} className="hover:bg-gray-50/50">
                   <td className="px-10 py-8 font-black text-sm text-gray-900">{cat.name}</td>
                   <td className="px-10 py-8 font-medium text-xs text-gray-400 truncate max-w-[200px]">{cat.imageUrl || 'No image'}</td>
@@ -84,7 +94,7 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
         </div>
       </Card>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden">
+        <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden">
           <DialogHeader className="bg-primary p-8 text-white space-y-2">
             <DialogTitle className="text-2xl font-black text-white">Category definition</DialogTitle>
             <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest uppercase">

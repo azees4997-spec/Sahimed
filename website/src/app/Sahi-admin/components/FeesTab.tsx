@@ -17,6 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Dialog, 
   DialogContent, 
+  DialogHeader,
   DialogTitle, 
   DialogDescription 
 } from '@/components/ui/dialog';
@@ -49,7 +50,16 @@ export function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boole
               <tr><th className="px-10 py-8">Charge name</th><th className="px-10 py-8">Pricing</th><th className="px-10 py-8">Status</th><th className="px-10 py-8 text-right">Actions</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={4} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : (!fees || fees.length === 0) ? (<tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300">No fees found</td></tr>) : fees?.map(fee => (
+              {isLoading ? (
+                Array(3).fill(0).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-10 py-8"><div className="w-48 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-10 py-8"><div className="w-20 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-10 py-8"><div className="w-16 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-10 py-8 text-right"><div className="flex justify-end gap-2"><div className="w-8 h-8 bg-slate-50 animate-pulse rounded-lg" /></div></td>
+                  </tr>
+                ))
+              ) : (!fees || fees.length === 0) ? (<tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300">No fees found</td></tr>) : fees?.map(fee => (
                 <tr key={fee.id} className="hover:bg-gray-50/50">
                   <td className="px-10 py-8 font-black text-sm">{fee.name}</td>
                   <td className="px-10 py-8 font-black text-gray-900">₹{Number(fee.discountedAmount || 0).toFixed(2)}</td>
@@ -76,7 +86,7 @@ export function FeesTab({ db, isVerified, onBack }: { db: any, isVerified: boole
         </div>
       </Card>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="rounded-[40px] max-lg border-none p-0 overflow-hidden">
+        <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden">
           <DialogHeader className="bg-primary p-8 text-white space-y-2">
             <DialogTitle className="text-2xl font-black text-white">Fee structure</DialogTitle>
             <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest uppercase">

@@ -13,7 +13,9 @@ import {
   ImageIcon,
   Check,
   ChevronsUpDown,
-  ChevronRight
+  ChevronRight,
+  ShieldAlert,
+  X
 } from 'lucide-react';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { 
   Dialog, 
   DialogContent, 
+  DialogHeader,
   DialogTitle, 
   DialogDescription 
 } from '@/components/ui/dialog';
@@ -82,6 +85,9 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
     window.open('/api/products/bulk', '_blank');
   };
 
+  const [importProgress, setImportProgress] = useState<{ current: number, total: number } | null>(null);
+  const [failedList, setFailedList] = useState<any[]>([]);
+
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -89,19 +95,43 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
     const reader = new FileReader();
     reader.onload = async (event) => {
       const text = event.target?.result as string;
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-      if (lines.length < 2) return;
+      const csvLines: string[] = [];
+      let currentLine = '';
+      let lineInQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        if (char === '"') lineInQuotes = !lineInQuotes;
+        if (char === '\n' && !lineInQuotes) {
+          csvLines.push(currentLine.trim());
+          currentLine = '';
+        } else {
+          currentLine += char;
+        }
+      }
+      if (currentLine) csvLines.push(currentLine.trim());
+      const filteredLines = csvLines.filter(l => l);
+
+      if (filteredLines.length < 2) return;
       
-      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      const headers = filteredLines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
       
-      const products = lines.slice(1).map(line => {
+      const products = filteredLines.slice(1).map(line => {
         const values: string[] = [];
         let current = '';
         let inQuotes = false;
         for (let i = 0; i < line.length; i++) {
           const char = line[i];
-          if (char === '"') inQuotes = !inQuotes;
-          else if (char === ',' && !inQuotes) {
+          const nextChar = line[i + 1];
+          
+          if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+              // Escaped quote
+              current += '"';
+              i++; // Skip next quote
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === ',' && !inQuotes) {
             values.push(current.trim());
             current = '';
           } else {
@@ -126,22 +156,50 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
 
       try {
         const token = await user?.getIdToken();
-        const res = await fetch('/api/products/bulk', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(products)
-        });
-        if (res.ok) {
-          toast({ title: "Bulk import success", description: "Catalog updated" });
-          window.location.reload();
+        const CHUNK_SIZE = 100;
+        const allErrors: any[] = [];
+        let processed = 0;
+
+        setImportProgress({ current: 0, total: products.length });
+
+        for (let i = 0; i < products.length; i += CHUNK_SIZE) {
+          const chunk = products.slice(i, i + CHUNK_SIZE);
+          const res = await fetch('/api/products/bulk', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(chunk)
+          });
+          
+          const result = await res.json();
+          if (!res.ok) {
+            allErrors.push(...(chunk.map(p => ({ item: p.name, reason: result.message || 'Network error' }))));
+          } else if (result.errors?.length > 0) {
+            allErrors.push(...result.errors);
+          }
+
+          processed += chunk.length;
+          setImportProgress({ current: processed, total: products.length });
+        }
+
+        setFailedList(allErrors);
+        setImportProgress(null);
+
+        if (allErrors.length > 0) {
+          toast({ 
+            variant: 'destructive', 
+            title: "Import completed with issues", 
+            description: `${products.length - allErrors.length} succeeded, ${allErrors.length} failed.` 
+          });
         } else {
-          throw new Error('Import failed');
+          toast({ title: "Bulk import success", description: "Catalog updated successfully." });
+          window.location.reload();
         }
       } catch (err: any) {
         toast({ variant: 'destructive', title: "Import failed", description: err.message });
+        setImportProgress(null);
       }
     };
     reader.readAsText(file);
@@ -187,7 +245,64 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
   });
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8 animate-in slide-in-from-bottom-2 relative">
+      {importProgress && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <Card className="w-[450px] p-10 rounded-[48px] border-none shadow-3xl bg-white/80 backdrop-blur-2xl text-center space-y-8 border border-white/20">
+            <div className="relative w-28 h-28 mx-auto">
+               <div className="absolute inset-0 rounded-full border-4 border-primary/10" />
+               <motion.div 
+                className="absolute inset-0 rounded-full border-t-4 border-primary" 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+               />
+               <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="font-black text-2xl text-primary">{Math.round((importProgress.current / importProgress.total) * 100)}%</span>
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Progress</span>
+               </div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-black text-slate-900 font-outfit uppercase tracking-tighter">Syncing Inventory</h3>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3 bg-slate-50 py-2 rounded-full">
+                Processing {importProgress.current} of {importProgress.total} SKUs
+              </p>
+            </div>
+            <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden p-1 shadow-inner">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full shadow-lg" 
+                initial={{ width: 0 }}
+                animate={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+            <p className="text-[10px] font-bold text-slate-400 italic">Establishing data links... Please keep this window open.</p>
+          </Card>
+        </div>
+      )}
+
+      {failedList.length > 0 && (
+        <div className="fixed bottom-10 right-10 z-[150] w-[350px] animate-in slide-in-from-right-10 duration-500">
+           <Card className="rounded-[32px] shadow-3xl border-none overflow-hidden bg-red-600 text-white">
+              <div className="p-6 bg-red-700/50 flex items-center justify-between">
+                 <h4 className="font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+                    <ShieldAlert className="w-4 h-4" /> Import Rejections
+                 </h4>
+                 <Button variant="ghost" size="icon" onClick={() => setFailedList([])} className="h-8 w-8 text-white hover:bg-white/10"><X className="w-4 h-4" /></Button>
+              </div>
+              <ScrollArea className="h-64 p-6 pt-0">
+                 <div className="space-y-4 pt-4">
+                    {failedList.map((err, i) => (
+                       <div key={i} className="space-y-1 pb-4 border-b border-white/10 last:border-none">
+                          <p className="font-black text-[10px] uppercase truncate">{err.item || err.molecule || 'Unknown SKU'}</p>
+                          <p className="text-[9px] font-medium text-white/60 leading-relaxed">{err.reason}</p>
+                       </div>
+                    ))}
+                 </div>
+              </ScrollArea>
+           </Card>
+        </div>
+      )}
+
       <SectionHeader title="Product Inventory" subtitle="Manage and organize your store products" onBack={onBack}>
         <div className="flex flex-wrap items-center gap-4">
           <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".csv" />
@@ -264,7 +379,29 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
               <tr><th className="px-10 py-8">Product detail</th><th className="px-10 py-8">Category</th><th className="px-10 py-8 text-right">Manage</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (<tr><td colSpan={3} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>) : medicines?.length === 0 ? (<tr><td colSpan={3} className="p-20 text-center font-bold text-gray-300">No entries found</td></tr>) : medicines?.map(med => (
+              {isLoading ? (
+                Array(5).fill(0).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-10 py-8">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-slate-100 animate-pulse rounded-2xl" />
+                        <div className="space-y-2">
+                          <div className="w-48 h-4 bg-slate-100 animate-pulse rounded-full" />
+                          <div className="w-32 h-2 bg-slate-50 animate-pulse rounded-full" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-10 py-8">
+                      <div className="w-24 h-6 bg-slate-100 animate-pulse rounded-lg" />
+                    </td>
+                    <td className="px-10 py-8">
+                      <div className="flex justify-end gap-2">
+                        <div className="w-10 h-10 bg-slate-50 animate-pulse rounded-xl" />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : medicines?.length === 0 ? (<tr><td colSpan={3} className="p-20 text-center font-bold text-gray-300">No entries found</td></tr>) : medicines?.map(med => (
                 <tr key={med.id} className="hover:bg-gray-50/50">
                   <td className="px-10 py-8"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border flex items-center justify-center overflow-hidden">{med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-6 h-6 text-gray-200" />}</div><div className="flex flex-col"><span className="font-black text-sm">{med.name}</span><span className="text-[9px] text-gray-400 uppercase">{med.sku} • {med.manufacturer}</span></div></div></td>
                   <td className="px-10 py-8"><Badge variant="outline" className="font-black text-[8px]">{med.category}</Badge></td>

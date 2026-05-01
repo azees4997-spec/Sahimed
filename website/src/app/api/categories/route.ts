@@ -5,7 +5,9 @@ import clientPromise from '@/lib/mongodb';
 // GET all categories
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const limitValue = parseInt(searchParams.get('limit') || '50');
+  let limitValue = parseInt(searchParams.get('limit') || '50');
+  if (isNaN(limitValue) || limitValue < 1) limitValue = 50;
+  if (limitValue > 100) limitValue = 100;
 
   try {
     const client = await clientPromise;

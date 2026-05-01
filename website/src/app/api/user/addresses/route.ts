@@ -39,8 +39,15 @@ export async function POST(req: Request) {
 
     if (id) {
       // Update existing
+      let filter: any = { userId: user.uid };
+      try {
+        filter._id = id.length === 24 ? new ObjectId(id) : id;
+      } catch (e) {
+        filter._id = id;
+      }
+
       await db.collection('addresses').updateOne(
-        { _id: new ObjectId(id), userId: user.uid },
+        filter,
         { $set: addressData }
       );
       return NextResponse.json({ success: true, id });
@@ -66,10 +73,14 @@ export async function DELETE(req: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
     
-    await db.collection('addresses').deleteOne({
-      _id: new ObjectId(id),
-      userId: user.uid
-    });
+    let filter: any = { userId: user.uid };
+    try {
+      filter._id = id.length === 24 ? new ObjectId(id) : id;
+    } catch (e) {
+      filter._id = id;
+    }
+
+    await db.collection('addresses').deleteOne(filter);
     
     return NextResponse.json({ success: true });
   } catch (err: any) {

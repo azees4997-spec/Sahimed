@@ -269,7 +269,7 @@ class ApiService {
   Future<bool> checkServiceability(String pincode) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/logistics/velocity/serviceability'),
+        Uri.parse('$baseUrl/logistics/shipway/serviceability'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'toPincode': pincode}),
       );
@@ -499,23 +499,28 @@ class ApiService {
 
   Future<List<Map<String, dynamic>>> getPages() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/analytics/pages'));
-      if (response.statusCode == 200) {
-        return List<Map<String, dynamic>>.from(json.decode(response.body));
+      final snapshot = await _firestore.collection('pages').get();
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs.map((doc) => ({
+          ...doc.data(),
+          'id': doc.id,
+        })).toList();
       }
     } catch (e) {
-      debugPrint('Error fetching CMS pages: $e');
+      debugPrint('Error fetching CMS pages from Firestore: $e');
     }
 
     return [
       {
         'title': 'Privacy Policy',
+        'id': 'privacy',
         'content':
             'Your privacy is our priority. We handle your medical data with enterprise-grade encryption.',
         'lastUpdated': DateTime.now().toIso8601String(),
       },
       {
         'title': 'Terms & Conditions',
+        'id': 'terms',
         'content':
             'Sahimed provides a platform for medical procurement. Users must provide valid clinical prescriptions where required.',
         'lastUpdated': DateTime.now().toIso8601String(),
