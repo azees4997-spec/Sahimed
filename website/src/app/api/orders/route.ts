@@ -327,19 +327,20 @@ export async function PUT(req: Request) {
                   } 
                 }
               );
-              console.log(`[Shipway Automation] Order ${currentOrder.orderId} manifested successfully. AWB: ${awb}`);
+              console.log(`[Shipway Automation] Order ${refreshedOrder.orderId} manifested successfully. AWB: ${awb}`);
             } else {
-              console.warn(`[Shipway Automation] Success response but no AWB found for order ${currentOrder.orderId}`);
+              console.warn(`[Shipway Automation] Success response but no AWB found for order ${refreshedOrder.orderId}`);
             }
           } else {
-            console.error(`[Shipway Automation] Failed for order ${currentOrder.orderId}:`, shipwayRes.error || shipwayRes.data);
+            console.error(`[Shipway Automation] Failed for order ${refreshedOrder.orderId}:`, shipwayRes.error || shipwayRes.data);
           }
         }
-      } catch (shipwayErr: any) {
-        console.error(`[Shipway Automation Error] Failed to manifest order ${id}:`, shipwayErr.message);
-        shipwayStatus = { success: false, error: shipwayErr.message };
       }
+    } catch (shipwayErr: any) {
+      console.error(`[Shipway Automation Error] Failed to manifest order ${id}:`, shipwayErr.message);
+      shipwayStatus = { success: false, error: shipwayErr.message };
     }
+  }
 
     // SHIPWAY REVERSE AUTOMATION: Trigger when status is Returned and partner is Shipway
     if (updates.status === 'Returned' && result.modifiedCount > 0) {
