@@ -344,7 +344,8 @@ export default function CheckoutPage() {
         quantity: item.quantity,
         unitPrice: item.price,
         mrp: item.mrp || item.price + 50,
-        name: item.name
+        name: item.name,
+        prescriptionRequired: item.prescriptionRequired || false
       })),
       billingBreakdown: {
         grossMrp: totalMrp,
