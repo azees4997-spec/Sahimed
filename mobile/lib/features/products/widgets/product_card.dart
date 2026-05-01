@@ -83,13 +83,11 @@ class SahimedProductCard extends StatelessWidget {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                SahimedColors.primary,
-                                Color(0xFF2E5BFF),
+                                Color(0xFF1E40AF),
+                                Color(0xFF1E3A8A),
                               ],
                             ),
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(2),
-                            ),
+                            borderRadius: BorderRadius.circular(2),
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -97,19 +95,33 @@ class SahimedProductCard extends StatelessWidget {
                               Text(
                                 'OFF',
                                 style: GoogleFonts.outfit(
-                                  fontSize: 4,
+                                  fontSize: 4.5,
                                   fontWeight: FontWeight.w900,
-                                  color: Colors.white70,
+                                  color: Colors.white,
                                   letterSpacing: 0.5,
+                                  shadows: [
+                                    const Shadow(
+                                      color: Colors.black26,
+                                      offset: Offset(0, 1),
+                                      blurRadius: 1,
+                                    ),
+                                  ],
                                 ),
                               ),
                               Text(
                                 '$savingsPct%',
                                 style: GoogleFonts.outfit(
-                                  fontSize: 7.5,
+                                  fontSize: 8,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                   height: 1,
+                                  shadows: [
+                                    const Shadow(
+                                      color: Colors.black26,
+                                      offset: Offset(0, 1),
+                                      blurRadius: 1,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -120,7 +132,7 @@ class SahimedProductCard extends StatelessWidget {
                           child: Container(
                             width: 20,
                             height: 4,
-                            color: const Color(0xFF2E5BFF),
+                            color: const Color(0xFF1E3A8A),
                           ),
                         ),
                       ],
