@@ -165,15 +165,15 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
         });
 
         return obj;
-      }).filter(m => m.molecule || m.masterId || m.form); 
+      }).filter(m => m && (m.molecule || m.masterId || m.form)); 
 
       if (moleculesData.length === 0) {
-        toast({ variant: 'destructive', title: "Empty CSV", description: "No valid ingredient rows found in file." });
+        toast({ variant: 'destructive', title: "Empty CSV", description: "No valid ingredient rows found." });
         return;
       }
       
-      // Pre-validation: Only validate rows that have at least one field filled
-      const invalidRowIdx = moleculesData.findIndex((m, i) => !m.molecule || !m.form);
+      // Pre-validation
+      const invalidRowIdx = moleculesData.findIndex((m) => !m.molecule || !m.form);
       if (invalidRowIdx !== -1) {
         const row = moleculesData[invalidRowIdx];
         toast({ 
@@ -288,35 +288,27 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2 relative">
       {importProgress && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <Card className="w-[450px] p-10 rounded-[48px] border-none shadow-3xl bg-white/80 backdrop-blur-2xl text-center space-y-8 border border-white/20">
-            <div className="relative w-28 h-28 mx-auto">
-               <div className="absolute inset-0 rounded-full border-4 border-primary/10" />
-               <motion.div 
-                className="absolute inset-0 rounded-full border-t-4 border-primary" 
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-               />
-               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="font-black text-2xl text-primary">{Math.round((importProgress.current / importProgress.total) * 100)}%</span>
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Sync</span>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md">
+          <Card className="w-[450px] p-10 rounded-[48px] border-none shadow-3xl bg-white text-center space-y-8">
+            <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
+               <div className="absolute inset-0 rounded-full border-8 border-slate-100" />
+               <div className="text-2xl font-black text-primary">
+                  {importProgress.total > 0 ? Math.round((importProgress.current / importProgress.total) * 100) : 0}%
                </div>
             </div>
             <div>
-              <h3 className="text-2xl font-black text-slate-900 font-outfit uppercase tracking-tighter">Updating Ingredients</h3>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3 bg-slate-50 py-2 rounded-full">
-                Processing {importProgress.current} of {importProgress.total} records
+              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Uploading Ingredients</h3>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3 bg-slate-50 py-2 rounded-full px-4 inline-block">
+                {importProgress.current} / {importProgress.total} PROCESSED
               </p>
             </div>
-            <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden p-1 shadow-inner">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full shadow-lg" 
-                initial={{ width: 0 }}
-                animate={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
-                transition={{ duration: 0.5 }}
+            <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-500 shadow-lg" 
+                style={{ width: `${importProgress.total > 0 ? (importProgress.current / importProgress.total) * 100 : 0}%` }}
               />
             </div>
-            <p className="text-[10px] font-bold text-slate-400 italic">Syncing with global matrix... Please wait.</p>
+            <p className="text-[10px] font-bold text-slate-400 italic animate-pulse">Syncing with database...</p>
           </Card>
         </div>
       )}
