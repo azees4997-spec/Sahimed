@@ -73,49 +73,61 @@ export class ShipwayService {
   }
 
   /**
-   * Manifests a shipment and pushes order to Shipway.
+   * Manifests a shipment using the v2orders API.
+   * Automatically assigns tracking and generates label.
    */
   static async createForwardOrder(order: ShipwayOrder) {
     try {
       const headers = this.getHeaders();
+      const [firstName, ...lastNames] = order.billingCustomerName.split(' ');
+      const lastName = lastNames.join(' ');
+
       const payload = {
         order_id: order.orderId,
-        customer_name: order.billingCustomerName,
-        customer_email: order.shippingDetails.email || "support@sahimed.com",
-        customer_phone: order.shippingDetails.phone,
-        shipping_address: order.shippingDetails.address,
-        shipping_city: order.shippingDetails.city,
-        shipping_state: order.shippingDetails.state,
-        shipping_zip: order.shippingDetails.pincode,
-        shipping_country: "India",
-        order_date: new Date().toISOString().split('T')[0],
-        order_amount: order.totalAmount,
-        payment_type: order.paymentMode === 'COD' ? 'COD' : 'Prepaid',
-        items: order.orderItems.map(item => ({
-          sku: item.sku || item.name.replace(/\s+/g, '-').toLowerCase(),
+        products: JSON.stringify(order.orderItems.map(item => ({
+          product_id: item.sku || item.name.replace(/\s+/g, '-').toLowerCase(),
           name: item.name,
           quantity: item.quantity,
           price: item.price
-        })),
-        // By omitting carrier_id, Shipway's rule engine auto-assigns the best carrier
+        }))),
+        payment_type: order.paymentMode === 'COD' ? 'C' : 'P',
+        email: order.shippingDetails.email || "support@sahimed.com",
+        order_total: String(order.totalAmount),
+        shipping_address: order.shippingDetails.address,
+        shipping_city: order.shippingDetails.city,
+        shipping_state: order.shippingDetails.state,
+        shipping_country: "India",
+        shipping_fname: firstName || "Customer",
+        shipping_lname: lastName || "",
+        shipping_phone: order.shippingDetails.phone,
+        shipping_zip: order.shippingDetails.pincode,
+        billing_address: order.shippingDetails.address,
+        billing_city: order.shippingDetails.city,
+        billing_state: order.shippingDetails.state,
+        billing_country: "India",
+        billing_fname: firstName || "Customer",
+        billing_lname: lastName || "",
+        billing_phone: order.shippingDetails.phone,
+        billing_zip: order.shippingDetails.pincode,
+        warehouse_id: '93743' // Medtown pharma default warehouse
       };
       
-      console.log(`[Shipway] Pushing forward order...`);
-      const response = await fetch(`${this.API_URL}/pushOrderData`, {
+      console.log(`[Shipway] Pushing forward order to v2orders...`);
+      const response = await fetch(`${this.API_URL}/v2orders`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
       });
 
       const responseText = await response.text();
-      console.log(`[Shipway] Response:`, responseText);
+      console.log(`[Shipway] v2orders Response:`, responseText);
 
       try {
         const orderData = JSON.parse(responseText);
         if (!response.ok || orderData.status === 'error' || orderData.status === 'Failed') {
           return { 
             success: false, 
-            error: `PushOrderData Failed: ${orderData.message || orderData.error || response.statusText}` 
+            error: `v2orders Failed: ${orderData.message || orderData.error || response.statusText}` 
           };
         }
         return { success: true, data: orderData };
@@ -126,7 +138,7 @@ export class ShipwayService {
         return { success: true, data: { raw: responseText } };
       }
     } catch (err: any) {
-      console.error("[Shipway] Create forward order failed:", err.message);
+      console.error("[Shipway] v2orders failed:", err.message);
       return { success: false, error: err.message };
     }
   }

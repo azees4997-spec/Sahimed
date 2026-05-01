@@ -138,7 +138,7 @@ export async function POST(req: Request) {
             price: Number(it.unitPrice || it.price),
             sku: it.productId || it.name
           })),
-          warehouseId: 'Primary', 
+          warehouseId: '93743', 
           shippingDetails: {
             address: `${orderData.shippingDetails?.houseNumber || ''}, ${orderData.shippingDetails?.street || ''}`,
             city: orderData.shippingDetails?.city || '',
@@ -161,7 +161,7 @@ export async function POST(req: Request) {
               { _id: result.insertedId },
               { $set: { 
                 "shipping.awb": awb,
-                "shipping.label": label || "",
+                "shipping.labelUrl": label || "",
                 "shipping.courier": courier || "Shipway",
                 "shipping.partner": "Shipway",
                 status: 'Shipped', // Automatically move to Shipped once AWB is generated
@@ -288,7 +288,7 @@ export async function PUT(req: Request) {
               price: Number(it.unitPrice),
               sku: it.productId || it.name
             })),
-            warehouseId: 'Primary', 
+            warehouseId: '93743', 
             shippingDetails: {
               address: `${currentOrder.shippingDetails?.houseNumber || ''}, ${currentOrder.shippingDetails?.street || ''}`,
               city: currentOrder.shippingDetails?.city || '',
