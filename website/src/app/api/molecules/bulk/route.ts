@@ -38,19 +38,29 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const molecules = await request.json();
+    
+    if (!Array.isArray(molecules)) {
+      return NextResponse.json({ error: "Invalid data format. Expected an array." }, { status: 400 });
+    }
+
     const client = await clientPromise;
     const db = client.db('sahimed');
     const moleculesCol = db.collection('molecules');
 
     const ops = molecules.map((m: any) => {
       const { id, _id, ...rest } = m;
-      const filterId = id || _id || `${m.molecule}-${m.form}`.toLowerCase().replace(/\s+/g, '-');
+      // Generate a consistent slug-based ID
+      const filterId = id || _id || `${m.molecule}-${m.form}`.trim().toLowerCase().replace(/\s+/g, '-');
       
       return {
         updateOne: {
-          filter: { $or: [{ _id: filterId }, { masterId: m.masterId }] },
+          filter: { _id: filterId },
           update: { 
-            $set: { ...rest, updatedAt: new Date() }
+            $set: { 
+              ...rest, 
+              _id: filterId, // Explicitly set _id for upsert
+              updatedAt: new Date() 
+            }
           },
           upsert: true
         }
@@ -58,12 +68,20 @@ export async function POST(request: Request) {
     });
 
     if (ops.length > 0) {
-      await moleculesCol.bulkWrite(ops);
+      const result = await moleculesCol.bulkWrite(ops, { ordered: false });
+      console.log(`[Molecule Bulk Import] Success: ${result.upsertedCount} upserted, ${result.modifiedCount} modified`);
     }
 
-    return NextResponse.json({ success: true, count: molecules.length });
+    return NextResponse.json({ 
+      success: true, 
+      count: molecules.length,
+      message: `Processed ${molecules.length} molecules successfully.`
+    });
   } catch (err: any) {
     console.error("[Molecule Bulk Import Error]", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Import failed", 
+      details: err.message 
+    }, { status: 500 });
   }
 }
