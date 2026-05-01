@@ -78,8 +78,8 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
   }, [searchQuery]);
 
   const downloadTemplate = () => {
-    const headers = ['molecule', 'masterId', 'form', 'imageUrl'];
-    const csv = headers.join(',') + '\n"Paracetamol","MM0001","Tablet"';
+    const headers = ['molecule', 'masterId', 'form'];
+    const csv = headers.join(',') + '\n"Paracetamol 500mg","MM0001","Tablet"';
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -150,12 +150,28 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
         const obj: any = {};
         headers.forEach((h, i) => {
           let val: any = values[i]?.replace(/^"|"$/g, '') || '';
-          obj[h] = val;
+          
+          // Header normalization
+          const normalizedHeader = h.toLowerCase().trim();
+          if (normalizedHeader === 'molecule' || normalizedHeader === 'ingredient name' || normalizedHeader === 'name') {
+            obj['molecule'] = val;
+          } else if (normalizedHeader === 'masterid' || normalizedHeader === 'master id' || normalizedHeader === 'id') {
+            obj['masterId'] = val;
+          } else if (normalizedHeader === 'form' || normalizedHeader === 'scientific form' || normalizedHeader === 'type') {
+            obj['form'] = val;
+          } else {
+            obj[h] = val;
+          }
         });
 
         return obj;
       }).filter(m => m.molecule || m.masterId || m.form); 
 
+      if (moleculesData.length === 0) {
+        toast({ variant: 'destructive', title: "Empty CSV", description: "No valid ingredient rows found in file." });
+        return;
+      }
+      
       // Pre-validation: Only validate rows that have at least one field filled
       const invalidRowIdx = moleculesData.findIndex((m, i) => !m.molecule || !m.form);
       if (invalidRowIdx !== -1) {
