@@ -73,7 +73,8 @@ export class ShipwayService {
   }
 
   /**
-   * Manifests a shipment and pushes order to Shipway.
+   * Manifests a shipment using the v2orders API.
+   * Automatically assigns tracking and generates label.
    */
   static async createForwardOrder(order: ShipwayOrder) {
     try {
@@ -83,24 +84,32 @@ export class ShipwayService {
 
       const payload = {
         order_id: order.orderId,
+        products: JSON.stringify(order.orderItems.map(item => ({
+          product_id: item.sku || item.name.replace(/\s+/g, '-').toLowerCase(),
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        }))),
         payment_type: order.paymentMode === 'COD' ? 'C' : 'P',
         email: order.shippingDetails.email || "support@sahimed.com",
         order_total: String(order.totalAmount),
         shipping_address: order.shippingDetails.address,
         shipping_city: order.shippingDetails.city,
         shipping_state: order.shippingDetails.state,
-        shipping_zipcode: order.shippingDetails.pincode,
         shipping_country: "India",
-        shipping_firstname: firstName || "Customer",
-        shipping_lastname: lastName || "",
+        shipping_fname: firstName || "Customer",
+        shipping_lname: lastName || "",
         shipping_phone: order.shippingDetails.phone,
-        order_date: new Date().toISOString().replace('T', ' ').split('.')[0],
-        products: order.orderItems.map(item => ({
-          product_id: item.sku || item.name.replace(/\s+/g, '-').toLowerCase(),
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price
-        }))
+        shipping_zip: order.shippingDetails.pincode,
+        billing_address: order.shippingDetails.address,
+        billing_city: order.shippingDetails.city,
+        billing_state: order.shippingDetails.state,
+        billing_country: "India",
+        billing_fname: firstName || "Customer",
+        billing_lname: lastName || "",
+        billing_phone: order.shippingDetails.phone,
+        billing_zip: order.shippingDetails.pincode,
+        warehouse_id: '93743' // Medtown pharma default warehouse
       };
       
       console.log(`[Shipway] Pushing forward order to v2orders...`);
@@ -111,7 +120,7 @@ export class ShipwayService {
       });
 
       const responseText = await response.text();
-      console.log(`[Shipway] Response:`, responseText);
+      console.log(`[Shipway] v2orders Response:`, responseText);
 
       try {
         const orderData = JSON.parse(responseText);
@@ -129,7 +138,7 @@ export class ShipwayService {
         return { success: true, data: { raw: responseText } };
       }
     } catch (err: any) {
-      console.error("[Shipway] Create forward order failed:", err.message);
+      console.error("[Shipway] v2orders failed:", err.message);
       return { success: false, error: err.message };
     }
   }
