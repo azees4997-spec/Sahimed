@@ -90,6 +90,8 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
     window.open('/api/molecules/bulk', '_blank');
   };
 
+  const [importProgress, setImportProgress] = useState<{ current: number, total: number } | null>(null);
+
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -136,27 +138,38 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
         return;
       }
 
+      setImportProgress({ current: 0, total: moleculesData.length });
+
       try {
         const token = await user?.getIdToken();
-        const res = await fetch('/api/molecules/bulk', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(moleculesData)
-        });
+        const CHUNK_SIZE = 100;
+        let processed = 0;
 
-        const result = await res.json();
+        for (let i = 0; i < moleculesData.length; i += CHUNK_SIZE) {
+          const chunk = moleculesData.slice(i, i + CHUNK_SIZE);
+          const res = await fetch('/api/molecules/bulk', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(chunk)
+          });
 
-        if (res.ok) {
-          toast({ title: "Bulk import success", description: result.message || "Registry updated" });
-          window.location.reload();
-        } else {
-          throw new Error(result.message || result.error || 'Import failed');
+          const result = await res.json();
+          if (!res.ok) {
+             throw new Error(result.message || result.error || `Import failed at chunk ${i/CHUNK_SIZE + 1}`);
+          }
+
+          processed += chunk.length;
+          setImportProgress({ current: processed, total: moleculesData.length });
         }
+
+        toast({ title: "Bulk import success", description: `Successfully processed ${moleculesData.length} ingredients.` });
+        window.location.reload();
       } catch (err: any) {
         toast({ variant: 'destructive', title: "Import failed", description: err.message });
+        setImportProgress(null);
       }
     };
     reader.readAsText(file);
@@ -194,7 +207,32 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
   };
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-2">
+    <div className="space-y-8 animate-in slide-in-from-bottom-2 relative">
+      {importProgress && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <Card className="w-[400px] p-10 rounded-[40px] border-none shadow-2xl bg-white text-center space-y-6">
+            <div className="relative w-24 h-24 mx-auto">
+              <Loader2 className="w-24 h-24 text-primary animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center font-black text-xs">
+                {Math.round((importProgress.current / importProgress.total) * 100)}%
+              </div>
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-gray-900">Importing Data</h3>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">
+                Processing {importProgress.current} of {importProgress.total} ingredients
+              </p>
+            </div>
+            <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-500 ease-out" 
+                style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+              />
+            </div>
+            <p className="text-[9px] font-medium text-gray-400 italic">Please do not close this tab until completion...</p>
+          </Card>
+        </div>
+      )}
       <SectionHeader title="Ingredient Database" subtitle="Manage scientific names and salt data" onBack={onBack}>
         <div className="flex flex-wrap items-center gap-4">
            <div className="relative w-64">
