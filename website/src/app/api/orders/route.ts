@@ -276,12 +276,16 @@ export async function PUT(req: Request) {
 
     // SHIPWAY AUTOMATION: Trigger when status is Confirmed or Shipped
     if ((updates.status === 'Confirmed' || updates.status === 'Shipped')) {
-      console.log(`[Shipway Automation] Block entered for order ${id}. Status: ${updates.status}`);
+      console.log(`[Shipway Automation] Attempting push for order ${id}. Status: ${updates.status}`);
       try {
-        if (refreshedOrder && !refreshedOrder.shipping?.awb) { // Double check no AWB exists to prevent duplicates
-          const { ShipwayService } = await import('@/lib/logistics/shipway');
-          const shipwayRes = await ShipwayService.createForwardOrder({
-            orderId: refreshedOrder.orderId,
+        if (refreshedOrder) {
+          if (refreshedOrder.shipping?.awb) {
+            console.log(`[Shipway Automation] Skipping: Order ${id} already has AWB: ${refreshedOrder.shipping.awb}`);
+          } else {
+            console.log(`[Shipway Automation] Calling ShipwayService for order ${refreshedOrder.orderId}`);
+            const { ShipwayService } = await import('@/lib/logistics/shipway');
+            const shipwayRes = await ShipwayService.createForwardOrder({
+              orderId: refreshedOrder.orderId,
             billingCustomerName: refreshedOrder.patientName,
             orderItems: (refreshedOrder.items || []).map((it: any) => ({
               name: it.name,

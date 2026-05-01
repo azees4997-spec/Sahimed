@@ -109,7 +109,7 @@ export class ShipwayService {
         billing_lname: lastName || "",
         billing_phone: order.shippingDetails.phone,
         billing_zip: order.shippingDetails.pincode,
-        warehouse_id: '93743' // Medtown pharma default warehouse
+        warehouse_id: 93743 // Medtown pharma default warehouse (numeric)
       };
       
       console.log(`[Shipway] Pushing forward order to v2orders...`);
