@@ -123,18 +123,19 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
 
         const obj: any = {};
         headers.forEach((h, i) => {
-          obj[h] = values[i]?.replace(/^"|"$/g, '') || '';
+          obj[h] = values[i]?.replace(/^"|"$/g, '').trim() || '';
         });
         return obj;
-      });
+      }).filter(m => m.molecule || m.masterId || m.form); // Skip completely empty rows
 
-      // Pre-validation
-      const invalidRow = moleculesData.find((m, i) => !m.molecule || !m.form);
-      if (invalidRow) {
+      // Pre-validation: Only validate rows that have at least one field filled
+      const invalidRowIdx = moleculesData.findIndex((m, i) => !m.molecule || !m.form);
+      if (invalidRowIdx !== -1) {
+        const row = moleculesData[invalidRowIdx];
         toast({ 
           variant: 'destructive', 
-          title: "Invalid CSV Data", 
-          description: `All rows must have 'molecule' and 'form'. Check your CSV file.` 
+          title: "Incomplete Data in CSV", 
+          description: `Row ${invalidRowIdx + 2}: '${row.molecule || 'Unknown'}' is missing ${!row.molecule ? 'a Name' : ''}${!row.molecule && !row.form ? ' and ' : ''}${!row.form ? 'a Scientific Form' : ''}.` 
         });
         return;
       }
