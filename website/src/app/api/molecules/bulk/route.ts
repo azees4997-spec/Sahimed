@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { verifyAdmin } from '@/lib/auth-utils';
+import { getDbAdmin } from '@/lib/firebase-admin';
+import * as admin from 'firebase-admin';
 
 export async function GET() {
   try {
@@ -37,6 +40,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    // 1. Authorize the user
+    await verifyAdmin(request);
+
     const molecules = await request.json();
     
     if (!Array.isArray(molecules)) {
@@ -47,9 +53,9 @@ export async function POST(request: Request) {
     const db = client.db('sahimed');
     const moleculesCol = db.collection('molecules');
 
+    // 2. Prepare MongoDB Bulk Ops
     const ops = molecules.map((m: any) => {
       const { id, _id, ...rest } = m;
-      // Generate a consistent slug-based ID
       const filterId = id || _id || `${m.molecule}-${m.form}`.trim().toLowerCase().replace(/\s+/g, '-');
       
       return {
@@ -58,7 +64,7 @@ export async function POST(request: Request) {
           update: { 
             $set: { 
               ...rest, 
-              _id: filterId, // Explicitly set _id for upsert
+              _id: filterId,
               updatedAt: new Date() 
             }
           },
@@ -67,15 +73,40 @@ export async function POST(request: Request) {
       };
     });
 
+    // 3. Execute MongoDB Bulk
     if (ops.length > 0) {
-      const result = await moleculesCol.bulkWrite(ops, { ordered: false });
-      console.log(`[Molecule Bulk Import] Success: ${result.upsertedCount} upserted, ${result.modifiedCount} modified`);
+      await moleculesCol.bulkWrite(ops, { ordered: false });
+    }
+
+    // 4. Sync to Firestore using Admin SDK (Batching)
+    try {
+      const firestore = getDbAdmin();
+      const BATCH_SIZE = 400;
+      
+      for (let i = 0; i < molecules.length; i += BATCH_SIZE) {
+        const batch = firestore.batch();
+        const chunk = molecules.slice(i, i + BATCH_SIZE);
+        
+        chunk.forEach((m: any) => {
+          const docId = m.id || m._id || `${m.molecule}-${m.form}`.trim().toLowerCase().replace(/\s+/g, '-');
+          const docRef = firestore.collection('moleculeMaster').doc(docId);
+          batch.set(docRef, {
+            ...m,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        });
+        
+        await batch.commit();
+      }
+    } catch (fsErr: any) {
+      console.error("[Firestore Sync Error]", fsErr);
+      // We don't fail the whole request if Firestore sync fails, but we log it
     }
 
     return NextResponse.json({ 
       success: true, 
       count: molecules.length,
-      message: `Processed ${molecules.length} molecules successfully.`
+      message: `Processed ${molecules.length} molecules and synced to cloud registry.`
     });
   } catch (err: any) {
     console.error("[Molecule Bulk Import Error]", err);

@@ -115,11 +115,6 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
           body: JSON.stringify(moleculesData)
         });
         if (res.ok) {
-          // Sync to Firestore
-          for (const mol of moleculesData) {
-             const docId = `${mol.molecule}-${mol.form}`.toLowerCase().replace(/\s+/g, '-');
-             await setDocumentNonBlocking(doc(db, 'moleculeMaster', docId), { ...mol, updatedAt: serverTimestamp() }, { merge: true });
-          }
           toast({ title: "Bulk import success", description: "Registry updated" });
           window.location.reload();
         } else {
