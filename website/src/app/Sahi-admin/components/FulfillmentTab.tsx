@@ -106,7 +106,11 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
       const result = await res.json();
 
       if (res.ok) {
-        toast({ title: `Order ${newStatus}`, description: "Status successfully updated in clinical matrix." });
+        if (result.shipway && !result.shipway.success) {
+          toast({ variant: 'destructive', title: "Logistics Sync Failed", description: result.shipway.error || "Shipway push failed" });
+        } else {
+          toast({ title: `Order ${newStatus}`, description: "Status successfully updated in clinical matrix." });
+        }
         await fetchOrders();
         setStatusUpdateTarget(null);
         setSelectedOrder(null);

@@ -84,12 +84,12 @@ export class ShipwayService {
 
       const payload = {
         order_id: order.orderId,
-        products: order.orderItems.map(item => ({
+        products: JSON.stringify(order.orderItems.map(item => ({
           product_id: item.sku || item.name.replace(/\s+/g, '-').toLowerCase(),
           name: item.name,
           quantity: item.quantity,
           price: item.price
-        })),
+        }))),
         payment_type: order.paymentMode === 'COD' ? 'C' : 'P',
         email: order.shippingDetails.email || "support@sahimed.com",
         order_total: String(order.totalAmount),
@@ -99,17 +99,17 @@ export class ShipwayService {
         shipping_country: "India",
         shipping_fname: firstName || "Customer",
         shipping_lname: lastName || "",
-        shipping_phone: order.shippingDetails.phone,
-        shipping_zip: order.shippingDetails.pincode,
+        shipping_phone: String(order.shippingDetails.phone),
+        shipping_zip: String(order.shippingDetails.pincode),
         billing_address: order.shippingDetails.address,
         billing_city: order.shippingDetails.city,
         billing_state: order.shippingDetails.state,
         billing_country: "India",
         billing_fname: firstName || "Customer",
         billing_lname: lastName || "",
-        billing_phone: order.shippingDetails.phone,
-        billing_zip: order.shippingDetails.pincode,
-        warehouse_id: 93743 // Medtown pharma default warehouse (numeric)
+        billing_phone: String(order.shippingDetails.phone),
+        billing_zip: String(order.shippingDetails.pincode),
+        warehouse_id: 93743 
       };
       
       console.log(`[Shipway] Pushing forward order to v2orders...`);
