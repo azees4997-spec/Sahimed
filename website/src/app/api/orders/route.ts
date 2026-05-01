@@ -110,10 +110,61 @@ export async function POST(req: Request) {
       orderDate: new Date(), // ALWAYS capture real server time
       createdAt: new Date(),
       updatedAt: new Date(),
-      status: initialStatus
+      status: initialStatus,
+      shipping: body.shipping || { partner: 'Shipway' }
     };
 
     const result = await db.collection('orders').insertOne(orderData);
+
+    // SHIPWAY AUTOMATION: Trigger immediately if order is Confirmed
+    if (initialStatus === 'Confirmed') {
+      try {
+        const { ShipwayService } = await import('@/lib/logistics/shipway');
+        const shipwayRes = await ShipwayService.createForwardOrder({
+          orderId: nextId,
+          billingCustomerName: orderData.patientName,
+          orderItems: (orderData.items || []).map((it: any) => ({
+            name: it.name,
+            quantity: it.quantity,
+            price: Number(it.unitPrice || it.price),
+            sku: it.productId || it.name
+          })),
+          warehouseId: 'Primary', 
+          shippingDetails: {
+            address: `${orderData.shippingDetails?.houseNumber || ''}, ${orderData.shippingDetails?.street || ''}`,
+            city: orderData.shippingDetails?.city || '',
+            state: orderData.shippingDetails?.state || '',
+            pincode: orderData.shippingDetails?.pincode || '',
+            phone: orderData.phoneNumber
+          },
+          totalAmount: Number(orderData.totalAmount),
+          paymentMode: 'PREPAID' // Defaulting to Prepaid for website orders for now, can be adjusted
+        });
+
+        if (shipwayRes.success) {
+          const vData = shipwayRes.data.result || shipwayRes.data;
+          const awb = vData.awb_number || vData.awb;
+          const label = vData.label_url || vData.manifest_url || vData.label;
+          const courier = vData.courier_name || vData.courier;
+
+          if (awb) {
+            await db.collection('orders').updateOne(
+              { _id: result.insertedId },
+              { $set: { 
+                "shipping.awb": awb,
+                "shipping.label": label || "",
+                "shipping.courier": courier || "Shipway",
+                "shipping.partner": "Shipway",
+                status: 'Shipped', // Automatically move to Shipped once AWB is generated
+                updatedAt: new Date()
+              }}
+            );
+          }
+        }
+      } catch (err: any) {
+        console.error("[Shipway Auto-Push Error]", err.message);
+      }
+    }
 
     // Sync to Firestore if enquiryPath is provided (resolves permission issues)
     if (enquiryPath) {
@@ -188,8 +239,8 @@ export async function PUT(req: Request) {
 
     let shipwayStatus = null;
 
-    // SHIPWAY AUTOMATION: Trigger when partner is Shipway
-    if ((updates.status === 'Confirmed' || updates.status === 'Shipped') && (updates.shipping?.partner === 'Shipway' || currentOrder?.shipping?.partner === 'Shipway')) {
+    // SHIPWAY AUTOMATION: Trigger when status is Confirmed or Shipped
+    if ((updates.status === 'Confirmed' || updates.status === 'Shipped')) {
       console.log(`[Shipway Automation] Block entered for order ${id}. Status: ${updates.status}`);
       try {
         if (currentOrder && !currentOrder.shipping?.awb) { // Double check no AWB exists to prevent duplicates
