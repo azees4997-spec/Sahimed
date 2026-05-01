@@ -1,55 +1,65 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
-/**
- * Google Merchant Center XML Feed Generator
- * Generates a real-time product feed for Google Shopping.
- */
 export async function GET() {
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
+    const productsCollection = db.collection('products');
     
     // Fetch all active products
-    const products = await db.collection('products').find({}).toArray();
-    
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://sahimed.com';
-    
-    // Build XML string
+    const products = await productsCollection.find({ 
+      $or: [
+        { is_active: true },
+        { active: true },
+        { active: { $exists: false } }
+      ]
+    }).toArray();
+
+    const baseUrl = 'https://sahimed.com';
+
     let xml = `<?xml version="1.0"?>
 <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
-<channel>
-  <title>Sahimed Product Feed</title>
-  <link>${escapeXml(baseUrl)}</link>
-  <description>Genuine medicines at honest prices - Sahimed Pharmacy</description>`;
+  <channel>
+    <title>SahiMed - Online Pharmacy Feed</title>
+    <link>${baseUrl}</link>
+    <description>Authentic medicines and healthcare products at honest prices.</description>
+    `;
 
-    products.forEach((product: any) => {
-      const pPrice = product.liveData?.sahimed_price || product.price || 0;
-      const pMrp = product.liveData?.mrp || product.mrp || pPrice;
-      const stockStatus = (product.stock > 0 || product.inStock !== false) ? 'in_stock' : 'out_of_stock';
-      const cleanId = product._id?.toString() || product.id;
-      
-      const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
-        ? product.imageUrl
-        : `${baseUrl}/placeholder-medicine.png`;
+    for (const product of products) {
+      const id = product._id.toString();
+      const title = (product.name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const description = (product.description || product.treatment || `Buy ${product.name} online at SahiMed. Genuine quality, fast delivery.`).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const link = `${baseUrl}/product/${id}`;
+      const imageLink = product.imageUrl || product.imageUrls?.[0] || `${baseUrl}/icon.png`;
+      const price = product.liveData?.mrp || product.mrp || product.price || 0;
+      const salePrice = product.liveData?.sahimed_price || product.price || 0;
+      const availability = ((product.stock ?? 0) > 0 || product.inStock !== false) ? 'in stock' : 'out of stock';
+      const brand = (product.manufacturer || product.brand || 'SahiMed').replace(/&/g, '&amp;');
 
       xml += `
-  <item>
-    <g:id>${escapeXml(cleanId)}</g:id>
-    <g:title>${escapeXml(product.name)}</g:title>
-    <g:description>${escapeXml(product.description || `Buy ${product.name} online at Sahimed. Genuine quality and fastest delivery.`)}</g:description>
-    <g:link>${escapeXml(`${baseUrl}/product/${cleanId}`)}</g:link>
-    <g:image_link>${escapeXml(safeImageUrl)}</g:image_link>
-    <g:condition>new</g:condition>
-    <g:availability>${stockStatus}</g:availability>
-    <g:price>${pPrice} INR</g:price>
-    <g:brand>${escapeXml(product.brand || 'Sahimed')}</g:brand>
-    <g:google_product_category>Health &amp; Beauty &gt; Health Care &gt; Medications &amp; Treatments</g:google_product_category>
-  </item>`;
-    });
+    <item>
+      <g:id>${id}</g:id>
+      <g:title>${title}</g:title>
+      <g:description>${description}</g:description>
+      <g:link>${link}</g:link>
+      <g:image_link>${imageLink}</g:image_link>
+      <g:condition>new</g:condition>
+      <g:availability>${availability}</g:availability>
+      <g:price>${price.toFixed(2)} INR</g:price>
+      ${salePrice < price ? `<g:sale_price>${salePrice.toFixed(2)} INR</g:sale_price>` : ''}
+      <g:brand>${brand}</g:brand>
+      <g:google_product_category>Health &amp; Beauty &gt; Health Care &gt; Medications &amp; Treatments</g:google_product_category>
+      <g:shipping>
+        <g:country>IN</g:country>
+        <g:service>Standard</g:service>
+        <g:price>0.00 INR</g:price>
+      </g:shipping>
+    </item>`;
+    }
 
     xml += `
-</channel>
+  </channel>
 </rss>`;
 
     return new NextResponse(xml, {
@@ -58,22 +68,8 @@ export async function GET() {
         'Cache-Control': 's-maxage=3600, stale-while-revalidate',
       },
     });
-  } catch (err: any) {
-    console.error("[Google Feed Error]", err);
-    return NextResponse.json({ error: "Failed to generate feed" }, { status: 500 });
+  } catch (error: any) {
+    console.error('[Google Shopping Feed Error]:', error);
+    return NextResponse.json({ error: 'Failed to generate feed' }, { status: 500 });
   }
-}
-
-function escapeXml(unsafe: string) {
-  if (!unsafe) return "";
-  return unsafe.replace(/[<>&'"]/g, (c) => {
-    switch (c) {
-      case '<': return '&lt;';
-      case '>': return '&gt;';
-      case '&': return '&amp;';
-      case '\'': return '&apos;';
-      case '"': return '&quot;';
-    }
-    return c;
-  });
 }
