@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI, Tool, FunctionDeclarationSchemaType } from "@google/generative-ai";
+import { GoogleGenerativeAI, Tool, SchemaType } from "@google/generative-ai";
 import clientPromise from '@/lib/mongodb';
 
 // 1. Initialize Gemini
@@ -12,14 +12,14 @@ const searchProductsTool: any = {
       name: "search_products",
       description: "Search for medicines in the Sahimed catalog by name, salt, or category. Use this to find generic alternatives.",
       parameters: {
-        type: FunctionDeclarationSchemaType.OBJECT,
+        type: SchemaType.OBJECT,
         properties: {
           query: {
-            type: FunctionDeclarationSchemaType.STRING,
+            type: SchemaType.STRING,
             description: "The name of the medicine or the salt/molecule (e.g., 'Paracetamol', 'Telmisartan').",
           },
           isGeneric: {
-            type: FunctionDeclarationSchemaType.BOOLEAN,
+            type: SchemaType.BOOLEAN,
             description: "Whether to filter for generic medicines specifically.",
           }
         },
@@ -30,10 +30,10 @@ const searchProductsTool: any = {
       name: "search_knowledge",
       description: "Search the Sahimed knowledge base for FAQs, policies, and health articles.",
       parameters: {
-        type: FunctionDeclarationSchemaType.OBJECT,
+        type: SchemaType.OBJECT,
         properties: {
           query: {
-            type: FunctionDeclarationSchemaType.STRING,
+            type: SchemaType.STRING,
             description: "The topic to search for (e.g., 'refund policy', 'what is a molecule').",
           }
         },
