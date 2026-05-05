@@ -140,8 +140,8 @@ class _HomeScreenState extends State<HomeScreen> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   _buildSection(
-                    title: 'Our Most Popular Brands',
-                    child: _isLoading ? _shimmerGrid(3) : _productGrid(_bestSellers, context),
+                    title: 'Most Popular Brands',
+                    child: _isLoading ? _shimmerHScroll() : _horizontalPopularBrands(context),
                   ),
                   const SizedBox(height: 28),
                   _buildSection(
@@ -191,34 +191,82 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHeroTop(BuildContext context) {
     return Container(
       color: const Color(0xFFFFF9F9),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Affordable\nSolutions for\nEveryday Care',
-                  style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, height: 1.1),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(color: Colors.black.withOpacity(0.05)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: const BoxDecoration(color: _waGreen, shape: BoxShape.circle),
+                        child: const Icon(LucideIcons.shieldCheck, size: 8, color: Colors.white),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'TRUSTED BY 10L+ USERS',
+                        style: GoogleFonts.outfit(fontSize: 7, fontWeight: FontWeight.w900, color: Colors.black, letterSpacing: 1),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                RichText(
+                  text: TextSpan(
+                    style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w900, height: 1.1, color: Colors.black),
+                    children: [
+                      const TextSpan(text: 'AFFORDABLE\nSOLUTIONS FOR\n'),
+                      TextSpan(
+                        text: 'EVERYDAY CARE',
+                        style: GoogleFonts.outfit(color: SahimedColors.primary, fontStyle: FontStyle.italic),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 12),
-          // BUG-16 FIX: Using a stable CDN image instead of random Unsplash
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: CachedNetworkImage(
-              imageUrl: 'https://images.pexels.com/photos/3683074/pexels-photo-3683074.jpeg?auto=compress&cs=tinysrgb&w=200',
-              width: 110,
-              height: 110,
-              fit: BoxFit.cover,
-              errorWidget: (ctx, _, __) => Container(
-                width: 110,
-                height: 110,
-                color: _lavender,
-                child: const Icon(LucideIcons.pill, color: SahimedColors.primary, size: 40),
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: CachedNetworkImage(
+                imageUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop',
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+                errorWidget: (ctx, _, __) => Container(
+                  width: 100,
+                  height: 100,
+                  color: _lavender,
+                  child: const Icon(LucideIcons.pill, color: SahimedColors.primary, size: 40),
+                ),
               ),
             ),
           ),
@@ -256,8 +304,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(width: 10),
           _quickAction(
-            label: 'Call Us',
-            iconBg: Colors.red,
+            label: 'Order on Call',
+            iconBg: const Color(0xFFF43F5E), // rose-500
             tileBg: _sahiPink,
             icon: const Icon(LucideIcons.phone, size: 18, color: Colors.white),
             onTap: () async {
@@ -324,26 +372,94 @@ class _HomeScreenState extends State<HomeScreen> {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 12, mainAxisSpacing: 16, childAspectRatio: 0.85),
-      itemCount: _categories.take(9).length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 12, mainAxisSpacing: 16, childAspectRatio: 0.82),
+      itemCount: _categories.take(12).length,
       itemBuilder: (_, i) => GestureDetector(
         onTap: () => _openCategory(context, _categories[i]),
         child: Column(
           children: [
-            Container(width: 74, height: 74, decoration: BoxDecoration(color: _catBg(i), shape: BoxShape.circle), child: ClipOval(child: CachedNetworkImage(imageUrl: _categories[i].imageUrl, fit: BoxFit.cover))),
+            Container(
+              width: 78,
+              height: 78,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: Colors.black.withOpacity(0.05)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))]),
+              child: Container(
+                decoration: BoxDecoration(color: _catBg(i), shape: BoxShape.circle),
+                child: ClipOval(child: CachedNetworkImage(imageUrl: _categories[i].imageUrl, fit: BoxFit.cover, errorWidget: (c,u,e) => const Icon(LucideIcons.pill, size: 20))),
+              ),
+            ),
             const SizedBox(height: 6),
-            Text(_categories[i].name.toUpperCase(), textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 7, fontWeight: FontWeight.w900)),
+            Text(_categories[i].name.toUpperCase(), textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 8, fontWeight: FontWeight.w900, color: Colors.black87)),
           ],
         ),
       ),
     );
   }
 
+  Widget _horizontalPopularBrands(BuildContext context) {
+    return SizedBox(
+      height: 245,
+      child: ListView.separated(
+        padding: const EdgeInsets.only(bottom: 10),
+        scrollDirection: Axis.horizontal,
+        itemCount: _bestSellers.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (_, i) => SizedBox(width: 165, child: SahimedProductCard(product: _bestSellers[i])),
+      ),
+    );
+  }
+
   Widget _buildDeliveryBanner(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(gradient: const LinearGradient(colors: [Colors.orange, Colors.red]), borderRadius: BorderRadius.circular(28)),
-      child: Text('FREE DELIVERY ON ALL ORDERS ABOVE ₹499', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w900)),
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFBBF24), Color(0xFFF97316), Color(0xFFE11D48)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF97316).withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -10,
+            top: -10,
+            child: Icon(LucideIcons.package, size: 80, color: Colors.white.withOpacity(0.1)),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'PAN INDIA\nFREE DELIVERY',
+                style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white, height: 1.1),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'ABOVE ₹499',
+                style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white.withOpacity(0.9)),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(100)),
+                child: Text(
+                  'SHOP NOW',
+                  style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: const Color(0xFFF97316), letterSpacing: 1),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
