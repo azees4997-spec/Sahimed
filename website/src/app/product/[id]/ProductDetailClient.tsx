@@ -201,6 +201,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
   const [edd, setEdd] = useState<string>('');
   const [activePincode, setActivePincode] = useState<string>('560068');
 
+  useEffect(() => {
     const stored = typeof window !== 'undefined' ? (localStorage.getItem('activePincode') || '560068') : '560068';
     setActivePincode(stored);
     fetchEdd(stored);
