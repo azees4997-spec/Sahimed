@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -8,6 +9,8 @@ import '../../../core/services/api_service.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../shared/models/models.dart';
 import '../../../core/widgets/screen_with_nav.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 // ─── Colors matching the website's Tailwind tokens ──────────────────────────
 // primary  = SahimedColors.primary  (green)
@@ -32,14 +35,33 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   final ApiService _apiService = ApiService();
   ProductModel? _genericAlt;
   bool _isLoading = true;
+  String _edd = '';
   late final TabController _tabController;
+
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _fetchGenericAlternative();
+    _loadEDD();
   }
+
+  Future<void> _loadEDD() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final pincode = prefs.getString('user_pincode') ?? '560001';
+      final edd = await _apiService.getShipwayEDD(pincode);
+      if (mounted && edd != null) {
+        final date = DateTime.parse(edd);
+        final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        setState(() => _edd = '${date.day} ${months[date.month - 1]}');
+      }
+    } catch (e) {
+      debugPrint('Error loading EDD on product page: $e');
+    }
+  }
+
 
   @override
   void dispose() {
@@ -100,7 +122,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
             icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF0F172A)),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              Navigator.pop(context);
+            },
           ),
         ),
         body: SingleChildScrollView(
@@ -271,6 +296,59 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
 
               const SizedBox(height: 16),
 
+              // ── 4.5 Delivery Information ───────────────────────────────
+              if (_edd.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0FDF4),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFDCFCE7)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFDCFCE7),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(LucideIcons.truck, size: 16, color: Color(0xFF166534)),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'DELIVERY BY $_edd'.toUpperCase(),
+
+                              style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF166534),
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            Text(
+                              'Guaranteed express delivery to your location',
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF15803D),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+              const SizedBox(height: 16),
+
+
               // ── 5. Clinical Tabs (Information / Safety Advice / Interactions)
               _ClinicalTabs(
                 product: widget.product,
@@ -410,7 +488,7 @@ class _ComparisonCard extends StatelessWidget {
           GestureDetector(
             onTap: () => _showFullImage(context),
             child: Container(
-              height: 90,
+              height: 130,
               width: double.infinity,
               decoration: BoxDecoration(
                 color: const Color(0xFFF8FAFC),
@@ -427,7 +505,7 @@ class _ComparisonCard extends StatelessWidget {
                     errorWidget: (c, u, e) => const Icon(
                       LucideIcons.pill,
                       color: SahimedColors.primary,
-                      size: 28,
+                      size: 40,
                     ),
                   ),
                 ),
@@ -541,6 +619,7 @@ class _ComparisonCard extends StatelessWidget {
           // ADD / IN CART button (matches website button exactly)
           GestureDetector(
             onTap: () {
+              HapticFeedback.mediumImpact();
               context.read<CartProvider>().addItem(product);
             },
             child: Container(
@@ -648,6 +727,7 @@ class _ClinicalTabs extends StatelessWidget {
                 border: Border.all(color: const Color(0xFFF1F5F9)),
               ),
               child: TabBar(
+                onTap: (index) => HapticFeedback.selectionClick(),
                 controller: tabController,
                 indicator: BoxDecoration(
                   color: Colors.white,
@@ -691,25 +771,24 @@ class _ClinicalTabs extends StatelessWidget {
                 // ── Tab 1: Information (Medical Uses + Product Info) ──────
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: GridView.count(
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    childAspectRatio: 1.8,
                     children: [
-                      Expanded(
-                        child: _InfoTile(
-                          icon: LucideIcons.clipboardList,
-                          title: 'Medical Uses',
-                          text: product.treatment ?? 'Standard medical use.',
-                          bgColor: const Color(0xFFEDE9FE),
-                        ),
+                      _InfoTile(
+                        icon: LucideIcons.clipboardList,
+                        title: 'Medical Uses',
+                        text: product.treatment ?? 'Standard medical use.',
+                        bgColor: const Color(0xFFEDE9FE),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _InfoTile(
-                          icon: LucideIcons.info,
-                          title: 'Product Info',
-                          text: product.description ?? 'Medicine details.',
-                          bgColor: const Color(0xFFEFF6FF),
-                        ),
+                      _InfoTile(
+                        icon: LucideIcons.info,
+                        title: 'Product Info',
+                        text: product.description ?? 'Medicine details.',
+                        bgColor: const Color(0xFFEFF6FF),
                       ),
                     ],
                   ),
@@ -718,35 +797,30 @@ class _ClinicalTabs extends StatelessWidget {
                 // ── Tab 2: Safety Advice ───────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: GridView.count(
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    childAspectRatio: 1.8,
                     children: [
-                      Expanded(
-                        child: _SafetyTile(
-                          icon: LucideIcons.triangleAlert,
-                          title: 'Safety Advice',
-                          text:
-                              product.safetyAdvice ??
-                              'Follow medical guidance.',
-                          iconColor: const Color(0xFFEF4444),
-                          bgColor: const Color(0xFFFFF1F2),
-                          textColor: const Color(0xFF9F1239),
-                          titleColor: const Color(0xFFDC2626),
-                        ),
+                      _SafetyTile(
+                        icon: LucideIcons.triangleAlert,
+                        title: 'Safety Advice',
+                        text: product.safetyAdvice ?? 'Follow medical guidance.',
+                        iconColor: const Color(0xFFEF4444),
+                        bgColor: const Color(0xFFFFF1F2),
+                        textColor: const Color(0xFF9F1239),
+                        titleColor: const Color(0xFFDC2626),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _SafetyTile(
-                          icon: LucideIcons.stethoscope,
-                          title: 'How to Use',
-                          text:
-                              product.howToUse ??
-                              'Take as directed by your doctor.',
-                          iconColor: SahimedColors.primary,
-                          bgColor: const Color(0xFFEFF6FF),
-                          textColor: const Color(0xFF334155),
-                          titleColor: SahimedColors.primary,
-                        ),
+                      _SafetyTile(
+                        icon: LucideIcons.stethoscope,
+                        title: 'How to Use',
+                        text: product.howToUse ?? 'Take as directed by your doctor.',
+                        iconColor: SahimedColors.primary,
+                        bgColor: const Color(0xFFEFF6FF),
+                        textColor: const Color(0xFF334155),
+                        titleColor: SahimedColors.primary,
                       ),
                     ],
                   ),
@@ -831,38 +905,44 @@ class _InfoTile extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white, width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 14, color: SahimedColors.primary),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  title.toUpperCase(),
-                  style: GoogleFonts.outfit(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF1E293B),
-                  ),
-                ),
-              ),
-            ],
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFF1F5F9)),
+            ),
+            child: Icon(icon, size: 13, color: SahimedColors.primary),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
-            text,
-            maxLines: 4,
-            overflow: TextOverflow.ellipsis,
+            title.toUpperCase(),
             style: GoogleFonts.outfit(
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF64748B),
-              height: 1.4,
+              fontSize: 7,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF94A3B8),
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Expanded(
+            child: Text(
+              text.toUpperCase(),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.outfit(
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF1E293B),
+                height: 1.3,
+              ),
             ),
           ),
         ],
@@ -896,45 +976,43 @@ class _SafetyTile extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white, width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6),
-              ],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFF1F5F9)),
             ),
-            child: Icon(icon, size: 16, color: iconColor),
+            child: Icon(icon, size: 13, color: iconColor),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             title.toUpperCase(),
             style: GoogleFonts.outfit(
-              fontSize: 8,
+              fontSize: 7,
               fontWeight: FontWeight.w900,
-              color: titleColor,
+              color: const Color(0xFF94A3B8),
               letterSpacing: 1,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Expanded(
             child: Text(
-              text,
-              maxLines: 3,
+              text.toUpperCase(),
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: GoogleFonts.outfit(
-                fontSize: 8.5,
-                fontWeight: FontWeight.w600,
-                color: textColor.withOpacity(0.8),
-                height: 1.4,
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF1E293B),
+                height: 1.3,
               ),
             ),
           ),

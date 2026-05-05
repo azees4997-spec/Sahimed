@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/colors.dart';
 
 class OrderDetailScreen extends StatelessWidget {
@@ -35,6 +36,12 @@ class OrderDetailScreen extends StatelessWidget {
                   _buildSectionHeader('DELIVERY ADDRESS', LucideIcons.mapPin),
                   _buildAddressInfo(shipping),
                   const SizedBox(height: 32),
+
+                  if (order['shipping'] != null && order['shipping']['awb'] != null) ...[
+                    _buildSectionHeader('TRACKING INFORMATION', LucideIcons.truck),
+                    _buildTrackingInfo(order['shipping']),
+                    const SizedBox(height: 32),
+                  ],
 
                   _buildSectionHeader(
                     'ORDERED ITEMS',
@@ -127,7 +134,7 @@ class OrderDetailScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'ID: #${order['id']?.toString().toUpperCase() ?? 'PENDING'}',
+                      'ID: #${(order['orderId'] ?? order['id'] ?? '').toString().toUpperCase()}',
                       style: GoogleFonts.outfit(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -204,6 +211,100 @@ class OrderDetailScreen extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrackingInfo(Map<String, dynamic> shipping) {
+    final awb = shipping['awb']?.toString() ?? '';
+    final courier = shipping['courier']?.toString() ?? 'Shipway';
+    final trackingUrl = 'https://sahimed.shipway.in/$awb';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: SahimedColors.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: SahimedColors.primary.withOpacity(0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'AWB NUMBER',
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: SahimedColors.slate400,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  Text(
+                    awb,
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: SahimedColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: SahimedColors.primary.withOpacity(0.2)),
+                ),
+                child: Text(
+                  courier.toUpperCase(),
+                  style: GoogleFonts.outfit(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: SahimedColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                final uri = Uri.parse(trackingUrl);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              },
+              icon: const Icon(LucideIcons.externalLink, size: 16),
+              label: Text(
+                'TRACK SHIPMENT',
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                  letterSpacing: 1,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: SahimedColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+            ),
           ),
         ],
       ),

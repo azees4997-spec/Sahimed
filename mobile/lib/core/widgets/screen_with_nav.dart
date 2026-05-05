@@ -2,17 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../theme/colors.dart';
 import '../providers/cart_provider.dart';
 import '../providers/navigation_provider.dart';
 
 /// Wraps any pushed screen with the persistent floating cart bar
 /// and bottom navigation bar — just like the main layout shows.
-///
-/// Usage:
-///   Navigator.push(context, MaterialPageRoute(
-///     builder: (_) => ScreenWithNav(child: ProductDetailScreen(product: p)),
-///   ));
 class ScreenWithNav extends StatelessWidget {
   final Widget child;
   final int activeTab; // 0=Home,1=Search,2=Cart,3=Profile (for highlight)
@@ -34,6 +30,10 @@ class ScreenWithNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
     final itemCount = cart.items.length;
+    final double freeShippingThreshold = 499.0;
+    final double remainingForFree = freeShippingThreshold - cart.total;
+    final bool isFreeShipping = remainingForFree <= 0;
+    final double progress = (cart.total / freeShippingThreshold).clamp(0.0, 1.0);
 
     return Stack(
       children: [
@@ -43,16 +43,13 @@ class ScreenWithNav extends StatelessWidget {
         // Floating "View Cart" bar — shown when cart has items
         if (itemCount > 0)
           Positioned(
-            bottom: 110,
+            bottom: 85,
             left: 20,
             right: 20,
             child: GestureDetector(
               onTap: () => _onNavTap(context, 2),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [SahimedColors.primary, Color(0xFF4F46E5)],
@@ -68,64 +65,122 @@ class ScreenWithNav extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        LucideIcons.shoppingBag,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+                    Row(
                       children: [
-                        Text(
-                          '$itemCount ITEMS IN CART',
-                          style: GoogleFonts.outfit(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white.withOpacity(0.8),
-                            letterSpacing: 1.2,
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            LucideIcons.shoppingCart,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ).animate(onPlay: (c) => c.repeat()).shimmer(duration: const Duration(seconds: 2)),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    '$itemCount ITEMS',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white.withOpacity(0.8),
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                  if (cart.totalSavings > 0) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: SahimedColors.emerald500,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        'SAVED ₹${cart.totalSavings.toStringAsFixed(0)}',
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ).animate().scale(),
+                                  ],
+                                ],
+                              ),
+                              isFreeShipping 
+                                ? Text(
+                                    'FREE DELIVERY UNLOCKED!',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                    ),
+                                  ).animate(onPlay: (c) => c.repeat()).shimmer(duration: const Duration(seconds: 3))
+                                : Text(
+                                    'ADD ₹${remainingForFree.toStringAsFixed(0)} FOR FREE SHIPPING',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                            ],
                           ),
                         ),
                         Text(
-                          'VIEW BASKET',
+                          '₹${cart.total.toStringAsFixed(0)}',
                           style: GoogleFonts.outfit(
-                            fontSize: 14,
+                            fontSize: 18,
                             fontWeight: FontWeight.w900,
                             color: Colors.white,
                           ),
                         ),
                       ],
                     ),
-                    const Spacer(),
-                    Text(
-                      '₹${cart.total.toStringAsFixed(0)}',
-                      style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                    if (!isFreeShipping) ...[
+                      const SizedBox(height: 12),
+                      Stack(
+                        children: [
+                          Container(
+                            height: 3,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          AnimatedContainer(
+                            duration: 500.ms,
+                            height: 3,
+                            width: (MediaQuery.of(context).size.width - 72) * progress,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(2),
+                              boxShadow: [
+                                BoxShadow(color: Colors.white.withOpacity(0.3), blurRadius: 4),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: Colors.white,
-                      size: 14,
-                    ),
+                    ],
                   ],
                 ),
               ),
             ),
-          ),
+          ).animate().slideY(begin: 1, end: 0),
 
         // Bottom Navigation Bar
         Positioned(
@@ -160,8 +215,8 @@ class ScreenWithNav extends StatelessWidget {
                   onTap: () => _onNavTap(context, 0),
                 ),
                 _NavItem(
-                  icon: LucideIcons.search,
-                  label: 'Explore',
+                  icon: LucideIcons.layoutGrid,
+                  label: 'Categories',
                   index: 1,
                   activeTab: activeTab,
                   badge: 0,

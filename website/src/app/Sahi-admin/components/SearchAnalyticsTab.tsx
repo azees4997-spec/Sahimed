@@ -108,11 +108,12 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
   const downloadCSV = () => {
     if (logs.length === 0) return;
     
-    const headers = ["Mobile", "Keyword", "Timestamp"];
+    const headers = ["Platform", "Mobile", "Keyword", "Results", "Pincode", "Timestamp"];
     const csvContent = [
       headers.join(","),
-      ...logs.map(log => `"${log.mobile}","${(log.keyword || '').replace(/"/g, '""')}","${log.timestamp ? format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss') : 'N/A'}"`)
+      ...logs.map(log => `"${log.platform || 'web'}","${log.mobile}","${(log.keyword || '').replace(/"/g, '""')}","${log.resultsCount ?? 'N/A'}","${log.pincode || ''}","${log.timestamp ? format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss') : 'N/A'}"`)
     ].join("\n");
+
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
@@ -200,9 +201,13 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
             <table className="w-full text-left">
               <thead className="bg-slate-50 border-b border-slate-100">
                 <tr>
+                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Platform</th>
                   <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Identity (Mobile)</th>
                   <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Keyword (Search)</th>
+                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Results</th>
+                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Region</th>
                   <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Timestamp</th>
+
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -224,6 +229,14 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
                 ) : logs.map((log) => (
                   <tr key={log._id} className="group hover:bg-slate-50 transition-colors">
                     <td className="px-8 py-6">
+                       <Badge className={cn(
+                         "uppercase border-none",
+                         log.platform === 'mobile' ? "bg-indigo-50 text-indigo-600" : "bg-sky-50 text-sky-600"
+                       )}>
+                         {log.platform || 'web'}
+                       </Badge>
+                    </td>
+                    <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center group-hover:bg-white transition-colors">
                           <Smartphone className="w-4 h-4 text-slate-400" />
@@ -239,16 +252,33 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
                       </div>
                     </td>
                     <td className="px-8 py-6">
+                      <span className={cn(
+                        "font-black text-xs",
+                        (log.resultsCount === 0) ? "text-red-500" : "text-emerald-500"
+                      )}>
+                        {log.resultsCount ?? 'N/A'}
+                      </span>
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-xs text-slate-600">{log.pincode || 'Generic'}</span>
+                        {log.lat && (
+                          <span className="text-[8px] text-slate-400 font-mono">{log.lat.toFixed(2)}, {log.lng.toFixed(2)}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
                       <div className="text-right">
                         <span className="font-bold text-xs text-slate-500">
                           {safeFormat(log.timestamp, 'MMM dd, yyyy')}
                         </span>
-                        <span className="text-[10px] font-medium text-slate-300">
+                        <span className="text-[10px] font-medium text-slate-300 ml-2">
                           {safeFormat(log.timestamp, 'HH:mm:ss')}
                         </span>
                       </div>
                     </td>
                   </tr>
+
                 ))}
               </tbody>
             </table>

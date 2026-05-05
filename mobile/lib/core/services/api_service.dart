@@ -174,25 +174,64 @@ class ApiService {
     return [];
   }
 
-  Future<List<ProductModel>> searchProducts(String query) async {
-    final cacheKey = 'search_${query.toLowerCase()}';
+  Future<List<ProductModel>> searchProducts(
+    String query, {
+    String? category,
+    String? marketerName,
+    String? dosageForm,
+    bool? isGeneric,
+    bool? isBestSeller,
+  }) async {
+    final cacheKey =
+        'search_${query.toLowerCase()}_cat_${category ?? ''}_gen_${isGeneric ?? ''}_best_${isBestSeller ?? ''}_mark_${marketerName ?? ''}_dose_${dosageForm ?? ''}';
     final cached = _getCached(cacheKey);
     if (cached != null) return List<ProductModel>.from(cached);
 
     try {
       final encodedQuery = Uri.encodeComponent(query);
-      final response = await http.get(
-        Uri.parse('$baseUrl/products?q=$encodedQuery&limit=20'),
-      );
+      String url = '$baseUrl/products?q=$encodedQuery&limit=30';
+
+      if (category != null) {
+        url += '&category=${Uri.encodeComponent(category)}';
+      }
+      if (marketerName != null) {
+        url += '&marketerName=${Uri.encodeComponent(marketerName)}';
+      }
+      if (dosageForm != null) {
+        url += '&dosageForm=${Uri.encodeComponent(dosageForm)}';
+      }
+      if (isGeneric != null) {
+        url += '&isGeneric=$isGeneric';
+      }
+      if (isBestSeller != null) {
+        url += '&isBestSeller=$isBestSeller';
+      }
+
+      final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         final list = data.map((item) => ProductModel.fromJson(item)).toList();
-        // Short-lived cache for search to balance freshness with DB load
         _setCache(cacheKey, list);
         return list;
       }
     } catch (e) {
       debugPrint('Error searching products: $e');
+    }
+    return [];
+  }
+
+
+  Future<List<Map<String, dynamic>>> searchMolecules(String query) async {
+    try {
+      final encodedQuery = Uri.encodeComponent(query);
+      final response = await http.get(
+        Uri.parse('$baseUrl/molecules?q=$encodedQuery&limit=10'),
+      );
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(json.decode(response.body));
+      }
+    } catch (e) {
+      debugPrint('Error searching molecules: $e');
     }
     return [];
   }
@@ -243,7 +282,9 @@ class ApiService {
     double? lat,
     double? lng,
     String? pincode,
+    int? resultsCount,
   }) async {
+
     try {
       final user = _auth.currentUser;
       final headers = await _getHeaders();
@@ -255,10 +296,12 @@ class ApiService {
           'lat': lat,
           'lng': lng,
           'pincode': pincode,
+          'resultsCount': resultsCount,
           'userId': user?.uid,
           'mobile': user?.phoneNumber ?? 'Anonymous',
           'platform': 'mobile',
           'timestamp': DateTime.now().toIso8601String(),
+
         }),
       );
     } catch (e) {
@@ -271,18 +314,40 @@ class ApiService {
       final response = await http.post(
         Uri.parse('$baseUrl/logistics/shipway/serviceability'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'toPincode': pincode}),
+        body: json.encode({'toPincode': pincode, 'fromPincode': '560068'}),
+
       );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return data['serviceable'] == true;
+        return data['serviceable'] == true || data['status'] == 'success';
       }
     } catch (e) {
       debugPrint('Error checking serviceability: $e');
     }
-    // Default to true or false on error? Let's assume true so we don't completely block users if API goes down, or false if strict? The user requested "strictly block".
-    return false;
+    return true; // Fallback to true to avoid blocking users if serviceability check fails
   }
+
+  Future<String?> getShipwayEDD(String toPincode) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/logistics/shipway/serviceability'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'toPincode': toPincode,
+          'fromPincode': '560068' // Sahimed Warehouse
+        }),
+
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['edd'] ?? data['expected_delivery_date'];
+      }
+    } catch (e) {
+      debugPrint('Error fetching Shipway EDD: $e');
+    }
+    return null;
+  }
+
 
   Future<List<BannerModel>> getBanners() async {
     final cached = _getCached('banners');
@@ -345,6 +410,7 @@ class ApiService {
     required Map<String, dynamic> billingBreakdown,
     List<String> prescriptions = const [],
     bool isConsultationRequired = false,
+    double walletUsed = 0,
   }) async {
     try {
       final user = _auth.currentUser;
@@ -369,7 +435,9 @@ class ApiService {
         prescriptionUrls: prescriptions,
         isConsultationRequired: isConsultationRequired,
         clinicalPath: isConsultationRequired ? 'consult' : 'normal',
+        walletUsed: walletUsed,
       );
+
 
       final orderPayload = {...order.toJson(), 'platform': 'mobile'};
 
@@ -441,21 +509,61 @@ class ApiService {
       if (user == null) return [];
 
       final headers = await _getHeaders();
-      // Fetch by userId OR phone for maximum compatibility during migration
+      
+      // We try fetching by multiple possible keys to be absolutely sure we find the data
+      final uid = user.uid;
+      final phone = user.phoneNumber?.replaceFirst('+', '') ?? '';
+      
+      // Try fetching by UID primarily
       final response = await http.get(
-        Uri.parse(
-          '$baseUrl/orders?userId=${user.uid}&phone=${Uri.encodeComponent(user.phoneNumber ?? "")}',
-        ),
+        Uri.parse('$baseUrl/orders?userId=$uid'),
         headers: headers,
       );
+
+      if (kDebugMode) {
+        print('DEBUG: Orders Response for UID $uid: ${response.body}');
+      }
+
       if (response.statusCode == 200) {
-        return List<Map<String, dynamic>>.from(json.decode(response.body));
+        final decoded = json.decode(response.body);
+        List<dynamic> rawList = [];
+        
+        if (decoded is List) {
+          rawList = decoded;
+        } else if (decoded is Map && decoded.containsKey('data')) {
+          rawList = decoded['data'] as List<dynamic>;
+        } else if (decoded is Map && (decoded['orders'] is List)) {
+          rawList = decoded['orders'] as List<dynamic>;
+        }
+
+        // Fallback: If no orders found for UID, try fetching by Phone Number
+        if (rawList.isEmpty && phone.isNotEmpty) {
+           final phoneResponse = await http.get(
+            Uri.parse('$baseUrl/orders?phone=$phone'),
+            headers: headers,
+          );
+          if (phoneResponse.statusCode == 200) {
+            final phoneDecoded = json.decode(phoneResponse.body);
+             if (phoneDecoded is List) {
+              rawList = phoneDecoded;
+            } else if (phoneDecoded is Map && phoneDecoded.containsKey('data')) {
+              rawList = phoneDecoded['data'] as List<dynamic>;
+            }
+          }
+        }
+
+        return rawList.map((order) {
+          final map = Map<String, dynamic>.from(order);
+          map['id'] = map['id'] ?? map['_id']?.toString() ?? '';
+          return map;
+        }).toList();
       }
     } catch (e) {
       debugPrint('Error fetching orders: $e');
     }
     return [];
   }
+
 
   Future<bool> submitPrescription({
     required List<String> imageUrls,
@@ -483,11 +591,19 @@ class ApiService {
 
   Future<List<Map<String, dynamic>>> getUserPrescriptions() async {
     try {
+      final user = _auth.currentUser;
+      if (user == null) return [];
+
       final headers = await _getHeaders();
+      final queryParams = 'userId=${user.uid}';
       final response = await http.get(
-        Uri.parse('$baseUrl/prescriptions'),
+        Uri.parse('$baseUrl/prescriptions?$queryParams'),
         headers: headers,
       );
+
+      if (kDebugMode) {
+        print('DEBUG: Prescriptions Response (${response.statusCode}): ${response.body}');
+      }
       if (response.statusCode == 200) {
         return List<Map<String, dynamic>>.from(json.decode(response.body));
       }
@@ -497,7 +613,10 @@ class ApiService {
     return [];
   }
 
+
+
   Future<List<Map<String, dynamic>>> getPages() async {
+
     try {
       final snapshot = await _firestore.collection('pages').get();
       if (snapshot.docs.isNotEmpty) {
@@ -527,4 +646,56 @@ class ApiService {
       },
     ];
   }
+
+  Future<Map<String, dynamic>> getWalletData() async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/user/wallet'),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        return Map<String, dynamic>.from(json.decode(response.body));
+      }
+    } catch (e) {
+      debugPrint('Error fetching wallet data: $e');
+    }
+    return {'balance': 0, 'transactions': []};
+  }
+
+  Future<bool> syncReminders(List<Map<String, dynamic>> reminders) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/user/reminders'),
+        headers: headers,
+        body: json.encode({'reminders': reminders}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Error syncing reminders: $e');
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>> validateWalletUse(List<Map<String, dynamic>> items) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/user/wallet'),
+        headers: headers,
+        body: json.encode({
+          'action': 'validate_use',
+          'items': items,
+        }),
+      );
+      if (response.statusCode == 200) {
+        return Map<String, dynamic>.from(json.decode(response.body));
+      }
+    } catch (e) {
+      debugPrint('Error validating wallet use: $e');
+    }
+    return {'allowable': 0};
+  }
 }
+

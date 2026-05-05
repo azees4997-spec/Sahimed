@@ -20,6 +20,18 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Optimization: Pre-cache assets to ensure butter-smooth loading
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      precacheImage(
+        const AssetImage('assets/images/login_illustration_wellness.png'),
+        context,
+      );
+    });
+  }
+
+  @override
   void dispose() {
     _phoneController.dispose();
     super.dispose();
@@ -304,6 +316,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => _sendOtp(),
               decoration: InputDecoration(
                 hintText: 'Mobile Number',
                 border: InputBorder.none,

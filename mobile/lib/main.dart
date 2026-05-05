@@ -12,9 +12,11 @@ import 'features/auth/screens/login_screen.dart';
 import 'firebase_options.dart';
 import 'core/layout/main_layout.dart';
 import 'core/widgets/global_error_handler.dart';
+import 'core/services/reminder_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await ReminderService.init();
 
   try {
     if (Firebase.apps.isEmpty) {
@@ -24,12 +26,13 @@ void main() async {
     }
 
     // [SECURITY REFACTOR] Initialize App Check with Play Integrity for Production
-    await FirebaseAppCheck.instance.activate(
-      androidProvider: kDebugMode
-          ? AndroidProvider.debug
-          : AndroidProvider.playIntegrity,
-      appleProvider: AppleProvider.deviceCheck,
-    );
+    // [SECURITY REFACTOR] Initialize App Check - Non-blocking to speed up launch
+    FirebaseAppCheck.instance.activate(
+      providerAndroid: kDebugMode
+          ? const AndroidDebugProvider()
+          : const AndroidPlayIntegrityProvider(),
+      providerApple: const AppleDeviceCheckProvider(),
+    ).catchError((e) => debugPrint("App Check error: $e"));
 
     // Initializing reCAPTCHA config for Phone Auth fallback (Web Only)
     if (kIsWeb) {
@@ -37,20 +40,53 @@ void main() async {
     }
 
     // Optimization: Expand Image Cache for smoother scrolling & better performance
-    PaintingBinding.instance.imageCache.maximumSize = 1000;
-    PaintingBinding.instance.imageCache.maximumSizeBytes =
-        100 * 1024 * 1024; // 100MB cache
+    // Performance & Memory Tuning
+    const double maxCacheSize = 50 * 1024 * 1024; // 50MB
+    PaintingBinding.instance.imageCache.maximumSizeBytes = maxCacheSize.toInt();
+    PaintingBinding.instance.imageCache.maximumSize = 100; // Max 100 images
 
     debugPrint("Firebase Security: App Check & Auth Config initialized.");
   } catch (e) {
     debugPrint("Firebase initialization error: $e");
   }
 
+  // Global Error Handling: Prevent Red Screen of Death in Production
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    if (kDebugMode) return ErrorWidget(details.exception);
+    return const SizedBox.shrink(); // Will be handled by GlobalErrorHandler
+  };
+
   runApp(const SahimedApp());
 }
 
-class SahimedApp extends StatelessWidget {
+
+class SahimedApp extends StatefulWidget {
   const SahimedApp({super.key});
+
+  @override
+  State<SahimedApp> createState() => _SahimedAppState();
+}
+
+class _SahimedAppState extends State<SahimedApp> {
+  late Future<List<dynamic>> _initFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _initFuture = _initialize();
+  }
+
+  Future<List<dynamic>> _initialize() async {
+    return Future.wait([
+      // Minimum splash time for premium feel at start
+      Future.delayed(const Duration(milliseconds: 2800)),
+      // Actual auth check
+      FirebaseAuth.instance.authStateChanges().first.timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => null,
+          ),
+    ]);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,14 +107,23 @@ class SahimedApp extends StatelessWidget {
             ),
             textTheme: GoogleFonts.outfitTextTheme(),
           ),
-          home: StreamBuilder<User?>(
-            stream: FirebaseAuth.instance.authStateChanges(),
+          home: FutureBuilder<List<dynamic>>(
+            future: _initFuture,
             builder: (context, snapshot) {
+              // Always show splash while waiting
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const SplashScreen();
               }
-              if (snapshot.hasData) {
-                return MainLayout();
+              
+              // Handle potential errors by defaulting to login
+              if (snapshot.hasError) {
+                debugPrint("App Startup Error: ${snapshot.error}");
+                return const LoginScreen();
+              }
+
+              final user = snapshot.data?[1] as User?;
+              if (user != null) {
+                return const MainLayout();
               }
               return const LoginScreen();
             },
@@ -88,3 +133,4 @@ class SahimedApp extends StatelessWidget {
     );
   }
 }
+

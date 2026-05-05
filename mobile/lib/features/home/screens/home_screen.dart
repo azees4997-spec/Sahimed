@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
-import '../../../core/providers/navigation_provider.dart';
-import '../../../core/services/api_service.dart';
 
+import '../../../core/services/api_service.dart';
+import '../../../core/services/permission_service.dart';
 import '../../../shared/models/models.dart';
+
 import 'prescription_screen.dart';
 import '../../products/screens/category_products_screen.dart';
+
+
 import '../../products/widgets/product_card.dart';
 import '../widgets/home_header.dart';
 
@@ -36,12 +40,25 @@ class _HomeScreenState extends State<HomeScreen> {
   List<ProductModel> _bestSellers = [];
   List<ProductModel> _medicines = [];
   bool _isLoading = true;
+  String _edd = '';
+  String _pincode = '560001';
 
   @override
   void initState() {
     super.initState();
     _load();
+    _loadEDD();
+    _requestInitialPermissions();
   }
+
+  Future<void> _requestInitialPermissions() async {
+    // Non-blocking request for notifications on app start
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) {
+      PermissionService.requestNotifications(context);
+    }
+  }
+
 
   Future<void> _load() async {
     try {
@@ -63,29 +80,38 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  Future<void> _loadEDD() async {
+    try {
+      final edd = await _api.getShipwayEDD(_pincode);
+      if (mounted && edd != null) {
+        final date = DateTime.parse(edd);
+        final months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        final formatted = '${months[date.month - 1]} ${date.day.toString().padLeft(2, '0')}';
+        setState(() => _edd = formatted);
+      }
+
+    } catch (e) {
+      debugPrint('Error loading EDD: $e');
+    }
+  }
+
   Future<void> _launch(String url) async {
     try {
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        // Fallback for some devices where canLaunchUrl returns false but it actually works
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Could not launch: $url'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Could not launch: $url')),
         );
       }
     }
   }
 
   void _goSearch(BuildContext context) {
+    HapticFeedback.mediumImpact();
     context.read<NavigationProvider>().switchTab(1);
   }
 
@@ -96,395 +122,156 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Category background cycle (lavender / sahi-pink / sahi-blue / sahi-green)
-  Color _catBg(int i) {
-    const list = [_lavender, _sahiPink, _sahiBlue, _sahiGreen];
-    return list[i % 4];
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bgPage,
-      body: Column(
-        children: [
-          const HomeHeader(),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _load,
-              color: SahimedColors.primary,
-              child: ListView(
-                padding: const EdgeInsets.only(top: 0, bottom: 100),
-                children: [
-                  // ── 1. Hero Section ─────────────────────────────────────────────
-                  _buildHero(context),
-
-            // ── 2. Most Popular Brands (3-col grid, best sellers) ───────────
-            if (_isLoading || _bestSellers.isNotEmpty)
-              _buildSection(
-                title: 'Our Most Popular Brands',
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF9C3),
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  child: Text(
-                    'BEST SELLERS',
-                    style: GoogleFonts.outfit(
-                      fontSize: 7,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFFB45309),
-                      letterSpacing: 1,
-                    ),
-                  ),
-                ),
-                child: _isLoading
-                    ? _shimmerGrid(3)
-                    : _productGrid(_bestSellers, context),
-              ),
-
-            const SizedBox(height: 28),
-
-            // ── 3. Top Categories ───────────────────────────────────────────
-            _buildSection(
-              title: 'Top Categories',
-              trailing: GestureDetector(
-                onTap: () => _goSearch(context),
-                child: Row(
-                  children: [
-                    Text(
-                      'EXPLORE ALL',
-                      style: GoogleFonts.outfit(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        color: SahimedColors.primary,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const Icon(
-                      LucideIcons.chevronRight,
-                      size: 14,
-                      color: SahimedColors.primary,
-                    ),
-                  ],
-                ),
-              ),
-              child: _isLoading ? _shimmerGrid(9) : _categoryGrid(context),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          const SliverToBoxAdapter(child: HomeHeader()),
+          SliverToBoxAdapter(child: _buildDeliveryInfo(context)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: _buildHeroTop(context),
             ),
-
-            const SizedBox(height: 28),
-
-            // ── 4. Free Delivery Banner ───────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildDeliveryBanner(context),
-            ),
-
-            const SizedBox(height: 28),
-
-            // ── 5. Best Sellers (horizontal scroll) ───────────────────────
-            _buildSection(
-              title: 'Best Sellers',
-              child: _isLoading
-                  ? _shimmerHScroll()
-                  : _horizontalProductScroll(context),
-            ),
-          ],
-        ),
-      ),
-    ),
-  ],
-),
-);
-}
-
-  // ── Hero Section ─────────────────────────────────────────────────────────
-  Widget _buildHero(BuildContext context) {
-    return Container(
-      color: const Color(0xFFFFF9F9),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Row 1: Text + Image
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Left text block
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // "Trusted by 10L+ users" pill
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(100),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.7),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 14,
-                            height: 14,
-                            decoration: const BoxDecoration(
-                              color: _waGreen,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              LucideIcons.shieldCheck,
-                              size: 9,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Trusted by 10L+ users',
-                            style: GoogleFonts.outfit(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF1E293B),
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Headline
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'Affordable\nSolutions for\n',
-                            style: GoogleFonts.outfit(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF0F172A),
-                              height: 1.1,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          TextSpan(
-                            text: 'Everyday Care',
-                            style: GoogleFonts.outfit(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              color: SahimedColors.primary,
-                              fontStyle: FontStyle.italic,
-                              height: 1.1,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // Right image (rounded)
-              Container(
-                width: 130,
-                height: 130,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white, width: 5),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x22000000),
-                      blurRadius: 16,
-                      offset: Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: CachedNetworkImage(
-                    imageUrl:
-                        'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=600&auto=format&fit=crop',
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                    errorWidget: (c, u, e) => Container(
-                      color: _lavender,
-                      child: const Icon(
-                        LucideIcons.heartPulse,
-                        color: SahimedColors.primary,
-                        size: 40,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
-
-          const SizedBox(height: 16),
-
-          // Row 2: Search bar
-          GestureDetector(
-            onTap: () => _goSearch(context),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(100),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x18000000),
-                    blurRadius: 20,
-                    offset: Offset(0, 6),
-                  ),
-                ],
-                border: Border.all(color: const Color(0xFFF1F5F9)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 20),
-                      child: Text(
-                        'Search Medicines...',
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF94A3B8),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.all(4),
-                    padding: const EdgeInsets.all(11),
-                    decoration: BoxDecoration(
-                      color: SahimedColors.primary,
-                      borderRadius: BorderRadius.circular(100),
-                      boxShadow: [
-                        BoxShadow(
-                          color: SahimedColors.primary.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _StickySearchDelegate(onTap: () => _goSearch(context)),
+          ),
+          SliverToBoxAdapter(child: _buildHeroBottom(context)),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                _buildSection(
+                  title: 'Our Most Popular Brands',
+                  child: _isLoading ? _shimmerGrid(3) : _productGrid(_bestSellers, context),
+                ),
+                const SizedBox(height: 28),
+                _buildSection(
+                  title: 'Top Categories',
+                  trailing: GestureDetector(
+                    onTap: () => _goSearch(context),
+                    child: Row(
+                      children: [
+                        Text('EXPLORE ALL', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
+                        const Icon(LucideIcons.chevronRight, size: 14, color: SahimedColors.primary),
                       ],
                     ),
-                    child: const Icon(
-                      LucideIcons.search,
-                      size: 16,
-                      color: Colors.white,
-                    ),
                   ),
-                ],
-              ),
+                  child: _isLoading ? _shimmerGrid(9) : _categoryGrid(context),
+                ),
+                const SizedBox(height: 28),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildDeliveryBanner(context),
+                ),
+                const SizedBox(height: 28),
+                _buildSection(
+                  title: 'Best Sellers',
+                  child: _isLoading ? _shimmerHScroll() : _horizontalProductScroll(context),
+                ),
+                const SizedBox(height: 120),
+              ]),
             ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Row 3: Quick Actions (Upload Rx / WhatsApp / Order on Call)
-          Row(
-            children: [
-              _quickAction(
-                label: 'Upload Rx',
-                iconBg: SahimedColors.primary,
-                tileBg: _lavender,
-                icon: LucideIcons.fileText,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const PrescriptionScreen()),
-                ),
-              ),
-              const SizedBox(width: 10),
-              _quickAction(
-                label: 'WhatsApp',
-                iconBg: _waGreen,
-                tileBg: const Color(0xFFF0FDF4),
-                icon: LucideIcons.messageCircle,
-                onTap: () => _launch(
-                  'https://wa.me/917349499898?text=Hi%20Sahimed%2C%20I%20would%20like%20to%20order%20medicines.',
-                ),
-              ),
-              const SizedBox(width: 10),
-              _quickAction(
-                label: 'Order on Call',
-                iconBg: const Color(0xFFEF4444),
-                tileBg: _sahiPink,
-                icon: LucideIcons.phone,
-                onTap: () => _launch('tel:+917349499898'),
-              ),
-            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _quickAction({
-    required String label,
-    required Color iconBg,
-    required Color tileBg,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildHeroTop(BuildContext context) {
+    return Container(
+      color: const Color(0xFFFFF9F9),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Affordable\nSolutions for\nEveryday Care',
+                  style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, height: 1.1),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: CachedNetworkImage(
+              imageUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=200',
+              width: 110,
+              height: 110,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroBottom(BuildContext context) {
+    return Container(
+      color: const Color(0xFFFFF9F9),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+      child: Row(
+        children: [
+          _quickAction(
+            label: 'Upload Rx',
+            iconBg: SahimedColors.primary,
+            tileBg: _lavender,
+            icon: const Icon(LucideIcons.fileText, size: 18, color: Colors.white),
+            onTap: () async {
+              if (await PermissionService.requestStorage(context)) {
+                if (mounted) {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const PrescriptionScreen()));
+                }
+              }
+            },
+
+          ),
+          const SizedBox(width: 10),
+          _quickAction(
+            label: 'WhatsApp',
+            iconBg: _waGreen,
+            tileBg: const Color(0xFFF0FDF4),
+            icon: const Icon(LucideIcons.messageCircle, size: 18, color: Colors.white),
+            onTap: () => _launch('https://wa.me/917349499898'),
+          ),
+          const SizedBox(width: 10),
+          _quickAction(
+            label: 'Call Us',
+            iconBg: Colors.red,
+            tileBg: _sahiPink,
+            icon: const Icon(LucideIcons.phone, size: 18, color: Colors.white),
+            onTap: () async {
+              if (await PermissionService.requestPhone(context)) {
+                _launch('tel:+917349499898');
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _quickAction({required String label, required Color iconBg, required Color tileBg, required Widget icon, required VoidCallback onTap}) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
-          decoration: BoxDecoration(
-            color: tileBg,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white, width: 1.5),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 12,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(color: tileBg, borderRadius: BorderRadius.circular(16)),
           child: Column(
             children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: iconBg.withOpacity(0.35),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Icon(icon, size: 18, color: Colors.white),
-              ),
+              Container(width: 36, height: 36, decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(12)), child: Center(child: icon)),
               const SizedBox(height: 6),
-              Text(
-                label.toUpperCase(),
-                textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(
-                  fontSize: 7.5,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF0F172A),
-                  letterSpacing: 0.5,
-                  height: 1.2,
-                ),
-              ),
+              Text(label.toUpperCase(), style: GoogleFonts.outfit(fontSize: 8, fontWeight: FontWeight.w900)),
             ],
           ),
         ),
@@ -492,12 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Generic Section Wrapper ───────────────────────────────────────────────
-  Widget _buildSection({
-    required String title,
-    required Widget child,
-    Widget? trailing,
-  }) {
+  Widget _buildSection({required String title, required Widget child, Widget? trailing}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -506,16 +288,8 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title.toUpperCase(),
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  color: SahimedColors.primary,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              ?trailing,
+              Text(title.toUpperCase(), style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
+              if (trailing != null) trailing,
             ],
           ),
           const SizedBox(height: 12),
@@ -529,243 +303,102 @@ class _HomeScreenState extends State<HomeScreen> {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, // Website-like 2-column grid on mobile
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.68, // Adjusted for 2-column grid
-      ),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 0.68),
       itemCount: products.length,
-      itemBuilder: (_, i) => SahimedProductCard(
-        product: products[i],
-      ),
+      itemBuilder: (_, i) => SahimedProductCard(product: products[i]),
     );
   }
 
-  // ── Category 3-column grid ────────────────────────────────────────────────
   Widget _categoryGrid(BuildContext context) {
-    final cats = _categories.take(9).toList();
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.85,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 12, mainAxisSpacing: 16, childAspectRatio: 0.85),
+      itemCount: _categories.take(9).length,
+      itemBuilder: (_, i) => GestureDetector(
+        onTap: () => _openCategory(context, _categories[i]),
+        child: Column(
+          children: [
+            Container(width: 74, height: 74, decoration: BoxDecoration(color: _catBg(i), shape: BoxShape.circle), child: ClipOval(child: CachedNetworkImage(imageUrl: _categories[i].imageUrl, fit: BoxFit.cover))),
+            const SizedBox(height: 6),
+            Text(_categories[i].name.toUpperCase(), textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 7, fontWeight: FontWeight.w900)),
+          ],
+        ),
       ),
-      itemCount: cats.length,
-      itemBuilder: (_, i) {
-        final cat = cats[i];
-        return GestureDetector(
-          onTap: () => _openCategory(context, cat),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Circle image — exactly as website
-              Container(
-                width: 74,
-                height: 74,
-                decoration: BoxDecoration(
-                  color: _catBg(i),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x14000000),
-                      blurRadius: 10,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: ClipOval(
-                  child: CachedNetworkImage(
-                    imageUrl: cat.imageUrl,
-                    fit: BoxFit.cover,
-                    width: 74,
-                    height: 74,
-                    errorWidget: (c, u, e) => Icon(
-                      LucideIcons.pill,
-                      color: SahimedColors.primary,
-                      size: 24,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                cat.name.toUpperCase(),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(
-                  fontSize: 7,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF64748B),
-                  letterSpacing: 0.5,
-                  height: 1.1,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
-  // ── Free Delivery Banner ──────────────────────────────────────────────────
   Widget _buildDeliveryBanner(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFBBF24), Color(0xFFF97316), Color(0xFFE11D48)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33F97316),
-            blurRadius: 20,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Pan India Free\nDelivery Above ₹499',
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    height: 1.2,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'ORDER NOW & SAVE MORE',
-                  style: GoogleFonts.outfit(
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white.withOpacity(0.8),
-                    letterSpacing: 1,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                GestureDetector(
-                  onTap: () => _goSearch(context),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(100),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x22000000),
-                          blurRadius: 8,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      'SHOP NOW',
-                      style: GoogleFonts.outfit(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        color: SahimedColors.primary,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: const [
-                BoxShadow(color: Color(0x22000000), blurRadius: 12),
-              ],
-            ),
-            child: const Icon(
-              LucideIcons.package,
-              color: SahimedColors.primary,
-              size: 30,
-            ),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(gradient: const LinearGradient(colors: [Colors.orange, Colors.red]), borderRadius: BorderRadius.circular(28)),
+      child: Text('FREE DELIVERY ON ALL ORDERS ABOVE ₹499', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w900)),
     );
   }
 
   Widget _horizontalProductScroll(BuildContext context) {
     return SizedBox(
-      height: 245, // Increased height to prevent Add button clipping
+      height: 245,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _medicines.length,
         separatorBuilder: (_, _) => const SizedBox(width: 12),
-        itemBuilder: (_, i) => SizedBox(
-          width: 155, // Wider cards for 2.3 - 2.5 items per screen view
-          child: SahimedProductCard(
-            product: _medicines[i],
+        itemBuilder: (_, i) => SizedBox(width: 155, child: SahimedProductCard(product: _medicines[i])),
+      ),
+    );
+  }
+
+  Widget _shimmerGrid(int count) => Container();
+  Widget _shimmerHScroll() => Container();
+
+  Widget _buildDeliveryInfo(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(100), border: Border.all(color: SahimedColors.slate100)),
+      child: Row(
+        children: [
+          const Icon(LucideIcons.mapPin, size: 14, color: SahimedColors.primary),
+          const SizedBox(width: 8),
+          Text('DELIVERING TO $_pincode', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900)),
+          const Spacer(),
+          Text(_edd.isEmpty ? 'FETCHING...' : 'DELIVERY BY $_edd', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.green)),
+        ],
+      ),
+    );
+  }
+
+  Color _catBg(int i) => [_lavender, _sahiPink, _sahiBlue, _sahiGreen][i % 4];
+}
+
+class _StickySearchDelegate extends SliverPersistentHeaderDelegate {
+  final VoidCallback onTap;
+  _StickySearchDelegate({required this.onTap});
+  @override
+  double get minExtent => 80;
+  @override
+  double get maxExtent => 80;
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.white,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(100)),
+          child: Row(
+            children: [
+              const Icon(LucideIcons.search, size: 18),
+              const SizedBox(width: 12),
+              Text('Search Medicines...', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.grey)),
+            ],
           ),
         ),
       ),
     );
   }
-
-  // ── Shimmer placeholders ──────────────────────────────────────────────────
-  Widget _shimmerGrid(int count) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 0.58,
-      ),
-      itemCount: count,
-      itemBuilder: (_, _) => Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFE2E8F0),
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-    );
-  }
-
-  Widget _shimmerHScroll() {
-    return SizedBox(
-      height: 240,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: 4,
-        separatorBuilder: (_, _) => const SizedBox(width: 10),
-        itemBuilder: (_, _) => Container(
-          width: 145,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE2E8F0),
-            borderRadius: BorderRadius.circular(20),
-          ),
-        ),
-      ),
-    );
-  }
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => false;
 }

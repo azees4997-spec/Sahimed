@@ -6,7 +6,17 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const { keyword, mobile, userId } = await request.json();
+    const { 
+      keyword, 
+      mobile, 
+      userId, 
+      lat, 
+      lng, 
+      pincode, 
+      platform, 
+      resultsCount 
+    } = await request.json();
+    
     if (!keyword) return NextResponse.json({ error: 'Keyword required' }, { status: 400 });
 
     const client = await clientPromise;
@@ -17,6 +27,11 @@ export async function POST(request: Request) {
       keyword,
       mobile: mobile || 'Anonymous',
       userId: userId || null,
+      lat: lat || null,
+      lng: lng || null,
+      pincode: pincode || null,
+      platform: platform || 'web',
+      resultsCount: resultsCount ?? null,
       timestamp: new Date()
     });
 
@@ -25,6 +40,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
 
 export async function GET(request: Request) {
   try {

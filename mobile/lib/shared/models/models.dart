@@ -207,6 +207,9 @@ class OrderModel {
   final String status;
   final bool isConsultationRequired;
   final String clinicalPath;
+  final String? awbNumber;
+  final String? carrierId;
+  final double walletUsed;
 
   OrderModel({
     this.userId,
@@ -221,6 +224,9 @@ class OrderModel {
     this.status = 'Pending Consult',
     this.isConsultationRequired = false,
     this.clinicalPath = 'consult',
+    this.awbNumber,
+    this.carrierId,
+    this.walletUsed = 0,
   });
 
   Map<String, dynamic> toJson() {
@@ -237,9 +243,77 @@ class OrderModel {
       'status': status,
       'isConsultationRequired': isConsultationRequired,
       'clinicalPath': clinicalPath,
+      'awbNumber': awbNumber,
+      'carrierId': carrierId,
+      'walletUsed': walletUsed,
       'orderDate': {'_methodName': 'serverTimestamp'},
     };
   }
+
+}
+
+class WalletTransaction {
+  final String id;
+  final double amount;
+  final String type; // 'credit' | 'debit'
+  final String description;
+  final DateTime timestamp;
+
+  WalletTransaction({
+    required this.id,
+    required this.amount,
+    required this.type,
+    required this.description,
+    required this.timestamp,
+  });
+
+  factory WalletTransaction.fromJson(Map<String, dynamic> json) {
+    return WalletTransaction(
+      id: json['id'] ?? json['_id'] ?? '',
+      amount: (json['amount'] ?? 0).toDouble(),
+      type: json['type'] ?? 'credit',
+      description: json['description'] ?? '',
+      timestamp: json['timestamp'] != null 
+        ? DateTime.parse(json['timestamp']) 
+        : DateTime.now(),
+    );
+  }
+}
+
+class MedicineReminder {
+  final String id;
+  final String medicineName;
+  final String dosage;
+  final int hour;
+  final int minute;
+  final bool isActive;
+
+  MedicineReminder({
+    required this.id,
+    required this.medicineName,
+    required this.dosage,
+    required this.hour,
+    required this.minute,
+    this.isActive = true,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'medicineName': medicineName,
+    'dosage': dosage,
+    'hour': hour,
+    'minute': minute,
+    'isActive': isActive,
+  };
+
+  factory MedicineReminder.fromJson(Map<String, dynamic> json) => MedicineReminder(
+    id: json['id'] ?? '',
+    medicineName: json['medicineName'] ?? '',
+    dosage: json['dosage'] ?? '',
+    hour: json['hour'] ?? 8,
+    minute: json['minute'] ?? 0,
+    isActive: json['isActive'] ?? true,
+  );
 }
 
 class PromoModel {

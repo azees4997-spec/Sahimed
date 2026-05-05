@@ -22,8 +22,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         serviceable: result.serviceable,
         carriers: result.carriers,
+        edd: result.edd,
         debug: result.debug
       });
+
     } else {
       return NextResponse.json(
         { 

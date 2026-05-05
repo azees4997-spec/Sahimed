@@ -1,7 +1,8 @@
 "use client"
 
 import Link from 'next/link';
-import { Search as SearchIcon, MapPin, ChevronDown, LocateFixed, Loader2, ShoppingCart, Package, ArrowUpRight, ChevronUp, User, ChevronRight } from 'lucide-react';
+import { Search as SearchIcon, MapPin, ChevronDown, LocateFixed, Loader2, ShoppingCart, Package, ArrowUpRight, ChevronUp, User, ChevronRight, Wallet } from 'lucide-react';
+
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -147,19 +148,34 @@ export default function Navbar() {
       const profileSnap = user ? await getDoc(doc(db, 'userProfiles', user.uid)) : null;
       const profile = profileSnap?.data();
       
+      // Extract location data from cart context if available
+      let lat = null;
+      let lng = null;
+      let pincode = null;
+
+      if (location && location.includes('PIN:')) {
+        pincode = location.replace('PIN:', '').trim();
+      }
+
       await fetch('/api/analytics/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           keyword,
           mobile: profile?.phone || user?.phoneNumber || 'Anonymous',
-          userId: user?.uid || null
+          userId: user?.uid || null,
+          lat,
+          lng,
+          pincode,
+          platform: 'web',
+          resultsCount: rawSuggestions.length
         })
       });
     } catch (err) {
       console.error("Search analytics failure", err);
     }
   };
+
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();

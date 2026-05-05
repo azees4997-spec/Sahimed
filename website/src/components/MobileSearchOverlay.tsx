@@ -61,19 +61,24 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
       const profileSnap = user ? await getDoc(doc(db, 'userProfiles', user.uid)) : null;
       const profile = profileSnap?.data();
       
+      // Since this is mobile-web, we might not have lat/lng easily without a prompt,
+      // but we can at least mark the platform correctly.
       await fetch('/api/analytics/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           keyword,
           mobile: profile?.phone || user?.phoneNumber || 'Anonymous',
-          userId: user?.uid || null
+          userId: user?.uid || null,
+          platform: 'mobile-web',
+          resultsCount: suggestions.length
         })
       });
     } catch (err) {
       console.error("Search analytics failure", err);
     }
   };
+
 
   useEffect(() => {
     if (isOpen) {

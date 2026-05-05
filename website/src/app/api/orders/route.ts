@@ -9,21 +9,62 @@ function escapeRegExp(string: string) {
 
 export async function GET(req: Request) {
   try {
-    await verifyAdmin(req);
+    let user;
+    let isAdmin = false;
+    try {
+      user = await verifyAdmin(req);
+      isAdmin = true;
+    } catch (err) {
+      user = await verifyAuth(req);
+    }
+
     const client = await clientPromise;
     const db = client.db('sahimed');
     const { searchParams } = new URL(req.url);
+    
+    // Security check: Non-admins MUST provide their own userId
+    const requestedUserId = searchParams.get('userId');
+    const phone = searchParams.get('phone');
+    
+    if (!isAdmin && requestedUserId !== user.uid) {
+      return NextResponse.json({ error: "Forbidden: You can only view your own orders." }, { status: 403 });
+    }
+
     const statusRaw = searchParams.get('status');
     const status = statusRaw ? escapeRegExp(statusRaw) : null;
     const start = searchParams.get('start');
     const end = searchParams.get('end');
     
-    const query: any = status ? { status: { $regex: new RegExp(status, 'i') } } : {};
+    // Build query
+    const query: any = {};
     
+    // Identity filter (OR logic for userId or phone with fuzzy matching)
+    if (requestedUserId && phone) {
+      const last10 = phone.replace(/\D/g, '').slice(-10);
+      query.$or = [
+        { userId: requestedUserId },
+        { customer_id: requestedUserId },
+        { phoneNumber: phone },
+        { phoneNumber: last10 },
+        { phoneNumber: `+91${last10}` },
+        { phoneNumber: `91${last10}` }
+      ];
+    } else if (requestedUserId) {
+      query.$or = [{ userId: requestedUserId }, { customer_id: requestedUserId }];
+    } else if (phone) {
+      const last10 = phone.replace(/\D/g, '').slice(-10);
+      query.$or = [
+        { phoneNumber: phone },
+        { phoneNumber: last10 },
+        { phoneNumber: `+91${last10}` },
+        { phoneNumber: `91${last10}` }
+      ];
+    }
+
+    if (status) query.status = { $regex: new RegExp(status, 'i') };
+    
+    // Date filter
     if (start || end) {
-      query.$or = [{ orderDate: { $exists: true } }, { createdAt: { $exists: true } }];
-      const dateField = query.orderDate ? 'orderDate' : 'createdAt'; // Fallback logic
-      
       const dateQuery: any = {};
       if (start) {
         const startDate = new Date(start);
@@ -31,22 +72,43 @@ export async function GET(req: Request) {
       }
       if (end) {
         const endDate = new Date(end);
-        if (!isNaN(endDate.getTime())) {
-          endDate.setHours(23, 59, 59, 999);
-          dateQuery.$lte = endDate;
-        }
+        endDate.setHours(23, 59, 59, 999);
+        if (!isNaN(endDate.getTime())) dateQuery.$lte = endDate;
       }
       
-      // We'll apply it to both for safety if they exist
-      query.$and = [
-        { $or: [
+      // Use $or for date field fallback (orderDate or createdAt)
+      const dateCondition = {
+        $or: [
           { orderDate: dateQuery },
           { createdAt: dateQuery }
-        ]}
-      ];
+        ]
+      };
+
+      // Merge with identity filter using $and if $or already exists
+      if (query.$or) {
+        const identityOr = query.$or;
+        delete query.$or;
+        query.$and = [
+          { $or: identityOr },
+          dateCondition
+        ];
+      } else {
+        // If no identity $or, we can just use $and to wrap the date $or and other conditions
+        const existingConditions = { ...query };
+        Object.keys(query).forEach(key => delete query[key]);
+        query.$and = [
+          existingConditions,
+          dateCondition
+        ];
+      }
     }
-    
-    const orders = await db.collection('orders').find(query).sort({ orderDate: -1 }).limit(100).toArray();
+
+    const client = await clientPromise;
+    const db = client.db('sahimed');
+    const orders = await db.collection('orders')
+      .find(query)
+      .sort({ orderDate: -1, createdAt: -1 })
+      .toArray();
     return NextResponse.json(orders);
   } catch (err: any) {
     console.error("[Orders API Error]", err);

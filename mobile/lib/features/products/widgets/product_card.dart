@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
@@ -82,7 +83,7 @@ class SahimedProductCard extends StatelessWidget {
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: (product.isGeneric == true || product.isGeneric == "true")
+                              colors: (product.isGeneric == true)
                                   ? [const Color(0xFF00D991), const Color(0xFF008C5D)]
                                   : [const Color(0xFFFF3B8E), const Color(0xFFCC0044)],
                             ),
@@ -131,7 +132,7 @@ class SahimedProductCard extends StatelessWidget {
                           child: Container(
                             width: 20,
                             height: 4,
-                            color: (product.isGeneric == true || product.isGeneric == "true")
+                            color: (product.isGeneric == true)
                                 ? const Color(0xFF008C5D)
                                 : const Color(0xFFCC0044),
                           ),
@@ -256,7 +257,10 @@ class SahimedProductCard extends StatelessWidget {
 
                 // Slot 6: Full-width ADD Button
                 GestureDetector(
-                  onTap: () => context.read<CartProvider>().addItem(product),
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    context.read<CartProvider>().addItem(product);
+                  },
                   child: Container(
                     width: double.infinity,
                     height: 28,

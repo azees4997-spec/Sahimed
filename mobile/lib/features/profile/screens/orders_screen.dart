@@ -49,21 +49,28 @@ class _OrdersScreenState extends State<OrdersScreen> {
     int addedCount = 0;
     for (var item in items) {
       try {
+        // Robust field mapping for cross-platform compatibility
+        final String medicineId = (item['medicineId'] ?? item['id'] ?? item['productId'] ?? item['sku'] ?? '').toString();
+        final String name = item['name'] ?? 'Medicine';
+        final String brand = item['brand'] ?? '';
+        
+        // Safety for numeric values
+        final double price = num.tryParse((item['unitPrice'] ?? item['price'] ?? 0).toString())?.toDouble() ?? 0.0;
+        final double mrp = num.tryParse((item['mrp'] ?? price).toString())?.toDouble() ?? price;
+        
         final product = ProductModel(
-          id: item['medicineId'] ?? item['id'] ?? '',
-          name: item['name'] ?? 'Medicine',
-          brand: item['brand'] ?? '',
-          price: (item['unitPrice'] as num).toDouble(),
-          mrp:
-              (item['mrp'] as num?)?.toDouble() ??
-              (item['unitPrice'] as num).toDouble(),
+          id: medicineId,
+          name: name,
+          brand: brand,
+          price: price,
+          mrp: mrp,
           imageUrl:
               item['imageUrl'] ??
-              'https://picsum.photos/seed/${item['medicineId']}/300/300',
+              'https://picsum.photos/seed/$medicineId/300/300',
         );
 
         // Add to cart with original quantity
-        final qty = (item['quantity'] as num?)?.toInt() ?? 1;
+        final qty = num.tryParse((item['quantity'] ?? 1).toString())?.toInt() ?? 1;
         for (int i = 0; i < qty; i++) {
           cart.addItem(product);
         }
@@ -123,20 +130,24 @@ class _OrdersScreenState extends State<OrdersScreen> {
           ),
         ),
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: SahimedColors.primary),
-            )
-          : _orders.isEmpty
-          ? _buildEmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: _orders.length,
-              itemBuilder: (ctx, i) {
-                final order = _orders[i];
-                return _buildOrderCard(order);
-              },
-            ),
+      body: RefreshIndicator(
+        onRefresh: _loadOrders,
+        color: SahimedColors.primary,
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: SahimedColors.primary),
+              )
+            : _orders.isEmpty
+            ? _buildEmptyState()
+            : ListView.builder(
+                padding: const EdgeInsets.all(20),
+                itemCount: _orders.length,
+                itemBuilder: (ctx, i) {
+                  final order = _orders[i];
+                  return _buildOrderCard(order);
+                },
+              ),
+      ),
     );
   }
 
@@ -225,7 +236,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'ORDER #${(order['id'] ?? '').toString().toUpperCase().padLeft(8, '0').substring(0, 8)}',
+                          'ORDER #${(order['orderId'] ?? order['id'] ?? '').toString().toUpperCase()}',
                           style: GoogleFonts.outfit(
                             fontSize: 10,
                             fontWeight: FontWeight.w900,

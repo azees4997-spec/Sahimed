@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from 'react';
-import { ChevronRight, Phone, MessageCircle, FileText, Search, Package, ShieldCheck } from 'lucide-react';
+import { ChevronRight, Phone, MessageCircle, FileText, Search, Package, ShieldCheck, MapPin } from 'lucide-react';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,32 @@ export default function HomeClient({ banners, categories, bestSellers, medicines
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
+  const [edd, setEdd] = React.useState<string>('');
+  const [activePincode, setActivePincode] = React.useState<string>('560068');
+
+  React.useEffect(() => {
+    const fetchEdd = async () => {
+      try {
+        const stored = localStorage.getItem('activePincode') || '560068';
+        setActivePincode(stored);
+        const res = await fetch('/api/logistics/shipway/serviceability', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ toPincode: stored })
+        });
+        const data = await res.json();
+        if (data.edd) {
+          const date = new Date(data.edd);
+          const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+          setEdd(`${months[date.getMonth()]} ${date.getDate().toString().padStart(2, '0')}`);
+        }
+      } catch (e) {
+        console.error("Failed to fetch EDD", e);
+      }
+    };
+    fetchEdd();
+  }, []);
+
 
   const plugin = React.useRef(
     Autoplay({ delay: 5000, stopOnInteraction: true })
@@ -42,8 +69,22 @@ export default function HomeClient({ banners, categories, bestSellers, medicines
     });
   }, [api]);
 
-  return (
     <div className="space-y-6 sm:space-y-12 pb-20 sm:pb-32 overflow-x-hidden max-w-full">
+      {/* Delivery Info Bar */}
+      <div className="max-w-7xl mx-auto">
+        <div className="mx-1 sm:mx-2 bg-white/60 backdrop-blur-md rounded-full border border-white/50 px-6 py-3 flex items-center justify-between shadow-xl shadow-slate-200/50">
+          <div className="flex items-center gap-3">
+            <MapPin className="w-4 h-4 text-primary" />
+            <span className="text-[10px] font-black uppercase tracking-tight text-slate-900">Delivering to {activePincode}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">
+              {edd ? `Delivery by ${edd}` : 'Estimating Delivery...'}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Banner Carousel */}
       {banners && banners.length > 0 && (
         <section className="w-full">

@@ -17,6 +17,8 @@ export function useMongoDBCollection<T = any>(options: {
   isBestSeller?: string | boolean;
   minPrice?: string;
   maxPrice?: string;
+  marketerName?: string;
+  dosageForm?: string;
 } = {}) {
   const [data, setData] = useState<T[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +36,8 @@ export function useMongoDBCollection<T = any>(options: {
       if (options.q) params.append('q', options.q);
       if (options.minPrice) params.append('minPrice', options.minPrice);
       if (options.maxPrice) params.append('maxPrice', options.maxPrice);
+      if (options.marketerName) params.append('marketerName', options.marketerName);
+      if (options.dosageForm) params.append('dosageForm', options.dosageForm);
 
       const cacheKey = `products_${params.toString()}`;
       const cached = queryCache[cacheKey];
@@ -65,7 +69,7 @@ export function useMongoDBCollection<T = any>(options: {
     };
 
     fetchData();
-  }, [options.limit, options.category, options.q, options.moleculeId, options.isBestSeller, options.minPrice, options.maxPrice, refreshKey]);
+  }, [options.limit, options.category, options.q, options.moleculeId, options.isBestSeller, options.minPrice, options.maxPrice, options.marketerName, options.dosageForm, refreshKey]);
 
   const refetch = useCallback(() => {
     setRefreshKey(k => k + 1);

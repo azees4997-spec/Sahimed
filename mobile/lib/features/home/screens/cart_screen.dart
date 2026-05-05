@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -8,6 +9,7 @@ import '../../../core/providers/cart_provider.dart';
 import '../../../core/services/api_service.dart';
 import '../../../shared/models/models.dart';
 import 'checkout_screen.dart';
+import '../../../core/providers/navigation_provider.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -466,12 +468,15 @@ class _CartScreenState extends State<CartScreen> {
                   // Right: Checkout button
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CheckoutScreen(),
-                        ),
-                      ),
+                      onTap: () {
+                        HapticFeedback.mediumImpact();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CheckoutScreen(),
+                          ),
+                        );
+                      },
                       child: Container(
                         height: 52,
                         decoration: BoxDecoration(
@@ -710,7 +715,10 @@ class _QtyBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       child: Container(
         width: 28,
         height: 28,
@@ -820,7 +828,10 @@ class _EmptyCart extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             GestureDetector(
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                HapticFeedback.mediumImpact();
+                context.read<NavigationProvider>().switchTab(0);
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 36,

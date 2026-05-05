@@ -45,12 +45,43 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Map<String, dynamic>? _selectedAddress;
   bool _showAddressForm = true;
 
+  // Wallet Integration
+  double _walletBalance = 0;
+  double _allowableWalletAmount = 0;
+  bool _useWallet = false;
+  String _walletReason = '';
+
+
   @override
   void initState() {
     super.initState();
     _prescriptionImage = widget.initialPrescription;
     _loadData();
+    _loadWalletInfo();
   }
+
+  Future<void> _loadWalletInfo() async {
+    final cart = context.read<CartProvider>();
+    final walletData = await _apiService.validateWalletUse(
+      cart.items.map((e) => {
+        'id': e.product.id,
+        'name': e.product.name,
+        'price': e.product.price,
+        'quantity': e.quantity,
+        'category': e.product.liveData?['category'] ?? '',
+      }).toList(),
+
+    );
+
+    if (mounted) {
+      setState(() {
+        _allowableWalletAmount = (walletData['allowable'] as num?)?.toDouble() ?? 0;
+        _walletBalance = (walletData['currentBalance'] as num?)?.toDouble() ?? 0;
+        _walletReason = walletData['reason'] ?? '';
+      });
+    }
+  }
+
 
   Future<void> _loadData() async {
     // 1. Pre-fill from Firebase Auth
@@ -73,13 +104,53 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           _selectedAddress = addresses.first;
           _showAddressForm = false;
           _fillFormWithAddress(addresses.first);
+        } else {
+          // New User: Auto-detect location to save time
+          _autoDetectLocation();
         }
       });
     }
   }
 
+  Future<void> _autoDetectLocation() async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always) {
+        final pos = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            timeLimit: Duration(seconds: 8),
+          ),
+        );
+        
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          pos.latitude,
+          pos.longitude,
+        );
+
+        if (placemarks.isNotEmpty && mounted) {
+          Placemark place = placemarks[0];
+          setState(() {
+            _streetController.text = place.subLocality ?? place.name ?? '';
+            _cityController.text = place.locality ?? '';
+            _stateController.text = place.administrativeArea ?? 'Karnataka';
+            _pincodeController.text = place.postalCode ?? '';
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Auto-location failed: $e');
+    }
+  }
+
   void _fillFormWithAddress(Map<String, dynamic> addr) {
-    _nameController.text = addr['name'] ?? addr['patientName'] ?? '';
+    final user = FirebaseAuth.instance.currentUser;
+    _nameController.text = addr['name'] ?? addr['patientName'] ?? user?.displayName ?? '';
     _houseController.text = addr['houseNumber'] ?? '';
     _streetController.text = addr['street'] ?? '';
     _cityController.text = addr['city'] ?? '';
@@ -87,7 +158,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _pincodeController.text = addr['pincode'] ?? '';
     _landmarkController.text = addr['landmark'] ?? '';
     _selectedTag = addr['tag'] ?? 'Home';
-    _phoneController.text = addr['phone'] ?? addr['phoneNumber'] ?? _phoneController.text;
+    _phoneController.text = addr['phone'] ?? addr['phoneNumber'] ?? user?.phoneNumber ?? '';
   }
 
   Future<void> _pickImage() async {
@@ -110,12 +181,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _placeOrder() async {
-    if (_showAddressForm && !_formKey.currentState!.validate()) return;
-    if (!_showAddressForm && _selectedAddress == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select an address')));
-      return;
+    // 1. Validation Logic
+    if (_showAddressForm) {
+      if (!_formKey.currentState!.validate()) return;
+    } else {
+      if (_selectedAddress == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select an address')),
+        );
+        return;
+      }
+      // Ensure name is actually present
+      if (_nameController.text.trim().isEmpty || 
+          _nameController.text == 'Sahimed User' || 
+          _nameController.text == 'N/A') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('PATIENT NAME IS MANDATORY')),
+        );
+        return;
+      }
     }
 
     final cart = context.read<CartProvider>();
@@ -224,16 +308,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         items: cart.items,
         total: cart.finalTotal,
         shippingDetails: shippingDetails,
-        name: _nameController.text.isNotEmpty 
-            ? _nameController.text 
-            : (shippingDetails['name'] ?? 'Sahimed User'),
-        phone: _phoneController.text.isNotEmpty 
-            ? _phoneController.text 
-            : (shippingDetails['phone'] ?? 'N/A'),
+        name: _nameController.text.trim(),
+        phone: _phoneController.text.trim(),
         billingBreakdown: billingBreakdown,
         prescriptions: prescriptions,
         isConsultationRequired: _isConsultationRequired,
+        walletUsed: _useWallet ? _allowableWalletAmount : 0,
       );
+
 
       if (mounted) {
         if (orderId != null) {
@@ -241,7 +323,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
-              builder: (context) => const OrderStatusScreen(isSuccess: true),
+              builder: (context) => OrderStatusScreen(
+                isSuccess: true,
+                orderId: orderId,
+                totalAmount: cart.finalTotal,
+                patientName: _nameController.text.trim(),
+              ),
             ),
             (route) => route.isFirst,
           );
@@ -298,6 +385,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Patient Details Section (New & Primary)
+                _buildSectionCard(
+                  title: 'Patient Details',
+                  icon: LucideIcons.user,
+                  child: Column(
+                    children: [
+                      _buildTextField(
+                        controller: _nameController,
+                        label: 'PATIENT NAME (MANDATORY)',
+                        hint: 'Full name of the patient',
+                        icon: LucideIcons.user,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _phoneController,
+                        label: 'ALTERNATIVE NUMBER (OPTIONAL)',
+                        hint: 'Secondary contact number',
+                        icon: LucideIcons.phone,
+                        keyboardType: TextInputType.phone,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+
                 // Address Section
                 _buildSectionCard(
                   title: 'Shipping Address',
@@ -317,7 +429,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             _cityController.clear();
                             _pincodeController.clear();
                           }),
-                          icon: Icon(LucideIcons.plus, size: 16),
+                          icon: const Icon(LucideIcons.plus, size: 16),
                           label: Text(
                             'Add New Address',
                             style: GoogleFonts.outfit(
@@ -332,22 +444,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           child: Column(
                             key: const ValueKey('address_form'),
                             children: [
-                              _buildTextField(
-                                controller: _nameController,
-                                label: 'PATIENT NAME',
-                                hint: 'Who is this medicine for?',
-                                icon: LucideIcons.user,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildTextField(
-                                controller: _phoneController,
-                                label: 'CONTACT NUMBER',
-                                hint: '10-digit mobile number',
-                                icon: LucideIcons.phone,
-                                keyboardType: TextInputType.phone,
-                              ),
-                              const SizedBox(height: 24),
-
                               // Locate Me Button for Parity
                               ElevatedButton.icon(
                                 onPressed: () async {
@@ -386,21 +482,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                               'Karnataka';
                                           _pincodeController.text =
                                               place.postalCode ?? '';
-                                          // Note: coords are captured during _placeOrder using the same service
                                         });
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'ADDRESS AUTO-FILLED',
-                                              ),
-                                              backgroundColor:
-                                                  SahimedColors.success,
-                                            ),
-                                          );
-                                        }
                                       }
                                     }
                                   } catch (e) {
@@ -495,7 +577,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
 
                 // Consultation Section
                 if (cart.isRxRequired)
@@ -554,7 +636,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                   ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
                 _buildOrderSummary(cart),
               ],
             ),
@@ -732,7 +814,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     required Widget child,
   }) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: SahimedColors.white,
         borderRadius: BorderRadius.circular(32),
@@ -879,6 +961,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               '- ₹${cart.totalSavings.toStringAsFixed(2)}',
               isGreen: true,
             ),
+          if (_allowableWalletAmount > 0)
+            _summaryRow(
+              'SahiWallet (Max Use)',
+              '- ₹${_allowableWalletAmount.toStringAsFixed(2)}',
+              isGreen: true,
+            ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Divider(height: 1),
@@ -895,7 +983,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
               Text(
-                '₹${cart.finalTotal.toStringAsFixed(2)}',
+                '₹${(cart.finalTotal - (_useWallet ? _allowableWalletAmount : 0)).toStringAsFixed(2)}',
                 style: GoogleFonts.outfit(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
@@ -904,10 +992,59 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 20),
+          if (_allowableWalletAmount > 0)
+            _buildWalletToggle(),
+          if (_walletReason.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                _walletReason,
+                style: GoogleFonts.inter(fontSize: 10, color: Colors.redAccent, fontWeight: FontWeight.bold),
+              ),
+            ),
         ],
       ),
     );
   }
+
+  Widget _buildWalletToggle() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: SahimedColors.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: SahimedColors.primary.withOpacity(0.1)),
+      ),
+      child: Row(
+        children: [
+          const Icon(LucideIcons.wallet, color: SahimedColors.primary, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'USE SAHIWALLET BALANCE',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1),
+                ),
+                Text(
+                  'Available: ₹${_walletBalance.toStringAsFixed(0)}',
+                  style: GoogleFonts.inter(fontSize: 10, color: SahimedColors.slate500),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: _useWallet,
+            activeColor: SahimedColors.primary,
+            onChanged: (v) => setState(() => _useWallet = v),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   Widget _summaryRow(String label, String value, {bool isGreen = false}) {
     return Padding(

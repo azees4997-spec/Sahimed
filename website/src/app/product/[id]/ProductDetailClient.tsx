@@ -23,8 +23,12 @@ import {
   Maximize2,
   Loader2,
   TrendingUp,
-  FlaskConical
+  TrendingUp,
+  FlaskConical,
+  Truck,
+  MapPin
 } from 'lucide-react';
+
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -194,8 +198,34 @@ const ComparisonCard = ({
 export default function ProductDetailClient({ initialProduct, id }: { initialProduct: any, id: string }) {
   const { toast } = useToast();
   const { addToCart, getItemQuantity } = useCart();
+  const [edd, setEdd] = useState<string>('');
+  const [activePincode, setActivePincode] = useState<string>('560068');
+
+  useEffect(() => {
+    const fetchEdd = async () => {
+      try {
+        const stored = localStorage.getItem('activePincode') || '560068';
+        setActivePincode(stored);
+        const res = await fetch('/api/logistics/shipway/serviceability', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ toPincode: stored })
+        });
+        const data = await res.json();
+        if (data.edd) {
+          const date = new Date(data.edd);
+          const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+          setEdd(`${months[date.getMonth()]} ${date.getDate().toString().padStart(2, '0')}`);
+        }
+      } catch (e) {
+        console.error("Failed to fetch EDD", e);
+      }
+    };
+    fetchEdd();
+  }, []);
 
   // Use initial data if available for instant render, but still keep hook for live updates if needed
+
   const { data: productData, isLoading: productLoading } = useMongoDBDoc(id);
   const product = productData || initialProduct;
   const { data: molData } = useMongoDBMolecule(product?.moleculeId);
@@ -330,7 +360,38 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
             )}
           </div>
 
+          {/* Delivery Information */}
+          {edd && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 sm:mb-10 px-1"
+            >
+              <div className="bg-emerald-50 border border-emerald-100 rounded-[20px] sm:rounded-[32px] p-4 sm:p-6 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-3 sm:gap-5">
+                  <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white rounded-full flex items-center justify-center shadow-sm border border-emerald-50">
+                    <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <h3 className="text-[10px] sm:text-base font-black text-emerald-900 tracking-tight uppercase font-outfit">
+                      DELIVERY BY {edd}
+                    </h3>
+
+                    <p className="text-[8px] sm:text-[11px] font-bold text-emerald-700/70 uppercase tracking-widest">
+                      Guaranteed express shipping to {activePincode}
+                    </p>
+                  </div>
+                </div>
+                <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-emerald-100 shadow-sm">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="text-[10px] font-black text-emerald-900 uppercase tracking-wider">{activePincode}</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           <motion.section
+
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}

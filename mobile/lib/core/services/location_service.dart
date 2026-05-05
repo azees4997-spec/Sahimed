@@ -19,9 +19,11 @@ class LocationService {
       return await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
         ),
       );
     } catch (e) {
+      debugPrint('Error getting position: $e');
       return null;
     }
   }
@@ -41,11 +43,13 @@ class LocationService {
     return prefs.containsKey(_addressKey);
   }
 
-  Future<String> getCurrentAddress() async {
+  Future<String> getCurrentAddress({bool forceRefresh = false}) async {
     try {
-      // 1. Check if we have a saved address first
-      final saved = await getSavedAddress();
-      if (saved != null) return saved;
+      // 1. Check if we have a saved address first (if not forcing refresh)
+      if (!forceRefresh) {
+        final saved = await getSavedAddress();
+        if (saved != null) return saved;
+      }
 
       // 2. Otherwise, fetch via GPS
       bool serviceEnabled;
@@ -65,19 +69,20 @@ class LocationService {
       }
 
       if (permission == LocationPermission.deniedForever) {
-        return 'Location permissions permanently denied';
+        return 'Permissions permanently denied';
       }
 
       Position position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
         ),
       );
 
       List<Placemark> placemarks = await placemarkFromCoordinates(
         position.latitude,
         position.longitude,
-      );
+      ).timeout(const Duration(seconds: 5));
 
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
@@ -98,7 +103,11 @@ class LocationService {
           address += state;
         }
 
-        return address.isEmpty ? 'Tap to set location' : address;
+        final finalAddr = address.isEmpty ? 'Tap to set location' : address;
+        if (finalAddr != 'Tap to set location') {
+          await saveAddress(finalAddr);
+        }
+        return finalAddr;
       }
     } catch (e) {
       debugPrint('Error getting location: $e');

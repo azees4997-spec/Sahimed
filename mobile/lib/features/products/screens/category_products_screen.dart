@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -66,7 +67,10 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                   children: [
                     // Back button — round white pill exactly like website
                     GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.pop(context);
+                      },
                       child: Container(
                         width: 40,
                         height: 40,
@@ -266,12 +270,15 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, i) => GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ProductDetailScreen(product: _products[i]),
-                        ),
-                      ),
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ProductDetailScreen(product: _products[i]),
+                          ),
+                        );
+                      },
                       child: SahimedProductCard(product: _products[i]),
                     ),
                     childCount: _products.length,

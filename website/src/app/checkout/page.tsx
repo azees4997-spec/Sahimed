@@ -129,6 +129,13 @@ export default function CheckoutPage() {
     otherTag: ''
   });
 
+  // Wallet Integration
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [allowableWallet, setAllowableWallet] = useState(0);
+  const [useWallet, setUseWallet] = useState(false);
+  const [walletReason, setWalletReason] = useState('');
+
+
   const addressesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'addresses'), orderBy('updatedAt', 'desc')) : null, [db, user]);
   const { data: savedAddresses } = useCollection(addressesQuery);
 
@@ -175,6 +182,36 @@ export default function CheckoutPage() {
       }));
     }
   }, [savedAddresses]);
+
+  useEffect(() => {
+    const fetchWallet = async () => {
+      if (!user) return;
+      try {
+        const res = await fetch('/api/user/wallet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'validate_use',
+            items: cart.map(item => ({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+              category: item.category
+            }))
+          })
+        });
+        const data = await res.json();
+        setAllowableWallet(data.allowable || 0);
+        setWalletBalance(data.currentBalance || 0);
+        setWalletReason(data.reason || '');
+      } catch (e) {
+        console.error("Wallet fetch failed", e);
+      }
+    };
+    fetchWallet();
+  }, [user, cart]);
+
 
   const validate = () => {
     if (!orderInfo.patientName.trim()) {
@@ -351,10 +388,12 @@ export default function CheckoutPage() {
         grossMrp: totalMrp,
         campaignDiscount: promoDiscount,
         deliveryFees: feeTotal,
-        savings: totalSavings
+        savings: totalSavings,
+        walletUsed: useWallet ? allowableWallet : 0
       },
       platform: 'website'
     };
+
 
     try {
       // 1. Get Authentication Token
@@ -788,17 +827,52 @@ export default function CheckoutPage() {
                       <span>-₹{promoDiscount.toFixed(2)}</span>
                     </div>
                   )}
-                  {feeTotal > 0 && (
+                   {feeTotal > 0 && (
                     <div className="flex justify-between text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-widest">
                       <span>Delivery Fees</span>
                       <span>₹{feeTotal.toFixed(2)}</span>
                     </div>
                   )}
+                  {allowableWallet > 0 && (
+                    <div className="flex justify-between text-xs sm:text-sm font-bold text-emerald-500 uppercase tracking-widest">
+                      <span>SahiWallet Discount</span>
+                      <span>-₹{allowableWallet.toFixed(2)}</span>
+                    </div>
+                  )}
 
                   <div className="pt-6 sm:pt-8 border-t border-slate-100 flex justify-between items-baseline">
                     <span className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-widest">Total Payable</span>
-                    <span className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit">₹{finalPayable.toFixed(2)}</span>
+                    <span className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit">₹{Math.max(0, finalPayable - (useWallet ? allowableWallet : 0)).toFixed(2)}</span>
                   </div>
+
+                  {allowableWallet > 0 && (
+                    <div className="pt-6">
+                      <div 
+                        onClick={() => setUseWallet(!useWallet)}
+                        className={cn(
+                          "p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between",
+                          useWallet ? "border-primary bg-primary/5" : "border-slate-100 bg-slate-50"
+                        )}
+                      >
+                         <div className="flex items-center gap-3">
+                           <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", useWallet ? "bg-primary text-white" : "bg-white text-slate-400")}>
+                             <Banknote className="w-4 h-4" />
+                           </div>
+                           <div className="text-left">
+                             <p className="text-[10px] font-black uppercase tracking-tight">Use Wallet Balance</p>
+                             <p className="text-[9px] font-bold text-slate-400 uppercase">Available: ₹{walletBalance}</p>
+                           </div>
+                         </div>
+                         <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", useWallet ? "bg-primary border-primary" : "border-slate-300")}>
+                           {useWallet && <Check className="w-3 h-3 text-white" />}
+                         </div>
+                      </div>
+                      {walletReason && (
+                        <p className="text-[8px] font-black text-rose-500 uppercase mt-2 text-center tracking-widest">{walletReason}</p>
+                      )}
+                    </div>
+                  )}
+
                   
                   {totalSavings > 0 && (
                     <div className="mt-6 flex justify-between items-center text-xs sm:text-sm font-black text-emerald-700 bg-emerald-50 p-4 rounded-[16px] border border-emerald-100 shadow-inner">

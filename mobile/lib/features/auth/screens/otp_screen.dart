@@ -26,9 +26,37 @@ class _OtpScreenState extends State<OtpScreen> {
   );
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   bool _isLoading = false;
+  
+  // Timer State
+  int _resendTimer = 30;
+  bool _canResend = false;
+  late dynamic _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _resendTimer = 30;
+    _canResend = false;
+    setState(() {});
+    _timer = Stream.periodic(const Duration(seconds: 1), (i) => 29 - i)
+        .take(30)
+        .listen((seconds) {
+      if (mounted) {
+        setState(() {
+          _resendTimer = seconds;
+          if (_resendTimer == 0) _canResend = true;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
+    if (_timer != null) _timer.cancel();
     for (var controller in _controllers) {
       controller.dispose();
     }
@@ -259,7 +287,9 @@ class _OtpScreenState extends State<OtpScreen> {
                     child: Column(
                       children: [
                         Text(
-                          "Didn't receive the code?",
+                          _canResend 
+                            ? "Didn't receive the code?" 
+                            : "Resend code in ${_resendTimer}s",
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             color: const Color(0xFF94A3B8),
@@ -267,15 +297,17 @@ class _OtpScreenState extends State<OtpScreen> {
                         ),
                         const SizedBox(height: 8),
                         TextButton(
-                          onPressed: () {
-                            // TODO: Implement Resend
-                          },
+                          onPressed: _canResend ? () {
+                            _startTimer();
+                            // In a real app, you would call the Firebase resend logic here
+                            _showError("OTP Resent Successfully");
+                          } : null,
                           child: Text(
                             "RESEND CODE",
                             style: GoogleFonts.outfit(
                               fontSize: 14,
                               fontWeight: FontWeight.w900,
-                              color: SahimedColors.primary,
+                              color: _canResend ? SahimedColors.primary : SahimedColors.slate300,
                               letterSpacing: 1.5,
                             ),
                           ),

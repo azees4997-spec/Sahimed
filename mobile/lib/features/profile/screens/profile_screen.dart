@@ -9,6 +9,8 @@ import 'policies_screen.dart';
 import 'health_vault_screen.dart';
 import 'orders_screen.dart';
 import 'address_list_screen.dart';
+import 'wallet_screen.dart';
+import 'reminders_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -59,6 +61,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void _showEditNameDialog(BuildContext context) {
+    final user = _auth.currentUser;
+    final nameController = TextEditingController(text: user?.displayName ?? '');
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Edit Profile Name',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w900),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(
+                labelText: 'FULL NAME',
+                labelStyle: GoogleFonts.outfit(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: SahimedColors.slate400,
+                ),
+                hintText: 'Enter your name',
+                prefixIcon: const Icon(LucideIcons.user, size: 20),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              textCapitalization: TextCapitalization.words,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'CANCEL',
+              style: GoogleFonts.outfit(
+                color: SahimedColors.slate500,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameController.text.trim().isNotEmpty) {
+                await user?.updateDisplayName(nameController.text.trim());
+                if (mounted) {
+                  setState(() {});
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Profile updated successfully')),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: SahimedColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              'SAVE',
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = _auth.currentUser;
@@ -82,56 +159,83 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     end: Alignment.bottomCenter,
                   ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 60),
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [SahimedColors.primary, Color(0xFF6366F1)],
+                child: SafeArea(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 10),
+                      Container(
+                        width: 90,
+                        height: 90,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [SahimedColors.primary, Color(0xFF6366F1)],
+                          ),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 4),
+                          boxShadow: [
+                            BoxShadow(
+                              color: SahimedColors.primary.withOpacity(0.2),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 4),
-                        boxShadow: [
-                          BoxShadow(
-                            color: SahimedColors.primary.withOpacity(0.2),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
+                        child: Center(
+                          child: Text(
+                            name.isNotEmpty ? name[0] : 'S',
+                            style: GoogleFonts.outfit(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(width: 32), // Spacer for balance
+                          Text(
+                            name,
+                            style: GoogleFonts.outfit(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: SahimedColors.textPrimary,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              LucideIcons.pencil,
+                              size: 16,
+                              color: SahimedColors.primary,
+                            ),
+                            onPressed: () => _showEditNameDialog(context),
                           ),
                         ],
                       ),
-                      child: Center(
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: SahimedColors.primary.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         child: Text(
-                          name.isNotEmpty ? name[0] : 'S',
-                          style: GoogleFonts.outfit(
-                            fontSize: 40,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
+                          phone,
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: SahimedColors.primary,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      name,
-                      style: GoogleFonts.outfit(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: SahimedColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      phone,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: SahimedColors.textSecondary,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -207,6 +311,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             );
                           },
                         ),
+                        const SizedBox(height: 12),
+                        _buildMenuCard(
+                          title: 'Sahimed Wallet',
+                          subtitle: 'View your savings and credits',
+                          icon: LucideIcons.wallet,
+                          color: const Color(0xFFF0F9FF),
+                          iconColor: const Color(0xFF0284C7),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const WalletScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        _buildMenuCard(
+                          title: 'Pill Reminders',
+                          subtitle: 'Manage your daily medicine alarms',
+                          icon: LucideIcons.alarmClock,
+                          color: const Color(0xFFFAF5FF),
+                          iconColor: const Color(0xFF7C3AED),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const RemindersScreen(),
+                              ),
+                            );
+                          },
+                        ),
 
                         const SizedBox(height: 32),
                         _buildSectionTitle('SETTINGS'),
@@ -223,6 +359,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             );
                           },
                         ),
+                        _buildMenuTile(LucideIcons.history, 'MY ORDERS', () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const OrdersScreen()));
+                        }),
+                        _buildMenuTile(LucideIcons.wallet, 'MY WALLET', () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
+                        }),
+                        _buildMenuTile(LucideIcons.bell, 'PILL ALARMS', () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const RemindersScreen()));
+                        }),
                         _buildSettingsTile(LucideIcons.info, 'Help & FAQ', () {
                           Navigator.push(
                             context,
@@ -461,4 +606,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
       onTap: onTap,
     );
   }
+
+  Widget _buildMenuTile(IconData icon, String title, VoidCallback onTap) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: SahimedColors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: SahimedColors.primary, size: 20),
+        ),
+        title: Text(
+          title,
+          style: GoogleFonts.outfit(
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFF1E293B),
+            letterSpacing: 0.5,
+          ),
+        ),
+        trailing: const Icon(LucideIcons.chevronRight, size: 18, color: Color(0xFF94A3B8)),
+        onTap: onTap,
+      ),
+    );
+  }
 }
+

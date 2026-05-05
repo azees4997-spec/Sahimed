@@ -66,5 +66,13 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to your camera to let you take photos of your prescriptions.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Allow access to your photo library to upload saved prescriptions and reports.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Your location is used to find the nearest delivery partner and provide accurate delivery estimates.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Your location is used to provide accurate delivery tracking even when the app is in the background.</string>
 </dict>
 </plist>

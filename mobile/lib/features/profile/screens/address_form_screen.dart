@@ -59,30 +59,34 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
 
       if (permission == LocationPermission.whileInUse ||
           permission == LocationPermission.always) {
-        Position position = await Geolocator.getCurrentPosition();
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 10),
+        );
         List<Placemark> placemarks = await placemarkFromCoordinates(
           position.latitude,
           position.longitude,
-        );
+        ).timeout(const Duration(seconds: 10));
 
-        if (placemarks.isNotEmpty) {
+        if (placemarks.isNotEmpty && mounted) {
           Placemark place = placemarks[0];
           setState(() {
             _streetController.text = place.subLocality ?? place.name ?? '';
             _cityController.text = place.locality ?? '';
             _stateController.text = place.administrativeArea ?? '';
-            _pincodeController.text = place.postalCode ?? '';
+            _pincodeController.text = (place.postalCode ?? '').replaceAll(RegExp(r'[^0-9]'), '');
           });
         }
       }
     } catch (e) {
+      debugPrint('Location Error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not fetch location')),
+          SnackBar(content: Text('Could not fetch location: $e')),
         );
       }
     } finally {
-      setState(() => _isLocating = false);
+      if (mounted) setState(() => _isLocating = false);
     }
   }
 
@@ -91,12 +95,17 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final isServiceable = await _apiService.checkServiceability(_pincodeController.text);
+      final pincode = _pincodeController.text.trim().replaceAll(RegExp(r'[^0-9]'), '');
+      if (pincode.length != 6) {
+        throw Exception('Invalid pincode. Please enter 6 digits.');
+      }
+
+      final isServiceable = await _apiService.checkServiceability(pincode);
       if (!isServiceable) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('We currently do not deliver to ${_pincodeController.text}'),
+              content: Text('We currently do not deliver to $pincode'),
               backgroundColor: Colors.red,
             ),
           );
@@ -107,28 +116,36 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
 
       final addressData = {
         'id': widget.initialAddress?['id'],
-        'patientName': _nameController.text,
-        'phoneNumber': _phoneController.text,
-        'houseNumber': _houseController.text,
-        'apartmentName': _apartmentController.text,
-        'street': _streetController.text,
-        'landmark': _landmarkController.text,
-        'city': _cityController.text,
-        'state': _stateController.text,
-        'pincode': _pincodeController.text,
+        'patientName': _nameController.text.trim(),
+        'phoneNumber': _phoneController.text.trim(),
+        'houseNumber': _houseController.text.trim(),
+        'apartmentName': _apartmentController.text.trim(),
+        'street': _streetController.text.trim(),
+        'landmark': _landmarkController.text.trim(),
+        'city': _cityController.text.trim(),
+        'state': _stateController.text.trim(),
+        'pincode': pincode,
         'tag': _selectedTag,
       };
 
-      await _apiService.saveAddress(addressData);
-      if (mounted) Navigator.pop(context, true);
+      final success = await _apiService.saveAddress(addressData);
+      if (success && mounted) {
+        Navigator.pop(context, true);
+      } else {
+        throw Exception('Failed to save address to server.');
+      }
     } catch (e) {
+      debugPrint('Save Address Error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error saving address: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception:', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

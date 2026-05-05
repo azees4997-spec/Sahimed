@@ -11,7 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { tapVariant } from '@/lib/animations';
 import RibbonBadge from './RibbonBadge';
 
-export default function ProductCard({ product }: { product: Product }) {
+import { memo } from 'react';
+
+function ProductCardComponent({ product }: { product: Product }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
   const { toast } = useToast();
   
@@ -148,3 +150,6 @@ export default function ProductCard({ product }: { product: Product }) {
     </div>
   );
 }
+
+export default memo(ProductCardComponent);
+

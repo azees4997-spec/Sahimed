@@ -1,40 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/colors.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
-
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
-
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,65 +12,124 @@ class _SplashScreenState extends State<SplashScreen>
       body: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
+          color: Colors.white,
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [SahimedColors.lavender, SahimedColors.background],
-          ),
-        ),
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Sahi',
-                    style: GoogleFonts.outfit(
-                      fontSize: 64,
-                      fontWeight: FontWeight.w900,
-                      color: SahimedColors.primary,
-                      letterSpacing: -2,
-                    ),
-                  ),
-                  Text(
-                    'Med',
-                    style: GoogleFonts.outfit(
-                      fontSize: 64,
-                      fontWeight: FontWeight.w900,
-                      color: SahimedColors.accent,
-                      letterSpacing: -2,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Sahi Dawai Sahi Daam Pe',
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  color: SahimedColors.primary.withAlpha(128),
-                  letterSpacing: 2,
-                ),
-              ),
-              const SizedBox(height: 64),
-              const SizedBox(
-                width: 40,
-                height: 40,
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    SahimedColors.primary,
-                  ),
-                  strokeWidth: 3,
-                ),
-              ),
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              SahimedColors.sahiBlue,
             ],
           ),
+        ),
+        child: Stack(
+          children: [
+            // Decorative background elements
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: SahimedColors.primary.withOpacity(0.05),
+                ),
+              ).animate().scale(duration: 2.seconds, curve: Curves.easeOut),
+            ),
+            
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo Group
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Sahi',
+                        style: GoogleFonts.outfit(
+                          fontSize: 72,
+                          fontWeight: FontWeight.w900,
+                          color: SahimedColors.primary,
+                          letterSpacing: -4,
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(duration: 800.ms)
+                          .slideX(begin: -0.2, end: 0, curve: Curves.easeOutCubic),
+                      Text(
+                        'Med',
+                        style: GoogleFonts.outfit(
+                          fontSize: 72,
+                          fontWeight: FontWeight.w900,
+                          color: SahimedColors.accent,
+                          letterSpacing: -4,
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(delay: 400.ms, duration: 800.ms)
+                          .slideX(begin: 0.2, end: 0, curve: Curves.easeOutCubic),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 12),
+                  
+                  // Tagline
+                  Text(
+                    'Sahi Dawai Sahi Daam Pe'.toUpperCase(),
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      color: SahimedColors.primary.withOpacity(0.4),
+                      letterSpacing: 4,
+                    ),
+                  )
+                      .animate()
+                      .fadeIn(delay: 1.seconds, duration: 800.ms)
+                      .shimmer(delay: 2.seconds, duration: 1.5.seconds),
+                  
+                  const SizedBox(height: 80),
+                  
+                  // Loader
+                  const SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        SahimedColors.primary,
+                      ),
+                      strokeWidth: 2,
+                    ),
+                  )
+                      .animate()
+                      .fadeIn(delay: 1.5.seconds)
+                      .scale(delay: 1.5.seconds, begin: const Offset(0.5, 0.5)),
+                ],
+              ),
+            ),
+            
+            // Bottom Footer
+            Positioned(
+              bottom: 60,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Text(
+                  'PREMIUM HEALTHCARE PARTNER',
+                  style: GoogleFonts.outfit(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: SahimedColors.slate400,
+                    letterSpacing: 2,
+                  ),
+                ).animate().fadeIn(delay: 2.seconds),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+

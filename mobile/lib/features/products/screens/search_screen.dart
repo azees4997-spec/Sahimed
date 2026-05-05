@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/providers/navigation_provider.dart';
 import 'product_detail_screen.dart';
 import '../../../shared/models/models.dart';
 import '../widgets/product_card.dart';
@@ -31,6 +34,13 @@ class _SearchScreenState extends State<SearchScreen> {
   double? _lat;
   double? _lng;
   List<CategoryModel> _categories = [];
+  List<Map<String, dynamic>> _moleculeResults = [];
+  
+  // Filter state
+  String? _selectedCategory;
+  bool _isGenericOnly = false;
+  bool _isBestSellerOnly = false;
+
 
   @override
   void initState() {
@@ -100,23 +110,51 @@ class _SearchScreenState extends State<SearchScreen> {
           _showSmartBanner = false;
           _smartAlternative = null;
         });
-        if (query.length >= 3) {
+        if (query.length >= 2) {
           _performSearch(query);
         } else {
-          setState(() => _results = []);
+          setState(() {
+            _results = [];
+            _moleculeResults = [];
+            _smartAlternative = null;
+            _showSmartBanner = false;
+          });
         }
       }
     });
   }
 
+
   Future<void> _performSearch(String query) async {
-    _saveToHistory(query);
+    if (query.length < 2) return;
+    
     setState(() => _isLoading = true);
-    final results = await _apiService.searchProducts(query);
+    
+    // Fetch both products and molecules in parallel
+    final results = await Future.wait([
+      _apiService.searchProducts(
+        query,
+        category: _selectedCategory,
+        isGeneric: _isGenericOnly ? true : null,
+        isBestSeller: _isBestSellerOnly ? true : null,
+      ),
+      _apiService.searchMolecules(query),
+    ]);
+    
+    final products = results[0] as List<ProductModel>;
+    final molecules = results[1] as List<Map<String, dynamic>>;
+
 
     if (mounted && _currentQuery == query) {
-      _results = results;
-      _apiService.logSearch(query, lat: _lat, lng: _lng);
+      _results = products;
+      _moleculeResults = molecules;
+      
+      _apiService.logSearch(
+        query, 
+        lat: _lat, 
+        lng: _lng,
+        resultsCount: products.length + molecules.length,
+      );
 
       // Intelligence Switch logic: If first result is branded, find generic alt
       if (_results.isNotEmpty) {
@@ -151,44 +189,182 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        color: const Color(0xFFF8FAFC),
-        child: Column(
+    final bool canPop = Navigator.of(context).canPop();
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Stack(
           children: [
-          _buildSearchHeader(),
-          // Filter Chips (Website Parity)
-          if (_results.isNotEmpty || _currentQuery.isNotEmpty)
-            _buildFilterBar(),
+            Column(
+              children: [
+                _buildSearchHeader(canPop),
+                // Filter Chips (Website Parity)
+                if (_results.isNotEmpty || _currentQuery.isNotEmpty)
+                  _buildFilterBar(),
+    
+                Expanded(
+                  child: Stack(
+                    children: [
+                      _currentQuery.isEmpty
+                          ? _buildRecentSearches()
+                          : _buildSearchResults(_searchBySalt),
+                      
+                      // Intelligence Switch Banner at the bottom of the results area
+                      if (_showSmartBanner && _smartAlternative != null)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: _buildSmartBanner(),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
 
-          // Smart "Save More" Banner (The Intelligence Switch)
-          if (_showSmartBanner && _smartAlternative != null)
-            _buildSmartBanner(),
+            // Suggestions Overlay
+            if (_currentQuery.isNotEmpty && (_moleculeResults.isNotEmpty || _results.isNotEmpty) && !_isLoading && _results.length > 3)
+               _buildSuggestionsOverlay(),
 
-          Expanded(
-            child: _currentQuery.isEmpty
-                ? _buildRecentSearches()
-                : _buildSearchResults(_searchBySalt),
-          ),
-        ],
+            if (_isLoading)
+              const Positioned.fill(
+                child: Center(
+                  child: CircularProgressIndicator(color: SahimedColors.primary),
+                ),
+              ),
+          ],
+        ),
       ),
-    ),
     );
   }
 
-  Widget _buildSearchHeader() {
+  Widget _buildSuggestionsOverlay() {
+    return Positioned(
+      top: 60, // Adjust based on header height
+      left: 16,
+      right: 16,
+      child: Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 30,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: ListView(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            children: [
+              if (_moleculeResults.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Text(
+                    'MOLECULES',
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: SahimedColors.slate400,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                ),
+                ..._moleculeResults.take(3).map((mol) {
+                  final name = mol['molecule'] ?? mol['name'] ?? '';
+                  return ListTile(
+                    leading: const Icon(LucideIcons.flaskConical, size: 18, color: SahimedColors.primary),
+                    title: Text(
+                      name.toUpperCase(),
+                      style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _searchController.text = name;
+                      _performSearch(name);
+                      setState(() {});
+                    },
+                  );
+                }),
+              ],
+              if (_results.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Text(
+                    'MEDICINES',
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: SahimedColors.slate400,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                ),
+                ..._results.take(3).map((prod) {
+                  return ListTile(
+                    leading: const Icon(LucideIcons.pill, size: 18, color: SahimedColors.primary),
+                    title: Text(
+                      prod.name.toUpperCase(),
+                      style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      prod.brand.toUpperCase(),
+                      style: GoogleFonts.inter(fontSize: 10, color: SahimedColors.slate500),
+                    ),
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _saveToHistory(_currentQuery);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProductDetailScreen(product: prod),
+                        ),
+                      );
+                    },
+                  );
+                }),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchHeader(bool canPop) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: SahimedColors.primary,
-              size: 20,
+          if (canPop) ...[
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                Navigator.pop(context);
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: const Icon(
+                  LucideIcons.chevronLeft,
+                  size: 20,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
             ),
-            onPressed: () => Navigator.pop(context),
-          ),
+            const SizedBox(width: 12),
+          ],
           Expanded(
             child: Container(
               height: 48,
@@ -237,7 +413,10 @@ class _SearchScreenState extends State<SearchScreen> {
                     )
                   else if (_currentQuery.isNotEmpty)
                     GestureDetector(
-                      onTap: () => _searchController.clear(),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        _searchController.clear();
+                      },
                       child: const Icon(
                         Icons.cancel_rounded,
                         size: 20,
@@ -248,7 +427,6 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 12),
         ],
       ),
     );
@@ -256,35 +434,72 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildFilterBar() {
     final filters = [
-      'In Stock',
-      'Best Seller',
-      'Smart CHOICE',
-      'Standard Brand',
+      {'label': 'Best Seller', 'active': _isBestSellerOnly},
+      {'label': 'Smart Choice', 'active': _isGenericOnly},
+      if (_selectedCategory != null) {'label': _selectedCategory!, 'active': true},
     ];
+
     return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      height: 54,
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: filters.length,
         itemBuilder: (ctx, i) {
-          return Container(
-            margin: const EdgeInsets.only(right: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Center(
-              child: Text(
-                filters[i],
-                style: GoogleFonts.outfit(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF64748B),
+          final filter = filters[i];
+          final bool isActive = filter['active'] as bool;
+          final String label = filter['label'] as String;
+
+          return GestureDetector(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              setState(() {
+                if (label == 'Best Seller') {
+                  _isBestSellerOnly = !_isBestSellerOnly;
+                } else if (label == 'Smart Choice') {
+                  _isGenericOnly = !_isGenericOnly;
+                } else if (_selectedCategory == label) {
+                  _selectedCategory = null;
+                }
+              });
+              _performSearch(_searchController.text.trim());
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.only(right: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              decoration: BoxDecoration(
+                color: isActive ? SahimedColors.primary : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isActive ? SahimedColors.primary : const Color(0xFFE2E8F0),
+                  width: 1.5,
                 ),
+                boxShadow: isActive ? [
+                  BoxShadow(
+                    color: SahimedColors.primary.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ] : null,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    label.toUpperCase(),
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: isActive ? Colors.white : const Color(0xFF64748B),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  if (isActive) ...[
+                    const SizedBox(width: 6),
+                    const Icon(Icons.close, size: 12, color: Colors.white),
+                  ],
+                ],
               ),
             ),
           );
@@ -293,7 +508,9 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+
   Widget _buildSmartBanner() {
+    if (_results.isEmpty || _smartAlternative == null) return const SizedBox.shrink();
     final original = _results.first;
     final savingsAmt = (original.price - _smartAlternative!.price).round();
     final savingsPct = original.price > 0
@@ -302,6 +519,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
     return GestureDetector(
       onTap: () {
+        HapticFeedback.mediumImpact();
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -324,7 +542,7 @@ class _SearchScreenState extends State<SearchScreen> {
           border: Border.all(color: Colors.white, width: 2),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF2563EB).withOpacity(0.2),
+              color: const Color(0xFF2563EB).withValues(alpha: 0.2),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -384,33 +602,6 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildRecentSearches() {
-    final topCategories = [
-      {
-        'name': 'Stomach Care',
-        'img': 'https://sahimed.com/assets/categories/stomach.jpg',
-      },
-      {
-        'name': 'Derma Care',
-        'img': 'https://sahimed.com/assets/categories/derma.jpg',
-      },
-      {
-        'name': 'Diabetes',
-        'img': 'https://sahimed.com/assets/categories/diabetes.jpg',
-      },
-      {
-        'name': 'Heart Care',
-        'img': 'https://sahimed.com/assets/categories/heart.jpg',
-      },
-      {
-        'name': 'Liver Care',
-        'img': 'https://sahimed.com/assets/categories/liver.jpg',
-      },
-      {
-        'name': 'Respicare',
-        'img': 'https://sahimed.com/assets/categories/respicare.jpg',
-      },
-    ];
-
     final popularBrands = [
       'GSK',
       'Cipla',
@@ -448,6 +639,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
                 GestureDetector(
                   onTap: () async {
+                    HapticFeedback.mediumImpact();
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.remove('search_history');
                     setState(() => _searchHistory = []);
@@ -509,8 +701,14 @@ class _SearchScreenState extends State<SearchScreen> {
                     final cat = _categories[i];
                     return GestureDetector(
                       onTap: () {
-                        // Navigate to category filtering
+                        HapticFeedback.mediumImpact();
+                        setState(() {
+                          _selectedCategory = cat.name;
+                          _searchController.text = cat.name;
+                        });
+                        _performSearch(cat.name);
                       },
+
                       child: Column(
                         children: [
                           Container(
@@ -602,6 +800,7 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildSuggestionPill(String label) {
     return GestureDetector(
       onTap: () {
+        HapticFeedback.lightImpact();
         _searchController.text = label;
         _performSearch(label);
       },
@@ -625,31 +824,108 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildSearchResults(Function(String) onSaltTap) {
-    if (_results.isEmpty && !_isLoading && _currentQuery.length >= 3) {
+    if (_results.isEmpty && _moleculeResults.isEmpty && !_isLoading && _currentQuery.length >= 2) {
       return _buildNoResults();
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 200),
-      itemCount: _results.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, // Consistency with home screen
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.68,
-      ),
-      itemBuilder: (context, index) {
-        final product = _results[index];
-        return GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ProductDetailScreen(product: product),
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(0, 16, 0, 200),
+      children: [
+        if (_moleculeResults.isNotEmpty) _buildMoleculeSuggestions(),
+        if (_results.isNotEmpty)
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: _results.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.68,
+            ),
+            itemBuilder: (context, index) {
+              final product = _results[index];
+              return GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  _saveToHistory(_currentQuery);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProductDetailScreen(product: product),
+                    ),
+                  );
+                },
+                child: SahimedProductCard(product: product),
+              );
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildMoleculeSuggestions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            'SUGGESTED MOLECULES / SALTS',
+            style: GoogleFonts.outfit(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              color: SahimedColors.slate400,
+              letterSpacing: 1.5,
             ),
           ),
-          child: SahimedProductCard(product: product),
-        );
-      },
+        ),
+        SizedBox(
+          height: 45,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: _moleculeResults.length,
+            itemBuilder: (context, index) {
+              final mol = _moleculeResults[index];
+              final name = mol['molecule'] ?? mol['name'] ?? 'Unknown';
+              return GestureDetector(
+                onTap: () {
+                  _searchController.text = name;
+                  _performSearch(name);
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: SahimedColors.primary.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: SahimedColors.primary.withOpacity(0.1)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(LucideIcons.flaskConical, size: 14, color: SahimedColors.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        name.toUpperCase(),
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: SahimedColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        const Divider(height: 1, color: Color(0xFFF1F5F9)),
+        const SizedBox(height: 16),
+      ],
     );
   }
 

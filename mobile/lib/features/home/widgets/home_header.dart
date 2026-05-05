@@ -28,7 +28,14 @@ class _HomeHeaderState extends State<HomeHeader> {
   }
 
   Future<void> _initLocation() async {
-    final address = await _locationService.getCurrentAddress();
+    // 1. First attempt (check saved)
+    var address = await _locationService.getCurrentAddress();
+    
+    // 2. If it's a generic message, try forcing a fresh GPS check
+    if (address == 'Location permissions denied' || address == 'Loading...') {
+      address = await _locationService.getCurrentAddress(forceRefresh: true);
+    }
+
     if (mounted) {
       setState(() => _currentAddress = address);
     }
@@ -355,19 +362,6 @@ class _HomeHeaderState extends State<HomeHeader> {
                     backgroundColor: SahimedColors.primary,
                     iconColor: Colors.white,
                     shadow: true,
-                  ),
-                  const SizedBox(width: 10),
-
-                  // Cart Trigger
-                  _NavbarIcon(
-                    icon: LucideIcons.shoppingCart,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CartScreen(),
-                      ),
-                    ),
-                    badgeCount: cartItems,
                   ),
                 ],
               ),
