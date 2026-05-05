@@ -319,7 +319,10 @@ class ApiService {
       );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return data['serviceable'] == true || data['status'] == 'success';
+        if (data == null) return true;
+        return data['serviceable'] == true || 
+               data['status'] == 'success' || 
+               data['serviceable'] == 'yes';
       }
     } catch (e) {
       debugPrint('Error checking serviceability: $e');
@@ -336,14 +339,19 @@ class ApiService {
           'toPincode': toPincode,
           'fromPincode': '560068' // Sahimed Warehouse
         }),
+      ).timeout(const Duration(seconds: 8));
 
-      );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return data['edd'] ?? data['expected_delivery_date'];
+        if (data != null) {
+          final edd = data['edd'] ?? data['expected_delivery_date'];
+          return edd?.toString();
+        }
+      } else {
+        debugPrint('Shipway EDD Non-200: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      debugPrint('Error fetching Shipway EDD: $e');
+      debugPrint('Error fetching Shipway EDD for $toPincode: $e');
     }
     return null;
   }
@@ -506,13 +514,18 @@ class ApiService {
   Future<List<Map<String, dynamic>>> getUserOrders() async {
     try {
       final user = _auth.currentUser;
-      if (user == null) return [];
+      if (user == null) {
+        debugPrint('DEBUG: getUserOrders called but user is NULL');
+        return [];
+      }
 
       final headers = await _getHeaders();
-      
-      // We try fetching by multiple possible keys to be absolutely sure we find the data
       final uid = user.uid;
-      final phone = user.phoneNumber?.replaceFirst('+', '') ?? '';
+      final fullPhone = user.phoneNumber ?? '';
+      final phoneNoPlus = fullPhone.replaceFirst('+', '');
+      final last10 = fullPhone.length >= 10 ? fullPhone.substring(fullPhone.length - 10) : '';
+      
+      if (kDebugMode) debugPrint('DEBUG: Fetching orders for UID: $uid, Phone: $fullPhone');
       
       // Try fetching by UID primarily
       final response = await http.get(
@@ -520,46 +533,56 @@ class ApiService {
         headers: headers,
       );
 
-      if (kDebugMode) {
-        print('DEBUG: Orders Response for UID $uid: ${response.body}');
-      }
+      if (kDebugMode) debugPrint('DEBUG: Orders Response (UID) Status: ${response.statusCode}');
+      if (kDebugMode) debugPrint('DEBUG: Orders Response (UID) Body: ${response.body}');
+
+      List<dynamic> rawList = [];
 
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
-        List<dynamic> rawList = [];
-        
         if (decoded is List) {
           rawList = decoded;
         } else if (decoded is Map && decoded.containsKey('data')) {
           rawList = decoded['data'] as List<dynamic>;
-        } else if (decoded is Map && (decoded['orders'] is List)) {
-          rawList = decoded['orders'] as List<dynamic>;
         }
+      }
 
-        // Fallback: If no orders found for UID, try fetching by Phone Number
-        if (rawList.isEmpty && phone.isNotEmpty) {
-           final phoneResponse = await http.get(
-            Uri.parse('$baseUrl/orders?phone=$phone'),
+      // Fallback: If no orders found for UID, try fetching by Phone Number (multiple formats)
+      if (rawList.isEmpty) {
+        if (kDebugMode) debugPrint('DEBUG: No orders found for UID, trying Phone fallback...');
+        
+        // Try with full phone (including +91 if present)
+        final List<String> phoneVariants = [fullPhone, phoneNoPlus, last10].where((p) => p.isNotEmpty).toList();
+        
+        for (final p in phoneVariants) {
+          if (rawList.isNotEmpty) break;
+          
+          if (kDebugMode) debugPrint('DEBUG: Trying Phone variant: $p');
+          final phoneResponse = await http.get(
+            Uri.parse('$baseUrl/orders?phone=${Uri.encodeComponent(p)}'),
             headers: headers,
           );
+          
           if (phoneResponse.statusCode == 200) {
             final phoneDecoded = json.decode(phoneResponse.body);
-             if (phoneDecoded is List) {
+            if (phoneDecoded is List && phoneDecoded.isNotEmpty) {
               rawList = phoneDecoded;
-            } else if (phoneDecoded is Map && phoneDecoded.containsKey('data')) {
+              if (kDebugMode) debugPrint('DEBUG: Found ${rawList.length} orders for phone variant: $p');
+            } else if (phoneDecoded is Map && phoneDecoded['data'] is List && (phoneDecoded['data'] as List).isNotEmpty) {
               rawList = phoneDecoded['data'] as List<dynamic>;
+              if (kDebugMode) debugPrint('DEBUG: Found ${rawList.length} orders for phone variant: $p (via data key)');
             }
           }
         }
-
-        return rawList.map((order) {
-          final map = Map<String, dynamic>.from(order);
-          map['id'] = map['id'] ?? map['_id']?.toString() ?? '';
-          return map;
-        }).toList();
       }
+
+      return rawList.map((order) {
+        final map = Map<String, dynamic>.from(order);
+        map['id'] = map['id'] ?? map['_id']?.toString() ?? '';
+        return map;
+      }).toList();
     } catch (e) {
-      debugPrint('Error fetching orders: $e');
+      if (kDebugMode) debugPrint('DEBUG: Exception in getUserOrders: $e');
     }
     return [];
   }
@@ -696,6 +719,24 @@ class ApiService {
       debugPrint('Error validating wallet use: $e');
     }
     return {'allowable': 0};
+  }
+
+  Future<Map<String, dynamic>> chatWithAI(List<Map<String, String>> messages) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/ai/chat'),
+        headers: headers,
+        body: json.encode({'messages': messages}),
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+      return {'error': 'Failed to connect to AI'};
+    } catch (e) {
+      debugPrint('Error in AI Chat: $e');
+      return {'error': e.toString()};
+    }
   }
 }
 

@@ -20,6 +20,7 @@ class HomeHeader extends StatefulWidget {
 class _HomeHeaderState extends State<HomeHeader> {
   String _currentAddress = 'Loading...';
   final LocationService _locationService = LocationService();
+  bool _isCheckingPincode = false;
 
   @override
   void initState() {
@@ -127,10 +128,14 @@ class _HomeHeaderState extends State<HomeHeader> {
                     ),
                     counterText: '',
                     border: InputBorder.none,
-                    suffixIcon: isLoading 
+                    suffixIcon: _isCheckingPincode 
                       ? const Padding(
                           padding: EdgeInsets.all(12),
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         )
                       : null,
                   ),
@@ -160,7 +165,7 @@ class _HomeHeaderState extends State<HomeHeader> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: isLoading ? null : () => _handleAutoDetect(setStateSheet),
+                  onPressed: _isCheckingPincode ? null : () => _handleAutoDetect(setStateSheet),
                   icon: const Icon(LucideIcons.locateFixed, size: 18),
                   label: Text(
                     'DETECT MY LOCATION',
@@ -197,23 +202,39 @@ class _HomeHeaderState extends State<HomeHeader> {
   }
 
   Future<void> _handlePincodeSubmit(String pincode, StateSetter setStateSheet) async {
-    setStateSheet(() => {}); // Refresh UI for loader
-    final isServiceable = await ApiService().checkServiceability(pincode);
+    if (_isCheckingPincode) return;
     
-    if (isServiceable) {
-      if (mounted) {
-        setState(() => _currentAddress = 'PIN: $pincode');
-        Navigator.pop(context);
+    setStateSheet(() => _isCheckingPincode = true);
+    setState(() => _isCheckingPincode = true);
+    
+    try {
+      final isServiceable = await ApiService().checkServiceability(pincode);
+      
+      if (isServiceable) {
+        if (mounted) {
+          setState(() {
+            _currentAddress = 'PIN: $pincode';
+            _isCheckingPincode = false;
+          });
+          Navigator.pop(context);
+        }
+      } else {
+        if (mounted) {
+          setState(() => _isCheckingPincode = false);
+          setStateSheet(() => _isCheckingPincode = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Delivery not available in $pincode yet.'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
-    } else {
+    } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Delivery not available in $pincode yet.'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        setState(() => _isCheckingPincode = false);
+        setStateSheet(() => _isCheckingPincode = false);
       }
     }
   }

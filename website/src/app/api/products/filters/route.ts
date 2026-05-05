@@ -9,10 +9,13 @@ export async function GET() {
     const db = client.db('sahimed');
     const collection = db.collection('products');
 
-    const [marketers, dosageForms] = await Promise.all([
+    const [marketerNames, manufacturerNames, dosageForms] = await Promise.all([
       collection.distinct('marketer_name', { marketer_name: { $exists: true, $ne: null, $ne: '' } }),
+      collection.distinct('manufacturer', { manufacturer: { $exists: true, $ne: null, $ne: '' } }),
       collection.distinct('dosage_form', { dosage_form: { $exists: true, $ne: null, $ne: '' } }),
     ]);
+
+    const marketers = Array.from(new Set([...marketerNames, ...manufacturerNames])).filter(Boolean).sort();
 
     return NextResponse.json(
       { marketers, dosageForms },

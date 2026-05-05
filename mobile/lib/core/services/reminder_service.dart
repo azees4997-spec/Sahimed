@@ -9,6 +9,9 @@ class ReminderService {
 
   static Future<void> init() async {
     tz.initializeTimeZones();
+
+    // BUG-06 FIX: Always set to Indian Standard Time regardless of device timezone
+    tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
     
     const AndroidInitializationSettings androidInit =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -67,10 +70,12 @@ class ReminderService {
     );
   }
 
+  // BUG-06 FIX: Always uses IST (Asia/Kolkata) for scheduling
   static tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
-    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+    final location = tz.getLocation('Asia/Kolkata');
+    final tz.TZDateTime now = tz.TZDateTime.now(location);
     tz.TZDateTime scheduledDate =
-        tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+        tz.TZDateTime(location, now.year, now.month, now.day, hour, minute);
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }

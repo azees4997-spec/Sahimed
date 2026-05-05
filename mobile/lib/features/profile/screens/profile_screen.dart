@@ -144,8 +144,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Container(
       color: SahimedColors.background,
-      child: CustomScrollView(
-        slivers: [
+      child: RefreshIndicator(
+        onRefresh: _loadProfileData,
+        color: SahimedColors.primary,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          slivers: [
           SliverAppBar(
             backgroundColor: SahimedColors.white,
             expandedHeight: 220,
@@ -464,8 +470,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(

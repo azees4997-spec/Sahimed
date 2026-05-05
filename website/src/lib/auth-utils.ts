@@ -31,10 +31,11 @@ export async function verifyAuth(request: Request) {
 
     const uid = payload.sub;
     const email = payload.email as string;
+    const phoneNumber = payload.phone_number as string;
 
     if (!uid) throw new Error('Invalid token payload: missing sub');
 
-    return { uid, email };
+    return { uid, email, phoneNumber };
   } catch (error: any) {
     throw new Error(error.message || 'Unauthorized access attempt');
   }

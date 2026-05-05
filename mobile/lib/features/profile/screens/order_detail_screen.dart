@@ -14,6 +14,10 @@ class OrderDetailScreen extends StatelessWidget {
     final items = order['items'] as List? ?? [];
     final billing = order['billingBreakdown'] as Map? ?? {};
     final shipping = order['shippingDetails'] as Map? ?? {};
+    final orderDate = order['orderDate'] != null 
+        ? DateTime.tryParse(order['orderDate'].toString()) 
+        : null;
+    final prescription = order['prescriptionUrl'] ?? order['prescription'];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -26,6 +30,18 @@ class OrderDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (orderDate != null) ...[
+                    Text(
+                      'PLACED ON ${orderDate.day} ${_getMonth(orderDate.month)} ${orderDate.year}',
+                      style: GoogleFonts.outfit(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: SahimedColors.slate400,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   _buildOrderStepper(status),
                   const SizedBox(height: 32),
 
@@ -36,6 +52,12 @@ class OrderDetailScreen extends StatelessWidget {
                   _buildSectionHeader('DELIVERY ADDRESS', LucideIcons.mapPin),
                   _buildAddressInfo(shipping),
                   const SizedBox(height: 32),
+
+                  if (prescription != null) ...[
+                    _buildSectionHeader('PRESCRIPTION', LucideIcons.fileText),
+                    _buildPrescriptionCard(prescription.toString()),
+                    const SizedBox(height: 32),
+                  ],
 
                   if (order['shipping'] != null && order['shipping']['awb'] != null) ...[
                     _buildSectionHeader('TRACKING INFORMATION', LucideIcons.truck),
@@ -51,7 +73,7 @@ class OrderDetailScreen extends StatelessWidget {
                   const SizedBox(height: 32),
 
                   _buildSectionHeader('BILLING SUMMARY', LucideIcons.receipt),
-                  _buildBillingSummary(billing, order['totalAmount'] ?? 0),
+                  _buildBillingSummary(billing, order['totalAmount'] ?? 0, order['paymentType'] ?? 'COD'),
                   const SizedBox(height: 48),
 
                   _buildCloseButton(context),
@@ -63,6 +85,10 @@ class OrderDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _getMonth(int m) {
+    return ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][m - 1];
   }
 
   Widget _buildSliverAppBar(BuildContext context, String status) {
@@ -369,58 +395,114 @@ class OrderDetailScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          ...items.map(
-            (item) => Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      LucideIcons.pill,
-                      color: SahimedColors.primary,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item['name'] ?? 'Medicine',
-                          style: GoogleFonts.outfit(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF0F172A),
-                          ),
+          // BUG-10 FIX: Added dividers between items for visual separation
+          ...items.asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value;
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        Text(
-                          '${item['quantity']} UNITS',
-                          style: GoogleFonts.outfit(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: SahimedColors.slate400,
-                            letterSpacing: 1,
-                          ),
+                        child: const Icon(
+                          LucideIcons.pill,
+                          color: SahimedColors.primary,
+                          size: 20,
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['name'] ?? 'Medicine',
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF0F172A),
+                              ),
+                            ),
+                            Text(
+                              '${item['quantity'] ?? 1} UNITS',
+                              style: GoogleFonts.outfit(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                color: SahimedColors.slate400,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        () {
+                          final price = num.tryParse(item['unitPrice']?.toString() ?? '0') ?? 0;
+                          final qty = num.tryParse(item['quantity']?.toString() ?? '1') ?? 1;
+                          return '₹${(price * qty).toStringAsFixed(0)}';
+                        }(),
+                        style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    '₹${(item['unitPrice'] * item['quantity']).toStringAsFixed(0)}',
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
-                ],
+                ),
+                if (index < items.length - 1)
+                  const Divider(height: 1, indent: 20, endIndent: 20),
+              ],
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPrescriptionCard(String url) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.network(
+              url,
+              height: 120,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (ctx, _, __) => Container(
+                height: 120,
+                color: SahimedColors.slate100,
+                child: const Icon(LucideIcons.fileImage, color: SahimedColors.slate300),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextButton.icon(
+            onPressed: () => launchUrl(Uri.parse(url)),
+            icon: const Icon(LucideIcons.maximize2, size: 14),
+            label: Text(
+              'VIEW FULL PRESCRIPTION',
+              style: GoogleFonts.outfit(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
               ),
             ),
           ),
@@ -429,7 +511,7 @@ class OrderDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBillingSummary(Map billing, dynamic total) {
+  Widget _buildBillingSummary(Map billing, dynamic total, String paymentType) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -464,14 +546,36 @@ class OrderDetailScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'TOTAL AMOUNT',
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF0F172A),
-                  letterSpacing: 1,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'TOTAL AMOUNT',
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF0F172A),
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: SahimedColors.primary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      paymentType.toUpperCase(),
+                      style: GoogleFonts.outfit(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               Text(
                 '₹${total.toStringAsFixed(0)}',

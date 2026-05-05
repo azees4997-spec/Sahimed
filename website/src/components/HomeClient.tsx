@@ -69,21 +69,8 @@ export default function HomeClient({ banners, categories, bestSellers, medicines
     });
   }, [api]);
 
+  return (
     <div className="space-y-6 sm:space-y-12 pb-20 sm:pb-32 overflow-x-hidden max-w-full">
-      {/* Delivery Info Bar */}
-      <div className="max-w-7xl mx-auto">
-        <div className="mx-1 sm:mx-2 bg-white/60 backdrop-blur-md rounded-full border border-white/50 px-6 py-3 flex items-center justify-between shadow-xl shadow-slate-200/50">
-          <div className="flex items-center gap-3">
-            <MapPin className="w-4 h-4 text-primary" />
-            <span className="text-[10px] font-black uppercase tracking-tight text-slate-900">Delivering to {activePincode}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">
-              {edd ? `Delivery by ${edd}` : 'Estimating Delivery...'}
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* Banner Carousel */}
       {banners && banners.length > 0 && (

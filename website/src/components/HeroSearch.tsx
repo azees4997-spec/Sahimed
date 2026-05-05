@@ -1,10 +1,13 @@
 "use client"
 
+import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 
 export default function HeroSearch() {
+  const router = useRouter();
+
   const handleOpenSearch = () => {
-    window.dispatchEvent(new CustomEvent('open-mobile-search'));
+    router.push('/search');
   };
 
   return (

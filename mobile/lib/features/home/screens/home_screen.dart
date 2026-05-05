@@ -7,14 +7,14 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
 
-import '../../../core/providers/navigation_provider.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/services/permission_service.dart';
 import '../../../shared/models/models.dart';
 
 import 'prescription_screen.dart';
 import '../../products/screens/category_products_screen.dart';
-
+import '../../products/screens/search_screen.dart';
+import 'sahi_ai_screen.dart';
 
 import '../../products/widgets/product_card.dart';
 import '../widgets/home_header.dart';
@@ -41,14 +41,12 @@ class _HomeScreenState extends State<HomeScreen> {
   List<ProductModel> _bestSellers = [];
   List<ProductModel> _medicines = [];
   bool _isLoading = true;
-  String _edd = '';
-  String _pincode = '560001';
+  // BUG-09 FIX: Removed dead _pincode variable
 
   @override
   void initState() {
     super.initState();
     _load();
-    _loadEDD();
     _requestInitialPermissions();
   }
 
@@ -60,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-
+  // BUG-02 FIX: Renamed from _loadInitialData to _load (consistent naming)
   Future<void> _load() async {
     try {
       final results = await Future.wait([
@@ -81,21 +79,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _loadEDD() async {
-    try {
-      final edd = await _api.getShipwayEDD(_pincode);
-      if (mounted && edd != null) {
-        final date = DateTime.parse(edd);
-        final months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-        final formatted = '${months[date.month - 1]} ${date.day.toString().padLeft(2, '0')}';
-        setState(() => _edd = formatted);
-      }
-
-    } catch (e) {
-      debugPrint('Error loading EDD: $e');
-    }
-  }
-
   Future<void> _launch(String url) async {
     try {
       final uri = Uri.parse(url);
@@ -113,7 +96,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _goSearch(BuildContext context) {
     HapticFeedback.mediumImpact();
-    context.read<NavigationProvider>().switchTab(1);
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SearchScreen()),
+    );
   }
 
   void _openCategory(BuildContext context, CategoryModel cat) {
@@ -127,59 +113,77 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bgPage,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          const SliverToBoxAdapter(child: HomeHeader()),
-          SliverToBoxAdapter(child: _buildDeliveryInfo(context)),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: _buildHeroTop(context),
+      body: RefreshIndicator(
+        // BUG-02 FIX: Changed _loadInitialData() to _load()
+        onRefresh: _load,
+        color: SahimedColors.primary,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          // BUG-01 FIX: Corrected all bracket nesting
+          slivers: [
+            const SliverToBoxAdapter(child: HomeHeader()),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: _buildHeroTop(context),
+              ),
             ),
-          ),
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _StickySearchDelegate(onTap: () => _goSearch(context)),
-          ),
-          SliverToBoxAdapter(child: _buildHeroBottom(context)),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _buildSection(
-                  title: 'Our Most Popular Brands',
-                  child: _isLoading ? _shimmerGrid(3) : _productGrid(_bestSellers, context),
-                ),
-                const SizedBox(height: 28),
-                _buildSection(
-                  title: 'Top Categories',
-                  trailing: GestureDetector(
-                    onTap: () => _goSearch(context),
-                    child: Row(
-                      children: [
-                        Text('EXPLORE ALL', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
-                        const Icon(LucideIcons.chevronRight, size: 14, color: SahimedColors.primary),
-                      ],
-                    ),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickySearchDelegate(onTap: () => _goSearch(context)),
+            ),
+            SliverToBoxAdapter(child: _buildHeroBottom(context)),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _buildSection(
+                    title: 'Our Most Popular Brands',
+                    child: _isLoading ? _shimmerGrid(3) : _productGrid(_bestSellers, context),
                   ),
-                  child: _isLoading ? _shimmerGrid(9) : _categoryGrid(context),
-                ),
-                const SizedBox(height: 28),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _buildDeliveryBanner(context),
-                ),
-                const SizedBox(height: 28),
-                _buildSection(
-                  title: 'Best Sellers',
-                  child: _isLoading ? _shimmerHScroll() : _horizontalProductScroll(context),
-                ),
-                const SizedBox(height: 120),
-              ]),
+                  const SizedBox(height: 28),
+                  _buildSection(
+                    title: 'Top Categories',
+                    trailing: GestureDetector(
+                      onTap: () => _goSearch(context),
+                      child: Row(
+                        children: [
+                          Text('EXPLORE ALL', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
+                          const Icon(LucideIcons.chevronRight, size: 14, color: SahimedColors.primary),
+                        ],
+                      ),
+                    ),
+                    child: _isLoading ? _shimmerGrid(9) : _categoryGrid(context),
+                  ),
+                  const SizedBox(height: 28),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildDeliveryBanner(context),
+                  ),
+                  const SizedBox(height: 28),
+                  _buildSection(
+                    title: 'Best Sellers',
+                    child: _isLoading ? _shimmerHScroll() : _horizontalProductScroll(context),
+                  ),
+                  const SizedBox(height: 120),
+                ]),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          HapticFeedback.heavyImpact();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SahiAIScreen()),
+          );
+        },
+        backgroundColor: SahimedColors.textPrimary,
+        child: const Icon(LucideIcons.bot, color: Colors.white),
       ),
     );
   }
@@ -202,13 +206,20 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(width: 12),
+          // BUG-16 FIX: Using a stable CDN image instead of random Unsplash
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: CachedNetworkImage(
-              imageUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=200',
+              imageUrl: 'https://images.pexels.com/photos/3683074/pexels-photo-3683074.jpeg?auto=compress&cs=tinysrgb&w=200',
               width: 110,
               height: 110,
               fit: BoxFit.cover,
+              errorWidget: (ctx, _, __) => Container(
+                width: 110,
+                height: 110,
+                color: _lavender,
+                child: const Icon(LucideIcons.pill, color: SahimedColors.primary, size: 40),
+              ),
             ),
           ),
         ],
@@ -234,7 +245,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
               }
             },
-
           ),
           const SizedBox(width: 10),
           _quickAction(
@@ -343,28 +353,45 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _medicines.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 12),
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (_, i) => SizedBox(width: 155, child: SahimedProductCard(product: _medicines[i])),
       ),
     );
   }
 
-  Widget _shimmerGrid(int count) => Container();
-  Widget _shimmerHScroll() => Container();
+  // BUG-05 FIX: Real shimmer placeholders instead of empty Container()
+  Widget _shimmerGrid(int count) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: count == 9 ? 3 : 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: count == 9 ? 0.85 : 0.68,
+      ),
+      itemCount: count,
+      itemBuilder: (_, __) => _shimmerBox(radius: 16),
+    );
+  }
 
-  Widget _buildDeliveryInfo(BuildContext context) {
+  Widget _shimmerHScroll() {
+    return SizedBox(
+      height: 245,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: 4,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (_, __) => SizedBox(width: 155, child: _shimmerBox(radius: 16)),
+      ),
+    );
+  }
+
+  Widget _shimmerBox({double radius = 12}) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(100), border: Border.all(color: SahimedColors.slate100)),
-      child: Row(
-        children: [
-          const Icon(LucideIcons.mapPin, size: 14, color: SahimedColors.primary),
-          const SizedBox(width: 8),
-          Text('DELIVERING TO $_pincode', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900)),
-          const Spacer(),
-          Text(_edd.isEmpty ? 'FETCHING...' : 'DELIVERY BY $_edd', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.green)),
-        ],
+      decoration: BoxDecoration(
+        color: const Color(0xFFE2E8F0),
+        borderRadius: BorderRadius.circular(radius),
       ),
     );
   }

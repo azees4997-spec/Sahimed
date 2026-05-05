@@ -45,24 +45,23 @@ export async function GET(request: Request) {
       query.isBestSeller = { $in: [isTrue, isBestSeller] };
     }
 
-    // 3. Marketer name multi-select filter
+    // 3. Marketer name multi-select filter (Includes Manufacturer fallback)
     if (marketerName) {
       const names = marketerName.split(',').map(n => n.trim()).filter(Boolean);
-      if (names.length === 1) {
-        query.marketer_name = { $regex: escapeRegExp(names[0]), $options: 'i' };
-      } else if (names.length > 1) {
-        query.marketer_name = { $in: names.map(n => new RegExp(escapeRegExp(n), 'i')) };
-      }
+      const marketerQueries = names.map(n => ({ marketer_name: { $regex: escapeRegExp(n), $options: 'i' } }));
+      const manufacturerQueries = names.map(n => ({ manufacturer: { $regex: escapeRegExp(n), $options: 'i' } }));
+      
+      query.$or = query.$or || [];
+      query.$or.push({ $or: [...marketerQueries, ...manufacturerQueries] });
     }
 
     // 4. Dosage form multi-select filter
     if (dosageForm) {
       const forms = dosageForm.split(',').map(f => f.trim()).filter(Boolean);
-      if (forms.length === 1) {
-        query.dosage_form = { $regex: escapeRegExp(forms[0]), $options: 'i' };
-      } else if (forms.length > 1) {
-        query.dosage_form = { $in: forms.map(f => new RegExp(escapeRegExp(f), 'i')) };
-      }
+      const dosageQueries = forms.map(f => ({ dosage_form: { $regex: escapeRegExp(f), $options: 'i' } }));
+      
+      query.$or = query.$or || [];
+      query.$or.push({ $or: dosageQueries });
     }
 
     // 5. Price range filter

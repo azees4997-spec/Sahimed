@@ -21,44 +21,67 @@ export async function GET(req: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
     const { searchParams } = new URL(req.url);
-    
-    // Security check: Non-admins MUST provide their own userId
-    const requestedUserId = searchParams.get('userId');
-    const phone = searchParams.get('phone');
-    
-    if (!isAdmin && requestedUserId !== user.uid) {
-      return NextResponse.json({ error: "Forbidden: You can only view your own orders." }, { status: 403 });
-    }
-
     const statusRaw = searchParams.get('status');
     const status = statusRaw ? escapeRegExp(statusRaw) : null;
     const start = searchParams.get('start');
     const end = searchParams.get('end');
-    
-    // Build query
     const query: any = {};
     
-    // Identity filter (OR logic for userId or phone with fuzzy matching)
-    if (requestedUserId && phone) {
-      const last10 = phone.replace(/\D/g, '').slice(-10);
-      query.$or = [
-        { userId: requestedUserId },
-        { customer_id: requestedUserId },
-        { phoneNumber: phone },
-        { phoneNumber: last10 },
-        { phoneNumber: `+91${last10}` },
-        { phoneNumber: `91${last10}` }
+    // Security check: Non-admins MUST be restricted to their own data
+    if (!isAdmin) {
+      const tokenPhone = (user as any).phoneNumber;
+      const last10 = tokenPhone ? tokenPhone.replace(/\D/g, '').slice(-10) : null;
+      
+      const identityConditions: any[] = [
+        { userId: user.uid },
+        { customer_id: user.uid }
       ];
-    } else if (requestedUserId) {
-      query.$or = [{ userId: requestedUserId }, { customer_id: requestedUserId }];
-    } else if (phone) {
-      const last10 = phone.replace(/\D/g, '').slice(-10);
-      query.$or = [
-        { phoneNumber: phone },
-        { phoneNumber: last10 },
-        { phoneNumber: `+91${last10}` },
-        { phoneNumber: `91${last10}` }
-      ];
+
+      if (tokenPhone) {
+        identityConditions.push({ phoneNumber: tokenPhone });
+        identityConditions.push({ phone: tokenPhone });
+        identityConditions.push({ customer_phone: tokenPhone });
+      }
+      if (last10) {
+        // Variants for both 'phoneNumber', 'phone', and 'customer_phone' keys
+        const variants = [last10, `+91${last10}`, `91${last10}`];
+        variants.forEach(v => {
+          identityConditions.push({ phoneNumber: v });
+          identityConditions.push({ phone: v });
+          identityConditions.push({ customer_phone: v });
+        });
+      }
+
+      query.$or = identityConditions;
+    } else {
+      // Admin Search Logic
+      const requestedUserId = searchParams.get('userId');
+      const phone = searchParams.get('phone');
+
+      if (requestedUserId && phone) {
+        const last10 = phone.replace(/\D/g, '').slice(-10);
+        // BUG-08 FIX: Include all phone field variants (phoneNumber, phone, customer_phone)
+        const phoneVariants = [phone, last10, `+91${last10}`, `91${last10}`];
+        query.$or = [
+          { userId: requestedUserId },
+          { customer_id: requestedUserId },
+          ...phoneVariants.flatMap(v => [
+            { phoneNumber: v },
+            { phone: v },
+            { customer_phone: v },
+          ])
+        ];
+      } else if (requestedUserId) {
+        query.$or = [{ userId: requestedUserId }, { customer_id: requestedUserId }];
+      } else if (phone) {
+        const last10 = phone.replace(/\D/g, '').slice(-10);
+        const phoneVariants = [phone, last10, `+91${last10}`, `91${last10}`];
+        query.$or = phoneVariants.flatMap(v => [
+          { phoneNumber: v },
+          { phone: v },
+          { customer_phone: v },
+        ]);
+      }
     }
 
     if (status) query.status = { $regex: new RegExp(status, 'i') };

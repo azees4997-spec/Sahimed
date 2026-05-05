@@ -27,19 +27,7 @@ class PermissionService {
       return false;
     }
 
-    // 4. Show custom rationale dialog before the system pop-up
-    if (context.mounted) {
-      final proceed = await _showRationaleDialog(
-        context,
-        title: title,
-        rationale: rationale,
-        icon: icon,
-      );
-      
-      if (proceed != true) return false;
-    }
-
-    // 5. Request the actual permission
+    // 4. Request the actual permission directly (bypassing custom rationale as requested)
     final result = await permission.request();
     return result.isGranted;
   }

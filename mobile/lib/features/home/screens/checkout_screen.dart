@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -319,6 +320,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
       if (mounted) {
         if (orderId != null) {
+          // BUG-04 FIX: Capture total BEFORE clearing cart to avoid showing ₹0
+          final confirmedTotal = cart.finalTotal;
+          final confirmedName = _nameController.text.trim();
           cart.clearCart();
           Navigator.pushAndRemoveUntil(
             context,
@@ -326,8 +330,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               builder: (context) => OrderStatusScreen(
                 isSuccess: true,
                 orderId: orderId,
-                totalAmount: cart.finalTotal,
-                patientName: _nameController.text.trim(),
+                totalAmount: confirmedTotal,
+                patientName: confirmedName,
               ),
             ),
             (route) => route.isFirst,
@@ -553,6 +557,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       hint: '6 digits',
                                       icon: LucideIcons.hash,
                                       keyboardType: TextInputType.number,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                        LengthLimitingTextInputFormatter(6),
+                                      ],
                                     ),
                                   ),
                                 ],
@@ -864,6 +872,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     required IconData icon,
     TextInputType? keyboardType,
     int maxLines = 1,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -884,6 +893,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           controller: controller,
           keyboardType: keyboardType,
           maxLines: maxLines,
+          inputFormatters: inputFormatters,
           style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600),
           decoration: InputDecoration(
             hintText: hint,

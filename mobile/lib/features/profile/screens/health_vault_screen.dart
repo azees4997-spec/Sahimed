@@ -73,17 +73,24 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _prescriptions.isEmpty
-          ? _buildEmptyState()
-          : _buildPrescriptionList(),
+      body: RefreshIndicator(
+        onRefresh: _loadPrescriptions,
+        color: SahimedColors.primary,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _prescriptions.isEmpty
+            ? _buildEmptyState()
+            : _buildPrescriptionList(),
+      ),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        alignment: Alignment.center,
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -154,12 +161,15 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
             ),
           ],
         ),
-      ).animate().fadeIn(),
-    );
+      ),
+    ).animate().fadeIn();
   }
 
   Widget _buildPrescriptionList() {
     return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
       padding: const EdgeInsets.all(20),
       itemCount: _prescriptions.length,
       itemBuilder: (context, index) {
@@ -188,102 +198,162 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
         final status = rx['status'] ?? 'Pending';
         final isPdf = (rx['imageUrl'] ?? '').toLowerCase().contains('.pdf');
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // Thumbnail/Icon
-              Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  color: Colors.grey[50],
+        return GestureDetector(
+          onTap: () => _showFullView(rx),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
                 ),
-                child: isPdf
-                    ? const Icon(
-                        LucideIcons.fileText,
-                        color: Colors.red,
-                        size: 32,
+              ],
+            ),
+            child: Row(
+              children: [
+                // Thumbnail/Icon
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.grey[50],
+                  ),
+                  child: isPdf
+                      ? const Icon(
+                          LucideIcons.fileText,
+                          color: Colors.red,
+                          size: 32,
+                        )
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: CachedNetworkImage(
+                            imageUrl: rx['imageUrl'] ?? '',
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) =>
+                                Container(color: Colors.grey[100]),
+                            errorWidget: (context, url, error) =>
+                                const Icon(LucideIcons.image, color: Colors.grey),
+                          ),
+                        ),
+                ),
+                const SizedBox(width: 16),
+                // Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        rx['patientName'] ?? 'Self',
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        formattedDate,
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(status).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          status.toUpperCase(),
+                          style: GoogleFonts.outfit(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: _getStatusColor(status),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  LucideIcons.chevronRight,
+                  color: Colors.grey,
+                  size: 20,
+                ),
+              ],
+            ),
+          ).animate().slideX(begin: 0.1, delay: (index * 50).ms),
+        );
+      },
+    );
+  }
+
+  void _showFullView(Map<String, dynamic> rx) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(10),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: double.infinity,
+              height: MediaQuery.of(context).size.height * 0.7,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(32),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: (rx['imageUrl'] ?? '').toLowerCase().contains('.pdf')
+                    ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(LucideIcons.fileText, color: Colors.red, size: 64),
+                            SizedBox(height: 16),
+                            Text('PDF Document', style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text('Contact support to view detailed records', style: TextStyle(color: Colors.grey)),
+                          ],
+                        ),
                       )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
+                    : InteractiveViewer(
+                        panEnabled: true,
+                        minScale: 0.5,
+                        maxScale: 4.0,
                         child: CachedNetworkImage(
                           imageUrl: rx['imageUrl'] ?? '',
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) =>
-                              Container(color: Colors.grey[100]),
-                          errorWidget: (context, url, error) =>
-                              const Icon(LucideIcons.image, color: Colors.grey),
+                          fit: BoxFit.contain,
+                          placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                          errorWidget: (context, url, error) => const Icon(LucideIcons.image, size: 64, color: Colors.grey),
                         ),
                       ),
               ),
-              const SizedBox(width: 16),
-              // Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      rx['patientName'] ?? 'Self',
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      formattedDate,
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(status).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        status.toUpperCase(),
-                        style: GoogleFonts.outfit(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          color: _getStatusColor(status),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+            ),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: IconButton(
+                icon: const Icon(LucideIcons.circleX, color: Colors.black, size: 32),
+                onPressed: () => Navigator.pop(context),
               ),
-              const Icon(
-                LucideIcons.chevronRight,
-                color: Colors.grey,
-                size: 20,
-              ),
-            ],
-          ),
-        ).animate().slideX(begin: 0.1, delay: (index * 50).ms);
-      },
+            ),
+          ],
+        ),
+      ),
     );
   }
 

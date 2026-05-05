@@ -4,9 +4,9 @@ import { use, useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  CheckCircle2, 
-  MapPin, 
+import {
+  CheckCircle2,
+  MapPin,
   Banknote,
   Zap,
   Clock,
@@ -40,7 +40,7 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
     <PageTransition>
       <div className="min-h-screen bg-white flex flex-col">
         <Navbar />
-        
+
         <main className="flex-1 max-w-lg mx-auto px-6 py-6 md:py-10 flex flex-col items-center w-full">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -69,10 +69,10 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
 
             {/* Payment & Savings Card */}
             <Card className="rounded-[40px] border-none shadow-2xl shadow-blue-900/10 bg-blue-600 overflow-hidden text-white relative">
-               <div className="absolute top-0 right-0 p-8 opacity-10">
-                 <Zap className="w-32 h-32" />
-               </div>
-               <CardContent className="p-8 space-y-8 relative z-10">
+              <div className="absolute top-0 right-0 p-8 opacity-10">
+                <Zap className="w-32 h-32" />
+              </div>
+              <CardContent className="p-8 space-y-8 relative z-10">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60">Amount Paid</p>
@@ -143,7 +143,7 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
             </div>
           </motion.div>
         </main>
-        
+
         <BottomNav />
       </div>
     </PageTransition>

@@ -14,7 +14,11 @@ export async function POST(req: NextRequest) {
 
     // Defaulting origin to the Bengaluru warehouse pincode.
     const fromPincode = process.env.WAREHOUSE_PINCODE || '560068'; 
-    console.log(`[Shipway] Checking serviceability from ${fromPincode} to ${toPincode}`);
+    // BUG-15 FIX: Only log in development to avoid noisy production logs
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Shipway] Checking serviceability from ${fromPincode} to ${toPincode}`);
+    }
+
 
     const result = await ShipwayService.checkServiceability(fromPincode, toPincode);
 
