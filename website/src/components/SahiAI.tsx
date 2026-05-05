@@ -93,7 +93,7 @@ export default function SahiAI() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="absolute bottom-18 right-0 w-[350px] md:w-[400px] h-[550px] bg-white rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden flex flex-col"
+            className="absolute bottom-20 right-0 w-[350px] md:w-[400px] h-[550px] bg-white rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden flex flex-col z-[101]"
           >
             {/* Header */}
             <div className="bg-slate-900 p-6 text-white relative overflow-hidden">
