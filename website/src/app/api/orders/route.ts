@@ -126,8 +126,6 @@ export async function GET(req: Request) {
       }
     }
 
-    const client = await clientPromise;
-    const db = client.db('sahimed');
     const orders = await db.collection('orders')
       .find(query)
       .sort({ orderDate: -1, createdAt: -1 })
