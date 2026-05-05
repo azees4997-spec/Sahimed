@@ -29,6 +29,20 @@ export async function GET(req: Request) {
         identityConditions.push({ phoneNumber: v });
         identityConditions.push({ phone: v });
       });
+
+      // Find all other UIDs associated with this phone number
+      const linkedUsers = await db.collection('users').find({
+        $or: [
+          { phoneNumber: { $in: phoneVariants } },
+          { phone: { $in: phoneVariants } }
+        ]
+      }).toArray();
+      
+      linkedUsers.forEach(u => {
+        if (u.uid && u.uid !== user.uid) {
+          identityConditions.push({ userId: u.uid });
+        }
+      });
     }
 
     const addresses = await db.collection('addresses')

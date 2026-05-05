@@ -54,6 +54,21 @@ export async function GET(req: Request) {
           identityConditions.push({ phone: v });
           identityConditions.push({ customer_phone: v });
         });
+
+        // NEW: Also find all other UIDs associated with this phone number for legacy sync
+        const linkedUsers = await db.collection('users').find({
+          $or: [
+            { phoneNumber: { $in: phoneVariants } },
+            { phone: { $in: phoneVariants } }
+          ]
+        }).toArray();
+        
+        linkedUsers.forEach(u => {
+          if (u.uid && u.uid !== user.uid) {
+            identityConditions.push({ userId: u.uid });
+            identityConditions.push({ customer_id: u.uid });
+          }
+        });
       }
 
       query.$or = identityConditions;
