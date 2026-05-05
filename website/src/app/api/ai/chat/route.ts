@@ -3,6 +3,7 @@ import { GoogleGenerativeAI, Tool, SchemaType } from "@google/generative-ai";
 import clientPromise from '@/lib/mongodb';
 
 // 1. Initialize Gemini
+// Version: 1.0.33-AI-FINAL
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 // 2. Define the Search Tool
