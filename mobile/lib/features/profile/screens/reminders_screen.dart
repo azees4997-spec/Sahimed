@@ -63,15 +63,12 @@ class _RemindersScreenState extends State<RemindersScreen> {
     if (!hasAlarm) return;
 
     final TimeOfDay? picked = await showTimePicker(
-
       context: context,
       initialTime: TimeOfDay.now(),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: SahimedColors.primary,
-            ),
+            colorScheme: const ColorScheme.light(primary: SahimedColors.primary),
           ),
           child: child!,
         );
@@ -94,19 +91,76 @@ class _RemindersScreenState extends State<RemindersScreen> {
         });
         _saveReminders();
         
-        await ReminderService.scheduleReminder(
-          id: int.parse(newReminder.id.substring(newReminder.id.length - 8)),
-          title: '💊 Time for your medicine',
-          body: 'Take $name (${newReminder.dosage})',
-          hour: picked.hour,
-          minute: picked.minute,
-        );
+        _scheduleAlarm(newReminder);
       }
     }
   }
 
-  Future<String?> _showNameDialog() {
-    String name = '';
+  void _editReminder(int index) async {
+    final reminder = _reminders[index];
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: reminder.hour, minute: reminder.minute),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(primary: SahimedColors.primary),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      final String? name = await _showNameDialog(initialValue: reminder.medicineName);
+      if (name != null && name.isNotEmpty) {
+        // Cancel old alarm
+        await ReminderService.cancelReminder(_getNotificationId(reminder.id));
+        
+        final updated = MedicineReminder(
+          id: reminder.id,
+          medicineName: name,
+          dosage: reminder.dosage,
+          hour: picked.hour,
+          minute: picked.minute,
+        );
+
+        setState(() {
+          _reminders[index] = updated;
+        });
+        _saveReminders();
+        _scheduleAlarm(updated);
+      }
+    }
+  }
+
+  int _getNotificationId(String id) {
+    try {
+      if (id.length >= 8) {
+        return int.parse(id.substring(id.length - 8));
+      }
+      return int.parse(id);
+    } catch (e) {
+      return id.hashCode;
+    }
+  }
+
+  void _scheduleAlarm(MedicineReminder r) async {
+    try {
+      await ReminderService.scheduleReminder(
+        id: _getNotificationId(r.id),
+        title: '💊 Time for your medicine',
+        body: 'Take ${r.medicineName} (${r.dosage})',
+        hour: r.hour,
+        minute: r.minute,
+      );
+    } catch (e) {
+      debugPrint('Error scheduling reminder: $e');
+    }
+  }
+
+  Future<String?> _showNameDialog({String initialValue = ''}) {
+    String name = initialValue;
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
@@ -114,6 +168,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
         title: Text('MEDICINE NAME', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16)),
         content: TextField(
           autofocus: true,
+          controller: TextEditingController(text: initialValue)
+            ..selection = TextSelection(baseOffset: 0, extentOffset: initialValue.length),
           decoration: const InputDecoration(hintText: 'e.g. Metformin, Pan 40'),
           onChanged: (val) => name = val,
         ),
@@ -122,7 +178,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, name),
             style: ElevatedButton.styleFrom(backgroundColor: SahimedColors.primary, foregroundColor: Colors.white),
-            child: const Text('ADD'),
+            child: const Text('SAVE'),
           ),
         ],
       ),
@@ -131,11 +187,30 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   void _deleteReminder(int index) async {
     final reminder = _reminders[index];
-    await ReminderService.cancelReminder(int.parse(reminder.id.substring(reminder.id.length - 8)));
-    setState(() {
-      _reminders.removeAt(index);
-    });
-    _saveReminders();
+    
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text('DELETE REMINDER?', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16)),
+        content: Text('Are you sure you want to remove the reminder for ${reminder.medicineName}?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true), 
+            child: const Text('DELETE', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold))
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await ReminderService.cancelReminder(_getNotificationId(reminder.id));
+      setState(() {
+        _reminders.removeAt(index);
+      });
+      _saveReminders();
+    }
   }
 
   @override
@@ -212,7 +287,11 @@ class _RemindersScreenState extends State<RemindersScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(LucideIcons.trash2, color: Color(0xFFFDA4AF), size: 20),
+            icon: const Icon(LucideIcons.pencil, color: SahimedColors.primary, size: 18),
+            onPressed: () => _editReminder(index),
+          ),
+          IconButton(
+            icon: const Icon(LucideIcons.trash2, color: Color(0xFFFDA4AF), size: 18),
             onPressed: () => _deleteReminder(index),
           ),
         ],

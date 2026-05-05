@@ -17,8 +17,8 @@ class ApiService {
   static final Map<String, dynamic> _cache = {};
   static final Map<String, DateTime> _cacheTime = {};
   static const Duration _cacheDuration = Duration(
-    minutes: 2,
-  ); // Reduced cache for better sync
+    seconds: 30,
+  ); // Fast cache for real-time sync
 
   dynamic _getCached(String key) {
     if (_cache.containsKey(key)) {
@@ -134,7 +134,6 @@ class ApiService {
     if (cached != null) return cached;
 
     try {
-      // Updated to match website search pattern: products?moleculeId=...&isGeneric=true
       final response = await http.get(
         Uri.parse(
           '$baseUrl/products?moleculeId=$moleculeId&isGeneric=true&limit=1',
@@ -188,8 +187,17 @@ class ApiService {
     if (cached != null) return List<ProductModel>.from(cached);
 
     try {
+      final user = _auth.currentUser;
       final encodedQuery = Uri.encodeComponent(query);
       String url = '$baseUrl/products?q=$encodedQuery&limit=30';
+
+      if (user != null) {
+        url += '&userId=${user.uid}';
+        if (user.phoneNumber != null) {
+          url += '&mobile=${Uri.encodeComponent(user.phoneNumber!)}';
+        }
+      }
+      url += '&platform=mobile';
 
       if (category != null) {
         url += '&category=${Uri.encodeComponent(category)}';
@@ -223,10 +231,19 @@ class ApiService {
 
   Future<List<Map<String, dynamic>>> searchMolecules(String query) async {
     try {
+      final user = _auth.currentUser;
       final encodedQuery = Uri.encodeComponent(query);
-      final response = await http.get(
-        Uri.parse('$baseUrl/molecules?q=$encodedQuery&limit=10'),
-      );
+      String url = '$baseUrl/molecules?q=$encodedQuery&limit=10';
+      
+      if (user != null) {
+        url += '&userId=${user.uid}';
+        if (user.phoneNumber != null) {
+          url += '&mobile=${Uri.encodeComponent(user.phoneNumber!)}';
+        }
+      }
+      url += '&platform=mobile';
+
+      final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         return List<Map<String, dynamic>>.from(json.decode(response.body));
       }
@@ -284,7 +301,6 @@ class ApiService {
     String? pincode,
     int? resultsCount,
   }) async {
-
     try {
       final user = _auth.currentUser;
       final headers = await _getHeaders();
@@ -301,7 +317,6 @@ class ApiService {
           'mobile': user?.phoneNumber ?? 'Anonymous',
           'platform': 'mobile',
           'timestamp': DateTime.now().toIso8601String(),
-
         }),
       );
     } catch (e) {
@@ -315,7 +330,6 @@ class ApiService {
         Uri.parse('$baseUrl/logistics/shipway/serviceability'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'toPincode': pincode, 'fromPincode': '560068'}),
-
       );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -327,7 +341,7 @@ class ApiService {
     } catch (e) {
       debugPrint('Error checking serviceability: $e');
     }
-    return true; // Fallback to true to avoid blocking users if serviceability check fails
+    return true; 
   }
 
   Future<String?> getShipwayEDD(String toPincode) async {
@@ -337,7 +351,7 @@ class ApiService {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'toPincode': toPincode,
-          'fromPincode': '560068' // Sahimed Warehouse
+          'fromPincode': '560068' 
         }),
       ).timeout(const Duration(seconds: 8));
 
@@ -347,8 +361,6 @@ class ApiService {
           final edd = data['edd'] ?? data['expected_delivery_date'];
           return edd?.toString();
         }
-      } else {
-        debugPrint('Shipway EDD Non-200: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       debugPrint('Error fetching Shipway EDD for $toPincode: $e');
@@ -446,7 +458,6 @@ class ApiService {
         walletUsed: walletUsed,
       );
 
-
       final orderPayload = {...order.toJson(), 'platform': 'mobile'};
 
       final headers = await _getHeaders();
@@ -520,73 +531,30 @@ class ApiService {
       }
 
       final headers = await _getHeaders();
-      final uid = user.uid;
-      final fullPhone = user.phoneNumber ?? '';
-      final phoneNoPlus = fullPhone.replaceFirst('+', '');
-      final last10 = fullPhone.length >= 10 ? fullPhone.substring(fullPhone.length - 10) : '';
+      if (kDebugMode) debugPrint('DEBUG: Fetching orders for UID: ${user.uid}');
       
-      if (kDebugMode) debugPrint('DEBUG: Fetching orders for UID: $uid, Phone: $fullPhone');
-      
-      // Try fetching by UID primarily
       final response = await http.get(
-        Uri.parse('$baseUrl/orders?userId=$uid'),
+        Uri.parse('$baseUrl/orders'),
         headers: headers,
       );
 
-      if (kDebugMode) debugPrint('DEBUG: Orders Response (UID) Status: ${response.statusCode}');
-      if (kDebugMode) debugPrint('DEBUG: Orders Response (UID) Body: ${response.body}');
-
-      List<dynamic> rawList = [];
-
+      if (kDebugMode) debugPrint('DEBUG: Orders Response Status: ${response.statusCode}');
+      
       if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
-        if (decoded is List) {
-          rawList = decoded;
-        } else if (decoded is Map && decoded.containsKey('data')) {
-          rawList = decoded['data'] as List<dynamic>;
-        }
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((order) {
+          final map = Map<String, dynamic>.from(order);
+          map['id'] = map['id'] ?? map['_id']?.toString() ?? '';
+          return map;
+        }).toList();
+      } else {
+        debugPrint('Failed to load orders: ${response.statusCode}');
       }
-
-      // Fallback: If no orders found for UID, try fetching by Phone Number (multiple formats)
-      if (rawList.isEmpty) {
-        if (kDebugMode) debugPrint('DEBUG: No orders found for UID, trying Phone fallback...');
-        
-        // Try with full phone (including +91 if present)
-        final List<String> phoneVariants = [fullPhone, phoneNoPlus, last10].where((p) => p.isNotEmpty).toList();
-        
-        for (final p in phoneVariants) {
-          if (rawList.isNotEmpty) break;
-          
-          if (kDebugMode) debugPrint('DEBUG: Trying Phone variant: $p');
-          final phoneResponse = await http.get(
-            Uri.parse('$baseUrl/orders?phone=${Uri.encodeComponent(p)}'),
-            headers: headers,
-          );
-          
-          if (phoneResponse.statusCode == 200) {
-            final phoneDecoded = json.decode(phoneResponse.body);
-            if (phoneDecoded is List && phoneDecoded.isNotEmpty) {
-              rawList = phoneDecoded;
-              if (kDebugMode) debugPrint('DEBUG: Found ${rawList.length} orders for phone variant: $p');
-            } else if (phoneDecoded is Map && phoneDecoded['data'] is List && (phoneDecoded['data'] as List).isNotEmpty) {
-              rawList = phoneDecoded['data'] as List<dynamic>;
-              if (kDebugMode) debugPrint('DEBUG: Found ${rawList.length} orders for phone variant: $p (via data key)');
-            }
-          }
-        }
-      }
-
-      return rawList.map((order) {
-        final map = Map<String, dynamic>.from(order);
-        map['id'] = map['id'] ?? map['_id']?.toString() ?? '';
-        return map;
-      }).toList();
     } catch (e) {
       if (kDebugMode) debugPrint('DEBUG: Exception in getUserOrders: $e');
     }
     return [];
   }
-
 
   Future<bool> submitPrescription({
     required List<String> imageUrls,
@@ -602,75 +570,17 @@ class ApiService {
           'imageUrls': imageUrls,
           'patientName': patientName,
           'notes': notes,
-          'platform': 'mobile',
+          'timestamp': DateTime.now().toIso8601String(),
         }),
       );
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
-      debugPrint('Error submitting prescription to MongoDB: $e');
+      debugPrint('Error submitting prescription: $e');
       return false;
     }
   }
 
-  Future<List<Map<String, dynamic>>> getUserPrescriptions() async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) return [];
-
-      final headers = await _getHeaders();
-      final queryParams = 'userId=${user.uid}';
-      final response = await http.get(
-        Uri.parse('$baseUrl/prescriptions?$queryParams'),
-        headers: headers,
-      );
-
-      if (kDebugMode) {
-        print('DEBUG: Prescriptions Response (${response.statusCode}): ${response.body}');
-      }
-      if (response.statusCode == 200) {
-        return List<Map<String, dynamic>>.from(json.decode(response.body));
-      }
-    } catch (e) {
-      debugPrint('Error fetching prescriptions from MongoDB: $e');
-    }
-    return [];
-  }
-
-
-
-  Future<List<Map<String, dynamic>>> getPages() async {
-
-    try {
-      final snapshot = await _firestore.collection('pages').get();
-      if (snapshot.docs.isNotEmpty) {
-        return snapshot.docs.map((doc) => ({
-          ...doc.data(),
-          'id': doc.id,
-        })).toList();
-      }
-    } catch (e) {
-      debugPrint('Error fetching CMS pages from Firestore: $e');
-    }
-
-    return [
-      {
-        'title': 'Privacy Policy',
-        'id': 'privacy',
-        'content':
-            'Your privacy is our priority. We handle your medical data with enterprise-grade encryption.',
-        'lastUpdated': DateTime.now().toIso8601String(),
-      },
-      {
-        'title': 'Terms & Conditions',
-        'id': 'terms',
-        'content':
-            'Sahimed provides a platform for medical procurement. Users must provide valid clinical prescriptions where required.',
-        'lastUpdated': DateTime.now().toIso8601String(),
-      },
-    ];
-  }
-
-  Future<Map<String, dynamic>> getWalletData() async {
+  Future<Map<String, dynamic>> getWalletBalance() async {
     try {
       final headers = await _getHeaders();
       final response = await http.get(
@@ -678,12 +588,61 @@ class ApiService {
         headers: headers,
       );
       if (response.statusCode == 200) {
-        return Map<String, dynamic>.from(json.decode(response.body));
+        return json.decode(response.body);
       }
     } catch (e) {
-      debugPrint('Error fetching wallet data: $e');
+      debugPrint('Error fetching wallet balance: $e');
     }
-    return {'balance': 0, 'transactions': []};
+    return {'balance': 0, 'history': []};
+  }
+
+  Future<Map<String, dynamic>> validateWalletUse(dynamic cartItems) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/user/wallet/validate'),
+        headers: headers,
+        body: json.encode({'items': cartItems}),
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      debugPrint('Error validating wallet use: $e');
+    }
+    return {'valid': false, 'message': 'Validation failed'};
+  }
+
+  Future<List<Map<String, dynamic>>> getUserPrescriptions() async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/user/prescriptions'),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(json.decode(response.body));
+      }
+    } catch (e) {
+      debugPrint('Error fetching user prescriptions: $e');
+    }
+    return [];
+  }
+
+  Future<Map<String, dynamic>> getWalletData() async {
+    return getWalletBalance(); // getWalletBalance already exists and returns the correct format
+  }
+
+  Future<List<Map<String, dynamic>>> getPages() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/pages'));
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(json.decode(response.body));
+      }
+    } catch (e) {
+      debugPrint('Error fetching pages: $e');
+    }
+    return [];
   }
 
   Future<bool> syncReminders(List<Map<String, dynamic>> reminders) async {
@@ -700,26 +659,4 @@ class ApiService {
       return false;
     }
   }
-
-  Future<Map<String, dynamic>> validateWalletUse(List<Map<String, dynamic>> items) async {
-    try {
-      final headers = await _getHeaders();
-      final response = await http.post(
-        Uri.parse('$baseUrl/user/wallet'),
-        headers: headers,
-        body: json.encode({
-          'action': 'validate_use',
-          'items': items,
-        }),
-      );
-      if (response.statusCode == 200) {
-        return Map<String, dynamic>.from(json.decode(response.body));
-      }
-    } catch (e) {
-      debugPrint('Error validating wallet use: $e');
-    }
-    return {'allowable': 0};
-  }
-
 }
-

@@ -365,15 +365,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             );
                           },
                         ),
-                        _buildMenuTile(LucideIcons.history, 'MY ORDERS', () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const OrdersScreen()));
-                        }),
-                        _buildMenuTile(LucideIcons.wallet, 'MY WALLET', () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
-                        }),
-                        _buildMenuTile(LucideIcons.bell, 'PILL ALARMS', () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const RemindersScreen()));
-                        }),
                         _buildSettingsTile(LucideIcons.info, 'Help & FAQ', () {
                           Navigator.push(
                             context,
