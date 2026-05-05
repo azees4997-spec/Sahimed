@@ -14,7 +14,6 @@ import '../../../shared/models/models.dart';
 import 'prescription_screen.dart';
 import '../../products/screens/category_products_screen.dart';
 import '../../products/screens/search_screen.dart';
-import 'sahi_ai_screen.dart';
 
 import '../../products/widgets/product_card.dart';
 import '../widgets/home_header.dart';
@@ -174,6 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+/*
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           HapticFeedback.heavyImpact();
@@ -185,6 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: SahimedColors.textPrimary,
         child: const Icon(LucideIcons.bot, color: Colors.white),
       ),
+*/
     );
   }
 

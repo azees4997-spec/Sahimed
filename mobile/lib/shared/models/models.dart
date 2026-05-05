@@ -195,6 +195,8 @@ class CartItem {
 }
 
 class OrderModel {
+  final String id;
+  final String? orderId;
   final String? userId;
   final String patientName;
   final String phoneNumber;
@@ -212,6 +214,8 @@ class OrderModel {
   final double walletUsed;
 
   OrderModel({
+    required this.id,
+    this.orderId,
     this.userId,
     required this.patientName,
     required this.phoneNumber,
@@ -231,6 +235,8 @@ class OrderModel {
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
+      orderId: json['orderId']?.toString(),
       userId: json['userId'] ?? json['customer_id'],
       patientName: json['patientName'] ?? json['customer_name'] ?? 'User',
       phoneNumber: (json['phoneNumber'] ?? json['phone'] ?? json['customer_phone'] ?? '').toString(),

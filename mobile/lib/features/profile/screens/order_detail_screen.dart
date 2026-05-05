@@ -160,7 +160,7 @@ class OrderDetailScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'ID: #${(order.awbNumber ?? "PENDING").toUpperCase()}',
+                      'ID: #${(order.orderId ?? order.id).toUpperCase()}',
                       style: GoogleFonts.outfit(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,

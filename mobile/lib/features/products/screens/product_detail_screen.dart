@@ -295,7 +295,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                       label: isBranded ? 'Branded Quality' : 'Sahi Recommended',
                       isAlt: false,
                       brandedMrp: brandedMrp,
-                      showComparison:              // ── 4.5 Delivery Information & Pincode Checker ─────────────
+                      showComparison: false,
+                    ),
+                  ),
+                ),
+
+              const SizedBox(height: 24),
+
+              // ── 4.5 Delivery Information & Pincode Checker ─────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Container(
@@ -403,18 +410,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                   ),
                 ),
               ),
-                 color: const Color(0xFF15803D),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-              const SizedBox(height: 16),
-
 
               // ── 5. Clinical Tabs (Information / Safety Advice / Interactions)
               _ClinicalTabs(

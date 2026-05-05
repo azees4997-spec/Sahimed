@@ -236,7 +236,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'ORDER #${(order['orderId'] ?? order['id'] ?? '').toString().toUpperCase()}',
+                          'ORDER #${(order.orderId ?? order.id).toUpperCase()}',
                           style: GoogleFonts.outfit(
                             fontSize: 10,
                             fontWeight: FontWeight.w900,

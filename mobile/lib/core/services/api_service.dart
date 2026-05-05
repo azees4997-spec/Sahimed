@@ -435,6 +435,7 @@ class ApiService {
     try {
       final user = _auth.currentUser;
       final order = OrderModel(
+        id: '',
         userId: user?.uid,
         patientName: name,
         phoneNumber: phone,

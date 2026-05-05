@@ -85,8 +85,6 @@ class _HomeHeaderState extends State<HomeHeader> {
                 ),
               ),
               const SizedBox(height: 24),
-              Row(
-              // Main View: Saved Addresses + Locate Me
               if (!_isAddingAddress) ...[
                 // Simplified view: Only show saved addresses + Add New trigger
                 Row(
@@ -196,7 +194,7 @@ class _HomeHeaderState extends State<HomeHeader> {
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                                    child: const Icon(LucideIcons.home, size: 16, color: SahimedColors.primary),
+                                    child: const Icon(LucideIcons.house, size: 16, color: SahimedColors.primary),
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
@@ -255,14 +253,18 @@ class _HomeHeaderState extends State<HomeHeader> {
                       setStateSheet(() => _isCheckingPincode = true);
                       try {
                         final pos = await _locationService.getCurrentPosition();
-                        final address = await _locationService.getAddressFromLatLng(pos.latitude, pos.longitude);
-                        setStateSheet(() {
-                          _houseController.text = address['suburb'] ?? address['neighbourhood'] ?? '';
-                          _streetController.text = address['street'] ?? '';
-                          _cityController.text = address['city'] ?? '';
-                          _pincodeController.text = address['pincode'] ?? '';
-                          _isCheckingPincode = false;
-                        });
+                        if (pos != null) {
+                          final address = await _locationService.getAddressFromLatLng(pos.latitude, pos.longitude);
+                          setStateSheet(() {
+                            _houseController.text = address['suburb'] ?? address['neighbourhood'] ?? '';
+                            _streetController.text = address['street'] ?? '';
+                            _cityController.text = address['city'] ?? '';
+                            _pincodeController.text = address['pincode'] ?? '';
+                            _isCheckingPincode = false;
+                          });
+                        } else {
+                          setStateSheet(() => _isCheckingPincode = false);
+                        }
                       } catch (e) {
                         setStateSheet(() => _isCheckingPincode = false);
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to detect location')));

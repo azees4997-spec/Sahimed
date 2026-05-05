@@ -10,8 +10,29 @@ export async function GET(req: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
     
+    // IDENTITY MATCHING: Just like in orders, we match by UID and Phone
+    const identityConditions: any[] = [
+      { userId: user.uid }
+    ];
+
+    // FALLBACK: If phoneNumber is not in the token, check the MongoDB user profile
+    let activePhone = user.phoneNumber;
+    if (!activePhone) {
+      const userProfile = await db.collection('users').findOne({ uid: user.uid });
+      activePhone = userProfile?.phoneNumber || userProfile?.phone;
+    }
+
+    if (activePhone) {
+      const last10 = activePhone.replace(/\D/g, '').slice(-10);
+      const phoneVariants = [activePhone, last10, `+91${last10}`, `91${last10}`];
+      phoneVariants.forEach(v => {
+        identityConditions.push({ phoneNumber: v });
+        identityConditions.push({ phone: v });
+      });
+    }
+
     const addresses = await db.collection('addresses')
-      .find({ userId: user.uid })
+      .find({ $or: identityConditions })
       .sort({ timestamp: -1 })
       .toArray();
       
@@ -30,10 +51,18 @@ export async function POST(req: Request) {
     
     const client = await clientPromise;
     const db = client.db('sahimed');
+
+    // Get phone number for cross-platform matching
+    let activePhone = user.phoneNumber;
+    if (!activePhone) {
+      const userProfile = await db.collection('users').findOne({ uid: user.uid });
+      activePhone = userProfile?.phoneNumber || userProfile?.phone;
+    }
     
     const addressData = {
       ...data,
       userId: user.uid,
+      phoneNumber: activePhone, // Store phone number for syncing
       updatedAt: new Date(),
       timestamp: data.timestamp || new Date()
     };
@@ -86,14 +115,40 @@ export async function DELETE(req: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
     
-    let filter: any = { userId: user.uid };
+    // IDENTITY MATCHING: Ensure user owns the address they are deleting
+    const identityConditions: any[] = [
+      { userId: user.uid }
+    ];
+
+    let activePhone = user.phoneNumber;
+    if (!activePhone) {
+      const userProfile = await db.collection('users').findOne({ uid: user.uid });
+      activePhone = userProfile?.phoneNumber || userProfile?.phone;
+    }
+
+    if (activePhone) {
+      const last10 = activePhone.replace(/\D/g, '').slice(-10);
+      const phoneVariants = [activePhone, last10, `+91${last10}`, `91${last10}`];
+      phoneVariants.forEach(v => {
+        identityConditions.push({ phoneNumber: v });
+        identityConditions.push({ phone: v });
+      });
+    }
+
+    let filter: any = { $or: identityConditions };
     try {
       filter._id = id.length === 24 ? new ObjectId(id) : id;
     } catch (e) {
       filter._id = id;
     }
 
-    await db.collection('addresses').deleteOne(filter);
+    // Combine _id and identity check
+    const finalFilter = {
+      _id: filter._id,
+      $or: identityConditions
+    };
+
+    await db.collection('addresses').deleteOne(finalFilter);
     
     return NextResponse.json({ success: true });
   } catch (err: any) {
