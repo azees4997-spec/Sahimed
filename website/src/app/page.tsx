@@ -107,14 +107,16 @@ export default async function Home() {
                   </div>
                 </div>
   
-                <div className="absolute right-0 bottom-[100px] sm:bottom-[140px] w-1/3 sm:w-1/4 h-[160px] sm:h-[320px]">
-                  <Image 
-                    src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=600&auto=format&fit=crop" 
-                    alt="Healthcare Professional" 
-                    fill
-                    priority
-                    className="object-contain object-bottom mix-blend-multiply" 
-                  />
+                <div className="w-1/3 sm:w-1/4 flex justify-end">
+                  <div className="relative w-full aspect-square max-w-[140px] sm:max-w-[280px] rounded-2xl sm:rounded-[32px] border-[4px] sm:border-[8px] border-white shadow-xl overflow-hidden bg-slate-100">
+                    <Image 
+                      src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=600&auto=format&fit=crop" 
+                      alt="Healthcare Professional" 
+                      fill
+                      priority
+                      className="object-cover object-top" 
+                    />
+                  </div>
                 </div>
               </div>
  
