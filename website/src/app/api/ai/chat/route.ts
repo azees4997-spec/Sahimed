@@ -47,13 +47,9 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    const model = genAI.getGenerativeModel(
-      {
-        model: "gemini-1.5-flash-latest",
-        tools: [searchProductsTool],
-        systemInstruction: "You are SahiAI, the official health and savings assistant for Sahimed. Your goal is to help users understand generic medicines and find cheaper alternatives. Generic medicines are identical to branded ones in dosage, safety, strength, quality, and performance. They cost less because they don't have the same marketing and R&D costs. You can search for products using the search_products tool. Always be professional, empathetic, and clear. If you suggest a medicine, remind the user to consult a doctor. Keep responses concise and use bullet points for product lists.",
-      }
-    );
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+    });
 
     const chat = model.startChat({
       history: messages
