@@ -14,6 +14,7 @@ import '../../../shared/models/models.dart';
 import 'prescription_screen.dart';
 import '../../products/screens/category_products_screen.dart';
 import '../../products/screens/search_screen.dart';
+import 'sahi_ai_screen.dart';
 
 import '../../products/widgets/product_card.dart';
 import '../widgets/home_header.dart';
@@ -112,215 +113,112 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bgPage,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: const HomeHeader(),
-      ),
       body: RefreshIndicator(
+        // BUG-02 FIX: Changed _loadInitialData() to _load()
         onRefresh: _load,
         color: SahimedColors.primary,
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. Image-matched Hero Section
-              _buildImageHero(context),
-
-              // 2. Quick Actions
-              _buildHeroBottom(context),
-
-              const SizedBox(height: 32),
-
-              // 4. Popular Brands
-              _buildSection(
-                title: 'Our Most Popular Brands',
-                child: _isLoading ? _shimmerGrid(3) : _productGrid(_bestSellers, context),
-              ),
-
-              const SizedBox(height: 32),
-
-              // 5. Categories
-              _buildSection(
-                title: 'Top Categories',
-                trailing: GestureDetector(
-                  onTap: () => _goSearch(context),
-                  child: Row(
-                    children: [
-                      Text('EXPLORE ALL', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
-                      const Icon(LucideIcons.chevronRight, size: 14, color: SahimedColors.primary),
-                    ],
-                  ),
-                ),
-                child: _isLoading ? _shimmerGrid(9) : _categoryGrid(context),
-              ),
-
-              const SizedBox(height: 32),
-
-              // 6. Delivery Banner
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _buildDeliveryBanner(context),
-              ),
-
-              const SizedBox(height: 32),
-
-              // 7. Best Sellers
-              _buildSection(
-                title: 'Best Sellers',
-                child: _isLoading ? _shimmerHScroll() : _horizontalProductScroll(context),
-              ),
-
-              const SizedBox(height: 120),
-            ],
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
           ),
+          // BUG-01 FIX: Corrected all bracket nesting
+          slivers: [
+            const SliverToBoxAdapter(child: HomeHeader()),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: _buildHeroTop(context),
+              ),
+            ),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickySearchDelegate(onTap: () => _goSearch(context)),
+            ),
+            SliverToBoxAdapter(child: _buildHeroBottom(context)),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _buildSection(
+                    title: 'Our Most Popular Brands',
+                    child: _isLoading ? _shimmerGrid(3) : _productGrid(_bestSellers, context),
+                  ),
+                  const SizedBox(height: 28),
+                  _buildSection(
+                    title: 'Top Categories',
+                    trailing: GestureDetector(
+                      onTap: () => _goSearch(context),
+                      child: Row(
+                        children: [
+                          Text('EXPLORE ALL', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
+                          const Icon(LucideIcons.chevronRight, size: 14, color: SahimedColors.primary),
+                        ],
+                      ),
+                    ),
+                    child: _isLoading ? _shimmerGrid(9) : _categoryGrid(context),
+                  ),
+                  const SizedBox(height: 28),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildDeliveryBanner(context),
+                  ),
+                  const SizedBox(height: 28),
+                  _buildSection(
+                    title: 'Best Sellers',
+                    child: _isLoading ? _shimmerHScroll() : _horizontalProductScroll(context),
+                  ),
+                  const SizedBox(height: 120),
+                ]),
+              ),
+            ),
+          ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          HapticFeedback.heavyImpact();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SahiAIScreen()),
+          );
+        },
+        backgroundColor: SahimedColors.textPrimary,
+        child: const Icon(LucideIcons.bot, color: Colors.white),
+      ),
     );
-  Widget _buildImageHero(BuildContext context) {
+  }
+
+  Widget _buildHeroTop(BuildContext context) {
     return Container(
-      width: double.infinity,
-      color: const Color(0xFFFFF9F9), // Subtle warm bg like image
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
-      child: Column(
+      color: const Color(0xFFFFF9F9),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Row(
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Badge: TRUSTED BY 10L+ USERS
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(100),
-                        border: Border.all(color: const Color(0xFFF1F5F9)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(LucideIcons.checkCircle, size: 14, color: Color(0xFF22C55E)),
-                          const SizedBox(width: 6),
-                          Text(
-                            'TRUSTED BY 10L+ USERS',
-                            style: GoogleFonts.outfit(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF1E293B),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Title: AFFORDABLE SOLUTIONS FOR EVERYDAY CARE
-                    RichText(
-                      text: TextSpan(
-                        style: GoogleFonts.outfit(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          height: 1.1,
-                          color: const Color(0xFF0F172A),
-                        ),
-                        children: [
-                          const TextSpan(text: 'AFFORDABLE\n'),
-                          const TextSpan(text: 'SOLUTIONS FOR\n'),
-                          TextSpan(
-                            text: 'EVERYDAY CARE',
-                            style: GoogleFonts.outfit(
-                              color: SahimedColors.primary,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Affordable\nSolutions for\nEveryday Care',
+                  style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, height: 1.1),
                 ),
-              ),
-              const SizedBox(width: 12),
-              // Doctor Image in Frame (Restored as per latest reference)
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white, width: 4),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Hero(
-                    tag: 'doctor_hero',
-                    child: CachedNetworkImage(
-                      imageUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=300&auto=format&fit=crop',
-                      width: 130,
-                      height: 130,
-                      fit: BoxFit.cover,
-                      placeholder: (ctx, _) => _shimmerBox(radius: 20),
-                      errorWidget: (ctx, _, __) => const Icon(LucideIcons.user, size: 40),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 32),
-          // Search Bar with Blue Button
-          GestureDetector(
-            onTap: () => _goSearch(context),
-            child: Container(
-              height: 56,
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(100),
-                boxShadow: [
-                  BoxShadow(
-                    color: SahimedColors.primary.withValues(alpha: 0.08),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 20),
-                  Text(
-                    'SEARCH MEDICINES...',
-                    style: GoogleFonts.outfit(
-                      color: const Color(0xFF94A3B8),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: const BoxDecoration(
-                      color: SahimedColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(LucideIcons.search, color: Colors.white, size: 20),
-                  ),
-                ],
+          const SizedBox(width: 12),
+          // BUG-16 FIX: Using a stable CDN image instead of random Unsplash
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: CachedNetworkImage(
+              imageUrl: 'https://images.pexels.com/photos/3683074/pexels-photo-3683074.jpeg?auto=compress&cs=tinysrgb&w=200',
+              width: 110,
+              height: 110,
+              fit: BoxFit.cover,
+              errorWidget: (ctx, _, __) => Container(
+                width: 110,
+                height: 110,
+                color: _lavender,
+                child: const Icon(LucideIcons.pill, color: SahimedColors.primary, size: 40),
               ),
             ),
           ),
@@ -501,3 +399,34 @@ class _HomeScreenState extends State<HomeScreen> {
   Color _catBg(int i) => [_lavender, _sahiPink, _sahiBlue, _sahiGreen][i % 4];
 }
 
+class _StickySearchDelegate extends SliverPersistentHeaderDelegate {
+  final VoidCallback onTap;
+  _StickySearchDelegate({required this.onTap});
+  @override
+  double get minExtent => 80;
+  @override
+  double get maxExtent => 80;
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.white,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(100)),
+          child: Row(
+            children: [
+              const Icon(LucideIcons.search, size: 18),
+              const SizedBox(width: 12),
+              Text('Search Medicines...', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.grey)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => false;
+}
