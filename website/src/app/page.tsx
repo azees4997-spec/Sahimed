@@ -90,7 +90,7 @@ export default async function Home() {
           <div className="max-w-7xl mx-auto px-4 relative z-10">
             <div className="flex flex-col gap-4 sm:gap-6">
               
-              <div className="flex items-center justify-between gap-4 sm:gap-8">
+              <div className="flex items-center justify-between gap-4 sm:gap-8 min-h-[160px] sm:min-h-[300px]">
                 <div className="flex-1 space-y-2 sm:space-y-4">
                   <div className="space-y-1 sm:space-y-2">
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-slate-100 w-fit shrink-0 shadow-sm">
@@ -106,21 +106,19 @@ export default async function Home() {
                     </h1>
                   </div>
                 </div>
- 
-                <div className="w-1/3 sm:w-1/4 flex justify-end">
-                  <div className="relative w-full aspect-square max-w-[120px] sm:max-w-[280px]">
-                    <Image 
-                      src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
-                      alt="Healthcare Professional" 
-                      fill
-                      priority
-                      className="object-contain object-bottom mix-blend-multiply" 
-                    />
-                  </div>
+  
+                <div className="absolute right-0 bottom-[100px] sm:bottom-[140px] w-1/3 sm:w-1/4 h-[160px] sm:h-[320px]">
+                  <Image 
+                    src="https://images.unsplash.com/photo-1559839734-2b71f1536783?q=80&w=600&auto=format&fit=crop" 
+                    alt="Healthcare Professional" 
+                    fill
+                    priority
+                    className="object-contain object-bottom mix-blend-multiply" 
+                  />
                 </div>
               </div>
  
-              <div className="w-full max-w-2xl mx-auto">
+              <div className="w-full max-w-2xl mx-auto relative z-20">
                 <HeroSearch />
               </div>
  
