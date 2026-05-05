@@ -154,7 +154,19 @@ export async function POST(req: Request) {
     });
 
   } catch (err: any) {
-    console.error("[AI Chat Error]", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("[SahiAI API Error]", err);
+    
+    // Check for specific common issues
+    if (err.message?.includes('API_KEY_INVALID')) {
+      return NextResponse.json({ error: "Invalid Gemini API Key. Please check your Vercel settings." }, { status: 500 });
+    }
+    if (err.message?.includes('MONGODB')) {
+      return NextResponse.json({ error: "Database connection failed. Please check your MONGODB_URI." }, { status: 500 });
+    }
+
+    return NextResponse.json({ 
+      error: "SahiAI is having trouble: " + (err.message || "Unknown Error"),
+      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    }, { status: 500 });
   }
 }
