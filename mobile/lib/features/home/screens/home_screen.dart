@@ -14,7 +14,6 @@ import '../../../shared/models/models.dart';
 import 'prescription_screen.dart';
 import '../../products/screens/category_products_screen.dart';
 import '../../products/screens/search_screen.dart';
-import 'sahi_ai_screen.dart';
 
 import '../../products/widgets/product_card.dart';
 import '../widgets/home_header.dart';
@@ -180,34 +179,87 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHeroTop(BuildContext context) {
     return Container(
       color: const Color(0xFFFFF9F9),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Affordable\nSolutions for\nEveryday Care',
-                  style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, height: 1.1),
+                // Website-style Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(color: Colors.green.withValues(alpha: 0.1)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(LucideIcons.checkCircle, size: 12, color: Colors.green),
+                      const SizedBox(width: 6),
+                      Text(
+                        'TRUSTED BY 10L+ USERS',
+                        style: GoogleFonts.outfit(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                          color: Colors.slate[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                RichText(
+                  text: TextSpan(
+                    style: GoogleFonts.outfit(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
+                      height: 1.1,
+                      color: SahimedColors.textPrimary,
+                    ),
+                    children: [
+                      const TextSpan(text: 'AFFORDABLE\n'),
+                      const TextSpan(text: 'SOLUTIONS FOR\n'),
+                      TextSpan(
+                        text: 'EVERYDAY CARE',
+                        style: TextStyle(color: SahimedColors.primary),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 12),
-          // BUG-16 FIX: Using a stable CDN image instead of random Unsplash
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: CachedNetworkImage(
-              imageUrl: 'https://images.pexels.com/photos/3683074/pexels-photo-3683074.jpeg?auto=compress&cs=tinysrgb&w=200',
-              width: 110,
-              height: 110,
-              fit: BoxFit.cover,
-              errorWidget: (ctx, _, __) => Container(
-                width: 110,
-                height: 110,
-                color: _lavender,
-                child: const Icon(LucideIcons.pill, color: SahimedColors.primary, size: 40),
+          // Premium Doctor Image Card
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white, width: 4),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: CachedNetworkImage(
+                imageUrl: 'https://images.pexels.com/photos/3683074/pexels-photo-3683074.jpeg?auto=compress&cs=tinysrgb&w=200',
+                width: 120,
+                height: 120,
+                fit: BoxFit.cover,
+                errorWidget: (ctx, _, __) => Container(
+                  width: 120,
+                  height: 120,
+                  color: _lavender,
+                  child: const Icon(LucideIcons.pill, color: SahimedColors.primary, size: 40),
+                ),
               ),
             ),
           ),

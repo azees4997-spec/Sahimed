@@ -17,8 +17,8 @@ class ApiService {
   static final Map<String, dynamic> _cache = {};
   static final Map<String, DateTime> _cacheTime = {};
   static const Duration _cacheDuration = Duration(
-    minutes: 30,
-  ); // Extended cache
+    minutes: 2,
+  ); // Reduced cache for better sync
 
   dynamic _getCached(String key) {
     if (_cache.containsKey(key)) {
