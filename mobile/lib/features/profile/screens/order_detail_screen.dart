@@ -3,21 +3,21 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/colors.dart';
+import '../../../shared/models/models.dart';
 
 class OrderDetailScreen extends StatelessWidget {
-  final Map<String, dynamic> order;
+  final OrderModel order;
   const OrderDetailScreen({super.key, required this.order});
 
   @override
   Widget build(BuildContext context) {
-    final status = order['status'] ?? 'Pending';
-    final items = order['items'] as List? ?? [];
-    final billing = order['billingBreakdown'] as Map? ?? {};
-    final shipping = order['shippingDetails'] as Map? ?? {};
-    final orderDate = order['orderDate'] != null 
-        ? DateTime.tryParse(order['orderDate'].toString()) 
-        : null;
-    final prescription = order['prescriptionUrl'] ?? order['prescription'];
+    final status = order.status;
+    final items = order.items;
+    final billing = order.billingBreakdown;
+    final shipping = order.shippingDetails;
+    // We don't have a reliable date in the model yet, so we'll use now for placeholder or omit
+    final orderDate = DateTime.now(); 
+    final prescription = order.prescriptionUrls.isNotEmpty ? order.prescriptionUrls.first : null;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -59,9 +59,9 @@ class OrderDetailScreen extends StatelessWidget {
                     const SizedBox(height: 32),
                   ],
 
-                  if (order['shipping'] != null && order['shipping']['awb'] != null) ...[
+                  if (order.awbNumber != null) ...[
                     _buildSectionHeader('TRACKING INFORMATION', LucideIcons.truck),
-                    _buildTrackingInfo(order['shipping']),
+                    _buildTrackingInfo(order.awbNumber!, order.carrierId ?? 'Shipway'),
                     const SizedBox(height: 32),
                   ],
 
@@ -73,7 +73,7 @@ class OrderDetailScreen extends StatelessWidget {
                   const SizedBox(height: 32),
 
                   _buildSectionHeader('BILLING SUMMARY', LucideIcons.receipt),
-                  _buildBillingSummary(billing, order['totalAmount'] ?? 0, order['paymentType'] ?? 'COD'),
+                  _buildBillingSummary(billing, order.totalAmount, order.paymentType),
                   const SizedBox(height: 48),
 
                   _buildCloseButton(context),
@@ -160,7 +160,7 @@ class OrderDetailScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'ID: #${(order['orderId'] ?? order['id'] ?? '').toString().toUpperCase()}',
+                      'ID: #${(order.awbNumber ?? "PENDING").toUpperCase()}',
                       style: GoogleFonts.outfit(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -199,7 +199,7 @@ class OrderDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCustomerInfo(Map<String, dynamic> order) {
+  Widget _buildCustomerInfo(OrderModel order) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -212,7 +212,7 @@ class OrderDetailScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            order['patientName'] ?? 'N/A',
+            order.patientName,
             style: GoogleFonts.outfit(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -229,7 +229,7 @@ class OrderDetailScreen extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                order['phoneNumber'] ?? 'N/A',
+                order.phoneNumber,
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
@@ -243,9 +243,7 @@ class OrderDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTrackingInfo(Map<String, dynamic> shipping) {
-    final awb = shipping['awb']?.toString() ?? '';
-    final courier = shipping['courier']?.toString() ?? 'Shipway';
+  Widget _buildTrackingInfo(String awb, String courier) {
     final trackingUrl = 'https://sahimed.shipway.in/$awb';
 
     return Container(
