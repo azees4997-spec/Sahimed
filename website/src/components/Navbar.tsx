@@ -109,38 +109,7 @@ export default function Navbar() {
 
   const [search, setSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<any>(null);
 
-  useEffect(() => {
-    if (isAddingAddress && searchRef.current && (window as any).google) {
-      autocompleteRef.current = new (window as any).google.maps.places.Autocomplete(searchRef.current, {
-        componentRestrictions: { country: "in" },
-        fields: ["address_components", "geometry", "formatted_address"],
-      });
-
-      autocompleteRef.current.addListener("place_changed", () => {
-        const place = autocompleteRef.current?.getPlace();
-        if (place?.address_components) {
-          let street = '', city = '', pincode = '';
-          
-          place.address_components.forEach((comp: any) => {
-            const types = comp.types;
-            if (types.includes('route')) street = comp.long_name;
-            if (types.includes('locality')) city = comp.long_name;
-            if (types.includes('postal_code')) pincode = comp.long_name;
-          });
-
-          setNewAddress((prev: any) => ({
-            ...prev,
-            street: street || place.formatted_address?.split(',')[0] || '',
-            city: city || '',
-            pincode: pincode || ''
-          }));
-        }
-      });
-    }
-  }, [isAddingAddress]);
   const [locationResolved, setLocationResolved] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -619,15 +588,6 @@ export default function Navbar() {
                             {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <LocateFixed className="w-4 h-4" />}
                             Use Current Location
                           </button>
-
-                          <div className="relative">
-                            <Input 
-                              ref={searchRef}
-                              placeholder="Search your area / landmark..." 
-                              className="h-11 rounded-xl bg-slate-50 border-2 border-primary/5 font-bold text-[11px] pl-10" 
-                            />
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                          </div>
 
                           <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1.5 col-span-2">
