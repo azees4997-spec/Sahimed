@@ -47,15 +47,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     _loadEDD();
   }
 
-  Future<void> _loadEDD() async {
+  Future<void> _loadEDD([String? pin]) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final pincode = prefs.getString('user_pincode') ?? '560001';
+      final pincode = pin ?? prefs.getString('user_pincode') ?? '560068';
       final edd = await _apiService.getShipwayEDD(pincode);
-      if (mounted && edd != null) {
-        final date = DateTime.parse(edd);
-        final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        setState(() => _edd = '${date.day} ${months[date.month - 1]}');
+      if (mounted) {
+        if (edd != null) {
+          final date = DateTime.parse(edd);
+          final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          setState(() {
+            _edd = '${date.day} ${months[date.month - 1]}';
+          });
+        } else {
+          setState(() => _edd = '');
+        }
       }
     } catch (e) {
       debugPrint('Error loading EDD on product page: $e');
@@ -289,54 +295,115 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                       label: isBranded ? 'Branded Quality' : 'Sahi Recommended',
                       isAlt: false,
                       brandedMrp: brandedMrp,
-                      showComparison: false,
-                    ),
+                      showComparison:              // ── 4.5 Delivery Information & Pincode Checker ─────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: const Color(0xFFDCFCE7)),
                   ),
-                ),
-
-              const SizedBox(height: 16),
-
-              // ── 4.5 Delivery Information ───────────────────────────────
-              if (_edd.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0FDF4),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFDCFCE7)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFDCFCE7),
-                            shape: BoxShape.circle,
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFDCFCE7),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(LucideIcons.truck, size: 18, color: Color(0xFF166534)),
                           ),
-                          child: const Icon(LucideIcons.truck, size: 16, color: Color(0xFF166534)),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _edd.isNotEmpty ? 'DELIVERY BY $_edd'.toUpperCase() : 'CHECK SERVICEABILITY',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF166534),
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                Text(
+                                  _edd.isNotEmpty 
+                                    ? 'Guaranteed express shipping' 
+                                    : 'Enter pincode to check delivery date',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF15803D),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFDCFCE7)),
                         ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
                           children: [
-                            Text(
-                              'DELIVERY BY $_edd'.toUpperCase(),
-
-                              style: GoogleFonts.outfit(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF166534),
-                                letterSpacing: 1,
+                            const Icon(LucideIcons.mapPin, size: 14, color: Color(0xFF166534)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: FutureBuilder<SharedPreferences>(
+                                future: SharedPreferences.getInstance(),
+                                builder: (context, snapshot) {
+                                  final pin = snapshot.data?.getString('user_pincode') ?? '560068';
+                                  return TextField(
+                                    decoration: const InputDecoration(
+                                      hintText: 'Enter Pincode',
+                                      border: InputBorder.none,
+                                      hintStyle: TextStyle(fontSize: 12),
+                                    ),
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF166534),
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    maxLength: 6,
+                                    onChanged: (val) async {
+                                      if (val.length == 6) {
+                                        final prefs = await SharedPreferences.getInstance();
+                                        await prefs.setString('user_pincode', val);
+                                        _loadEDD(val);
+                                      }
+                                    },
+                                    controller: TextEditingController(text: pin)..selection = TextSelection.fromPosition(TextPosition(offset: pin.length)),
+                                  );
+                                },
                               ),
                             ),
                             Text(
-                              'Guaranteed express delivery to your location',
-                              style: GoogleFonts.inter(
+                              'EDIT',
+                              style: GoogleFonts.outfit(
                                 fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF15803D),
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF166534),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+                 color: const Color(0xFF15803D),
                               ),
                             ),
                           ],

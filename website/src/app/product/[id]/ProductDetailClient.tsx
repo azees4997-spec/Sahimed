@@ -201,28 +201,39 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
   const [edd, setEdd] = useState<string>('');
   const [activePincode, setActivePincode] = useState<string>('560068');
 
-  useEffect(() => {
-    const fetchEdd = async () => {
-      try {
-        const stored = localStorage.getItem('activePincode') || '560068';
-        setActivePincode(stored);
-        const res = await fetch('/api/logistics/shipway/serviceability', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ toPincode: stored })
-        });
-        const data = await res.json();
-        if (data.edd) {
-          const date = new Date(data.edd);
-          const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-          setEdd(`${months[date.getMonth()]} ${date.getDate().toString().padStart(2, '0')}`);
-        }
-      } catch (e) {
-        console.error("Failed to fetch EDD", e);
-      }
-    };
-    fetchEdd();
+    const stored = typeof window !== 'undefined' ? (localStorage.getItem('activePincode') || '560068') : '560068';
+    setActivePincode(stored);
+    fetchEdd(stored);
   }, []);
+
+  const fetchEdd = async (pin: string) => {
+    try {
+      const res = await fetch('/api/logistics/shipway/serviceability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toPincode: pin })
+      });
+      const data = await res.json();
+      if (data.edd) {
+        const date = new Date(data.edd);
+        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        setEdd(`${months[date.getMonth()]} ${date.getDate().toString().padStart(2, '0')}`);
+      } else {
+        setEdd('');
+      }
+    } catch (e) {
+      console.error("Failed to fetch EDD", e);
+    }
+  };
+
+  const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+    setActivePincode(val);
+    if (val.length === 6) {
+      localStorage.setItem('activePincode', val);
+      fetchEdd(val);
+    }
+  };
 
   // Use initial data if available for instant render, but still keep hook for live updates if needed
 
@@ -360,35 +371,42 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
             )}
           </div>
 
-          {/* Delivery Information */}
-          {edd && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 sm:mb-10 px-1"
-            >
-              <div className="bg-emerald-50 border border-emerald-100 rounded-[20px] sm:rounded-[32px] p-4 sm:p-6 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-3 sm:gap-5">
-                  <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white rounded-full flex items-center justify-center shadow-sm border border-emerald-50">
-                    <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
-                  </div>
-                  <div className="space-y-0.5">
-                    <h3 className="text-[10px] sm:text-base font-black text-emerald-900 tracking-tight uppercase font-outfit">
-                      DELIVERY BY {edd}
-                    </h3>
-
-                    <p className="text-[8px] sm:text-[11px] font-bold text-emerald-700/70 uppercase tracking-widest">
-                      Guaranteed express shipping to {activePincode}
-                    </p>
-                  </div>
+          {/* Delivery Information & Pincode Checker */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 sm:mb-10 px-1"
+          >
+            <div className="bg-emerald-50 border border-emerald-100 rounded-[20px] sm:rounded-[32px] p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between shadow-sm gap-4">
+              <div className="flex items-center gap-3 sm:gap-5 w-full">
+                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white rounded-full flex items-center justify-center shadow-sm border border-emerald-50 shrink-0">
+                  <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
                 </div>
-                <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-emerald-100 shadow-sm">
-                  <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="text-[10px] font-black text-emerald-900 uppercase tracking-wider">{activePincode}</span>
+                <div className="space-y-0.5">
+                  <h3 className="text-[10px] sm:text-base font-black text-emerald-900 tracking-tight uppercase font-outfit">
+                    {edd ? `DELIVERY BY ${edd}` : "CHECK SERVICEABILITY"}
+                  </h3>
+                  <p className="text-[8px] sm:text-[11px] font-bold text-emerald-700/70 uppercase tracking-widest">
+                    {edd ? "Guaranteed express shipping" : "Enter pincode to see delivery date"}
+                  </p>
                 </div>
               </div>
-            </motion.div>
-          )}
+              
+              <div className="w-full sm:w-auto flex items-center gap-2 px-3 sm:px-4 py-2 bg-white rounded-full border border-emerald-100 shadow-sm">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                <input 
+                  type="text"
+                  maxLength={6}
+                  value={activePincode}
+                  onChange={handlePincodeChange}
+                  placeholder="Pincode"
+                  className="bg-transparent border-none outline-none text-[10px] sm:text-xs font-black text-emerald-900 uppercase tracking-wider w-16 sm:w-20"
+                />
+                <div className="w-[1px] h-3 bg-emerald-100 hidden sm:block" />
+                <span className="text-[7px] sm:text-[9px] font-black text-emerald-600 uppercase tracking-widest hidden sm:block">Edit</span>
+              </div>
+            </div>
+          </motion.div>
 
           <motion.section
 
