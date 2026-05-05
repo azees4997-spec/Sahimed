@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -86,6 +88,7 @@ class _HomeHeaderState extends State<HomeHeader> {
               Row(
               // Main View: Saved Addresses + Locate Me
               if (!_isAddingAddress) ...[
+                // Simplified view: Only show saved addresses + Add New trigger
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -168,7 +171,7 @@ class _HomeHeaderState extends State<HomeHeader> {
                     }
 
                     return Container(
-                      constraints: const BoxConstraints(maxHeight: 220),
+                      constraints: const BoxConstraints(maxHeight: 280),
                       child: ListView.separated(
                         shrinkWrap: true,
                         itemCount: addresses.length,
@@ -223,45 +226,6 @@ class _HomeHeaderState extends State<HomeHeader> {
                     );
                   },
                 ),
-                
-                const SizedBox(height: 20),
-                
-                Text(
-                  'OR',
-                  style: GoogleFonts.outfit(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFCBD5E1),
-                    letterSpacing: 1,
-                  ),
-                ),
-                
-                const SizedBox(height: 20),
-                
-                // Use Current Location Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _isCheckingPincode ? null : () => _handleAutoDetect(setStateSheet),
-                    icon: const Icon(LucideIcons.locateFixed, size: 18),
-                    label: Text(
-                      'IDENTIFY MY LOCATION',
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: SahimedColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                  ),
-                ),
               ] else ...[
                 // Add Address Form View
                 Row(
@@ -283,6 +247,53 @@ class _HomeHeaderState extends State<HomeHeader> {
                   ],
                 ),
                 const SizedBox(height: 24),
+                // Compact Use Current Location Button inside Form
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _isCheckingPincode ? null : () async {
+                      setStateSheet(() => _isCheckingPincode = true);
+                      try {
+                        final pos = await _locationService.getCurrentPosition();
+                        final address = await _locationService.getAddressFromLatLng(pos.latitude, pos.longitude);
+                        setStateSheet(() {
+                          _houseController.text = address['suburb'] ?? address['neighbourhood'] ?? '';
+                          _streetController.text = address['street'] ?? '';
+                          _cityController.text = address['city'] ?? '';
+                          _pincodeController.text = address['pincode'] ?? '';
+                          _isCheckingPincode = false;
+                        });
+                      } catch (e) {
+                        setStateSheet(() => _isCheckingPincode = false);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to detect location')));
+                      }
+                    },
+                    icon: const Icon(LucideIcons.locateFixed, size: 16),
+                    label: Text(
+                      'USE CURRENT LOCATION',
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: SahimedColors.primary,
+                      side: const BorderSide(color: SahimedColors.primary, width: 2),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Google Places Search Field
+                _GooglePlacesSearch(
+                  onPlaceSelected: (details) {
+                    setStateSheet(() {
+                      _houseController.text = details['suburb'] ?? '';
+                      _streetController.text = details['street'] ?? '';
+                      _cityController.text = details['city'] ?? '';
+                      _pincodeController.text = details['pincode'] ?? '';
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
                 _buildField(controller: _houseController, hint: 'House / Flat / Block No.'),
                 const SizedBox(height: 12),
                 _buildField(controller: _streetController, hint: 'Street / Area Name'),
@@ -662,6 +673,134 @@ class _NavbarIcon extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _GooglePlacesSearch extends StatefulWidget {
+  final Function(Map<String, String>) onPlaceSelected;
+  const _GooglePlacesSearch({required this.onPlaceSelected});
+
+  @override
+  State<_GooglePlacesSearch> createState() => _GooglePlacesSearchState();
+}
+
+class _GooglePlacesSearchState extends State<_GooglePlacesSearch> {
+  final _searchController = TextEditingController();
+  List<dynamic> _suggestions = [];
+  bool _isSearching = false;
+  final String _apiKey = 'AIzaSyAETOLgGFYBRwSurgaZuf9wy_6qIISCg4A';
+
+  Future<void> _fetchSuggestions(String input) async {
+    if (input.length < 3) {
+      setState(() => _suggestions = []);
+      return;
+    }
+
+    setState(() => _isSearching = true);
+    try {
+      final url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$input&key=$_apiKey&components=country:in';
+      final response = await http.get(Uri.parse(url));
+      final data = json.decode(response.body);
+      if (data['status'] == 'OK') {
+        setState(() => _suggestions = data['predictions']);
+      }
+    } catch (e) {
+      debugPrint('Error fetching suggestions: $e');
+    } finally {
+      setState(() => _isSearching = false);
+    }
+  }
+
+  Future<void> _getPlaceDetails(String placeId) async {
+    try {
+      final url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$_apiKey&fields=address_components,formatted_address';
+      final response = await http.get(Uri.parse(url));
+      final data = json.decode(response.body);
+      
+      if (data['status'] == 'OK') {
+        final components = data['result']['address_components'] as List;
+        Map<String, String> details = {};
+        
+        for (var comp in components) {
+          final types = comp['types'] as List;
+          if (types.contains('sublocality')) details['suburb'] = comp['long_name'];
+          if (types.contains('route')) details['street'] = comp['long_name'];
+          if (types.contains('locality')) details['city'] = comp['long_name'];
+          if (types.contains('postal_code')) details['pincode'] = comp['long_name'];
+        }
+
+        if (details['street'] == null) {
+          details['street'] = data['result']['formatted_address'].toString().split(',')[0];
+        }
+
+        widget.onPlaceSelected(details);
+        setState(() => _suggestions = []);
+        _searchController.clear();
+      }
+    } catch (e) {
+      debugPrint('Error getting place details: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: SahimedColors.primary.withOpacity(0.1), width: 2),
+          ),
+          child: TextField(
+            controller: _searchController,
+            onChanged: _fetchSuggestions,
+            style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold),
+            decoration: InputDecoration(
+              hintText: 'Search area / landmark...',
+              prefixIcon: Icon(
+                _isSearching ? LucideIcons.loader2 : LucideIcons.search,
+                size: 18,
+                color: SahimedColors.primary,
+              ),
+              border: InputBorder.none,
+              hintStyle: GoogleFonts.outfit(fontSize: 14, color: const Color(0xFF94A3B8)),
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+          ),
+        ),
+        if (_suggestions.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(top: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFF1F5F9)),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+              ],
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _suggestions.length,
+              separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
+              itemBuilder: (context, index) {
+                final suggestion = _suggestions[index];
+                return ListTile(
+                  dense: true,
+                  leading: const Icon(LucideIcons.mapPin, size: 14, color: SahimedColors.slate400),
+                  title: Text(
+                    suggestion['description'],
+                    style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  onTap: () => _getPlaceDetails(suggestion['place_id']),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 }

@@ -109,6 +109,38 @@ export default function Navbar() {
 
   const [search, setSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+  useEffect(() => {
+    if (isAddingAddress && searchRef.current && window.google) {
+      autocompleteRef.current = new google.maps.places.Autocomplete(searchRef.current, {
+        componentRestrictions: { country: "in" },
+        fields: ["address_components", "geometry", "formatted_address"],
+      });
+
+      autocompleteRef.current.addListener("place_changed", () => {
+        const place = autocompleteRef.current?.getPlace();
+        if (place?.address_components) {
+          let street = '', city = '', pincode = '';
+          
+          place.address_components.forEach(comp => {
+            const types = comp.types;
+            if (types.includes('route')) street = comp.long_name;
+            if (types.includes('locality')) city = comp.long_name;
+            if (types.includes('postal_code')) pincode = comp.long_name;
+          });
+
+          setNewAddress(prev => ({
+            ...prev,
+            street: street || place.formatted_address?.split(',')[0] || '',
+            city: city || '',
+            pincode: pincode || ''
+          }));
+        }
+      });
+    }
+  }, [isAddingAddress]);
   const [locationResolved, setLocationResolved] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -529,18 +561,12 @@ export default function Navbar() {
                             </div>
                           )}
 
-                          <div className="relative py-2">
-                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
-                            <div className="relative flex justify-center"><span className="bg-white px-2 text-[9px] font-black text-slate-300 uppercase tracking-widest">OR</span></div>
-                          </div>
-
                           <Button 
-                            onClick={handleGeoLocation} 
-                            disabled={isLocating}
-                            className="w-full justify-start gap-4 h-14 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black text-xs tracking-widest uppercase shadow-xl shadow-primary/20"
+                            onClick={() => setIsAddingAddress(true)}
+                            className="w-full justify-start gap-4 h-14 rounded-2xl bg-slate-50 text-slate-800 hover:bg-slate-100 font-black text-xs tracking-widest uppercase border border-slate-100"
                           >
-                            {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <LocateFixed className="w-5 h-5" />}
-                            Identify Location
+                            <Plus className="w-5 h-5 text-primary" />
+                            Add New Address
                           </Button>
                         </motion.div>
                       ) : (
@@ -557,6 +583,50 @@ export default function Navbar() {
                             </button>
                             <p className="text-[10px] font-black tracking-widest text-slate-800 uppercase">New Address</p>
                             <div className="w-6" />
+                          </div>
+
+                          <button
+                            onClick={async () => {
+                              if (!navigator.geolocation) {
+                                toast({ title: "Error", description: "Geolocation not supported", variant: "destructive" });
+                                return;
+                              }
+                              setIsLocating(true);
+                              navigator.geolocation.getCurrentPosition(async (pos) => {
+                                try {
+                                  const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+                                  const data = await res.json();
+                                  if (data.address) {
+                                    setNewAddress({
+                                      ...newAddress,
+                                      houseNumber: data.address.suburb || data.address.neighbourhood || '',
+                                      street: data.address.road || '',
+                                      city: data.address.city || data.address.town || '',
+                                      pincode: data.address.postcode || ''
+                                    });
+                                    toast({ title: "Location Detected", description: "Address fields have been populated." });
+                                  }
+                                } finally {
+                                  setIsLocating(false);
+                                }
+                              }, () => {
+                                setIsLocating(false);
+                                toast({ title: "Error", description: "Location access denied", variant: "destructive" });
+                              });
+                            }}
+                            className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-primary/10 bg-primary/5 text-primary hover:bg-primary/10 transition-all font-black text-[10px] tracking-widest uppercase"
+                          >
+                            {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <LocateFixed className="w-4 h-4" />}
+                            Use Current Location
+                          </button>
+
+                          <div className="relative">
+                            <Input 
+                              ref={searchRef}
+                              placeholder="Search your area / landmark..." 
+                              className="h-11 rounded-xl bg-slate-50 border-2 border-primary/5 font-bold text-[11px] pl-10" 
+                            />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                           </div>
 
                           <div className="grid grid-cols-2 gap-3">

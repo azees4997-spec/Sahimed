@@ -115,4 +115,22 @@ class LocationService {
     }
     return 'Location not found';
   }
+
+  Future<Map<String, String>> getAddressFromLatLng(double lat, double lng) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        return {
+          'suburb': place.subLocality ?? place.name ?? '',
+          'street': place.street ?? '',
+          'city': place.locality ?? '',
+          'pincode': place.postalCode ?? '',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error reverse geocoding: $e');
+    }
+    return {};
+  }
 }
