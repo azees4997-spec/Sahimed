@@ -58,10 +58,13 @@ export async function POST(req: Request) {
     });
 
     const chat = model.startChat({
-      history: messages.slice(0, -1).map((m: any) => ({
-        role: m.role === "user" ? "user" : "model",
-        parts: [{ text: m.content }],
-      })),
+      history: messages
+        .slice(0, -1)
+        .filter((m: any, i: number) => i > 0 || m.role === "user") // Skip if first message is assistant
+        .map((m: any) => ({
+          role: m.role === "user" ? "user" : "model",
+          parts: [{ text: m.content }],
+        })),
     });
 
     const lastMessage = messages[messages.length - 1].content;
