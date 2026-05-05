@@ -109,7 +109,7 @@ export default async function Home() {
   
                 <div className="absolute right-0 bottom-[100px] sm:bottom-[140px] w-1/3 sm:w-1/4 h-[160px] sm:h-[320px]">
                   <Image 
-                    src="https://images.unsplash.com/photo-1559839734-2b71f1536783?q=80&w=600&auto=format&fit=crop" 
+                    src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=600&auto=format&fit=crop" 
                     alt="Healthcare Professional" 
                     fill
                     priority
