@@ -158,6 +158,25 @@ export async function GET(request: Request) {
     
     console.log(`[Search API] Aggregation Params: mol=${moleculeId || 'none'}, q=${q || 'none'} | Result: ${products.length} in ${duration}ms`);
 
+    // --- AUTOMATIC SEARCH ANALYTICS LOGGING ---
+    if (qStr && qStr.length >= 2) {
+      try {
+        const analyticsCol = db.collection('searchAnalytics');
+        // We log asynchronously to avoid blocking the response
+        analyticsCol.insertOne({
+          keyword: qStr,
+          userId: searchParams.get('userId') || null,
+          mobile: searchParams.get('mobile') || 'Anonymous',
+          platform: searchParams.get('platform') || (request.headers.get('user-agent')?.includes('Dart') ? 'mobile' : 'web'),
+          resultsCount: products.length,
+          timestamp: new Date(),
+          autoCaptured: true
+        }).catch(err => console.error("[Analytics Background Error]", err));
+      } catch (e) {
+        console.error("[Search Analytics Auto-Log Failed]", e);
+      }
+    }
+
     return NextResponse.json(products, {
       headers: {
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',

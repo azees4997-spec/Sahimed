@@ -28,24 +28,22 @@ export async function GET(req: Request) {
     const query: any = {};
     
     // Security check: Non-admins MUST be restricted to their own data
-    if (!isAdmin) {
-      const tokenPhone = (user as any).phoneNumber;
-      const last10 = tokenPhone ? tokenPhone.replace(/\D/g, '').slice(-10) : null;
-      
+    // ADMINS: If no search params are provided, default to their own orders for the app profile screen
+    const requestedUserId = searchParams.get('userId');
+    const phone = searchParams.get('phone');
+
+    if (!isAdmin || (!requestedUserId && !phone)) {
       const identityConditions: any[] = [
         { userId: user.uid },
         { customer_id: user.uid }
       ];
 
-      if (tokenPhone) {
-        identityConditions.push({ phoneNumber: tokenPhone });
-        identityConditions.push({ phone: tokenPhone });
-        identityConditions.push({ customer_phone: tokenPhone });
-      }
-      if (last10) {
-        // Variants for both 'phoneNumber', 'phone', and 'customer_phone' keys
-        const variants = [last10, `+91${last10}`, `91${last10}`];
-        variants.forEach(v => {
+      // BUG-09 FIX: Allow users to see orders matched by their phone number too
+      // This ensures guest orders or legacy orders show up correctly in the app
+      if (user.phoneNumber) {
+        const last10 = user.phoneNumber.replace(/\D/g, '').slice(-10);
+        const phoneVariants = [user.phoneNumber, last10, `+91${last10}`, `91${last10}`];
+        phoneVariants.forEach(v => {
           identityConditions.push({ phoneNumber: v });
           identityConditions.push({ phone: v });
           identityConditions.push({ customer_phone: v });
@@ -54,9 +52,7 @@ export async function GET(req: Request) {
 
       query.$or = identityConditions;
     } else {
-      // Admin Search Logic
-      const requestedUserId = searchParams.get('userId');
-      const phone = searchParams.get('phone');
+      // Admin Search Logic (When params ARE provided)
 
       if (requestedUserId && phone) {
         const last10 = phone.replace(/\D/g, '').slice(-10);
@@ -130,6 +126,7 @@ export async function GET(req: Request) {
       .find(query)
       .sort({ orderDate: -1, createdAt: -1 })
       .toArray();
+
     return NextResponse.json(orders);
   } catch (err: any) {
     console.error("[Orders API Error]", err);

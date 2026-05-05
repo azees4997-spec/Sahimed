@@ -93,11 +93,11 @@ export default async function Home() {
               <div className="flex items-center justify-between gap-4 sm:gap-8">
                 <div className="flex-1 space-y-2 sm:space-y-4">
                   <div className="space-y-1 sm:space-y-2">
-                    <div className="flex items-center gap-2 px-2.5 py-1 bg-white/50 backdrop-blur-sm rounded-full border border-white/50 w-fit shrink-0">
-                      <div className="w-3 h-3 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
-                        <ShieldCheck className="w-2 h-2 text-white" />
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-slate-100 w-fit shrink-0 shadow-sm">
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#22C55E] flex items-center justify-center shrink-0">
+                        <ShieldCheck className="w-2.5 h-2.5 text-white" />
                       </div>
-                      <span className="text-slate-800 font-black uppercase tracking-[0.1em] text-[8px] sm:text-[9px]">Trusted by 10L+ users</span>
+                      <span className="text-slate-900 font-black uppercase tracking-[0.1em] text-[8px] sm:text-[10px]">Trusted by 10L+ users</span>
                     </div>
                     <h1 className="text-xl sm:text-5xl font-black leading-[1.1] tracking-tighter text-slate-900 font-outfit uppercase">
                       Affordable <br/>
@@ -108,13 +108,13 @@ export default async function Home() {
                 </div>
  
                 <div className="w-1/3 sm:w-1/4 flex justify-end">
-                  <div className="relative w-full aspect-square max-w-[120px] sm:max-w-[280px] rounded-xl sm:rounded-[32px] border-[4px] sm:border-[8px] border-white shadow-2xl overflow-hidden bg-white">
+                  <div className="relative w-full aspect-square max-w-[120px] sm:max-w-[280px]">
                     <Image 
                       src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
                       alt="Healthcare Professional" 
                       fill
                       priority
-                      className="object-cover object-top" 
+                      className="object-contain object-bottom mix-blend-multiply" 
                     />
                   </div>
                 </div>

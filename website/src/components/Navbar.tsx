@@ -135,7 +135,7 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    if (search.trim().length >= 3 && search.trim().length <= 15) {
+    if (search.trim().length >= 3) {
       const timer = setTimeout(() => {
         logSearch(search.trim());
       }, 500);

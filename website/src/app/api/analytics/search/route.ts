@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
+    const body = await request.json();
     const { 
       keyword, 
       mobile, 
@@ -15,15 +16,20 @@ export async function POST(request: Request) {
       pincode, 
       platform, 
       resultsCount 
-    } = await request.json();
+    } = body;
     
-    if (!keyword) return NextResponse.json({ error: 'Keyword required' }, { status: 400 });
+    console.log(`[Search Analytics] Incoming: kw="${keyword}", platform="${platform}", user="${userId || 'anon'}"`);
+
+    if (!keyword) {
+      console.warn('[Search Analytics] Rejected: Missing keyword');
+      return NextResponse.json({ error: 'Keyword required' }, { status: 400 });
+    }
 
     const client = await clientPromise;
     const db = client.db('sahimed');
     const collection = db.collection('searchAnalytics');
 
-    await collection.insertOne({
+    const result = await collection.insertOne({
       keyword,
       mobile: mobile || 'Anonymous',
       userId: userId || null,
@@ -35,8 +41,10 @@ export async function POST(request: Request) {
       timestamp: new Date()
     });
 
-    return NextResponse.json({ success: true });
+    console.log(`[Search Analytics] Captured: ${result.insertedId} | kw="${keyword}"`);
+    return NextResponse.json({ success: true, id: result.insertedId });
   } catch (err: any) {
+    console.error("[Search Analytics POST Error]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

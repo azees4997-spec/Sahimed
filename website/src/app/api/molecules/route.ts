@@ -45,6 +45,25 @@ export async function GET(request: Request) {
       .limit(limitValue)
       .toArray();
 
+    // --- AUTOMATIC SEARCH ANALYTICS LOGGING ---
+    if (qRaw && qRaw.length >= 2) {
+      try {
+        const analyticsCol = db.collection('searchAnalytics');
+        analyticsCol.insertOne({
+          keyword: qRaw,
+          userId: searchParams.get('userId') || null,
+          mobile: searchParams.get('mobile') || 'Anonymous',
+          platform: searchParams.get('platform') || (request.headers.get('user-agent')?.includes('Dart') ? 'mobile' : 'web'),
+          resultsCount: molecules.length,
+          timestamp: new Date(),
+          autoCaptured: true,
+          type: 'molecule'
+        }).catch(err => console.error("[Analytics Molecule Background Error]", err));
+      } catch (e) {
+        console.error("[Molecule Search Analytics Auto-Log Failed]", e);
+      }
+    }
+
     return NextResponse.json(molecules.map(m => ({ ...m, id: m._id.toString() })), {
       headers: {
         'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60',
