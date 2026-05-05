@@ -110,11 +110,11 @@ export default function Navbar() {
   const [search, setSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const autocompleteRef = useRef<any>(null);
 
   useEffect(() => {
-    if (isAddingAddress && searchRef.current && window.google) {
-      autocompleteRef.current = new google.maps.places.Autocomplete(searchRef.current, {
+    if (isAddingAddress && searchRef.current && (window as any).google) {
+      autocompleteRef.current = new (window as any).google.maps.places.Autocomplete(searchRef.current, {
         componentRestrictions: { country: "in" },
         fields: ["address_components", "geometry", "formatted_address"],
       });
@@ -124,14 +124,14 @@ export default function Navbar() {
         if (place?.address_components) {
           let street = '', city = '', pincode = '';
           
-          place.address_components.forEach(comp => {
+          place.address_components.forEach((comp: any) => {
             const types = comp.types;
             if (types.includes('route')) street = comp.long_name;
             if (types.includes('locality')) city = comp.long_name;
             if (types.includes('postal_code')) pincode = comp.long_name;
           });
 
-          setNewAddress(prev => ({
+          setNewAddress((prev: any) => ({
             ...prev,
             street: street || place.formatted_address?.split(',')[0] || '',
             city: city || '',
