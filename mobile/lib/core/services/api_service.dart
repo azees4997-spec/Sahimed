@@ -721,22 +721,5 @@ class ApiService {
     return {'allowable': 0};
   }
 
-  Future<Map<String, dynamic>> chatWithAI(List<Map<String, String>> messages) async {
-    try {
-      final headers = await _getHeaders();
-      final response = await http.post(
-        Uri.parse('$baseUrl/ai/chat'),
-        headers: headers,
-        body: json.encode({'messages': messages}),
-      );
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      }
-      return {'error': 'Failed to connect to AI'};
-    } catch (e) {
-      debugPrint('Error in AI Chat: $e');
-      return {'error': e.toString()};
-    }
-  }
 }
 

@@ -8,7 +8,7 @@ import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import { Outfit, Poppins } from 'next/font/google';
 import LocationSync from '@/components/LocationSync';
-import SahiAI from '@/components/SahiAI';
+
 import Script from 'next/script';
 
 const outfit = Outfit({ 
@@ -187,7 +187,6 @@ export default function RootLayout({
               </main>
               <BottomNav />
               <MobileCartBar />
-              <SahiAI />
             </div>
             <Toaster />
           </CartProvider>
@@ -195,4 +194,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
+}

@@ -174,17 +174,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          HapticFeedback.heavyImpact();
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const SahiAIScreen()),
-          );
-        },
-        backgroundColor: SahimedColors.textPrimary,
-        child: const Icon(LucideIcons.bot, color: Colors.white),
-      ),
     );
   }
 
