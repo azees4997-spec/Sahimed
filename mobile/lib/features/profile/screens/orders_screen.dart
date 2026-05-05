@@ -17,7 +17,7 @@ class OrdersScreen extends StatefulWidget {
 
 class _OrdersScreenState extends State<OrdersScreen> {
   final _apiService = ApiService();
-  List<Map<String, dynamic>> _orders = [];
+  List<OrderModel> _orders = [];
   bool _isLoading = true;
 
   @override
@@ -29,8 +29,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
   Future<void> _loadOrders() async {
     setState(() => _isLoading = true);
     try {
-      final orders = await _apiService.getUserOrders();
-      setState(() => _orders = orders);
+      final ordersData = await _apiService.getUserOrders();
+      setState(() => _orders = ordersData.map((m) => OrderModel.fromJson(m)).toList());
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -42,9 +42,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
     }
   }
 
-  void _reorder(Map<String, dynamic> order) {
+  void _reorder(OrderModel order) {
     final cart = context.read<CartProvider>();
-    final items = order['items'] as List<dynamic>? ?? [];
+    final items = order.items;
 
     int addedCount = 0;
     for (var item in items) {
@@ -183,8 +183,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
   }
 
-  Widget _buildOrderCard(Map<String, dynamic> order) {
-    final status = order['status'] ?? 'Pending';
+  Widget _buildOrderCard(OrderModel order) {
+    final status = order.status;
     final isDelivered = status == 'Delivered';
 
     return Container(
@@ -246,7 +246,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '₹${(order['totalAmount'] ?? 0).toStringAsFixed(0)}',
+                          '₹${order.totalAmount.toStringAsFixed(0)}',
                           style: GoogleFonts.outfit(
                             fontSize: 18,
                             fontWeight: FontWeight.w900,
@@ -287,7 +287,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${(order['items'] as List?)?.length ?? 0} ITEMS',
+                    '${order.items.length} ITEMS',
                     style: GoogleFonts.outfit(
                       fontSize: 9,
                       fontWeight: FontWeight.w900,

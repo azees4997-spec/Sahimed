@@ -229,6 +229,26 @@ class OrderModel {
     this.walletUsed = 0,
   });
 
+  factory OrderModel.fromJson(Map<String, dynamic> json) {
+    return OrderModel(
+      userId: json['userId'] ?? json['customer_id'],
+      patientName: json['patientName'] ?? json['customer_name'] ?? 'User',
+      phoneNumber: (json['phoneNumber'] ?? json['phone'] ?? json['customer_phone'] ?? '').toString(),
+      shippingDetails: json['shippingDetails'] ?? {},
+      items: (json['items'] as List?)?.map((i) => Map<String, dynamic>.from(i)).toList() ?? [],
+      totalAmount: num.tryParse((json['totalAmount'] ?? 0).toString())?.toDouble() ?? 0.0,
+      billingBreakdown: json['billingBreakdown'] ?? {},
+      prescriptionUrls: (json['prescriptionUrls'] as List?)?.map((u) => u.toString()).toList() ?? [],
+      paymentType: json['paymentType'] ?? 'COD',
+      status: json['status'] ?? 'Pending',
+      isConsultationRequired: json['isConsultationRequired'] == true,
+      clinicalPath: json['clinicalPath'] ?? 'normal',
+      awbNumber: json['shipping']?['awb'] ?? json['awbNumber'],
+      carrierId: json['shipping']?['courier'] ?? json['carrierId'],
+      walletUsed: num.tryParse((json['walletUsed'] ?? 0).toString())?.toDouble() ?? 0.0,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'userId': userId,

@@ -38,11 +38,17 @@ export async function GET(req: Request) {
         { customer_id: user.uid }
       ];
 
+      // FALLBACK: If phoneNumber is not in the token, check the MongoDB user profile
+      let activePhone = user.phoneNumber;
+      if (!activePhone) {
+        const userProfile = await db.collection('users').findOne({ uid: user.uid });
+        activePhone = userProfile?.phoneNumber || userProfile?.phone;
+      }
+
       // BUG-09 FIX: Allow users to see orders matched by their phone number too
-      // This ensures guest orders or legacy orders show up correctly in the app
-      if (user.phoneNumber) {
-        const last10 = user.phoneNumber.replace(/\D/g, '').slice(-10);
-        const phoneVariants = [user.phoneNumber, last10, `+91${last10}`, `91${last10}`];
+      if (activePhone) {
+        const last10 = activePhone.replace(/\D/g, '').slice(-10);
+        const phoneVariants = [activePhone, last10, `+91${last10}`, `91${last10}`];
         phoneVariants.forEach(v => {
           identityConditions.push({ phoneNumber: v });
           identityConditions.push({ phone: v });
