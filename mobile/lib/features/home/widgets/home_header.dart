@@ -42,6 +42,14 @@ class _HomeHeaderState extends State<HomeHeader> {
     }
   }
 
+  // Address form controllers
+  final _houseController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _pincodeController = TextEditingController();
+  String _selectedTag = 'Home';
+  bool _isAddingAddress = false;
+
   void _showLocationSheet() {
     final pincodeController = TextEditingController();
     bool isLoading = false;
@@ -53,7 +61,7 @@ class _HomeHeaderState extends State<HomeHeader> {
       builder: (context) => StatefulBuilder(
         builder: (context, setStateSheet) => Container(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 32,
             top: 12,
             left: 20,
             right: 20,
@@ -76,124 +84,287 @@ class _HomeHeaderState extends State<HomeHeader> {
               ),
               const SizedBox(height: 24),
               Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: SahimedColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      LucideIcons.mapPin,
-                      color: SahimedColors.primary,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    'Service Delivery Area',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              
-              // Pincode Input
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFF1F5F9)),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: TextField(
-                  controller: pincodeController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  onChanged: (val) {
-                    if (val.length == 6) {
-                      _handlePincodeSubmit(val, setStateSheet);
-                    }
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Enter your 6-digit Pincode',
-                    hintStyle: GoogleFonts.outfit(
-                      color: const Color(0xFF94A3B8),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    counterText: '',
-                    border: InputBorder.none,
-                    suffixIcon: _isCheckingPincode 
-                      ? const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+              // Main View: Saved Addresses + Locate Me
+              if (!_isAddingAddress) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: SahimedColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        )
-                      : null,
-                  ),
+                          child: const Icon(
+                            LucideIcons.mapPin,
+                            color: SahimedColors.primary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Text(
+                          'Delivery Area',
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF0F172A),
+                          ),
+                        ),
+                      ],
+                    ),
+                    TextButton(
+                      onPressed: () => setStateSheet(() => _isAddingAddress = true),
+                      child: Text(
+                        'ADD NEW +',
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: SahimedColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                
+                // Saved Addresses Section
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: ApiService().getUserAddresses(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()));
+                    }
+                    
+                    final addresses = snapshot.data ?? [];
+                    if (addresses.isEmpty) {
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Column(
+                          children: [
+                            const Icon(LucideIcons.map, color: Color(0xFFCBD5E1), size: 32),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No saved addresses yet',
+                              style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                color: const Color(0xFF64748B),
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => setStateSheet(() => _isAddingAddress = true),
+                              child: Text('CREATE ONE NOW', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return Container(
+                      constraints: const BoxConstraints(maxHeight: 220),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: addresses.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final addr = addresses[index];
+                          return GestureDetector(
+                            onTap: () {
+                              final formatted = '${addr['houseNumber']}, ${addr['street']}, ${addr['city']}';
+                              setState(() => _currentAddress = formatted);
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: const Color(0xFFF1F5F9)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                                    child: const Icon(LucideIcons.home, size: 16, color: SahimedColors.primary),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          (addr['tag'] ?? 'Address').toString().toUpperCase(),
+                                          style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A)),
+                                        ),
+                                        Text(
+                                          '${addr['houseNumber']}, ${addr['street']}, ${addr['city']}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.outfit(fontSize: 10, color: const Color(0xFF64748B), fontWeight: FontWeight.w600),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(LucideIcons.chevronRight, size: 16, color: Color(0xFFCBD5E1)),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+                
+                const SizedBox(height: 20),
+                
+                Text(
+                  'OR',
                   style: GoogleFonts.outfit(
-                    fontSize: 16,
+                    fontSize: 10,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 4,
+                    color: const Color(0xFFCBD5E1),
+                    letterSpacing: 1,
                   ),
                 ),
-              ),
-              
-              const SizedBox(height: 20),
-              
-              Text(
-                'OR',
-                style: GoogleFonts.outfit(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFFCBD5E1),
-                  letterSpacing: 1,
-                ),
-              ),
-              
-              const SizedBox(height: 20),
-              
-              // Use Current Location Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _isCheckingPincode ? null : () => _handleAutoDetect(setStateSheet),
-                  icon: const Icon(LucideIcons.locateFixed, size: 18),
-                  label: Text(
-                    'DETECT MY LOCATION',
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1,
+                
+                const SizedBox(height: 20),
+                
+                // Use Current Location Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _isCheckingPincode ? null : () => _handleAutoDetect(setStateSheet),
+                    icon: const Icon(LucideIcons.locateFixed, size: 18),
+                    label: Text(
+                      'IDENTIFY MY LOCATION',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1,
+                      ),
                     ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: SahimedColors.primary,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: SahimedColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'We need your location to show available items',
-                style: GoogleFonts.outfit(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF64748B),
+              ] else ...[
+                // Add Address Form View
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      onPressed: () => setStateSheet(() => _isAddingAddress = false),
+                      icon: const Icon(LucideIcons.arrowLeft, size: 20),
+                    ),
+                    Text(
+                      'NEW ADDRESS',
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(width: 48), // Spacer to center title
+                  ],
                 ),
-              ),
+                const SizedBox(height: 24),
+                _buildField(controller: _houseController, hint: 'House / Flat / Block No.'),
+                const SizedBox(height: 12),
+                _buildField(controller: _streetController, hint: 'Street / Area Name'),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _buildField(controller: _cityController, hint: 'City')),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildField(controller: _pincodeController, hint: 'Pincode', isNum: true)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: ['Home', 'Office', 'Other'].map((tag) => Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: GestureDetector(
+                        onTap: () => setStateSheet(() => _selectedTag = tag),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: _selectedTag == tag ? SahimedColors.primary : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _selectedTag == tag ? SahimedColors.primary : const Color(0xFFF1F5F9)),
+                          ),
+                          child: Center(
+                            child: Text(
+                              tag.toUpperCase(),
+                              style: GoogleFonts.outfit(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                color: _selectedTag == tag ? Colors.white : const Color(0xFF64748B),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )).toList(),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isCheckingPincode ? null : () async {
+                      if (_houseController.text.isEmpty || _pincodeController.text.length != 6) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter valid address details')));
+                        return;
+                      }
+                      setStateSheet(() => _isCheckingPincode = true);
+                      final success = await ApiService().saveAddress({
+                        'houseNumber': _houseController.text,
+                        'street': _streetController.text,
+                        'city': _cityController.text,
+                        'pincode': _pincodeController.text,
+                        'tag': _selectedTag,
+                        'isDefault': true,
+                      });
+                      if (success) {
+                        final formatted = '${_houseController.text}, ${_streetController.text}, ${_cityController.text}';
+                        setState(() {
+                          _currentAddress = formatted;
+                          _isCheckingPincode = false;
+                          _isAddingAddress = false;
+                        });
+                        Navigator.pop(context);
+                      } else {
+                        setStateSheet(() => _isCheckingPincode = false);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: SahimedColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    ),
+                    child: _isCheckingPincode 
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text('SAVE & DELIVER', style: GoogleFonts.outfit(fontWeight: FontWeight.w900)),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -254,6 +425,27 @@ class _HomeHeaderState extends State<HomeHeader> {
         );
       }
     }
+  }
+
+  Widget _buildField({required TextEditingController controller, required String hint, bool isNum = false}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: TextField(
+        controller: controller,
+        keyboardType: isNum ? TextInputType.number : TextInputType.text,
+        style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold),
+        decoration: InputDecoration(
+          hintText: hint,
+          border: InputBorder.none,
+          hintStyle: GoogleFonts.outfit(fontSize: 14, color: const Color(0xFF94A3B8)),
+        ),
+      ),
+    );
   }
 
   @override

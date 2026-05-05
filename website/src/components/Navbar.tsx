@@ -100,6 +100,13 @@ export default function Navbar() {
     orderBy('lastUpdated', 'desc')
   ), [db]);
   const { data: headerPages } = useCollection(headerPagesQuery);
+  
+  const addressesQuery = useMemoFirebase(() => user ? query(
+    collection(db, 'userProfiles', user.uid, 'addresses'),
+    orderBy('isDefault', 'desc')
+  ) : null, [db, user]);
+  const { data: savedAddresses } = useCollection(addressesQuery);
+
   const [search, setSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);
   const [locationResolved, setLocationResolved] = useState(false);
@@ -110,6 +117,14 @@ export default function Navbar() {
   const [rawSuggestions, setRawSuggestions] = useState<any[]>([]);
   const [scrolled, setScrolled] = useState(false);
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
+  const [isAddingAddress, setIsAddingAddress] = useState(false);
+  const [newAddress, setNewAddress] = useState({
+    houseNumber: '',
+    street: '',
+    city: '',
+    pincode: '',
+    tag: 'Home'
+  });
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -444,64 +459,190 @@ export default function Navbar() {
                       <span className="max-w-[70px] truncate tracking-tight">{location}</span>
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent sideOffset={12} className="w-72 p-5 rounded-[32px] shadow-3xl border border-white/50 glass space-y-3">
-                    <div className="space-y-2">
-                      <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Enter Pincode</p>
-                      <div className="flex gap-2">
-                        <Input 
-                          placeholder="e.g. 560001" 
-                          id="pincode-input"
-                          maxLength={6}
-                          className="h-12 rounded-xl bg-slate-50 border-none font-black tracking-widest text-xs"
-                        />
-                        <Button 
-                          onClick={async () => {
-                            const input = document.getElementById('pincode-input') as HTMLInputElement;
-                            if (input && input.value.length === 6) {
+                  <PopoverContent sideOffset={12} className="w-85 p-6 rounded-[32px] shadow-3xl border border-white/50 glass space-y-4">
+                    <AnimatePresence mode="wait">
+                      {!isAddingAddress ? (
+                        <motion.div 
+                          key="list"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 10 }}
+                          className="space-y-4"
+                        >
+                          <div className="flex items-center justify-between">
+                            <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Delivery Location</p>
+                            {user && (
+                              <button 
+                                onClick={() => setIsAddingAddress(true)} 
+                                className="text-[9px] font-black text-primary uppercase hover:underline"
+                              >
+                                Add New +
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Saved Addresses List */}
+                          {user ? (
+                            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+                              {savedAddresses && savedAddresses.length > 0 ? (
+                                savedAddresses.map((addr: any) => (
+                                  <button
+                                    key={addr.id}
+                                    onClick={() => {
+                                      const formatted = `${addr.houseNumber}, ${addr.street}, ${addr.city}`;
+                                      setLocation(formatted);
+                                      setLocationResolved(true);
+                                      setIsPopoverOpen(false);
+                                      toast({ title: "Address selected", description: `Delivering to ${addr.tag || 'Home'}` });
+                                    }}
+                                    className="w-full text-left p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors group border border-transparent hover:border-slate-200"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                        <MapPin className="w-4 h-4 text-primary" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-[10px] font-black text-slate-800 uppercase tracking-tight">{addr.tag || 'Address'}</p>
+                                        <p className="text-[9px] text-slate-500 truncate">{addr.houseNumber}, {addr.street}, {addr.city}</p>
+                                      </div>
+                                      <ChevronRight className="w-3 h-3 text-slate-300 group-hover:text-primary transition-colors" />
+                                    </div>
+                                  </button>
+                                ))
+                              ) : (
+                                <div className="text-center py-6 space-y-3">
+                                  <p className="text-[9px] text-slate-400 uppercase font-black">No saved addresses</p>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => setIsAddingAddress(true)}
+                                    className="rounded-full text-[8px] font-black uppercase tracking-widest h-8"
+                                  >
+                                    Create One Now
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="p-4 rounded-2xl bg-blue-50 border border-blue-100 text-center">
+                              <p className="text-[10px] font-bold text-blue-600">Login to see your saved addresses</p>
+                            </div>
+                          )}
+
+                          <div className="relative py-2">
+                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
+                            <div className="relative flex justify-center"><span className="bg-white px-2 text-[9px] font-black text-slate-300 uppercase tracking-widest">OR</span></div>
+                          </div>
+
+                          <Button 
+                            onClick={handleGeoLocation} 
+                            disabled={isLocating}
+                            className="w-full justify-start gap-4 h-14 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black text-xs tracking-widest uppercase shadow-xl shadow-primary/20"
+                          >
+                            {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <LocateFixed className="w-5 h-5" />}
+                            Identify Location
+                          </Button>
+                        </motion.div>
+                      ) : (
+                        <motion.div 
+                          key="form"
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
+                          className="space-y-4"
+                        >
+                          <div className="flex items-center justify-between">
+                            <button onClick={() => setIsAddingAddress(false)} className="p-1 hover:bg-slate-100 rounded-full transition-colors">
+                              <ChevronRight className="w-4 h-4 rotate-180" />
+                            </button>
+                            <p className="text-[10px] font-black tracking-widest text-slate-800 uppercase">New Address</p>
+                            <div className="w-6" />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5 col-span-2">
+                              <Input 
+                                placeholder="House / Flat No." 
+                                value={newAddress.houseNumber}
+                                onChange={(e) => setNewAddress({...newAddress, houseNumber: e.target.value})}
+                                className="h-11 rounded-xl bg-slate-50 border-none font-bold text-[11px]" 
+                              />
+                            </div>
+                            <div className="space-y-1.5 col-span-2">
+                              <Input 
+                                placeholder="Street / Area Name" 
+                                value={newAddress.street}
+                                onChange={(e) => setNewAddress({...newAddress, street: e.target.value})}
+                                className="h-11 rounded-xl bg-slate-50 border-none font-bold text-[11px]" 
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Input 
+                                placeholder="City" 
+                                value={newAddress.city}
+                                onChange={(e) => setNewAddress({...newAddress, city: e.target.value})}
+                                className="h-11 rounded-xl bg-slate-50 border-none font-bold text-[11px]" 
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Input 
+                                placeholder="Pincode" 
+                                maxLength={6}
+                                value={newAddress.pincode}
+                                onChange={(e) => setNewAddress({...newAddress, pincode: e.target.value})}
+                                className="h-11 rounded-xl bg-slate-50 border-none font-bold text-[11px]" 
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            {['Home', 'Office', 'Other'].map((tag) => (
+                              <button
+                                key={tag}
+                                onClick={() => setNewAddress({...newAddress, tag})}
+                                className={cn(
+                                  "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all",
+                                  newAddress.tag === tag 
+                                    ? "bg-primary text-white border-primary shadow-md" 
+                                    : "bg-white text-slate-400 border-slate-100 hover:border-slate-200"
+                                )}
+                              >
+                                {tag}
+                              </button>
+                            ))}
+                          </div>
+
+                          <Button 
+                            disabled={isLocating || !newAddress.houseNumber || !newAddress.pincode}
+                            onClick={async () => {
                               setIsLocating(true);
                               try {
-                                const res = await fetch('/api/logistics/shipway/serviceability', {
+                                const res = await fetch('/api/user/addresses', {
                                   method: 'POST',
                                   headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ toPincode: input.value })
+                                  body: JSON.stringify({...newAddress, isDefault: true})
                                 });
-                                const data = await res.json();
-                                if (data.serviceable) {
-                                  setLocation(`PIN: ${input.value}`);
+                                if (res.ok) {
+                                  const formatted = `${newAddress.houseNumber}, ${newAddress.street}, ${newAddress.city}`;
+                                  setLocation(formatted);
                                   setLocationResolved(true);
                                   setIsPopoverOpen(false);
-                                  toast({ title: "Location updated" });
-                                } else {
-                                  toast({ variant: 'destructive', title: "Not Serviceable", description: "We currently do not deliver to this pincode." });
+                                  setIsAddingAddress(false);
+                                  toast({ title: "Address Saved", description: "Delivering to your new location." });
                                 }
                               } catch(e) {
-                                toast({ variant: 'destructive', title: "Error", description: "Could not verify serviceability." });
+                                toast({ variant: 'destructive', title: "Save Failed" });
                               } finally {
                                 setIsLocating(false);
                               }
-                            }
-                          }}
-                          disabled={isLocating}
-                          className="h-12 w-12 shrink-0 rounded-xl bg-primary text-white"
-                        >
-                          {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="relative py-2">
-                      <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
-                      <div className="relative flex justify-center"><span className="bg-white px-2 text-[9px] font-black text-slate-300 uppercase tracking-widest">OR</span></div>
-                    </div>
-
-                    <Button 
-                      onClick={handleGeoLocation} 
-                      disabled={isLocating}
-                      className="w-full justify-start gap-3 h-14 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black text-xs tracking-widest uppercase shadow-xl shadow-primary/20"
-                    >
-                      {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <LocateFixed className="w-5 h-5" />}
-                      Locate Me
-                    </Button>
+                            }}
+                            className="w-full h-14 rounded-2xl bg-primary text-white font-black text-xs tracking-widest uppercase shadow-xl shadow-primary/20"
+                          >
+                            {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save & Deliver"}
+                          </Button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </PopoverContent>
                 </Popover>
               )}
