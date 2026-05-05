@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link';
-import { Search as SearchIcon, MapPin, ChevronDown, LocateFixed, Loader2, ShoppingCart, Package, ArrowUpRight, ChevronUp, User, ChevronRight, Wallet } from 'lucide-react';
+import { Search as SearchIcon, MapPin, ChevronDown, LocateFixed, Loader2, ShoppingCart, Package, ArrowUpRight, ChevronUp, User, ChevronRight, Wallet, Plus } from 'lucide-react';
 
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
