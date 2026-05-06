@@ -102,6 +102,11 @@ export default function CheckoutPage() {
   const storage = useStorage();
 
   const [isUploading, setIsUploading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
   
@@ -113,7 +118,7 @@ export default function CheckoutPage() {
     if (fee.tiers && fee.tiers.length > 0) {
       // Find the highest tier that the current total qualifies for
       // Sort tiers descending by minOrder: [1000, 500, 0]
-      const sortedTiers = [...fee.tiers].sort((a, b) => b.minOrder - a.minOrder);
+      const sortedTiers = [...fee.tiers].sort((a: any, b: any) => b.minOrder - a.minOrder);
       const matchingTier = sortedTiers.find(t => totalPrice >= t.minOrder);
       
       if (matchingTier) {
@@ -165,6 +170,12 @@ export default function CheckoutPage() {
 
   const addressesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'addresses'), orderBy('updatedAt', 'desc')) : null, [db, user]);
   const { data: savedAddresses } = useCollection(addressesQuery);
+
+  if (!mounted) return (
+    <div className="min-h-screen bg-[#F4F7F6] flex items-center justify-center">
+       <Loader2 className="w-12 h-12 animate-spin text-primary opacity-20" />
+    </div>
+  );
 
   useEffect(() => {
     const initProfile = async () => {
