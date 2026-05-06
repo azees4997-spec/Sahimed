@@ -280,6 +280,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
   const { addToCart, getItemQuantity } = useCart();
   const [edd, setEdd] = useState<string>('');
   const [activePincode, setActivePincode] = useState<string>('560068');
+  const [zone, setZone] = useState<string>('');
 
   useEffect(() => {
     const stored = typeof window !== 'undefined' ? (localStorage.getItem('activePincode') || '560068') : '560068';
@@ -288,22 +289,42 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
   }, []);
 
   const fetchEdd = async (pin: string) => {
+    if (!pin || pin.length !== 6) return;
+    
     try {
       const res = await fetch('/api/logistics/shipway/serviceability', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ toPincode: pin })
       });
+      
       const data = await res.json();
+      
       if (data.edd) {
-        const date = new Date(data.edd);
+        // Parse date string (YYYY-MM-DD) carefully to avoid timezone shifts
+        const parts = data.edd.split('-');
+        const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
         const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
         setEdd(`${months[date.getMonth()]} ${date.getDate().toString().padStart(2, '0')}`);
+        setZone(data.zone || 'India');
       } else {
         setEdd('');
+        setZone('');
+        if (data.error) {
+          toast({
+            variant: 'destructive',
+            title: "Serviceability Check",
+            description: "This area might not be serviceable currently."
+          });
+        }
       }
     } catch (e) {
       console.error("Failed to fetch EDD", e);
+      toast({
+        variant: 'destructive',
+        title: "Connection Error",
+        description: "Failed to reach delivery servers."
+      });
     }
   };
 
@@ -500,7 +521,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                     {edd ? `DELIVERY BY ${edd}` : "CHECK SERVICEABILITY"}
                   </h3>
                   <p className="text-[8px] sm:text-[11px] font-bold text-emerald-700/70 uppercase tracking-widest">
-                    {edd ? "Guaranteed express shipping" : "Enter pincode to see delivery date"}
+                    {edd ? (zone ? `EXPRESS SHIPPING TO ${zone.toUpperCase()}` : "Guaranteed express shipping") : "Enter pincode to see delivery date"}
                   </p>
                 </div>
               </div>

@@ -70,34 +70,49 @@ export class ShipwayService {
         const currentHour = now.getHours();
         const isBefore2PM = currentHour < 14;
         
+        let zone = 'India';
         let daysToAdd = 4; // Default fallback
         const p2 = toPincode.substring(0, 2);
         const p3 = toPincode.substring(0, 3);
 
         // 1. Bangalore (560xxx)
         if (p3 === '560') {
+          zone = 'Bengaluru';
           daysToAdd = isBefore2PM ? 1 : 2;
         }
         // 2. South India (TN: 60-64, KL: 67-69, AP/TS: 50-53, KA: 56-59)
         else if (['60','61','62','63','64','67','68','69','50','51','52','53','56','57','58','59'].includes(p2)) {
+          zone = 'South India';
           daysToAdd = isBefore2PM ? 3 : 4;
         }
         // 3. West India (MH/GJ/GA/RJ: 30-44)
         else if (parseInt(p2) >= 30 && parseInt(p2) <= 44) {
+          zone = 'West India';
           daysToAdd = isBefore2PM ? 4 : 5;
         }
         // 4. North India (DL/HR/PB/UP/HP/JK: 11-28)
         else if (parseInt(p2) >= 11 && parseInt(p2) <= 28) {
+          zone = 'North India';
           daysToAdd = isBefore2PM ? 4 : 5;
         }
         // 5. East India (WB/OR/BH/NE: 70-85)
         else if (parseInt(p2) >= 70 && parseInt(p2) <= 85) {
+          zone = 'East India';
           daysToAdd = isBefore2PM ? 5 : 6;
         }
 
         const date = new Date();
         date.setDate(date.getDate() + daysToAdd);
         edd = date.toISOString().split('T')[0];
+
+        return { 
+          success: true, 
+          serviceable: !!isServiceable, 
+          carriers: data.carriers || [{ name: "Shipway Courier", id: "auto" }],
+          edd: edd,
+          zone: zone,
+          debug: data 
+        };
       }
 
       return { 
@@ -105,6 +120,7 @@ export class ShipwayService {
         serviceable: !!isServiceable, 
         carriers: data.carriers || [{ name: "Shipway Courier", id: "auto" }],
         edd: edd,
+        zone: 'India',
         debug: data 
       };
 
