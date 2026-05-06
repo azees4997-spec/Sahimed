@@ -171,12 +171,6 @@ export default function CheckoutPage() {
   const addressesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'addresses'), orderBy('updatedAt', 'desc')) : null, [db, user]);
   const { data: savedAddresses } = useCollection(addressesQuery);
 
-  if (!mounted) return (
-    <div className="min-h-screen bg-[#F4F7F6] flex items-center justify-center">
-       <Loader2 className="w-12 h-12 animate-spin text-primary opacity-20" />
-    </div>
-  );
-
   useEffect(() => {
     const initProfile = async () => {
       if (user && db) {
@@ -249,6 +243,12 @@ export default function CheckoutPage() {
     };
     fetchWallet();
   }, [user, cart]);
+
+  if (!mounted) return (
+    <div className="min-h-screen bg-[#F4F7F6] flex items-center justify-center">
+       <Loader2 className="w-12 h-12 animate-spin text-primary opacity-20" />
+    </div>
+  );
 
 
   const validate = () => {
