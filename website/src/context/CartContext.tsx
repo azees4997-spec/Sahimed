@@ -42,15 +42,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Fetch dynamic fees and promos with explicit pattern to avoid onSnapshot bugs in Firebase 11
   useEffect(() => {
     const fetchData = async () => {
-      if (!db) return;
+      if (!db) {
+        console.log("CART_CONTEXT: DB not ready yet...");
+        return;
+      }
       try {
-        const feesSnap = await getDocs(query(collection(db, 'fees'), where('isActive', '==', true)));
-        setActiveFees(feesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fee)));
+        console.log("CART_CONTEXT: Synchronizing Logistics & Promo Engines...");
+        
+        // Fetch all and filter in memory to avoid "missing index" errors and SDK query bugs
+        const feesSnap = await getDocs(collection(db, 'fees'));
+        const allFees = feesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fee));
+        const activeOnes = allFees.filter(f => f.isActive === true);
+        console.log(`CART_CONTEXT: Found ${activeOnes.length} active logistics policies.`, activeOnes);
+        setActiveFees(activeOnes);
 
-        const promosSnap = await getDocs(query(collection(db, 'promocodes'), where('isActive', '==', true)));
-        setAvailablePromos(promosSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PromoCode)));
+        const promosSnap = await getDocs(collection(db, 'promocodes'));
+        const allPromos = promosSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PromoCode));
+        const activePromosList = allPromos.filter(p => p.isActive === true);
+        console.log(`CART_CONTEXT: Found ${activePromosList.length} active promo codes.`);
+        setAvailablePromos(activePromosList);
+        
       } catch (err) {
-        console.error("CART_CONTEXT_FETCH_ERROR:", err);
+        console.error("CART_CONTEXT_FETCH_CRITICAL_ERROR:", err);
       }
     };
     fetchData();
