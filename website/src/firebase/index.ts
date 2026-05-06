@@ -86,10 +86,19 @@ export function initializeFirebase(): FirebaseSdks {
  * Used internally by initializeFirebase.
  */
 export function getSdks(firebaseApp: FirebaseApp): FirebaseSdks {
+  let firestore: Firestore;
+  try {
+    firestore = initializeFirestore(firebaseApp, {
+      localCache: memoryLocalCache()
+    });
+  } catch (e) {
+    firestore = getFirestore(firebaseApp);
+  }
+
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp),
+    firestore,
     storage: getStorage(firebaseApp),
     functions: getFunctions(firebaseApp)
   };
