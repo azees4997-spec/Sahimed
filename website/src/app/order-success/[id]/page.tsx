@@ -32,6 +32,37 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
 
   const { data: order, isLoading } = useDoc(orderRef);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center">
+        <Navbar />
+        <div className="animate-pulse flex flex-col items-center gap-4 py-20">
+          <div className="w-20 h-20 bg-slate-100 rounded-full" />
+          <div className="h-4 w-32 bg-slate-100 rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-6">
+            <CheckCircle2 className="w-10 h-10 opacity-20" />
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2 font-outfit">Order Not Found</h1>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8 max-w-[200px]">This order summary is unavailable, expired, or restricted to another account.</p>
+          <Button asChild className="rounded-full px-10 h-14 uppercase font-black tracking-widest text-[10px] bg-slate-900 shadow-xl shadow-slate-200">
+            <Link href="/">Return Home</Link>
+          </Button>
+        </main>
+        <BottomNav />
+      </div>
+    );
+  }
+
   const breakdown = order?.billingBreakdown;
   const totalSaved = breakdown?.savings || 0;
   const isPendingConsult = order?.status === 'Pending Consult';
