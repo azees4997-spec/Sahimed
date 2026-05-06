@@ -64,8 +64,19 @@ export default function CartPage() {
   }, [appliedPromo]);
 
   const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
-  const applicableFees = activeFees.filter(f => totalPrice >= (f.minPurchase || 0));
-  const feeTotal = applicableFees.reduce((acc, fee) => {
+  // LOGIC FIX: Tiered Delivery Fee (Synced with Checkout)
+  const feeTotal = activeFees.reduce((acc, fee) => {
+    if (!fee.isActive) return acc;
+    
+    if (fee.tiers && fee.tiers.length > 0) {
+      const sortedTiers = [...fee.tiers].sort((a: any, b: any) => b.minOrder - a.minOrder);
+      const matchingTier = sortedTiers.find(t => totalPrice >= t.minOrder);
+      if (matchingTier) return acc + matchingTier.charge;
+    }
+
+    const threshold = fee.minPurchase || 0;
+    const isWaived = threshold > 0 && totalPrice >= threshold;
+    if (isWaived) return acc;
     const amt = fee.discountedAmount ?? fee.originalAmount ?? 0;
     return fee.type === 'fixed' ? acc + amt : acc + (totalPrice * (amt / 100));
   }, 0);
