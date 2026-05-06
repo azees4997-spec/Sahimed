@@ -447,6 +447,10 @@ export default function CheckoutPage() {
 
   const handleOnlinePayment = async () => {
     if (!user) return;
+    
+    // CRITICAL: Validate data BEFORE opening payment gateway
+    if (!validate()) return;
+    
     setLoading(true);
 
     try {
@@ -490,6 +494,7 @@ export default function CheckoutPage() {
         modal: {
           ondismiss: function() {
             setLoading(false);
+            router.push('/payment-failed');
           }
         }
       };
@@ -503,10 +508,13 @@ export default function CheckoutPage() {
         title: "Payment Error", 
         description: err.message || "Could not initiate secure payment gateway." 
       });
+      router.push('/payment-failed');
     }
   };
 
   const onPlaceOrderClick = () => {
+    if (!validate()) return; // Extra check to ensure data is ready
+
     if (paymentMethod === 'Online') {
       handleOnlinePayment();
     } else {

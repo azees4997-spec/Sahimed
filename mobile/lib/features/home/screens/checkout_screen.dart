@@ -82,10 +82,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void _handlePaymentError(PaymentFailureResponse response) {
     if (mounted) {
       setState(() => _isProcessing = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Payment Failed: ${response.message}'),
-          backgroundColor: SahimedColors.accent,
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const OrderStatusScreen(isSuccess: false),
         ),
       );
     }
@@ -266,12 +266,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         );
         return;
       }
-      // Ensure name is actually present
+      // Ensure name and phone are actually present
       if (_nameController.text.trim().isEmpty || 
           _nameController.text == 'Sahimed User' || 
           _nameController.text == 'N/A') {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('PATIENT NAME IS MANDATORY')),
+        );
+        return;
+      }
+      if (_phoneController.text.trim().isEmpty || _phoneController.text.length < 10) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('VALID 10-DIGIT MOBILE NUMBER IS REQUIRED')),
         );
         return;
       }
