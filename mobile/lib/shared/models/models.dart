@@ -395,3 +395,32 @@ class PromoModel {
     };
   }
 }
+
+class FeeModel {
+  final String id;
+  final String name;
+  final double amount;
+  final double minPurchase;
+  final bool isActive;
+  final String type; // 'fixed' | 'percentage'
+
+  FeeModel({
+    required this.id,
+    required this.name,
+    required this.amount,
+    required this.minPurchase,
+    this.isActive = true,
+    this.type = 'fixed',
+  });
+
+  factory FeeModel.fromJson(Map<String, dynamic> json) {
+    return FeeModel(
+      id: json['id'] ?? json['_id'] ?? '',
+      name: json['name'] ?? '',
+      amount: (json['discountedAmount'] ?? json['amount'] ?? 0).toDouble(),
+      minPurchase: (json['minPurchase'] ?? 0).toDouble(),
+      isActive: json['isActive'] ?? true,
+      type: json['type'] ?? 'fixed',
+    );
+  }
+}

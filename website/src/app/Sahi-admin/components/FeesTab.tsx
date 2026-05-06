@@ -109,12 +109,17 @@ function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, o
     discountedAmount: initialData?.discountedAmount || 0, 
     type: initialData?.type || 'fixed', 
     minPurchase: initialData?.minPurchase || 0, 
-    tiers: initialData?.tiers || [{ minOrder: 499, charge: 50 }, { minOrder: 1000, charge: 25 }],
     isActive: initialData?.isActive ?? true 
   });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...form, updatedAt: serverTimestamp() };
+    const payload = { 
+      ...form, 
+      discountedAmount: Number(form.discountedAmount),
+      minPurchase: Number(form.minPurchase),
+      updatedAt: serverTimestamp() 
+    };
     try {
       if (initialData?.id) {
         await updateDocumentNonBlocking(doc(db, 'fees', initialData.id), payload);
@@ -127,22 +132,63 @@ function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, o
       toast({ variant: 'destructive', title: "Update failed", description: err.message });
     }
   };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2"><Label className="text-[10px] font-black">Fee label</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-      <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
-        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tiered Pricing Levels</h4>
-        {form.tiers.map((t: any, i: number) => (
-          <div key={i} className="flex gap-4 items-end">
-            <div className="flex-1 space-y-2"><Label className="text-[8px] font-black">For orders above (₹)</Label><Input type="number" value={t.minOrder} onChange={e => { const next = [...form.tiers]; next[i].minOrder = Number(e.target.value); setForm({...form, tiers: next}); }} className="rounded-xl h-12 bg-white border-none font-bold" /></div>
-            <div className="flex-1 space-y-2"><Label className="text-[8px] font-black">Charge amount (₹)</Label><Input type="number" value={t.charge} onChange={e => { const next = [...form.tiers]; next[i].charge = Number(e.target.value); setForm({...form, tiers: next}); }} className="rounded-xl h-12 bg-white border-none font-bold" /></div>
-            <Button type="button" variant="ghost" size="icon" onClick={() => setForm({...form, tiers: form.tiers.filter((_: any, idx: number) => idx !== i)})} className="h-10 w-10 text-red-300"><Trash2 className="w-4 h-4" /></Button>
-          </div>
-        ))}
-        <Button type="button" onClick={() => setForm({...form, tiers: [...form.tiers, { minOrder: 0, charge: 0 }]})} variant="outline" className="w-full rounded-xl h-12 border-dashed font-black text-[10px] gap-2"><PlusCircle className="w-4 h-4" /> Add price level</Button>
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fee Label (e.g. Delivery Charge)</Label>
+        <Input 
+          value={form.name} 
+          onChange={e => setForm({...form, name: e.target.value})} 
+          required 
+          placeholder="Shipping / Delivery Fee"
+          className="rounded-2xl h-14 bg-gray-50 border-none font-bold" 
+        />
       </div>
-      <div className="flex items-center space-x-2"><Checkbox id="fee-active" checked={form.isActive} onCheckedChange={c => setForm({...form, isActive: !!c})} /><Label htmlFor="fee-active" className="text-[10px] font-black cursor-pointer">Active in cart & checkout</Label></div>
-      <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white">Update logistics policy</Button>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fee Amount (₹)</Label>
+          <Input 
+            type="number"
+            value={form.discountedAmount} 
+            onChange={e => setForm({...form, discountedAmount: Number(e.target.value)})} 
+            required 
+            className="rounded-2xl h-14 bg-gray-50 border-none font-bold" 
+          />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Free Above (₹)</Label>
+          <Input 
+            type="number"
+            value={form.minPurchase} 
+            onChange={e => setForm({...form, minPurchase: Number(e.target.value)})} 
+            required 
+            className="rounded-2xl h-14 bg-gray-50 border-none font-bold" 
+          />
+        </div>
+      </div>
+
+      <div className="p-6 bg-blue-50/50 rounded-[32px] border border-blue-100 space-y-2">
+        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Pricing Strategy Preview</p>
+        <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
+          Orders below <span className="text-blue-600">₹{form.minPurchase}</span> will be charged <span className="text-blue-600">₹{form.discountedAmount}</span>. 
+          Orders equal to or above this amount will have <span className="text-green-600 uppercase">Free Delivery</span>.
+        </p>
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Checkbox 
+          id="fee-active" 
+          checked={form.isActive} 
+          onCheckedChange={c => setForm({...form, isActive: !!c})} 
+        />
+        <Label htmlFor="fee-active" className="text-[10px] font-black cursor-pointer">Active in Clinical Matrix</Label>
+      </div>
+
+      <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.01] active:scale-95 transition-all">
+        Update Logistics Policy
+      </Button>
     </form>
   );
 }

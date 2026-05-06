@@ -105,8 +105,18 @@ export default function CheckoutPage() {
   const [isUploading, setIsUploading] = useState(false);
 
   const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
-  const applicableFees = activeFees.filter(f => totalPrice >= (f.minPurchase || 0));
-  const feeTotal = applicableFees.reduce((acc, fee) => {
+  
+  // LOGIC FIX: Fee is applied ONLY IF totalPrice < minPurchase
+  // If f.minPurchase is 500, and totalPrice is 400, fee is applied.
+  // If totalPrice is 600, fee is waived (0).
+  const feeTotal = activeFees.reduce((acc, fee) => {
+    if (!fee.isActive) return acc;
+    
+    const threshold = fee.minPurchase || 0;
+    const isWaived = threshold > 0 && totalPrice >= threshold;
+    
+    if (isWaived) return acc;
+
     const amt = fee.discountedAmount ?? fee.originalAmount ?? 0;
     return fee.type === 'fixed' ? acc + amt : acc + (totalPrice * (amt / 100));
   }, 0);

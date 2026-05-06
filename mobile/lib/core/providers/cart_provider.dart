@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,19 +9,33 @@ import '../../../shared/models/models.dart';
 class CartProvider with ChangeNotifier {
   List<CartItem> _items = [];
   PromoModel? _appliedPromo;
+  List<FeeModel> _activeFees = [];
   final String _prefKey = 'sahimed_cart';
 
   CartProvider() {
     _loadCart();
+    _listenToFees();
+  }
+
+  void _listenToFees() {
+    FirebaseFirestore.instance
+        .collection('fees')
+        .where('isActive', isEqualTo: true)
+        .snapshots()
+        .listen((snapshot) {
+      _activeFees =
+          snapshot.docs.map((doc) => FeeModel.fromJson({...doc.data(), 'id': doc.id})).toList();
+      notifyListeners();
+    });
   }
 
   List<CartItem> get items => _items;
   PromoModel? get appliedPromo => _appliedPromo;
 
   double get subtotal =>
-      _items.fold(0, (sum, item) => sum + (item.product.mrp * item.quantity));
+      _items.fold(0.0, (sum, item) => sum + (item.product.mrp * item.quantity));
   double get total =>
-      _items.fold(0, (sum, item) => sum + (item.product.price * item.quantity));
+      _items.fold(0.0, (sum, item) => sum + (item.product.price * item.quantity));
 
   double get promoDiscount {
     if (_appliedPromo == null || total < _appliedPromo!.minOrderValue) {
@@ -41,7 +56,23 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  double get deliveryFee => 0.0;
+  double get deliveryFee {
+    double feeTotal = 0.0;
+    for (var fee in _activeFees) {
+      // LOGIC FIX: Waive if total >= minPurchase
+      if (fee.minPurchase > 0 && total >= fee.minPurchase) {
+        continue;
+      }
+      
+      if (fee.type == 'fixed') {
+        feeTotal += fee.amount;
+      } else {
+        feeTotal += (total * (fee.amount / 100));
+      }
+    }
+    return feeTotal;
+  }
+
   double get packingFee => 0.0;
 
   double get finalTotal => (total - promoDiscount) + deliveryFee + packingFee;
