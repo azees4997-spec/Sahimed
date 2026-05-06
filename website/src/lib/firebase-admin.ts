@@ -40,5 +40,20 @@ export const getAuthAdmin = () => {
   return (app as admin.app.App).auth();
 };
 
-export const db = getDbAdmin();
-export const auth = getAuthAdmin();
+/**
+ * STABILIZATION: Use Proxies for db and auth to prevent build-time crashes
+ * when environment variables are missing during static generation/prerendering.
+ */
+export const db: admin.firestore.Firestore = new Proxy({} as admin.firestore.Firestore, {
+  get: (target, prop) => {
+    const instance = getDbAdmin();
+    return (instance as any)[prop];
+  }
+});
+
+export const auth: admin.auth.Auth = new Proxy({} as admin.auth.Auth, {
+  get: (target, prop) => {
+    const instance = getAuthAdmin();
+    return (instance as any)[prop];
+  }
+});
