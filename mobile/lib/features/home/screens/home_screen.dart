@@ -192,7 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHeroTop(BuildContext context) {
     return Container(
       color: const Color(0xFFFFF9F9),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -224,14 +224,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 RichText(
                   text: TextSpan(
-                    style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w900, height: 1.1, color: Colors.black),
+                    style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w900, height: 1.1, color: const Color(0xFF0F172A)),
                     children: [
-                      const TextSpan(text: 'AFFORDABLE\nSOLUTIONS FOR\n'),
+                      const TextSpan(text: 'AFFORDABLE SOLUTIONS FOR '),
                       TextSpan(
-                        text: 'EVERYDAY CARE',
+                        text: 'EVERYDAY LIFE',
                         style: GoogleFonts.outfit(color: SahimedColors.primary, fontStyle: FontStyle.italic),
                       ),
                     ],
@@ -245,28 +245,28 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  color: SahimedColors.primary.withOpacity(0.15),
+                  blurRadius: 30,
+                  offset: const Offset(0, 15),
                 ),
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               child: CachedNetworkImage(
                 imageUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop',
-                width: 100,
-                height: 100,
+                width: 110,
+                height: 120,
                 fit: BoxFit.cover,
                 alignment: Alignment.topCenter,
                 errorWidget: (ctx, _, __) => Container(
-                  width: 100,
-                  height: 100,
+                  width: 110,
+                  height: 120,
                   color: _lavender,
-                  child: const Icon(LucideIcons.pill, color: SahimedColors.primary, size: 40),
+                  child: const Icon(LucideIcons.stethoscope, color: SahimedColors.primary, size: 40),
                 ),
               ),
             ),
@@ -308,7 +308,7 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Order on Call',
             iconBg: const Color(0xFFF43F5E), // rose-500
             tileBg: _sahiPink,
-            icon: const Icon(LucideIcons.phone, size: 18, color: Colors.white),
+            icon: const Icon(LucideIcons.phoneCall, size: 18, color: Colors.white),
             onTap: () async {
               if (await PermissionService.requestPhone(context)) {
                 _launch('tel:+917349499898');
@@ -526,18 +526,47 @@ class _StickySearchDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: _bgPage,
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(100)),
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: SahimedColors.primary.withOpacity(0.1),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              ),
+            ],
+            border: Border.all(color: const Color(0xFFF1F5F9), width: 2),
+          ),
           child: Row(
             children: [
-              const Icon(LucideIcons.search, size: 18),
-              const SizedBox(width: 12),
-              Text('Search Medicines...', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.grey)),
+              Expanded(
+                child: Text(
+                  'SEARCH MEDICINES...',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF94A3B8),
+                    letterSpacing: 1.5,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: SahimedColors.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(LucideIcons.search, size: 22, color: Colors.white),
+              ),
             ],
           ),
         ),

@@ -1,6 +1,12 @@
 "use client"
 
 import { useState, useEffect } from 'react';
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -322,7 +328,7 @@ export default function CheckoutPage() {
     }
   };
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = async (body?: any) => {
     if (!user || !db) return;
     if (!selectedAddressId) {
       toast({ variant: 'destructive', title: "No address", description: "Please select or add a delivery point to proceed." });
@@ -361,6 +367,8 @@ export default function CheckoutPage() {
       totalAmount: finalPayable,
       status: 'Pending',
       paymentType: paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online',
+      paymentId: body?.paymentId || null, // Capture Razorpay payment ID
+      razorpayOrderId: body?.razorpayOrderId || null,
       patientName: orderInfo.patientName,
       phoneNumber: `+91${cleanPhone}`,
       clinicalPath: clinicalPath,
@@ -434,6 +442,75 @@ export default function CheckoutPage() {
     } catch (err: any) {
       setLoading(false);
       toast({ variant: 'destructive', title: "Order failed", description: err.message || "Failed to sync order with clinical hub." });
+    }
+  };
+
+  const handleOnlinePayment = async () => {
+    if (!user) return;
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/payments/razorpay', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await user.getIdToken()}`
+        },
+        body: JSON.stringify({
+          amount: Math.max(0, finalPayable - (useWallet ? allowableWallet : 0))
+        })
+      });
+
+      const rzpOrder = await response.json();
+
+      if (!response.ok) throw new Error(rzpOrder.error);
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: rzpOrder.amount,
+        currency: rzpOrder.currency,
+        name: "SahiMed",
+        description: "Clinical Healthcare Purchase",
+        order_id: rzpOrder.id,
+        handler: function (response: any) {
+          // Payment successful! Now place the final order
+          handlePlaceOrder({
+            paymentId: response.razorpay_payment_id,
+            razorpayOrderId: response.razorpay_order_id,
+            signature: response.razorpay_signature
+          });
+        },
+        prefill: {
+          name: orderInfo.patientName,
+          contact: `+91${orderInfo.phoneNumber.replace(/\D/g, '')}`,
+        },
+        theme: {
+          color: "#7C3AED", // SahiMed Primary Color
+        },
+        modal: {
+          ondismiss: function() {
+            setLoading(false);
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err: any) {
+      setLoading(false);
+      toast({ 
+        variant: 'destructive', 
+        title: "Payment Error", 
+        description: err.message || "Could not initiate secure payment gateway." 
+      });
+    }
+  };
+
+  const onPlaceOrderClick = () => {
+    if (paymentMethod === 'Online') {
+      handleOnlinePayment();
+    } else {
+      handlePlaceOrder();
     }
   };
 
@@ -772,30 +849,58 @@ export default function CheckoutPage() {
                    <div className="w-1 h-6 bg-primary rounded-full" />
                    <h3 className="text-lg font-black text-slate-900 tracking-tight font-outfit uppercase">Payment Method</h3>
                 </div>
-                <div 
-                  className={cn(
-                    "p-8 rounded-[48px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white/40 backdrop-blur-md shadow-xl relative overflow-hidden group",
-                    paymentMethod === 'COD' ? "border-primary bg-white" : "border-transparent"
-                  )}
-                  onClick={() => setPaymentMethod('COD')}
-                >
-                  <div className="flex items-center gap-8 relative z-10">
-                    <div className={cn("w-16 h-16 rounded-[24px] flex items-center justify-center shadow-inner transition-colors", paymentMethod === 'COD' ? "bg-primary text-white" : "bg-white text-slate-300")}>
-                      <Banknote className="w-8 h-8" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div 
+                    className={cn(
+                      "p-8 rounded-[48px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white/40 backdrop-blur-md shadow-xl relative overflow-hidden group",
+                      paymentMethod === 'COD' ? "border-primary bg-white" : "border-transparent"
+                    )}
+                    onClick={() => setPaymentMethod('COD')}
+                  >
+                    <div className="flex items-center gap-8 relative z-10">
+                      <div className={cn("w-16 h-16 rounded-[24px] flex items-center justify-center shadow-inner transition-colors", paymentMethod === 'COD' ? "bg-primary text-white" : "bg-white text-slate-300")}>
+                        <Banknote className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <p className="font-black text-lg tracking-tight font-outfit uppercase">Cash on Delivery</p>
+                        <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-1">Pay at doorstep</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-black text-lg tracking-tight font-outfit uppercase">Cash on Delivery</p>
-                      <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-1">Pay when you receive your order</p>
+                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-inner relative z-10", paymentMethod === 'COD' ? "bg-primary" : "bg-white")}>
+                      <Check className={cn("w-4 h-4", paymentMethod === 'COD' ? "text-white" : "text-transparent")} />
                     </div>
+                    {paymentMethod === 'COD' && (
+                      <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12">
+                        <Zap className="w-24 h-24 text-primary fill-primary" />
+                      </div>
+                    )}
                   </div>
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-inner relative z-10", paymentMethod === 'COD' ? "bg-primary" : "bg-white")}>
-                    <Check className={cn("w-4 h-4", paymentMethod === 'COD' ? "text-white" : "text-transparent")} />
-                  </div>
-                  {paymentMethod === 'COD' && (
-                    <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12">
-                      <Zap className="w-24 h-24 text-primary fill-primary" />
+
+                  <div 
+                    className={cn(
+                      "p-8 rounded-[48px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white/40 backdrop-blur-md shadow-xl relative overflow-hidden group",
+                      paymentMethod === 'Online' ? "border-primary bg-white" : "border-transparent"
+                    )}
+                    onClick={() => setPaymentMethod('Online')}
+                  >
+                    <div className="flex items-center gap-8 relative z-10">
+                      <div className={cn("w-16 h-16 rounded-[24px] flex items-center justify-center shadow-inner transition-colors", paymentMethod === 'Online' ? "bg-primary text-white" : "bg-white text-slate-300")}>
+                        <ShieldCheck className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <p className="font-black text-lg tracking-tight font-outfit uppercase">Online Payment</p>
+                        <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-1">UPI, Card, Net Banking</p>
+                      </div>
                     </div>
-                  )}
+                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-inner relative z-10", paymentMethod === 'Online' ? "bg-primary" : "bg-white")}>
+                      <Check className={cn("w-4 h-4", paymentMethod === 'Online' ? "text-white" : "text-transparent")} />
+                    </div>
+                    {paymentMethod === 'Online' && (
+                      <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12">
+                        <Lock className="w-24 h-24 text-primary fill-primary" />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             </div>
@@ -886,7 +991,7 @@ export default function CheckoutPage() {
 
                 <div className="space-y-6 relative z-10">
                   <Button 
-                    onClick={handlePlaceOrder} 
+                    onClick={onPlaceOrderClick} 
                     disabled={loading} 
                     className="w-full h-20 rounded-full text-xs font-black tracking-[0.3em] uppercase shadow-2xl shadow-primary/20 bg-primary hover:bg-primary/90 gap-4 text-white transition-all active:scale-95 group"
                   >

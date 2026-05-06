@@ -32,9 +32,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
       final ordersData = await _apiService.getUserOrders();
       setState(() => _orders = ordersData.map((m) => OrderModel.fromJson(m)).toList());
     } catch (e) {
+      debugPrint('CRITICAL: Error in _loadOrders: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error loading orders')),
+          SnackBar(
+            content: Text('Error loading orders: ${e.toString().split('\n').first}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {

@@ -43,14 +43,18 @@ class _RemindersScreenState extends State<RemindersScreen> {
   }
 
   Future<void> _saveReminders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final listJson = _reminders.map((r) => r.toJson()).toList();
-    final String data = json.encode(listJson);
-    await prefs.setString('pill_reminders', data);
-    
-    // Sync to Database for Admin Tracking
-    final apiService = ApiService();
-    await apiService.syncReminders(listJson.cast<Map<String, dynamic>>());
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final listJson = _reminders.map((r) => r.toJson()).toList();
+      final String data = json.encode(listJson);
+      await prefs.setString('pill_reminders', data);
+      
+      // Sync to Database for Admin Tracking
+      final apiService = ApiService();
+      await apiService.syncReminders(listJson.cast<Map<String, dynamic>>());
+    } catch (e) {
+      debugPrint('Error saving reminders: $e');
+    }
   }
 
 
@@ -205,11 +209,24 @@ class _RemindersScreenState extends State<RemindersScreen> {
     );
 
     if (confirm == true) {
-      await ReminderService.cancelReminder(_getNotificationId(reminder.id));
-      setState(() {
-        _reminders.removeAt(index);
-      });
-      _saveReminders();
+      try {
+        await ReminderService.cancelReminder(_getNotificationId(reminder.id));
+        setState(() {
+          _reminders.removeAt(index);
+        });
+        await _saveReminders();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Reminder deleted successfully')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error deleting reminder: $e')),
+          );
+        }
+      }
     }
   }
 
@@ -291,7 +308,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
             onPressed: () => _editReminder(index),
           ),
           IconButton(
-            icon: const Icon(LucideIcons.trash2, color: Color(0xFFFDA4AF), size: 18),
+            icon: const Icon(LucideIcons.trash2, color: Colors.redAccent, size: 20),
             onPressed: () => _deleteReminder(index),
           ),
         ],

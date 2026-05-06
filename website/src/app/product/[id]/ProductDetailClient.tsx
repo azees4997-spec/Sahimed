@@ -26,7 +26,9 @@ import {
   TrendingUp,
   FlaskConical,
   Truck,
-  MapPin
+  MapPin,
+  Edit2,
+  Clock
 } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
@@ -104,9 +106,9 @@ const ComparisonCard = ({
         <div className="space-y-3 sm:space-y-6">
           <div className="flex items-center justify-between">
             <Badge className={cn("rounded-full font-black text-[7px] sm:text-[9px] px-2 py-0.5 uppercase tracking-widest", isAlt ? "bg-accent text-white" : "bg-slate-100 text-slate-400")}>{label}</Badge>
-            <RibbonBadge 
-              savingsPct={displaySavingsPct} 
-              variant={isAlt ? 'accent' : 'primary'} 
+            <RibbonBadge
+              savingsPct={displaySavingsPct}
+              variant={isAlt ? 'accent' : 'primary'}
               className="right-2 sm:right-6"
               size="sm"
             />
@@ -134,7 +136,7 @@ const ComparisonCard = ({
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
                 {images.map((img: string, idx: number) => (
-                  <button 
+                  <button
                     key={idx}
                     onClick={() => setCurrentImageIndex(idx)}
                     className={cn(
@@ -227,12 +229,47 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
     }
   };
 
+  const [isEditingPincode, setIsEditingPincode] = useState(false);
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      const cutoff = new Date();
+      cutoff.setHours(14, 0, 0, 0);
+
+      let diff = cutoff.getTime() - now.getTime();
+      if (diff < 0) {
+        cutoff.setDate(cutoff.getDate() + 1);
+        diff = cutoff.getTime() - now.getTime();
+      }
+
+      const h = Math.floor(diff / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+      setTimeLeft(`${h}h ${m}m ${s}s`);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, '').slice(0, 6);
     setActivePincode(val);
     if (val.length === 6) {
       localStorage.setItem('activePincode', val);
-      fetchEdd(val);
+    }
+  };
+
+  const onCheckPincode = () => {
+    if (activePincode.length === 6) {
+      fetchEdd(activePincode);
+      setIsEditingPincode(false);
+    } else {
+      toast({
+        variant: 'destructive',
+        title: "Invalid Pincode",
+        description: "Please enter a valid 6-digit pincode."
+      });
     }
   };
 
@@ -392,29 +429,54 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                   </p>
                 </div>
               </div>
-              
-              <div className="w-full sm:w-auto flex items-center gap-2 px-3 sm:px-4 py-2 bg-white rounded-full border border-emerald-100 shadow-sm">
+
+              <div className="w-full sm:w-auto flex items-center gap-2 pl-3 sm:pl-4 pr-1 py-1 bg-white rounded-full border border-emerald-100 shadow-sm group focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
                 <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                <input 
+                <input
                   type="text"
                   maxLength={6}
+                  readOnly={!isEditingPincode}
                   value={activePincode}
                   onChange={handlePincodeChange}
                   placeholder="Pincode"
-                  className="bg-transparent border-none outline-none text-[10px] sm:text-xs font-black text-emerald-900 uppercase tracking-wider w-16 sm:w-20"
+                  className={cn(
+                    "bg-transparent border-none outline-none text-[10px] sm:text-xs font-black text-emerald-900 uppercase tracking-wider w-16 sm:w-20",
+                    !isEditingPincode && "cursor-not-allowed opacity-70"
+                  )}
                 />
-                <div className="w-[1px] h-3 bg-emerald-100 hidden sm:block" />
-                <span className="text-[7px] sm:text-[9px] font-black text-emerald-600 uppercase tracking-widest hidden sm:block">Edit</span>
+                <button
+                  onClick={() => setIsEditingPincode(!isEditingPincode)}
+                  className="p-2 hover:bg-emerald-50 rounded-full transition-colors"
+                  title="Edit Pincode"
+                >
+                  <Edit2 className={cn("w-3 h-3 sm:w-4 sm:h-4", isEditingPincode ? "text-emerald-600" : "text-slate-400")} />
+                </button>
+                <button
+                  onClick={onCheckPincode}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[7px] sm:text-[9px] px-3 sm:px-5 py-1.5 sm:py-2 rounded-full uppercase tracking-widest transition-all active:scale-95 shadow-sm ml-1"
+                >
+                  Check
+                </button>
               </div>
+            </div>
+
+            {/* Flipkart-style Delivery Timer */}
+            <div className="mt-4 flex items-center justify-center sm:justify-start gap-2 text-emerald-700">
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100 animate-pulse">
+                <Clock className="w-3 h-3" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Order within {timeLeft}</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                for <span className="text-emerald-600">Tomorrow</span> delivery
+              </span>
             </div>
           </motion.div>
 
           <motion.section
-
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-white rounded-[24px] sm:rounded-[48px] p-4 sm:p-12 shadow-sm border border-slate-100 overflow-hidden"
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-[24px] sm:rounded-[48px] p-4 sm:p-12 shadow-sm border border-slate-100 overflow-hidden relative z-10"
           >
             <Tabs defaultValue="clinical" className="w-full">
               <TabsList className="bg-slate-50 p-1 rounded-full h-10 sm:h-14 w-full max-w-[500px] flex mx-auto mb-8 border border-slate-100 shadow-inner">
@@ -425,26 +487,36 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
 
               <TabsContent value="clinical" className="space-y-10 focus-visible:outline-none">
                 <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-8">
-                  <div className="bg-lavender p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-white space-y-2 sm:space-y-4 shadow-sm">
-                    <div className="flex items-center gap-2 sm:gap-4"><ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /><h3 className="text-[10px] sm:text-lg font-black text-slate-800 tracking-tighter font-outfit uppercase">Medical Uses</h3></div>
-                    <p className="text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase opacity-70 tracking-tight">{product?.treatment || "Standard medical use."}</p>
-                  </div>
-                  <div className="bg-sahi-blue p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-white space-y-2 sm:space-y-4 shadow-sm">
-                    <div className="flex items-center gap-2 sm:gap-4"><Info className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /><h3 className="text-[10px] sm:text-lg font-black text-slate-800 tracking-tighter font-outfit uppercase">Product Info</h3></div>
-                    <p className="text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase opacity-70 tracking-tight">{product?.description || "Medicine details."}</p>
-                  </div>
+                  <ExpandableInfoTile
+                    icon={ClipboardList}
+                    title="Medical Uses"
+                    text={product?.treatment || "Standard medical use."}
+                    color="bg-lavender"
+                  />
+                  <ExpandableInfoTile
+                    icon={Info}
+                    title="Product Info"
+                    text={product?.description || "Medicine details."}
+                    color="bg-sahi-blue"
+                  />
                 </div>
               </TabsContent>
 
               <TabsContent value="safety" className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-8 focus-visible:outline-none">
-                <div className="bg-sahi-pink border border-white p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] flex flex-col sm:flex-row gap-4 sm:gap-6 shadow-sm">
-                  <div className="w-10 h-10 sm:w-16 sm:h-16 bg-white rounded-[16px] sm:rounded-[24px] flex items-center justify-center shrink-0 shadow-lg"><AlertTriangle className="w-4 h-4 sm:w-6 sm:h-6 text-rose-500" /></div>
-                  <div><h4 className="text-[8px] sm:text-xs font-black text-rose-600 mb-1 sm:mb-2 uppercase tracking-widest">Safety Advice</h4><p className="text-[8px] sm:text-[10px] font-black text-rose-900/60 leading-tight sm:leading-relaxed uppercase tracking-tight">{product?.safetyAdvice || "Follow medical guidance."}</p></div>
-                </div>
-                <div className="bg-sahi-blue border border-white p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] flex flex-col sm:flex-row gap-4 sm:gap-6 shadow-sm">
-                  <div className="w-10 h-10 sm:w-16 sm:h-16 bg-white rounded-[16px] sm:rounded-[24px] flex items-center justify-center shrink-0 shadow-lg"><Stethoscope className="w-4 h-4 sm:w-6 sm:h-6 text-primary" /></div>
-                  <div><h4 className="text-[8px] sm:text-xs font-black text-primary mb-1 sm:mb-2 uppercase tracking-widest">How to Use</h4><p className="text-[8px] sm:text-[10px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase tracking-tight">{product?.howToUse || "Take as directed by your doctor."}</p></div>
-                </div>
+                <ExpandableInfoTile
+                  icon={AlertTriangle}
+                  title="Safety Advice"
+                  text={product?.safetyAdvice || "Follow medical guidance."}
+                  color="bg-sahi-pink"
+                  iconColor="text-rose-500"
+                  titleColor="text-rose-600"
+                />
+                <ExpandableInfoTile
+                  icon={Stethoscope}
+                  title="How to Use"
+                  text={product?.howToUse || "Take as directed by your doctor."}
+                  color="bg-sahi-blue"
+                />
               </TabsContent>
 
               <TabsContent value="interactions" className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 focus-visible:outline-none">
@@ -456,17 +528,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                   { icon: Package, title: "Renal", text: product?.kidneyInteraction, color: "bg-lavender" },
                   { icon: ShieldAlert, title: "Hepatic", text: product?.liverInteraction, color: "bg-slate-50" }
                 ].map((item, i) => (
-                  <motion.div
-                    key={i}
-                    variants={fadeInVariant}
-                    className={cn("p-4 sm:p-8 rounded-[24px] sm:rounded-[32px] flex flex-col gap-3 sm:gap-5 border border-white shadow-sm", item.color)}
-                  >
-                    <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[12px] sm:rounded-[16px] flex items-center justify-center text-primary shrink-0 shadow-sm border border-slate-50"><item.icon className="w-4 h-4 sm:w-5 sm:h-5" /></div>
-                    <div className="flex flex-col gap-0.5 sm:gap-1">
-                      <h4 className="text-[7px] sm:text-[9px] font-black tracking-[0.2em] text-slate-500/60 uppercase">{item.title}</h4>
-                      <p className="text-[9px] sm:text-[11px] font-black text-slate-800 leading-tight uppercase tracking-tight line-clamp-2">{item.text || "CONSULT DOCTOR"}</p>
-                    </div>
-                  </motion.div>
+                  <InteractionCard key={i} item={item} />
                 ))}
               </TabsContent>
             </Tabs>
@@ -474,5 +536,274 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
         </main>
       </div>
     </PageTransition>
+  );
+}
+
+function InteractionCard({ item }: { item: any }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <motion.div
+      layout
+      onClick={() => setIsExpanded(!isExpanded)}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        "p-4 sm:p-8 rounded-[24px] sm:rounded-[32px] flex flex-col gap-3 sm:gap-5 border border-white shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98]",
+        item.color,
+        isExpanded ? "ring-2 ring-primary/20 z-20" : "z-10"
+      )}
+            <motion.div
+              initial={{ scale: 0.98, opacity: 0, y: -5 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              className="mb-2 sm:mb-6 px-2"
+            >
+              <div className="bg-gradient-to-r from-primary to-accent text-white py-1.5 sm:py-2.5 px-4 sm:px-8 rounded-[12px] sm:rounded-[20px] shadow-lg flex items-center justify-center gap-2 text-center">
+                <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-bounce" />
+                <h2 className="text-[8px] sm:text-[11px] font-black tracking-widest uppercase line-clamp-1">
+                  Switch and save ₹{Number(switchSavingsAmt).toFixed(0)} • Same Medicine
+                </h2>
+              </div>
+            </motion.div>
+          )}
+
+          <div className="mb-4 sm:mb-10 px-1">
+            {showComparison ? (
+              <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-6 items-stretch">
+                <ComparisonCard
+                  product={brandedItem}
+                  label="BRANDED"
+                  getItemQuantity={getItemQuantity}
+                  addToCart={addToCart}
+                  showComparison={showComparison}
+                  brandedMrp={brandedMrp}
+                />
+                <ComparisonCard
+                  product={genericItem}
+                  label="SAHI RECOMMENDED"
+                  isAlt
+                  getItemQuantity={getItemQuantity}
+                  addToCart={addToCart}
+                  showComparison={showComparison}
+                  brandedMrp={brandedMrp}
+                />
+              </div>
+            ) : (
+              <div className="flex justify-center">
+                <div className="w-full sm:w-[480px]">
+                  <ComparisonCard
+                    product={product}
+                    label={isBranded ? "Branded" : "Generic Solution"}
+                    getItemQuantity={getItemQuantity}
+                    addToCart={addToCart}
+                    showComparison={showComparison}
+                    brandedMrp={brandedMrp}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Delivery Information & Pincode Checker */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 sm:mb-10 px-1"
+          >
+            <div className="bg-emerald-50 border border-emerald-100 rounded-[20px] sm:rounded-[32px] p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between shadow-sm gap-4">
+              <div className="flex items-center gap-3 sm:gap-5 w-full">
+                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white rounded-full flex items-center justify-center shadow-sm border border-emerald-50 shrink-0">
+                  <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
+                </div>
+                <div className="space-y-0.5">
+                  <h3 className="text-[10px] sm:text-base font-black text-emerald-900 tracking-tight uppercase font-outfit">
+                    {edd ? `DELIVERY BY ${edd}` : "CHECK SERVICEABILITY"}
+                  </h3>
+                  <p className="text-[8px] sm:text-[11px] font-bold text-emerald-700/70 uppercase tracking-widest">
+                    {edd ? "Guaranteed express shipping" : "Enter pincode to see delivery date"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="w-full sm:w-auto flex items-center gap-2 pl-3 sm:pl-4 pr-1 py-1 bg-white rounded-full border border-emerald-100 shadow-sm group focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                <input
+                  type="text"
+                  maxLength={6}
+                  readOnly={!isEditingPincode}
+                  value={activePincode}
+                  onChange={handlePincodeChange}
+                  placeholder="Pincode"
+                  className={cn(
+                    "bg-transparent border-none outline-none text-[10px] sm:text-xs font-black text-emerald-900 uppercase tracking-wider w-16 sm:w-20",
+                    !isEditingPincode && "cursor-not-allowed opacity-70"
+                  )}
+                />
+                <button
+                  onClick={() => setIsEditingPincode(!isEditingPincode)}
+                  className="p-2 hover:bg-emerald-50 rounded-full transition-colors"
+                  title="Edit Pincode"
+                >
+                  <Edit2 className={cn("w-3 h-3 sm:w-4 sm:h-4", isEditingPincode ? "text-emerald-600" : "text-slate-400")} />
+                </button>
+                <button
+                  onClick={onCheckPincode}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[7px] sm:text-[9px] px-3 sm:px-5 py-1.5 sm:py-2 rounded-full uppercase tracking-widest transition-all active:scale-95 shadow-sm ml-1"
+                >
+                  Check
+                </button>
+              </div>
+            </div>
+
+            {/* Flipkart-style Delivery Timer */}
+            <div className="mt-4 flex items-center justify-center sm:justify-start gap-2 text-emerald-700">
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100 animate-pulse">
+                <Clock className="w-3 h-3" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Order within {timeLeft}</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                for <span className="text-emerald-600">Tomorrow</span> delivery
+              </span>
+            </div>
+          </motion.div>
+
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-[24px] sm:rounded-[48px] p-4 sm:p-12 shadow-sm border border-slate-100 overflow-hidden relative z-10"
+          >
+            <Tabs defaultValue="clinical" className="w-full">
+              <TabsList className="bg-slate-50 p-1 rounded-full h-10 sm:h-14 w-full max-w-[500px] flex mx-auto mb-8 border border-slate-100 shadow-inner">
+                <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Information</TabsTrigger>
+                <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Safety Advice</TabsTrigger>
+                <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Interactions</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="clinical" className="space-y-10 focus-visible:outline-none">
+                <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-8">
+                  <ExpandableInfoTile
+                    icon={ClipboardList}
+                    title="Medical Uses"
+                    text={product?.treatment || "Standard medical use."}
+                    color="bg-lavender"
+                  />
+                  <ExpandableInfoTile
+                    icon={Info}
+                    title="Product Info"
+                    text={product?.description || "Medicine details."}
+                    color="bg-sahi-blue"
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="safety" className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-8 focus-visible:outline-none">
+                <ExpandableInfoTile
+                  icon={AlertTriangle}
+                  title="Safety Advice"
+                  text={product?.safetyAdvice || "Follow medical guidance."}
+                  color="bg-sahi-pink"
+                  iconColor="text-rose-500"
+                  titleColor="text-rose-600"
+                />
+                <ExpandableInfoTile
+                  icon={Stethoscope}
+                  title="How to Use"
+                  text={product?.howToUse || "Take as directed by your doctor."}
+                  color="bg-sahi-blue"
+                />
+              </TabsContent>
+
+              <TabsContent value="interactions" className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 focus-visible:outline-none">
+                {[
+                  { icon: FlaskConical, title: "Composition", text: product?.saltComposition, color: "bg-lavender" },
+                  { icon: Baby, title: "Pregnancy", text: product?.pregnancyInteraction, color: "bg-sahi-pink" },
+                  { icon: Milk, title: "Lactation", text: product?.lactationInteraction, color: "bg-sahi-blue" },
+                  { icon: Car, title: "Driving", text: product?.drivingInteraction, color: "bg-sahi-green" },
+                  { icon: Package, title: "Renal", text: product?.kidneyInteraction, color: "bg-lavender" },
+                  { icon: ShieldAlert, title: "Hepatic", text: product?.liverInteraction, color: "bg-slate-50" }
+                ].map((item, i) => (
+                  <InteractionCard key={i} item={item} />
+                ))}
+              </TabsContent>
+            </Tabs>
+          </motion.section>
+        </main>
+      </div>
+    </PageTransition>
+  );
+}
+
+function InteractionCard({ item }: { item: any }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <motion.div
+      layout
+      onClick={() => setIsExpanded(!isExpanded)}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        "p-4 sm:p-8 rounded-[24px] sm:rounded-[32px] flex flex-col gap-3 sm:gap-5 border border-white shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98]",
+        item.color,
+        isExpanded ? "ring-2 ring-primary/20 z-20" : "z-10"
+      )}
+    >
+      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[12px] sm:rounded-[16px] flex items-center justify-center text-primary shrink-0 shadow-sm border border-slate-50">
+        <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+      </div>
+      <div className="flex flex-col gap-0.5 sm:gap-1">
+        <h4 className="text-[7px] sm:text-[9px] font-black tracking-[0.2em] text-slate-500/60 uppercase">{item.title}</h4>
+        <p className={cn(
+          "text-[9px] sm:text-[11px] font-black text-slate-800 leading-tight uppercase tracking-tight transition-all",
+          !isExpanded && "line-clamp-2"
+        )}>
+          {item.text || "CONSULT DOCTOR"}
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
+function ExpandableInfoTile({
+  icon: Icon,
+  title,
+  text,
+  color,
+  iconColor = "text-primary",
+  titleColor = "text-slate-800"
+}: {
+  icon: any,
+  title: string,
+  text: string,
+  color: string,
+  iconColor?: string,
+  titleColor?: string
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <motion.div
+      layout
+      onClick={() => setIsExpanded(!isExpanded)}
+      className={cn(
+        "p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-white space-y-2 sm:space-y-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98]",
+        color,
+        isExpanded ? "ring-2 ring-primary/10 z-20" : "z-10"
+      )}
+    >
+      <div className="flex items-center gap-2 sm:gap-4">
+        <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", iconColor)} />
+        <h3 className={cn("text-[10px] sm:text-lg font-black tracking-tighter font-outfit uppercase", titleColor)}>
+          {title}
+        </h3>
+      </div>
+      <p className={cn(
+        "text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase tracking-tight transition-all",
+        !isExpanded && "line-clamp-3"
+      )}>
+        {text}
+      </p>
+    </motion.div>
   );
 }

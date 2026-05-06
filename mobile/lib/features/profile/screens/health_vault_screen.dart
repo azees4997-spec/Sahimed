@@ -27,12 +27,26 @@ class _HealthVaultScreenState extends State<HealthVaultScreen> {
   }
 
   Future<void> _loadPrescriptions() async {
-    final prescriptions = await _apiService.getUserPrescriptions();
-    if (mounted) {
-      setState(() {
-        _prescriptions = prescriptions;
-        _isLoading = false;
-      });
+    setState(() => _isLoading = true);
+    try {
+      final prescriptions = await _apiService.getUserPrescriptions();
+      if (mounted) {
+        setState(() {
+          _prescriptions = prescriptions;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('CRITICAL: Error in _loadPrescriptions: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading vault: ${e.toString().split('\n').first}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

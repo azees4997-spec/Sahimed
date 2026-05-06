@@ -83,10 +83,18 @@ class ReminderService {
   }
 
   static Future<void> cancelReminder(int id) async {
-    await _notifications.cancel(id);
+    try {
+      await _notifications.cancel(id);
+    } catch (e) {
+      debugPrint('Error canceling reminder: $e');
+    }
   }
 
   static Future<void> cancelAll() async {
-    await _notifications.cancelAll();
+    try {
+      await _notifications.cancelAll();
+    } catch (e) {
+      debugPrint('Error canceling all reminders: $e');
+    }
   }
 }

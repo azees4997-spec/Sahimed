@@ -25,13 +25,20 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   Future<void> _loadWallet() async {
-    final data = await _apiService.getWalletData();
-    if (mounted) {
-      setState(() {
-        _balance = (data['balance'] as num).toDouble();
-        _transactions = data['transactions'] as List<dynamic>;
-        _isLoading = false;
-      });
+    try {
+      final Map<String, dynamic> data = await _apiService.getWalletData();
+      if (mounted) {
+        setState(() {
+          _balance = (data['balance'] as num?)?.toDouble() ?? 0.0;
+          _transactions = (data['transactions'] ?? data['history'] ?? []) as List<dynamic>;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading wallet: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 

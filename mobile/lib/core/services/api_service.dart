@@ -431,6 +431,9 @@ class ApiService {
     List<String> prescriptions = const [],
     bool isConsultationRequired = false,
     double walletUsed = 0,
+    String? paymentId,
+    String? razorpayOrderId,
+    String? signature,
   }) async {
     try {
       final user = _auth.currentUser;
@@ -459,7 +462,14 @@ class ApiService {
         walletUsed: walletUsed,
       );
 
-      final orderPayload = {...order.toJson(), 'platform': 'mobile'};
+      final orderPayload = {
+        ...order.toJson(), 
+        'platform': 'mobile',
+        'paymentId': paymentId,
+        'razorpayOrderId': razorpayOrderId,
+        'signature': signature,
+        'paymentType': paymentId != null ? 'Online' : 'Cash on Delivery',
+      };
 
       final headers = await _getHeaders();
       final response = await http.post(
@@ -474,6 +484,24 @@ class ApiService {
       }
     } catch (e) {
       debugPrint('Error creating order: $e');
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> createRazorpayOrder({required double amount}) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/payments/razorpay'),
+        headers: headers,
+        body: json.encode({'amount': amount}),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      debugPrint('Error creating Razorpay order: $e');
     }
     return null;
   }
@@ -542,17 +570,23 @@ class ApiService {
       if (kDebugMode) debugPrint('DEBUG: Orders Response Status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+        final decoded = json.decode(response.body);
+        if (decoded is! List) {
+          debugPrint('DEBUG: getUserOrders expected List but got ${decoded.runtimeType}');
+          return [];
+        }
+        
+        final List<dynamic> data = decoded;
         return data.map((order) {
           final map = Map<String, dynamic>.from(order);
           map['id'] = map['id'] ?? map['_id']?.toString() ?? '';
           return map;
         }).toList();
       } else {
-        debugPrint('Failed to load orders: ${response.statusCode}');
+        debugPrint('Failed to load orders: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      if (kDebugMode) debugPrint('DEBUG: Exception in getUserOrders: $e');
+      debugPrint('DEBUG: Exception in getUserOrders: $e');
     }
     return [];
   }
@@ -594,7 +628,7 @@ class ApiService {
     } catch (e) {
       debugPrint('Error fetching wallet balance: $e');
     }
-    return {'balance': 0, 'history': []};
+    return {'balance': 0, 'transactions': [], 'history': []};
   }
 
   Future<Map<String, dynamic>> validateWalletUse(dynamic cartItems) async {
@@ -618,7 +652,7 @@ class ApiService {
     try {
       final headers = await _getHeaders();
       final response = await http.get(
-        Uri.parse('$baseUrl/user/prescriptions'),
+        Uri.parse('$baseUrl/prescriptions'),
         headers: headers,
       );
       if (response.statusCode == 200) {

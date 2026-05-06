@@ -42,43 +42,68 @@ export async function GET(req: Request) {
       let activePhone = user.phoneNumber;
       if (!activePhone) {
         const userProfile = await db.collection('users').findOne({ uid: user.uid });
-        activePhone = userProfile?.phoneNumber || userProfile?.phone;
+        activePhone = userProfile?.phoneNumber || userProfile?.phone || userProfile?.phone_number;
       }
 
-      // BUG-09 FIX: Allow users to see orders matched by their phone number too
       if (activePhone) {
-        const last10 = activePhone.replace(/\D/g, '').slice(-10);
-        const phoneVariants = [activePhone, last10, `+91${last10}`, `91${last10}`];
+        // ULTRA-AGGRESSIVE MATCHING: Catch every possible format
+        const stripped = activePhone.replace(/\D/g, '');
+        const last10 = stripped.slice(-10);
+        
+        const phoneVariants = Array.from(new Set([
+          activePhone, 
+          stripped, 
+          last10, 
+          `+91${last10}`, 
+          `91${last10}`, 
+          `0${last10}`
+        ]));
+        
         phoneVariants.forEach(v => {
           identityConditions.push({ phoneNumber: v });
           identityConditions.push({ phone: v });
+          identityConditions.push({ phone_number: v });
           identityConditions.push({ customer_phone: v });
+          identityConditions.push({ customerPhone: v });
+          
+          // Case-insensitive check for string, and exact check for numeric fields
+          const numValue = parseInt(v.replace(/\D/g, ''));
+          if (!isNaN(numValue)) {
+            identityConditions.push({ phoneNumber: numValue });
+            identityConditions.push({ phone: numValue });
+            identityConditions.push({ phone_number: numValue });
+            identityConditions.push({ customerPhone: numValue });
+            identityConditions.push({ customer_phone: numValue });
+          }
         });
 
-        // NEW: Also find all other UIDs associated with this phone number for legacy sync
+        // Find all other UIDs associated with any variant of this phone number
         const linkedUsers = await db.collection('users').find({
           $or: [
             { phoneNumber: { $in: phoneVariants } },
-            { phone: { $in: phoneVariants } }
+            { phone: { $in: phoneVariants } },
+            { phone_number: { $in: phoneVariants } }
           ]
         }).toArray();
         
         linkedUsers.forEach(u => {
-          if (u.uid && u.uid !== user.uid) {
+          if (u.uid) {
             identityConditions.push({ userId: u.uid });
+            identityConditions.push({ user_id: u.uid }); // Added underscore variant
             identityConditions.push({ customer_id: u.uid });
           }
         });
       }
 
-      query.$or = identityConditions;
+      // Final unique conditions to keep query efficient
+      query.$or = Array.from(new Set(identityConditions.map(c => JSON.stringify(c)))).map(s => JSON.parse(s));
     } else {
       // Admin Search Logic (When params ARE provided)
 
       if (requestedUserId && phone) {
         const last10 = phone.replace(/\D/g, '').slice(-10);
         // BUG-08 FIX: Include all phone field variants (phoneNumber, phone, customer_phone)
-        const phoneVariants = [phone, last10, `+91${last10}`, `91${last10}`];
+        const phoneVariants = [phone, last10, `+91${last10}`, `91${last10}`, `0${last10}`];
         query.$or = [
           { userId: requestedUserId },
           { customer_id: requestedUserId },
@@ -86,17 +111,19 @@ export async function GET(req: Request) {
             { phoneNumber: v },
             { phone: v },
             { customer_phone: v },
+            { customerPhone: v },
           ])
         ];
       } else if (requestedUserId) {
         query.$or = [{ userId: requestedUserId }, { customer_id: requestedUserId }];
       } else if (phone) {
         const last10 = phone.replace(/\D/g, '').slice(-10);
-        const phoneVariants = [phone, last10, `+91${last10}`, `91${last10}`];
+        const phoneVariants = [phone, last10, `+91${last10}`, `91${last10}`, `0${last10}`];
         query.$or = phoneVariants.flatMap(v => [
           { phoneNumber: v },
           { phone: v },
           { customer_phone: v },
+          { customerPhone: v },
         ]);
       }
     }

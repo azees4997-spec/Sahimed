@@ -24,17 +24,21 @@ export async function GET(req: Request) {
 
     if (activePhone) {
       const last10 = activePhone.replace(/\D/g, '').slice(-10);
-      const phoneVariants = [activePhone, last10, `+91${last10}`, `91${last10}`];
+      const phoneVariants = [activePhone, last10, `+91${last10}`, `91${last10}`, `0${last10}`];
+      
       phoneVariants.forEach(v => {
         identityConditions.push({ phoneNumber: v });
         identityConditions.push({ phone: v });
+        identityConditions.push({ customer_phone: v });
+        identityConditions.push({ phone_number: v });
       });
 
-      // Find all other UIDs associated with this phone number
+      // Find all other UIDs associated with this phone number for legacy sync
       const linkedUsers = await db.collection('users').find({
         $or: [
           { phoneNumber: { $in: phoneVariants } },
-          { phone: { $in: phoneVariants } }
+          { phone: { $in: phoneVariants } },
+          { phone_number: { $in: phoneVariants } }
         ]
       }).toArray();
       

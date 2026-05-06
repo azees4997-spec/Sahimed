@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../core/services/api_service.dart';
@@ -52,13 +53,46 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   bool _useWallet = false;
   String _walletReason = '';
 
+  // Payment Integration
+  late Razorpay _razorpay;
+  String _paymentMethod = 'COD';
+
 
   @override
   void initState() {
     super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+    
     _prescriptionImage = widget.initialPrescription;
     _loadData();
     _loadWalletInfo();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    _placeOrder(
+      paymentId: response.paymentId,
+      razorpayOrderId: response.orderId,
+      signature: response.signature,
+    );
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    if (mounted) {
+      setState(() => _isProcessing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Payment Failed: ${response.message}'),
+          backgroundColor: SahimedColors.accent,
+        ),
+      );
+    }
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    // Handle external wallet if needed
   }
 
   Future<void> _loadWalletInfo() async {
@@ -171,6 +205,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   void dispose() {
+    _razorpay.clear();
     _nameController.dispose();
     _houseController.dispose();
     _streetController.dispose();
@@ -181,7 +216,45 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.dispose();
   }
 
-  Future<void> _placeOrder() async {
+  Future<void> _handleOnlinePayment() async {
+    final cart = context.read<CartProvider>();
+    final amountPayable = cart.finalTotal - (_useWallet ? _allowableWalletAmount : 0);
+
+    try {
+      final rzpOrder = await _apiService.createRazorpayOrder(amount: amountPayable);
+      if (rzpOrder == null) throw Exception('Failed to create payment order');
+
+      final options = {
+        'key': 'rzp_test_SmCfTDc5ejqOnF', // Use the provided test key
+        'amount': rzpOrder['amount'],
+        'name': 'SahiMed',
+        'description': 'Clinical Healthcare Purchase',
+        'order_id': rzpOrder['id'],
+        'prefill': {
+          'contact': _phoneController.text.trim(),
+          'name': _nameController.text.trim(),
+        },
+        'theme': {
+          'color': '#7C3AED', // Sahimed Primary Color
+        }
+      };
+
+      _razorpay.open(options);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Payment Initialization Failed: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _placeOrder({
+    String? paymentId,
+    String? razorpayOrderId,
+    String? signature,
+  }) async {
     // 1. Validation Logic
     if (_showAddressForm) {
       if (!_formKey.currentState!.validate()) return;
@@ -231,6 +304,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
 
     setState(() => _isProcessing = true);
+
+    // TRIGGER ONLINE PAYMENT IF SELECTED AND NOT ALREADY PAID
+    if (_paymentMethod == 'Online' && paymentId == null) {
+      await _handleOnlinePayment();
+      return; // Stop here, payment handler will resume via _handlePaymentSuccess
+    }
 
     // Check serviceability
     try {
@@ -315,6 +394,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         prescriptions: prescriptions,
         isConsultationRequired: _isConsultationRequired,
         walletUsed: _useWallet ? _allowableWalletAmount : 0,
+        paymentId: paymentId,
+        razorpayOrderId: razorpayOrderId,
+        signature: signature,
       );
 
 
@@ -645,6 +727,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
 
                 const SizedBox(height: 12),
+                _buildPaymentMethodSection(),
+                const SizedBox(height: 12),
                 _buildOrderSummary(cart),
               ],
             ),
@@ -663,6 +747,97 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             child: _buildGlassPlaceOrderBar(cart),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentMethodSection() {
+    return _buildSectionCard(
+      title: 'Payment Method',
+      icon: LucideIcons.creditCard,
+      child: Column(
+        children: [
+          _buildPaymentOption(
+            id: 'COD',
+            title: 'Cash on Delivery',
+            subtitle: 'Pay at your doorstep',
+            icon: LucideIcons.banknote,
+          ),
+          const SizedBox(height: 12),
+          _buildPaymentOption(
+            id: 'Online',
+            title: 'Online Payment',
+            subtitle: 'UPI, Card, Net Banking',
+            icon: LucideIcons.shieldCheck,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentOption({
+    required String id,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+  }) {
+    bool isSelected = _paymentMethod == id;
+    return GestureDetector(
+      onTap: () => setState(() => _paymentMethod = id),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? SahimedColors.primary.withOpacity(0.05) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? SahimedColors.primary : SahimedColors.slate100,
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isSelected ? SahimedColors.primary : SahimedColors.background,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? Colors.white : SahimedColors.slate400,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      color: SahimedColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      color: SahimedColors.slate500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              isSelected ? LucideIcons.circleCheck : LucideIcons.circle,
+              color: isSelected ? SahimedColors.primary : SahimedColors.slate200,
+              size: 20,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -37,12 +37,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   bool _isLoading = true;
   String _edd = '';
   late final TabController _tabController;
+  bool _isPincodeEditable = false;
+  late final TextEditingController _pincodeController;
 
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _pincodeController = TextEditingController();
     _fetchGenericAlternative();
     _loadEDD();
   }
@@ -72,6 +75,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _pincodeController.dispose();
     super.dispose();
   }
 
@@ -370,11 +374,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                 future: SharedPreferences.getInstance(),
                                 builder: (context, snapshot) {
                                   final pin = snapshot.data?.getString('user_pincode') ?? '560068';
+                                  if (_pincodeController.text.isEmpty && !_isPincodeEditable) {
+                                    _pincodeController.text = pin;
+                                  }
                                   return TextField(
+                                    controller: _pincodeController,
+                                    readOnly: !_isPincodeEditable,
                                     decoration: const InputDecoration(
                                       hintText: 'Enter Pincode',
                                       border: InputBorder.none,
                                       hintStyle: TextStyle(fontSize: 12),
+                                      counterText: '',
                                     ),
                                     style: GoogleFonts.outfit(
                                       fontSize: 12,
@@ -390,17 +400,46 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                         _loadEDD(val);
                                       }
                                     },
-                                    controller: TextEditingController(text: pin)..selection = TextSelection.fromPosition(TextPosition(offset: pin.length)),
                                   );
                                 },
                               ),
                             ),
-                            Text(
-                              'EDIT',
-                              style: GoogleFonts.outfit(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF166534),
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  if (_isPincodeEditable) {
+                                    // Save/Check logic
+                                    final pin = _pincodeController.text;
+                                    if (pin.length == 6) {
+                                      _loadEDD(pin);
+                                      _isPincodeEditable = false;
+                                    }
+                                  } else {
+                                    _isPincodeEditable = true;
+                                  }
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: _isPincodeEditable ? const Color(0xFF166534) : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    if (!_isPincodeEditable)
+                                      const Icon(LucideIcons.pencil, size: 12, color: Color(0xFF166534)),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _isPincodeEditable ? 'CHECK' : 'EDIT',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w900,
+                                        color: _isPincodeEditable ? Colors.white : const Color(0xFF166534),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
