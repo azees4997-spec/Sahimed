@@ -15,7 +15,8 @@ import {
   CheckCircle,
   FileCheck,
   FileText,
-  Printer
+  Printer,
+  Trash2
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -121,6 +122,34 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
       }
     } catch (err: any) {
       toast({ variant: 'destructive', title: "Synchronization Error", description: err.message });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+  
+  const handleDeleteOrder = async (id: string) => {
+    if (!window.confirm("Are you sure? This will PERMANENTLY delete this order from both MongoDB and Firestore. This cannot be undone.")) return;
+    
+    setIsUpdating(true);
+    try {
+      const token = await user?.getIdToken();
+      const res = await fetch(`/api/orders?id=${id}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const result = await res.json();
+      if (res.ok) {
+        toast({ title: "Order Purged", description: "The transaction has been removed from all databases." });
+        await fetchOrders();
+        setSelectedOrder(null);
+      } else {
+        throw new Error(result.error || "Purge failed");
+      }
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: "Deletion Error", description: err.message });
     } finally {
       setIsUpdating(false);
     }
@@ -600,6 +629,18 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                       </Button>
                     </div>
                   )}
+                  
+                  <div className="pt-8 border-t border-dashed border-slate-200 mt-8">
+                    <Button 
+                      variant="ghost" 
+                      disabled={isUpdating}
+                      onClick={() => handleDeleteOrder(selectedOrder._id)}
+                      className="w-full h-12 rounded-xl text-rose-500 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-rose-50 hover:text-rose-600 gap-2"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Hard Delete Order
+                    </Button>
+                  </div>
                 </div>
               </>
             )}

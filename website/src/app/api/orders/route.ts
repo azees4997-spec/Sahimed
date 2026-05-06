@@ -578,3 +578,45 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: err.message }, { status });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const user = await verifyAdmin(req);
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    
+    if (!id) {
+      return NextResponse.json({ error: "Order ID required" }, { status: 400 });
+    }
+
+    const client = await clientPromise;
+    const db = client.db('sahimed');
+    
+    // 1. Find the order first to get userId and orderId for sync
+    const order = await db.collection('orders').findOne({ _id: new ObjectId(id) });
+    
+    if (!order) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    // 2. Hard Delete from MongoDB
+    await db.collection('orders').deleteOne({ _id: new ObjectId(id) });
+
+    // 3. Sync Deletion to Firestore
+    try {
+      if (order.userId && order.orderId) {
+        const { getDbAdmin } = await import('@/lib/firebase-admin');
+        const dbAdmin = getDbAdmin();
+        await dbAdmin.doc(`userProfiles/${order.userId}/orders/${order.orderId}`).delete();
+        console.log(`[Order Delete Sync] Successfully deleted order ${order.orderId} from Firestore`);
+      }
+    } catch (fsErr: any) {
+      console.error(`[Order Delete Sync Error] Failed to delete from Firestore:`, fsErr.message);
+    }
+
+    return NextResponse.json({ success: true, message: "Order purged from clinical matrix" });
+  } catch (err: any) {
+    console.error("[Orders Delete Error]", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
