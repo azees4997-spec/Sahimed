@@ -59,11 +59,30 @@ class CartProvider with ChangeNotifier {
   double get deliveryFee {
     double feeTotal = 0.0;
     for (var fee in _activeFees) {
-      // LOGIC FIX: Waive if total >= minPurchase
+      if (!fee.isActive) continue;
+
+      if (fee.tiers != null && fee.tiers!.isNotEmpty) {
+        // Find the highest tier that the current total qualifies for
+        // Sort tiers descending by minOrder
+        final sortedTiers = List<Map<String, dynamic>>.from(fee.tiers!)
+          ..sort((a, b) => (b['minOrder'] as num).compareTo(a['minOrder'] as num));
+
+        final matchingTier = sortedTiers.firstWhere(
+          (t) => total >= (t['minOrder'] as num),
+          orElse: () => {},
+        );
+
+        if (matchingTier.isNotEmpty) {
+          feeTotal += (matchingTier['charge'] as num).toDouble();
+          continue; // Skip fallback for this fee object
+        }
+      }
+
+      // Fallback to legacy single threshold logic
       if (fee.minPurchase > 0 && total >= fee.minPurchase) {
         continue;
       }
-      
+
       if (fee.type == 'fixed') {
         feeTotal += fee.amount;
       } else {

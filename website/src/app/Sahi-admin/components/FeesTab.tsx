@@ -106,75 +106,117 @@ function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, o
   const { toast } = useToast();
   const [form, setForm] = useState({ 
     name: initialData?.name || '', 
-    discountedAmount: initialData?.discountedAmount || 0, 
-    type: initialData?.type || 'fixed', 
-    minPurchase: initialData?.minPurchase || 0, 
+    tiers: initialData?.tiers || [{ minOrder: 0, charge: 49 }, { minOrder: 500, charge: 29 }, { minOrder: 1000, charge: 0 }],
     isActive: initialData?.isActive ?? true 
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Sort tiers by minOrder to ensure correct evaluation order
+    const sortedTiers = [...form.tiers]
+      .map(t => ({ minOrder: Number(t.minOrder), charge: Number(t.charge) }))
+      .sort((a, b) => a.minOrder - b.minOrder);
+
     const payload = { 
-      ...form, 
-      discountedAmount: Number(form.discountedAmount),
-      minPurchase: Number(form.minPurchase),
+      name: form.name,
+      tiers: sortedTiers,
+      isActive: form.isActive,
       updatedAt: serverTimestamp() 
     };
+
     try {
       if (initialData?.id) {
         await updateDocumentNonBlocking(doc(db, 'fees', initialData.id), payload);
       } else {
         await addDocumentNonBlocking(collection(db, 'fees'), { ...payload, createdAt: serverTimestamp() });
       }
-      toast({ title: "Logistics protocol updated" });
+      toast({ title: "Clinical fee protocol synchronized" });
       onSuccess();
     } catch (err: any) {
-      toast({ variant: 'destructive', title: "Update failed", description: err.message });
+      toast({ variant: 'destructive', title: "Sync failed", description: err.message });
     }
   };
 
+  const addTier = () => {
+    setForm({...form, tiers: [...form.tiers, { minOrder: 0, charge: 0 }]});
+  };
+
+  const removeTier = (index: number) => {
+    setForm({...form, tiers: form.tiers.filter((_: any, i: number) => i !== index)});
+  };
+
+  const updateTier = (index: number, field: string, value: number) => {
+    const next = [...form.tiers];
+    next[index] = { ...next[index], [field]: value };
+    setForm({...form, tiers: next});
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
       <div className="space-y-2">
-        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fee Label (e.g. Delivery Charge)</Label>
+        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Policy Name</Label>
         <Input 
           value={form.name} 
           onChange={e => setForm({...form, name: e.target.value})} 
           required 
-          placeholder="Shipping / Delivery Fee"
+          placeholder="e.g. standard Delivery"
           className="rounded-2xl h-14 bg-gray-50 border-none font-bold" 
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fee Amount (₹)</Label>
-          <Input 
-            type="number"
-            value={form.discountedAmount} 
-            onChange={e => setForm({...form, discountedAmount: Number(e.target.value)})} 
-            required 
-            className="rounded-2xl h-14 bg-gray-50 border-none font-bold" 
-          />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Active Tiers</h4>
+          <Button type="button" onClick={addTier} variant="ghost" className="h-8 text-[10px] font-black text-primary uppercase tracking-widest gap-2">
+            <PlusCircle className="w-3.5 h-3.5" /> Add Level
+          </Button>
         </div>
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Free Above (₹)</Label>
-          <Input 
-            type="number"
-            value={form.minPurchase} 
-            onChange={e => setForm({...form, minPurchase: Number(e.target.value)})} 
-            required 
-            className="rounded-2xl h-14 bg-gray-50 border-none font-bold" 
-          />
+
+        <div className="space-y-3">
+          {form.tiers.map((t: any, i: number) => (
+            <div key={i} className="flex gap-4 items-end bg-gray-50 p-4 rounded-3xl border border-dashed border-gray-200">
+              <div className="flex-1 space-y-1.5">
+                <Label className="text-[8px] font-black text-gray-400 uppercase">Min. Order Value (₹)</Label>
+                <Input 
+                  type="number" 
+                  value={t.minOrder} 
+                  onChange={e => updateTier(i, 'minOrder', Number(e.target.value))} 
+                  className="rounded-xl h-11 bg-white border-none font-bold text-xs" 
+                />
+              </div>
+              <div className="flex-1 space-y-1.5">
+                <Label className="text-[8px] font-black text-gray-400 uppercase">Charge Amount (₹)</Label>
+                <Input 
+                  type="number" 
+                  value={t.charge} 
+                  onChange={e => updateTier(i, 'charge', Number(e.target.value))} 
+                  className="rounded-xl h-11 bg-white border-none font-bold text-xs" 
+                />
+              </div>
+              <Button type="button" variant="ghost" size="icon" onClick={() => removeTier(i)} className="h-11 w-11 text-red-300 hover:bg-red-50 hover:text-red-500 rounded-xl">
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="p-6 bg-blue-50/50 rounded-[32px] border border-blue-100 space-y-2">
-        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Pricing Strategy Preview</p>
-        <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
-          Orders below <span className="text-blue-600">₹{form.minPurchase}</span> will be charged <span className="text-blue-600">₹{form.discountedAmount}</span>. 
-          Orders equal to or above this amount will have <span className="text-green-600 uppercase">Free Delivery</span>.
+      <div className="p-6 bg-blue-50/50 rounded-[32px] border border-blue-100 space-y-3">
+        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
+          <Edit2 className="w-3 h-3" /> Logic Preview
         </p>
+        <div className="space-y-1.5">
+          {[...form.tiers].sort((a, b) => a.minOrder - b.minOrder).map((t, idx, arr) => (
+            <p key={idx} className="text-[11px] font-bold text-slate-500">
+              {idx === arr.length - 1 ? (
+                <>Above <span className="text-blue-600 font-black">₹{t.minOrder}</span></>
+              ) : (
+                <>Between <span className="text-blue-600 font-black">₹{t.minOrder}</span> and <span className="text-blue-600 font-black">₹{arr[idx+1].minOrder}</span></>
+              )}
+              : <span className={t.charge === 0 ? "text-green-600 font-black" : "text-slate-900 font-black"}>₹{t.charge}</span>
+            </p>
+          ))}
+        </div>
       </div>
 
       <div className="flex items-center space-x-2">
@@ -183,11 +225,11 @@ function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, o
           checked={form.isActive} 
           onCheckedChange={c => setForm({...form, isActive: !!c})} 
         />
-        <Label htmlFor="fee-active" className="text-[10px] font-black cursor-pointer">Active in Clinical Matrix</Label>
+        <Label htmlFor="fee-active" className="text-[10px] font-black cursor-pointer uppercase tracking-widest text-slate-500">Enable this policy</Label>
       </div>
 
-      <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.01] active:scale-95 transition-all">
-        Update Logistics Policy
+      <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.01] active:scale-95 transition-all uppercase tracking-[0.2em] text-[10px]">
+        Push to Clinical Matrix
       </Button>
     </form>
   );

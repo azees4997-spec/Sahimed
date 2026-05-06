@@ -403,6 +403,7 @@ class FeeModel {
   final double minPurchase;
   final bool isActive;
   final String type; // 'fixed' | 'percentage'
+  final List<Map<String, dynamic>>? tiers;
 
   FeeModel({
     required this.id,
@@ -411,6 +412,7 @@ class FeeModel {
     required this.minPurchase,
     this.isActive = true,
     this.type = 'fixed',
+    this.tiers,
   });
 
   factory FeeModel.fromJson(Map<String, dynamic> json) {
@@ -421,6 +423,7 @@ class FeeModel {
       minPurchase: (json['minPurchase'] ?? 0).toDouble(),
       isActive: json['isActive'] ?? true,
       type: json['type'] ?? 'fixed',
+      tiers: (json['tiers'] as List?)?.map((t) => Map<String, dynamic>.from(t)).toList(),
     );
   }
 }

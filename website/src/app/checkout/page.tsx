@@ -104,19 +104,26 @@ export default function CheckoutPage() {
   const [clinicalPath, setClinicalPath] = useState<'attach' | 'consult'>('attach');
   const [isUploading, setIsUploading] = useState(false);
 
-  const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
-  
-  // LOGIC FIX: Fee is applied ONLY IF totalPrice < minPurchase
-  // If f.minPurchase is 500, and totalPrice is 400, fee is applied.
-  // If totalPrice is 600, fee is waived (0).
+  // LOGIC FIX: Tiered Delivery Fee
+  // Example: 0-499: 49, 500-999: 29, 1000+: 0
   const feeTotal = activeFees.reduce((acc, fee) => {
     if (!fee.isActive) return acc;
     
+    if (fee.tiers && fee.tiers.length > 0) {
+      // Find the highest tier that the current total qualifies for
+      // Sort tiers descending by minOrder: [1000, 500, 0]
+      const sortedTiers = [...fee.tiers].sort((a, b) => b.minOrder - a.minOrder);
+      const matchingTier = sortedTiers.find(t => totalPrice >= t.minOrder);
+      
+      if (matchingTier) {
+        return acc + matchingTier.charge;
+      }
+    }
+
+    // Fallback to legacy single threshold logic if no tiers defined
     const threshold = fee.minPurchase || 0;
     const isWaived = threshold > 0 && totalPrice >= threshold;
-    
     if (isWaived) return acc;
-
     const amt = fee.discountedAmount ?? fee.originalAmount ?? 0;
     return fee.type === 'fixed' ? acc + amt : acc + (totalPrice * (amt / 100));
   }, 0);

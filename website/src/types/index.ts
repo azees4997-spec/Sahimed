@@ -43,6 +43,7 @@ export interface Fee {
   discountedAmount: number;
   type: 'fixed' | 'percentage';
   minPurchase: number;
+  tiers?: { minOrder: number; charge: number }[];
   isActive: boolean;
 }
 
