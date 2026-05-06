@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +11,7 @@ class CartProvider with ChangeNotifier {
   List<CartItem> _items = [];
   PromoModel? _appliedPromo;
   List<FeeModel> _activeFees = [];
+  StreamSubscription? _feeSubscription;
   final String _prefKey = 'sahimed_cart';
 
   CartProvider() {
@@ -18,15 +20,23 @@ class CartProvider with ChangeNotifier {
   }
 
   void _listenToFees() {
-    FirebaseFirestore.instance
+    // MOB-01 FIX: Store subscription reference to cancel on dispose and prevent memory leaks
+    _feeSubscription = FirebaseFirestore.instance
         .collection('fees')
         .where('isActive', isEqualTo: true)
         .snapshots()
-        .listen((snapshot) {
-      _activeFees =
-          snapshot.docs.map((doc) => FeeModel.fromJson({...doc.data(), 'id': doc.id})).toList();
-      notifyListeners();
-    });
+        .listen(
+          (snapshot) {
+            _activeFees = snapshot.docs
+                .map((doc) => FeeModel.fromJson({...doc.data(), 'id': doc.id}))
+                .toList();
+            notifyListeners();
+          },
+          onError: (e) {
+            // MOB-03 FIX: Log fee fetch failures instead of silently failing
+            debugPrint('CartProvider: Fee stream error: $e');
+          },
+        );
   }
 
   List<CartItem> get items => _items;
@@ -96,7 +106,15 @@ class CartProvider with ChangeNotifier {
 
   double get finalTotal => (total - promoDiscount) + deliveryFee + packingFee;
 
-  double get totalSavings => (subtotal - total) + promoDiscount;
+  // MOB-02 FIX: Guard against negative savings when mrp or price data is missing
+  double get totalSavings => (subtotal - total + promoDiscount).clamp(0.0, double.infinity);
+
+  @override
+  void dispose() {
+    // MOB-01 FIX: Cancel subscription to prevent memory leak on navigation
+    _feeSubscription?.cancel();
+    super.dispose();
+  }
 
   bool get isRxRequired => _items.any(
     (item) => item.product.rxRequired || item.product.prescriptionRequired,

@@ -205,10 +205,16 @@ export async function POST(req: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
     
-    // 3. GENERATE RANDOM & UNIQUE ORDER ID (SHM-XXXXX)
-    // We use a high-entropy random string and keep the counter as backup/audit
-    const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase();
-    const nextId = `SHM-${randomSuffix}`;
+    // 3. GENERATE RANDOM & UNIQUE ORDER ID (SHM-XXXXX) with collision guard
+    let nextId: string;
+    let idAttempts = 0;
+    do {
+      const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase();
+      nextId = `SHM-${randomSuffix}`;
+      const idCollision = await db.collection('orders').findOne({ orderId: nextId });
+      if (!idCollision) break;
+      idAttempts++;
+    } while (idAttempts < 5);
 
     // 3.5. DEDUPLICATION: Prevent duplicate orders within 30 seconds
     // (Check if same user has same amount recently)
@@ -225,6 +231,7 @@ export async function POST(req: Request) {
         orderId: existingOrder.orderId 
       }, { status: 409 });
     }
+
 
     // 4. Clinical Status Logic: Check if any items require a prescription
     const hasRxItems = (body.items || []).some((it: any) => it.prescriptionRequired === true);

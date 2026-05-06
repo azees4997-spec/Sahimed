@@ -16,7 +16,6 @@ import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
-import BottomNav from '@/components/BottomNav';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -285,12 +284,12 @@ export default function CartPage() {
                         <span>-₹{promoDiscount.toFixed(2)}</span>
                       </div>
                     )}
-                    {feeTotal > 0 && (
-                      <div className="flex justify-between text-[9px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">
-                        <span>Delivery Fee</span>
-                        <span>₹{feeTotal.toFixed(2)}</span>
-                      </div>
-                    )}
+                    <div className="flex justify-between text-[9px] sm:text-xs font-bold uppercase tracking-widest">
+                      <span className="text-slate-500">Delivery Fee</span>
+                      <span className={feeTotal === 0 ? 'text-emerald-600 font-black' : 'text-slate-500'}>
+                        {activeFees.length === 0 ? '...' : feeTotal === 0 ? 'FREE' : `₹${feeTotal.toFixed(2)}`}
+                      </span>
+                    </div>
 
                     <div className="pt-3 sm:pt-6 border-t border-slate-50 flex justify-between items-baseline">
                       <span className="text-[10px] sm:text-xs font-black text-slate-900 uppercase tracking-widest">Net Payable</span>

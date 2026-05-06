@@ -40,13 +40,7 @@ export function initializeFirebase(): FirebaseSdks {
   const existingApps = getApps();
 
   if (!existingApps.length) {
-    try {
-      // First attempt: environment-based initialization
-      firebaseApp = initializeApp(firebaseConfig);
-    } catch (e) {
-      // Fallback: explicit config object
-      firebaseApp = initializeApp(firebaseConfig);
-    }
+    firebaseApp = initializeApp(firebaseConfig);
   } else {
     firebaseApp = getApp();
   }

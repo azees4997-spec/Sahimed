@@ -2,8 +2,8 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 import { Product, CartItem, Fee, PromoCode } from '@/types';
 
 interface CartContextType {
@@ -43,23 +43,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchData = async () => {
       if (!db) {
-        console.log("CART_CONTEXT: DB not ready yet...");
+        if (process.env.NODE_ENV === 'development') console.log("CART_CONTEXT: DB not ready yet...");
         return;
       }
       try {
-        console.log("CART_CONTEXT: Synchronizing Logistics & Promo Engines...");
+        if (process.env.NODE_ENV === 'development') console.log("CART_CONTEXT: Synchronizing Logistics & Promo Engines...");
         
         // Fetch all and filter in memory to avoid "missing index" errors and SDK query bugs
         const feesSnap = await getDocs(collection(db, 'fees'));
         const allFees = feesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fee));
         const activeOnes = allFees.filter(f => f.isActive === true);
-        console.log(`CART_CONTEXT: Found ${activeOnes.length} active logistics policies.`, activeOnes);
+        if (process.env.NODE_ENV === 'development') console.log(`CART_CONTEXT: Found ${activeOnes.length} active logistics policies.`, activeOnes);
         setActiveFees(activeOnes);
 
         const promosSnap = await getDocs(collection(db, 'promocodes'));
         const allPromos = promosSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PromoCode));
         const activePromosList = allPromos.filter(p => p.isActive === true);
-        console.log(`CART_CONTEXT: Found ${activePromosList.length} active promo codes.`);
+        if (process.env.NODE_ENV === 'development') console.log(`CART_CONTEXT: Found ${activePromosList.length} active promo codes.`);
         setAvailablePromos(activePromosList);
         
       } catch (err) {

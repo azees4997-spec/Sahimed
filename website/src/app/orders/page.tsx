@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { safeFormat } from '@/lib/safe-date';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -32,8 +32,8 @@ import {
   Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { 
   Dialog, 
   DialogContent, 
@@ -76,13 +76,26 @@ export default function OrdersPage() {
   const { user } = useUser();
   const db = useFirestore();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const ordersQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return query(collection(db, 'userProfiles', user.uid, 'orders'), orderBy('orderDate', 'desc'));
+  // WEB-01 FIX: Replace onSnapshot (useCollection) with explicit fetch to avoid Firebase 11 crash
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!db || !user) { setIsLoading(false); return; }
+      setIsLoading(true);
+      try {
+        const q = query(collection(db, 'userProfiles', user.uid, 'orders'), orderBy('orderDate', 'desc'));
+        const snap = await getDocs(q);
+        setOrders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } catch (err) {
+        console.error('[Orders] Fetch error:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchOrders();
   }, [db, user]);
-
-  const { data: orders, isLoading } = useCollection(ordersQuery);
 
   const formatCurrency = (val: number | string) => Number(val || 0).toFixed(2);
 
@@ -150,7 +163,7 @@ export default function OrdersPage() {
                             </div>
                             <div>
                               <p className="text-[9px] font-black text-slate-400 tracking-[0.3em] mb-1.5 uppercase opacity-60">Order ID</p>
-                              <h3 className="font-black text-lg text-slate-900 tracking-tight font-outfit uppercase">#{order.id.substring(0, 12).toUpperCase()}</h3>
+                              <h3 className="font-black text-lg text-slate-900 tracking-tight font-outfit uppercase">#{(order.orderId || order.id.substring(0, 12)).toUpperCase()}</h3>
                             </div>
                           </div>
                           <div className="flex items-center gap-8">
@@ -189,7 +202,7 @@ export default function OrdersPage() {
                             <MapPin className="w-4 h-4 text-slate-400" />
                             <span className="text-[10px] font-black text-slate-500 tracking-[0.2em] uppercase truncate">{order.shippingDetails?.street || 'VERIFIED DESTINATION'}</span>
                           </div>
-                          {order.prescriptionUrl && (
+                          {(order.prescriptionUrls?.length > 0 || order.prescriptionUrl) && (
                             <div className="flex items-center gap-3 text-primary bg-primary/5 px-4 py-2 rounded-full border border-primary/10">
                               <ImageIcon className="w-4 h-4" />
                               <span className="text-[9px] font-black tracking-[0.2em] uppercase">Prescription Attached</span>
@@ -268,7 +281,7 @@ export default function OrdersPage() {
                     </div>
                   </div>
 
-                  {selectedOrder?.prescriptionUrl && (
+                  {(selectedOrder?.prescriptionUrls?.length > 0 || selectedOrder?.prescriptionUrl) && (
                     <div className="space-y-6">
                       <h4 className="text-[10px] font-black tracking-[0.3em] text-slate-400 flex items-center gap-4 uppercase opacity-60">
                         <ImageIcon className="w-4 h-4" /> Prescription Attached
@@ -277,7 +290,7 @@ export default function OrdersPage() {
                         <DialogTrigger asChild>
                           <div className="relative aspect-[16/9] w-full bg-slate-50 rounded-[40px] overflow-hidden border-2 border-dashed border-slate-200 cursor-zoom-in group shadow-inner">
                             <img 
-                              src={selectedOrder.prescriptionUrl} 
+                              src={selectedOrder.prescriptionUrls?.[0] || selectedOrder.prescriptionUrl} 
                               className="w-full h-full object-contain p-6 group-hover:scale-105 transition-transform duration-700" 
                               alt="Clinical Attachment" 
                             />
@@ -292,7 +305,7 @@ export default function OrdersPage() {
                         <DialogContent className="max-w-[95vw] sm:max-w-4xl border-none p-0 bg-black/80 backdrop-blur-3xl shadow-none z-[200]">
                           <DialogTitle className="sr-only">Clinical Document Matrix</DialogTitle>
                           <div className="relative aspect-[3/4] w-full max-h-[90vh] flex items-center justify-center p-6">
-                            <img src={selectedOrder.prescriptionUrl} className="max-w-full max-h-full object-contain rounded-[40px] shadow-3xl" alt="Full Analysis" />
+                            <img src={selectedOrder.prescriptionUrls?.[0] || selectedOrder.prescriptionUrl} className="max-w-full max-h-full object-contain rounded-[40px] shadow-3xl" alt="Full Analysis" />
                           </div>
                         </DialogContent>
                       </Dialog>
@@ -409,7 +422,9 @@ export default function OrdersPage() {
                       </div>
                       <div className="flex justify-between text-[11px] font-black text-slate-900 uppercase tracking-widest">
                         <span>Delivery Charges</span>
-                        <span className="text-emerald-600 font-black">FREE</span>
+                        <span className={(selectedOrder?.billingBreakdown?.deliveryFees ?? 0) > 0 ? 'font-black' : 'text-emerald-600 font-black'}>
+                          {(selectedOrder?.billingBreakdown?.deliveryFees ?? 0) > 0 ? `₹${formatCurrency(selectedOrder.billingBreakdown.deliveryFees)}` : 'FREE'}
+                        </span>
                       </div>
                       <div className="pt-8 border-t border-dashed border-primary/20 flex flex-col items-end gap-2">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] opacity-60">Total Payable Amount</span>
