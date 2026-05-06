@@ -23,12 +23,12 @@ import {
   Maximize2,
   Loader2,
   TrendingUp,
-  TrendingUp,
   FlaskConical,
   Truck,
   MapPin,
   Edit2,
-  Clock
+  Clock,
+  ArrowRight
 } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
@@ -51,6 +51,82 @@ import {
   fadeInVariant
 } from '@/lib/animations';
 import RibbonBadge from '@/components/RibbonBadge';
+
+// --- SUB-COMPONENTS ---
+
+function ExpandableInfoTile({
+  icon: Icon,
+  title,
+  text,
+  color,
+  iconColor = "text-primary",
+  titleColor = "text-slate-800"
+}: {
+  icon: any,
+  title: string,
+  text: string,
+  color: string,
+  iconColor?: string,
+  titleColor?: string
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <motion.div
+      layout
+      onClick={() => setIsExpanded(!isExpanded)}
+      className={cn(
+        "p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-white space-y-2 sm:space-y-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98]",
+        color,
+        isExpanded ? "ring-2 ring-primary/10 z-20" : "z-10"
+      )}
+    >
+      <div className="flex items-center gap-2 sm:gap-4">
+        <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", iconColor)} />
+        <h3 className={cn("text-[10px] sm:text-lg font-black tracking-tighter font-outfit uppercase", titleColor)}>
+          {title}
+        </h3>
+      </div>
+      <p className={cn(
+        "text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase tracking-tight transition-all",
+        !isExpanded && "line-clamp-3"
+      )}>
+        {text}
+      </p>
+    </motion.div>
+  );
+}
+
+function InteractionCard({ item }: { item: any }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <motion.div
+      layout
+      onClick={() => setIsExpanded(!isExpanded)}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        "p-4 sm:p-8 rounded-[24px] sm:rounded-[32px] flex flex-col gap-3 sm:gap-5 border border-white shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98]",
+        item.color,
+        isExpanded ? "ring-2 ring-primary/20 z-20" : "z-10"
+      )}
+    >
+      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[12px] sm:rounded-[16px] flex items-center justify-center text-primary shrink-0 shadow-sm border border-slate-50">
+        <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+      </div>
+      <div className="flex flex-col gap-0.5 sm:gap-1">
+        <h4 className="text-[7px] sm:text-[9px] font-black tracking-[0.2em] text-slate-500/60 uppercase">{item.title}</h4>
+        <p className={cn(
+          "text-[9px] sm:text-[11px] font-black text-slate-800 leading-tight uppercase tracking-tight transition-all",
+          !isExpanded && "line-clamp-2"
+        )}>
+          {item.text || "CONSULT DOCTOR"}
+        </p>
+      </div>
+    </motion.div>
+  );
+}
 
 const ComparisonCard = ({
   product,
@@ -197,6 +273,8 @@ const ComparisonCard = ({
   );
 };
 
+// --- MAIN COMPONENT ---
+
 export default function ProductDetailClient({ initialProduct, id }: { initialProduct: any, id: string }) {
   const { toast } = useToast();
   const { addToCart, getItemQuantity } = useCart();
@@ -273,8 +351,6 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
     }
   };
 
-  // Use initial data if available for instant render, but still keep hook for live updates if needed
-
   const { data: productData, isLoading: productLoading } = useMongoDBDoc(id);
   const product = productData || initialProduct;
   const { data: molData } = useMongoDBMolecule(product?.moleculeId);
@@ -309,7 +385,6 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
   const genericPrice = Number(genPriceRaw) || 0;
 
   const switchSavingsAmt = Math.max(0, brandedMrp - genericPrice);
-  const switchSavingsPct = brandedMrp > 0 ? Math.round((switchSavingsAmt / brandedMrp) * 100) : 0;
 
   if (!product && productLoading) {
     return (
@@ -536,274 +611,5 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
         </main>
       </div>
     </PageTransition>
-  );
-}
-
-function InteractionCard({ item }: { item: any }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  return (
-    <motion.div
-      layout
-      onClick={() => setIsExpanded(!isExpanded)}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={cn(
-        "p-4 sm:p-8 rounded-[24px] sm:rounded-[32px] flex flex-col gap-3 sm:gap-5 border border-white shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98]",
-        item.color,
-        isExpanded ? "ring-2 ring-primary/20 z-20" : "z-10"
-      )}
-            <motion.div
-              initial={{ scale: 0.98, opacity: 0, y: -5 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              className="mb-2 sm:mb-6 px-2"
-            >
-              <div className="bg-gradient-to-r from-primary to-accent text-white py-1.5 sm:py-2.5 px-4 sm:px-8 rounded-[12px] sm:rounded-[20px] shadow-lg flex items-center justify-center gap-2 text-center">
-                <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-bounce" />
-                <h2 className="text-[8px] sm:text-[11px] font-black tracking-widest uppercase line-clamp-1">
-                  Switch and save ₹{Number(switchSavingsAmt).toFixed(0)} • Same Medicine
-                </h2>
-              </div>
-            </motion.div>
-          )}
-
-          <div className="mb-4 sm:mb-10 px-1">
-            {showComparison ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-6 items-stretch">
-                <ComparisonCard
-                  product={brandedItem}
-                  label="BRANDED"
-                  getItemQuantity={getItemQuantity}
-                  addToCart={addToCart}
-                  showComparison={showComparison}
-                  brandedMrp={brandedMrp}
-                />
-                <ComparisonCard
-                  product={genericItem}
-                  label="SAHI RECOMMENDED"
-                  isAlt
-                  getItemQuantity={getItemQuantity}
-                  addToCart={addToCart}
-                  showComparison={showComparison}
-                  brandedMrp={brandedMrp}
-                />
-              </div>
-            ) : (
-              <div className="flex justify-center">
-                <div className="w-full sm:w-[480px]">
-                  <ComparisonCard
-                    product={product}
-                    label={isBranded ? "Branded" : "Generic Solution"}
-                    getItemQuantity={getItemQuantity}
-                    addToCart={addToCart}
-                    showComparison={showComparison}
-                    brandedMrp={brandedMrp}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Delivery Information & Pincode Checker */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 sm:mb-10 px-1"
-          >
-            <div className="bg-emerald-50 border border-emerald-100 rounded-[20px] sm:rounded-[32px] p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between shadow-sm gap-4">
-              <div className="flex items-center gap-3 sm:gap-5 w-full">
-                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white rounded-full flex items-center justify-center shadow-sm border border-emerald-50 shrink-0">
-                  <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
-                </div>
-                <div className="space-y-0.5">
-                  <h3 className="text-[10px] sm:text-base font-black text-emerald-900 tracking-tight uppercase font-outfit">
-                    {edd ? `DELIVERY BY ${edd}` : "CHECK SERVICEABILITY"}
-                  </h3>
-                  <p className="text-[8px] sm:text-[11px] font-bold text-emerald-700/70 uppercase tracking-widest">
-                    {edd ? "Guaranteed express shipping" : "Enter pincode to see delivery date"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="w-full sm:w-auto flex items-center gap-2 pl-3 sm:pl-4 pr-1 py-1 bg-white rounded-full border border-emerald-100 shadow-sm group focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
-                <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                <input
-                  type="text"
-                  maxLength={6}
-                  readOnly={!isEditingPincode}
-                  value={activePincode}
-                  onChange={handlePincodeChange}
-                  placeholder="Pincode"
-                  className={cn(
-                    "bg-transparent border-none outline-none text-[10px] sm:text-xs font-black text-emerald-900 uppercase tracking-wider w-16 sm:w-20",
-                    !isEditingPincode && "cursor-not-allowed opacity-70"
-                  )}
-                />
-                <button
-                  onClick={() => setIsEditingPincode(!isEditingPincode)}
-                  className="p-2 hover:bg-emerald-50 rounded-full transition-colors"
-                  title="Edit Pincode"
-                >
-                  <Edit2 className={cn("w-3 h-3 sm:w-4 sm:h-4", isEditingPincode ? "text-emerald-600" : "text-slate-400")} />
-                </button>
-                <button
-                  onClick={onCheckPincode}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[7px] sm:text-[9px] px-3 sm:px-5 py-1.5 sm:py-2 rounded-full uppercase tracking-widest transition-all active:scale-95 shadow-sm ml-1"
-                >
-                  Check
-                </button>
-              </div>
-            </div>
-
-            {/* Flipkart-style Delivery Timer */}
-            <div className="mt-4 flex items-center justify-center sm:justify-start gap-2 text-emerald-700">
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100 animate-pulse">
-                <Clock className="w-3 h-3" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Order within {timeLeft}</span>
-              </div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                for <span className="text-emerald-600">Tomorrow</span> delivery
-              </span>
-            </div>
-          </motion.div>
-
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-[24px] sm:rounded-[48px] p-4 sm:p-12 shadow-sm border border-slate-100 overflow-hidden relative z-10"
-          >
-            <Tabs defaultValue="clinical" className="w-full">
-              <TabsList className="bg-slate-50 p-1 rounded-full h-10 sm:h-14 w-full max-w-[500px] flex mx-auto mb-8 border border-slate-100 shadow-inner">
-                <TabsTrigger value="clinical" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Information</TabsTrigger>
-                <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Safety Advice</TabsTrigger>
-                <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Interactions</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="clinical" className="space-y-10 focus-visible:outline-none">
-                <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-8">
-                  <ExpandableInfoTile
-                    icon={ClipboardList}
-                    title="Medical Uses"
-                    text={product?.treatment || "Standard medical use."}
-                    color="bg-lavender"
-                  />
-                  <ExpandableInfoTile
-                    icon={Info}
-                    title="Product Info"
-                    text={product?.description || "Medicine details."}
-                    color="bg-sahi-blue"
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="safety" className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-8 focus-visible:outline-none">
-                <ExpandableInfoTile
-                  icon={AlertTriangle}
-                  title="Safety Advice"
-                  text={product?.safetyAdvice || "Follow medical guidance."}
-                  color="bg-sahi-pink"
-                  iconColor="text-rose-500"
-                  titleColor="text-rose-600"
-                />
-                <ExpandableInfoTile
-                  icon={Stethoscope}
-                  title="How to Use"
-                  text={product?.howToUse || "Take as directed by your doctor."}
-                  color="bg-sahi-blue"
-                />
-              </TabsContent>
-
-              <TabsContent value="interactions" className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 focus-visible:outline-none">
-                {[
-                  { icon: FlaskConical, title: "Composition", text: product?.saltComposition, color: "bg-lavender" },
-                  { icon: Baby, title: "Pregnancy", text: product?.pregnancyInteraction, color: "bg-sahi-pink" },
-                  { icon: Milk, title: "Lactation", text: product?.lactationInteraction, color: "bg-sahi-blue" },
-                  { icon: Car, title: "Driving", text: product?.drivingInteraction, color: "bg-sahi-green" },
-                  { icon: Package, title: "Renal", text: product?.kidneyInteraction, color: "bg-lavender" },
-                  { icon: ShieldAlert, title: "Hepatic", text: product?.liverInteraction, color: "bg-slate-50" }
-                ].map((item, i) => (
-                  <InteractionCard key={i} item={item} />
-                ))}
-              </TabsContent>
-            </Tabs>
-          </motion.section>
-        </main>
-      </div>
-    </PageTransition>
-  );
-}
-
-function InteractionCard({ item }: { item: any }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  return (
-    <motion.div
-      layout
-      onClick={() => setIsExpanded(!isExpanded)}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={cn(
-        "p-4 sm:p-8 rounded-[24px] sm:rounded-[32px] flex flex-col gap-3 sm:gap-5 border border-white shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98]",
-        item.color,
-        isExpanded ? "ring-2 ring-primary/20 z-20" : "z-10"
-      )}
-    >
-      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[12px] sm:rounded-[16px] flex items-center justify-center text-primary shrink-0 shadow-sm border border-slate-50">
-        <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
-      </div>
-      <div className="flex flex-col gap-0.5 sm:gap-1">
-        <h4 className="text-[7px] sm:text-[9px] font-black tracking-[0.2em] text-slate-500/60 uppercase">{item.title}</h4>
-        <p className={cn(
-          "text-[9px] sm:text-[11px] font-black text-slate-800 leading-tight uppercase tracking-tight transition-all",
-          !isExpanded && "line-clamp-2"
-        )}>
-          {item.text || "CONSULT DOCTOR"}
-        </p>
-      </div>
-    </motion.div>
-  );
-}
-
-function ExpandableInfoTile({
-  icon: Icon,
-  title,
-  text,
-  color,
-  iconColor = "text-primary",
-  titleColor = "text-slate-800"
-}: {
-  icon: any,
-  title: string,
-  text: string,
-  color: string,
-  iconColor?: string,
-  titleColor?: string
-}) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  return (
-    <motion.div
-      layout
-      onClick={() => setIsExpanded(!isExpanded)}
-      className={cn(
-        "p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-white space-y-2 sm:space-y-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98]",
-        color,
-        isExpanded ? "ring-2 ring-primary/10 z-20" : "z-10"
-      )}
-    >
-      <div className="flex items-center gap-2 sm:gap-4">
-        <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", iconColor)} />
-        <h3 className={cn("text-[10px] sm:text-lg font-black tracking-tighter font-outfit uppercase", titleColor)}>
-          {title}
-        </h3>
-      </div>
-      <p className={cn(
-        "text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase tracking-tight transition-all",
-        !isExpanded && "line-clamp-3"
-      )}>
-        {text}
-      </p>
-    </motion.div>
   );
 }
