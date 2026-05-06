@@ -3,7 +3,7 @@
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore'
+import { getFirestore, initializeFirestore, Firestore, memoryLocalCache } from 'firebase/firestore'
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getFunctions, Functions } from 'firebase/functions';
 
@@ -42,7 +42,7 @@ export function initializeFirebase(): FirebaseSdks {
   if (!existingApps.length) {
     try {
       // First attempt: environment-based initialization
-      firebaseApp = initializeApp();
+      firebaseApp = initializeApp(firebaseConfig);
     } catch (e) {
       // Fallback: explicit config object
       firebaseApp = initializeApp(firebaseConfig);
@@ -51,10 +51,23 @@ export function initializeFirebase(): FirebaseSdks {
     firebaseApp = getApp();
   }
 
+  // Use initializeFirestore instead of getFirestore for better reliability in Next.js/HMR
+  let firestore: Firestore;
+  try {
+    firestore = initializeFirestore(firebaseApp, {
+      // Use memory cache during development/HMR to avoid the "mutations" assertion error
+      // in Firebase 11.x
+      localCache: memoryLocalCache()
+    });
+  } catch (e) {
+    // If already initialized, get current instance
+    firestore = getFirestore(firebaseApp);
+  }
+
   const sdks: FirebaseSdks = {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp),
+    firestore,
     storage: getStorage(firebaseApp),
     functions: getFunctions(firebaseApp)
   };
