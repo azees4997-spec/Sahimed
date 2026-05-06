@@ -225,8 +225,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       if (rzpOrder == null) throw Exception('Failed to create payment order');
 
       final options = {
-        'key': 'rzp_test_SmCfTDc5ejqOnF', // Use the provided test key
+        'key': 'rzp_test_SmCfTDc5ejqOnF',
         'amount': rzpOrder['amount'],
+        'currency': 'INR',
         'name': 'SahiMed',
         'description': 'Clinical Healthcare Purchase',
         'order_id': rzpOrder['id'],

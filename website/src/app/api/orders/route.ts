@@ -243,7 +243,8 @@ export async function POST(req: Request) {
     const allowedFields = [
       'userId', 'patientName', 'phoneNumber', 'shippingDetails', 'billingBreakdown', 
       'items', 'totalAmount', 'prescriptionUrls', 'isConsultationRequired', 
-      'clinicalPath', 'couponCode', 'discountAmount'
+      'clinicalPath', 'couponCode', 'discountAmount', 'paymentType', 
+      'paymentId', 'razorpayOrderId', 'signature'
     ];
     
     const sanitizedBody: any = {};
@@ -285,7 +286,7 @@ export async function POST(req: Request) {
             phone: orderData.phoneNumber
           },
           totalAmount: Number(orderData.totalAmount),
-          paymentMode: 'PREPAID' // Defaulting to Prepaid for website orders for now, can be adjusted
+          paymentMode: orderData.paymentType === 'Cash on Delivery' ? 'COD' : 'PREPAID'
         });
 
         if (shipwayRes.success && shipwayRes.data) {
@@ -461,7 +462,7 @@ export async function PUT(req: Request) {
               phone: refreshedOrder.phoneNumber
             },
             totalAmount: Number(refreshedOrder.totalAmount),
-            paymentMode: 'PREPAID'
+            paymentMode: refreshedOrder.paymentType === 'Cash on Delivery' ? 'COD' : 'PREPAID'
           });
           
           shipwayStatus = shipwayRes;
@@ -526,7 +527,7 @@ export async function PUT(req: Request) {
               phone: order.phoneNumber
             },
             totalAmount: Number(order.totalAmount),
-            paymentMode: 'PREPAID'
+            paymentMode: order.paymentType === 'Cash on Delivery' ? 'COD' : 'PREPAID'
           });
           
           if (shipwayRes.success && shipwayRes.data?.awb_number) {
