@@ -101,9 +101,10 @@ export default function CheckoutPage() {
   const router = useRouter();
   const storage = useStorage();
 
-  const [clinicalPath, setClinicalPath] = useState<'attach' | 'consult'>('attach');
   const [isUploading, setIsUploading] = useState(false);
 
+  const totalMrp = cart.reduce((acc, item) => acc + (item.mrp || item.price + 50) * item.quantity, 0);
+  
   // LOGIC FIX: Tiered Delivery Fee
   // Example: 0-499: 49, 500-999: 29, 1000+: 0
   const feeTotal = activeFees.reduce((acc, fee) => {

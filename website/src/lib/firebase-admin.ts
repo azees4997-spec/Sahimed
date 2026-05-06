@@ -39,3 +39,6 @@ export const getAuthAdmin = () => {
   const app = getFirebaseAdmin();
   return (app as admin.app.App).auth();
 };
+
+export const db = getDbAdmin();
+export const auth = getAuthAdmin();
