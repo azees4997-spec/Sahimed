@@ -432,13 +432,9 @@ export default function CheckoutPage() {
         mongoId: result.id 
       }, { merge: false });
       
-      toast({ title: "Order processed", description: `Order ID ${mongoOrderId} generated.` });
-      
       // 4. Success Navigation
-      setTimeout(() => {
-        clearCart();
-        router.push(`/order-success/${mongoOrderId}`);
-      }, 1000);
+      clearCart();
+      router.push(`/order-success/${mongoOrderId}`);
     } catch (err: any) {
       setLoading(false);
       toast({ variant: 'destructive', title: "Order failed", description: err.message || "Failed to sync order with clinical hub." });
