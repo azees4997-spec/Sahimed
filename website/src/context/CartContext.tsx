@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Product, CartItem, Fee, PromoCode } from '@/types';
 
 interface CartContextType {
@@ -34,24 +34,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useState('Mumbai, MH');
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
   const [attachedPrescriptions, setAttachedPrescriptions] = useState<string[]>([]);
+  const [activeFees, setActiveFees] = useState<Fee[]>([]);
+  const [availablePromos, setAvailablePromos] = useState<PromoCode[]>([]);
   
   const db = useFirestore();
 
-  // Fetch dynamic fees with real-time sync
-  const feesQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'fees'), where('isActive', '==', true));
-  }, [db]);
-  const { data: activeFeesData } = useCollection(feesQuery);
-  const activeFees = (activeFeesData as Fee[]) || [];
+  // Fetch dynamic fees and promos with explicit pattern to avoid onSnapshot bugs in Firebase 11
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!db) return;
+      try {
+        const feesSnap = await getDocs(query(collection(db, 'fees'), where('isActive', '==', true)));
+        setActiveFees(feesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fee)));
 
-  // Fetch available promos
-  const promosQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'promocodes'), where('isActive', '==', true));
+        const promosSnap = await getDocs(query(collection(db, 'promocodes'), where('isActive', '==', true)));
+        setAvailablePromos(promosSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PromoCode)));
+      } catch (err) {
+        console.error("CART_CONTEXT_FETCH_ERROR:", err);
+      }
+    };
+    fetchData();
+    // Refresh every 30 seconds as a fallback for real-time
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, [db]);
-  const { data: availablePromosData } = useCollection(promosQuery);
-  const availablePromos = (availablePromosData as PromoCode[]) || [];
 
   useEffect(() => {
     const savedCart = localStorage.getItem('hl_cart');

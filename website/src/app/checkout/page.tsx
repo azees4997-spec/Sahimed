@@ -158,6 +158,9 @@ export default function CheckoutPage() {
   const [allowableWallet, setAllowableWallet] = useState(0);
   const [useWallet, setUseWallet] = useState(false);
   const [walletReason, setWalletReason] = useState('');
+  
+  // Clinical Matrix Path
+  const [clinicalPath, setClinicalPath] = useState<'attach' | 'consult'>('attach');
 
 
   const addressesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'addresses'), orderBy('updatedAt', 'desc')) : null, [db, user]);
