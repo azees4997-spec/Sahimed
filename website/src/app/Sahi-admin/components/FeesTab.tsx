@@ -154,46 +154,55 @@ function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, o
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="space-y-2">
-        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Policy Name</Label>
+        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Policy Name (e.g. Standard Delivery)</Label>
         <Input 
           value={form.name} 
           onChange={e => setForm({...form, name: e.target.value})} 
           required 
-          placeholder="e.g. standard Delivery"
-          className="rounded-2xl h-14 bg-gray-50 border-none font-bold" 
+          placeholder="ENTER POLICY IDENTIFIER..."
+          className="rounded-2xl h-14 bg-gray-50 border-none font-black text-xs placeholder:text-slate-200 uppercase" 
         />
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Active Tiers</h4>
-          <Button type="button" onClick={addTier} variant="ghost" className="h-8 text-[10px] font-black text-primary uppercase tracking-widest gap-2">
-            <PlusCircle className="w-3.5 h-3.5" /> Add Level
+        <div className="flex items-center justify-between px-2">
+          <div className="space-y-0.5">
+            <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Pricing Tiers</h4>
+            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Define cost per order value range</p>
+          </div>
+          <Button type="button" onClick={addTier} variant="ghost" className="h-8 text-[10px] font-black text-primary uppercase tracking-widest gap-2 hover:bg-primary/5 rounded-full px-4">
+            <PlusCircle className="w-3.5 h-3.5" /> Add Tier
           </Button>
         </div>
 
         <div className="space-y-3">
           {form.tiers.map((t: any, i: number) => (
-            <div key={i} className="flex gap-4 items-end bg-gray-50 p-4 rounded-3xl border border-dashed border-gray-200">
-              <div className="flex-1 space-y-1.5">
-                <Label className="text-[8px] font-black text-gray-400 uppercase">Min. Order Value (₹)</Label>
-                <Input 
-                  type="number" 
-                  value={t.minOrder} 
-                  onChange={e => updateTier(i, 'minOrder', Number(e.target.value))} 
-                  className="rounded-xl h-11 bg-white border-none font-bold text-xs" 
-                />
+            <div key={i} className="group flex gap-4 items-end bg-slate-50/50 p-5 rounded-[28px] border-2 border-transparent hover:border-primary/10 hover:bg-white transition-all shadow-sm">
+              <div className="flex-1 space-y-2">
+                <Label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Threshold (₹)</Label>
+                <div className="relative">
+                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300">MIN</div>
+                   <Input 
+                    type="number" 
+                    value={t.minOrder} 
+                    onChange={e => updateTier(i, 'minOrder', Number(e.target.value))} 
+                    className="rounded-xl h-12 bg-white border-none font-black text-sm pl-12" 
+                  />
+                </div>
               </div>
-              <div className="flex-1 space-y-1.5">
-                <Label className="text-[8px] font-black text-gray-400 uppercase">Charge Amount (₹)</Label>
-                <Input 
-                  type="number" 
-                  value={t.charge} 
-                  onChange={e => updateTier(i, 'charge', Number(e.target.value))} 
-                  className="rounded-xl h-11 bg-white border-none font-bold text-xs" 
-                />
+              <div className="flex-1 space-y-2">
+                <Label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Charge (₹)</Label>
+                <div className="relative">
+                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300">₹</div>
+                   <Input 
+                    type="number" 
+                    value={t.charge} 
+                    onChange={e => updateTier(i, 'charge', Number(e.target.value))} 
+                    className="rounded-xl h-12 bg-white border-none font-black text-sm pl-8" 
+                  />
+                </div>
               </div>
-              <Button type="button" variant="ghost" size="icon" onClick={() => removeTier(i)} className="h-11 w-11 text-red-300 hover:bg-red-50 hover:text-red-500 rounded-xl">
+              <Button type="button" variant="ghost" size="icon" onClick={() => removeTier(i)} className="h-12 w-12 text-slate-200 hover:bg-rose-50 hover:text-rose-500 rounded-xl transition-colors">
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
@@ -201,35 +210,48 @@ function FeeForm({ db, initialData, onSuccess }: { db: any, initialData?: any, o
         </div>
       </div>
 
-      <div className="p-6 bg-blue-50/50 rounded-[32px] border border-blue-100 space-y-3">
-        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
-          <Edit2 className="w-3 h-3" /> Logic Preview
+      <div className="p-6 bg-slate-900 rounded-[32px] shadow-2xl space-y-4">
+        <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em] flex items-center gap-2">
+          <Edit2 className="w-3 h-3" /> System Logic Preview
         </p>
-        <div className="space-y-1.5">
+        <div className="grid gap-2">
           {[...form.tiers].sort((a, b) => a.minOrder - b.minOrder).map((t, idx, arr) => (
-            <p key={idx} className="text-[11px] font-bold text-slate-500">
-              {idx === arr.length - 1 ? (
-                <>Above <span className="text-blue-600 font-black">₹{t.minOrder}</span></>
-              ) : (
-                <>Between <span className="text-blue-600 font-black">₹{t.minOrder}</span> and <span className="text-blue-600 font-black">₹{arr[idx+1].minOrder}</span></>
-              )}
-              : <span className={t.charge === 0 ? "text-green-600 font-black" : "text-slate-900 font-black"}>₹{t.charge}</span>
-            </p>
+            <div key={idx} className="flex items-center justify-between py-2 border-b border-white/5 last:border-none">
+              <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">
+                {idx === 0 && t.minOrder === 0 ? "Initial Range" : `Threshold Reach`}
+              </span>
+              <p className="text-[11px] font-bold text-white">
+                {idx === arr.length - 1 ? (
+                  <span className="flex items-center gap-2">
+                    Orders <span className="text-primary font-black">₹{t.minOrder}+</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Orders <span className="text-primary font-black">₹{t.minOrder} - ₹{arr[idx+1].minOrder - 1}</span>
+                  </span>
+                )}
+              </p>
+              <div className="h-6 w-px bg-white/5 mx-2" />
+              <span className={cn("text-xs font-black", t.charge === 0 ? "text-accent" : "text-white")}>
+                {t.charge === 0 ? "FREE" : `₹${t.charge}`}
+              </span>
+            </div>
           ))}
         </div>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-3 px-2">
         <Checkbox 
           id="fee-active" 
           checked={form.isActive} 
           onCheckedChange={c => setForm({...form, isActive: !!c})} 
+          className="w-5 h-5 rounded-md border-2 border-slate-200"
         />
-        <Label htmlFor="fee-active" className="text-[10px] font-black cursor-pointer uppercase tracking-widest text-slate-500">Enable this policy</Label>
+        <Label htmlFor="fee-active" className="text-[10px] font-black cursor-pointer uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 transition-colors">Deploy policy to Live environment</Label>
       </div>
 
-      <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.01] active:scale-95 transition-all uppercase tracking-[0.2em] text-[10px]">
-        Push to Clinical Matrix
+      <Button type="submit" className="w-full h-20 rounded-[28px] font-black bg-primary text-white shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-[0.3em] text-xs border-4 border-white">
+        Sync Logistics Engine
       </Button>
     </form>
   );
