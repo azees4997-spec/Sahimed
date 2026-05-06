@@ -52,10 +52,50 @@ class CartProvider with ChangeNotifier {
       return 0.0;
     }
 
+    // Calculate eligible subtotal based on campaign rules
+    double eligibleTotal = _items.fold(0.0, (acc, item) {
+      bool isEligible = true;
+      final rules = _appliedPromo!.rules ?? {};
+      final scope = _appliedPromo!.scope ?? 'global';
+
+      // 1. Branded / Generic Restrictions
+      final isItemGeneric = item.product.isGeneric == true;
+      if (scope == 'branded' || (rules['isBrandedOnly'] == true)) {
+        if (isItemGeneric) isEligible = false;
+      } else if (scope == 'generic' || (rules['isGenericOnly'] == true)) {
+        if (!isItemGeneric) isEligible = false;
+      }
+
+      // 2. Category Restrictions
+      final allowedCats = List<String>.from(rules['categories'] ?? []);
+      if (scope == 'category' || allowedCats.isNotEmpty) {
+        final cats = [...allowedCats];
+        if (scope == 'category' && _appliedPromo!.scopeValue != null) {
+          cats.add(_appliedPromo!.scopeValue!);
+        }
+        if (!cats.contains(item.product.category)) isEligible = false;
+      }
+
+      // 3. Product Restrictions
+      final allowedProds = List<String>.from(rules['products'] ?? []);
+      if (scope == 'product' || allowedProds.isNotEmpty) {
+        final prods = [...allowedProds];
+        if (scope == 'product' && _appliedPromo!.scopeValue != null) {
+          prods.add(_appliedPromo!.scopeValue!);
+        }
+        if (!prods.contains(item.product.name)) isEligible = false;
+      }
+
+      return isEligible ? acc + (item.product.price * item.quantity) : acc;
+    });
+
+
+    if (eligibleTotal <= 0) return 0.0;
+
     if (_appliedPromo!.discountType == 'fixed') {
       return _appliedPromo!.discountValue;
     } else {
-      double discount = total * (_appliedPromo!.discountValue / 100);
+      double discount = eligibleTotal * (_appliedPromo!.discountValue / 100);
       if (_appliedPromo!.maxDiscount != null &&
           _appliedPromo!.maxDiscount! > 0) {
         discount = discount > _appliedPromo!.maxDiscount!

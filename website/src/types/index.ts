@@ -58,6 +58,15 @@ export interface PromoCode {
   applyTo: 'cart' | 'product' | 'customer' | 'both';
   targetId?: string;
   isActive: boolean;
+  scope?: string;
+  scopeValue?: string;
+  rules?: {
+    categories?: string[];
+    products?: string[];
+    patients?: string[];
+    isBrandedOnly?: boolean;
+    isGenericOnly?: boolean;
+  };
 }
 
 export interface AdminProfile {

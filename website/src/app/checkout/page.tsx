@@ -134,11 +134,51 @@ export default function CheckoutPage() {
     return fee.type === 'fixed' ? acc + amt : acc + (totalPrice * (amt / 100));
   }, 0);
 
+  // PROMO LOGIC: Calculate eligible subtotal based on campaign rules
+  const eligibleTotalPrice = cart.reduce((acc, item) => {
+    if (!appliedPromo) return acc;
+    
+    let isEligible = true;
+    const rules = appliedPromo.rules || {};
+    const scope = appliedPromo.scope || 'global';
+    
+    // 1. Branded / Generic Restrictions
+    const isItemGeneric = item.isGeneric === true || item.isGeneric === "true";
+    if (scope === 'branded' || rules.isBrandedOnly) {
+      if (isItemGeneric) isEligible = false;
+    } else if (scope === 'generic' || rules.isGenericOnly) {
+      if (!isItemGeneric) isEligible = false;
+    }
+    
+    // 2. Category Restrictions
+    const allowedCats = rules.categories || [];
+    if (scope === 'category' || allowedCats.length > 0) {
+      // Check both multi-select rules and single scopeValue fallback
+      const cats = [...allowedCats];
+      if (scope === 'category' && appliedPromo.scopeValue) cats.push(appliedPromo.scopeValue);
+      if (!cats.includes(item.category)) isEligible = false;
+    }
+    
+    // 3. Product Restrictions
+    const allowedProds = rules.products || [];
+    if (scope === 'product' || allowedProds.length > 0) {
+      const prods = [...allowedProds];
+      if (scope === 'product' && appliedPromo.scopeValue) prods.push(appliedPromo.name); // Using name for product scope
+      if (!prods.includes(item.name)) isEligible = false;
+    }
+    
+    return isEligible ? acc + (item.price * item.quantity) : acc;
+  }, 0);
+
   let rawDiscount = 0;
-  if (appliedPromo) {
-    rawDiscount = appliedPromo.discountType === 'fixed' ? appliedPromo.discountValue : (totalPrice * (appliedPromo.discountValue / 100));
+  if (appliedPromo && eligibleTotalPrice > 0) {
+    rawDiscount = appliedPromo.discountType === 'fixed' 
+      ? appliedPromo.discountValue 
+      : (eligibleTotalPrice * (appliedPromo.discountValue / 100));
   }
   const promoDiscount = (appliedPromo?.maxDiscount && appliedPromo.maxDiscount > 0) ? Math.min(rawDiscount, appliedPromo.maxDiscount) : rawDiscount;
+
+
   
   const finalPayable = Math.max(0, totalPrice + feeTotal - promoDiscount);
   const itemSavings = totalMrp - totalPrice;

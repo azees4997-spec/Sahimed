@@ -350,8 +350,9 @@ class PromoModel {
   final double discountValue;
   final double? maxDiscount;
   final double minOrderValue;
-  final String applyTo; // 'cart' | 'product'
-  final bool isActive;
+  final String? scope;
+  final String? scopeValue;
+  final Map<String, dynamic>? rules;
 
   PromoModel({
     required this.id,
@@ -363,6 +364,9 @@ class PromoModel {
     required this.minOrderValue,
     required this.applyTo,
     this.isActive = true,
+    this.scope,
+    this.scopeValue,
+    this.rules,
   });
 
   factory PromoModel.fromJson(Map<String, dynamic> json) {
@@ -378,6 +382,9 @@ class PromoModel {
       minOrderValue: (json['minOrderValue'] ?? 0).toDouble(),
       applyTo: json['applyTo'] ?? 'cart',
       isActive: json['isActive'] ?? true,
+      scope: json['scope'],
+      scopeValue: json['scopeValue'],
+      rules: json['rules'] != null ? Map<String, dynamic>.from(json['rules']) : null,
     );
   }
 
@@ -392,6 +399,9 @@ class PromoModel {
       'minOrderValue': minOrderValue,
       'applyTo': applyTo,
       'isActive': isActive,
+      'scope': scope,
+      'scopeValue': scopeValue,
+      'rules': rules,
     };
   }
 }
