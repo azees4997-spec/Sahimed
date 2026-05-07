@@ -17,7 +17,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { motion } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
-import BottomNav from '@/components/BottomNav';
+
 
 export default function OrderSuccessPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -58,7 +58,7 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
             <Link href="/">Return Home</Link>
           </Button>
         </main>
-        <BottomNav />
+
       </div>
     );
   }
@@ -175,7 +175,7 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
           </motion.div>
         </main>
 
-        <BottomNav />
+
       </div>
     </PageTransition>
   );

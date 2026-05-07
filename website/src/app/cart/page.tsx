@@ -447,7 +447,6 @@ export default function CartPage() {
             </div>
           </div>
         )}
-        <BottomNav />
       </div>
     </PageTransition>
   );

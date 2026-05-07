@@ -47,7 +47,7 @@ import { collection, serverTimestamp, doc, getDoc, query, orderBy, addDoc } from
 import AddressForm from '@/components/AddressForm';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import BottomNav from '@/components/BottomNav';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 import Link from 'next/link';
@@ -1088,7 +1088,7 @@ export default function CheckoutPage() {
             </div>
           </div>
         </main>
-        <BottomNav />
+
 
         <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
           <DialogContent className="max-w-md w-[94vw] rounded-[40px] p-0 border-none shadow-3xl bg-white z-[110] overflow-hidden">
