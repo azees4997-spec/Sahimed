@@ -1131,7 +1131,7 @@ class _PromoSheet extends StatelessWidget {
                                   const SizedBox(height: 10),
                                   Row(
                                     children: [
-                                      const Icon(LucideIcons.alertCircle, size: 10, color: Color(0xFFE11D48)),
+                                      const Icon(LucideIcons.circleAlert, size: 10, color: Color(0xFFE11D48)),
                                       const SizedBox(width: 4),
                                       Text(
                                         restrictionMessage,

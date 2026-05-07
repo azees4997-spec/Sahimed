@@ -344,7 +344,7 @@ class ApiService {
     return true; 
   }
 
-  Future<String?> getShipwayEDD(String toPincode) async {
+  Future<Map<String, dynamic>?> getShipwayServiceability(String toPincode) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/logistics/shipway/serviceability'),
@@ -356,14 +356,10 @@ class ApiService {
       ).timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data != null) {
-          final edd = data['edd'] ?? data['expected_delivery_date'];
-          return edd?.toString();
-        }
+        return json.decode(response.body);
       }
     } catch (e) {
-      debugPrint('Error fetching Shipway EDD for $toPincode: $e');
+      debugPrint('Error fetching Shipway serviceability for $toPincode: $e');
     }
     return null;
   }
@@ -460,6 +456,7 @@ class ApiService {
         isConsultationRequired: isConsultationRequired,
         clinicalPath: isConsultationRequired ? 'consult' : 'normal',
         walletUsed: walletUsed,
+        createdAt: DateTime.now(),
       );
 
       final orderPayload = {
@@ -560,14 +557,24 @@ class ApiService {
       }
 
       final headers = await _getHeaders();
-      if (kDebugMode) debugPrint('DEBUG: Fetching orders for UID: ${user.uid}');
+      final phone = user.phoneNumber ?? 'NO_PHONE';
+      final uid = user.uid;
+      
+      if (kDebugMode) {
+        debugPrint('DEBUG: Fetching orders for UID: $uid, Phone: $phone');
+      }
       
       final response = await http.get(
         Uri.parse('$baseUrl/orders'),
         headers: headers,
       );
 
-      if (kDebugMode) debugPrint('DEBUG: Orders Response Status: ${response.statusCode}');
+      if (kDebugMode) {
+        debugPrint('DEBUG: Orders Response Status: ${response.statusCode}');
+        if (response.statusCode != 200) {
+          debugPrint('DEBUG: Orders Response Body: ${response.body}');
+        }
+      }
       
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
@@ -577,6 +584,8 @@ class ApiService {
         }
         
         final List<dynamic> data = decoded;
+        if (kDebugMode) debugPrint('DEBUG: Fetched ${data.length} orders');
+        
         return data.map((order) {
           final map = Map<String, dynamic>.from(order);
           map['id'] = map['id'] ?? map['_id']?.toString() ?? '';

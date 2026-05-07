@@ -216,6 +216,8 @@ class OrderModel {
   final String? awbNumber;
   final String? carrierId;
   final double walletUsed;
+  final DateTime createdAt;
+  final String? expectedDeliveryDate;
 
   OrderModel({
     required this.id,
@@ -235,6 +237,8 @@ class OrderModel {
     this.awbNumber,
     this.carrierId,
     this.walletUsed = 0,
+    required this.createdAt,
+    this.expectedDeliveryDate,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -256,6 +260,10 @@ class OrderModel {
       awbNumber: json['shipping']?['awb'] ?? json['awbNumber'],
       carrierId: json['shipping']?['courier'] ?? json['carrierId'],
       walletUsed: num.tryParse((json['walletUsed'] ?? 0).toString())?.toDouble() ?? 0.0,
+      createdAt: json['createdAt'] != null 
+        ? (json['createdAt'] is String ? DateTime.parse(json['createdAt']) : (json['createdAt'] is Map ? DateTime.fromMillisecondsSinceEpoch(json['createdAt']['_seconds'] * 1000) : DateTime.now()))
+        : DateTime.now(),
+      expectedDeliveryDate: json['expectedDeliveryDate']?.toString(),
     );
   }
 
@@ -354,6 +362,8 @@ class PromoModel {
   final double discountValue;
   final double? maxDiscount;
   final double minOrderValue;
+  final String applyTo;
+  final bool isActive;
   final String? scope;
   final String? scopeValue;
   final Map<String, dynamic>? rules;

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,6 +11,8 @@ import '../../../core/providers/cart_provider.dart';
 import '../../../shared/models/models.dart';
 import '../../../core/widgets/screen_with_nav.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
+
 
 
 // ─── Colors matching the website's Tailwind tokens ──────────────────────────
@@ -39,6 +42,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   late final TabController _tabController;
   bool _isPincodeEditable = false;
   late final TextEditingController _pincodeController;
+  String? _zone;
+  String _timeLeft = '';
+  Timer? _timer;
 
 
   @override
@@ -48,22 +54,52 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     _pincodeController = TextEditingController();
     _fetchGenericAlternative();
     _loadEDD();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final now = DateTime.now();
+      var cutoff = DateTime(now.year, now.month, now.day, 14, 0, 0);
+
+      if (now.isAfter(cutoff)) {
+        cutoff = cutoff.add(const Duration(days: 1));
+      }
+
+      final diff = cutoff.difference(now);
+      final h = diff.inHours;
+      final m = diff.inMinutes % 60;
+      final s = diff.inSeconds % 60;
+
+      if (mounted) {
+        setState(() {
+          _timeLeft = '${h}h ${m}m ${s}s';
+        });
+      }
+    });
   }
 
   Future<void> _loadEDD([String? pin]) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final pincode = pin ?? prefs.getString('user_pincode') ?? '560068';
-      final edd = await _apiService.getShipwayEDD(pincode);
+      final serviceability = await _apiService.getShipwayServiceability(pincode);
       if (mounted) {
-        if (edd != null) {
-          final date = DateTime.parse(edd);
-          final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        if (serviceability != null && serviceability['edd'] != null) {
+          final eddStr = serviceability['edd'].toString();
+          final date = DateTime.parse(eddStr);
+          // Format: May 09 Saturday
+          final formattedDate = DateFormat('MMM dd EEEE').format(date);
+          
           setState(() {
-            _edd = '${date.day} ${months[date.month - 1]}';
+            _edd = formattedDate;
+            _zone = serviceability['zone']?.toString() ?? 'India';
           });
         } else {
-          setState(() => _edd = '');
+          setState(() {
+            _edd = '';
+            _zone = '';
+          });
         }
       }
     } catch (e) {
@@ -72,8 +108,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   }
 
 
+
   @override
   void dispose() {
+    _timer?.cancel();
     _tabController.dispose();
     _pincodeController.dispose();
     super.dispose();
@@ -310,139 +348,192 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: const Color(0xFFDCFCE7)),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
                   child: Column(
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFDCFCE7),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(LucideIcons.truck, size: 18, color: Color(0xFF166534)),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _edd.isNotEmpty ? 'DELIVERY BY $_edd'.toUpperCase() : 'CHECK SERVICEABILITY',
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFF166534),
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                                Text(
-                                  _edd.isNotEmpty 
-                                    ? 'Guaranteed express shipping' 
-                                    : 'Enter pincode to check delivery date',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
-                                    color: const Color(0xFF15803D),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
+                      // Top Section: EDD & Timer
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFDCFCE7)),
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                          border: Border.all(color: const Color(0xFFDCFCE7), width: 0.5),
                         ),
                         child: Row(
                           children: [
-                            const Icon(LucideIcons.mapPin, size: 14, color: Color(0xFF166534)),
-                            const SizedBox(width: 12),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFDCFCE7),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(LucideIcons.truck, size: 20, color: Color(0xFF166534)),
+                            ),
+                            const SizedBox(width: 16),
                             Expanded(
-                              child: FutureBuilder<SharedPreferences>(
-                                future: SharedPreferences.getInstance(),
-                                builder: (context, snapshot) {
-                                  final pin = snapshot.data?.getString('user_pincode') ?? '560068';
-                                  if (_pincodeController.text.isEmpty && !_isPincodeEditable) {
-                                    _pincodeController.text = pin;
-                                  }
-                                  return TextField(
-                                    controller: _pincodeController,
-                                    readOnly: !_isPincodeEditable,
-                                    decoration: const InputDecoration(
-                                      hintText: 'Enter Pincode',
-                                      border: InputBorder.none,
-                                      hintStyle: TextStyle(fontSize: 12),
-                                      counterText: '',
-                                    ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _edd.isNotEmpty ? 'DELIVER BY $_edd'.toUpperCase() : 'CHECK SERVICEABILITY',
                                     style: GoogleFonts.outfit(
-                                      fontSize: 12,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.w900,
                                       color: const Color(0xFF166534),
+                                      letterSpacing: 0.5,
                                     ),
-                                    keyboardType: TextInputType.number,
-                                    maxLength: 6,
-                                    onChanged: (val) async {
-                                      if (val.length == 6) {
-                                        final prefs = await SharedPreferences.getInstance();
-                                        await prefs.setString('user_pincode', val);
-                                        _loadEDD(val);
-                                      }
-                                    },
-                                  );
-                                },
+                                  ),
+                                  if (_timeLeft.isNotEmpty)
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Order within ',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 11,
+                                            color: const Color(0xFF15803D),
+                                          ),
+                                        ),
+                                        Text(
+                                          _timeLeft,
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w900,
+                                            color: const Color(0xFF166534),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                ],
                               ),
                             ),
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  if (_isPincodeEditable) {
-                                    // Save/Check logic
-                                    final pin = _pincodeController.text;
-                                    if (pin.length == 6) {
-                                      _loadEDD(pin);
-                                      _isPincodeEditable = false;
-                                    }
-                                  } else {
-                                    _isPincodeEditable = true;
-                                  }
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            if (_edd.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: _isPincodeEditable ? const Color(0xFF166534) : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(8),
+                                  color: Colors.white.withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(100),
                                 ),
-                                child: Row(
-                                  children: [
-                                    if (!_isPincodeEditable)
-                                      const Icon(LucideIcons.pencil, size: 12, color: Color(0xFF166534)),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      _isPincodeEditable ? 'CHECK' : 'EDIT',
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w900,
-                                        color: _isPincodeEditable ? Colors.white : const Color(0xFF166534),
-                                      ),
-                                    ),
-                                  ],
+                                child: Text(
+                                  'FREE',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF166534),
+                                  ),
                                 ),
                               ),
-                            ),
                           ],
+                        ),
+                      ),
+                      
+                      // Bottom Section: Pincode Input
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFF1F5F9)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(LucideIcons.mapPin, size: 16, color: SahimedColors.slate400),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: FutureBuilder<SharedPreferences>(
+                                  future: SharedPreferences.getInstance(),
+                                  builder: (context, snapshot) {
+                                    final pin = snapshot.data?.getString('user_pincode') ?? '560068';
+                                    if (_pincodeController.text.isEmpty && !_isPincodeEditable) {
+                                      _pincodeController.text = pin;
+                                    }
+                                    return TextField(
+                                      controller: _pincodeController,
+                                      readOnly: !_isPincodeEditable,
+                                      autofocus: _isPincodeEditable,
+                                      decoration: const InputDecoration(
+                                        hintText: 'Enter Pincode',
+                                        border: InputBorder.none,
+                                        hintStyle: TextStyle(fontSize: 13, color: SahimedColors.slate300),
+                                        counterText: '',
+                                      ),
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w900,
+                                        color: const Color(0xFF0F172A),
+                                      ),
+                                      keyboardType: TextInputType.number,
+                                      maxLength: 6,
+                                      onSubmitted: (val) async {
+                                        if (val.length == 6) {
+                                          final prefs = await SharedPreferences.getInstance();
+                                          await prefs.setString('user_pincode', val);
+                                          _loadEDD(val);
+                                          setState(() => _isPincodeEditable = false);
+                                        }
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  setState(() {
+                                    if (_isPincodeEditable) {
+                                      final pin = _pincodeController.text;
+                                      if (pin.length == 6) {
+                                        _loadEDD(pin);
+                                        _isPincodeEditable = false;
+                                      } else {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Invalid Pincode')),
+                                        );
+                                      }
+                                    } else {
+                                      _isPincodeEditable = true;
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: _isPincodeEditable ? SahimedColors.primary : const Color(0xFFF1F5F9),
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      if (!_isPincodeEditable) ...[
+                                        const Icon(LucideIcons.pencil, size: 12, color: SahimedColors.slate500),
+                                        const SizedBox(width: 8),
+                                      ],
+                                      Text(
+                                        _isPincodeEditable ? 'CHECK' : 'EDIT',
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w900,
+                                          color: _isPincodeEditable ? Colors.white : SahimedColors.slate500,
+                                          letterSpacing: 1,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -987,6 +1078,85 @@ class _ClinicalTabs extends StatelessWidget {
 
 // ── Reusable tile widgets ─────────────────────────────────────────────────────
 
+void _showDetailModal(BuildContext context, String title, String content, IconData icon, Color color) {
+  HapticFeedback.lightImpact();
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (context) => Container(
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF0F172A),
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(LucideIcons.circleX, color: SahimedColors.slate300),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFF1F5F9)),
+            ),
+            child: Text(
+              content,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: const Color(0xFF334155),
+                height: 1.6,
+              ),
+            ),
+          ),
+          const SizedBox(height: 40),
+        ],
+      ),
+    ),
+  );
+}
+
 class _InfoTile extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -1002,51 +1172,55 @@ class _InfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFF1F5F9)),
+    return InkWell(
+      onTap: () => _showDetailModal(context, title, text, icon, SahimedColors.primary),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white, width: 1.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+              ),
+              child: Icon(icon, size: 13, color: SahimedColors.primary),
             ),
-            child: Icon(icon, size: 13, color: SahimedColors.primary),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            title.toUpperCase(),
-            style: GoogleFonts.outfit(
-              fontSize: 7,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF94A3B8),
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Expanded(
-            child: Text(
-              text.toUpperCase(),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            const SizedBox(height: 6),
+            Text(
+              title.toUpperCase(),
               style: GoogleFonts.outfit(
-                fontSize: 9,
+                fontSize: 7,
                 fontWeight: FontWeight.w900,
-                color: const Color(0xFF1E293B),
-                height: 1.3,
+                color: const Color(0xFF94A3B8),
+                letterSpacing: 1,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Expanded(
+              child: Text(
+                text.toUpperCase(),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.outfit(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF1E293B),
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1073,51 +1247,55 @@ class _SafetyTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFF1F5F9)),
+    return InkWell(
+      onTap: () => _showDetailModal(context, title, text, icon, iconColor),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white, width: 1.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+              ),
+              child: Icon(icon, size: 13, color: iconColor),
             ),
-            child: Icon(icon, size: 13, color: iconColor),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            title.toUpperCase(),
-            style: GoogleFonts.outfit(
-              fontSize: 7,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF94A3B8),
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Expanded(
-            child: Text(
-              text.toUpperCase(),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            const SizedBox(height: 6),
+            Text(
+              title.toUpperCase(),
               style: GoogleFonts.outfit(
-                fontSize: 9,
+                fontSize: 7,
                 fontWeight: FontWeight.w900,
-                color: const Color(0xFF1E293B),
-                height: 1.3,
+                color: const Color(0xFF94A3B8),
+                letterSpacing: 1,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Expanded(
+              child: Text(
+                text.toUpperCase(),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.outfit(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF1E293B),
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1138,51 +1316,56 @@ class _InteractionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFF1F5F9)),
+    final content = text ?? 'CONSULT DOCTOR';
+    return InkWell(
+      onTap: () => _showDetailModal(context, title, content, icon, SahimedColors.primary),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white, width: 1.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+              ),
+              child: Icon(icon, size: 13, color: SahimedColors.primary),
             ),
-            child: Icon(icon, size: 13, color: SahimedColors.primary),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            title.toUpperCase(),
-            style: GoogleFonts.outfit(
-              fontSize: 7,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF94A3B8),
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Expanded(
-            child: Text(
-              (text ?? 'CONSULT DOCTOR').toUpperCase(),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            const SizedBox(height: 6),
+            Text(
+              title.toUpperCase(),
               style: GoogleFonts.outfit(
-                fontSize: 9,
+                fontSize: 7,
                 fontWeight: FontWeight.w900,
-                color: const Color(0xFF1E293B),
-                height: 1.3,
+                color: const Color(0xFF94A3B8),
+                letterSpacing: 1,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Expanded(
+              child: Text(
+                content.toUpperCase(),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.outfit(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF1E293B),
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

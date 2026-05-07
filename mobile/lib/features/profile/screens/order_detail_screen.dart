@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/colors.dart';
 import '../../../shared/models/models.dart';
 
@@ -38,14 +39,29 @@ class OrderDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (orderDate != null) ...[
-                    Text(
-                      'PLACED ON ${orderDate.day} ${_getMonth(orderDate.month)} ${orderDate.year}',
-                      style: GoogleFonts.outfit(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        color: SahimedColors.slate400,
-                        letterSpacing: 1,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'PLACED ON ${orderDate.day} ${_getMonth(orderDate.month)} ${orderDate.year}',
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: SahimedColors.slate400,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        if (!status.toLowerCase().contains('delivered') && !status.toLowerCase().contains('cancelled'))
+                          Text(
+                            _calculateEDDString(order),
+                            style: GoogleFonts.outfit(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF10B981),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -738,5 +754,25 @@ class OrderDetailScreen extends StatelessWidget {
         );
       }),
     );
+  }
+
+  String _calculateEDDString(OrderModel order) {
+    if (order.expectedDeliveryDate != null) {
+      try {
+        final date = DateTime.parse(order.expectedDeliveryDate!);
+        return 'EST. DELIVERY BY ${DateFormat('MMM dd EEEE').format(date)}'.toUpperCase();
+      } catch (_) {}
+    }
+
+    final pincode = (order.shippingDetails['pincode'] ?? '000000').toString();
+    int daysToAdd = 6;
+    if (pincode.startsWith('56')) {
+      daysToAdd = 2;
+    } else if (pincode.startsWith('5') || pincode.startsWith('6')) {
+      daysToAdd = 4;
+    }
+
+    final edd = order.createdAt.add(Duration(days: daysToAdd));
+    return 'EST. DELIVERY BY ${DateFormat('MMM dd EEEE').format(edd)}'.toUpperCase();
   }
 }

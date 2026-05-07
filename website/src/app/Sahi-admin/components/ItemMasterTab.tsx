@@ -573,8 +573,10 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     };
 
     refreshProduct();
+  }, [initialData?.id, initialData?._id]);
 
-    // Fetch categories for dropdown
+  // Fetch categories for dropdown - separately so it runs in create mode too
+  useEffect(() => {
     const fetchCats = async () => {
       try {
         const res = await fetch('/api/categories');
@@ -587,7 +589,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       }
     };
     fetchCats();
-  }, [initialData?.id, initialData?._id]);
+  }, []);
 
   useEffect(() => {
     const fetchMols = async () => {
@@ -757,7 +759,8 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
             )}
             <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black">Medicine name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2"><Label className="text-[10px] font-black">Sku</Label><Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-            <div className="space-y-2"><Label className="text-[10px] font-black">Manufacturer</Label><Input value={form.manufacturer} onChange={e => setForm({...form, manufacturer: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black">Pack Size</Label><Input value={form.packSize} onChange={e => setForm({...form, packSize: e.target.value})} placeholder="e.g. 10 Tablets" className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
+            <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black">Manufacturer</Label><Input value={form.manufacturer} onChange={e => setForm({...form, manufacturer: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
             <div className="space-y-2">
               <Label className="text-[10px] font-black">HSN Code</Label>
               <Input 
