@@ -134,9 +134,6 @@ export class ShipwayService {
       };
 
     } catch (err: any) {
-
-
-    } catch (err: any) {
       console.error("[Shipway] Serviceability check failed:", err.message);
       return { success: false, serviceable: false, error: err.message };
     }
