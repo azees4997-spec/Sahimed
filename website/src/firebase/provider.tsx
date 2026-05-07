@@ -127,6 +127,21 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
             // Heartbeat update for Last Activity tracking
             await setDoc(profileRef, baseData, { merge: true });
           }
+
+          // [STABILIZATION] SYNC TO MONGODB: Ensure real-time mirror
+          try {
+            const idToken = await user.getIdToken();
+            await fetch('/api/user/sync', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+              }
+            });
+            console.log("[Clinical Sync] MongoDB mirror updated successfully.");
+          } catch (syncErr) {
+            console.warn("[Clinical Sync] MongoDB mirror failed, will retry on next login.", syncErr);
+          }
         } catch (e) {
           console.error("Clinical Bridge Sync Failure:", e);
         }

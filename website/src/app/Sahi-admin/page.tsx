@@ -51,6 +51,7 @@ import { BannersTab } from './components/BannersTab';
 import { AdminProfilesTab } from './components/AdminProfilesTab';
 import { PagesTab } from './components/PagesTab';
 import { SearchAnalyticsTab } from './components/SearchAnalyticsTab';
+import { MaintenanceTab } from './components/MaintenanceTab';
 
 const MASTER_UIDS = ["BM9HheYflheT0Wyj6olaEnyCAHl1", "RzB6nqlQumg1VEniFcZrgbcDdRA2"];
 
@@ -390,6 +391,7 @@ function AdminConsoleContent() {
               {permissions.staff_manage && activeTab === 'admins' && <AdminProfilesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {permissions.inventory_manage && activeTab === 'pages' && <PagesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {permissions.inventory_manage && activeTab === 'searchAnalytics' && <SearchAnalyticsTab onBack={() => handleTabChange('overview')} />}
+              {permissions.staff_manage && activeTab === 'maintenance' && <MaintenanceTab onBack={() => handleTabChange('overview')} />}
             </motion.div>
           </AnimatePresence>
         </main>

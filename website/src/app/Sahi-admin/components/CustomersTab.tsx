@@ -22,22 +22,42 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   useMemoFirebase, 
   useCollection,
-  updateDocumentNonBlocking
+  updateDocumentNonBlocking,
+  useAuth
 } from '@/firebase';
 import { doc, collection, query, orderBy, serverTimestamp, limit } from 'firebase/firestore';
 import { SectionHeader } from './SectionHeader';
+import { getAuth } from 'firebase/auth';
 
 export function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
+  const auth = useAuth();
   const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles'), orderBy('createdAt', 'desc'), limit(50)) : null, [db, isVerified]);
   const { data: users, isLoading } = useCollection(usersQuery);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const { toast } = useToast();
 
-  const handleUpdateUser = (id: string, updates: any) => {
+  const handleUpdateUser = async (id: string, updates: any) => {
     updateDocumentNonBlocking(doc(db, 'userProfiles', id), { ...updates, updatedAt: serverTimestamp() });
     toast({ title: "Customer profile updated" });
     setSelectedUser(null);
+
+    // [STABILIZATION] SYNC TO MONGODB: Ensure real-time mirror after admin update
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) throw new Error("No admin session found");
+      
+      await fetch('/api/user/sync', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ uid: id })
+      });
+    } catch (err) {
+      console.warn("[Sync] Admin user update sync failed", err);
+    }
   };
 
   const filteredUsers = users?.filter(patient => {

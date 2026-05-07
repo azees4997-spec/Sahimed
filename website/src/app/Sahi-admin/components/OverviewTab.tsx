@@ -14,7 +14,8 @@ import {
   ArrowRight,
   Shield,
   FileCode,
-  LineChart
+  LineChart,
+  Database
 } from 'lucide-react';
 import { Card, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -36,7 +37,8 @@ export function OverviewTab({ setTab, role }: { setTab: (t: AdminTab) => void, r
     { label: 'Molecules', icon: Dna, desc: 'Generic salt database', tab: 'moleculeMaster', color: 'text-teal-500', bg: 'bg-teal-50' },
     { label: 'Analytics', icon: LineChart, desc: 'Search insights', tab: 'searchAnalytics', color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Pages', icon: FileCode, desc: 'Website content', tab: 'pages', color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
-    { label: 'Staff', icon: Shield, desc: 'Team permissions', tab: 'admins', color: 'text-indigo-600', bg: 'bg-indigo-50', restricted: true }
+    { label: 'Staff', icon: Shield, desc: 'Team permissions', tab: 'admins', color: 'text-indigo-600', bg: 'bg-indigo-50', restricted: true },
+    { label: 'Maintenance', icon: Database, desc: 'DB Sync & Integrity', tab: 'maintenance', color: 'text-slate-600', bg: 'bg-slate-100', restricted: true }
   ];
 
   const filteredStats = allStats.filter(card => {

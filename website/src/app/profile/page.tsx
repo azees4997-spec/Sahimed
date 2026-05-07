@@ -190,6 +190,22 @@ export default function ProfilePage() {
     setIsAddressDialogOpen(false);
     toast({ title: "Address secured" });
     setAddressForm(null);
+
+    // [STABILIZATION] SYNC TO MONGODB: Ensure real-time mirror after address change
+    (async () => {
+      try {
+        const idToken = await user.getIdToken();
+        await fetch('/api/user/sync', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          }
+        });
+      } catch (err) {
+        console.warn("[Sync] Address sync failed", err);
+      }
+    })();
   };
 
   const handleLogout = async () => {
@@ -378,7 +394,23 @@ export default function ProfilePage() {
                             </div>
                             <div className="flex gap-1.5">
                               <Button variant="ghost" size="icon" onClick={() => { setAddressForm(addr); setIsAddressDialogOpen(true); }} className="h-8 w-8 rounded-full bg-white shadow-sm text-slate-300 hover:text-primary active:scale-95"><Edit2 className="w-3.5 h-3.5" /></Button>
-                              <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db, 'userProfiles', user.uid, 'addresses', addr.id))} className="h-8 w-8 rounded-full bg-white shadow-sm text-slate-300 hover:text-rose-500 active:scale-95"><Trash2 className="w-3.5 h-3.5" /></Button>
+                              <Button variant="ghost" size="icon" onClick={async () => {
+                                await deleteDocumentNonBlocking(doc(db, 'userProfiles', user.uid, 'addresses', addr.id));
+                                // [STABILIZATION] SYNC TO MONGODB: Ensure real-time mirror after address deletion
+                                try {
+                                  const idToken = await user.getIdToken();
+                                  await fetch('/api/user/sync', {
+                                    method: 'POST',
+                                    headers: { 
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${idToken}`
+                                    }
+                                  });
+                                  toast({ title: "Address removed" });
+                                } catch (err) {
+                                  console.warn("[Sync] Address deletion sync failed", err);
+                                }
+                              }} className="h-8 w-8 rounded-full bg-white shadow-sm text-slate-300 hover:text-rose-500 active:scale-95"><Trash2 className="w-3.5 h-3.5" /></Button>
                             </div>
                           </div>
                         </motion.div>
