@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 
 declare global {
   interface Window {
-    Razorpay: any;
+    Paytm: any;
   }
 }
 import Navbar from '@/components/Navbar';
@@ -439,8 +439,8 @@ export default function CheckoutPage() {
       totalAmount: finalPayable,
       status: 'Pending',
       paymentType: paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online',
-      paymentId: body?.paymentId || null, // Capture Razorpay payment ID
-      razorpayOrderId: body?.razorpayOrderId || null,
+      paymentId: body?.paymentId || null, // Capture Paytm transaction ID
+      paytmOrderId: body?.paytmOrderId || null,
       patientName: orderInfo.patientName,
       phoneNumber: `+91${cleanPhone}`,
       clinicalPath: clinicalPath,
@@ -517,68 +517,68 @@ export default function CheckoutPage() {
 
   const handleOnlinePayment = async () => {
     if (!user) return;
-    
-    // CRITICAL: Validate data BEFORE opening payment gateway
     if (!validate()) return;
     
     setLoading(true);
 
     try {
-      const response = await fetch('/api/payments/razorpay', {
+      const orderId = `ORD${Date.now()}`;
+      const amountToPay = Math.max(0, finalPayable - (useWallet ? allowableWallet : 0));
+
+      const response = await fetch('/api/paytm/initiate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${await user.getIdToken()}`
         },
         body: JSON.stringify({
-          amount: Math.max(0, finalPayable - (useWallet ? allowableWallet : 0))
+          orderId: orderId,
+          amount: amountToPay,
+          channel: 'WEB'
         })
       });
 
-      const rzpOrder = await response.json();
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
 
-      if (!response.ok) throw new Error(rzpOrder.error);
-
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: rzpOrder.amount,
-        currency: rzpOrder.currency,
-        name: "SahiMed",
-        description: "Clinical Healthcare Purchase",
-        order_id: rzpOrder.id,
-        handler: function (response: any) {
-          // Payment successful! Now place the final order
-          handlePlaceOrder({
-            paymentId: response.razorpay_payment_id,
-            razorpayOrderId: response.razorpay_order_id,
-            signature: response.razorpay_signature
-          });
+      const config = {
+        "root": "",
+        "flow": "DEFAULT",
+        "data": {
+          "orderId": orderId,
+          "token": data.txnToken,
+          "tokenType": "TXN_TOKEN",
+          "amount": amountToPay.toString()
         },
-        prefill: {
-          name: orderInfo.patientName,
-          contact: `+91${orderInfo.phoneNumber.replace(/\D/g, '')}`,
-        },
-        theme: {
-          color: "#7C3AED", // SahiMed Primary Color
-        },
-        modal: {
-          ondismiss: function() {
-            setLoading(false);
-            router.push('/payment-failed');
+        "handler": {
+          "notifyMerchant": function(eventName: string, data: any) {
+             console.log("Paytm Event:", eventName, data);
+             if (eventName === 'SESSION_EXPIRED') {
+               setLoading(false);
+               toast({ variant: 'destructive', title: "Session Expired", description: "Payment session timed out." });
+             }
           }
         }
       };
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      if (window.Paytm && window.Paytm.CheckoutJS) {
+        window.Paytm.CheckoutJS.init(config).then(function onSuccess() {
+          window.Paytm.CheckoutJS.invoke();
+        }).catch(function onError(error: any) {
+          console.error("Paytm Init Error:", error);
+          setLoading(false);
+        });
+      } else {
+        throw new Error("Paytm SDK not loaded");
+      }
+
     } catch (err: any) {
       setLoading(false);
       toast({ 
         variant: 'destructive', 
         title: "Payment Error", 
-        description: err.message || "Could not initiate secure payment gateway." 
+        description: err.message || "Could not initiate Paytm gateway." 
       });
-      router.push('/payment-failed');
     }
   };
 

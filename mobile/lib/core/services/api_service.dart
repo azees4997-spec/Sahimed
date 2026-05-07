@@ -428,8 +428,8 @@ class ApiService {
     bool isConsultationRequired = false,
     double walletUsed = 0,
     String? paymentId,
-    String? razorpayOrderId,
-    String? signature,
+    String? paymentId,
+    String? paytmOrderId,
   }) async {
     try {
       final user = _auth.currentUser;
@@ -463,8 +463,7 @@ class ApiService {
         ...order.toJson(), 
         'platform': 'mobile',
         'paymentId': paymentId,
-        'razorpayOrderId': razorpayOrderId,
-        'signature': signature,
+        'paytmOrderId': paytmOrderId,
         'paymentType': paymentId != null ? 'Online' : 'Cash on Delivery',
       };
 
@@ -485,20 +484,27 @@ class ApiService {
     return null;
   }
 
-  Future<Map<String, dynamic>?> createRazorpayOrder({required double amount}) async {
+  Future<Map<String, dynamic>?> createPaytmOrder({
+    required String orderId,
+    required double amount,
+  }) async {
     try {
       final headers = await _getHeaders();
       final response = await http.post(
-        Uri.parse('$baseUrl/payments/razorpay'),
+        Uri.parse('$baseUrl/paytm/initiate'),
         headers: headers,
-        body: json.encode({'amount': amount}),
+        body: json.encode({
+          'orderId': orderId,
+          'amount': amount,
+          'channel': 'WAP',
+        }),
       );
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
       }
     } catch (e) {
-      debugPrint('Error creating Razorpay order: $e');
+      debugPrint('Error creating Paytm order: $e');
     }
     return null;
   }

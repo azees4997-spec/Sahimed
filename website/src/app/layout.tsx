@@ -175,10 +175,11 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(pharmacyJsonLd) }}
         />
-        <Script
-          src="https://checkout.razorpay.com/v1/checkout.js"
-          strategy="lazyOnload"
-        />
+        <script
+          type="application/javascript"
+          src="https://securegw-stage.paytm.in/merchantpgpui/checkoutjs/merchants/CFehFB20400052473723.js"
+          crossOrigin="anonymous"
+        ></script>
         <Script
           src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
           strategy="lazyOnload"

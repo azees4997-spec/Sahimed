@@ -9,7 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:paytm_allinone/paytm_allinone.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../core/services/api_service.dart';
@@ -54,46 +54,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String _walletReason = '';
 
   // Payment Integration
-  late Razorpay _razorpay;
+  // Paytm Integration
   String _paymentMethod = 'COD';
 
 
   @override
   void initState() {
     super.initState();
-    _razorpay = Razorpay();
-    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
-    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+    _prescriptionImage = widget.initialPrescription;
     
     _prescriptionImage = widget.initialPrescription;
     _loadData();
     _loadWalletInfo();
   }
 
-  void _handlePaymentSuccess(PaymentSuccessResponse response) {
-    _placeOrder(
-      paymentId: response.paymentId,
-      razorpayOrderId: response.orderId,
-      signature: response.signature,
-    );
-  }
-
-  void _handlePaymentError(PaymentFailureResponse response) {
-    if (mounted) {
-      setState(() => _isProcessing = false);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const OrderStatusScreen(isSuccess: false),
-        ),
-      );
-    }
-  }
-
-  void _handleExternalWallet(ExternalWalletResponse response) {
-    // Handle external wallet if needed
-  }
+  // Payment handlers removed as Paytm uses async call
 
   Future<void> _loadWalletInfo() async {
     final cart = context.read<CartProvider>();
@@ -205,7 +180,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   void dispose() {
-    _razorpay.clear();
     _nameController.dispose();
     _houseController.dispose();
     _streetController.dispose();
@@ -219,28 +193,35 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<void> _handleOnlinePayment() async {
     final cart = context.read<CartProvider>();
     final amountPayable = cart.finalTotal - (_useWallet ? _allowableWalletAmount : 0);
+    final orderId = "ORD${DateTime.now().millisecondsSinceEpoch}";
 
     try {
-      final rzpOrder = await _apiService.createRazorpayOrder(amount: amountPayable);
-      if (rzpOrder == null) throw Exception('Failed to create payment order');
+      final paytmData = await _apiService.createPaytmOrder(
+        orderId: orderId,
+        amount: amountPayable,
+      );
+      
+      if (paytmData == null || paytmData['txnToken'] == null) {
+        throw Exception('Failed to initiate Paytm transaction');
+      }
 
-      final options = {
-        'key': 'rzp_live_SmDhO2dwbv0Ibn',
-        'amount': rzpOrder['amount'],
-        'currency': 'INR',
-        'name': 'SahiMed',
-        'description': 'Clinical Healthcare Purchase',
-        'order_id': rzpOrder['id'],
-        'prefill': {
-          'contact': _phoneController.text.trim(),
-          'name': _nameController.text.trim(),
-        },
-        'theme': {
-          'color': '#7C3AED', // Sahimed Primary Color
-        }
-      };
+      final response = await PaytmAllInOne.startTransaction(
+        mid: paytmData['mid'],
+        orderId: orderId,
+        amount: amountPayable.toString(),
+        txnToken: paytmData['txnToken'],
+        isStaging: true, // Change to false for production
+        callbackUrl: "https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=$orderId",
+      );
 
-      _razorpay.open(options);
+      if (response != null && response['STATUS'] == 'TXN_SUCCESS') {
+        _placeOrder(
+          paymentId: response['TXNID'],
+          paytmOrderId: response['ORDERID'],
+        );
+      } else {
+        throw Exception(response?['RESPMSG'] ?? 'Payment Failed');
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
@@ -253,8 +234,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Future<void> _placeOrder({
     String? paymentId,
-    String? razorpayOrderId,
-    String? signature,
+    String? paytmOrderId,
   }) async {
     // 1. Validation Logic
     if (_showAddressForm) {
@@ -314,8 +294,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     // TRIGGER ONLINE PAYMENT IF SELECTED AND NOT ALREADY PAID
     if (_paymentMethod == 'Online' && paymentId == null) {
-      await _handleOnlinePayment();
-      return; // Stop here, payment handler will resume via _handlePaymentSuccess
+      _handleOnlinePayment();
+      return; 
     }
 
     // Check serviceability
@@ -405,8 +385,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         isConsultationRequired: _isConsultationRequired,
         walletUsed: _useWallet ? _allowableWalletAmount : 0,
         paymentId: paymentId,
-        razorpayOrderId: razorpayOrderId,
-        signature: signature,
+        paytmOrderId: paytmOrderId,
       );
 
 
