@@ -965,7 +965,57 @@ class _PromoSheet extends StatelessWidget {
                     separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (_, i) {
                       final promo = promos[i];
-                      final isApplicable = cart.total >= promo.minOrderValue;
+                      
+                      final rules = promo.rules;
+                      final scope = promo.scope ?? 'global';
+                      
+                      final hasEligibleItems = cart.items.any((item) {
+                        bool isEligible = true;
+                        final isItemGeneric = item.product.isGeneric;
+                        
+                        if (scope == 'branded' || (rules != null && rules['isBrandedOnly'] == true)) {
+                          if (isItemGeneric) isEligible = false;
+                        } else if (scope == 'generic' || (rules != null && rules['isGenericOnly'] == true)) {
+                          if (!isItemGeneric) isEligible = false;
+                        }
+                        
+                        final allowedCats = rules != null && rules['categories'] != null 
+                          ? List<String>.from(rules['categories']) 
+                          : <String>[];
+                        if (scope == 'category' || allowedCats.isNotEmpty) {
+                          final cats = [...allowedCats];
+                          if (scope == 'category' && promo.scopeValue != null) cats.add(promo.scopeValue!);
+                          if (!cats.contains(item.product.category)) isEligible = false;
+                        }
+                        
+                        final allowedProds = rules != null && rules['products'] != null 
+                          ? List<String>.from(rules['products']) 
+                          : <String>[];
+                        if (scope == 'product' || allowedProds.isNotEmpty) {
+                          final prods = [...allowedProds];
+                          if (scope == 'product' && promo.scopeValue != null) prods.add(promo.scopeValue!);
+                          if (!prods.contains(item.product.name)) isEligible = false;
+                        }
+                        
+                        return isEligible;
+                      });
+
+                      final isValueMet = cart.total >= promo.minOrderValue;
+                      final isApplicable = isValueMet && hasEligibleItems;
+
+                      String restrictionMessage = "";
+                      if (!hasEligibleItems) {
+                        if (scope == 'branded' || (rules != null && rules['isBrandedOnly'] == true)) {
+                          restrictionMessage = "APPLICABLE TO BRANDED ITEMS ONLY";
+                        } else if (scope == 'generic' || (rules != null && rules['isGenericOnly'] == true)) {
+                          restrictionMessage = "APPLICABLE TO GENERIC ITEMS ONLY";
+                        } else if (scope == 'category' || (rules != null && (rules['categories'] as List?)?.isNotEmpty == true)) {
+                          restrictionMessage = "APPLICABLE TO SPECIFIC CATEGORIES ONLY";
+                        } else if (scope == 'product' || (rules != null && (rules['products'] as List?)?.isNotEmpty == true)) {
+                          restrictionMessage = "APPLICABLE TO SPECIFIC ITEMS ONLY";
+                        }
+                      }
+
                       final progressPct = promo.minOrderValue > 0
                           ? (cart.total / promo.minOrderValue).clamp(0.0, 1.0)
                           : 1.0;
@@ -1044,7 +1094,7 @@ class _PromoSheet extends StatelessWidget {
                                     letterSpacing: 0.5,
                                   ),
                                 ),
-                                if (!isApplicable) ...[
+                                if (!isValueMet) ...[
                                   const SizedBox(height: 10),
                                   Row(
                                     children: [
@@ -1077,6 +1127,23 @@ class _PromoSheet extends StatelessWidget {
                                       ),
                                     ],
                                   ),
+                                ] else if (!hasEligibleItems) ...[
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    children: [
+                                      const Icon(LucideIcons.alertCircle, size: 10, color: Color(0xFFE11D48)),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        restrictionMessage,
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.w900,
+                                          color: const Color(0xFFE11D48),
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ] else ...[
                                   const SizedBox(height: 6),
                                   Text(
@@ -1095,6 +1162,7 @@ class _PromoSheet extends StatelessWidget {
                         ),
                       );
                     },
+
                   ),
           ),
         ],

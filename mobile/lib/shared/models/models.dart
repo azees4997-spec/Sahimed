@@ -63,6 +63,7 @@ class ProductModel {
   final String? drivingInteraction;
   final String? kidneyInteraction;
   final String? liverInteraction;
+  final String category;
 
   ProductModel({
     required this.id,
@@ -92,6 +93,7 @@ class ProductModel {
     this.drivingInteraction,
     this.kidneyInteraction,
     this.liverInteraction,
+    required this.category,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -143,6 +145,7 @@ class ProductModel {
       drivingInteraction: json['drivingInteraction'],
       kidneyInteraction: json['kidneyInteraction'],
       liverInteraction: json['liverInteraction'],
+      category: json['category'] ?? json['treatment'] ?? 'General',
     );
   }
 
@@ -173,6 +176,7 @@ class ProductModel {
       'drivingInteraction': drivingInteraction,
       'kidneyInteraction': kidneyInteraction,
       'liverInteraction': liverInteraction,
+      'category': category,
     };
   }
 }

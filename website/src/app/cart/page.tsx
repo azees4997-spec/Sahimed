@@ -132,11 +132,50 @@ export default function CartPage() {
 
 
   const handleApplyPromo = (promo: any) => {
+    // Recalculate eligibility for this specific promo
+    const promoEligibleTotal = cart.reduce((acc, item) => {
+      let isEligible = true;
+      const rules = promo.rules || {};
+      const scope = promo.scope || 'global';
+      const isItemGeneric = item.isGeneric === true || item.isGeneric === "true";
+      
+      if (scope === 'branded' || rules.isBrandedOnly) {
+        if (isItemGeneric) isEligible = false;
+      } else if (scope === 'generic' || rules.isGenericOnly) {
+        if (!isItemGeneric) isEligible = false;
+      }
+      
+      const allowedCats = rules.categories || [];
+      if (scope === 'category' || allowedCats.length > 0) {
+        const cats = [...allowedCats];
+        if (scope === 'category' && promo.scopeValue) cats.push(promo.scopeValue);
+        if (!cats.includes(item.category)) isEligible = false;
+      }
+      
+      const allowedProds = rules.products || [];
+      if (scope === 'product' || allowedProds.length > 0) {
+        const prods = [...allowedProds];
+        if (scope === 'product' && promo.scopeValue) prods.push(promo.name);
+        if (!prods.includes(item.name)) isEligible = false;
+      }
+      
+      return isEligible ? acc + (item.price * item.quantity) : acc;
+    }, 0);
+
+    if (promoEligibleTotal <= 0) {
+      toast({
+        title: "Coupon not applicable",
+        description: "This coupon doesn't apply to any items in your cart.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     applyPromo(promo);
     setIsPromoDialogOpen(false);
     toast({
       title: "Coupon applied!",
-      description: `You just saved ₹${(promo.discountType === 'fixed' ? promo.discountValue : (totalPrice * (promo.discountValue / 100))).toFixed(2)} extra!`,
+      description: `You just saved ₹${(promo.discountType === 'fixed' ? promo.discountValue : (promoEligibleTotal * (promo.discountValue / 100))).toFixed(2)} extra!`,
     });
   };
 
@@ -375,7 +414,44 @@ export default function CartPage() {
                 </div>
               ) : (
                 availablePromos.map((promo, idx) => {
-                  const isApplicable = totalPrice >= promo.minOrderValue;
+                  const rules = promo.rules || {};
+                  const scope = promo.scope || 'global';
+                  
+                  // Check if at least one item matches the criteria
+                  const hasEligibleItems = cart.some(item => {
+                    let isEligible = true;
+                    const isItemGeneric = item.isGeneric === true || item.isGeneric === "true";
+                    if (scope === 'branded' || rules.isBrandedOnly) {
+                      if (isItemGeneric) isEligible = false;
+                    } else if (scope === 'generic' || rules.isGenericOnly) {
+                      if (!isItemGeneric) isEligible = false;
+                    }
+                    const allowedCats = rules.categories || [];
+                    if (scope === 'category' || allowedCats.length > 0) {
+                      const cats = [...allowedCats];
+                      if (scope === 'category' && promo.scopeValue) cats.push(promo.scopeValue);
+                      if (!cats.includes(item.category)) isEligible = false;
+                    }
+                    const allowedProds = rules.products || [];
+                    if (scope === 'product' || allowedProds.length > 0) {
+                      const prods = [...allowedProds];
+                      if (scope === 'product' && promo.scopeValue) prods.push(promo.name);
+                      if (!prods.includes(item.name)) isEligible = false;
+                    }
+                    return isEligible;
+                  });
+
+                  const isValueMet = totalPrice >= promo.minOrderValue;
+                  const isApplicable = isValueMet && hasEligibleItems;
+                  
+                  let restrictionMessage = "";
+                  if (!hasEligibleItems) {
+                    if (scope === 'branded' || rules.isBrandedOnly) restrictionMessage = "Applicable to Branded items only";
+                    else if (scope === 'generic' || rules.isGenericOnly) restrictionMessage = "Applicable to Generic items only";
+                    else if (scope === 'category' || (rules.categories?.length > 0)) restrictionMessage = "Applicable to specific categories only";
+                    else if (scope === 'product' || (rules.products?.length > 0)) restrictionMessage = "Applicable to specific items only";
+                  }
+
                   return (
                     <motion.div 
                       key={promo.id} 
@@ -397,7 +473,8 @@ export default function CartPage() {
                         </span>
                       </div>
                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed mt-2">{promo.description}</p>
-                      {!isApplicable ? (
+                      
+                      {!isValueMet ? (
                         <div className="mt-4 flex items-center gap-4">
                           <div className="h-1.5 flex-1 bg-slate-100 rounded-full overflow-hidden">
                             <div className="h-full bg-primary" style={{ width: `${(totalPrice / promo.minOrderValue) * 100}%` }} />
@@ -406,12 +483,18 @@ export default function CartPage() {
                             Add ₹{(promo.minOrderValue - totalPrice).toFixed(2)} More
                           </p>
                         </div>
+                      ) : !hasEligibleItems ? (
+                        <div className="mt-4 flex items-center gap-2 text-rose-500">
+                          <FileWarning className="w-3 h-3" />
+                          <p className="text-[9px] font-black uppercase tracking-tighter">{restrictionMessage}</p>
+                        </div>
                       ) : (
                         <p className="text-[9px] font-black text-primary/40 tracking-[0.3em] mt-4 uppercase group-hover:text-primary transition-colors">Apply Coupon Now</p>
                       )}
                     </motion.div>
                   );
                 })
+
               )}
             </div>
           </DialogContent>
