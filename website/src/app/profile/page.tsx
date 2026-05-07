@@ -13,6 +13,7 @@ import {
   Smartphone, 
   Download, 
   ShieldCheck,
+  Wallet,
   SmartphoneNfc,
   Loader2,
   LogIn,
