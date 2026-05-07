@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
+import { PaytmService } from '@/lib/payments/paytm';
 
 export async function POST(req: Request) {
   try {
@@ -11,6 +12,17 @@ export async function POST(req: Request) {
     });
 
     console.log("[Paytm Callback Received]", body);
+
+    // Verify Checksum
+    const checksum = body.CHECKSUMHASH;
+    delete body.CHECKSUMHASH;
+    
+    const isVerified = await PaytmService.verifyChecksum(body, process.env.PAYTM_MERCHANT_KEY || 'UcS3iYcSyDs5%RGX', checksum);
+    
+    if (!isVerified) {
+      console.error("[Paytm Callback] Checksum Verification Failed");
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/checkout?error=Security+Verification+Failed`, 303);
+    }
 
     const client = await clientPromise;
     const db = client.db('sahimed');

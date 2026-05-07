@@ -1,5 +1,5 @@
-import crypto from 'crypto';
 import clientPromise from '@/lib/mongodb';
+import PaytmChecksum from './PaytmChecksum';
 
 /**
  * Paytm Payment Gateway Utility
@@ -18,29 +18,20 @@ export class PaytmService {
   }
 
   /**
-   * Generates Paytm Checksum
+   * Generates Paytm Checksum for objects
    */
   static async generateChecksum(params: any, key: string): Promise<string> {
-    const data = this.getStringByParams(params);
-    return crypto.createHmac('sha256', key).update(data).digest('base64');
+    return PaytmChecksum.generateSignature(params, key);
   }
 
   /**
-   * Verifies Paytm Checksum
+   * Verifies Paytm Checksum for objects
    */
-  static verifyChecksum(params: any, key: string, checksum: string): boolean {
-    const data = this.getStringByParams(params);
-    const expected = crypto.createHmac('sha256', key).update(data).digest('base64');
-    return expected === checksum;
+  static async verifyChecksum(params: any, key: string, checksum: string): Promise<boolean> {
+    return PaytmChecksum.verifySignature(params, key, checksum);
   }
 
-  private static getStringByParams(params: any): string {
-    const data: any = {};
-    Object.keys(params).sort().forEach(key => {
-      data[key] = params[key];
-    });
-    return Object.values(data).join('|');
-  }
+  // getStringByParams removed as it's in PaytmChecksum
 
   /**
    * Initiates a transaction and returns the txnToken
@@ -65,11 +56,7 @@ export class PaytmService {
       },
     };
 
-    /*
-    * Import PaytmChecksum from the package
-    * Since we are using native crypto for checksum, we generate signature for the body
-    */
-    const signature = await this.generateSignature(JSON.stringify(paytmParams.body), this.MKEY);
+    const signature = await PaytmChecksum.generateSignature(JSON.stringify(paytmParams.body), this.MKEY);
     paytmParams["head"] = {
       "signature": signature
     };
@@ -92,8 +79,5 @@ export class PaytmService {
     return await response.json();
   }
 
-  private static async generateSignature(body: string, key: string): Promise<string> {
-    // In production, use 'paytmchecksum' package. Here's a simplified version.
-    return crypto.createHmac('sha256', key).update(body).digest('hex');
-  }
+  // generateSignature removed as it's in PaytmChecksum
 }
