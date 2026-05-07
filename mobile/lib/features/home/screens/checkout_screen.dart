@@ -385,10 +385,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       }
 
       final billingBreakdown = {
-        'subtotal': cart.subtotal,
-        'packingFee': 10.0,
-        'deliveryFee': cart.subtotal < 499 ? 49.0 : 0.0,
+        'subtotal': cart.total, // Total of items
+        'promoDiscount': cart.promoDiscount,
+        'promoCode': cart.appliedPromo?.code,
+        'walletUsed': _useWallet ? _allowableWalletAmount : 0,
+        'deliveryFee': cart.total < 499 ? 49.0 : 0.0,
         'total': cart.finalTotal,
+        'campaignDiscount': cart.promoDiscount, // For compatibility with older detail screens
       };
 
       final orderId = await _apiService.createOrder(

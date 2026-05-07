@@ -467,6 +467,8 @@ export default function CheckoutPage() {
       billingBreakdown: {
         grossMrp: totalMrp,
         campaignDiscount: promoDiscount,
+        promoCode: appliedPromo?.code,
+        promoDiscount: promoDiscount,
         deliveryFees: feeTotal,
         savings: totalSavings,
         walletUsed: useWallet ? allowableWallet : 0
