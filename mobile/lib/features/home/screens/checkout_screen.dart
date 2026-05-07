@@ -103,7 +103,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         'name': e.product.name,
         'price': e.product.price,
         'quantity': e.quantity,
-        'category': e.product.liveData?['category'] ?? '',
+        'category': e.product.category,
       }).toList(),
 
     );
@@ -396,7 +396,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
       final orderId = await _apiService.createOrder(
         items: cart.items,
-        total: cart.finalTotal,
+        total: cart.finalTotal - (_useWallet ? _allowableWalletAmount : 0),
         shippingDetails: shippingDetails,
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),

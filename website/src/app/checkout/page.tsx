@@ -163,7 +163,7 @@ export default function CheckoutPage() {
     const allowedProds = rules.products || [];
     if (scope === 'product' || allowedProds.length > 0) {
       const prods = [...allowedProds];
-      if (scope === 'product' && appliedPromo.scopeValue) prods.push(appliedPromo.name); // Using name for product scope
+      if (scope === 'product' && appliedPromo.scopeValue) prods.push(appliedPromo.scopeValue);
       if (!prods.includes(item.name)) isEligible = false;
     }
     

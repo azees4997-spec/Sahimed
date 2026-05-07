@@ -32,8 +32,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
-import { useUser, useFirestore } from '@/firebase';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { useUser } from '@/firebase';
 import { 
   Dialog, 
   DialogContent, 
@@ -74,28 +73,38 @@ const itemVariants = {
 
 export default function OrdersPage() {
   const { user } = useUser();
-  const db = useFirestore();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // WEB-01 FIX: Replace onSnapshot (useCollection) with explicit fetch to avoid Firebase 11 crash
+  // BUG-C2 FIX: Replaced Firestore read with MongoDB API fetch (same source as mobile app)
+  // This ensures orders placed on mobile AND web both appear correctly
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!db || !user) { setIsLoading(false); return; }
+      if (!user) { setIsLoading(false); return; }
       setIsLoading(true);
       try {
-        const q = query(collection(db, 'userProfiles', user.uid, 'orders'), orderBy('orderDate', 'desc'));
-        const snap = await getDocs(q);
-        setOrders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const token = await user.getIdToken();
+        const res = await fetch('/api/orders', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch orders');
+        const data = await res.json();
+        // Sort by orderDate descending
+        const sorted = data.sort((a: any, b: any) => {
+          const dateA = a.orderDate?._seconds ? a.orderDate._seconds * 1000 : new Date(a.orderDate || 0).getTime();
+          const dateB = b.orderDate?._seconds ? b.orderDate._seconds * 1000 : new Date(b.orderDate || 0).getTime();
+          return dateB - dateA;
+        });
+        setOrders(sorted);
       } catch (err) {
-        console.error('[Orders] Fetch error:', err);
+        console.error('[Orders] MongoDB fetch error:', err);
       } finally {
         setIsLoading(false);
       }
     };
     fetchOrders();
-  }, [db, user]);
+  }, [user]);
 
   const formatCurrency = (val: number | string) => Number(val || 0).toFixed(2);
 
@@ -416,14 +425,28 @@ export default function OrdersPage() {
                         <span>Total MRP</span>
                         <span className="text-rose-400 line-through">₹{formatCurrency(selectedOrder?.billingBreakdown?.grossMrp || selectedOrder?.totalAmount)}</span>
                       </div>
-                      <div className="flex justify-between text-[11px] font-black text-emerald-600 uppercase tracking-widest">
-                        <span className="flex items-center gap-3"><Tag className="w-4 h-4" /> Discount</span>
-                        <span>-₹{formatCurrency(selectedOrder?.billingBreakdown?.campaignDiscount || 0)}</span>
-                      </div>
+                      {(selectedOrder?.billingBreakdown?.campaignDiscount ?? 0) > 0 && (
+                        <div className="flex justify-between text-[11px] font-black text-emerald-600 uppercase tracking-widest">
+                          <span className="flex items-center gap-3"><Tag className="w-4 h-4" /> Item Savings</span>
+                          <span>-₹{formatCurrency(selectedOrder.billingBreakdown.campaignDiscount)}</span>
+                        </div>
+                      )}
+                      {(selectedOrder?.billingBreakdown?.promoDiscount ?? 0) > 0 && (
+                        <div className="flex justify-between text-[11px] font-black text-primary uppercase tracking-widest">
+                          <span className="flex items-center gap-3"><Sparkles className="w-4 h-4" /> Coupon {selectedOrder.billingBreakdown.promoCode ? `(${selectedOrder.billingBreakdown.promoCode})` : ''}</span>
+                          <span>-₹{formatCurrency(selectedOrder.billingBreakdown.promoDiscount)}</span>
+                        </div>
+                      )}
+                      {(selectedOrder?.billingBreakdown?.walletUsed ?? 0) > 0 && (
+                        <div className="flex justify-between text-[11px] font-black text-emerald-500 uppercase tracking-widest">
+                          <span className="flex items-center gap-3"><Banknote className="w-4 h-4" /> Wallet Credits</span>
+                          <span>-₹{formatCurrency(selectedOrder.billingBreakdown.walletUsed)}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between text-[11px] font-black text-slate-900 uppercase tracking-widest">
                         <span>Delivery Charges</span>
-                        <span className={(selectedOrder?.billingBreakdown?.deliveryFees ?? 0) > 0 ? 'font-black' : 'text-emerald-600 font-black'}>
-                          {(selectedOrder?.billingBreakdown?.deliveryFees ?? 0) > 0 ? `₹${formatCurrency(selectedOrder.billingBreakdown.deliveryFees)}` : 'FREE'}
+                        <span className={(selectedOrder?.billingBreakdown?.deliveryFees ?? selectedOrder?.billingBreakdown?.deliveryFee ?? 0) > 0 ? 'font-black' : 'text-emerald-600 font-black'}>
+                          {(selectedOrder?.billingBreakdown?.deliveryFees ?? selectedOrder?.billingBreakdown?.deliveryFee ?? 0) > 0 ? `₹${formatCurrency(selectedOrder.billingBreakdown.deliveryFees ?? selectedOrder.billingBreakdown.deliveryFee)}` : 'FREE'}
                         </span>
                       </div>
                       <div className="pt-8 border-t border-dashed border-primary/20 flex flex-col items-end gap-2">

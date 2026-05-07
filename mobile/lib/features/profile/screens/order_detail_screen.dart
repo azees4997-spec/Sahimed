@@ -15,8 +15,15 @@ class OrderDetailScreen extends StatelessWidget {
     final items = order.items;
     final billing = order.billingBreakdown;
     final shipping = order.shippingDetails;
-    // We don't have a reliable date in the model yet, so we'll use now for placeholder or omit
-    final orderDate = DateTime.now(); 
+    // BUG-M2 FIX: Parse actual order date from billing or createdAt metadata
+    DateTime? orderDate;
+    try {
+      final rawDate = billing['orderDate'] ?? billing['createdAt'];
+      if (rawDate is String) orderDate = DateTime.tryParse(rawDate)?.toLocal();
+      else if (rawDate is Map && rawDate['_seconds'] != null) {
+        orderDate = DateTime.fromMillisecondsSinceEpoch((rawDate['_seconds'] as int) * 1000, isUtc: true).toLocal();
+      }
+    } catch (_) {}
     final prescription = order.prescriptionUrls.isNotEmpty ? order.prescriptionUrls.first : null;
 
     return Scaffold(

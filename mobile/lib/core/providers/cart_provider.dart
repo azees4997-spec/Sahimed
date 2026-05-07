@@ -144,7 +144,7 @@ class CartProvider with ChangeNotifier {
 
   double get packingFee => 0.0;
 
-  double get finalTotal => (total - promoDiscount) + deliveryFee + packingFee;
+  double get finalTotal => ((total - promoDiscount).clamp(0.0, double.infinity)) + deliveryFee + packingFee;
 
   // MOB-02 FIX: Guard against negative savings when mrp or price data is missing
   double get totalSavings => (subtotal - total + promoDiscount).clamp(0.0, double.infinity);

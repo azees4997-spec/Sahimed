@@ -71,6 +71,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
           imageUrl:
               item['imageUrl'] ??
               'https://picsum.photos/seed/$medicineId/300/300',
+          category: item['category']?.toString() ?? 'General',
         );
 
         // Add to cart with original quantity
