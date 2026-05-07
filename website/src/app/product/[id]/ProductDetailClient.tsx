@@ -305,7 +305,12 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
         const parts = data.edd.split('-');
         const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
         const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-        setEdd(`${months[date.getMonth()]} ${date.getDate().toString().padStart(2, '0')}`);
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        const formattedDate = `${months[date.getMonth()]} ${date.getDate().toString().padStart(2, '0')}`;
+        const dayName = days[date.getDay()];
+        
+        setEdd(`${formattedDate} ${dayName}`);
         setZone(data.zone || 'India');
       } else {
         setEdd('');
@@ -563,7 +568,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                 <span className="text-[10px] font-black uppercase tracking-widest">Order within {timeLeft}</span>
               </div>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                for <span className="text-emerald-600">Tomorrow</span> delivery
+                for <span className="text-emerald-600">{edd ? edd.split(' ').pop() : 'Express'}</span> delivery
               </span>
             </div>
           </motion.div>

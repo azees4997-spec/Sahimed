@@ -67,8 +67,12 @@ export class ShipwayService {
       
       if (!edd && isServiceable) {
         const now = new Date();
-        const currentHour = now.getHours();
-        const isBefore2PM = currentHour < 14;
+        const istHour = parseInt(new Intl.DateTimeFormat('en-GB', {
+          hour: 'numeric',
+          hour12: false,
+          timeZone: 'Asia/Kolkata'
+        }).format(now));
+        const isBefore2PM = istHour < 14;
         
         let zone = 'India';
         let daysToAdd = 4; // Default fallback
