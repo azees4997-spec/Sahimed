@@ -42,6 +42,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   late final TabController _tabController;
   bool _isPincodeEditable = false;
   late final TextEditingController _pincodeController;
+  bool _isServiceable = true;
   String? _zone;
   String _timeLeft = '';
   Timer? _timer;
@@ -84,20 +85,36 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
       final prefs = await SharedPreferences.getInstance();
       final pincode = pin ?? prefs.getString('user_pincode') ?? '560068';
       final serviceability = await _apiService.getShipwayServiceability(pincode);
+      
       if (mounted) {
-        if (serviceability != null && serviceability['edd'] != null) {
-          final eddStr = serviceability['edd'].toString();
-          final date = DateTime.parse(eddStr);
-          // Format: May 09 Saturday
-          final formattedDate = DateFormat('MMM dd EEEE').format(date);
+        if (serviceability != null) {
+          final bool isServiceable = serviceability['serviceable'] == true || 
+                                     serviceability['serviceable'] == 'yes' || 
+                                     serviceability['status'] == 'Success';
           
           setState(() {
-            _edd = formattedDate;
+            _isServiceable = isServiceable;
             _zone = serviceability['zone']?.toString() ?? 'India';
+            
+            if (isServiceable && serviceability['edd'] != null) {
+              try {
+                final eddStr = serviceability['edd'].toString();
+                final date = DateTime.parse(eddStr);
+                // Format: MAY 09 Saturday (matching website)
+                final formattedDate = DateFormat('MMM dd EEEE').format(date).toUpperCase();
+                _edd = formattedDate;
+              } catch (e) {
+                debugPrint('EDD Parse Error: $e');
+                _edd = '';
+              }
+            } else {
+              _edd = '';
+            }
           });
         } else {
           setState(() {
             _edd = '';
+            _isServiceable = true; // Default to true if API fails to avoid blocking
             _zone = '';
           });
         }
@@ -362,179 +379,193 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                   ),
                   child: Column(
                     children: [
-                      // Top Section: EDD & Timer
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF0FDF4),
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-                          border: Border.all(color: const Color(0xFFDCFCE7), width: 0.5),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFDCFCE7),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(LucideIcons.truck, size: 20, color: Color(0xFF166534)),
+              // ─── 4. Delivery & Serviceability (Modern Premium) ───
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0F172A).withOpacity(0.04),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                  border: Border.all(color: const Color(0xFFF1F5F9)),
+                ),
+                child: Column(
+                  children: [
+                    // Top Banner: Pincode & Change Action
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 12, 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: SahimedColors.primary.withOpacity(0.08),
+                              shape: BoxShape.circle,
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _edd.isNotEmpty ? 'DELIVER BY $_edd'.toUpperCase() : 'CHECK SERVICEABILITY',
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFF166534),
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                  if (_timeLeft.isNotEmpty)
-                                    Row(
-                                      children: [
-                                        Text(
-                                          'Order within ',
-                                          style: GoogleFonts.inter(
-                                            fontSize: 11,
-                                            color: const Color(0xFF15803D),
-                                          ),
-                                        ),
-                                        Text(
-                                          _timeLeft,
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w900,
-                                            color: const Color(0xFF166534),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                ],
-                              ),
-                            ),
-                            if (_edd.isNotEmpty)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.5),
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                child: Text(
-                                  'FREE',
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFF166534),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      
-                      // Bottom Section: Pincode Input
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFF1F5F9)),
+                            child: const Icon(LucideIcons.mapPin, size: 18, color: SahimedColors.primary),
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(LucideIcons.mapPin, size: 16, color: SahimedColors.slate400),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: FutureBuilder<SharedPreferences>(
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'DELIVERING TO',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    color: SahimedColors.slate400,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                                FutureBuilder<SharedPreferences>(
                                   future: SharedPreferences.getInstance(),
                                   builder: (context, snapshot) {
                                     final pin = snapshot.data?.getString('user_pincode') ?? '560068';
-                                    if (_pincodeController.text.isEmpty && !_isPincodeEditable) {
-                                      _pincodeController.text = pin;
-                                    }
-                                    return TextField(
-                                      controller: _pincodeController,
-                                      readOnly: !_isPincodeEditable,
-                                      autofocus: _isPincodeEditable,
-                                      decoration: const InputDecoration(
-                                        hintText: 'Enter Pincode',
-                                        border: InputBorder.none,
-                                        hintStyle: TextStyle(fontSize: 13, color: SahimedColors.slate300),
-                                        counterText: '',
-                                      ),
+                                    return Text(
+                                      _pincodeController.text.isNotEmpty ? _pincodeController.text : pin,
                                       style: GoogleFonts.outfit(
-                                        fontSize: 14,
+                                        fontSize: 15,
                                         fontWeight: FontWeight.w900,
                                         color: const Color(0xFF0F172A),
                                       ),
-                                      keyboardType: TextInputType.number,
-                                      maxLength: 6,
-                                      onSubmitted: (val) async {
-                                        if (val.length == 6) {
-                                          final prefs = await SharedPreferences.getInstance();
-                                          await prefs.setString('user_pincode', val);
-                                          _loadEDD(val);
-                                          setState(() => _isPincodeEditable = false);
-                                        }
-                                      },
                                     );
                                   },
                                 ),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  HapticFeedback.lightImpact();
-                                  setState(() {
-                                    if (_isPincodeEditable) {
-                                      final pin = _pincodeController.text;
-                                      if (pin.length == 6) {
-                                        _loadEDD(pin);
-                                        _isPincodeEditable = false;
-                                      } else {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Invalid Pincode')),
-                                        );
+                              ],
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => setState(() => _isPincodeEditable = !_isPincodeEditable),
+                            style: TextButton.styleFrom(
+                              foregroundColor: SahimedColors.primary,
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                            ),
+                            child: Text(
+                              _isPincodeEditable ? 'CANCEL' : 'CHANGE',
+                              style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    if (_isPincodeEditable)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: SahimedColors.primary.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  child: TextField(
+                                    controller: _pincodeController,
+                                    autofocus: true,
+                                    keyboardType: TextInputType.number,
+                                    maxLength: 6,
+                                    decoration: const InputDecoration(
+                                      hintText: 'Enter 6-digit Pincode',
+                                      border: InputBorder.none,
+                                      counterText: '',
+                                    ),
+                                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                                    onSubmitted: (val) async {
+                                      if (val.length == 6) {
+                                        final prefs = await SharedPreferences.getInstance();
+                                        await prefs.setString('user_pincode', val);
+                                        _loadEDD(val);
+                                        setState(() => _isPincodeEditable = false);
                                       }
-                                    } else {
-                                      _isPincodeEditable = true;
-                                    }
-                                  });
+                                    },
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () async {
+                                  if (_pincodeController.text.length == 6) {
+                                    final prefs = await SharedPreferences.getInstance();
+                                    await prefs.setString('user_pincode', _pincodeController.text);
+                                    _loadEDD(_pincodeController.text);
+                                    setState(() => _isPincodeEditable = false);
+                                  }
                                 },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                icon: const Icon(LucideIcons.arrowRight, color: SahimedColors.primary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
+
+                    // Delivery Info Section
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: _isServiceable 
+                        ? Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: const BoxDecoration(color: Color(0xFFDCFCE7), shape: BoxShape.circle),
+                                    child: const Icon(LucideIcons.check, size: 14, color: Color(0xFF166534)),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  RichText(
+                                    text: TextSpan(
+                                      style: GoogleFonts.outfit(fontSize: 14, color: const Color(0xFF475569)),
+                                      children: [
+                                        const TextSpan(text: 'FREE Delivery by '),
+                                        TextSpan(
+                                          text: _edd.isNotEmpty ? _edd : '...',
+                                          style: GoogleFonts.outfit(
+                                            fontWeight: FontWeight.w900,
+                                            color: const Color(0xFF0F172A),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (_timerText.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                   decoration: BoxDecoration(
-                                    color: _isPincodeEditable ? SahimedColors.primary : const Color(0xFFF1F5F9),
-                                    borderRadius: BorderRadius.circular(100),
+                                    color: const Color(0xFFFFF7ED),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: const Color(0xFFFFEDD5)),
                                   ),
                                   child: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      if (!_isPincodeEditable) ...[
-                                        const Icon(LucideIcons.pencil, size: 12, color: SahimedColors.slate500),
-                                        const SizedBox(width: 8),
-                                      ],
+                                      const Icon(LucideIcons.timer, size: 14, color: Color(0xFFC2410C)),
+                                      const SizedBox(width: 8),
                                       Text(
-                                        _isPincodeEditable ? 'CHECK' : 'EDIT',
+                                        _timerText,
                                         style: GoogleFonts.outfit(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w900,
-                                          color: _isPincodeEditable ? Colors.white : SahimedColors.slate500,
-                                          letterSpacing: 1,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: const Color(0xFFC2410C),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
                       ),
                     ],
                   ),

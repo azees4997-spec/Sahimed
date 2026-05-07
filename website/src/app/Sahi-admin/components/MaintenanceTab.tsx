@@ -65,7 +65,7 @@ export function MaintenanceTab({ onBack }: { onBack: () => void }) {
               </div>
               <div>
                 <CardTitle className="text-xl font-black uppercase font-outfit">MongoDB Mirroring</CardTitle>
-                <p className="text-[10px] font-black text-white/40 tracking-widest uppercase">Full Firestore -> MongoDB Sync</p>
+                <p className="text-[10px] font-black text-white/40 tracking-widest uppercase">Full Firestore &rarr; MongoDB Sync</p>
               </div>
             </div>
           </CardHeader>

@@ -437,6 +437,101 @@ export async function PUT(req: Request) {
       { $set: { ...updates, updatedAt: new Date() } }
     );
 
+    // --- CASHBACK ENGINE TRIGGER ---
+    if (updates.status === 'Delivered' && currentOrder?.status !== 'Delivered' && !currentOrder?.cashbackApplied) {
+      try {
+        const settings = await db.collection('walletSettings').findOne({ id: 'global' });
+        if (settings?.isCashbackEnabled) {
+            // --- GRANULAR ELIGIBILITY CALCULATION ---
+            let eligibleTotalForCashback = 0;
+            const items = currentOrder.items || [];
+            
+            // 0. Check Customer Restriction
+            const isCustomerExcluded = settings.excludedCustomers?.includes(currentOrder.userId);
+            
+            if (!isCustomerExcluded) {
+              items.forEach((item: any) => {
+                let isItemEligible = true;
+
+                // 1. Category Restriction
+                if (settings.excludedCategories?.includes(item.category)) isItemEligible = false;
+
+                // 2. Product Restriction
+                if (settings.excludedProducts?.includes(item.name)) isItemEligible = false;
+
+                // 3. Branded/Generic Restriction
+                const isGeneric = item.isGeneric === true || item.isGeneric === 'true';
+                if (settings.allowGenericOnly && !isGeneric) isItemEligible = false;
+                if (settings.allowBrandedOnly && isGeneric) isItemEligible = false;
+
+                if (isItemEligible) {
+                  eligibleTotalForCashback += (Number(item.unitPrice || item.price) * Number(item.quantity));
+                }
+              });
+            }
+
+            if (eligibleTotalForCashback >= (settings.minOrderAmountForCashback || 0)) {
+              let cashbackAmount = 0;
+              if (settings.cashbackType === 'percentage') {
+                cashbackAmount = eligibleTotalForCashback * (settings.cashbackValue / 100);
+              } else {
+                cashbackAmount = Number(settings.cashbackValue);
+              }
+
+              if (cashbackAmount > 0) {
+                // 1. Credit MongoDB Wallet
+                await db.collection('userProfiles').updateOne(
+                  { uid: currentOrder.userId },
+                  { $inc: { walletBalance: cashbackAmount } },
+                  { upsert: true }
+                );
+
+                // 2. Add Transaction Record
+                await db.collection('walletTransactions').insertOne({
+                  userId: currentOrder.userId,
+                  type: 'credit',
+                  amount: cashbackAmount,
+                  description: `Cashback for Order #${currentOrder.orderId}`,
+                  orderId: currentOrder.orderId,
+                  timestamp: new Date()
+                });
+
+                // 3. Mark Order to prevent duplicate cashback
+                await db.collection('orders').updateOne(
+                  { _id: new ObjectId(id) },
+                  { $set: { 
+                    cashbackApplied: true, 
+                    cashbackAmount,
+                    cashbackEligibleAmount: eligibleTotalForCashback 
+                  } }
+                );
+
+                // 4. Sync to Firestore for App Real-time Balance
+                try {
+                  const { getDbAdmin } = await import('@/lib/firebase-admin');
+                  const dbAdmin = getDbAdmin();
+                  const userRef = dbAdmin.doc(`userProfiles/${currentOrder.userId}`);
+                  const userDoc = await userRef.get();
+                  const currentFsBalance = userDoc.exists ? (userDoc.data()?.walletBalance || 0) : 0;
+                  
+                  await userRef.set({ 
+                    walletBalance: currentFsBalance + cashbackAmount 
+                  }, { merge: true });
+                  
+                  console.log(`[Cashback] Provisioned ₹${cashbackAmount} on eligible total ₹${eligibleTotalForCashback} to ${currentOrder.userId}`);
+                } catch (fsErr: any) {
+                  console.error("[Cashback Sync Error]", fsErr.message);
+                }
+              }
+            } else {
+               console.log(`[Cashback Skip] Order ${currentOrder.orderId}: Eligible total ₹${eligibleTotalForCashback} below threshold.`);
+            }
+        }
+      } catch (cbErr: any) {
+        console.error("[Cashback Engine Error]", cbErr.message);
+      }
+    }
+
     // Refresh currentOrder after update for automation logic
     const refreshedOrder = await db.collection('orders').findOne({ _id: new ObjectId(id) });
     let shipwayStatus = null;

@@ -312,23 +312,42 @@ export default function ProfilePage() {
                  className="space-y-6"
                >
                   <div className="space-y-3">
-                    <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 ml-4 uppercase">Order Management</h2>
-                    <motion.div variants={itemVariants}>
-                      <Link href="/orders" className="block">
-                        <div className="bg-white/40 backdrop-blur-md p-5 rounded-[24px] border border-white flex items-center justify-between group active:scale-[0.98] transition-all hover:shadow-xl shadow-lg hover:bg-white">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-[12px] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"><Package className="w-4 h-4" /></div>
-                            <div>
-                              <h3 className="text-xs font-black text-slate-900 tracking-tight font-outfit uppercase">Order History</h3>
-                              <p className="text-[7px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-0.5">Track items</p>
+                    <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 ml-4 uppercase">Financial & Orders</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <motion.div variants={itemVariants}>
+                        <Link href="/orders" className="block h-full">
+                          <div className="bg-white/40 backdrop-blur-md p-5 rounded-[24px] border border-white flex items-center justify-between group h-full active:scale-[0.98] transition-all hover:shadow-xl shadow-lg hover:bg-white">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-[12px] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"><Package className="w-4 h-4" /></div>
+                              <div>
+                                <h3 className="text-xs font-black text-slate-900 tracking-tight font-outfit uppercase">Order History</h3>
+                                <p className="text-[7px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-0.5">Track items</p>
+                              </div>
+                            </div>
+                            <div className="bg-slate-50 w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-primary transition-all">
+                              <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-white transition-all group-hover:translate-x-1" />
                             </div>
                           </div>
-                          <div className="bg-slate-50 w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-primary transition-all">
-                            <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-white transition-all group-hover:translate-x-1" />
+                        </Link>
+                      </motion.div>
+
+                      <motion.div variants={itemVariants}>
+                        <Link href="/profile/wallet" className="block h-full">
+                          <div className="bg-white/40 backdrop-blur-md p-5 rounded-[24px] border border-white flex items-center justify-between group h-full active:scale-[0.98] transition-all hover:shadow-xl shadow-lg hover:bg-white">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-[12px] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"><Wallet className="w-4 h-4" /></div>
+                              <div>
+                                <h3 className="text-xs font-black text-slate-900 tracking-tight font-outfit uppercase">SahiWallet</h3>
+                                <p className="text-[7px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-0.5">₹{profile?.walletBalance?.toFixed(2) || '0.00'} Available</p>
+                              </div>
+                            </div>
+                            <div className="bg-slate-50 w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-primary transition-all">
+                              <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-white transition-all group-hover:translate-x-1" />
+                            </div>
                           </div>
-                        </div>
-                      </Link>
-                    </motion.div>
+                        </Link>
+                      </motion.div>
+                    </div>
                   </div>
 
                   <div className="space-y-6">

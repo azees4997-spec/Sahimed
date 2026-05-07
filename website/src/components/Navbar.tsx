@@ -710,6 +710,82 @@ export default function Navbar() {
                   )}
                 </div>
               </Link>
+              
+              {/* User Menu */}
+              <div className="flex items-center">
+                {user ? (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className={cn(
+                        "flex items-center gap-2 p-1.5 pr-3 rounded-full border transition-all h-9 group",
+                        scrolled 
+                          ? "bg-slate-100 border-slate-200 text-slate-900" 
+                          : isHome 
+                            ? "bg-white/80 border-slate-200/50 text-slate-800" 
+                            : "bg-primary/10 border-primary/20 text-primary"
+                      )}>
+                        <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-black shadow-sm group-hover:scale-110 transition-transform">
+                          {user.email?.[0].toUpperCase() || <User className="w-3.5 h-3.5" />}
+                        </div>
+                        <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline-block">Profile</span>
+                        <ChevronDown className="w-3 h-3 opacity-30 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent sideOffset={12} className="w-64 p-3 rounded-[32px] shadow-3xl border border-white/50 glass space-y-1.5">
+                      <div className="p-4 mb-2">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Authenticated as</p>
+                        <p className="text-xs font-black text-slate-900 truncate">{user.email || user.phoneNumber}</p>
+                      </div>
+                      
+                      {[
+                        { label: 'My Profile', href: '/profile', icon: User },
+                        { label: 'My Orders', href: '/orders', icon: Package },
+                        { label: 'SahiWallet', href: '/profile/wallet', icon: Wallet },
+                      ].map((item) => (
+                        <Link key={item.label} href={item.href}>
+                          <button className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 transition-all group">
+                            <div className="w-8 h-8 rounded-xl bg-slate-50 group-hover:bg-primary/10 group-hover:text-primary flex items-center justify-center transition-colors">
+                              <item.icon className="w-4 h-4" />
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 group-hover:text-slate-900">{item.label}</span>
+                            <ChevronRight className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+                          </button>
+                        </Link>
+                      ))}
+                      
+                      <div className="h-px bg-slate-100 my-2 mx-4" />
+                      
+                      <button 
+                        onClick={async () => {
+                          const { signOut } = await import('firebase/auth');
+                          const { auth } = await import('@/firebase');
+                          await signOut(auth);
+                          router.push('/login');
+                        }}
+                        className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-rose-50 text-rose-500 transition-all group"
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center">
+                          <LogOut className="w-4 h-4" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Sign Out</span>
+                      </button>
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <Link href="/login">
+                    <Button 
+                      size="sm" 
+                      className={cn(
+                        "h-9 rounded-full px-5 font-black text-[9px] tracking-widest uppercase gap-2 shadow-lg transition-all active:scale-95",
+                        scrolled || !isHome ? "bg-primary text-white shadow-primary/20" : "bg-white text-primary shadow-white/20"
+                      )}
+                    >
+                      <User className="w-3.5 h-3.5" />
+                      Login
+                    </Button>
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
 

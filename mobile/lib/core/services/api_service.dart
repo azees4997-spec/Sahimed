@@ -644,9 +644,12 @@ class ApiService {
     try {
       final headers = await _getHeaders();
       final response = await http.post(
-        Uri.parse('$baseUrl/user/wallet/validate'),
+        Uri.parse('$baseUrl/user/wallet'),
         headers: headers,
-        body: json.encode({'items': cartItems}),
+        body: json.encode({
+          'action': 'validate_use',
+          'items': cartItems,
+        }),
       );
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -654,7 +657,7 @@ class ApiService {
     } catch (e) {
       debugPrint('Error validating wallet use: $e');
     }
-    return {'valid': false, 'message': 'Validation failed'};
+    return {'allowable': 0, 'currentBalance': 0, 'reason': 'Validation failed'};
   }
 
   Future<List<Map<String, dynamic>>> getUserPrescriptions() async {

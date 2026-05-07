@@ -42,28 +42,84 @@ export async function POST(request: Request) {
     const db = client.db('sahimed');
 
     if (action === 'validate_use') {
-      // Wallet Usage Rules Logic
-      const profile = await db.collection('userProfiles').findOne({ uid: user.uid });
+      const [profile, settings] = await Promise.all([
+        db.collection('userProfiles').findOne({ uid: user.uid }),
+        db.collection('walletSettings').findOne({ id: 'global' })
+      ]);
+
       const balance = profile?.walletBalance || 0;
+      if (balance <= 0) return NextResponse.json({ allowable: 0, currentBalance: 0, reason: 'No balance' });
 
-      if (balance <= 0) return NextResponse.json({ allowable: 0, reason: 'No balance' });
+      const rules = settings || {
+        maxPercentage: 20,
+        maxFixedAmount: 500,
+        allowGenericOnly: false,
+        allowBrandedOnly: false,
+        excludedCategories: ['Health Devices'],
+        excludedProducts: [],
+        excludedCustomers: [],
+        minWalletBalance: 500
+      };
 
-      // Rule 1: Exclude 'Health Devices' category
-      const hasExcludedItems = items?.some((item: any) => item.category === 'Health Devices');
-      if (hasExcludedItems) {
-        return NextResponse.json({ allowable: 0, reason: 'Wallet cannot be used for Health Devices' });
+      // 0. Customer Restriction Check
+      if (rules.excludedCustomers?.includes(user.uid)) {
+        return NextResponse.json({ 
+          allowable: 0, 
+          currentBalance: balance, 
+          reason: 'Wallet usage restricted for your account' 
+        });
       }
 
-      // Rule 2: Max 20% of order total, unless balance is low/high? 
-      // User said: "X% or full of certain amount"
-      // Let's implement: Max 20% of order, but if balance is < ₹500 and order is > ₹1000, allow full balance.
-      const orderTotal = items?.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0) || 0;
-      
-      let allowable = Math.min(balance, orderTotal * 0.20);
-      
-      if (balance < 500) {
-        allowable = Math.min(balance, orderTotal); // Allow full small balance
+      // Calculate Eligible Total based on rules
+      let eligibleTotal = 0;
+      const ineligibleReasons: string[] = [];
+
+      items?.forEach((item: any) => {
+        let isItemEligible = true;
+
+        // 1. Category Restriction
+        if (rules.excludedCategories?.includes(item.category)) {
+          isItemEligible = false;
+        }
+
+        // 2. Product Restriction
+        if (rules.excludedProducts?.includes(item.name)) {
+          isItemEligible = false;
+        }
+
+        // 3. Branded/Generic Restriction
+        const isGeneric = item.isGeneric === true || item.isGeneric === 'true';
+        if (rules.allowGenericOnly && !isGeneric) {
+          isItemEligible = false;
+        }
+        if (rules.allowBrandedOnly && isGeneric) {
+          isItemEligible = false;
+        }
+
+        if (isItemEligible) {
+          eligibleTotal += (item.price * item.quantity);
+        }
+      });
+
+      if (eligibleTotal <= 0) {
+        return NextResponse.json({ 
+          allowable: 0, 
+          currentBalance: balance, 
+          reason: 'No eligible items in cart' 
+        });
       }
+
+      // Small Balance Rule: If balance is low, allow full redemption on eligible items
+      if (balance < (rules.minWalletBalance || 500)) {
+        return NextResponse.json({
+          allowable: Math.min(balance, eligibleTotal),
+          currentBalance: balance
+        });
+      }
+
+      // Calculate standard allowable amount
+      const percentageLimit = eligibleTotal * (rules.maxPercentage / 100);
+      const allowable = Math.min(balance, percentageLimit, rules.maxFixedAmount);
 
       return NextResponse.json({ 
         allowable, 

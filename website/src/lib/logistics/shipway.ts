@@ -45,8 +45,14 @@ export class ShipwayService {
 
   /**
    * Checks if a pincode is reachable and lists available carriers.
+   * Includes manual EDD calculation based on Zones and Pincode Overrides.
    */
   static async checkServiceability(fromPincode: string, toPincode: string, paymentMode: string = 'cod', shipmentType: string = 'forward') {
+    // MANUAL PINCODE OVERRIDES (Optional: can be moved to DB later)
+    const PINCODE_OVERRIDES: Record<string, { days: number, zone?: string }> = {
+      // '560001': { days: 1, zone: 'Bengaluru Central' },
+    };
+
     try {
       const headers = this.getHeaders();
       const url = `${this.API_URL}/pincodeserviceable?pincode=${toPincode}`;
@@ -62,71 +68,72 @@ export class ShipwayService {
       // Shipway response typically contains status success or error and details.
       const isServiceable = data.status === 'Success' || data.success || data.is_serviceable;
       
-      // Calculate a realistic EDD if not provided by API
-      let edd = data.edd || data.estimated_delivery_date;
+      // --- MANUAL EDD LOGIC ---
+      // As per user request: Bengaluru (1), South India (3), Rest of India (5)
+      // Cutoff: 2 PM (14:00 IST)
       
-      if (!edd && isServiceable) {
-        const now = new Date();
-        const istHour = parseInt(new Intl.DateTimeFormat('en-GB', {
-          hour: 'numeric',
-          hour12: false,
-          timeZone: 'Asia/Kolkata'
-        }).format(now));
-        const isBefore2PM = istHour < 14;
-        
-        let zone = 'India';
-        let daysToAdd = 4; // Default fallback
+      const now = new Date();
+      const istHour = parseInt(new Intl.DateTimeFormat('en-GB', {
+        hour: 'numeric',
+        hour12: false,
+        timeZone: 'Asia/Kolkata'
+      }).format(now));
+      
+      const isBefore2PM = istHour < 14;
+      
+      let zone = 'Rest of India';
+      let daysToAdd = 5; // Default fallback for Rest of India
+      
+      // 1. PINCODE OVERRIDE CHECK (Priority 1)
+      if (PINCODE_OVERRIDES[toPincode]) {
+        const override = PINCODE_OVERRIDES[toPincode];
+        daysToAdd = override.days;
+        zone = override.zone || `Pincode ${toPincode}`;
+      } else {
+        // 2. ZONE-BASED DETECTION (Priority 2)
         const p2 = toPincode.substring(0, 2);
         const p3 = toPincode.substring(0, 3);
 
-        // 1. Bangalore (560xxx)
+        // Bengaluru (560xxx)
         if (p3 === '560') {
           zone = 'Bengaluru';
-          daysToAdd = isBefore2PM ? 1 : 2;
+          daysToAdd = 1;
         }
-        // 2. South India (TN: 60-64, KL: 67-69, AP/TS: 50-53, KA: 56-59)
+        // South India (TN: 60-64, KL: 67-69, AP/TS: 50-53, KA: 56-59)
         else if (['60','61','62','63','64','67','68','69','50','51','52','53','56','57','58','59'].includes(p2)) {
           zone = 'South India';
-          daysToAdd = isBefore2PM ? 3 : 4;
+          daysToAdd = 3;
         }
-        // 3. West India (MH/GJ/GA/RJ: 30-44)
-        else if (parseInt(p2) >= 30 && parseInt(p2) <= 44) {
-          zone = 'West India';
-          daysToAdd = isBefore2PM ? 4 : 5;
-        }
-        // 4. North India (DL/HR/PB/UP/HP/JK: 11-28)
-        else if (parseInt(p2) >= 11 && parseInt(p2) <= 28) {
-          zone = 'North India';
-          daysToAdd = isBefore2PM ? 4 : 5;
-        }
-        // 5. East India (WB/OR/BH/NE: 70-85)
-        else if (parseInt(p2) >= 70 && parseInt(p2) <= 85) {
-          zone = 'East India';
-          daysToAdd = isBefore2PM ? 5 : 6;
-        }
-
-        const date = new Date();
-        date.setDate(date.getDate() + daysToAdd);
-        edd = date.toISOString().split('T')[0];
-
-        return { 
-          success: true, 
-          serviceable: !!isServiceable, 
-          carriers: data.carriers || [{ name: "Shipway Courier", id: "auto" }],
-          edd: edd,
-          zone: zone,
-          debug: data 
-        };
       }
+
+      // If after 2 PM, add an extra day for dispatch
+      if (!isBefore2PM) {
+        daysToAdd += 1;
+      }
+
+      const date = new Date();
+      // Adjust to IST date for calculation if needed, but for simple days-to-add Date() is fine
+      date.setDate(date.getDate() + daysToAdd);
+      const edd = date.toISOString().split('T')[0];
 
       return { 
         success: true, 
         serviceable: !!isServiceable, 
         carriers: data.carriers || [{ name: "Shipway Courier", id: "auto" }],
         edd: edd,
-        zone: 'India',
-        debug: data 
+        zone: zone,
+        debug: {
+          ...data,
+          manualCalculation: {
+            istHour,
+            isBefore2PM,
+            daysToAdd,
+            appliedZone: zone
+          }
+        }
       };
+
+    } catch (err: any) {
 
 
     } catch (err: any) {
