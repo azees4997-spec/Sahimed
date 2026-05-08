@@ -51,35 +51,50 @@ export class PaytmService {
     const callbackUrl = `${baseUrl}/api/paytm/callback`;
     
     const cleanOrderId = orderId.replace(/[^a-zA-Z0-9_-]/g, '');
+    const cleanCustId = userId.replace(/[^a-zA-Z0-9_-]/g, '');
     
     console.log(`[Paytm] Initiating ${this.ENV} transaction. Order: ${cleanOrderId}, Host: ${baseUrl}`);
 
-    const paytmParams: any = {};
+    // Helper to ensure deterministic JSON stringification
+    const sortObject = (obj: any): any => {
+      return Object.keys(obj).sort().reduce((acc: any, key: string) => {
+        acc[key] = obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key]) 
+          ? sortObject(obj[key]) 
+          : obj[key];
+        return acc;
+      }, {});
+    };
 
-    paytmParams["body"] = {
+    const rawBody = {
       "requestType": "Payment",
       "mid": this.MID,
       "websiteName": this.WEBSITE,
       "orderId": cleanOrderId,
       "callbackUrl": callbackUrl,
+      "industryTypeId": "Retail",
       "txnAmount": {
         "value": Number(amount).toFixed(2),
         "currency": "INR",
       },
       "userInfo": {
-        "custId": userId,
+        "custId": cleanCustId,
       },
     };
 
+    const sortedBody = sortObject(rawBody);
+
     try {
-      const bodyString = JSON.stringify(paytmParams.body);
+      const bodyString = JSON.stringify(sortedBody);
       const signature = await PaytmChecksum.generateSignature(bodyString, this.MKEY);
       
       console.log(`[Paytm Payload] Body: ${bodyString}`);
       console.log(`[Paytm Payload] Signature: ${signature}`);
 
-      paytmParams["head"] = {
-        "signature": signature
+      const paytmParams = {
+        "head": {
+          "signature": signature
+        },
+        "body": sortedBody
       };
 
       const post_data = JSON.stringify(paytmParams);
