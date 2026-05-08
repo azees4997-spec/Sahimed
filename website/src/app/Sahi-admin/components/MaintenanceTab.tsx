@@ -35,6 +35,22 @@ export function MaintenanceTab({ onBack }: { onBack: () => void }) {
   const auth = useAuth();
   const db = useFirestore();
 
+  const [counts, setCounts] = useState<{fs: number, mg: number} | null>(null);
+
+  const checkCounts = async () => {
+    try {
+      const res = await fetch('/api/admin/stats');
+      if (res.ok) {
+        const data = await res.json();
+        setCounts(prev => ({ ...prev, mg: data.users }));
+      }
+    } catch (e) {}
+  };
+
+  useEffect(() => {
+    checkCounts();
+  }, []);
+
   const handleMigration = async () => {
     if (!confirm("This will mirror all Firestore users and addresses to MongoDB. It may take a while. Proceed?")) return;
     
@@ -85,31 +101,39 @@ export function MaintenanceTab({ onBack }: { onBack: () => void }) {
         const userDoc = usersSnap.docs[i];
         const uid = userDoc.id;
         const userData = { id: uid, ...userDoc.data() };
+      let lastVisible = null;
+      let processed = 0;
 
-        // 2. Fetch addresses for this user
-        const addressesSnap = await getDocs(collection(db, 'userProfiles', uid, 'addresses'));
-        const addresses = addressesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      while (processed < total) {
+        const q = query(collection(db, 'userProfiles'), orderBy('__name__'), limit(50), ...(lastVisible ? [startAfter(lastVisible)] : []));
+        const usersSnap = await getDocs(q);
+        
+        if (usersSnap.empty) break;
 
-        // 3. Send to bridge
-        const res = await fetch('/api/admin/mirror-bridge', {
-          method: 'POST',
-          headers: { 
-            'Authorization': `Bearer ${idToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ user: userData, addresses })
-        });
+        for (const userDoc of usersSnap.docs) {
+          const uid = userDoc.id;
+          const userData = { id: uid, ...userDoc.data() };
+          const addressesSnap = await getDocs(collection(db, 'userProfiles', uid, 'addresses'));
+          const addresses = addressesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || `Failed on user ${uid}`);
+          const res = await fetch('/api/admin/mirror-bridge', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user: userData, addresses })
+          });
+
+          if (!res.ok) throw new Error(`Failed on user ${uid}`);
+          processed++;
+          setSafeMirrorProgress({ current: processed, total });
         }
-
-        setSafeMirrorProgress({ current: i + 1, total });
+        
+        lastVisible = usersSnap.docs[usersSnap.docs.length - 1];
+        await new Promise(r => setTimeout(r, 200));
       }
 
-      toast({ title: "Safe Mirroring Complete", description: `Successfully synchronized ${total} users.` });
+      toast({ title: "Safe Mirror Complete", description: `Synchronized ${total} users to MongoDB.` });
       setResult({ type: 'safe_success', count: total });
+      checkCounts(); // Refresh counts
     } catch (err: any) {
       console.error("Safe Mirror Error:", err);
       toast({ variant: 'destructive', title: "Mirroring Stopped", description: err.message });
