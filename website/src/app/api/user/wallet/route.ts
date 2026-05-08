@@ -42,12 +42,16 @@ export async function POST(request: Request) {
     const db = client.db('sahimed');
 
     if (action === 'validate_use') {
+      console.log(`[Wallet] Validating usage for user: ${user.uid}`);
+      
       const [profile, settings] = await Promise.all([
-        db.collection('userProfiles').findOne({ uid: user.uid }),
-        db.collection('walletSettings').findOne({ id: 'global' })
+        db.collection('userProfiles').findOne({ uid: user.uid }).catch(e => { console.error("Profile fetch error", e); return null; }),
+        db.collection('walletSettings').findOne({ id: 'global' }).catch(e => { console.error("Settings fetch error", e); return null; })
       ]);
 
       const balance = profile?.walletBalance || 0;
+      console.log(`[Wallet] User Balance: ${balance}`);
+
       if (balance <= 0) return NextResponse.json({ allowable: 0, currentBalance: 0, reason: 'No balance' });
 
       const rules = settings || {
@@ -72,18 +76,21 @@ export async function POST(request: Request) {
 
       // Calculate Eligible Total based on rules
       let eligibleTotal = 0;
-      const ineligibleReasons: string[] = [];
+      
+      if (!items || !Array.isArray(items)) {
+        console.warn("[Wallet] No valid items array provided for validation");
+      }
 
       items?.forEach((item: any) => {
         let isItemEligible = true;
 
         // 1. Category Restriction
-        if (rules.excludedCategories?.includes(item.category)) {
+        if (item.category && rules.excludedCategories?.includes(item.category)) {
           isItemEligible = false;
         }
 
         // 2. Product Restriction
-        if (rules.excludedProducts?.includes(item.name)) {
+        if (item.name && rules.excludedProducts?.includes(item.name)) {
           isItemEligible = false;
         }
 
@@ -97,9 +104,11 @@ export async function POST(request: Request) {
         }
 
         if (isItemEligible) {
-          eligibleTotal += (item.price * item.quantity);
+          eligibleTotal += ((item.price || 0) * (item.quantity || 1));
         }
       });
+
+      console.log(`[Wallet] Eligible Total: ${eligibleTotal}`);
 
       if (eligibleTotal <= 0) {
         return NextResponse.json({ 
@@ -128,8 +137,14 @@ export async function POST(request: Request) {
     }
 
     if (action === 'spend') {
+      console.log(`[Wallet] Processing spend: ${amount} for user: ${user.uid}`);
+      
       // Deduct from wallet
       const profile = await db.collection('userProfiles').findOne({ uid: user.uid });
+      if (!profile) {
+        return NextResponse.json({ error: 'User profile not found in database' }, { status: 404 });
+      }
+
       const currentBalance = profile?.walletBalance || 0;
 
       if (currentBalance < amount) {
@@ -155,6 +170,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("[Wallet API Error]", err);
+    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }
 }
