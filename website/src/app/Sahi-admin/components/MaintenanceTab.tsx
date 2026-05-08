@@ -56,7 +56,6 @@ export function MaintenanceTab({ onBack }: { onBack: () => void }) {
       } else {
         throw new Error(data.error || "Migration failed");
       }
-      }
     } catch (err: any) {
       const isMissingConfig = err.message?.includes("Configuration Missing");
       if (isMissingConfig) {
