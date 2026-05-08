@@ -47,7 +47,7 @@ async function getProducts(isBestSeller = false) {
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const query: any = {};
+    const query: any = { isActive: { $ne: false } };
     if (isBestSeller) {
       query.isBestSeller = { $in: [true, 'true'] };
     }

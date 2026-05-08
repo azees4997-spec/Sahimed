@@ -28,8 +28,8 @@ export async function GET(
 
     const product = await collection.findOne(query);
 
-    if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    if (!product || product.isActive === false) {
+      return NextResponse.json({ error: 'Product not found or unavailable' }, { status: 404 });
     }
 
     return NextResponse.json({ ...product, id: product._id.toString() });

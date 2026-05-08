@@ -217,7 +217,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
       
       const fetchSuggestions = async () => {
         try {
-          const res = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=10`);
+          const res = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=10&showDisabled=true`);
           if (res.ok) {
             const data = await res.json();
             if (Array.isArray(data)) {
@@ -241,7 +241,8 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
 
   const { data: medicines, isLoading, refetch } = useMongoDBCollection({
     q: debouncedSearch,
-    limit: 50
+    limit: 50,
+    showDisabled: true
   });
 
   return (
@@ -403,7 +404,22 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                 ))
               ) : medicines?.length === 0 ? (<tr><td colSpan={3} className="p-20 text-center font-bold text-gray-300">No entries found</td></tr>) : medicines?.map(med => (
                 <tr key={med.id} className="hover:bg-gray-50/50">
-                  <td className="px-10 py-8"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border flex items-center justify-center overflow-hidden">{med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-6 h-6 text-gray-200" />}</div><div className="flex flex-col"><span className="font-black text-sm">{med.name}</span><span className="text-[9px] text-gray-400 uppercase">{med.sku} • {med.manufacturer}</span></div></div></td>
+                  <td className="px-10 py-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border flex items-center justify-center overflow-hidden">
+                        {med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-6 h-6 text-gray-200" />}
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-sm">{med.name}</span>
+                          {med.isActive === false && (
+                            <Badge variant="destructive" className="h-4 text-[7px] px-1 font-black uppercase">Inactive</Badge>
+                          )}
+                        </div>
+                        <span className="text-[9px] text-gray-400 uppercase">{med.sku} • {med.manufacturer}</span>
+                      </div>
+                    </div>
+                  </td>
                   <td className="px-10 py-8"><Badge variant="outline" className="font-black text-[8px]">{med.category}</Badge></td>
                   <td className="px-10 py-8 text-right">
                      <div className="flex justify-end gap-2">

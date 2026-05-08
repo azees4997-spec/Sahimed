@@ -29,6 +29,12 @@ export async function GET(request: Request) {
     const collection = db.collection('products');
 
     const query: any = {};
+    
+    // Filter out disabled products by default
+    const showDisabled = searchParams.get('showDisabled') === 'true';
+    if (!showDisabled) {
+      query.isActive = { $ne: false };
+    }
     if (category) {
       query.category = category;
     }
