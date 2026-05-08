@@ -13,14 +13,9 @@ import { getDbAdmin } from '@/lib/firebase-admin';
 export const revalidate = 60; // Revalidate every minute
 
 async function getBanners() {
-  // Check if Firebase Admin env vars are present to avoid build-time errors
-  if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
-    console.warn("Firebase Admin Configuration Missing: Skipping banner fetch during build.");
-    return [];
-  }
-
   try {
     const db = getDbAdmin();
+    if (!db) return [];
     const snapshot = await db.collection('banners')
       .where('isActive', '==', true)
       .orderBy('order', 'asc')

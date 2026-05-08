@@ -15,6 +15,12 @@ export async function POST(req: Request) {
     const db = client.db('sahimed');
     const firestore = getDbAdmin();
 
+    if (!firestore) {
+      return NextResponse.json({ 
+        error: "Firebase Admin Configuration Missing. Please check your environment variables (Project ID, Client Email, Private Key)." 
+      }, { status: 500 });
+    }
+
     console.log("[Migration] Starting full Firestore -> MongoDB sync...");
 
     const usersSnap = await firestore.collection('userProfiles').get();

@@ -108,11 +108,13 @@ export default async function RootLayout({
   let initialPages: any[] = [];
   try {
     const dbAdmin = getDbAdmin();
-    const snapshot = await dbAdmin.collection('pages').orderBy('lastUpdated', 'desc').get();
-    initialPages = snapshot.docs.map(doc => ({ 
-      id: doc.id, 
-      ...doc.data(),
-    }));
+    if (dbAdmin) {
+      const snapshot = await dbAdmin.collection('pages').orderBy('lastUpdated', 'desc').get();
+      initialPages = snapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data(),
+      }));
+    }
   } catch (error) {
     console.error("Error fetching pages for layout footer:", error);
     // Silent fail - footer will fall back to client-side fetching
