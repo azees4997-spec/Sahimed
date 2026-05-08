@@ -6,8 +6,14 @@ import PaytmChecksum from './PaytmChecksum';
  * Handles checksum generation, transaction initiation, and verification.
  */
 export class PaytmService {
-  private static MID = process.env.PAYTM_MID || 'CFehFB20400052473723';
-  private static MKEY = process.env.PAYTM_MERCHANT_KEY || 'UcS3iYcSyDs5%RGX';
+  private static get MID() {
+    return (process.env.PAYTM_MID || 'CFehFB20400052473723').trim();
+  }
+
+  private static get MKEY() {
+    return (process.env.PAYTM_MERCHANT_KEY || 'UcS3iYcSyDs5%RGX').trim();
+  }
+
   private static get ENV(): 'PROD' | 'STAGING' {
     if (process.env.PAYTM_ENV) return process.env.PAYTM_ENV as 'PROD' | 'STAGING';
     if (this.MID.startsWith('CFehFB')) return 'STAGING';
@@ -15,7 +21,7 @@ export class PaytmService {
   }
 
   private static get WEBSITE() {
-    return process.env.PAYTM_WEBSITE || (this.ENV === 'STAGING' ? 'WEBSTAGING' : 'DEFAULT');
+    return (process.env.PAYTM_WEBSITE || (this.ENV === 'STAGING' ? 'WEBSTAGING' : 'DEFAULT')).trim();
   }
 
   private static get HOST() {
@@ -44,7 +50,9 @@ export class PaytmService {
     const baseUrl = host ? `https://${host}` : (process.env.NEXT_PUBLIC_APP_URL || 'https://sahimed.com');
     const callbackUrl = `${baseUrl}/api/paytm/callback`;
     
-    console.log(`[Paytm] Initiating ${this.ENV} transaction. Order: ${orderId}, Host: ${baseUrl}`);
+    const cleanOrderId = orderId.replace(/[^a-zA-Z0-9_-]/g, '');
+    
+    console.log(`[Paytm] Initiating ${this.ENV} transaction. Order: ${cleanOrderId}, Host: ${baseUrl}`);
 
     const paytmParams: any = {};
 
@@ -52,7 +60,7 @@ export class PaytmService {
       "requestType": "Payment",
       "mid": this.MID,
       "websiteName": this.WEBSITE,
-      "orderId": orderId,
+      "orderId": cleanOrderId,
       "callbackUrl": callbackUrl,
       "txnAmount": {
         "value": Number(amount).toFixed(2),
@@ -64,13 +72,18 @@ export class PaytmService {
     };
 
     try {
-      const signature = await PaytmChecksum.generateSignature(JSON.stringify(paytmParams.body), this.MKEY);
+      const bodyString = JSON.stringify(paytmParams.body);
+      const signature = await PaytmChecksum.generateSignature(bodyString, this.MKEY);
+      
+      console.log(`[Paytm Payload] Body: ${bodyString}`);
+      console.log(`[Paytm Payload] Signature: ${signature}`);
+
       paytmParams["head"] = {
         "signature": signature
       };
 
       const post_data = JSON.stringify(paytmParams);
-      const url = `https://${this.HOST}/theia/api/v1/initiateTransaction?mid=${this.MID}&orderId=${orderId}`;
+      const url = `https://${this.HOST}/theia/api/v1/initiateTransaction?mid=${this.MID}&orderId=${cleanOrderId}`;
 
       const response = await fetch(url, {
         method: 'POST',
