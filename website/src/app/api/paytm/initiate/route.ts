@@ -15,10 +15,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Order ID and amount are required" }, { status: 400 });
     }
 
+    const host = req.headers.get('host') || undefined;
+
     const result = await PaytmService.initiateTransaction(
       orderId, 
       amount, 
       user.uid, 
+      host,
       channel || 'WEB'
     );
 
