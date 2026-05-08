@@ -67,7 +67,7 @@ export function initializeFirebase(): FirebaseSdks {
   };
 
   cachedSdks = sdks;
-  
+
   if (typeof window !== 'undefined') {
     window.__sahimedFirebaseSdks = sdks;
   }

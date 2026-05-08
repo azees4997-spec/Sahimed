@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,14 +29,38 @@ function LoginForm() {
   const redirectPath = searchParams.get('redirect') || '/';
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !(window as any).recaptchaVerifier) {
-      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+    if (typeof window !== 'undefined' && auth) {
+      // Clear existing verifier if any to avoid DOM conflicts
+      if ((window as any).recaptchaVerifier) {
+        try { (window as any).recaptchaVerifier.clear(); } catch (e) {}
+      }
+
+      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         size: 'invisible',
         callback: () => {
+          // Recaptcha resolved
+        },
+        'expired-callback': () => {
+          toast({ title: 'Recaptcha Expired', description: 'Please try sending OTP again.' });
         }
       });
+      
+      (window as any).recaptchaVerifier = verifier;
+      
+      // [PERFORMANCE] Pre-render to warm up the Recaptcha iframe
+      // This saves several seconds during the actual "Request OTP" click
+      verifier.render().catch(err => {
+        console.warn('Recaptcha render warning:', err);
+      });
+
+      return () => {
+        try {
+          verifier.clear();
+          (window as any).recaptchaVerifier = null;
+        } catch (e) {}
+      };
     }
-  }, [auth]);
+  }, [auth, toast]);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,12 +78,19 @@ function LoginForm() {
       setStep(2);
       toast({ title: 'OTP Sent', description: `Check your phone for the code.` });
     } catch (err: any) {
+      console.error("OTP Send Error:", err);
       toast({ variant: 'destructive', title: 'Error', description: err.message || 'Failed to send OTP.' });
+      
+      // Re-initialize verifier if it fails (often needed for Recaptcha resets)
       if ((window as any).recaptchaVerifier) {
-        (window as any).recaptchaVerifier.clear();
-        (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible'
-        });
+        try {
+          (window as any).recaptchaVerifier.clear();
+          const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            size: 'invisible'
+          });
+          (window as any).recaptchaVerifier = verifier;
+          verifier.render();
+        } catch (e) {}
       }
     } finally {
       setLoading(false);
