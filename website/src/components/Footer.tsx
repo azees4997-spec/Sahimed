@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export default function Footer() {
+export default function Footer({ initialPages = [] }: { initialPages?: any[] }) {
   const pathname = usePathname();
   const db = useFirestore();
 
@@ -27,7 +27,9 @@ export default function Footer() {
     orderBy('lastUpdated', 'desc')
   ), [db]);
   const { data: allPages } = useCollection(footerPagesQuery);
-  const footerPages = allPages?.filter((p: any) => p.placement === 'footer' || p.placement === 'both');
+  
+  const currentPages = allPages || initialPages;
+  const footerPages = currentPages?.filter((p: any) => p.placement === 'footer' || p.placement === 'both');
 
   const hideOnPaths = ['/cart', '/checkout', '/Sahi-admin', '/login', '/prescription'];
   if (hideOnPaths.some(path => pathname.startsWith(path))) return null;

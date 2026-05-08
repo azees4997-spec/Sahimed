@@ -97,11 +97,28 @@ export const viewport: Viewport = {
   themeColor: '#7C3AED',
 };
 
-export default function RootLayout({
+import { getDbAdmin } from '@/lib/firebase-admin';
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch pages for footer on the server to prevent syncing delay
+  let initialPages: any[] = [];
+  if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+    try {
+      const dbAdmin = getDbAdmin();
+      const snapshot = await dbAdmin.collection('pages').orderBy('lastUpdated', 'desc').get();
+      initialPages = snapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data(),
+      }));
+    } catch (error) {
+      console.error("Error fetching pages for layout footer:", error);
+    }
+  }
+
   const organizationJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -192,7 +209,7 @@ export default function RootLayout({
             <div className="flex flex-col min-h-screen">
               <main className="flex-1">
                 {children}
-                <Footer />
+                <Footer initialPages={initialPages} />
               </main>
               <BottomNav />
               <MobileCartBar />

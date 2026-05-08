@@ -1,11 +1,12 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { doc, getDoc } from 'firebase/firestore';
+
+export const revalidate = 3600; // Revalidate every hour
+import { doc, getDoc, getDocs, collection } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
 import { initializeApp, getApps, initializeApp as initApp } from 'firebase/app';
 import { firebaseConfig } from '@/firebase/config';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 
 // Initialize Firebase for Server-Side Rendering
 const app = getApps().length === 0 ? initApp(firebaseConfig) : getApps()[0];
@@ -26,6 +27,18 @@ async function getPage(slug: string) {
     console.error("Error fetching page:", error);
   }
   return null;
+}
+
+export async function generateStaticParams() {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'pages'));
+    return querySnapshot.docs.map((doc) => ({
+      slug: doc.id,
+    }));
+  } catch (error) {
+    console.error("Error generating static params:", error);
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -77,8 +90,6 @@ export default async function DynamicPage({ params }: PageProps) {
            />
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }
