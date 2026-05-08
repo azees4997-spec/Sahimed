@@ -480,7 +480,7 @@ export async function PUT(req: Request) {
 
               if (cashbackAmount > 0) {
                 // 1. Credit MongoDB Wallet
-                await db.collection('userProfiles').updateOne(
+                await db.collection('users').updateOne(
                   { uid: currentOrder.userId },
                   { $inc: { walletBalance: cashbackAmount } },
                   { upsert: true }

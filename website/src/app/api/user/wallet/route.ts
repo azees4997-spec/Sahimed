@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     const db = client.db('sahimed');
     
     // Fetch profile for balance
-    const profile = await db.collection('userProfiles').findOne({ uid: user.uid });
+    const profile = await db.collection('users').findOne({ uid: user.uid });
     
     // Fetch transaction history
     const transactions = await db.collection('walletTransactions')
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       console.log(`[Wallet] Validating usage for user: ${user.uid}`);
       
       const [profile, settings] = await Promise.all([
-        db.collection('userProfiles').findOne({ uid: user.uid }).catch(e => { console.error("Profile fetch error", e); return null; }),
+        db.collection('users').findOne({ uid: user.uid }).catch(e => { console.error("Profile fetch error", e); return null; }),
         db.collection('walletSettings').findOne({ id: 'global' }).catch(e => { console.error("Settings fetch error", e); return null; })
       ]);
 
@@ -152,7 +152,7 @@ export async function POST(request: Request) {
       console.log(`[Wallet] Processing spend: ${amount} for user: ${user.uid}`);
       
       // Deduct from wallet
-      const profile = await db.collection('userProfiles').findOne({ uid: user.uid });
+      const profile = await db.collection('users').findOne({ uid: user.uid });
       if (!profile) {
         return NextResponse.json({ error: 'User profile not found in database' }, { status: 404 });
       }
@@ -163,7 +163,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
       }
 
-      await db.collection('userProfiles').updateOne(
+      await db.collection('users').updateOne(
         { uid: user.uid },
         { $inc: { walletBalance: -amount } }
       );

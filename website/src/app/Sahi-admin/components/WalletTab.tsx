@@ -60,9 +60,9 @@ export function WalletTab({ db, isVerified, onBack }: { db: any, isVerified: boo
   const [foundProducts, setFoundProducts] = useState<any[]>([]);
   const [searchingProducts, setSearchingProducts] = useState(false);
   
-  // Fetch Customers from Firestore
-  const usersQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'userProfiles'), orderBy('name', 'asc'), limit(100)) : null, [db, isVerified]);
-  const { data: customers } = useCollection(usersQuery);
+  // Fetch Customers from MongoDB
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [fetchingUsers, setFetchingUsers] = useState(false);
 
   const { toast } = useToast();
   const auth = useAuth();
@@ -88,10 +88,19 @@ export function WalletTab({ db, isVerified, onBack }: { db: any, isVerified: boo
         const cats = await categoriesRes.json();
         setAllCategories(cats);
       }
+
+      // Fetch MongoDB Users
+      setFetchingUsers(true);
+      const usersRes = await fetch('/api/admin/users?limit=100');
+      if (usersRes.ok) {
+        const users = await usersRes.json();
+        setCustomers(users);
+      }
     } catch (err) {
       console.error("Failed to fetch initial data", err);
     } finally {
       setLoading(false);
+      setFetchingUsers(false);
     }
   };
 

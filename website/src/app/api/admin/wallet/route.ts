@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
 
-    const profile = await db.collection('userProfiles').findOne({ uid: userId });
+    const profile = await db.collection('users').findOne({ uid: userId });
     return NextResponse.json({ balance: profile?.walletBalance || 0 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const db = client.db('sahimed');
 
     // Update balance
-    await db.collection('userProfiles').updateOne(
+    await db.collection('users').updateOne(
       { uid: userId },
       { $inc: { walletBalance: amount } },
       { upsert: true }
