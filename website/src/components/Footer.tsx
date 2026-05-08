@@ -105,7 +105,11 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
                   </li>
                 ))
               ) : (
-                <li className="text-[10px] font-black text-gray-600 uppercase tracking-widest italic">Syncing Documents...</li>
+                <>
+                  <li className="h-4 w-32 bg-white/5 rounded animate-pulse" />
+                  <li className="h-4 w-24 bg-white/5 rounded animate-pulse" />
+                  <li className="h-4 w-28 bg-white/5 rounded animate-pulse" />
+                </>
               )}
             </ul>
           </div>

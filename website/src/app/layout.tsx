@@ -106,17 +106,16 @@ export default async function RootLayout({
 }>) {
   // Fetch pages for footer on the server to prevent syncing delay
   let initialPages: any[] = [];
-  if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
-    try {
-      const dbAdmin = getDbAdmin();
-      const snapshot = await dbAdmin.collection('pages').orderBy('lastUpdated', 'desc').get();
-      initialPages = snapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data(),
-      }));
-    } catch (error) {
-      console.error("Error fetching pages for layout footer:", error);
-    }
+  try {
+    const dbAdmin = getDbAdmin();
+    const snapshot = await dbAdmin.collection('pages').orderBy('lastUpdated', 'desc').get();
+    initialPages = snapshot.docs.map(doc => ({ 
+      id: doc.id, 
+      ...doc.data(),
+    }));
+  } catch (error) {
+    console.error("Error fetching pages for layout footer:", error);
+    // Silent fail - footer will fall back to client-side fetching
   }
 
   const organizationJsonLd = {
