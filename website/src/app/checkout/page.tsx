@@ -259,9 +259,13 @@ export default function CheckoutPage() {
     const fetchWallet = async () => {
       if (!user) return;
       try {
+        const idToken = await user.getIdToken();
         const res = await fetch('/api/user/wallet', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
           body: JSON.stringify({
             action: 'validate_use',
             items: cart.map(item => ({
