@@ -7,7 +7,7 @@ export default function HeroSearch() {
   const router = useRouter();
 
   const handleOpenSearch = () => {
-    router.push('/search');
+    window.dispatchEvent(new CustomEvent('open-mobile-search'));
   };
 
   return (
