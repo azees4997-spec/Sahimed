@@ -12,20 +12,28 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { SectionHeader } from './SectionHeader';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 import { 
   Key, 
   Terminal, 
   ExternalLink as ExternalLinkIcon, 
   Info,
-  Settings
+  Settings,
+  ShieldCheck,
+  Zap,
+  Globe
 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 export function MaintenanceTab({ onBack }: { onBack: () => void }) {
   const [isMigrating, setIsMigrating] = useState(false);
+  const [isSafeMirroring, setIsSafeMirroring] = useState(false);
+  const [safeMirrorProgress, setSafeMirrorProgress] = useState({ current: 0, total: 0 });
   const [result, setResult] = useState<any>(null);
   const { toast } = useToast();
   const auth = useAuth();
+  const db = useFirestore();
 
   const handleMigration = async () => {
     if (!confirm("This will mirror all Firestore users and addresses to MongoDB. It may take a while. Proceed?")) return;
@@ -57,6 +65,57 @@ export function MaintenanceTab({ onBack }: { onBack: () => void }) {
       toast({ variant: 'destructive', title: "Migration Failed", description: err.message });
     } finally {
       setIsMigrating(false);
+    }
+  };
+
+  const handleSafeMirror = async () => {
+    if (!confirm("This will fetch all users from Firestore on your device and mirror them to MongoDB. This is safer if you don't have server credentials. Proceed?")) return;
+    
+    setIsSafeMirroring(true);
+    setResult(null);
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) throw new Error("Unauthorized");
+
+      // 1. Fetch all users from Firestore
+      const usersSnap = await getDocs(collection(db, 'userProfiles'));
+      const total = usersSnap.docs.length;
+      setSafeMirrorProgress({ current: 0, total });
+
+      for (let i = 0; i < usersSnap.docs.length; i++) {
+        const userDoc = usersSnap.docs[i];
+        const uid = userDoc.id;
+        const userData = { id: uid, ...userDoc.data() };
+
+        // 2. Fetch addresses for this user
+        const addressesSnap = await getDocs(collection(db, 'userProfiles', uid, 'addresses'));
+        const addresses = addressesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        // 3. Send to bridge
+        const res = await fetch('/api/admin/mirror-bridge', {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${idToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ user: userData, addresses })
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || `Failed on user ${uid}`);
+        }
+
+        setSafeMirrorProgress({ current: i + 1, total });
+      }
+
+      toast({ title: "Safe Mirroring Complete", description: `Successfully synchronized ${total} users.` });
+      setResult({ type: 'safe_success', count: total });
+    } catch (err: any) {
+      console.error("Safe Mirror Error:", err);
+      toast({ variant: 'destructive', title: "Mirroring Stopped", description: err.message });
+    } finally {
+      setIsSafeMirroring(false);
     }
   };
 
@@ -109,11 +168,63 @@ export function MaintenanceTab({ onBack }: { onBack: () => void }) {
 
             <Button 
               onClick={handleMigration} 
-              disabled={isMigrating}
+              disabled={isMigrating || isSafeMirroring}
               className="w-full h-16 rounded-full font-black text-[10px] tracking-[0.2em] bg-slate-900 text-white hover:bg-black uppercase shadow-xl active:scale-95 transition-all gap-3"
             >
               {isMigrating ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCcw className="w-5 h-5" />}
               {isMigrating ? "Synchronizing Clinical Matrix..." : "Start Full Database Mirroring"}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Safe Mirroring Section */}
+        <Card className="rounded-[40px] border-none shadow-xl overflow-hidden bg-emerald-50/50 border border-emerald-100">
+          <CardHeader className="p-8 bg-emerald-600 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-black uppercase font-outfit">Safe Mirror (Browser-Mode)</CardTitle>
+                <p className="text-[10px] font-black text-white/60 tracking-widest uppercase">No Server Credentials Required</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-8 space-y-6">
+            <p className="text-sm font-medium text-slate-600 leading-relaxed">
+              If your Firebase Admin configuration is missing, use this mode. It uses your <strong>Admin Login Session</strong> to fetch data from Firestore and mirror it to MongoDB.
+            </p>
+            
+            {isSafeMirroring && (
+              <div className="space-y-4 bg-white p-6 rounded-3xl border border-emerald-100 animate-in fade-in zoom-in-95">
+                <div className="flex justify-between text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                  <span>Mirroring Clinical Data...</span>
+                  <span>{Math.round((safeMirrorProgress.current / safeMirrorProgress.total) * 100)}%</span>
+                </div>
+                <Progress value={(safeMirrorProgress.current / safeMirrorProgress.total) * 100} className="h-3 bg-emerald-100" />
+                <p className="text-[9px] font-bold text-slate-400 text-center uppercase tracking-widest">
+                  Processed {safeMirrorProgress.current} of {safeMirrorProgress.total} Profiles
+                </p>
+              </div>
+            )}
+
+            {result?.type === 'safe_success' && (
+              <div className="bg-emerald-500 p-6 rounded-3xl text-white flex items-center gap-4 animate-in slide-in-from-top-4">
+                <Zap className="w-6 h-6 animate-pulse" />
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Mirroring Complete</p>
+                  <p className="text-sm font-black">{result.count} Users synced to MongoDB via Secure Tunnel.</p>
+                </div>
+              </div>
+            )}
+
+            <Button 
+              onClick={handleSafeMirror} 
+              disabled={isSafeMirroring || isMigrating}
+              className="w-full h-16 rounded-full font-black text-[10px] tracking-[0.2em] bg-emerald-600 text-white hover:bg-emerald-700 uppercase shadow-xl active:scale-95 transition-all gap-3"
+            >
+              {isSafeMirroring ? <Loader2 className="w-5 h-5 animate-spin" /> : <Globe className="w-5 h-5" />}
+              {isSafeMirroring ? "Tunneling Data..." : "Start Secure Client Mirroring"}
             </Button>
           </CardContent>
         </Card>
