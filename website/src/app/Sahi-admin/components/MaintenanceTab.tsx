@@ -97,10 +97,6 @@ export function MaintenanceTab({ onBack }: { onBack: () => void }) {
       const total = usersSnap.docs.length;
       setSafeMirrorProgress({ current: 0, total });
 
-      for (let i = 0; i < usersSnap.docs.length; i++) {
-        const userDoc = usersSnap.docs[i];
-        const uid = userDoc.id;
-        const userData = { id: uid, ...userDoc.data() };
       let lastVisible = null;
       let processed = 0;
 
