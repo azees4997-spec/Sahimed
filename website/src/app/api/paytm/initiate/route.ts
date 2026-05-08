@@ -30,9 +30,12 @@ export async function POST(req: Request) {
         amount: amount
       });
     } else {
+      const errorMsg = result.body?.resultInfo?.resultMsg || "Failed to initiate Paytm transaction";
+      console.warn(`[Paytm Failure] ${errorMsg}`, result);
       return NextResponse.json({ 
-        error: result.body?.resultInfo?.resultMsg || "Failed to initiate Paytm transaction" 
-      }, { status: 500 });
+        error: errorMsg,
+        details: result.body?.resultInfo
+      }, { status: 400 }); // Changed to 400 as it's usually a bad request/credential issue, not a server crash
     }
 
   } catch (err: any) {

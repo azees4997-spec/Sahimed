@@ -10,7 +10,7 @@ export class PaytmService {
   private static MKEY = process.env.PAYTM_MERCHANT_KEY || 'UcS3iYcSyDs5%RGX';
   private static WEBSITE = process.env.PAYTM_WEBSITE || 'WEBSTAGING';
   private static INDUSTRY_TYPE = 'Retail';
-  private static ENV = process.env.NODE_ENV === 'production' ? 'PROD' : 'STAGING';
+  private static ENV = (process.env.PAYTM_ENV || (process.env.NODE_ENV === 'production' ? 'PROD' : 'STAGING')) as 'PROD' | 'STAGING';
   
   // Paytm API Endpoints
   private static get HOST() {
@@ -31,14 +31,14 @@ export class PaytmService {
     return PaytmChecksum.verifySignature(params, key, checksum);
   }
 
-  // getStringByParams removed as it's in PaytmChecksum
-
   /**
    * Initiates a transaction and returns the txnToken
    */
   static async initiateTransaction(orderId: string, amount: number, userId: string, channel: 'WEB' | 'WAP' = 'WEB') {
     const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/paytm/callback`;
     
+    console.log(`[Paytm] Initiating ${this.ENV} transaction for Order: ${orderId}, Amount: ${amount}`);
+
     const paytmParams: any = {};
 
     paytmParams["body"] = {
@@ -48,7 +48,7 @@ export class PaytmService {
       "orderId": orderId,
       "callbackUrl": callbackUrl,
       "txnAmount": {
-        "value": amount.toFixed(2),
+        "value": Number(amount).toFixed(2),
         "currency": "INR",
       },
       "userInfo": {
@@ -56,27 +56,45 @@ export class PaytmService {
       },
     };
 
-    const signature = await PaytmChecksum.generateSignature(JSON.stringify(paytmParams.body), this.MKEY);
-    paytmParams["head"] = {
-      "signature": signature
-    };
+    try {
+      const signature = await PaytmChecksum.generateSignature(JSON.stringify(paytmParams.body), this.MKEY);
+      paytmParams["head"] = {
+        "signature": signature
+      };
 
-    const post_data = JSON.stringify(paytmParams);
+      const post_data = JSON.stringify(paytmParams);
+      const url = `https://${this.HOST}/theia/api/v1/initiateTransaction?mid=${this.MID}&orderId=${orderId}`;
 
-    const options = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': post_data.length.toString(),
-      },
-    };
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': post_data.length.toString(),
+        },
+        body: post_data
+      });
 
-    const response = await fetch(`https://${this.HOST}/theia/api/v1/initiateTransaction?mid=${this.MID}&orderId=${orderId}`, {
-      ...options,
-      body: post_data
-    });
-
-    return await response.json();
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        const result = await response.json();
+        console.log(`[Paytm Response]`, JSON.stringify(result));
+        return result;
+      } else {
+        const text = await response.text();
+        console.error(`[Paytm Error] Received non-JSON response from Paytm:`, text.substring(0, 500));
+        return {
+          body: {
+            resultInfo: {
+              resultStatus: 'F',
+              resultMsg: `Invalid response from Paytm Gateway. Check if your MID (${this.MID}) matches the environment (${this.ENV}).`
+            }
+          }
+        };
+      }
+    } catch (err: any) {
+      console.error(`[Paytm Exception]`, err);
+      throw err;
+    }
   }
 
   // generateSignature removed as it's in PaytmChecksum
