@@ -26,6 +26,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   List<Map<String, dynamic>> _orders = [];
   List<Map<String, dynamic>> _addresses = [];
+  Map<String, dynamic>? _profile;
   bool _isLoading = true;
 
   @override
@@ -36,12 +37,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadProfileData() async {
     try {
-      final orders = await _apiService.getUserOrders();
-      final addresses = await _apiService.getUserAddresses();
+      final results = await Future.wait([
+        _apiService.getUserProfile(),
+        _apiService.getUserOrders(),
+        _apiService.getUserAddresses(),
+      ]);
+
       if (mounted) {
         setState(() {
-          _orders = orders;
-          _addresses = addresses;
+          _profile = results[0] as Map<String, dynamic>?;
+          _orders = results[1] as List<Map<String, dynamic>>;
+          _addresses = results[2] as List<Map<String, dynamic>>;
           _isLoading = false;
         });
       }
@@ -139,8 +145,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final user = _auth.currentUser;
-    final phone = user?.phoneNumber ?? '+91 7349499898';
-    final name = (user?.displayName ?? 'Sahimed Member').toUpperCase();
+    final phone = _profile?['phone'] ?? user?.phoneNumber ?? '+91 7349499898';
+    final name = (_profile?['name'] ?? user?.displayName ?? 'Sahimed Member').toUpperCase();
+    final balance = _profile?['walletBalance'] ?? 0;
 
     return Container(
       color: SahimedColors.background,
@@ -230,14 +237,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: SahimedColors.primary.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
-                          phone,
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: SahimedColors.primary,
-                            letterSpacing: 0.5,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              phone,
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: SahimedColors.primary,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            if (balance > 0) ...[
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: SahimedColors.emerald500,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '₹$balance',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ],

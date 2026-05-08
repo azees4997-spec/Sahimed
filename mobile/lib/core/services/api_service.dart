@@ -606,6 +606,22 @@ class ApiService {
     return [];
   }
 
+  Future<Map<String, dynamic>?> getUserProfile() async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/user/profile'),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      debugPrint('Error fetching user profile from MongoDB: $e');
+    }
+    return null;
+  }
+
   Future<bool> submitPrescription({
     required List<String> imageUrls,
     required String patientName,
