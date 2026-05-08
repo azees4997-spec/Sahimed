@@ -72,3 +72,15 @@ File any bugs at https://github.com/firebase/firebase-tools/issues
 This is a NextJS starter in Firebase Studio.
 
 To get started, take a look at src/app/page.tsx.
+
+## Configuration & Maintenance
+### Environment Variables
+For features like database mirroring and server-side legal pages, configure the following in your deployment platform (Firebase App Hosting, Vercel, etc.):
+- `FIREBASE_PROJECT_ID`: Your Firebase Project ID (e.g., `sahimed-73c38`)
+- `FIREBASE_CLIENT_EMAIL`: Service account email from Firebase Settings.
+- `FIREBASE_PRIVATE_KEY`: Service account private key.
+- `MONGODB_URI`: Connection string for MongoDB (required for wallet and mirroring).
+
+**For Firebase App Hosting:**
+1. Add these keys to **Google Cloud Secret Manager**.
+2. Reference them in your `apphosting.yaml`.

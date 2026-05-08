@@ -7,13 +7,25 @@ export function getFirebaseAdmin() {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
+  // STRATEGY: Try to initialize without explicit keys first.
+  // On Firebase App Hosting / Cloud Run, this will automatically use the environment's default service account.
+  try {
+    if (!projectId && !clientEmail && !privateKey) {
+      console.log("[Firebase Admin] Attempting automatic initialization...");
+      return admin.initializeApp();
+    }
+  } catch (e) {
+    console.warn("[Firebase Admin] Automatic initialization failed, falling back to explicit configuration.");
+  }
+
+  // Fallback: Require explicit keys if automatic init is not possible or failed.
   if (!projectId || !clientEmail || !privateKey) {
     const missing = [];
     if (!projectId) missing.push('FIREBASE_PROJECT_ID');
     if (!clientEmail) missing.push('FIREBASE_CLIENT_EMAIL');
     if (!privateKey) missing.push('FIREBASE_PRIVATE_KEY');
     
-    throw new Error(`Firebase Admin Configuration Missing: ${missing.join(', ')}. Please configure these Environment Variables in Vercel.`);
+    throw new Error(`Firebase Admin Configuration Missing: ${missing.join(', ')}. Please configure these Environment Variables in your deployment platform (Vercel, Firebase App Hosting, etc.).`);
   }
 
   try {
