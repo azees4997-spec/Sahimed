@@ -8,11 +8,16 @@ import PaytmChecksum from './PaytmChecksum';
 export class PaytmService {
   private static MID = process.env.PAYTM_MID || 'CFehFB20400052473723';
   private static MKEY = process.env.PAYTM_MERCHANT_KEY || 'UcS3iYcSyDs5%RGX';
-  private static WEBSITE = process.env.PAYTM_WEBSITE || 'WEBSTAGING';
-  private static INDUSTRY_TYPE = 'Retail';
-  private static ENV = (process.env.PAYTM_ENV || (process.env.NODE_ENV === 'production' ? 'PROD' : 'STAGING')) as 'PROD' | 'STAGING';
-  
-  // Paytm API Endpoints
+  private static get ENV(): 'PROD' | 'STAGING' {
+    if (process.env.PAYTM_ENV) return process.env.PAYTM_ENV as 'PROD' | 'STAGING';
+    if (this.MID.startsWith('CFehFB')) return 'STAGING';
+    return process.env.NODE_ENV === 'production' ? 'PROD' : 'STAGING';
+  }
+
+  private static get WEBSITE() {
+    return process.env.PAYTM_WEBSITE || (this.ENV === 'STAGING' ? 'WEBSTAGING' : 'DEFAULT');
+  }
+
   private static get HOST() {
     return this.ENV === 'PROD' ? 'securegw.paytm.in' : 'securegw-stage.paytm.in';
   }
