@@ -38,8 +38,20 @@ export async function POST(request: Request) {
 
     const { action, amount, orderId, items } = await request.json();
 
-    const client = await clientPromise;
-    const db = client.db('sahimed');
+    let client, db;
+    try {
+      client = await clientPromise;
+      db = client.db('sahimed');
+      // Simple ping to verify connection
+      await db.command({ ping: 1 });
+    } catch (dbErr: any) {
+      console.error("[Wallet DB Error]", dbErr);
+      return NextResponse.json({ 
+        error: "Database Connection Failed", 
+        details: dbErr.message,
+        hint: "Ensure MONGODB_URI is set in Vercel and IP 0.0.0.0/0 is whitelisted in MongoDB Atlas."
+      }, { status: 503 });
+    }
 
     if (action === 'validate_use') {
       console.log(`[Wallet] Validating usage for user: ${user.uid}`);
