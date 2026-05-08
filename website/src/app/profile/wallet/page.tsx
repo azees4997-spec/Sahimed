@@ -19,7 +19,12 @@ export default function WalletPage() {
     const fetchWallet = async () => {
       if (!user) return;
       try {
-        const res = await fetch('/api/user/wallet');
+        const idToken = await user.getIdToken();
+        const res = await fetch('/api/user/wallet', {
+          headers: {
+            'Authorization': `Bearer ${idToken}`
+          }
+        });
         const walletData = await res.json();
         setData(walletData);
       } catch (e) {
