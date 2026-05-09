@@ -281,7 +281,7 @@ export async function POST(req: Request) {
     });
 
     // 2.5. Handle Wallet Usage with strict server-side validation
-    const walletUsed = Number(body.walletUsed || 0);
+    const walletUsed = Number(body.walletUsed || body.billingBreakdown?.walletUsed || 0);
     if (walletUsed > 0) {
       const mongoUser = await db.collection('users').findOne({ uid: user.uid });
       const currentBalance = mongoUser?.walletBalance || 0;
