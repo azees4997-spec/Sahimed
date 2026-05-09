@@ -73,6 +73,7 @@ export class PaytmService {
       "orderId": uniqueOrderId,
       "callbackUrl": callbackUrl,
       "industryTypeId": "Retail",
+      "channelId": channel, // Crucial field from merchant keys
       "txnAmount": {
         "value": Number(amount).toFixed(2).toString(),
         "currency": "INR",
