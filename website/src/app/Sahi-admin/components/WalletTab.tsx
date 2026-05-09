@@ -74,9 +74,12 @@ export function WalletTab({ db, isVerified, onBack }: { db: any, isVerified: boo
   const fetchInitialData = async () => {
     setLoading(true);
     try {
+      const idToken = await auth.currentUser?.getIdToken();
+      const authHeader = { 'Authorization': `Bearer ${idToken}` };
+
       const [settingsRes, categoriesRes] = await Promise.all([
-        fetch('/api/admin/wallet-settings'),
-        fetch('/api/categories?limit=100')
+        fetch('/api/admin/wallet-settings', { headers: authHeader }),
+        fetch('/api/categories?limit=100', { headers: authHeader })
       ]);
       
       if (settingsRes.ok) {
@@ -89,9 +92,9 @@ export function WalletTab({ db, isVerified, onBack }: { db: any, isVerified: boo
         setAllCategories(cats);
       }
 
-      // Fetch MongoDB Users
+      // Fetch MongoDB Users with token
       setFetchingUsers(true);
-      const usersRes = await fetch('/api/admin/users?limit=100');
+      const usersRes = await fetch('/api/admin/users?limit=100', { headers: authHeader });
       if (usersRes.ok) {
         const users = await usersRes.json();
         setCustomers(users);
