@@ -508,55 +508,61 @@ export async function PUT(req: Request) {
     const wasPreviouslyDelivered = currentOrder?.status === 'Delivered' || currentOrder?.status === 'Completed';
 
     if (isNowDelivered && !wasPreviouslyDelivered && !currentOrder?.cashbackApplied) {
+      console.log(`[Cashback Engine] Triggered for Order #${currentOrder?.orderId}. User: ${currentOrder?.userId}`);
       try {
         const settings = await db.collection('walletSettings').findOne({ id: 'global' });
+        console.log(`[Cashback Engine] Settings Found: ${settings ? 'YES' : 'NO'}. Enabled: ${settings?.isCashbackEnabled}`);
+        
         if (settings?.isCashbackEnabled) {
-            // --- GRANULAR ELIGIBILITY CALCULATION ---
             let eligibleTotalForCashback = 0;
             const items = currentOrder.items || [];
             
-            // 0. Check Customer Restriction
             const isCustomerExcluded = settings.excludedCustomers?.includes(currentOrder.userId);
+            if (isCustomerExcluded) {
+              console.log(`[Cashback Engine] User ${currentOrder.userId} is in the Exclusion List.`);
+            }
             
             if (!isCustomerExcluded) {
               items.forEach((item: any) => {
                 let isItemEligible = true;
 
-                // 1. Category Restriction
                 if (settings.excludedCategories?.includes(item.category)) isItemEligible = false;
-
-                // 2. Product Restriction
                 if (settings.excludedProducts?.includes(item.name)) isItemEligible = false;
 
-                // 3. Branded/Generic Restriction
                 const isGeneric = item.isGeneric === true || item.isGeneric === 'true';
                 if (settings.allowGenericOnly && !isGeneric) isItemEligible = false;
                 if (settings.allowBrandedOnly && isGeneric) isItemEligible = false;
 
                 if (isItemEligible) {
-                  eligibleTotalForCashback += (Number(item.unitPrice || item.price) * Number(item.quantity));
+                  const itemTotal = (Number(item.unitPrice || item.price || 0) * Number(item.quantity || 1));
+                  eligibleTotalForCashback += itemTotal;
+                } else {
+                  console.log(`[Cashback Engine] Item "${item.name}" excluded from cashback.`);
                 }
               });
             }
 
-            if (eligibleTotalForCashback >= (settings.minOrderAmountForCashback || 0)) {
+            const minThreshold = Number(settings.minOrderAmountForCashback || 0);
+            console.log(`[Cashback Engine] Eligible Total: ₹${eligibleTotalForCashback} | Min Required: ₹${minThreshold}`);
+
+            if (eligibleTotalForCashback >= minThreshold) {
               let cashbackAmount = 0;
+              const cbValue = Number(settings.cashbackValue || 0);
+              
               if (settings.cashbackType === 'percentage') {
-                cashbackAmount = eligibleTotalForCashback * (settings.cashbackValue / 100);
+                cashbackAmount = eligibleTotalForCashback * (cbValue / 100);
               } else {
-                cashbackAmount = Number(settings.cashbackValue);
+                cashbackAmount = cbValue;
               }
 
-              // ROUNDING: Ensure clean currency (2 decimal places)
               cashbackAmount = Math.round(cashbackAmount * 100) / 100;
+              console.log(`[Cashback Engine] Calculated Amount: ₹${cashbackAmount} (${settings.cashbackType})`);
 
               if (cashbackAmount > 0) {
-                console.log(`[Cashback Engine] Provisioning ₹${cashbackAmount} for Order #${currentOrder.orderId}`);
                 // 1. Credit MongoDB Wallet
                 await db.collection('users').updateOne(
                   { uid: currentOrder.userId },
-                  { $inc: { walletBalance: cashbackAmount } },
-                  { upsert: true }
+                  { $inc: { walletBalance: cashbackAmount } }
                 );
 
                 // 2. Add Transaction Record
@@ -569,7 +575,7 @@ export async function PUT(req: Request) {
                   timestamp: new Date()
                 });
 
-                // 3. Mark Order to prevent duplicate cashback
+                // 3. Mark Order
                 await db.collection('orders').updateOne(
                   { _id: new ObjectId(id) },
                   { $set: { 
@@ -579,7 +585,7 @@ export async function PUT(req: Request) {
                   } }
                 );
 
-                // 4. Sync to Firestore for App Real-time Balance
+                // 4. Sync to Firestore
                 try {
                   const { getDbAdmin } = await import('@/lib/firebase-admin');
                   const dbAdmin = getDbAdmin();
@@ -588,17 +594,18 @@ export async function PUT(req: Request) {
                   const currentFsBalance = userDoc.exists ? (userDoc.data()?.walletBalance || 0) : 0;
                   
                   await userRef.set({ 
-                    walletBalance: currentFsBalance + cashbackAmount 
+                    walletBalance: Number((currentFsBalance + cashbackAmount).toFixed(2))
                   }, { merge: true });
-                  
-                  console.log(`[Cashback] Provisioned ₹${cashbackAmount} on eligible total ₹${eligibleTotalForCashback} to ${currentOrder.userId}`);
                 } catch (fsErr: any) {
                   console.error("[Cashback Sync Error]", fsErr.message);
                 }
+                console.log(`[Cashback Engine] SUCCESS: ₹${cashbackAmount} credited to ${currentOrder.userId}`);
               }
             } else {
-               console.log(`[Cashback Skip] Order ${currentOrder.orderId}: Eligible total ₹${eligibleTotalForCashback} below threshold.`);
+               console.log(`[Cashback Engine] SKIP: Eligible total ₹${eligibleTotalForCashback} is below threshold ₹${minThreshold}`);
             }
+        } else {
+          console.log(`[Cashback Engine] Cashback is DISABLED in global settings.`);
         }
       } catch (cbErr: any) {
         console.error("[Cashback Engine Error]", cbErr.message);
