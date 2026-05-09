@@ -1005,64 +1005,7 @@ export default function CheckoutPage() {
                     <span className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit">₹{Math.max(0, finalPayable - (useWallet ? allowableWallet : 0)).toFixed(2)}</span>
                   </div>
 
-                  {user && (
-                    <div className="pt-6">
-                      <div 
-                        onClick={() => {
-                          if (allowableWallet > 0) {
-                            setUseWallet(!useWallet);
-                          } else {
-                            toast({
-                              title: "Wallet Strategy",
-                              description: walletBalance > 0 
-                                ? "Items in your cart are not eligible for wallet redemption under current admin rules." 
-                                : "Your SahiWallet balance is currently ₹0."
-                            });
-                          }
-                        }}
-                        className={cn(
-                          "p-5 rounded-[24px] border-2 transition-all flex items-center justify-between cursor-pointer group",
-                          useWallet ? "border-primary bg-primary/5 shadow-lg shadow-primary/5" : "border-slate-100 bg-white hover:border-primary/20 hover:shadow-xl",
-                          (allowableWallet <= 0 && walletBalance <= 0) && "opacity-60 cursor-not-allowed grayscale"
-                        )}
-                      >
-                         <div className="flex items-center gap-5">
-                           <div className={cn(
-                             "w-12 h-12 rounded-[18px] flex items-center justify-center transition-all", 
-                             useWallet ? "bg-primary text-white scale-110 shadow-lg shadow-primary/20" : "bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
-                           )}>
-                             <Wallet className="w-6 h-6" />
-                           </div>
-                           <div className="text-left">
-                             <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-900">SahiWallet Savings</p>
-                             <div className="flex items-center gap-2 mt-1">
-                               <p className="text-[10px] font-black text-primary uppercase">
-                                 Balance: ₹{walletBalance.toFixed(2)}
-                               </p>
-                               {allowableWallet > 0 && !useWallet && (
-                                 <span className="bg-emerald-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter animate-pulse">
-                                   Save ₹{allowableWallet.toFixed(2)}
-                                 </span>
-                               )}
-                             </div>
-                           </div>
-                         </div>
-                         <div className={cn(
-                           "w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all", 
-                           useWallet ? "bg-primary border-primary scale-110 shadow-lg shadow-primary/20" : "border-slate-200 bg-white"
-                         )}>
-                           {useWallet ? <Check className="w-4 h-4 text-white" /> : <Plus className="w-4 h-4 text-slate-200" />}
-                         </div>
-                      </div>
-                      
-                      {walletReason && allowableWallet <= 0 && walletBalance > 0 && (
-                        <div className="mt-4 p-3 bg-rose-50 rounded-xl border border-rose-100 flex items-center gap-3">
-                           <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
-                           <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest">{walletReason}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {/* Wallet & Cashback Deactivated */}
 
                   
                   {totalSavings > 0 && (

@@ -507,6 +507,7 @@ export async function PUT(req: Request) {
     const isOrderFinished = updates.status === 'Delivered' || updates.status === 'Completed';
     const wasAlreadyFinished = currentOrder?.status === 'Delivered' || currentOrder?.status === 'Completed';
 
+    /* CASHBACK DEACTIVATED
     if (isOrderFinished && !wasAlreadyFinished && !currentOrder?.cashbackApplied) {
       console.log(`[Cashback V2] Processing Order #${currentOrder.orderId}`);
       try {
@@ -592,6 +593,7 @@ export async function PUT(req: Request) {
         console.error("[Cashback V2 Error]", err.message);
       }
     }
+    */
 
     // Refresh currentOrder after update for automation logic
     const refreshedOrder = await db.collection('orders').findOne({ _id: new ObjectId(id) });
