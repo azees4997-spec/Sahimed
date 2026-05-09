@@ -544,7 +544,7 @@ export default function CheckoutPage() {
         },
         body: JSON.stringify({
           orderId: orderId,
-          amount: amountToPay,
+          amount: Number(amountToPay.toFixed(2)),
           channel: 'WEB'
         })
       });
@@ -556,10 +556,10 @@ export default function CheckoutPage() {
         "root": "",
         "flow": "DEFAULT",
         "data": {
-          "orderId": orderId,
+          "orderId": data.orderId || orderId,
           "token": data.txnToken,
           "tokenType": "TXN_TOKEN",
-          "amount": amountToPay.toString()
+          "amount": amountToPay.toFixed(2).toString()
         },
         "handler": {
           "notifyMerchant": function(eventName: string, data: any) {

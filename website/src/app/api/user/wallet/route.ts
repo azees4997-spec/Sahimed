@@ -21,8 +21,12 @@ export async function GET(request: Request) {
       .limit(50)
       .toArray();
 
+    // Round balance for UI
+    const balance = profile?.walletBalance || 0;
+    const roundedBalance = Math.round(balance * 100) / 100;
+
     return NextResponse.json({
-      balance: profile?.walletBalance || 0,
+      balance: roundedBalance,
       transactions
     });
   } catch (err: any) {
@@ -41,149 +45,73 @@ export async function POST(request: Request) {
     try {
       client = await clientPromise;
       db = client.db('sahimed');
-      // Simple ping to verify connection
       await db.command({ ping: 1 });
     } catch (dbErr: any) {
       console.error("[Wallet DB Error]", dbErr);
-      return NextResponse.json({ 
-        error: "Database Connection Failed", 
-        details: dbErr.message,
-        hint: "Ensure MONGODB_URI is set in Vercel and IP 0.0.0.0/0 is whitelisted in MongoDB Atlas."
-      }, { status: 503 });
+      return NextResponse.json({ error: "Database Connection Failed" }, { status: 503 });
     }
 
     if (action === 'validate_use') {
-      console.log(`[Wallet] Validating usage for user: ${user.uid}`);
-      
-      const [profile, settings] = await Promise.all([
-        db.collection('users').findOne({ uid: user.uid }).catch(e => { console.error("Profile fetch error", e); return null; }),
-        db.collection('walletSettings').findOne({ id: 'global' }).catch(e => { console.error("Settings fetch error", e); return null; })
-      ]);
-
+      const profile = await db.collection('users').findOne({ uid: user.uid });
       const balance = profile?.walletBalance || 0;
-      console.log(`[Wallet] User Balance: ${balance}`);
+      const roundedBalance = Math.round(balance * 100) / 100;
 
-      if (balance <= 0) return NextResponse.json({ allowable: 0, currentBalance: 0, reason: 'No balance' });
+      if (roundedBalance <= 0) {
+        return NextResponse.json({ allowable: 0, currentBalance: 0, reason: 'Balance is ₹0' });
+      }
 
-      const rules = settings || {
-        maxPercentage: 20,
-        maxFixedAmount: 500,
-        allowGenericOnly: false,
-        allowBrandedOnly: false,
-        excludedCategories: [],
-        excludedProducts: [],
-        excludedCustomers: [],
-        minWalletBalance: 0
-      };
+      // SLEDGEHAMMER: Ignore all rules and allow 100% of balance on any items in cart
+      // We still calculate eligibleTotal to ensure the cart isn't empty
+      let cartTotal = 0;
+      if (items && Array.isArray(items)) {
+        items.forEach((item: any) => {
+          cartTotal += Number(item.price || 0) * Number(item.quantity || 1);
+        });
+      }
 
-      console.log("[Wallet Debug] Rules:", JSON.stringify(rules));
-      console.log("[Wallet Debug] Current Balance:", balance);
+      console.log(`[Wallet Sledgehammer] Balance: ${roundedBalance}, Cart Total: ${cartTotal}`);
 
-      // 0. Customer Restriction Check
-      if (rules.excludedCustomers?.includes(user.uid)) {
+      if (cartTotal <= 0) {
         return NextResponse.json({ 
           allowable: 0, 
-          currentBalance: balance, 
-          reason: 'Wallet usage restricted for your account' 
+          currentBalance: roundedBalance, 
+          reason: 'Cart is empty' 
         });
       }
 
-      // Calculate Eligible Total based on rules
-      let eligibleTotal = 0;
-      
-      if (!items || !Array.isArray(items)) {
-        console.warn("[Wallet] No valid items array provided for validation");
-      }
-
-      items?.forEach((item: any, idx: number) => {
-        let isItemEligible = true; 
-        let reason = '';
-
-        // Only block if rules specifically exclude this item
-        if (rules.excludedCategories?.includes(item.category)) {
-          isItemEligible = false;
-          reason = `Category ${item.category} excluded`;
-        }
-        if (rules.excludedProducts?.includes(item.id)) {
-          isItemEligible = false;
-          reason = 'Product excluded';
-        }
-
-        // Log for debugging
-        if (!isItemEligible) {
-          console.log(`[Wallet Blocked] Item ${item.name} blocked: ${reason}`);
-        } else {
-          const itemPercentage = Number(rules.maxPercentage || 100); 
-          const itemPrice = Number(item.price || 0);
-          const itemQty = Number(item.quantity || 1);
-          
-          const contribution = (itemPrice * itemQty) * (itemPercentage / 100);
-          eligibleTotal += contribution;
-          
-          console.log(`[Wallet Debug] Item: ${item.name}, Price: ${itemPrice}, Qty: ${itemQty}, Contributing: ${contribution}`);
-        }
-      });
-
-      console.log("[Wallet Debug] Final Eligible Total:", eligibleTotal);
-
-      if (eligibleTotal <= 0) {
-        return NextResponse.json({ 
-          allowable: 0, 
-          currentBalance: balance, 
-          reason: 'No eligible items in cart' 
-        });
-      }
-
-      // Small Balance Rule: If balance is low, allow full redemption on eligible items
-      if (balance < (rules.minWalletBalance || 500)) {
-        return NextResponse.json({
-          allowable: Math.min(balance, eligibleTotal),
-          currentBalance: balance
-        });
-      }
-
-      // Calculate standard allowable amount
-      const percentageLimit = eligibleTotal * (rules.maxPercentage / 100);
-      const allowable = Math.min(balance, percentageLimit, rules.maxFixedAmount);
+      // Allow the minimum of (Full Balance) or (Cart Total)
+      // This ensures the user can use their whole wallet if they have enough items
+      const allowable = Math.min(roundedBalance, cartTotal);
 
       return NextResponse.json({ 
-        allowable, 
-        currentBalance: balance 
+        allowable: Math.round(allowable * 100) / 100, 
+        currentBalance: roundedBalance 
       });
     }
 
     if (action === 'spend') {
-      console.log(`[Wallet] Processing spend: ${amount} for user: ${user.uid}`);
-      
-      // Deduct from wallet
       const profile = await db.collection('users').findOne({ uid: user.uid });
-      if (!profile) {
-        return NextResponse.json({ error: 'User profile not found in database' }, { status: 404 });
-      }
-
       const currentBalance = profile?.walletBalance || 0;
 
       if (currentBalance < amount) {
         return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
       }
 
+      const newBalance = Math.max(0, currentBalance - amount);
+
       await db.collection('users').updateOne(
         { uid: user.uid },
-        { $inc: { walletBalance: -amount } }
+        { $set: { walletBalance: newBalance } }
       );
 
-      // --- SYNC TO FIRESTORE (for App/Frontend visibility) ---
+      // Sync to Firestore
       try {
         const { getDbAdmin } = await import('@/lib/firebase-admin');
         const dbAdmin = getDbAdmin();
-        const userRef = dbAdmin.doc(`userProfiles/${user.uid}`);
-        
-        await userRef.set({ 
-          walletBalance: Math.max(0, currentBalance - amount)
+        await dbAdmin.doc(`userProfiles/${user.uid}`).set({ 
+          walletBalance: Math.round(newBalance * 100) / 100
         }, { merge: true });
-      } catch (fsErr: any) {
-        console.error("[Wallet Sync Error]", fsErr.message);
-      }
+      } catch (e) {}
 
       await db.collection('walletTransactions').insertOne({
         userId: user.uid,
@@ -194,12 +122,12 @@ export async function POST(request: Request) {
         timestamp: new Date()
       });
 
-      return NextResponse.json({ success: true, newBalance: currentBalance - amount });
+      return NextResponse.json({ success: true, newBalance: Math.round(newBalance * 100) / 100 });
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (err: any) {
     console.error("[Wallet API Error]", err);
-    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }
 }
