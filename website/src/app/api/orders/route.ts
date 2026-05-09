@@ -514,34 +514,20 @@ export async function PUT(req: Request) {
         const isCashbackEnabled = settings?.isCashbackEnabled !== false; // Default to true if missing
         
         if (isCashbackEnabled) {
-          let eligibleTotal = 0;
-          const items = currentOrder.items || [];
-          
-          items.forEach((item: any) => {
-            let isEligible = true;
-            if (settings?.excludedCategories?.includes(item.category)) isEligible = false;
-            if (settings?.excludedProducts?.includes(item.name)) isEligible = false;
-            
-            // Branded/Generic check only if explicitly restricted
-            const isGeneric = item.isGeneric === true || item.isGeneric === 'true';
-            if (settings?.allowGenericOnly && !isGeneric) isEligible = false;
-            if (settings?.allowBrandedOnly && isGeneric) isEligible = false;
-
-            if (isEligible) {
-              eligibleTotal += (Number(item.unitPrice || item.price || 0) * Number(item.quantity || 1));
-            }
-          });
-
+          // UNIVERSAL CASHBACK: Use the total amount of the order for calculation
+          const totalAmount = Number(currentOrder.totalAmount || 0);
           const minOrder = Number(settings?.minOrderAmountForCashback || 0);
           
-          if (eligibleTotal >= minOrder) {
-            const cbValue = Number(settings?.cashbackValue || 5); // Default to 5% if missing
+          console.log(`[Cashback V2] Order Total: ₹${totalAmount} | Min Required: ₹${minOrder}`);
+
+          if (totalAmount >= minOrder) {
+            const cbValue = Number(settings?.cashbackValue || 5);
             let cashback = 0;
             
             if (settings?.cashbackType === 'fixed') {
               cashback = cbValue;
             } else {
-              cashback = eligibleTotal * (cbValue / 100);
+              cashback = totalAmount * (cbValue / 100);
             }
 
             cashback = Math.round(cashback * 100) / 100;
