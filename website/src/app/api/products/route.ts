@@ -34,8 +34,13 @@ export async function GET(request: Request) {
     const showDisabled = searchParams.get('showDisabled') === 'true';
     if (showDisabled) {
       // Security: Only admins can bypass the isActive filter
-      const isAdmin = await verifyAdmin(request);
-      if (!isAdmin) {
+      try {
+        const isAdmin = await verifyAdmin(request);
+        if (!isAdmin) {
+          query.isActive = { $ne: false };
+        }
+      } catch (authErr) {
+        console.warn("[Products API] Admin check failed during fetch, defaulting to active only:", authErr);
         query.isActive = { $ne: false };
       }
     } else {
