@@ -12,7 +12,6 @@ export async function GET(request: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
     
-    // Fetch profile for balance
     const profile = await db.collection('users').findOne({ uid: user.uid });
     
     // Fetch transaction history
@@ -97,20 +96,10 @@ export async function POST(request: Request) {
       }
 
       items?.forEach((item: any, idx: number) => {
-        let isItemEligible = true;
+        let isItemEligible = true; 
         let reason = '';
 
-        const isGeneric = item.isGeneric === true || item.isGeneric === 'true';
-
-        // Apply rules
-        if (rules.allowGenericOnly && !isGeneric) {
-          isItemEligible = false;
-          reason = 'Generic products only';
-        }
-        if (rules.allowBrandedOnly && isGeneric) {
-          isItemEligible = false;
-          reason = 'Branded products only';
-        }
+        // Only block if rules specifically exclude this item
         if (rules.excludedCategories?.includes(item.category)) {
           isItemEligible = false;
           reason = `Category ${item.category} excluded`;
@@ -120,13 +109,18 @@ export async function POST(request: Request) {
           reason = 'Product excluded';
         }
 
-        console.log(`[Wallet Debug] Item #${idx} (${item.name}): isGeneric=${isGeneric}, eligible=${isItemEligible}, reason=${reason}`);
-
-        if (isItemEligible) {
-          const itemPercentage = Number(rules.maxPercentage || 20);
-          const maxAmountForItem = (Number(item.price) * Number(item.quantity || 1)) * (itemPercentage / 100);
-          eligibleTotal += maxAmountForItem;
-          console.log(`[Wallet Debug] Item #${idx} contributing ₹${maxAmountForItem} (${itemPercentage}%) to eligibleTotal`);
+        // Log for debugging
+        if (!isItemEligible) {
+          console.log(`[Wallet Blocked] Item ${item.name} blocked: ${reason}`);
+        } else {
+          const itemPercentage = Number(rules.maxPercentage || 100); 
+          const itemPrice = Number(item.price || 0);
+          const itemQty = Number(item.quantity || 1);
+          
+          const contribution = (itemPrice * itemQty) * (itemPercentage / 100);
+          eligibleTotal += contribution;
+          
+          console.log(`[Wallet Debug] Item: ${item.name}, Price: ${itemPrice}, Qty: ${itemQty}, Contributing: ${contribution}`);
         }
       });
 
