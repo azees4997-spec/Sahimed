@@ -545,6 +545,7 @@ export async function PUT(req: Request) {
               }
 
               if (cashbackAmount > 0) {
+                console.log(`[Cashback Engine] Provisioning ₹${cashbackAmount} for Order #${currentOrder.orderId}`);
                 // 1. Credit MongoDB Wallet
                 await db.collection('users').updateOne(
                   { uid: currentOrder.userId },

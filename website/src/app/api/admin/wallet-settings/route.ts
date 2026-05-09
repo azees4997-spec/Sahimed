@@ -19,11 +19,11 @@ export async function GET(request: Request) {
       excludedCategories: ['Health Devices'],
       excludedProducts: [],
       excludedCustomers: [],
-      minWalletBalance: 500,
-      isCashbackEnabled: false,
+      minWalletBalance: 0,
+      isCashbackEnabled: true,
       cashbackType: 'percentage',
       cashbackValue: 5,
-      minOrderAmountForCashback: 500
+      minOrderAmountForCashback: 0
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
