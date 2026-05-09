@@ -92,12 +92,11 @@ export default async function Home() {
                       <div className="w-3 h-3 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
                         <ShieldCheck className="w-2 h-2 text-white" />
                       </div>
-                      <span className="text-slate-800 font-black uppercase tracking-[0.1em] text-[8px] sm:text-[9px]">Trusted by 10L+ users</span>
+                      <span className="text-slate-800 font-black uppercase tracking-[0.1em] text-[8px] sm:text-[9px]">Trusted Quality</span>
                     </div>
                     <h1 className="text-xl sm:text-5xl font-black leading-[1.1] tracking-tighter text-slate-900 font-outfit uppercase">
-                      Affordable <br/>
-                      Solutions for <br/>
-                      <span className="text-primary italic">Everyday Care</span>
+                      Affordable Medicines <br/>
+                      <span className="text-primary italic">for Everyday Health</span>
                     </h1>
                   </div>
                 </div>

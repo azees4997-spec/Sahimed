@@ -711,8 +711,8 @@ export default function Navbar() {
                 </div>
               </Link>
               
-              {/* User Menu */}
-              <div className="flex items-center">
+              {/* User Menu - Desktop Only */}
+              <div className="hidden sm:flex items-center">
                 {user ? (
                   <Popover>
                     <PopoverTrigger asChild>
@@ -727,7 +727,7 @@ export default function Navbar() {
                         <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-black shadow-sm group-hover:scale-110 transition-transform">
                           {user.email?.[0].toUpperCase() || <User className="w-3.5 h-3.5" />}
                         </div>
-                        <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline-block">Profile</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest hidden lg:inline-block">Profile</span>
                         <ChevronDown className="w-3 h-3 opacity-30 group-hover:opacity-100 transition-opacity" />
                       </button>
                     </PopoverTrigger>

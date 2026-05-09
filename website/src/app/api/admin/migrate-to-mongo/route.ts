@@ -21,60 +21,77 @@ export async function POST(req: Request) {
       }, { status: 500 });
     }
 
-    console.log("[Migration] Starting full Firestore -> MongoDB sync...");
+    console.log("[Migration] Starting full Auth -> Firestore -> MongoDB sync...");
 
-    const usersSnap = await firestore.collection('userProfiles').get();
-    let migratedCount = 0;
-    let addressCount = 0;
-
-    for (const userDoc of usersSnap.docs) {
-      const uid = userDoc.id;
-      const data = userDoc.data();
-
-      // 1. Mirror Profile
-      const mongoUserData = {
-        uid: uid,
-        name: data.name || null,
-        email: data.email || null,
-        phone: data.phone || null,
-        phoneNumber: data.phone || null,
-        walletBalance: data.walletBalance || 0,
-        tags: data.tags || [],
-        authCreated: data.authCreated || null,
-        authLastSignIn: data.authLastSignIn || null,
-        updatedAt: new Date(),
-      };
-
-      await db.collection('users').updateOne(
-        { uid: uid },
-        { $set: mongoUserData },
-        { upsert: true }
-      );
-      migratedCount++;
-
-      // 2. Mirror Addresses
-      const addressesSnap = await firestore.collection('userProfiles').doc(uid).collection('addresses').get();
-      for (const addrDoc of addressesSnap.docs) {
-        const addr = addrDoc.data();
-        const addressData = {
-          ...addr,
-          userId: uid,
-          phoneNumber: mongoUserData.phoneNumber,
-          firestoreId: addrDoc.id,
-          updatedAt: new Date(),
-          timestamp: addr.createdAt?.toDate?.() || new Date()
-        };
-
-        await db.collection('addresses').updateOne(
-          { firestoreId: addrDoc.id },
-          { $set: addressData },
-          { upsert: true }
-        );
-        addressCount++;
-      }
+    const authAdmin = getAuthAdmin();
+    if (!authAdmin) {
+      return NextResponse.json({ error: "Auth Admin missing" }, { status: 500 });
     }
 
-    console.log(`[Migration] Finished. Users: ${migratedCount}, Addresses: ${addressCount}`);
+    let migratedCount = 0;
+    let addressCount = 0;
+    let nextPageToken: string | undefined;
+
+    do {
+      const listUsersResult = await authAdmin.listUsers(100, nextPageToken);
+      
+      for (const userRecord of listUsersResult.users) {
+        const uid = userRecord.uid;
+        
+        // 1. Get Firestore Profile
+        const userDoc = await firestore.collection('userProfiles').doc(uid).get();
+        const data = userDoc.exists ? userDoc.data() : {};
+
+        // 2. Prepare MongoDB User Data (Merges Auth + Firestore)
+        const mongoUserData = {
+          uid: uid,
+          name: data?.name || userRecord.displayName || null,
+          email: data?.email || userRecord.email || null,
+          phone: data?.phone || userRecord.phoneNumber || null,
+          phoneNumber: data?.phone || userRecord.phoneNumber || null,
+          walletBalance: data?.walletBalance || 0,
+          tags: data?.tags || [],
+          authCreated: data?.authCreated || userRecord.metadata.creationTime || null,
+          authLastSignIn: data?.authLastSignIn || userRecord.metadata.lastSignInTime || null,
+          updatedAt: new Date(),
+        };
+
+        // 3. Sync to MongoDB
+        await db.collection('users').updateOne(
+          { uid: uid },
+          { $set: mongoUserData },
+          { upsert: true }
+        );
+        migratedCount++;
+
+        // 4. Sync Addresses if profile exists
+        if (userDoc.exists) {
+          const addressesSnap = await firestore.collection('userProfiles').doc(uid).collection('addresses').get();
+          for (const addrDoc of addressesSnap.docs) {
+            const addr = addrDoc.data();
+            const addressData = {
+              ...addr,
+              userId: uid,
+              phoneNumber: mongoUserData.phoneNumber,
+              firestoreId: addrDoc.id,
+              updatedAt: new Date(),
+              timestamp: addr.createdAt?.toDate?.() || new Date()
+            };
+
+            await db.collection('addresses').updateOne(
+              { firestoreId: addrDoc.id },
+              { $set: addressData },
+              { upsert: true }
+            );
+            addressCount++;
+          }
+        }
+      }
+      
+      nextPageToken = listUsersResult.pageToken;
+    } while (nextPageToken);
+
+    console.log(`[Migration] Finished. Total Auth Users: ${migratedCount}, Addresses: ${addressCount}`);
     return NextResponse.json({ 
       success: true, 
       usersMigrated: migratedCount, 

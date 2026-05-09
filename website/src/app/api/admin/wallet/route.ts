@@ -1,4 +1,9 @@
+import { NextResponse } from 'next/server';
+import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
+import { getDbAdmin } from '@/lib/firebase-admin';
+
+
 
 export async function GET(request: Request) {
   try {
@@ -29,12 +34,27 @@ export async function POST(request: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
 
-    // Update balance
+    // Update balance in MongoDB
     await db.collection('users').updateOne(
       { uid: userId },
       { $inc: { walletBalance: amount } },
       { upsert: true }
     );
+
+    // Sync to Firestore for real-time app reflection
+    try {
+      const firestore = getDbAdmin();
+      const userRef = firestore.collection('userProfiles').doc(userId);
+      const doc = await userRef.get();
+      const currentFsBalance = doc.exists ? (doc.data()?.walletBalance || 0) : 0;
+      await userRef.set({ 
+        walletBalance: currentFsBalance + amount 
+      }, { merge: true });
+    } catch (fsErr) {
+      console.error("[Admin Wallet Sync Error]", fsErr);
+      // We continue since MongoDB is the primary source for the clinical matrix
+    }
+
 
     // Record transaction
     await db.collection('walletTransactions').insertOne({

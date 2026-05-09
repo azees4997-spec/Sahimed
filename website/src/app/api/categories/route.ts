@@ -12,8 +12,12 @@ export async function GET(request: Request) {
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
+    
+    // Get list of categories that have at least one active product
+    const activeCategories = await db.collection('products').distinct('category', { isActive: { $ne: false } });
+
     const categories = await db.collection('categories')
-      .find({})
+      .find({ _id: { $in: activeCategories } })
       .sort({ name: 1 })
       .limit(limitValue)
       .toArray();

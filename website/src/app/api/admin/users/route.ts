@@ -41,7 +41,10 @@ export async function GET(req: Request) {
 
     return NextResponse.json(users);
   } catch (err: any) {
-    console.error("[Admin Users API Error]", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const errorMessage = err.message || "Unknown administrative error";
+    const status = errorMessage.includes('Unauthorized') ? 401 : 
+                   errorMessage.includes('Forbidden') ? 403 : 500;
+    
+    return NextResponse.json({ error: errorMessage }, { status });
   }
 }

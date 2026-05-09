@@ -32,7 +32,13 @@ export async function GET(request: Request) {
     
     // Filter out disabled products by default
     const showDisabled = searchParams.get('showDisabled') === 'true';
-    if (!showDisabled) {
+    if (showDisabled) {
+      // Security: Only admins can bypass the isActive filter
+      const isAdmin = await verifyAdmin(request);
+      if (!isAdmin) {
+        query.isActive = { $ne: false };
+      }
+    } else {
       query.isActive = { $ne: false };
     }
     if (category) {

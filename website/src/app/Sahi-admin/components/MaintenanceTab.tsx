@@ -39,7 +39,12 @@ export function MaintenanceTab({ onBack }: { onBack: () => void }) {
 
   const checkCounts = async () => {
     try {
-      const res = await fetch('/api/admin/stats');
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) return;
+
+      const res = await fetch('/api/admin/stats', {
+        headers: { 'Authorization': `Bearer ${idToken}` }
+      });
       if (res.ok) {
         const data = await res.json();
         setCounts(prev => ({ ...prev, mg: data.users }));

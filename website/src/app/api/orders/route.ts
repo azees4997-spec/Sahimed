@@ -232,6 +232,27 @@ export async function POST(req: Request) {
       }, { status: 409 });
     }
 
+    // 3.7. PRICE INTEGRITY CHECK: Recalculate total from DB prices
+    const itemIds = (body.items || []).map((it: any) => it.medicineId || it.id).filter(Boolean);
+    const dbProducts = await db.collection('products').find({ _id: { $in: itemIds } }).toArray();
+    
+    let calculatedSubtotal = 0;
+    (body.items || []).forEach((item: any) => {
+      const dbProduct = dbProducts.find(p => p._id.toString() === (item.medicineId || item.id));
+      const price = dbProduct?.price || Number(item.unitPrice || item.price || 0);
+      calculatedSubtotal += price * Number(item.quantity || 1);
+    });
+
+    const expectedTotal = calculatedSubtotal - Number(body.walletUsed || 0) - Number(body.discountAmount || 0);
+    // Allow for a 1 rupee rounding tolerance
+    if (Math.abs(expectedTotal - Number(body.totalAmount)) > 1 && !isAdmin) {
+      return NextResponse.json({ 
+        error: "Price discrepancy detected. Your cart has been updated.",
+        expected: expectedTotal,
+        received: body.totalAmount
+      }, { status: 400 });
+    }
+
 
     // 4. Clinical Status Logic: Check if any items require a prescription
     const hasRxItems = (body.items || []).some((it: any) => it.prescriptionRequired === true);
@@ -251,13 +272,40 @@ export async function POST(req: Request) {
       'userId', 'patientName', 'phoneNumber', 'shippingDetails', 'billingBreakdown', 
       'items', 'totalAmount', 'prescriptionUrls', 'isConsultationRequired', 
       'clinicalPath', 'couponCode', 'discountAmount', 'paymentType', 
-      'paymentId', 'razorpayOrderId', 'signature'
+      'paymentId', 'razorpayOrderId', 'signature', 'walletUsed'
     ];
     
     const sanitizedBody: any = {};
     allowedFields.forEach(field => {
       if (body[field] !== undefined) sanitizedBody[field] = body[field];
     });
+
+    // 2.5. Handle Wallet Usage with strict server-side validation
+    const walletUsed = Number(body.walletUsed || 0);
+    if (walletUsed > 0) {
+      const mongoUser = await db.collection('users').findOne({ uid: user.uid });
+      const currentBalance = mongoUser?.walletBalance || 0;
+      
+      if (currentBalance < walletUsed) {
+        return NextResponse.json({ error: "Insufficient wallet balance" }, { status: 400 });
+      }
+
+      // Deduct immediately
+      await db.collection('users').updateOne(
+        { uid: user.uid },
+        { $inc: { walletBalance: -walletUsed } }
+      );
+
+      // Record transaction
+      await db.collection('walletTransactions').insertOne({
+        userId: user.uid,
+        type: 'debit',
+        amount: walletUsed,
+        description: `Used for Order #${nextId}`,
+        orderId: nextId,
+        timestamp: new Date()
+      });
+    }
 
     const orderData = {
       ...sanitizedBody,
@@ -282,7 +330,10 @@ export async function POST(req: Request) {
             name: it.name,
             quantity: it.quantity,
             price: Number(it.unitPrice || it.price),
-            sku: it.productId || it.name
+            sku: it.productId || it.name,
+            brand: it.brand || '',
+            imageUrl: it.imageUrl || '',
+            category: it.category || 'General'
           })),
           warehouseId: '93743', 
           shippingDetails: {

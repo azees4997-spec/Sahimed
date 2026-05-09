@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from 'react';
+import Script from 'next/script';
+
 
 declare global {
   interface Window {
@@ -23,6 +25,7 @@ import {
   Home, 
   ArrowRight, 
   Check,
+  Wallet,
   Briefcase,
   Plus,
   Tag,
@@ -466,6 +469,9 @@ export default function CheckoutPage() {
         unitPrice: item.price,
         mrp: item.mrp || item.price + 50,
         name: item.name,
+        brand: item.brand || '',
+        imageUrl: item.imageUrl || '',
+        category: item.category || 'General',
         prescriptionRequired: item.prescriptionRequired || false
       })),
       billingBreakdown: {
@@ -640,7 +646,13 @@ export default function CheckoutPage() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
-        <Navbar />
+      <Navbar />
+      <Script
+        src="https://securegw-stage.paytm.in/merchantpgpui/checkoutjs/merchants/CFehFB20400052473723.js"
+        strategy="afterInteractive"
+        crossOrigin="anonymous"
+      />
+
         <main className="max-w-7xl mx-auto px-4 py-12 md:py-20">
           <motion.div 
             initial={{ y: -20, opacity: 0 }}
@@ -1020,7 +1032,7 @@ export default function CheckoutPage() {
                       <span>₹{feeTotal.toFixed(2)}</span>
                     </div>
                   )}
-                  {allowableWallet > 0 && (
+                  {useWallet && allowableWallet > 0 && (
                     <div className="flex justify-between text-xs sm:text-sm font-bold text-emerald-500 uppercase tracking-widest">
                       <span>SahiWallet Discount</span>
                       <span>-₹{allowableWallet.toFixed(2)}</span>
@@ -1032,29 +1044,41 @@ export default function CheckoutPage() {
                     <span className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit">₹{Math.max(0, finalPayable - (useWallet ? allowableWallet : 0)).toFixed(2)}</span>
                   </div>
 
-                  {allowableWallet > 0 && (
+                  {user && (
                     <div className="pt-6">
                       <div 
-                        onClick={() => setUseWallet(!useWallet)}
+                        onClick={() => {
+                          if (allowableWallet > 0) {
+                            setUseWallet(!useWallet);
+                          } else {
+                            toast({
+                              title: "Wallet Unavailable",
+                              description: walletBalance > 0 ? "No eligible items in cart for wallet discount." : "Your wallet balance is ₹0."
+                            });
+                          }
+                        }}
                         className={cn(
-                          "p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between",
-                          useWallet ? "border-primary bg-primary/5" : "border-slate-100 bg-slate-50"
+                          "p-4 rounded-2xl border-2 transition-all flex items-center justify-between",
+                          useWallet ? "border-primary bg-primary/5" : "border-slate-100 bg-slate-50",
+                          allowableWallet <= 0 && "opacity-60 cursor-not-allowed"
                         )}
                       >
                          <div className="flex items-center gap-3">
                            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", useWallet ? "bg-primary text-white" : "bg-white text-slate-400")}>
-                             <Banknote className="w-4 h-4" />
+                             <Wallet className="w-4 h-4" />
                            </div>
                            <div className="text-left">
-                             <p className="text-[10px] font-black uppercase tracking-tight">Use Wallet Balance</p>
-                             <p className="text-[9px] font-bold text-slate-400 uppercase">Available: ₹{walletBalance}</p>
+                             <p className="text-[10px] font-black uppercase tracking-tight">SahiWallet Balance</p>
+                             <p className="text-[9px] font-bold text-slate-400 uppercase">
+                               {walletBalance > 0 ? `Available: ₹${walletBalance}` : "Balance: ₹0"}
+                             </p>
                            </div>
                          </div>
                          <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", useWallet ? "bg-primary border-primary" : "border-slate-300")}>
                            {useWallet && <Check className="w-3 h-3 text-white" />}
                          </div>
                       </div>
-                      {walletReason && (
+                      {walletReason && allowableWallet <= 0 && (
                         <p className="text-[8px] font-black text-rose-500 uppercase mt-2 text-center tracking-widest">{walletReason}</p>
                       )}
                     </div>
