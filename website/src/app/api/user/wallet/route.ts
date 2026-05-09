@@ -76,18 +76,32 @@ export async function POST(request: Request) {
       let eligibleTotal = 0;
       const cartItems = items || [];
       
+      // PRE-FETCH product details to ensure we have the correct isGeneric status
+      const itemIds = cartItems.map((it: any) => it.id).filter(Boolean);
+      const dbProducts = await db.collection('products').find({ id: { $in: itemIds } }).toArray();
+      const productMap = new Map(dbProducts.map(p => [p.id, p]));
+
       cartItems.forEach((item: any) => {
         // DEFAULT TO ELIGIBLE (Relaxed Rule)
         let isEligible = true;
+
+        // Get fresh data from DB if possible
+        const dbProduct = productMap.get(item.id);
+        const actualIsGeneric = dbProduct ? (dbProduct.isGeneric === true || dbProduct.isGeneric === 'true') : (item.isGeneric === true || item.isGeneric === 'true');
 
         // Only exclude if explicitly found in exclusion lists
         if (rules.excludedCategories?.length > 0 && rules.excludedCategories.includes(item.category)) isEligible = false;
         if (rules.excludedProducts?.length > 0 && rules.excludedProducts.includes(item.name)) isEligible = false;
         
         // Branded/Generic check (New 4-Way Granular Logic)
-        const isGeneric = item.isGeneric === true || item.isGeneric === 'true';
-        if (isGeneric && rules.enableGenericUse === false) isEligible = false;
-        if (!isGeneric && rules.enableBrandedUse === false) isEligible = false;
+        if (actualIsGeneric && rules.enableGenericUse === false) {
+          isEligible = false;
+          console.log(`[Wallet V2] Skipping Generic item: ${item.name}`);
+        }
+        if (!actualIsGeneric && rules.enableBrandedUse === false) {
+          isEligible = false;
+          console.log(`[Wallet V2] Skipping Branded item: ${item.name}`);
+        }
 
         if (isEligible) {
           const itemTotal = (Number(item.price || 0) * Number(item.quantity || 1));
