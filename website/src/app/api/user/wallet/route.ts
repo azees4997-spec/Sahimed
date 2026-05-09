@@ -101,18 +101,26 @@ export async function POST(request: Request) {
           isItemEligible = false;
         }
 
-        // 2. Product Restriction
-        if (item.name && rules.excludedProducts?.includes(item.name)) {
-          isItemEligible = false;
-        }
-
-        // 3. Branded/Generic Restriction
         const isGeneric = item.isGeneric === true || item.isGeneric === 'true';
+        let isItemEligible = true;
+        let reason = '';
+
+        // Apply rules
         if (rules.allowGenericOnly && !isGeneric) {
           isItemEligible = false;
+          reason = 'Generic products only';
         }
         if (rules.allowBrandedOnly && isGeneric) {
           isItemEligible = false;
+          reason = 'Branded products only';
+        }
+        if (rules.excludedCategories?.includes(item.category)) {
+          isItemEligible = false;
+          reason = `Category ${item.category} excluded`;
+        }
+        if (rules.excludedProducts?.includes(item.id)) {
+          isItemEligible = false;
+          reason = 'Product excluded';
         }
 
         if (isItemEligible) {

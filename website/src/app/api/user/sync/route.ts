@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
-import { verifyAuth } from '@/lib/auth-utils';
+import { verifyAuth, verifyAdmin } from '@/lib/auth-utils';
 import { getDbAdmin } from '@/lib/firebase-admin';
 
 /**
