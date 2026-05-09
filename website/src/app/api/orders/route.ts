@@ -290,13 +290,28 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Insufficient wallet balance" }, { status: 400 });
       }
 
-      // Deduct immediately
+      // Deduct immediately in MongoDB
       await db.collection('users').updateOne(
         { uid: user.uid },
         { $inc: { walletBalance: -walletUsed } }
       );
 
-      // Record transaction
+      // --- SYNC TO FIRESTORE (for App/Frontend visibility) ---
+      try {
+        const { getDbAdmin } = await import('@/lib/firebase-admin');
+        const dbAdmin = getDbAdmin();
+        const userRef = dbAdmin.doc(`userProfiles/${user.uid}`);
+        const userDoc = await userRef.get();
+        const currentFsBalance = userDoc.exists ? (userDoc.data()?.walletBalance || 0) : 0;
+        
+        await userRef.set({ 
+          walletBalance: Math.max(0, currentFsBalance - walletUsed)
+        }, { merge: true });
+      } catch (fsErr: any) {
+        console.error("[Wallet Sync Error]", fsErr.message);
+      }
+
+      // Record transaction in MongoDB
       await db.collection('walletTransactions').insertOne({
         userId: user.uid,
         type: 'debit',
