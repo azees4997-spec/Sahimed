@@ -320,6 +320,12 @@ export async function POST(req: Request) {
         orderId: nextId,
         timestamp: new Date()
       });
+
+      // UPDATE: Subtract from MongoDB User Balance
+      await db.collection('users').updateOne(
+        { uid: user.uid },
+        { $inc: { walletBalance: -walletUsed } }
+      );
     }
 
     const orderData = {
