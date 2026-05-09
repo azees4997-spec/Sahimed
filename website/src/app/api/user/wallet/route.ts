@@ -102,7 +102,6 @@ export async function POST(request: Request) {
         }
 
         const isGeneric = item.isGeneric === true || item.isGeneric === 'true';
-        let isItemEligible = true;
         let reason = '';
 
         // Apply rules
