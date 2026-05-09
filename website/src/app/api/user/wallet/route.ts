@@ -77,6 +77,9 @@ export async function POST(request: Request) {
         minWalletBalance: 0
       };
 
+      console.log("[Wallet Debug] Rules:", JSON.stringify(rules));
+      console.log("[Wallet Debug] Current Balance:", balance);
+
       // 0. Customer Restriction Check
       if (rules.excludedCustomers?.includes(user.uid)) {
         return NextResponse.json({ 
@@ -93,16 +96,11 @@ export async function POST(request: Request) {
         console.warn("[Wallet] No valid items array provided for validation");
       }
 
-      items?.forEach((item: any) => {
+      items?.forEach((item: any, idx: number) => {
         let isItemEligible = true;
-
-        // 1. Category Restriction
-        if (item.category && rules.excludedCategories?.includes(item.category)) {
-          isItemEligible = false;
-        }
+        let reason = '';
 
         const isGeneric = item.isGeneric === true || item.isGeneric === 'true';
-        let reason = '';
 
         // Apply rules
         if (rules.allowGenericOnly && !isGeneric) {
@@ -122,12 +120,17 @@ export async function POST(request: Request) {
           reason = 'Product excluded';
         }
 
+        console.log(`[Wallet Debug] Item #${idx} (${item.name}): isGeneric=${isGeneric}, eligible=${isItemEligible}, reason=${reason}`);
+
         if (isItemEligible) {
-          eligibleTotal += ((item.price || 0) * (item.quantity || 1));
+          const itemPercentage = Number(rules.maxPercentage || 20);
+          const maxAmountForItem = (Number(item.price) * Number(item.quantity || 1)) * (itemPercentage / 100);
+          eligibleTotal += maxAmountForItem;
+          console.log(`[Wallet Debug] Item #${idx} contributing ₹${maxAmountForItem} (${itemPercentage}%) to eligibleTotal`);
         }
       });
 
-      console.log(`[Wallet] Eligible Total: ${eligibleTotal}`);
+      console.log("[Wallet Debug] Final Eligible Total:", eligibleTotal);
 
       if (eligibleTotal <= 0) {
         return NextResponse.json({ 
