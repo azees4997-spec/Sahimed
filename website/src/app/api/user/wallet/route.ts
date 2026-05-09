@@ -68,27 +68,42 @@ export async function POST(request: Request) {
 
     // --- ACTION: VALIDATE USAGE (Pre-Checkout) ---
     if (action === 'validate_use') {
-      if (currentBalance <= 0) return NextResponse.json({ allowable: 0, reason: 'Balance is zero' });
-      if (rules.excludedCustomers?.includes(user.uid)) return NextResponse.json({ allowable: 0, reason: 'Account restricted' });
+      console.log(`[Wallet V2] Validating for User: ${user.uid}. Balance: ₹${currentBalance}`);
+      
+      if (currentBalance <= 0) return NextResponse.json({ allowable: 0, currentBalance: 0, reason: 'Balance is zero' });
+      if (rules.excludedCustomers?.includes(user.uid)) return NextResponse.json({ allowable: 0, currentBalance, reason: 'Account restricted' });
 
       let eligibleTotal = 0;
       const cartItems = items || [];
       
       cartItems.forEach((item: any) => {
+        // DEFAULT TO ELIGIBLE (Relaxed Rule)
         let isEligible = true;
-        if (rules.excludedCategories?.includes(item.category)) isEligible = false;
-        if (rules.excludedProducts?.includes(item.name)) isEligible = false;
+
+        // Only exclude if explicitly found in exclusion lists
+        if (rules.excludedCategories?.length > 0 && rules.excludedCategories.includes(item.category)) isEligible = false;
+        if (rules.excludedProducts?.length > 0 && rules.excludedProducts.includes(item.name)) isEligible = false;
         
+        // Branded/Generic check (Only if strictly enabled)
         const isGeneric = item.isGeneric === true || item.isGeneric === 'true';
         if (rules.allowGenericOnly && !isGeneric) isEligible = false;
         if (rules.allowBrandedOnly && isGeneric) isEligible = false;
 
         if (isEligible) {
-          eligibleTotal += (Number(item.price || 0) * Number(item.quantity || 1));
+          const itemTotal = (Number(item.price || 0) * Number(item.quantity || 1));
+          eligibleTotal += itemTotal;
         }
       });
 
-      if (eligibleTotal <= 0) return NextResponse.json({ allowable: 0, reason: 'No eligible items' });
+      console.log(`[Wallet V2] Eligible Total for discount: ₹${eligibleTotal}`);
+
+      if (eligibleTotal <= 0) {
+        return NextResponse.json({ 
+          allowable: 0, 
+          currentBalance, 
+          reason: 'Items not eligible for wallet discount' 
+        });
+      }
 
       // Small Balance Rule: Allow 100% redemption
       if (currentBalance < (rules.minWalletBalance || 500)) {

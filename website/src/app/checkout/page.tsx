@@ -1013,34 +1013,53 @@ export default function CheckoutPage() {
                             setUseWallet(!useWallet);
                           } else {
                             toast({
-                              title: "Wallet Unavailable",
-                              description: walletBalance > 0 ? "No eligible items in cart for wallet discount." : "Your wallet balance is ₹0."
+                              title: "Wallet Strategy",
+                              description: walletBalance > 0 
+                                ? "Items in your cart are not eligible for wallet redemption under current admin rules." 
+                                : "Your SahiWallet balance is currently ₹0."
                             });
                           }
                         }}
                         className={cn(
-                          "p-4 rounded-2xl border-2 transition-all flex items-center justify-between",
-                          useWallet ? "border-primary bg-primary/5" : "border-slate-100 bg-slate-50",
-                          allowableWallet <= 0 && "opacity-60 cursor-not-allowed"
+                          "p-5 rounded-[24px] border-2 transition-all flex items-center justify-between cursor-pointer group",
+                          useWallet ? "border-primary bg-primary/5 shadow-lg shadow-primary/5" : "border-slate-100 bg-white hover:border-primary/20 hover:shadow-xl",
+                          (allowableWallet <= 0 && walletBalance <= 0) && "opacity-60 cursor-not-allowed grayscale"
                         )}
                       >
-                         <div className="flex items-center gap-3">
-                           <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", useWallet ? "bg-primary text-white" : "bg-white text-slate-400")}>
-                             <Wallet className="w-4 h-4" />
+                         <div className="flex items-center gap-5">
+                           <div className={cn(
+                             "w-12 h-12 rounded-[18px] flex items-center justify-center transition-all", 
+                             useWallet ? "bg-primary text-white scale-110 shadow-lg shadow-primary/20" : "bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
+                           )}>
+                             <Wallet className="w-6 h-6" />
                            </div>
                            <div className="text-left">
-                             <p className="text-[10px] font-black uppercase tracking-tight">SahiWallet Balance</p>
-                             <p className="text-[9px] font-bold text-slate-400 uppercase">
-                               {walletBalance > 0 ? `Available: ₹${walletBalance}` : "Balance: ₹0"}
-                             </p>
+                             <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-900">SahiWallet Savings</p>
+                             <div className="flex items-center gap-2 mt-1">
+                               <p className="text-[10px] font-black text-primary uppercase">
+                                 Balance: ₹{walletBalance.toFixed(2)}
+                               </p>
+                               {allowableWallet > 0 && !useWallet && (
+                                 <span className="bg-emerald-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter animate-pulse">
+                                   Save ₹{allowableWallet.toFixed(2)}
+                                 </span>
+                               )}
+                             </div>
                            </div>
                          </div>
-                         <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", useWallet ? "bg-primary border-primary" : "border-slate-300")}>
-                           {useWallet && <Check className="w-3 h-3 text-white" />}
+                         <div className={cn(
+                           "w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all", 
+                           useWallet ? "bg-primary border-primary scale-110 shadow-lg shadow-primary/20" : "border-slate-200 bg-white"
+                         )}>
+                           {useWallet ? <Check className="w-4 h-4 text-white" /> : <Plus className="w-4 h-4 text-slate-200" />}
                          </div>
                       </div>
-                      {walletReason && allowableWallet <= 0 && (
-                        <p className="text-[8px] font-black text-rose-500 uppercase mt-2 text-center tracking-widest">{walletReason}</p>
+                      
+                      {walletReason && allowableWallet <= 0 && walletBalance > 0 && (
+                        <div className="mt-4 p-3 bg-rose-50 rounded-xl border border-rose-100 flex items-center gap-3">
+                           <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+                           <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest">{walletReason}</p>
+                        </div>
                       )}
                     </div>
                   )}
