@@ -553,9 +553,60 @@ export function WalletTab({ db, isVerified, onBack }: { db: any, isVerified: boo
                 <div className="w-16 h-16 bg-white/10 rounded-[24px] flex items-center justify-center border border-white/10">
                   <ShieldCheck className="w-8 h-8 text-white" />
                 </div>
-                <div>
-                  <h3 className="text-2xl font-black tracking-tight font-outfit uppercase">Commit Governance</h3>
-                  <p className="text-[10px] font-black text-white/40 tracking-widest uppercase mt-1">Rules will be applied to all live sessions instantly</p>
+                <div className="space-y-6">
+                  {/* USE RULES */}
+                  <div className="p-6 bg-slate-50 rounded-3xl space-y-4 border border-slate-100">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Wallet Usage Rules (Spending)</h4>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-black uppercase">Allow Generic Use</Label>
+                        <p className="text-[9px] text-slate-400 uppercase">Enable wallet spending on generics</p>
+                      </div>
+                      <Switch 
+                        checked={settings.enableGenericUse !== false} 
+                        onCheckedChange={(val) => setSettings({...settings, enableGenericUse: val})}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-black uppercase">Allow Branded Use</Label>
+                        <p className="text-[9px] text-slate-400 uppercase">Enable wallet spending on branded</p>
+                      </div>
+                      <Switch 
+                        checked={settings.enableBrandedUse !== false} 
+                        onCheckedChange={(val) => setSettings({...settings, enableBrandedUse: val})}
+                      />
+                    </div>
+                  </div>
+
+                  {/* CREDIT RULES */}
+                  <div className="p-6 bg-primary/5 rounded-3xl space-y-4 border border-primary/10">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-primary/60">Cashback Earning Rules (Credit)</h4>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-black uppercase">Generic Cashback Credit</Label>
+                        <p className="text-[9px] text-slate-400 uppercase">Earn rewards on generic items</p>
+                      </div>
+                      <Switch 
+                        checked={settings.enableGenericCredit !== false} 
+                        onCheckedChange={(val) => setSettings({...settings, enableGenericCredit: val})}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-black uppercase">Branded Cashback Credit</Label>
+                        <p className="text-[9px] text-slate-400 uppercase">Earn rewards on branded items</p>
+                      </div>
+                      <Switch 
+                        checked={settings.enableBrandedCredit !== false} 
+                        onCheckedChange={(val) => setSettings({...settings, enableBrandedCredit: val})}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black tracking-tight font-outfit uppercase">Commit Governance</h3>
+                    <p className="text-[10px] font-black text-white/40 tracking-widest uppercase mt-1">Rules will be applied to all live sessions instantly</p>
+                  </div>
                 </div>
               </div>
               <Button 

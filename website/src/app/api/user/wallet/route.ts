@@ -84,10 +84,10 @@ export async function POST(request: Request) {
         if (rules.excludedCategories?.length > 0 && rules.excludedCategories.includes(item.category)) isEligible = false;
         if (rules.excludedProducts?.length > 0 && rules.excludedProducts.includes(item.name)) isEligible = false;
         
-        // Branded/Generic check (Only if strictly enabled)
+        // Branded/Generic check (New 4-Way Granular Logic)
         const isGeneric = item.isGeneric === true || item.isGeneric === 'true';
-        if (rules.allowGenericOnly && !isGeneric) isEligible = false;
-        if (rules.allowBrandedOnly && isGeneric) isEligible = false;
+        if (isGeneric && rules.enableGenericUse === false) isEligible = false;
+        if (!isGeneric && rules.enableBrandedUse === false) isEligible = false;
 
         if (isEligible) {
           const itemTotal = (Number(item.price || 0) * Number(item.quantity || 1));

@@ -514,20 +514,35 @@ export async function PUT(req: Request) {
         const isCashbackEnabled = settings?.isCashbackEnabled !== false; // Default to true if missing
         
         if (isCashbackEnabled) {
-          // UNIVERSAL CASHBACK: Use the total amount of the order for calculation
-          const totalAmount = Number(currentOrder.totalAmount || 0);
-          const minOrder = Number(settings?.minOrderAmountForCashback || 0);
+          let eligibleTotal = 0;
+          const items = currentOrder.items || [];
           
-          console.log(`[Cashback V2] Order Total: ₹${totalAmount} | Min Required: ₹${minOrder}`);
+          items.forEach((item: any) => {
+            let isEligible = true;
+            if (settings?.excludedCategories?.includes(item.category)) isEligible = false;
+            if (settings?.excludedProducts?.includes(item.name)) isEligible = false;
+            
+            // New 4-Way Credit Logic
+            const isGeneric = item.isGeneric === true || item.isGeneric === 'true';
+            if (isGeneric && settings?.enableGenericCredit === false) isEligible = false;
+            if (!isGeneric && settings?.enableBrandedCredit === false) isEligible = false;
 
-          if (totalAmount >= minOrder) {
+            if (isEligible) {
+              eligibleTotal += (Number(item.unitPrice || item.price || 0) * Number(item.quantity || 1));
+            }
+          });
+
+          const minOrder = Number(settings?.minOrderAmountForCashback || 0);
+          console.log(`[Cashback V2] Eligible Total: ₹${eligibleTotal} | Min Required: ₹${minOrder}`);
+
+          if (eligibleTotal >= minOrder) {
             const cbValue = Number(settings?.cashbackValue || 5);
             let cashback = 0;
             
             if (settings?.cashbackType === 'fixed') {
               cashback = cbValue;
             } else {
-              cashback = totalAmount * (cbValue / 100);
+              cashback = eligibleTotal * (cbValue / 100);
             }
 
             cashback = Math.round(cashback * 100) / 100;
