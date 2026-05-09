@@ -28,18 +28,23 @@ export async function POST(req: Request) {
     const db = client.db('sahimed');
 
     const status = body.STATUS;
-    const orderId = body.ORDERID;
+    const paytmOrderId = body.ORDERID;
     const txnId = body.TXNID;
 
+    // Extract baseOrderId (strip -P suffix if exists)
+    const baseOrderId = paytmOrderId.includes('-P') ? paytmOrderId.split('-P')[0] : paytmOrderId;
+
     if (status === 'TXN_SUCCESS') {
+      console.log(`[Paytm Success] Updating Order: ${baseOrderId} with Paytm ID: ${paytmOrderId}`);
+      
       // 1. Update Order in MongoDB
       await db.collection('orders').updateOne(
-        { orderId: orderId },
+        { orderId: baseOrderId },
         { 
           $set: { 
             status: 'Confirmed', 
             paymentId: txnId,
-            paytmOrderId: orderId,
+            paytmOrderId: paytmOrderId,
             updatedAt: new Date(),
             paymentStatus: 'Paid'
           } 
@@ -48,11 +53,11 @@ export async function POST(req: Request) {
 
       // 2. Sync to Firestore (Real-time update for App)
       try {
-        const order = await db.collection('orders').findOne({ orderId: orderId });
+        const order = await db.collection('orders').findOne({ orderId: baseOrderId });
         if (order && order.userId) {
           const { getDbAdmin } = await import('@/lib/firebase-admin');
           const dbAdmin = getDbAdmin();
-          await dbAdmin.doc(`userProfiles/${order.userId}/orders/${orderId}`).set({
+          await dbAdmin.doc(`userProfiles/${order.userId}/orders/${baseOrderId}`).set({
             status: 'Confirmed',
             paymentId: txnId,
             updatedAt: new Date()
@@ -63,11 +68,11 @@ export async function POST(req: Request) {
       }
 
       // Redirect to success page
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/orders/success?id=${orderId}`, 303);
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/orders/success?id=${baseOrderId}`, 303);
     } else {
       // Update Order as Failed
       await db.collection('orders').updateOne(
-        { orderId: orderId },
+        { orderId: baseOrderId },
         { $set: { status: 'Payment Failed', updatedAt: new Date() } }
       );
       

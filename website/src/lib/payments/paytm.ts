@@ -48,12 +48,13 @@ export class PaytmService {
   static async initiateTransaction(orderId: string, amount: number, userId: string, host?: string, channel: 'WEB' | 'WAP' = 'WEB') {
     // Dynamic callback URL based on current host if available, fallback to env
     const baseUrl = host ? `https://${host}` : (process.env.NEXT_PUBLIC_APP_URL || 'https://sahimed.com');
+    const cleanOrderId = orderId.replace(/[^a-zA-Z0-9_-]/g, '');
+    const uniqueOrderId = `${cleanOrderId}-P${Date.now().toString().slice(-6)}`;
     const callbackUrl = `${baseUrl}/api/paytm/callback`;
     
-    const cleanOrderId = orderId.replace(/[^a-zA-Z0-9_-]/g, '');
     const cleanCustId = userId.replace(/[^a-zA-Z0-9_-]/g, '');
     
-    console.log(`[Paytm] Initiating ${this.ENV} transaction. Order: ${cleanOrderId}, Host: ${baseUrl}`);
+    console.log(`[Paytm] Initiating ${this.ENV} transaction. Original Order: ${cleanOrderId}, Paytm Order: ${uniqueOrderId}`);
 
     // Helper to ensure deterministic JSON stringification
     const sortObject = (obj: any): any => {
@@ -69,11 +70,11 @@ export class PaytmService {
       "requestType": "Payment",
       "mid": this.MID,
       "websiteName": this.WEBSITE,
-      "orderId": cleanOrderId,
+      "orderId": uniqueOrderId,
       "callbackUrl": callbackUrl,
       "industryTypeId": "Retail",
       "txnAmount": {
-        "value": Number(amount).toFixed(2),
+        "value": Number(amount).toFixed(2).toString(),
         "currency": "INR",
       },
       "userInfo": {
@@ -98,7 +99,7 @@ export class PaytmService {
       };
 
       const post_data = JSON.stringify(paytmParams);
-      const url = `https://${this.HOST}/theia/api/v1/initiateTransaction?mid=${this.MID}&orderId=${cleanOrderId}`;
+      const url = `https://${this.HOST}/theia/api/v1/initiateTransaction?mid=${this.MID}&orderId=${uniqueOrderId}`;
 
       const response = await fetch(url, {
         method: 'POST',
@@ -118,6 +119,10 @@ export class PaytmService {
           result.body.resultInfo.system_mid = this.MID;
         }
         console.log(`[Paytm Response]`, JSON.stringify(result));
+        // Include the uniqueOrderId used for this attempt
+        if (result.body) {
+          result.body.uniqueOrderId = uniqueOrderId;
+        }
         return result;
       } else {
         const text = await response.text();
