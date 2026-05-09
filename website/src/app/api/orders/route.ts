@@ -526,18 +526,33 @@ export async function PUT(req: Request) {
               items.forEach((item: any) => {
                 let isItemEligible = true;
 
-                if (settings.excludedCategories?.includes(item.category)) isItemEligible = false;
-                if (settings.excludedProducts?.includes(item.name)) isItemEligible = false;
+                // 1. Category Restriction
+                if (settings.excludedCategories?.includes(item.category)) {
+                  isItemEligible = false;
+                  console.log(`[Cashback Engine] Item "${item.name}" skipped: Category "${item.category}" is excluded.`);
+                }
 
+                // 2. Product Restriction
+                if (settings.excludedProducts?.includes(item.name)) {
+                  isItemEligible = false;
+                  console.log(`[Cashback Engine] Item "${item.name}" skipped: Product is explicitly excluded.`);
+                }
+
+                // 3. Branded/Generic Restriction
                 const isGeneric = item.isGeneric === true || item.isGeneric === 'true';
-                if (settings.allowGenericOnly && !isGeneric) isItemEligible = false;
-                if (settings.allowBrandedOnly && isGeneric) isItemEligible = false;
+                if (settings.allowGenericOnly && !isGeneric) {
+                  isItemEligible = false;
+                  console.log(`[Cashback Engine] Item "${item.name}" skipped: Admin set "Generic Only" but item is Branded.`);
+                }
+                if (settings.allowBrandedOnly && isGeneric) {
+                  isItemEligible = false;
+                  console.log(`[Cashback Engine] Item "${item.name}" skipped: Admin set "Branded Only" but item is Generic.`);
+                }
 
                 if (isItemEligible) {
                   const itemTotal = (Number(item.unitPrice || item.price || 0) * Number(item.quantity || 1));
                   eligibleTotalForCashback += itemTotal;
-                } else {
-                  console.log(`[Cashback Engine] Item "${item.name}" excluded from cashback.`);
+                  console.log(`[Cashback Engine] Item "${item.name}" is ELIGIBLE. Adding ₹${itemTotal}`);
                 }
               });
             }
