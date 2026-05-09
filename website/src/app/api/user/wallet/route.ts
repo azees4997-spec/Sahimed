@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 
     let balance = profile?.walletBalance || 0;
     
-    // SELF-HEAL: If balance is negative, reset to zero in DB and response
+    // SELF-HEAL: If balance is negative, reset to zero
     if (balance < 0) {
       balance = 0;
       await db.collection('users').updateOne(
@@ -61,7 +61,11 @@ export async function POST(request: Request) {
     }
 
     if (action === 'validate_use') {
-      const profile = await db.collection('users').findOne({ uid: user.uid });
+      const [profile, settings] = await Promise.all([
+        db.collection('users').findOne({ uid: user.uid }),
+        db.collection('walletSettings').findOne({ id: 'global' })
+      ]);
+
       const balance = profile?.walletBalance || 0;
       const roundedBalance = Math.round(balance * 100) / 100;
 
@@ -69,28 +73,68 @@ export async function POST(request: Request) {
         return NextResponse.json({ allowable: 0, currentBalance: 0, reason: 'Balance is ₹0' });
       }
 
-      // SLEDGEHAMMER: Ignore all rules and allow 100% of balance on any items in cart
-      // We still calculate eligibleTotal to ensure the cart isn't empty
-      let cartTotal = 0;
-      if (items && Array.isArray(items)) {
-        items.forEach((item: any) => {
-          cartTotal += Number(item.price || 0) * Number(item.quantity || 1);
-        });
-      }
+      // Use settings from DB or sensible defaults
+      const rules = settings || {
+        maxPercentage: 20,
+        maxFixedAmount: 500,
+        allowGenericOnly: false,
+        allowBrandedOnly: false,
+        excludedCategories: [],
+        excludedProducts: [],
+        excludedCustomers: [],
+        minWalletBalance: 500
+      };
 
-      console.log(`[Wallet Sledgehammer] Balance: ${roundedBalance}, Cart Total: ${cartTotal}`);
-
-      if (cartTotal <= 0) {
+      // Customer Exclusion Check
+      if (rules.excludedCustomers?.includes(user.uid)) {
         return NextResponse.json({ 
           allowable: 0, 
           currentBalance: roundedBalance, 
-          reason: 'Cart is empty' 
+          reason: 'Wallet usage restricted for this account' 
         });
       }
 
-      // Allow the minimum of (Full Balance) or (Cart Total)
-      // This ensures the user can use their whole wallet if they have enough items
-      const allowable = Math.min(roundedBalance, cartTotal);
+      let eligibleTotal = 0;
+      if (items && Array.isArray(items)) {
+        items.forEach((item: any) => {
+          let isEligible = true;
+          
+          // Exclusion Logic
+          if (rules.excludedCategories?.includes(item.category)) isEligible = false;
+          if (rules.excludedProducts?.includes(item.id) || rules.excludedProducts?.includes(item.name)) isEligible = false;
+          
+          // Generic/Branded Logic (if enabled)
+          const isItemGeneric = item.isGeneric === true || item.isGeneric === 'true';
+          if (rules.allowGenericOnly && !isItemGeneric) isEligible = false;
+          if (rules.allowBrandedOnly && isItemGeneric) isEligible = false;
+
+          if (isEligible) {
+            eligibleTotal += Number(item.price || 0) * Number(item.quantity || 1);
+          }
+        });
+      }
+
+      console.log(`[Wallet Validation] Eligible Total: ${eligibleTotal}, Balance: ${roundedBalance}`);
+
+      if (eligibleTotal <= 0) {
+        return NextResponse.json({ 
+          allowable: 0, 
+          currentBalance: roundedBalance, 
+          reason: 'No eligible items in cart' 
+        });
+      }
+
+      // Rule: Small balances can be used fully on eligible items
+      if (roundedBalance < (rules.minWalletBalance || 500)) {
+        return NextResponse.json({
+          allowable: Math.round(Math.min(roundedBalance, eligibleTotal) * 100) / 100,
+          currentBalance: roundedBalance
+        });
+      }
+
+      // Standard Rule: Cap by percentage and fixed amount
+      const percentageLimit = eligibleTotal * ((rules.maxPercentage || 20) / 100);
+      const allowable = Math.min(roundedBalance, percentageLimit, (rules.maxFixedAmount || 500));
 
       return NextResponse.json({ 
         allowable: Math.round(allowable * 100) / 100, 
