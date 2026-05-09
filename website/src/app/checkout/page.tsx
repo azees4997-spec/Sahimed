@@ -845,48 +845,8 @@ export default function CheckoutPage() {
                             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                               {attachedPrescriptions.map((url, idx) => {
                                 const isPDF = url.toLowerCase().includes('.pdf') || url.includes('application%2Fpdf');
-                                if (!user) {
-    return (
-      <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
-        <Navbar />
-        <main className="max-w-7xl mx-auto px-4 py-max-h-screen flex items-center justify-center pt-20">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="max-w-xl w-full"
-          >
-            <Card className="rounded-[56px] border-none shadow-3xl bg-white overflow-hidden text-center p-12 sm:p-20 relative">
-              <div className="absolute top-0 right-0 p-12 opacity-5 rotate-12">
-                 <Lock className="w-48 h-48" />
-              </div>
-              <div className="w-24 h-24 bg-primary/10 text-primary rounded-[32px] flex items-center justify-center mx-auto mb-10 shadow-xl shadow-primary/5 relative z-10">
-                <Lock className="w-10 h-10" />
-              </div>
-              <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit uppercase mb-6 relative z-10">Checkout Restricted</h1>
-              <p className="text-[11px] font-black text-slate-400 tracking-[0.3em] uppercase max-w-sm mx-auto mb-12 relative z-10 leading-relaxed">
-                Please login to your Sahimed account to complete your purchase.
-              </p>
-              <div className="space-y-4 relative z-10">
-                <Button 
-                  onClick={() => router.push('/login?redirect=/checkout')}
-                  className="w-full h-20 rounded-full font-black tracking-widest text-xs uppercase gap-4 shadow-2xl shadow-primary/30 active:scale-95 transition-all bg-primary"
-                >
-                  <User className="w-6 h-6" />
-                  Sign In to Checkout
-                </Button>
-                <Link href="/">
-                  <Button variant="ghost" className="w-full h-14 rounded-full font-black text-[10px] tracking-widest text-slate-400 uppercase gap-2">
-                    <ArrowRight className="w-4 h-4 rotate-180" /> Continue Shopping
-                  </Button>
-                </Link>
-              </div>
-            </Card>
-          </motion.div>
-        </main>
-      </div>
-    );
-  }
-  return (
+                                if (!user) return null;
+                                return (
                                   <motion.div key={idx} initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="relative shrink-0 group">
                                     {isPDF ? (
                                       <div className="w-24 h-24 rounded-3xl bg-slate-50 border-2 border-slate-100 flex flex-col items-center justify-center text-rose-500">

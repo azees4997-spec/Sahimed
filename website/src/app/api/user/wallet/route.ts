@@ -71,10 +71,10 @@ export async function POST(request: Request) {
         maxFixedAmount: 500,
         allowGenericOnly: false,
         allowBrandedOnly: false,
-        excludedCategories: ['Health Devices'],
+        excludedCategories: [],
         excludedProducts: [],
         excludedCustomers: [],
-        minWalletBalance: 500
+        minWalletBalance: 0
       };
 
       // 0. Customer Restriction Check
