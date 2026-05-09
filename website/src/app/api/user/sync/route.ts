@@ -29,6 +29,14 @@ export async function POST(req: Request) {
     const db = client.db('sahimed');
     const firestore = getDbAdmin();
 
+    if (!firestore) {
+      console.warn("[Sync] Firestore Admin not configured. Skipping Firestore-to-Mongo sync.");
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Sync skipped: Firestore not configured' 
+      });
+    }
+
     // 1. Fetch Profile from Firestore
     const profileSnap = await firestore.collection('userProfiles').doc(targetUid).get();
     if (!profileSnap.exists) {
