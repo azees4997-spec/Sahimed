@@ -379,21 +379,21 @@ function AdminConsoleContent() {
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             >
               {activeTab === 'overview' && <OverviewTab setTab={handleTabChange} role={userRole} />}
-              {permissions.orders_view && activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
-              {permissions.orders_view && activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
-              {permissions.inventory_manage && activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
-              {permissions.inventory_manage && activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
-              {permissions.inventory_manage && activeTab === 'categories' && <CategoriesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
-              {permissions.orders_view && activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
-              {permissions.inventory_manage && activeTab === 'stockAlerts' && <AlertsTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
-              {permissions.inventory_manage && activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
-              {permissions.inventory_manage && activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
-              {permissions.inventory_manage && activeTab === 'banners' && <BannersTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
-              {permissions.staff_manage && activeTab === 'admins' && <AdminProfilesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
-              {permissions.inventory_manage && activeTab === 'pages' && <PagesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
-              {permissions.inventory_manage && activeTab === 'searchAnalytics' && <SearchAnalyticsTab onBack={() => handleTabChange('overview')} />}
-              {permissions.staff_manage && activeTab === 'maintenance' && <MaintenanceTab onBack={() => handleTabChange('overview')} />}
-              {permissions.inventory_manage && activeTab === 'wallet' && <WalletTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.orders_view || userRole === 'admin') && activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.orders_view || userRole === 'admin') && activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'categories' && <CategoriesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.orders_view || userRole === 'admin') && activeTab === 'customers' && <CustomersTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'stockAlerts' && <AlertsTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'itemMaster' && <ItemMasterTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'moleculeMaster' && <MoleculeMasterTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'banners' && <BannersTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.staff_manage || userRole === 'admin') && activeTab === 'admins' && <AdminProfilesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'pages' && <PagesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'searchAnalytics' && <SearchAnalyticsTab onBack={() => handleTabChange('overview')} />}
+              {(permissions.staff_manage || userRole === 'admin') && activeTab === 'maintenance' && <MaintenanceTab onBack={() => handleTabChange('overview')} />}
+              {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'wallet' && <WalletTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
             </motion.div>
           </AnimatePresence>
         </main>
