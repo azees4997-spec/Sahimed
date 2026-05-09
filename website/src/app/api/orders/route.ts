@@ -550,6 +550,9 @@ export async function PUT(req: Request) {
                 cashbackAmount = Number(settings.cashbackValue);
               }
 
+              // ROUNDING: Ensure clean currency (2 decimal places)
+              cashbackAmount = Math.round(cashbackAmount * 100) / 100;
+
               if (cashbackAmount > 0) {
                 console.log(`[Cashback Engine] Provisioning ₹${cashbackAmount} for Order #${currentOrder.orderId}`);
                 // 1. Credit MongoDB Wallet
