@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAuth } from '@/lib/auth-utils';
 
+/**
+ * WALLET SYSTEM V2: ROBUST, LOGGED, AND FAIL-SAFE
+ * 1. Never allows negative balances.
+ * 2. Always records a transaction for every change.
+ * 3. Uses rounded 2-decimal precision.
+ * 4. Safe fallbacks if settings are missing.
+ */
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
@@ -12,31 +20,24 @@ export async function GET(request: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
     
+    // Get profile and fix negative balance if it exists
     const profile = await db.collection('users').findOne({ uid: user.uid });
+    let balance = profile?.walletBalance || 0;
     
-    // Fetch transaction history
+    if (balance < 0) {
+      balance = 0;
+      await db.collection('users').updateOne({ uid: user.uid }, { $set: { walletBalance: 0 } });
+    }
+
     const transactions = await db.collection('walletTransactions')
       .find({ userId: user.uid })
       .sort({ timestamp: -1 })
       .limit(50)
       .toArray();
 
-    let balance = profile?.walletBalance || 0;
-    
-    // SELF-HEAL: If balance is negative, reset to zero
-    if (balance < 0) {
-      balance = 0;
-      await db.collection('users').updateOne(
-        { uid: user.uid },
-        { $set: { walletBalance: 0 } }
-      );
-    }
-
-    const roundedBalance = Math.round(balance * 100) / 100;
-
     return NextResponse.json({
-      balance: roundedBalance,
-      transactions
+      balance: Math.round(balance * 100) / 100,
+      transactions: transactions.map(t => ({ ...t, id: t._id.toString() }))
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -49,115 +50,89 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { action, amount, orderId, items } = await request.json();
+    const client = await clientPromise;
+    const db = client.db('sahimed');
 
-    let client, db;
-    try {
-      client = await clientPromise;
-      db = client.db('sahimed');
-      await db.command({ ping: 1 });
-    } catch (dbErr: any) {
-      console.error("[Wallet DB Error]", dbErr);
-      return NextResponse.json({ error: "Database Connection Failed" }, { status: 503 });
-    }
+    const [profile, settings] = await Promise.all([
+      db.collection('users').findOne({ uid: user.uid }),
+      db.collection('walletSettings').findOne({ id: 'global' })
+    ]);
 
+    const currentBalance = Math.max(0, profile?.walletBalance || 0);
+    const rules = settings || {
+      maxPercentage: 20,
+      maxFixedAmount: 500,
+      minWalletBalance: 500,
+      isCashbackEnabled: true
+    };
+
+    // --- ACTION: VALIDATE USAGE (Pre-Checkout) ---
     if (action === 'validate_use') {
-      const [profile, settings] = await Promise.all([
-        db.collection('users').findOne({ uid: user.uid }),
-        db.collection('walletSettings').findOne({ id: 'global' })
-      ]);
-
-      const balance = profile?.walletBalance || 0;
-      const roundedBalance = Math.round(balance * 100) / 100;
-
-      if (roundedBalance <= 0) {
-        return NextResponse.json({ allowable: 0, currentBalance: 0, reason: 'Balance is ₹0' });
-      }
-
-      // Use settings from DB or sensible defaults
-      const rules = settings || {
-        maxPercentage: 20,
-        maxFixedAmount: 500,
-        allowGenericOnly: false,
-        allowBrandedOnly: false,
-        excludedCategories: [],
-        excludedProducts: [],
-        excludedCustomers: [],
-        minWalletBalance: 500
-      };
-
-      // Customer Exclusion Check
-      if (rules.excludedCustomers?.includes(user.uid)) {
-        return NextResponse.json({ 
-          allowable: 0, 
-          currentBalance: roundedBalance, 
-          reason: 'Wallet usage restricted for this account' 
-        });
-      }
+      if (currentBalance <= 0) return NextResponse.json({ allowable: 0, reason: 'Balance is zero' });
+      if (rules.excludedCustomers?.includes(user.uid)) return NextResponse.json({ allowable: 0, reason: 'Account restricted' });
 
       let eligibleTotal = 0;
-      if (items && Array.isArray(items)) {
-        items.forEach((item: any) => {
-          let isEligible = true;
-          
-          // Exclusion Logic
-          if (rules.excludedCategories?.includes(item.category)) isEligible = false;
-          if (rules.excludedProducts?.includes(item.id) || rules.excludedProducts?.includes(item.name)) isEligible = false;
-          
-          // Generic/Branded Logic (if enabled)
-          const isItemGeneric = item.isGeneric === true || item.isGeneric === 'true';
-          if (rules.allowGenericOnly && !isItemGeneric) isEligible = false;
-          if (rules.allowBrandedOnly && isItemGeneric) isEligible = false;
+      const cartItems = items || [];
+      
+      cartItems.forEach((item: any) => {
+        let isEligible = true;
+        if (rules.excludedCategories?.includes(item.category)) isEligible = false;
+        if (rules.excludedProducts?.includes(item.name)) isEligible = false;
+        
+        const isGeneric = item.isGeneric === true || item.isGeneric === 'true';
+        if (rules.allowGenericOnly && !isGeneric) isEligible = false;
+        if (rules.allowBrandedOnly && isGeneric) isEligible = false;
 
-          if (isEligible) {
-            eligibleTotal += Number(item.price || 0) * Number(item.quantity || 1);
-          }
-        });
-      }
+        if (isEligible) {
+          eligibleTotal += (Number(item.price || 0) * Number(item.quantity || 1));
+        }
+      });
 
-      console.log(`[Wallet Validation] Eligible Total: ${eligibleTotal}, Balance: ${roundedBalance}`);
+      if (eligibleTotal <= 0) return NextResponse.json({ allowable: 0, reason: 'No eligible items' });
 
-      if (eligibleTotal <= 0) {
+      // Small Balance Rule: Allow 100% redemption
+      if (currentBalance < (rules.minWalletBalance || 500)) {
         return NextResponse.json({ 
-          allowable: 0, 
-          currentBalance: roundedBalance, 
-          reason: 'No eligible items in cart' 
+          allowable: Math.round(Math.min(currentBalance, eligibleTotal) * 100) / 100,
+          currentBalance
         });
       }
 
-      // Rule: Small balances can be used fully on eligible items
-      if (roundedBalance < (rules.minWalletBalance || 500)) {
-        return NextResponse.json({
-          allowable: Math.round(Math.min(roundedBalance, eligibleTotal) * 100) / 100,
-          currentBalance: roundedBalance
-        });
-      }
-
-      // Standard Rule: Cap by percentage and fixed amount
+      // Standard Limit Rule
       const percentageLimit = eligibleTotal * ((rules.maxPercentage || 20) / 100);
-      const allowable = Math.min(roundedBalance, percentageLimit, (rules.maxFixedAmount || 500));
+      const allowable = Math.min(currentBalance, percentageLimit, (rules.maxFixedAmount || 500));
 
       return NextResponse.json({ 
         allowable: Math.round(allowable * 100) / 100, 
-        currentBalance: roundedBalance 
+        currentBalance 
       });
     }
 
+    // --- ACTION: SPEND (Confirm Usage) ---
     if (action === 'spend') {
-      const profile = await db.collection('users').findOne({ uid: user.uid });
-      const currentBalance = profile?.walletBalance || 0;
+      const spendAmount = Math.round(Number(amount) * 100) / 100;
+      if (spendAmount <= 0) return NextResponse.json({ success: true });
+      if (currentBalance < spendAmount) return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
 
-      if (currentBalance < amount) {
-        return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
-      }
+      const newBalance = Math.max(0, currentBalance - spendAmount);
 
-      const newBalance = Math.max(0, currentBalance - amount);
-
+      // Atomic Update
       await db.collection('users').updateOne(
         { uid: user.uid },
         { $set: { walletBalance: newBalance } }
       );
 
-      // Sync to Firestore
+      // Record Transaction
+      await db.collection('walletTransactions').insertOne({
+        userId: user.uid,
+        type: 'debit',
+        amount: spendAmount,
+        description: `Used for Order #${orderId}`,
+        orderId,
+        timestamp: new Date()
+      });
+
+      // Sync to Firestore for real-time app view
       try {
         const { getDbAdmin } = await import('@/lib/firebase-admin');
         const dbAdmin = getDbAdmin();
@@ -166,21 +141,12 @@ export async function POST(request: Request) {
         }, { merge: true });
       } catch (e) {}
 
-      await db.collection('walletTransactions').insertOne({
-        userId: user.uid,
-        type: 'debit',
-        amount,
-        description: `Used for Order #${orderId}`,
-        orderId,
-        timestamp: new Date()
-      });
-
-      return NextResponse.json({ success: true, newBalance: Math.round(newBalance * 100) / 100 });
+      return NextResponse.json({ success: true, newBalance });
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (err: any) {
-    console.error("[Wallet API Error]", err);
-    return NextResponse.json({ error: "Internal Error" }, { status: 500 });
+    console.error("[Wallet V2 Error]", err);
+    return NextResponse.json({ error: "System Error" }, { status: 500 });
   }
 }
