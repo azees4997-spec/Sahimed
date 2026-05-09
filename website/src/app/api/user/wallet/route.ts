@@ -168,6 +168,19 @@ export async function POST(request: Request) {
         { $inc: { walletBalance: -amount } }
       );
 
+      // --- SYNC TO FIRESTORE (for App/Frontend visibility) ---
+      try {
+        const { getDbAdmin } = await import('@/lib/firebase-admin');
+        const dbAdmin = getDbAdmin();
+        const userRef = dbAdmin.doc(`userProfiles/${user.uid}`);
+        
+        await userRef.set({ 
+          walletBalance: Math.max(0, currentBalance - amount)
+        }, { merge: true });
+      } catch (fsErr: any) {
+        console.error("[Wallet Sync Error]", fsErr.message);
+      }
+
       await db.collection('walletTransactions').insertOne({
         userId: user.uid,
         type: 'debit',
