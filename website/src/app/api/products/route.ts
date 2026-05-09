@@ -33,14 +33,16 @@ export async function GET(request: Request) {
     // Filter out disabled products by default
     const showDisabled = searchParams.get('showDisabled') === 'true';
     if (showDisabled) {
-      // Security: Only admins can bypass the isActive filter
       try {
-        const isAdmin = await verifyAdmin(request);
-        if (!isAdmin) {
+        const admin = await verifyAdmin(request);
+        if (admin) {
+          console.log(`[Products API] Admin detected (${admin.uid}), showing ALL items (including inactive).`);
+          // No isActive filter added = show all
+        } else {
           query.isActive = { $ne: false };
         }
       } catch (authErr) {
-        console.warn("[Products API] Admin check failed during fetch, defaulting to active only:", authErr);
+        // If auth fails, fallback to safe view (active only)
         query.isActive = { $ne: false };
       }
     } else {
