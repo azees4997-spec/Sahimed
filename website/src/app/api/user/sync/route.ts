@@ -30,10 +30,22 @@ export async function POST(req: Request) {
     const firestore = getDbAdmin();
 
     if (!firestore) {
-      console.warn("[Sync] Firestore Admin not configured. Skipping Firestore-to-Mongo sync.");
+      console.warn("[Sync] Firestore Admin not configured. Performing basic Mongo upsert only.");
+      await db.collection('users').updateOne(
+        { uid: targetUid },
+        { 
+          $set: { 
+            uid: targetUid,
+            email: user.email || null,
+            phone: user.phoneNumber || null,
+            updatedAt: new Date()
+          } 
+        },
+        { upsert: true }
+      );
       return NextResponse.json({ 
         success: true, 
-        message: 'Sync skipped: Firestore not configured' 
+        message: 'Sync partially completed: Basic profile created in MongoDB' 
       });
     }
 
