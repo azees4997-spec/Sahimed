@@ -276,7 +276,8 @@ export default function CheckoutPage() {
               name: item.name,
               price: item.price,
               quantity: item.quantity,
-              category: item.category
+              category: item.category,
+              isGeneric: item.isGeneric
             }))
           })
         });
