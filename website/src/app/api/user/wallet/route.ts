@@ -21,8 +21,17 @@ export async function GET(request: Request) {
       .limit(50)
       .toArray();
 
-    // Round balance for UI
-    const balance = profile?.walletBalance || 0;
+    let balance = profile?.walletBalance || 0;
+    
+    // SELF-HEAL: If balance is negative, reset to zero in DB and response
+    if (balance < 0) {
+      balance = 0;
+      await db.collection('users').updateOne(
+        { uid: user.uid },
+        { $set: { walletBalance: 0 } }
+      );
+    }
+
     const roundedBalance = Math.round(balance * 100) / 100;
 
     return NextResponse.json({
