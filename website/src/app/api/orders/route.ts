@@ -320,12 +320,6 @@ export async function POST(req: Request) {
         orderId: nextId,
         timestamp: new Date()
       });
-
-      // UPDATE: Subtract from MongoDB User Balance
-      await db.collection('users').updateOne(
-        { uid: user.uid },
-        { $inc: { walletBalance: -walletUsed } }
-      );
     }
 
     const orderData = {
@@ -510,7 +504,10 @@ export async function PUT(req: Request) {
     );
 
     // --- CASHBACK ENGINE TRIGGER ---
-    if (updates.status === 'Delivered' && currentOrder?.status !== 'Delivered' && !currentOrder?.cashbackApplied) {
+    const isNowDelivered = updates.status === 'Delivered' || updates.status === 'Completed';
+    const wasPreviouslyDelivered = currentOrder?.status === 'Delivered' || currentOrder?.status === 'Completed';
+
+    if (isNowDelivered && !wasPreviouslyDelivered && !currentOrder?.cashbackApplied) {
       try {
         const settings = await db.collection('walletSettings').findOne({ id: 'global' });
         if (settings?.isCashbackEnabled) {
