@@ -20,6 +20,7 @@ export async function GET(req: Request) {
       products: productCount,
       orders: orderCount
     });
+  } catch (err: any) {
     const errorMessage = err.message || "Unknown stats error";
     const status = errorMessage.includes('Unauthorized') ? 401 : 
                    errorMessage.includes('Forbidden') ? 403 : 500;
