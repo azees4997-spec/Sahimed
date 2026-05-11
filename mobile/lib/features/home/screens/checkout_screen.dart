@@ -9,12 +9,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:paytm_allinone/paytm_allinone.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/services/location_service.dart';
 import 'order_status_screen.dart';
+import 'package:paytm_allinonesdk/paytm_allinonesdk.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final File? initialPrescription;
@@ -47,14 +47,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Map<String, dynamic>? _selectedAddress;
   bool _showAddressForm = true;
 
-  // Wallet Integration
-  double _walletBalance = 0;
-  double _allowableWalletAmount = 0;
-  bool _useWallet = false;
-  String _walletReason = '';
-
-  // Payment Integration
-  // Paytm Integration
   String _paymentMethod = 'COD';
 
 
@@ -65,32 +57,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     
     _prescriptionImage = widget.initialPrescription;
     _loadData();
-    _loadWalletInfo();
   }
 
   // Payment handlers removed as Paytm uses async call
 
-  Future<void> _loadWalletInfo() async {
-    final cart = context.read<CartProvider>();
-    final walletData = await _apiService.validateWalletUse(
-      cart.items.map((e) => {
-        'id': e.product.id,
-        'name': e.product.name,
-        'price': e.product.price,
-        'quantity': e.quantity,
-        'category': e.product.category,
-      }).toList(),
-
-    );
-
-    if (mounted) {
-      setState(() {
-        _allowableWalletAmount = (walletData['allowable'] as num?)?.toDouble() ?? 0;
-        _walletBalance = (walletData['currentBalance'] as num?)?.toDouble() ?? 0;
-        _walletReason = walletData['reason'] ?? '';
-      });
-    }
-  }
 
 
   Future<void> _loadData() async {
@@ -191,44 +161,61 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _handleOnlinePayment() async {
-    final cart = context.read<CartProvider>();
-    final amountPayable = cart.finalTotal - (_useWallet ? _allowableWalletAmount : 0);
-    final orderId = "ORD${DateTime.now().millisecondsSinceEpoch}";
+    // 1. Validation Logic
+    if (_showAddressForm) {
+      if (!_formKey.currentState!.validate()) return;
+    } else if (_selectedAddress == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select an address')));
+      return;
+    }
 
+    setState(() => _isProcessing = true);
+
+    final cart = context.read<CartProvider>();
+    final user = FirebaseAuth.instance.currentUser;
+    
     try {
-      final paytmData = await _apiService.createPaytmOrder(
-        orderId: orderId,
-        amount: amountPayable,
+      // 1. Initiate Transaction with Backend
+      final response = await _apiService.initiatePaytmTransaction(
+        amount: cart.finalTotal,
+        channel: 'WAP', // Mobile uses WAP
       );
-      
-      if (paytmData == null || paytmData['txnToken'] == null) {
-        throw Exception('Failed to initiate Paytm transaction');
+
+      if (response == null || response['txnToken'] == null) {
+        throw Exception('Failed to get transaction token');
       }
 
-      final response = await PaytmAllInOne.startTransaction(
-        mid: paytmData['mid'],
-        orderId: orderId,
-        amount: amountPayable.toString(),
-        txnToken: paytmData['txnToken'],
-        isStaging: true, // Change to false for production
-        callbackUrl: "https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=$orderId",
+      final String txnToken = response['txnToken'];
+      final String mid = response['mid'];
+      final String orderId = response['orderId'];
+      final String amount = response['amount'].toString();
+
+      // 2. Start Paytm SDK
+      var result = await PaytmAllInOneSdk.startTransaction(
+        mid,
+        orderId,
+        amount,
+        txnToken,
+        "", // callbackUrl (can be empty for SDK)
+        false, // isStaging
+        false, // restrictAppInvoke
       );
 
-      if (response != null && response['STATUS'] == 'TXN_SUCCESS') {
-        _placeOrder(
-          paymentId: response['TXNID'],
-          paytmOrderId: response['ORDERID'],
+      if (result != null && result['STATUS'] == 'TXN_SUCCESS') {
+        // 3. Place order with transaction details
+        await _placeOrder(
+          paymentId: result['TXNID'],
+          paytmOrderId: orderId,
         );
       } else {
-        throw Exception(response?['RESPMSG'] ?? 'Payment Failed');
+        String msg = result?['RESPMSG'] ?? "Payment Cancelled or Failed";
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (e) {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Payment Initialization Failed: $e')),
-        );
-      }
+      debugPrint('Paytm Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Payment Error: $e')));
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
@@ -292,11 +279,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     setState(() => _isProcessing = true);
 
-    // TRIGGER ONLINE PAYMENT IF SELECTED AND NOT ALREADY PAID
-    if (_paymentMethod == 'Online' && paymentId == null) {
-      _handleOnlinePayment();
-      return; 
-    }
+    /* Online Payment Deactivated */
 
     // Check serviceability
     try {
@@ -368,7 +351,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         'subtotal': cart.total, // Total of items
         'promoDiscount': cart.promoDiscount,
         'promoCode': cart.appliedPromo?.code,
-        'walletUsed': _useWallet ? _allowableWalletAmount : 0,
+        'walletUsed': 0.0,
         'deliveryFee': cart.total < 499 ? 49.0 : 0.0,
         'total': cart.finalTotal,
         'campaignDiscount': cart.promoDiscount, // For compatibility with older detail screens
@@ -376,14 +359,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
       final orderId = await _apiService.createOrder(
         items: cart.items,
-        total: cart.finalTotal - (_useWallet ? _allowableWalletAmount : 0),
+        total: cart.finalTotal,
         shippingDetails: shippingDetails,
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
         billingBreakdown: billingBreakdown,
         prescriptions: prescriptions,
         isConsultationRequired: _isConsultationRequired,
-        walletUsed: _useWallet ? _allowableWalletAmount : 0,
         paymentId: paymentId,
         paytmOrderId: paytmOrderId,
       );
@@ -724,8 +706,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
           if (_isProcessing)
             Container(
-              color: Colors.black26,
-              child: Center(
+              color: Colors.white.withOpacity(0.5),
+              child: const Center(
                 child: CircularProgressIndicator(color: SahimedColors.primary),
               ),
             ),
@@ -736,6 +718,86 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             child: _buildGlassPlaceOrderBar(cart),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGlassPlaceOrderBar(CartProvider cart) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 34),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'TOTAL PAYABLE',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 10,
+                    color: SahimedColors.slate400,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                Text(
+                  '₹${cart.finalTotal.toStringAsFixed(2)}',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 24,
+                    color: SahimedColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 24),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _isProcessing 
+                    ? null 
+                    : (_paymentMethod == 'Online' ? _handleOnlinePayment : _placeOrder),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: SahimedColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 8,
+                  shadowColor: SahimedColors.primary.withOpacity(0.4),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _paymentMethod == 'Online' ? 'PAY SECURELY' : 'PLACE ORDER',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(LucideIcons.arrowRight, size: 18),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -755,9 +817,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const SizedBox(height: 12),
           _buildPaymentOption(
             id: 'Online',
-            title: 'Online Payment',
-            subtitle: 'UPI, Card, Net Banking',
-            icon: LucideIcons.shieldCheck,
+            title: 'Paytm / Online',
+            subtitle: 'UPI, Wallet, Cards & Netbanking',
+            icon: LucideIcons.creditCard,
           ),
         ],
       ),
@@ -1135,12 +1197,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               '- ₹${cart.totalSavings.toStringAsFixed(2)}',
               isGreen: true,
             ),
-          if (_allowableWalletAmount > 0)
-            _summaryRow(
-              'SahiWallet (Max Use)',
-              '- ₹${_allowableWalletAmount.toStringAsFixed(2)}',
-              isGreen: true,
-            ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Divider(height: 1),
@@ -1157,7 +1213,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
               Text(
-                '₹${(cart.finalTotal - (_useWallet ? _allowableWalletAmount : 0)).toStringAsFixed(2)}',
+                '₹${cart.finalTotal.toStringAsFixed(2)}',
                 style: GoogleFonts.outfit(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
@@ -1167,57 +1223,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          if (_allowableWalletAmount > 0)
-            _buildWalletToggle(),
-          if (_walletReason.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                _walletReason,
-                style: GoogleFonts.inter(fontSize: 10, color: Colors.redAccent, fontWeight: FontWeight.bold),
-              ),
-            ),
+          // Wallet Deactivated
         ],
       ),
     );
   }
 
-  Widget _buildWalletToggle() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: SahimedColors.primary.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: SahimedColors.primary.withOpacity(0.1)),
-      ),
-      child: Row(
-        children: [
-          const Icon(LucideIcons.wallet, color: SahimedColors.primary, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'USE SAHIWALLET BALANCE',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1),
-                ),
-                Text(
-                  'Available: ₹${_walletBalance.toStringAsFixed(0)}',
-                  style: GoogleFonts.inter(fontSize: 10, color: SahimedColors.slate500),
-                ),
-              ],
-            ),
-          ),
-          Switch.adaptive(
-            value: _useWallet,
-            activeColor: SahimedColors.primary,
-            onChanged: (v) => setState(() => _useWallet = v),
-          ),
-        ],
-      ),
-    );
-  }
 
 
   Widget _summaryRow(String label, String value, {bool isGreen = false}) {

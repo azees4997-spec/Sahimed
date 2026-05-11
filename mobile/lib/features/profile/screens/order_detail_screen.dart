@@ -554,12 +554,6 @@ class OrderDetailScreen extends StatelessWidget {
               '-₹${(billing['promoDiscount'] ?? billing['campaignDiscount'] ?? 0).toStringAsFixed(0)}',
               true,
             ),
-          if ((billing['walletUsed'] ?? 0) > 0)
-            _buildBillRow(
-              'Wallet Credits',
-              '-₹${(billing['walletUsed'] ?? 0).toStringAsFixed(0)}',
-              true,
-            ),
           const SizedBox(height: 12),
           _buildBillRow('Delivery Charges', 'FREE', true),
           const Padding(

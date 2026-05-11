@@ -52,7 +52,6 @@ import { AdminProfilesTab } from './components/AdminProfilesTab';
 import { PagesTab } from './components/PagesTab';
 import { SearchAnalyticsTab } from './components/SearchAnalyticsTab';
 import { MaintenanceTab } from './components/MaintenanceTab';
-import { WalletTab } from './components/WalletTab';
 
 const MASTER_UIDS = ["BM9HheYflheT0Wyj6olaEnyCAHl1", "RzB6nqlQumg1VEniFcZrgbcDdRA2"];
 
@@ -393,7 +392,6 @@ function AdminConsoleContent() {
               {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'pages' && <PagesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'searchAnalytics' && <SearchAnalyticsTab onBack={() => handleTabChange('overview')} />}
               {(permissions.staff_manage || userRole === 'admin') && activeTab === 'maintenance' && <MaintenanceTab onBack={() => handleTabChange('overview')} />}
-              {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'wallet' && <WalletTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
             </motion.div>
           </AnimatePresence>
         </main>

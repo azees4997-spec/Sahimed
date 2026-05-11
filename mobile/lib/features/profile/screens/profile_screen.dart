@@ -9,7 +9,6 @@ import 'policies_screen.dart';
 import 'health_vault_screen.dart';
 import 'orders_screen.dart';
 import 'address_list_screen.dart';
-import 'wallet_screen.dart';
 import 'reminders_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -147,7 +146,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = _auth.currentUser;
     final phone = _profile?['phone'] ?? user?.phoneNumber ?? '+91 7349499898';
     final name = (_profile?['name'] ?? user?.displayName ?? 'Sahimed Member').toUpperCase();
-    final balance = _profile?['walletBalance'] ?? 0;
 
     return Container(
       color: SahimedColors.background,
@@ -209,7 +207,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(width: 32), // Spacer for balance
                           Text(
                             name,
                             style: GoogleFonts.outfit(
@@ -249,24 +246,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 letterSpacing: 0.5,
                               ),
                             ),
-                            if (balance > 0) ...[
-                              const SizedBox(width: 12),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: SahimedColors.emerald500,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  '₹$balance',
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
                           ],
                         ),
                       ),
@@ -348,21 +327,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           },
                         ),
                         const SizedBox(height: 12),
-                        _buildMenuCard(
-                          title: 'Sahimed Wallet',
-                          subtitle: 'View your savings and credits',
-                          icon: LucideIcons.wallet,
-                          color: const Color(0xFFF0F9FF),
-                          iconColor: const Color(0xFF0284C7),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const WalletScreen(),
-                              ),
-                            );
-                          },
-                        ),
+                        // Wallet Deactivated
                         const SizedBox(height: 12),
                         _buildMenuCard(
                           title: 'Pill Reminders',

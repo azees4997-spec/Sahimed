@@ -21,24 +21,30 @@ export async function GET(req: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
     const { searchParams } = new URL(req.url);
+    
+    // Pagination parameters
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
+    const page = Math.max(parseInt(searchParams.get('page') || '1'), 1);
+    const skip = (page - 1) * limit;
+
     const statusRaw = searchParams.get('status');
-    const status = statusRaw ? escapeRegExp(statusRaw) : null;
+    const status = statusRaw && statusRaw !== 'All' ? escapeRegExp(statusRaw) : null;
     const start = searchParams.get('start');
     const end = searchParams.get('end');
-    const query: any = {};
+    const searchTerm = searchParams.get('search');
     
-    // Security check: Non-admins MUST be restricted to their own data
-    // ADMINS: If no search params are provided, default to their own orders for the app profile screen
-    const requestedUserId = searchParams.get('userId');
-    const phone = searchParams.get('phone');
+    const query: any = {};
+    const andConditions: any[] = [];
 
-    if (!isAdmin || (!requestedUserId && !phone)) {
+    // 1. Authorization & Identity Restriction
+    if (!isAdmin) {
+      // NON-ADMIN: Restricted to their own data
       const identityConditions: any[] = [
         { userId: user.uid },
         { customer_id: user.uid }
       ];
 
-      // FALLBACK: If phoneNumber is not in the token, check the MongoDB user profile
+      // Phone-based matching for legacy/un-synced orders
       let activePhone = user.phoneNumber;
       if (!activePhone) {
         const userProfile = await db.collection('users').findOne({ uid: user.uid });
@@ -46,27 +52,16 @@ export async function GET(req: Request) {
       }
 
       if (activePhone) {
-        // ULTRA-AGGRESSIVE MATCHING: Catch every possible format
         const stripped = activePhone.replace(/\D/g, '');
         const last10 = stripped.slice(-10);
-        
-        const phoneVariants = Array.from(new Set([
-          activePhone, 
-          stripped, 
-          last10, 
-          `+91${last10}`, 
-          `91${last10}`, 
-          `0${last10}`
-        ]));
+        const phoneVariants = [activePhone, stripped, last10, `+91${last10}`, `91${last10}`, `0${last10}`];
         
         phoneVariants.forEach(v => {
           identityConditions.push({ phoneNumber: v });
           identityConditions.push({ phone: v });
-          identityConditions.push({ phone_number: v });
           identityConditions.push({ customer_phone: v });
           identityConditions.push({ customerPhone: v });
           
-          // Case-insensitive check for string, and exact check for numeric fields
           const numValue = parseInt(v.replace(/\D/g, ''));
           if (!isNaN(numValue)) {
             identityConditions.push({ phoneNumber: numValue });
@@ -89,99 +84,116 @@ export async function GET(req: Request) {
         linkedUsers.forEach(u => {
           if (u.uid) {
             identityConditions.push({ userId: u.uid });
-            identityConditions.push({ user_id: u.uid }); // Added underscore variant
+            identityConditions.push({ user_id: u.uid });
             identityConditions.push({ customer_id: u.uid });
           }
         });
       }
-
-      // Final unique conditions to keep query efficient
-      query.$or = Array.from(new Set(identityConditions.map(c => JSON.stringify(c)))).map(s => JSON.parse(s));
+      andConditions.push({ $or: Array.from(new Set(identityConditions.map(c => JSON.stringify(c)))).map(s => JSON.parse(s)) });
     } else {
-      // Admin Search Logic (When params ARE provided)
+      // ADMIN: Optional filters for specific user/phone
+      const requestedUserId = searchParams.get('userId');
+      const phone = searchParams.get('phone');
 
-      if (requestedUserId && phone) {
-        const last10 = phone.replace(/\D/g, '').slice(-10);
-        // BUG-08 FIX: Include all phone field variants (phoneNumber, phone, customer_phone)
-        const phoneVariants = [phone, last10, `+91${last10}`, `91${last10}`, `0${last10}`];
-        query.$or = [
-          { userId: requestedUserId },
-          { customer_id: requestedUserId },
-          ...phoneVariants.flatMap(v => [
-            { phoneNumber: v },
-            { phone: v },
-            { customer_phone: v },
-            { customerPhone: v },
-          ])
-        ];
-      } else if (requestedUserId) {
-        query.$or = [{ userId: requestedUserId }, { customer_id: requestedUserId }];
-      } else if (phone) {
-        const last10 = phone.replace(/\D/g, '').slice(-10);
-        const phoneVariants = [phone, last10, `+91${last10}`, `91${last10}`, `0${last10}`];
-        query.$or = phoneVariants.flatMap(v => [
-          { phoneNumber: v },
-          { phone: v },
-          { customer_phone: v },
-          { customerPhone: v },
-        ]);
+      if (requestedUserId || phone) {
+        const adminFilters: any[] = [];
+        if (requestedUserId) {
+          adminFilters.push({ userId: requestedUserId }, { customer_id: requestedUserId });
+        }
+        if (phone) {
+          const last10 = phone.replace(/\D/g, '').slice(-10);
+          const phoneVariants = [phone, last10, `+91${last10}`, `91${last10}`, `0${last10}`];
+          phoneVariants.forEach(v => {
+            adminFilters.push({ phoneNumber: v }, { phone: v }, { customer_phone: v }, { customerPhone: v });
+          });
+        }
+        andConditions.push({ $or: adminFilters });
       }
     }
 
-    if (status) query.status = { $regex: new RegExp(status, 'i') };
-    
-    // Date filter
+    // 2. Status Filter
+    if (status) {
+      andConditions.push({ status: { $regex: new RegExp(status, 'i') } });
+    }
+
+    // 3. Date Filter
     if (start || end) {
-      const dateQuery: any = {};
+      const dateRange: any = {};
       if (start) {
         const startDate = new Date(start);
-        if (!isNaN(startDate.getTime())) dateQuery.$gte = startDate;
+        if (!isNaN(startDate.getTime())) dateRange.$gte = startDate;
       }
       if (end) {
         const endDate = new Date(end);
         endDate.setHours(23, 59, 59, 999);
-        if (!isNaN(endDate.getTime())) dateQuery.$lte = endDate;
+        if (!isNaN(endDate.getTime())) dateRange.$lte = endDate;
       }
-      
-      // Use $or for date field fallback (orderDate or createdAt)
-      const dateCondition = {
+      andConditions.push({
         $or: [
-          { orderDate: dateQuery },
-          { createdAt: dateQuery }
+          { orderDate: dateRange },
+          { createdAt: dateRange }
         ]
-      };
-
-      // Merge with identity filter using $and if $or already exists
-      if (query.$or) {
-        const identityOr = query.$or;
-        delete query.$or;
-        query.$and = [
-          { $or: identityOr },
-          dateCondition
-        ];
-      } else {
-        // If no identity $or, we can just use $and to wrap the date $or and other conditions
-        const existingConditions = { ...query };
-        Object.keys(query).forEach(key => delete query[key]);
-        query.$and = [
-          existingConditions,
-          dateCondition
-        ];
-      }
+      });
     }
 
-    const orders = await db.collection('orders')
-      .find(query)
-      .sort({ orderDate: -1, createdAt: -1 })
-      .toArray();
+    // 4. Search Filter (Search by ID, Name, Phone)
+    if (searchTerm) {
+      const searchRegex = new RegExp(escapeRegExp(searchTerm), 'i');
+      andConditions.push({
+        $or: [
+          { orderId: searchRegex },
+          { patientName: searchRegex },
+          { phoneNumber: searchRegex },
+          { phone: searchRegex },
+          { customerPhone: searchRegex }
+        ]
+      });
+    }
 
-    return NextResponse.json(orders);
+    // Combine all conditions
+    if (andConditions.length > 0) {
+      query.$and = andConditions;
+    }
+
+    // Execute query with pagination
+    // Check if pagination is requested (if no limit/page and not admin, might want everything for profile)
+    // Actually, always paginate for speed, but if it's not admin and no search params, return everything?
+    // No, for backward compatibility with user history page, we should return array if no pagination params.
+    const isPaginationRequested = searchParams.has('page') || searchParams.has('limit') || searchParams.has('search');
+
+    if (isPaginationRequested || isAdmin) {
+      const [orders, total] = await Promise.all([
+        db.collection('orders')
+          .find(query)
+          .sort({ orderDate: -1, createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .toArray(),
+        db.collection('orders').countDocuments(query)
+      ]);
+
+      return NextResponse.json({
+        orders,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      });
+    } else {
+      // Legacy behavior for standard profile fetch
+      const orders = await db.collection('orders')
+        .find(query)
+        .sort({ orderDate: -1, createdAt: -1 })
+        .toArray();
+      return NextResponse.json(orders);
+    }
   } catch (err: any) {
     console.error("[Orders API Error]", err);
     const status = err.message?.includes('Unauthorized') || err.message?.includes('Forbidden') ? 401 : 500;
     return NextResponse.json({ error: err.message }, { status });
   }
 }
+
 
 export async function POST(req: Request) {
   try {
@@ -279,8 +291,9 @@ export async function POST(req: Request) {
     allowedFields.forEach(field => {
       if (body[field] !== undefined) sanitizedBody[field] = body[field];
     });
-
-    // 2.5. Handle Wallet Usage with strict server-side validation
+    
+    // Force COD for all new orders (Online Payment Deactivated)
+    sanitizedBody.paymentType = 'Cash on Delivery';
     const walletUsed = Number(body.walletUsed || body.billingBreakdown?.walletUsed || 0);
     if (walletUsed > 0) {
       const mongoUser = await db.collection('users').findOne({ uid: user.uid });

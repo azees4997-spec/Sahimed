@@ -30,6 +30,21 @@ class ReminderService {
         // Handle notification tap
       },
     );
+
+    // CRITICAL: Request OS-level permissions
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final androidImplementation = _notifications.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      await androidImplementation?.requestNotificationsPermission();
+      await androidImplementation?.requestExactAlarmsPermission();
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await _notifications.resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
   }
 
   static Future<void> scheduleReminder({
@@ -47,12 +62,13 @@ class ReminderService {
       _nextInstanceOfTime(hour, minute),
       const NotificationDetails(
         android: AndroidNotificationDetails(
-          'pill_reminders',
-          'Pill Reminders',
-          channelDescription: 'Daily notifications for taking medicines',
+          'pill_reminders_v2', // Changed ID to force channel update
+          'Medicine Alarms',
+          channelDescription: 'Persistent alarms for taking medicines',
           importance: Importance.max,
           priority: Priority.high,
           playSound: true,
+          sound: RawResourceAndroidNotificationSound('sahimed_alarm'),
           enableVibration: true,
           fullScreenIntent: true,
           category: AndroidNotificationCategory.alarm,
@@ -62,6 +78,7 @@ class ReminderService {
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
+          sound: 'sahimed_alarm.wav',
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,

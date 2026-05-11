@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
@@ -218,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'TRUSTED BY 10L+ USERS',
+                        'TRUSTED QUALITY',
                         style: GoogleFonts.outfit(fontSize: 7, fontWeight: FontWeight.w900, color: Colors.black, letterSpacing: 1),
                       ),
                     ],
@@ -229,9 +230,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   text: TextSpan(
                     style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w900, height: 1.1, color: const Color(0xFF0F172A)),
                     children: [
-                      const TextSpan(text: 'AFFORDABLE SOLUTIONS FOR '),
+                      const TextSpan(text: 'AFFORDABLE MEDICINES\n'),
                       TextSpan(
-                        text: 'EVERYDAY LIFE',
+                        text: 'FOR EVERYDAY HEALTH',
                         style: GoogleFonts.outfit(color: SahimedColors.primary, fontStyle: FontStyle.italic),
                       ),
                     ],
@@ -300,7 +301,12 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'WhatsApp',
             iconBg: _waGreen,
             tileBg: const Color(0xFFF0FDF4),
-            icon: const Icon(LucideIcons.messageCircle, size: 18, color: Colors.white),
+            icon: SvgPicture.asset(
+              'assets/icons/whatsapp.svg', 
+              width: 20, 
+              height: 20, 
+              colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+            ),
             onTap: () => _launch('https://wa.me/917349499898'),
           ),
           const SizedBox(width: 10),

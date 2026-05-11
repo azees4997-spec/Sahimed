@@ -426,8 +426,6 @@ class ApiService {
     required Map<String, dynamic> billingBreakdown,
     List<String> prescriptions = const [],
     bool isConsultationRequired = false,
-    double walletUsed = 0,
-    String? paymentId,
     String? paymentId,
     String? paytmOrderId,
   }) async {
@@ -447,6 +445,8 @@ class ApiService {
                 'quantity': i.quantity,
                 'unitPrice': i.product.price,
                 'mrp': i.product.mrp.round(),
+                'isGeneric': i.product.isGeneric,
+                'category': i.product.category,
               },
             )
             .toList(),
@@ -455,7 +455,7 @@ class ApiService {
         prescriptionUrls: prescriptions,
         isConsultationRequired: isConsultationRequired,
         clinicalPath: isConsultationRequired ? 'consult' : 'normal',
-        walletUsed: walletUsed,
+        walletUsed: 0.0,
         createdAt: DateTime.now(),
       );
 
@@ -484,9 +484,9 @@ class ApiService {
     return null;
   }
 
-  Future<Map<String, dynamic>?> createPaytmOrder({
-    required String orderId,
+  Future<Map<String, dynamic>?> initiatePaytmTransaction({
     required double amount,
+    required String channel,
   }) async {
     try {
       final headers = await _getHeaders();
@@ -494,9 +494,9 @@ class ApiService {
         Uri.parse('$baseUrl/paytm/initiate'),
         headers: headers,
         body: json.encode({
-          'orderId': orderId,
+          'orderId': 'ORD${DateTime.now().millisecondsSinceEpoch}',
           'amount': amount,
-          'channel': 'WAP',
+          'channel': channel,
         }),
       );
 
@@ -504,7 +504,7 @@ class ApiService {
         return json.decode(response.body);
       }
     } catch (e) {
-      debugPrint('Error creating Paytm order: $e');
+      debugPrint('Error initiating Paytm transaction: $e');
     }
     return null;
   }
@@ -622,6 +622,20 @@ class ApiService {
     return null;
   }
 
+  Future<bool> syncUser() async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/user/sync'),
+        headers: headers,
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Error syncing user to MongoDB: $e');
+      return false;
+    }
+  }
+
   Future<bool> submitPrescription({
     required List<String> imageUrls,
     required String patientName,
@@ -646,41 +660,7 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> getWalletBalance() async {
-    try {
-      final headers = await _getHeaders();
-      final response = await http.get(
-        Uri.parse('$baseUrl/user/wallet'),
-        headers: headers,
-      );
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      }
-    } catch (e) {
-      debugPrint('Error fetching wallet balance: $e');
-    }
-    return {'balance': 0, 'transactions': [], 'history': []};
-  }
 
-  Future<Map<String, dynamic>> validateWalletUse(dynamic cartItems) async {
-    try {
-      final headers = await _getHeaders();
-      final response = await http.post(
-        Uri.parse('$baseUrl/user/wallet'),
-        headers: headers,
-        body: json.encode({
-          'action': 'validate_use',
-          'items': cartItems,
-        }),
-      );
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      }
-    } catch (e) {
-      debugPrint('Error validating wallet use: $e');
-    }
-    return {'allowable': 0, 'currentBalance': 0, 'reason': 'Validation failed'};
-  }
 
   Future<List<Map<String, dynamic>>> getUserPrescriptions() async {
     try {
@@ -698,9 +678,6 @@ class ApiService {
     return [];
   }
 
-  Future<Map<String, dynamic>> getWalletData() async {
-    return getWalletBalance(); // getWalletBalance already exists and returns the correct format
-  }
 
   Future<List<Map<String, dynamic>>> getPages() async {
     try {

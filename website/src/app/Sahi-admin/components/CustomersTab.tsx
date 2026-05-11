@@ -75,7 +75,7 @@ export function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: 
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[10px] font-black text-gray-400 border-b">
-              <tr><th className="px-10 py-8">Name</th><th className="px-10 py-8">Identifier</th><th className="px-10 py-8">Wallet</th><th className="px-10 py-8">Tags</th><th className="px-10 py-8 text-right">Action</th></tr>
+              <tr><th className="px-10 py-8">Name</th><th className="px-10 py-8">Identifier</th><th className="px-10 py-8">Tags</th><th className="px-10 py-8 text-right">Action</th></tr>
 
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -84,7 +84,7 @@ export function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: 
                   <tr key={i}>
                     <td className="px-10 py-8"><div className="w-32 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
                     <td className="px-10 py-8"><div className="w-24 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
-                    <td className="px-10 py-8"><div className="flex gap-2"><div className="w-12 h-4 bg-slate-50 animate-pulse rounded-full" /><div className="w-12 h-4 bg-slate-50 animate-pulse rounded-full" /></div></td>
+                    <td className="px-10 py-8"><div className="flex gap-2"><div className="w-12 h-4 bg-slate-50 animate-pulse rounded-full" /></div></td>
                     <td className="px-10 py-8 text-right"><div className="flex justify-end"><div className="w-8 h-8 bg-slate-50 animate-pulse rounded-lg" /></div></td>
                   </tr>
                 ))
@@ -92,9 +92,6 @@ export function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: 
                 <tr key={patient.id} className="hover:bg-gray-50/50">
                   <td className="px-10 py-8 font-black text-sm">{patient.name || 'SahiMed member'}</td>
                   <td className="px-10 py-8 font-bold text-sm text-primary">{patient.phone || patient.email}</td>
-                  <td className="px-10 py-8">
-                    <span className="font-black text-xs text-primary bg-primary/5 px-3 py-1 rounded-full">₹{patient.walletBalance || 0}</span>
-                  </td>
 
                   <td className="px-10 py-8 flex flex-wrap gap-1">
                     {(patient.tags || []).map((t: string) => <Badge key={t} className="bg-gray-100 text-gray-400 text-[8px] font-black">{t}</Badge>)}
@@ -122,57 +119,6 @@ export function CustomersTab({ db, isVerified, onBack }: { db: any, isVerified: 
               <Input value={selectedUser?.name} onChange={e => setSelectedUser({...selectedUser, name: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
             </div>
             
-            <div className="space-y-4 pt-4 border-t border-slate-100">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">SahiWallet Management</Label>
-               <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                 <div>
-                   <p className="text-[9px] font-black text-primary uppercase tracking-widest">Current Balance</p>
-                   <p className="text-2xl font-black text-primary">₹{selectedUser?.walletBalance || 0}</p>
-                 </div>
-                 <div className="flex gap-2">
-                   <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="rounded-xl border-primary text-primary hover:bg-primary hover:text-white font-black text-[9px]"
-                    onClick={async () => {
-                      const amt = prompt("Amount to ADD (Credit):");
-                      if (!amt) return;
-                      const res = await fetch('/api/admin/wallet', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: selectedUser.uid || selectedUser.id, amount: parseFloat(amt), description: 'Admin Credit' })
-                      });
-                      if (res.ok) {
-                        setSelectedUser({ ...selectedUser, walletBalance: (selectedUser.walletBalance || 0) + parseFloat(amt) });
-                        toast({ title: "Wallet Credited" });
-                      }
-                    }}
-                   >
-                     CREDIT
-                   </Button>
-                   <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="rounded-xl border-rose-500 text-rose-500 hover:bg-rose-500 hover:text-white font-black text-[9px]"
-                    onClick={async () => {
-                      const amt = prompt("Amount to DEDUCT (Debit):");
-                      if (!amt) return;
-                      const res = await fetch('/api/admin/wallet', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: selectedUser.uid || selectedUser.id, amount: -parseFloat(amt), description: 'Admin Debit' })
-                      });
-                      if (res.ok) {
-                        setSelectedUser({ ...selectedUser, walletBalance: (selectedUser.walletBalance || 0) - parseFloat(amt) });
-                        toast({ title: "Wallet Debited" });
-                      }
-                    }}
-                   >
-                     DEBIT
-                   </Button>
-                 </div>
-               </div>
-            </div>
 
             <div className="space-y-2"><Label className="text-[10px] font-black">Administrative Tags (Comma separated)</Label><Input value={selectedUser?.tags?.join(', ')} onChange={e => setSelectedUser({...selectedUser, tags: e.target.value.split(',').map(t => t.trim())})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" placeholder="VIP, Chronic, Priority" /></div>
             <Button onClick={() => handleUpdateUser(selectedUser.id, { name: selectedUser.name, tags: selectedUser.tags })} className="w-full h-16 rounded-full font-black bg-primary text-white">Save Record</Button>

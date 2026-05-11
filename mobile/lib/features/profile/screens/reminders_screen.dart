@@ -66,6 +66,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
     final hasAlarm = await PermissionService.requestAlarms(context);
     if (!hasAlarm) return;
 
+    // Optional but recommended for reliability
+    await PermissionService.requestBatteryOptimizations(context);
+
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),

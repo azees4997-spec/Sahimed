@@ -24,13 +24,101 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
   bool _isSuccess = false;
 
   Future<void> _pickFiles() async {
-    try {
-      final List<XFile> results = await _picker.pickMultiImage();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'SELECT SOURCE',
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: Colors.black,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildSourceOption(
+                  icon: LucideIcons.camera,
+                  label: 'CAMERA',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _captureImage(ImageSource.camera);
+                  },
+                ),
+                _buildSourceOption(
+                  icon: LucideIcons.image,
+                  label: 'GALLERY',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _captureImage(ImageSource.gallery);
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-      if (results.isNotEmpty) {
-        setState(() {
-          _selectedFiles.addAll(results.map((xfile) => File(xfile.path)));
-        });
+  Widget _buildSourceOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: SahimedColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Icon(icon, color: SahimedColors.primary, size: 28),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _captureImage(ImageSource source) async {
+    try {
+      if (source == ImageSource.gallery) {
+        final List<XFile> results = await _picker.pickMultiImage();
+        if (results.isNotEmpty) {
+          setState(() {
+            _selectedFiles.addAll(results.map((xfile) => File(xfile.path)));
+          });
+        }
+      } else {
+        final XFile? result = await _picker.pickImage(source: source);
+        if (result != null) {
+          setState(() {
+            _selectedFiles.add(File(result.path));
+          });
+        }
       }
     } catch (e) {
       debugPrint('ImagePicker error: $e');

@@ -289,7 +289,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
           const Icon(LucideIcons.circleAlert, color: SahimedColors.accent, size: 40),
           const SizedBox(height: 16),
           Text(
-            'Don\'t worry, no amount was charged from your wallet. Please try again or contact support.',
+            'Don\'t worry, your order was not placed. Please try again or contact support.',
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               fontSize: 14,

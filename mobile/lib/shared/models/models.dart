@@ -11,7 +11,7 @@ class CategoryModel {
       name: json['name'] ?? '',
       imageUrl:
           json['imageUrl'] ??
-          'https://picsum.photos/seed/${json['name']}/200/200',
+          'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=2070&auto=format&fit=crop',
     );
   }
 }
@@ -119,7 +119,7 @@ class ProductModel {
       imageUrl: images.isNotEmpty
           ? images.first
           : (json['imageUrl'] ??
-                'https://picsum.photos/seed/${json['_id'] ?? json['id']}/300/300'),
+                'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=2070&auto=format&fit=crop'),
       imageUrls: images,
       saltComposition: json['saltComposition'] ?? json['composition'],
       isGeneric: json['isGeneric'] == true || json['isGeneric'] == "true",
@@ -290,33 +290,6 @@ class OrderModel {
 
 }
 
-class WalletTransaction {
-  final String id;
-  final double amount;
-  final String type; // 'credit' | 'debit'
-  final String description;
-  final DateTime timestamp;
-
-  WalletTransaction({
-    required this.id,
-    required this.amount,
-    required this.type,
-    required this.description,
-    required this.timestamp,
-  });
-
-  factory WalletTransaction.fromJson(Map<String, dynamic> json) {
-    return WalletTransaction(
-      id: json['id'] ?? json['_id'] ?? '',
-      amount: (json['amount'] ?? 0).toDouble(),
-      type: json['type'] ?? 'credit',
-      description: json['description'] ?? '',
-      timestamp: json['timestamp'] != null 
-        ? DateTime.parse(json['timestamp']) 
-        : DateTime.now(),
-    );
-  }
-}
 
 class MedicineReminder {
   final String id;

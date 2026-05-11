@@ -44,7 +44,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   late final TextEditingController _pincodeController;
   bool _isServiceable = true;
   String? _zone;
-  String _timeLeft = '';
+  String _timerText = '';
   Timer? _timer;
 
 
@@ -74,7 +74,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
 
       if (mounted) {
         setState(() {
-          _timeLeft = '${h}h ${m}m ${s}s';
+          _timerText = '${h}h ${m}m ${s}s';
         });
       }
     });
@@ -361,25 +361,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
 
               const SizedBox(height: 24),
 
-              // ── 4.5 Delivery Information & Pincode Checker ─────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: const Color(0xFFF1F5F9)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 16,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-              // ─── 4. Delivery & Serviceability (Modern Premium) ───
+              // ── 4.5 Delivery & Serviceability (Modern Premium) ───
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
@@ -566,9 +548,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                     ],
                                   ),
                                 ),
-                      ),
-                    ],
-                  ),
+                              ],
+                            ],
+                          )
+                        : Text(
+                            'NOT SERVICEABLE TO THIS PINCODE',
+                            style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.red,
+                            ),
+                          ),
+                    ),
+                  ],
                 ),
               ),
 

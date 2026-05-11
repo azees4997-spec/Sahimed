@@ -90,8 +90,12 @@ export default function OrdersPage() {
         });
         if (!res.ok) throw new Error('Failed to fetch orders');
         const data = await res.json();
+        
+        // Handle both direct array and paginated object formats
+        const ordersArray = Array.isArray(data) ? data : (data.orders || []);
+        
         // Sort by orderDate descending
-        const sorted = data.sort((a: any, b: any) => {
+        const sorted = ordersArray.sort((a: any, b: any) => {
           const dateA = a.orderDate?._seconds ? a.orderDate._seconds * 1000 : new Date(a.orderDate || 0).getTime();
           const dateB = b.orderDate?._seconds ? b.orderDate._seconds * 1000 : new Date(b.orderDate || 0).getTime();
           return dateB - dateA;
@@ -435,12 +439,6 @@ export default function OrdersPage() {
                         <div className="flex justify-between text-[11px] font-black text-primary uppercase tracking-widest">
                           <span className="flex items-center gap-3"><Sparkles className="w-4 h-4" /> Coupon {selectedOrder.billingBreakdown.promoCode ? `(${selectedOrder.billingBreakdown.promoCode})` : ''}</span>
                           <span>-₹{formatCurrency(selectedOrder.billingBreakdown.promoDiscount)}</span>
-                        </div>
-                      )}
-                      {(selectedOrder?.billingBreakdown?.walletUsed ?? 0) > 0 && (
-                        <div className="flex justify-between text-[11px] font-black text-emerald-500 uppercase tracking-widest">
-                          <span className="flex items-center gap-3"><Banknote className="w-4 h-4" /> Wallet Credits</span>
-                          <span>-₹{formatCurrency(selectedOrder.billingBreakdown.walletUsed)}</span>
                         </div>
                       )}
                       <div className="flex justify-between text-[11px] font-black text-slate-900 uppercase tracking-widest">

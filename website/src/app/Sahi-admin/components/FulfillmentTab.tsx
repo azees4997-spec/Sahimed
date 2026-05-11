@@ -49,6 +49,10 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
   const [isLoading, setIsLoading] = useState(true);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const { user } = useUser();
   const { toast } = useToast();
 
@@ -59,6 +63,9 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
       if (statusFilter !== 'All') sp.append('status', statusFilter);
       if (startDate) sp.append('start', startDate);
       if (endDate) sp.append('end', endDate);
+      if (searchTerm) sp.append('search', searchTerm);
+      sp.append('page', page.toString());
+      sp.append('limit', '50');
       
       const token = await user?.getIdToken();
       const res = await fetch(`/api/orders?${sp.toString()}`, {
@@ -67,8 +74,15 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
         }
       });
       const data = await res.json();
-      if (Array.isArray(data)) {
+      
+      if (data.orders && Array.isArray(data.orders)) {
+        setOrders(data.orders);
+        setTotalOrders(data.total || 0);
+        setTotalPages(data.totalPages || 1);
+      } else if (Array.isArray(data)) {
         setOrders(data);
+        setTotalOrders(data.length);
+        setTotalPages(1);
       } else {
         setOrders([]);
       }
@@ -80,7 +94,8 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
     }
   };
 
-  useEffect(() => { fetchOrders(); }, [statusFilter, startDate, endDate]);
+  useEffect(() => { fetchOrders(); }, [statusFilter, startDate, endDate, searchTerm, page]);
+  useEffect(() => { setPage(1); }, [statusFilter, startDate, endDate, searchTerm]);
 
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [statusUpdateTarget, setStatusUpdateTarget] = useState<any>(null);
@@ -262,6 +277,22 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
     <div className="space-y-10">
       <SectionHeader title="Order Fulfillment" subtitle="Manage and track customer orders" onBack={onBack}>
         <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-4 bg-white/60 backdrop-blur-md rounded-full px-6 h-14 border border-slate-200 shadow-sm min-w-[300px]">
+            <Search className="w-4 h-4 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Search by ID, Name or Phone..." 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="bg-transparent border-none text-xs font-bold outline-none focus:ring-0 flex-1 placeholder:text-slate-300"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
           <div className="flex items-center gap-2 bg-slate-100 rounded-full px-5 h-14 border border-slate-200 shadow-inner">
              <div className="flex items-center gap-2 group/date">
               <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest group-hover/date:text-primary transition-colors">Start Date</span>
@@ -372,6 +403,57 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination Controls */}
+        {!isLoading && totalPages > 1 && (
+          <div className="px-8 py-6 bg-slate-50/50 border-t flex items-center justify-between">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Showing <span className="text-primary">{orders.length}</span> of <span className="text-primary">{totalOrders}</span> orders
+            </p>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                disabled={page === 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                className="rounded-full h-10 px-6 font-black text-[9px] uppercase tracking-widest gap-2"
+              >
+                Previous
+              </Button>
+              <div className="flex items-center gap-1 mx-2">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum = page;
+                  if (totalPages <= 5) pageNum = i + 1;
+                  else if (page <= 3) pageNum = i + 1;
+                  else if (page >= totalPages - 2) pageNum = totalPages - 4 + i;
+                  else pageNum = page - 2 + i;
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setPage(pageNum)}
+                      className={cn(
+                        "w-8 h-8 rounded-full text-[9px] font-black transition-all",
+                        page === pageNum ? "bg-primary text-white" : "text-slate-400 hover:bg-slate-200"
+                      )}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                disabled={page === totalPages}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                className="rounded-full h-10 px-6 font-black text-[9px] uppercase tracking-widest gap-2"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
       <Dialog open={!!selectedOrder} onOpenChange={o => !o && (setSelectedOrder(null), setIsEditing(false), setStatusUpdateTarget(null))}>

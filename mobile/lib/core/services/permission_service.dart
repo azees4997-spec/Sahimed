@@ -235,5 +235,15 @@ class PermissionService {
       icon: LucideIcons.alarmClock,
     );
   }
+
+  static Future<bool> requestBatteryOptimizations(BuildContext context) {
+    return requestPermission(
+      context,
+      permission: Permission.ignoreBatteryOptimizations,
+      title: 'Uninterrupted Alarms',
+      rationale: 'To prevent your phone from silencing alarms during power-saving mode, please allow Sahimed to run in the background.',
+      icon: LucideIcons.zap,
+    );
+  }
 }
 

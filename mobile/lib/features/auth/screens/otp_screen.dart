@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/layout/main_layout.dart';
+import '../../../core/services/api_service.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -80,6 +81,15 @@ class _OtpScreenState extends State<OtpScreen> {
       );
 
       await _auth.signInWithCredential(credential);
+
+      // CRITICAL: Sync with MongoDB immediately after login
+      try {
+        await ApiService().syncUser();
+      } catch (e) {
+        debugPrint("Sync Error: $e");
+        // We continue anyway so as not to block the user, 
+        // but the sync is triggered in the background.
+      }
 
       if (mounted) {
         Navigator.pushAndRemoveUntil(

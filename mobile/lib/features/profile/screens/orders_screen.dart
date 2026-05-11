@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/providers/cart_provider.dart';
+import '../../../core/providers/navigation_provider.dart';
 import '../../../shared/models/models.dart';
 import 'order_detail_screen.dart';
 
@@ -82,7 +83,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
           brand: brand,
           price: price,
           mrp: mrp,
-          imageUrl: item['imageUrl'] ?? 'https://picsum.photos/seed/$medicineId/300/300',
+          imageUrl: (item['imageUrl'] ?? '').toString().isNotEmpty 
+            ? item['imageUrl'] 
+            : 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=2070&auto=format&fit=crop', // Generic High-quality medicine image
+
           category: item['category']?.toString() ?? 'General',
         );
 
@@ -113,6 +117,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           margin: const EdgeInsets.all(20),
+          action: SnackBarAction(
+            label: 'VIEW CART',
+            textColor: Colors.white,
+            onPressed: () {
+              Navigator.pop(context); // Go back to profile
+              context.read<NavigationProvider>().switchTab(2); // Go to cart tab
+            },
+          ),
         ),
       );
     }

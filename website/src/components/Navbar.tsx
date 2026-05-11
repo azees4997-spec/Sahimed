@@ -360,15 +360,15 @@ export default function Navbar() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ toPincode: detectedPincode })
                   });
-                  const velocityData = await res.json();
-                  if (!velocityData.serviceable) {
+                  const shipwayData = await res.json();
+                  if (!shipwayData.serviceable) {
                     toast({ variant: 'destructive', title: "Not Serviceable", description: `We currently do not deliver to your detected location (${detectedPincode}).` });
                     setIsPopoverOpen(false);
                     setIsLocating(false);
                     return;
                   }
                 } catch(e) {
-                  console.error("Velocity check failed", e);
+                  console.error("Shipway check failed", e);
                 }
               }
 
@@ -740,7 +740,6 @@ export default function Navbar() {
                       {[
                         { label: 'My Profile', href: '/profile', icon: User },
                         { label: 'My Orders', href: '/orders', icon: Package },
-                        { label: 'SahiWallet', href: '/profile/wallet', icon: Wallet },
                       ].map((item) => (
                         <Link key={item.label} href={item.href}>
                           <button className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 transition-all group">
