@@ -488,9 +488,16 @@ export default function CheckoutPage() {
 
   const handlePaytmPayment = async (orderId: string, amount: number) => {
     try {
+      if (!user) throw new Error("Authentication required");
+      
+      const idToken = await user.getIdToken();
+      
       const res = await fetch('/api/paytm/initiate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
         body: JSON.stringify({ 
           orderId, 
           amount,
