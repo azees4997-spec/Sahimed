@@ -852,11 +852,44 @@ export default function CheckoutPage() {
                    <div className="w-1 h-6 bg-primary rounded-full" />
                    <h3 className="text-lg font-black text-slate-900 tracking-tight font-outfit uppercase">Payment Method</h3>
                 </div>
-                <div className="flex justify-center">
+                <div className="flex flex-col items-center gap-6">
+                  {/* Online Payment - Recommended */}
                   <div 
                     className={cn(
                       "p-8 rounded-[48px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white/40 backdrop-blur-md shadow-xl relative overflow-hidden group max-w-md w-full",
-                      paymentMethod === 'COD' ? "border-primary bg-white" : "border-transparent"
+                      paymentMethod === 'Online' ? "border-primary bg-white" : "border-transparent hover:border-slate-200"
+                    )}
+                    onClick={() => setPaymentMethod('Online')}
+                  >
+                    {/* Popular Badge */}
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-emerald-500 text-white text-[8px] font-black rounded-b-xl shadow-lg z-20 uppercase tracking-widest">
+                       Recommended
+                    </div>
+
+                    <div className="flex items-center gap-8 relative z-10 pt-2">
+                      <div className={cn("w-16 h-16 rounded-[24px] flex items-center justify-center shadow-inner transition-colors", paymentMethod === 'Online' ? "bg-primary text-white" : "bg-white text-slate-300")}>
+                        <CreditCard className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <p className="font-black text-lg tracking-tight font-outfit uppercase">Paytm / Online</p>
+                        <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-1">UPI, Cards, Netbanking</p>
+                      </div>
+                    </div>
+                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-inner relative z-10", paymentMethod === 'Online' ? "bg-primary" : "bg-white")}>
+                      <Check className={cn("w-4 h-4", paymentMethod === 'Online' ? "text-white" : "text-transparent")} />
+                    </div>
+                    {paymentMethod === 'Online' && (
+                      <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12">
+                        <Sparkles className="w-24 h-24 text-primary fill-primary" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Cash on Delivery */}
+                  <div 
+                    className={cn(
+                      "p-8 rounded-[48px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white/40 backdrop-blur-md shadow-xl relative overflow-hidden group max-w-md w-full",
+                      paymentMethod === 'COD' ? "border-primary bg-white" : "border-transparent hover:border-slate-200"
                     )}
                     onClick={() => setPaymentMethod('COD')}
                   >
@@ -875,32 +908,6 @@ export default function CheckoutPage() {
                     {paymentMethod === 'COD' && (
                       <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12">
                         <Zap className="w-24 h-24 text-primary fill-primary" />
-                      </div>
-                    )}
-                  </div>
-
-                   <div 
-                    className={cn(
-                      "p-8 rounded-[48px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white/40 backdrop-blur-md shadow-xl relative overflow-hidden group max-w-md w-full",
-                      paymentMethod === 'Online' ? "border-primary bg-white" : "border-transparent"
-                    )}
-                    onClick={() => setPaymentMethod('Online')}
-                  >
-                    <div className="flex items-center gap-8 relative z-10">
-                      <div className={cn("w-16 h-16 rounded-[24px] flex items-center justify-center shadow-inner transition-colors", paymentMethod === 'Online' ? "bg-primary text-white" : "bg-white text-slate-300")}>
-                        <CreditCard className="w-8 h-8" />
-                      </div>
-                      <div>
-                        <p className="font-black text-lg tracking-tight font-outfit uppercase">Paytm / Online</p>
-                        <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-1">UPI, Cards, Netbanking</p>
-                      </div>
-                    </div>
-                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-inner relative z-10", paymentMethod === 'Online' ? "bg-primary" : "bg-white")}>
-                      <Check className={cn("w-4 h-4", paymentMethod === 'Online' ? "text-white" : "text-transparent")} />
-                    </div>
-                    {paymentMethod === 'Online' && (
-                      <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12">
-                        <Sparkles className="w-24 h-24 text-primary fill-primary" />
                       </div>
                     )}
                   </div>
