@@ -34,8 +34,11 @@ export async function POST(req: Request) {
       });
     } else {
       const resultInfo = result.body?.resultInfo || {};
-      const errorMsg = resultInfo.resultMsg || "Failed to initiate Paytm transaction";
-      console.warn(`[Paytm Failure] Code: ${resultInfo.resultCode}, Msg: ${errorMsg}`, resultInfo);
+      const resultCode = resultInfo.resultCode || "Unknown";
+      const resultMsg = resultInfo.resultMsg || "System Error";
+      const errorMsg = `Paytm Error: ${resultCode} - ${resultMsg}`;
+      
+      console.warn(`[Paytm Failure] ${errorMsg}`, resultInfo);
       return NextResponse.json({ 
         error: errorMsg,
         details: resultInfo

@@ -55,7 +55,7 @@ export class PaytmService {
     // Dynamic callback URL based on current host if available, fallback to env
     const baseUrl = host ? `https://${host}` : (process.env.NEXT_PUBLIC_APP_URL || 'https://sahimed.com');
     const cleanOrderId = orderId.replace(/[^a-zA-Z0-9_-]/g, '');
-    const uniqueOrderId = `${cleanOrderId}T${Date.now()}`; 
+    const uniqueOrderId = `${cleanOrderId}-${Date.now()}`; 
     const callbackUrl = `${baseUrl}/api/paytm/callback`;
     
     const cleanCustId = userId.replace(/[^a-zA-Z0-9_-]/g, '');
