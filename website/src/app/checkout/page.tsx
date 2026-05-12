@@ -542,7 +542,12 @@ export default function CheckoutPage() {
       }
     } catch (err: any) {
       setLoading(false);
-      toast({ variant: 'destructive', title: "Payment Initiation Failed", description: err.message });
+      console.error("[Paytm Error Details]", err);
+      toast({ 
+        variant: 'destructive', 
+        title: "Payment Initiation Failed", 
+        description: err.message || "System Error"
+      });
     }
   };
 
