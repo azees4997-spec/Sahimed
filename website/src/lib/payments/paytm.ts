@@ -72,7 +72,6 @@ export class PaytmService {
       "websiteName": this.WEBSITE,
       "orderId": uniqueOrderId,
       "callbackUrl": callbackUrl,
-      "channelId": channel, // WEB or WAP
       "txnAmount": {
         "value": Number(amount).toFixed(2).toString(),
         "currency": "INR",
@@ -93,13 +92,17 @@ export class PaytmService {
 
       const paytmParams = {
         "head": {
-          "signature": signature
+          "signature": signature,
+          "version": "v1"
         },
         "body": sortedBody
       };
 
       const post_data = JSON.stringify(paytmParams);
       const url = `https://${this.HOST}/theia/api/v1/initiateTransaction?mid=${this.MID}&orderId=${uniqueOrderId}`;
+      
+      console.log(`[Paytm Request] URL: ${url}`);
+      console.log(`[Paytm Request] Payload: ${post_data}`);
 
       const response = await fetch(url, {
         method: 'POST',
