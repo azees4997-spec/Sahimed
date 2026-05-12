@@ -72,8 +72,7 @@ export class PaytmService {
       "websiteName": this.WEBSITE,
       "orderId": uniqueOrderId,
       "callbackUrl": callbackUrl,
-      "industryTypeId": "Retail",
-      "channelId": channel, // Crucial field from merchant keys
+      "channelId": channel, // WEB or WAP
       "txnAmount": {
         "value": Number(amount).toFixed(2).toString(),
         "currency": "INR",
@@ -105,8 +104,7 @@ export class PaytmService {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': post_data.length.toString(),
+          'Content-Type': 'application/json'
         },
         body: post_data
       });
