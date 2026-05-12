@@ -88,8 +88,7 @@ export class PaytmService {
 
       const paytmParams = {
         "head": {
-          "signature": signature,
-          "version": "v1"
+          "signature": signature
         },
         "body": bodyData
       };
@@ -102,8 +101,7 @@ export class PaytmService {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(post_data).toString() // Explicitly set byte length for production
+          'Content-Type': 'application/json'
         },
         body: post_data
       });
