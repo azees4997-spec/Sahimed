@@ -7,21 +7,27 @@ import PaytmChecksum from './PaytmChecksum';
  */
 export class PaytmService {
   private static get MID() {
-    return (process.env.PAYTM_MID || 'CFehFB20400052473723').trim();
+    const mid = process.env.PAYTM_MID;
+    if (!mid) throw new Error("PAYTM_MID is not defined in environment variables");
+    return mid.trim();
   }
 
   private static get MKEY() {
-    return (process.env.PAYTM_MERCHANT_KEY || 'UcS3iYcSyDs5%RGX').trim();
+    const mkey = process.env.PAYTM_MERCHANT_KEY;
+    if (!mkey) throw new Error("PAYTM_MERCHANT_KEY is not defined in environment variables");
+    return mkey.trim();
   }
 
   private static get ENV(): 'PROD' | 'STAGING' {
-    if (process.env.PAYTM_ENV) return process.env.PAYTM_ENV as 'PROD' | 'STAGING';
-    if (this.MID.startsWith('CFehFB')) return 'STAGING';
-    return process.env.NODE_ENV === 'production' ? 'PROD' : 'STAGING';
+    const env = process.env.PAYTM_ENV;
+    if (!env) return 'PROD'; // Default to PROD if not specified for safety
+    return env as 'PROD' | 'STAGING';
   }
 
   private static get WEBSITE() {
-    return (process.env.PAYTM_WEBSITE || (this.ENV === 'STAGING' ? 'WEBSTAGING' : 'DEFAULT')).trim();
+    const website = process.env.PAYTM_WEBSITE;
+    if (!website) return 'DEFAULT';
+    return website.trim();
   }
 
   private static get HOST() {
@@ -56,24 +62,15 @@ export class PaytmService {
     
     console.log(`[Paytm] Initiating ${this.ENV} transaction. Original Order: ${cleanOrderId}, Paytm Order: ${uniqueOrderId}`);
 
-    // Helper to ensure deterministic JSON stringification
-    const sortObject = (obj: any): any => {
-      return Object.keys(obj).sort().reduce((acc: any, key: string) => {
-        acc[key] = obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key]) 
-          ? sortObject(obj[key]) 
-          : obj[key];
-        return acc;
-      }, {});
-    };
-
-    const rawBody = {
+    // Define body exactly as per user's production structure (retains insertion order)
+    const bodyData = {
       "requestType": "Payment",
       "mid": this.MID,
       "websiteName": this.WEBSITE,
       "orderId": uniqueOrderId,
       "callbackUrl": callbackUrl,
       "txnAmount": {
-        "value": Number(amount).toFixed(2).toString(),
+        "value": parseFloat(amount.toString()).toFixed(2).toString(),
         "currency": "INR",
       },
       "userInfo": {
@@ -81,10 +78,9 @@ export class PaytmService {
       },
     };
 
-    const sortedBody = sortObject(rawBody);
-
     try {
-      const bodyString = JSON.stringify(sortedBody);
+      // Generate checksum from the JSON string of the body only
+      const bodyString = JSON.stringify(bodyData);
       const signature = await PaytmChecksum.generateSignature(bodyString, this.MKEY);
       
       console.log(`[Paytm Payload] Body: ${bodyString}`);
@@ -95,19 +91,19 @@ export class PaytmService {
           "signature": signature,
           "version": "v1"
         },
-        "body": sortedBody
+        "body": bodyData
       };
 
       const post_data = JSON.stringify(paytmParams);
       const url = `https://${this.HOST}/theia/api/v1/initiateTransaction?mid=${this.MID}&orderId=${uniqueOrderId}`;
       
       console.log(`[Paytm Request] URL: ${url}`);
-      console.log(`[Paytm Request] Payload: ${post_data}`);
 
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(post_data).toString() // Explicitly set byte length for production
         },
         body: post_data
       });

@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     if (result.body?.resultInfo?.resultStatus === 'S') {
       return NextResponse.json({
         txnToken: result.body.txnToken,
-        mid: process.env.PAYTM_MID || 'CFehFB20400052473723',
+        mid: process.env.PAYTM_MID || '',
         orderId: result.body.uniqueOrderId || orderId, // Use the unique ID for the payment window
         amount: amount
       });

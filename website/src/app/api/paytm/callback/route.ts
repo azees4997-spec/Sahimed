@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const checksum = body.CHECKSUMHASH;
     delete body.CHECKSUMHASH;
     
-    const isVerified = await PaytmService.verifyChecksum(body, process.env.PAYTM_MERCHANT_KEY || 'UcS3iYcSyDs5%RGX', checksum);
+    const isVerified = await PaytmService.verifyChecksum(body, process.env.PAYTM_MERCHANT_KEY || '', checksum);
     
     if (!isVerified) {
       console.error("[Paytm Callback] Checksum Verification Failed");
