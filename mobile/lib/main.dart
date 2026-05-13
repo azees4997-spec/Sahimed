@@ -13,6 +13,7 @@ import 'firebase_options.dart';
 import 'core/layout/main_layout.dart';
 import 'core/widgets/global_error_handler.dart';
 import 'core/services/reminder_service.dart';
+import 'package:in_app_update/in_app_update.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,6 +75,25 @@ class _SahimedAppState extends State<SahimedApp> {
   void initState() {
     super.initState();
     _initFuture = _initialize();
+    
+    // Check for updates in production
+    if (!kDebugMode) {
+      _checkForUpdate();
+    }
+  }
+
+  Future<void> _checkForUpdate() async {
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+      if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+        // If there's an update, start a flexible update (non-blocking)
+        // or an immediate update if you want to force it.
+        // We'll use performImmediateUpdate for critical medicine app parity
+        await InAppUpdate.performImmediateUpdate();
+      }
+    } catch (e) {
+      debugPrint("In-App Update Check Failed: $e");
+    }
   }
 
   Future<List<dynamic>> _initialize() async {
