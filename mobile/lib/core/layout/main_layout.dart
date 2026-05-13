@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'dart:async';
 import '../theme/colors.dart';
 import '../providers/cart_provider.dart';
 import '../providers/navigation_provider.dart';
@@ -28,6 +30,37 @@ class _MainLayoutState extends State<MainLayout> {
     const CartScreen(),
     const ProfileScreen(),
   ];
+
+  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
+  bool _isOffline = false;
+  bool _showOnlineSuccess = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((results) {
+      final isOffline = results.isEmpty || results.contains(ConnectivityResult.none);
+      
+      if (isOffline != _isOffline) {
+        setState(() {
+          if (!isOffline && _isOffline) {
+            // Recovered from offline
+            _showOnlineSuccess = true;
+            Future.delayed(const Duration(seconds: 3), () {
+              if (mounted) setState(() => _showOnlineSuccess = false);
+            });
+          }
+          _isOffline = isOffline;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +103,79 @@ class _MainLayoutState extends State<MainLayout> {
                   return const SizedBox.shrink();
                 },
               ),
+
+              // Online Success Banner
+              if (_showOnlineSuccess)
+                Positioned(
+                  top: 20,
+                  left: 20,
+                  right: 20,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: SahimedColors.emerald500,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(color: SahimedColors.emerald500.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 5))
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(LucideIcons.wifi, color: Colors.white, size: 16),
+                        const SizedBox(width: 10),
+                        Text(
+                          'BACK ONLINE',
+                          style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 10, letterSpacing: 1),
+                        ),
+                      ],
+                    ),
+                  ).animate().slideY(begin: -2, end: 0).fadeOut(delay: 2500.ms),
+                ),
+
+              // Offline Overlay
+              if (_isOffline)
+                Positioned(
+                  bottom: 100,
+                  left: 20,
+                  right: 20,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 30, offset: const Offset(0, 10))
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), shape: BoxShape.circle),
+                          child: const Icon(LucideIcons.wifiOff, color: SahimedColors.primary, size: 20),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'CONNECTION LOST',
+                                style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 10, letterSpacing: 1),
+                              ),
+                              Text(
+                                'Please check your internet settings.',
+                                style: GoogleFonts.outfit(fontWeight: FontWeight.w700, color: Colors.white60, fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(duration: 3.seconds, color: Colors.white10),
+                ),
             ],
           ),
         ),
