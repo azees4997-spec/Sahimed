@@ -9,6 +9,12 @@ import '../../shared/models/models.dart';
 
 class ApiService {
   static const String baseUrl = 'https://sahimed.com/api';
+  
+  // Singleton pattern
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+  ApiService._internal();
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -632,6 +638,21 @@ class ApiService {
       return response.statusCode == 200;
     } catch (e) {
       debugPrint('Error syncing user to MongoDB: $e');
+      return false;
+    }
+  }
+
+  Future<bool> updateFcmToken(String token) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/user/fcm-token'),
+        headers: headers,
+        body: json.encode({'fcmToken': token}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Error updating FCM token: $e');
       return false;
     }
   }

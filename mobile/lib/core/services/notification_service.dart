@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
+import 'api_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -72,6 +73,9 @@ class NotificationService {
 
     // 7. Get token for server-side use
     String? token = await _messaging.getToken();
+    if (token != null) {
+      await ApiService().updateFcmToken(token);
+    }
     debugPrint('FCM Token: $token');
   }
 
