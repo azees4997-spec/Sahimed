@@ -10,22 +10,32 @@ import {
   Banknote,
   Zap,
   Clock,
-  ChevronRight
+  ChevronRight,
+  Smile,
+  PackageCheck
 } from 'lucide-react';
 import Link from 'next/link';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 import { safeFormat } from '@/lib/safe-date';
 import { cn } from '@/lib/utils';
-
+import { useWindowSize } from 'react-use';
+import Confetti from 'react-confetti';
 
 export default function OrderSuccessPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const orderId = resolvedParams?.id;
   const { user } = useUser();
   const db = useFirestore();
+  const { width, height } = useWindowSize();
+  const [showConfetti, setShowConfetti] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowConfetti(false), 8000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const orderRef = useMemoFirebase(() => {
     if (!db || !user || !orderId) return null;
@@ -60,7 +70,6 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
             <Link href="/">Return Home</Link>
           </Button>
         </main>
-
       </div>
     );
   }
@@ -71,150 +80,115 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+        {showConfetti && <Confetti width={width} height={height} numberOfPieces={200} recycle={false} colors={['#10b981', '#34d399', '#059669', '#6ee7b7']} />}
         <Navbar />
 
-        <main className="flex-1 max-w-lg mx-auto px-6 py-6 md:py-10 flex flex-col items-center w-full">
+        <main className="flex-1 max-w-lg mx-auto px-6 py-6 md:py-12 flex flex-col items-center w-full">
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full space-y-6"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full space-y-8"
           >
             {/* Confirmation Header */}
             <div className="text-center space-y-4">
-              <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto shadow-sm border border-blue-100">
-                <CheckCircle2 className="w-10 h-10" />
-              </div>
-              <div className="space-y-1.5">
-                <h1 className="text-2xl font-black text-slate-900 tracking-tight font-outfit uppercase">
+              <motion.div 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                className="w-24 h-24 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-emerald-200 border-4 border-white"
+              >
+                <CheckCircle2 className="w-12 h-12" />
+              </motion.div>
+              <div className="space-y-2">
+                <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight font-outfit uppercase">
                   {isPendingConsult ? "Order Received" : "Order Confirmed!"}
                 </h1>
-                {isPendingConsult ? (
-                  <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider border border-amber-100">
-                    <Clock className="w-3 h-3" />
-                    Waiting for doctor consultation
-                  </div>
-                ) : (
-                  <p className="text-slate-500 font-bold text-xs uppercase tracking-wider opacity-70">Your health essentials are being prepared</p>
-                )}
+                <p className="text-emerald-600 font-black text-[10px] tracking-[0.3em] uppercase">YOUR HEALTH ESSENTIALS ARE ON THE WAY</p>
               </div>
             </div>
             
-            {/* Fulfillment Journey Timeline */}
-            {order?.timeline && order.timeline.length > 0 && (
-              <div className="bg-slate-50/50 rounded-[32px] p-6 border border-slate-100">
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6 flex items-center gap-2">
-                  <Clock className="w-3 h-3 text-blue-600" /> Order Track History
-                </p>
-                <div className="space-y-6">
-                  {order.timeline.slice().reverse().map((entry: any, idx: number) => (
-                    <div key={idx} className="flex gap-4 items-start relative">
-                      {idx !== order.timeline.length - 1 && (
-                        <div className="absolute left-[11px] top-6 bottom-[-24px] w-0.5 bg-slate-100" />
-                      )}
-                      <div className={cn(
-                        "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2 border-white shadow-sm",
-                        idx === 0 ? "bg-blue-600 text-white shadow-lg shadow-blue-100" : "bg-slate-100 text-slate-300"
-                      )}>
-                        <div className="w-1.5 h-1.5 rounded-full bg-current" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className={cn("text-[10px] font-black uppercase tracking-tight", 
-                            idx === 0 ? "text-blue-600" : "text-slate-500"
-                          )}>
-                            {entry.status}
-                          </p>
-                          <p className="text-[8px] font-black text-slate-400 uppercase whitespace-nowrap">
-                            {safeFormat(entry.timestamp, 'HH:mm | dd MMM')}
-                          </p>
-                        </div>
-                        <p className="text-[9px] font-bold text-slate-400 mt-0.5 line-clamp-1">{entry.message}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Payment & Savings Card */}
-            <Card className="rounded-[40px] border-none shadow-2xl shadow-blue-900/10 bg-blue-600 overflow-hidden text-white relative">
+            {/* Success Card - Matches Mobile App Aesthetic */}
+            <Card className="rounded-[48px] border-none shadow-2xl shadow-emerald-900/10 bg-emerald-600 overflow-hidden text-white relative">
               <div className="absolute top-0 right-0 p-8 opacity-10">
-                <Zap className="w-32 h-32" />
+                <Zap className="w-40 h-40" />
               </div>
-              <CardContent className="p-8 space-y-8 relative z-10">
+              <CardContent className="p-10 space-y-8 relative z-10">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60">Amount Paid</p>
-                    <p className="text-4xl font-black font-outfit tracking-tighter">₹{Number(order?.totalAmount || 0).toFixed(2)}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-100/60">Total Amount</p>
+                    <p className="text-5xl font-black font-outfit tracking-tighter">₹{Number(order?.totalAmount || 0).toFixed(2)}</p>
                   </div>
                   {totalSaved > 0 && (
                     <div className="text-right space-y-1">
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60">Smart Savings</p>
-                      <p className="text-xl font-black font-outfit flex items-center justify-end gap-1.5 text-blue-100">
-                        <Zap className="w-4 h-4 fill-blue-100" />
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-100/60">Total Savings</p>
+                      <p className="text-2xl font-black font-outfit flex items-center justify-end gap-2 text-emerald-50">
+                        <Zap className="w-5 h-5 fill-emerald-50" />
                         ₹{Number(totalSaved).toFixed(2)}
                       </p>
                     </div>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-6 pt-6 border-t border-white/10">
-                  <div className="space-y-1">
-                    <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/60">Payment Mode</p>
+                <div className="grid grid-cols-2 gap-8 pt-8 border-t border-white/20">
+                  <div className="space-y-2">
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-100/60">Order ID</p>
+                    <p className="text-xs font-black uppercase tracking-wider">#{orderId?.substring(0, 12).toUpperCase()}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-100/60">Payment Mode</p>
                     <div className="flex items-center gap-2">
-                      <Banknote className="w-3.5 h-3.5 text-white/60" />
-                      <p className="text-xs font-black uppercase">{order?.paymentType || 'COD'}</p>
+                      <Banknote className="w-4 h-4 text-emerald-100/60" />
+                      <p className="text-xs font-black uppercase">{order?.paymentType || 'CASH ON DELIVERY'}</p>
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/60">Order ID</p>
-                    <p className="text-xs font-black uppercase truncate">#{orderId?.substring(0, 8).toUpperCase()}</p>
-                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Delivery Address Card */}
-            <Card className="rounded-[32px] border border-slate-100 shadow-sm bg-slate-50/50">
-              <CardContent className="p-5 flex gap-4 items-start">
-                <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-100 shrink-0">
-                  <MapPin className="w-5 h-5 text-blue-600" />
+            {/* Delivery Info Card */}
+            <div className="grid grid-cols-1 gap-4">
+              <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex gap-5 items-center">
+                <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center shrink-0">
+                  <MapPin className="w-6 h-6 text-emerald-600" />
                 </div>
-                <div className="space-y-1 min-w-0">
-                  <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Delivering to</p>
-                  <p className="text-[11px] font-black text-slate-700 leading-tight uppercase truncate">
-                    {order?.shippingDetails?.street || 'Default Address'}
-                  </p>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase">
-                    {order?.shippingDetails?.city} - {order?.shippingDetails?.pincode}
-                  </p>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Delivering to</p>
+                  <p className="text-sm font-black text-slate-800 uppercase line-clamp-1">{order?.shippingDetails?.street}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">{order?.shippingDetails?.city} • {order?.shippingDetails?.pincode}</p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+
+              <div className="bg-emerald-50/50 p-6 rounded-[32px] border border-emerald-100/50 flex gap-5 items-center">
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
+                  <Smile className="w-6 h-6 text-emerald-500" />
+                </div>
+                <p className="text-[11px] font-bold text-emerald-700 leading-relaxed uppercase tracking-wide">
+                  We're excited to serve you! You will receive a confirmation call shortly from our team.
+                </p>
+              </div>
+            </div>
 
             {/* Actions */}
-            <div className="flex flex-col gap-3">
-              <Link href="/orders" className="w-full">
-                <Button className="w-full h-16 rounded-2xl bg-slate-900 text-white font-black text-xs uppercase tracking-widest hover:scale-[1.01] active:scale-95 transition-all shadow-xl shadow-slate-200 gap-3">
-                  Track Order
-                  <ChevronRight className="w-4 h-4" />
+            <div className="flex flex-col gap-4 pt-4">
+              <Link href="/profile/orders" className="w-full">
+                <Button className="w-full h-20 rounded-[28px] bg-slate-900 text-white font-black text-sm uppercase tracking-[0.2em] hover:bg-slate-800 active:scale-[0.98] transition-all shadow-xl shadow-slate-200 gap-4">
+                  Track Your Order
+                  <PackageCheck className="w-5 h-5" />
                 </Button>
               </Link>
               <Link href="/" className="w-full">
-                <Button variant="outline" className="w-full h-16 rounded-2xl border-2 font-black text-xs uppercase tracking-widest hover:bg-slate-50 active:scale-95 transition-all">
+                <Button variant="outline" className="w-full h-20 rounded-[28px] border-2 border-slate-100 bg-white font-black text-sm uppercase tracking-[0.2em] hover:bg-slate-50 active:scale-[0.98] transition-all text-slate-600">
                   Continue Shopping
                 </Button>
               </Link>
             </div>
 
-            <div className="pt-6 text-center">
-              <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em]">SahiMed Secure Gateway</p>
+            <div className="pt-8 text-center">
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">SahiMed Secure Checkout</p>
             </div>
           </motion.div>
         </main>
-
-
       </div>
     </PageTransition>
   );
