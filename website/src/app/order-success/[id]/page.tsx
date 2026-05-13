@@ -104,7 +104,7 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
             {order?.timeline && order.timeline.length > 0 && (
               <div className="bg-slate-50/50 rounded-[32px] p-6 border border-slate-100">
                 <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6 flex items-center gap-2">
-                  <Clock className="w-3 h-3 text-blue-600" /> Fulfillment Journey
+                  <Clock className="w-3 h-3 text-blue-600" /> Order Track History
                 </p>
                 <div className="space-y-6">
                   {order.timeline.slice().reverse().map((entry: any, idx: number) => (

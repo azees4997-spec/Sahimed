@@ -515,7 +515,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                 <div className="grid grid-cols-2 gap-12">
                   <div><h4 className="text-xs font-black text-gray-400 mb-3 uppercase tracking-widest">Patient / Customer</h4><p className="font-black text-2xl tracking-tight">{selectedOrder?.patientName}</p><p className="text-base font-bold text-gray-500">{selectedOrder?.phoneNumber}</p></div>
                   <div>
-                    <h4 className="text-xs font-black text-gray-400 mb-3 uppercase tracking-widest">Delivery Matrix</h4>
+                    <h4 className="text-xs font-black text-gray-400 mb-3 uppercase tracking-widest">Shipping Address</h4>
                     <p className="text-lg font-bold leading-relaxed uppercase">
                       {selectedOrder?.shippingDetails?.houseNumber ? `${selectedOrder.shippingDetails.houseNumber}, ` : ''}
                       {selectedOrder?.shippingDetails?.street}
@@ -568,7 +568,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                 {selectedOrder?.timeline && selectedOrder.timeline.length > 0 && (
                   <div className="bg-slate-50 p-8 rounded-[40px] border border-slate-100 space-y-6">
                     <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-primary" /> Fulfillment Journey
+                      <Clock className="w-5 h-5 text-primary" /> Order Track History
                     </h4>
                     <div className="space-y-6">
                       {selectedOrder.timeline.map((entry: any, idx: number) => (
@@ -602,7 +602,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                 )}
 
                 <div className="bg-gray-50 p-8 rounded-[40px] border space-y-6">
-                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Manage Fulfillment Pipeline</h4>
+                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Order Processing Pipeline</h4>
                   <div className="grid grid-cols-2 gap-3">
                     {selectedOrder?.status === 'Pending Pharmacist' ? (
                       <>
@@ -657,7 +657,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                   </div>
                 </div>
                 <div className="bg-gray-50 p-8 rounded-[40px] border-2 space-y-6">
-                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Order Inventory / Items</h4>
+                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Medicine & Item Summary</h4>
                   {selectedOrder?.items?.map((it: any, i: number) => (
                     <div key={i} className="flex justify-between items-center bg-white p-5 rounded-3xl border-2 border-slate-100 shadow-sm">
                       <div className="space-y-1">
