@@ -17,6 +17,8 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { motion } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
+import { safeFormat } from '@/lib/safe-date';
+import { cn } from '@/lib/utils';
 
 
 export default function OrderSuccessPage({ params }: { params: Promise<{ id: string }> }) {
@@ -97,6 +99,43 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
                 )}
               </div>
             </div>
+            
+            {/* Fulfillment Journey Timeline */}
+            {order?.timeline && order.timeline.length > 0 && (
+              <div className="bg-slate-50/50 rounded-[32px] p-6 border border-slate-100">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6 flex items-center gap-2">
+                  <Clock className="w-3 h-3 text-blue-600" /> Fulfillment Journey
+                </p>
+                <div className="space-y-6">
+                  {order.timeline.slice().reverse().map((entry: any, idx: number) => (
+                    <div key={idx} className="flex gap-4 items-start relative">
+                      {idx !== order.timeline.length - 1 && (
+                        <div className="absolute left-[11px] top-6 bottom-[-24px] w-0.5 bg-slate-100" />
+                      )}
+                      <div className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2 border-white shadow-sm",
+                        idx === 0 ? "bg-blue-600 text-white shadow-lg shadow-blue-100" : "bg-slate-100 text-slate-300"
+                      )}>
+                        <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={cn("text-[10px] font-black uppercase tracking-tight", 
+                            idx === 0 ? "text-blue-600" : "text-slate-500"
+                          )}>
+                            {entry.status}
+                          </p>
+                          <p className="text-[8px] font-black text-slate-400 uppercase whitespace-nowrap">
+                            {safeFormat(entry.timestamp, 'HH:mm | dd MMM')}
+                          </p>
+                        </div>
+                        <p className="text-[9px] font-bold text-slate-400 mt-0.5 line-clamp-1">{entry.message}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Payment & Savings Card */}
             <Card className="rounded-[40px] border-none shadow-2xl shadow-blue-900/10 bg-blue-600 overflow-hidden text-white relative">

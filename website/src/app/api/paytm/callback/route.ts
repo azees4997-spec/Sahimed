@@ -55,7 +55,14 @@ export async function POST(req: Request) {
             paytmOrderId: paytmOrderId,
             updatedAt: new Date(),
             paymentStatus: 'Paid'
-          } 
+          },
+          $push: { 
+            timeline: { 
+              status: 'Paid', 
+              timestamp: new Date(), 
+              message: `Payment confirmed via Paytm. TXN ID: ${txnId}` 
+            } 
+          } as any
         }
       );
 
@@ -68,7 +75,8 @@ export async function POST(req: Request) {
           await dbAdmin.doc(`userProfiles/${order.userId}/orders/${baseOrderId}`).set({
             status: 'Confirmed',
             paymentId: txnId,
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            timeline: order.timeline // Sync the updated timeline
           }, { merge: true });
         }
       } catch (fsErr: any) {

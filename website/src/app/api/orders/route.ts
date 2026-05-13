@@ -341,6 +341,10 @@ export async function POST(req: Request) {
       createdAt: new Date(),
       updatedAt: new Date(),
       status: initialStatus,
+      timeline: [
+        { status: 'Placed', timestamp: new Date(), message: 'Order created successfully' },
+        { status: initialStatus, timestamp: new Date(), message: `Order initialized as ${initialStatus}` }
+      ],
       shipping: body.shipping || { partner: 'Shipway' }
     };
 
@@ -512,7 +516,16 @@ export async function PUT(req: Request) {
 
     const result = await db.collection('orders').updateOne(
       { _id: new ObjectId(id) },
-      { $set: { ...updates, updatedAt: new Date() } }
+      { 
+        $set: { ...updates, updatedAt: new Date() },
+        $push: { 
+          timeline: { 
+            status: updates.status || currentOrder.status, 
+            timestamp: new Date(), 
+            message: updates.action ? `Transition: ${updates.action}` : `Status adjusted to ${updates.status || currentOrder.status}`
+          } 
+        }
+      }
     );
 
     // --- REBUILT CASHBACK ENGINE V2 ---

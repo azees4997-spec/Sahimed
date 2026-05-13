@@ -16,7 +16,8 @@ import {
   FileCheck,
   FileText,
   Printer,
-  Trash2
+  Trash2,
+  Clock
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -560,6 +561,42 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                           <span className="text-[8px] bg-emerald-100 px-2 py-1 rounded-lg">OPEN LINK</span>
                         </a>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {selectedOrder?.timeline && selectedOrder.timeline.length > 0 && (
+                  <div className="bg-slate-50 p-6 rounded-[32px] border border-slate-100 space-y-4">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-primary" /> Fulfillment Journey
+                    </h4>
+                    <div className="space-y-4">
+                      {selectedOrder.timeline.map((entry: any, idx: number) => (
+                        <div key={idx} className="flex gap-4 items-start relative">
+                          {idx !== selectedOrder.timeline.length - 1 && (
+                            <div className="absolute left-[11px] top-6 -bottom-4 w-0.5 bg-slate-200" />
+                          )}
+                          <div className={cn(
+                            "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2 border-white shadow-sm",
+                            idx === selectedOrder.timeline.length - 1 ? "bg-primary text-white scale-110" : "bg-slate-200 text-slate-500"
+                          )}>
+                            <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className={cn("text-[10px] font-black uppercase tracking-tight", 
+                                idx === selectedOrder.timeline.length - 1 ? "text-primary" : "text-slate-600"
+                              )}>
+                                {entry.status}
+                              </p>
+                              <p className="text-[8px] font-black text-slate-400 uppercase whitespace-nowrap">
+                                {safeFormat(entry.timestamp, 'HH:mm | dd MMM')}
+                              </p>
+                            </div>
+                            <p className="text-[9px] font-bold text-slate-400 mt-0.5 line-clamp-1">{entry.message}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
