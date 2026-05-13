@@ -31,7 +31,7 @@ export class PaytmService {
   }
 
   private static get HOST() {
-    return this.ENV === 'PROD' ? 'securegw.paytm.in' : 'securestage.paytmpayments.com';
+    return this.ENV === 'PROD' ? 'secure.paytmpayments.com' : 'securestage.paytmpayments.com';
   }
 
   /**
@@ -80,7 +80,7 @@ export class PaytmService {
     
     console.log(`[Paytm] Initiating ${this.ENV} transaction. Original Order: ${cleanOrderId}, Paytm Order: ${uniqueOrderId}`);
 
-    // Define body exactly as per user's production structure
+    // Define body exactly as per user's production dashboard
     const bodyData: any = {
       "requestType": "Payment",
       "mid": this.MID,
@@ -96,7 +96,8 @@ export class PaytmService {
         ...(userDetails?.mobile && { "mobile": userDetails.mobile.replace(/\D/g, '').slice(-10) }),
         ...(userDetails?.email && { "email": userDetails.email })
       },
-      "industryTypeId": "Retail"
+      "industryTypeId": "Retail",
+      "channelId": "WEB"
     };
 
     try {
