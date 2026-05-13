@@ -138,9 +138,7 @@ export class PaytmService {
         }
         console.log(`[Paytm Response]`, JSON.stringify(result));
         // Include the uniqueOrderId used for this attempt
-        if (result.body) {
-          result.body.uniqueOrderId = uniqueOrderId;
-        }
+        result.orderId = uniqueOrderId;
         return result;
       } else {
         const text = await response.text();
