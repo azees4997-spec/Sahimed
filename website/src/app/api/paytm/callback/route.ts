@@ -13,10 +13,16 @@ export async function POST(req: Request) {
 
     console.log("[Paytm Callback Received]", body);
 
-    // Verify Checksum
-    const checksum = body.CHECKSUMHASH;
-    delete body.CHECKSUMHASH;
+    // Verify Checksum/Signature
+    const checksum = body.CHECKSUMHASH || body.signature;
+    if (body.CHECKSUMHASH) delete body.CHECKSUMHASH;
+    if (body.signature) delete body.signature;
     
+    if (!checksum) {
+      console.error("[Paytm Callback] No Checksum/Signature found in response");
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/checkout?error=Missing+Verification+Token`, 303);
+    }
+
     const isVerified = await PaytmService.verifyChecksum(body, process.env.PAYTM_MERCHANT_KEY || '', checksum);
     
     if (!isVerified) {

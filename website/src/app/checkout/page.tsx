@@ -501,7 +501,18 @@ export default function CheckoutPage() {
         body: JSON.stringify({ 
           orderId, 
           amount,
-          channel: 'WEB'
+          channel: 'WEB',
+          userDetails: {
+            mobile: orderInfo.phoneNumber,
+            firstName: orderInfo.patientName,
+            shipping: {
+              address1: orderInfo.houseNumber,
+              address2: orderInfo.buildingLocality,
+              cityName: orderInfo.city,
+              stateName: orderInfo.state,
+              zipCode: orderInfo.pincode
+            }
+          }
         })
       });
 

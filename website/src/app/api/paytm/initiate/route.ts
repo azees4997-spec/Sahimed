@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     const user = await verifyAuth(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { orderId, amount, channel } = await req.json();
+    const { orderId, amount, channel, userDetails } = await req.json();
 
     if (!orderId || !amount) {
       return NextResponse.json({ error: "Order ID and amount are required" }, { status: 400 });
@@ -22,7 +22,8 @@ export async function POST(req: Request) {
       amount, 
       user.uid, 
       host,
-      channel || 'WEB'
+      channel || 'WEB',
+      userDetails
     );
 
     if (result.body?.resultInfo?.resultStatus === 'S') {

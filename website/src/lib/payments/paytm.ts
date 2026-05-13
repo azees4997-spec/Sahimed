@@ -26,12 +26,12 @@ export class PaytmService {
 
   private static get WEBSITE() {
     const website = process.env.PAYTM_WEBSITE;
-    if (!website) return 'DEFAULT';
-    return website.trim();
+    if (website) return website.trim();
+    return this.ENV === 'PROD' ? 'DEFAULT' : 'WEBSTAGING';
   }
 
   private static get HOST() {
-    return this.ENV === 'PROD' ? 'securegw.paytm.in' : 'securegw-stage.paytm.in';
+    return this.ENV === 'PROD' ? 'secure.paytmpayments.com' : 'securestage.paytmpayments.com';
   }
 
   /**
@@ -51,7 +51,25 @@ export class PaytmService {
   /**
    * Initiates a transaction and returns the txnToken
    */
-  static async initiateTransaction(orderId: string, amount: number, userId: string, host?: string, channel: 'WEB' | 'WAP' = 'WEB') {
+  static async initiateTransaction(
+    orderId: string, 
+    amount: number, 
+    userId: string, 
+    host?: string, 
+    channel: 'WEB' | 'WAP' = 'WEB',
+    userDetails?: { 
+      mobile?: string, 
+      email?: string, 
+      firstName?: string,
+      shipping?: {
+        address1?: string,
+        address2?: string,
+        cityName?: string,
+        stateName?: string,
+        zipCode?: string
+      }
+    }
+  ) {
     // Dynamic callback URL based on current host if available, fallback to env
     const baseUrl = host ? `https://${host}` : (process.env.NEXT_PUBLIC_APP_URL || 'https://sahimed.com');
     const cleanOrderId = orderId.replace(/[^a-zA-Z0-9_-]/g, '');
@@ -62,8 +80,8 @@ export class PaytmService {
     
     console.log(`[Paytm] Initiating ${this.ENV} transaction. Original Order: ${cleanOrderId}, Paytm Order: ${uniqueOrderId}`);
 
-    // Define body exactly as per user's production structure (retains insertion order)
-    const bodyData = {
+    // Define body exactly as per user's production structure
+    const bodyData: any = {
       "requestType": "Payment",
       "mid": this.MID,
       "websiteName": this.WEBSITE,
@@ -75,8 +93,22 @@ export class PaytmService {
       },
       "userInfo": {
         "custId": cleanCustId,
+        ...(userDetails?.mobile && { "mobile": userDetails.mobile.replace(/\D/g, '').slice(-10) }),
+        ...(userDetails?.email && { "email": userDetails.email })
       },
     };
+
+    // Add Shipping Info if available
+    if (userDetails?.shipping) {
+      bodyData.shippingInfo = {
+        ...(userDetails.firstName && { "firstName": userDetails.firstName }),
+        ...(userDetails.shipping.address1 && { "address1": userDetails.shipping.address1 }),
+        ...(userDetails.shipping.address2 && { "address2": userDetails.shipping.address2 }),
+        ...(userDetails.shipping.cityName && { "cityName": userDetails.shipping.cityName }),
+        ...(userDetails.shipping.stateName && { "stateName": userDetails.shipping.stateName }),
+        ...(userDetails.shipping.zipCode && { "zipCode": userDetails.shipping.zipCode })
+      };
+    }
 
     try {
       // Generate checksum from the JSON string of the body only
@@ -88,7 +120,8 @@ export class PaytmService {
 
       const paytmParams = {
         "head": {
-          "signature": signature
+          "signature": signature,
+          "channelId": channel
         },
         "body": bodyData
       };
