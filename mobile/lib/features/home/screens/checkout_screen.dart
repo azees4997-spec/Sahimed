@@ -385,6 +385,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 orderId: orderId,
                 totalAmount: confirmedTotal,
                 patientName: confirmedName,
+                paymentMethod: paymentId != null ? 'Online Payment' : 'Cash on Delivery',
               ),
             ),
             (route) => route.isFirst,

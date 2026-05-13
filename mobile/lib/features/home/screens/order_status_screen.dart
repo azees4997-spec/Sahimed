@@ -16,6 +16,7 @@ class OrderStatusScreen extends StatefulWidget {
   final String? orderId;
   final double? totalAmount;
   final String? patientName;
+  final String? paymentMethod;
 
   const OrderStatusScreen({
     super.key,
@@ -23,6 +24,7 @@ class OrderStatusScreen extends StatefulWidget {
     this.orderId,
     this.totalAmount,
     this.patientName,
+    this.paymentMethod,
   });
 
   @override
@@ -99,35 +101,34 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
             ),
 
           SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
               child: Column(
                 children: [
-                  const SizedBox(height: 60),
+                  const SizedBox(height: 10),
                   
-                  // Big Animated Icon
+                  // Big Animated Icon - Reduced size to fit screen
                   _buildAnimatedStatusIcon(),
                   
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
                   
                   // Success/Joy Text
                   if (widget.isSuccess) ...[
                     Text(
                       'Order Confirmed!',
                       style: GoogleFonts.outfit(
-                        fontSize: 34,
+                        fontSize: 30,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
                         letterSpacing: -1,
                       ),
                     ).animate().scale(delay: 400.ms, duration: 600.ms, curve: Curves.elasticOut),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Text(
                       'YOUR MEDICINES ARE ON THE WAY',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: FontWeight.w900,
                         color: Colors.white.withOpacity(0.9),
                         letterSpacing: 2,
@@ -137,18 +138,18 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                     Text(
                       'Something Went Wrong',
                       style: GoogleFonts.outfit(
-                        fontSize: 28,
+                        fontSize: 24,
                         fontWeight: FontWeight.w900,
                         color: SahimedColors.textPrimary,
                         letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Text(
                       'TRANSACTION FAILED',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: FontWeight.w900,
                         color: SahimedColors.accent,
                         letterSpacing: 2,
@@ -156,16 +157,20 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                     ),
                   ],
 
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 24),
                   
-                  // Detail Card
-                  if (widget.isSuccess) _buildOrderCard() else _buildErrorCard(),
+                  // Detail Card - Expanded to take available space efficiently
+                  Expanded(
+                    child: Center(
+                      child: widget.isSuccess ? _buildOrderCard() : _buildErrorCard(),
+                    ),
+                  ),
                   
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 24),
                   
                   // Action Buttons
                   _buildActionButtons(context),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 10),
                 ],
               ),
             ),
@@ -177,23 +182,23 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
 
   Widget _buildAnimatedStatusIcon() {
     return Container(
-      width: 140,
-      height: 140,
+      width: 120,
+      height: 120,
       decoration: BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
-            blurRadius: 30,
-            offset: const Offset(0, 10),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Center(
         child: Icon(
           widget.isSuccess ? Icons.check_rounded : Icons.close_rounded,
-          size: 90,
+          size: 70,
           color: widget.isSuccess ? const Color(0xFF00B377) : SahimedColors.accent,
         ),
       ),
@@ -221,30 +226,30 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
           if (widget.orderId != null) ...[
             _rowItem(LucideIcons.hash, 'Order ID', widget.orderId!),
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
+              padding: EdgeInsets.symmetric(vertical: 8),
               child: Divider(height: 1, color: Color(0xFFF1F5F9)),
             ),
           ],
           if (widget.patientName != null) ...[
             _rowItem(LucideIcons.user, 'Patient Name', widget.patientName!.toUpperCase()),
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
+              padding: EdgeInsets.symmetric(vertical: 8),
               child: Divider(height: 1, color: Color(0xFFF1F5F9)),
             ),
           ],
           if (widget.totalAmount != null) ...[
             _rowItem(LucideIcons.banknote, 'Total Amount', '₹${widget.totalAmount!.toStringAsFixed(2)}'),
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
+              padding: EdgeInsets.symmetric(vertical: 8),
               child: Divider(height: 1, color: Color(0xFFF1F5F9)),
             ),
           ],
           _rowItem(LucideIcons.truck, 'Expected Arrival', 'WITHIN 24-48 HOURS'),
           const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
+            padding: EdgeInsets.symmetric(vertical: 8),
             child: Divider(height: 1, color: Color(0xFFF1F5F9)),
           ),
-          _rowItem(LucideIcons.packageCheck, 'Payment Mode', 'CASH ON DELIVERY'),
+          _rowItem(LucideIcons.packageCheck, 'Payment Mode', widget.paymentMethod?.toUpperCase() ?? 'CASH ON DELIVERY'),
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(16),
