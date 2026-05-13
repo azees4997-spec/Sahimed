@@ -38,7 +38,9 @@ export async function POST(req: Request) {
     const txnId = body.TXNID;
 
     // Extract baseOrderId (strip T suffix if exists)
-    const baseOrderId = paytmOrderId.includes('T') ? paytmOrderId.split('T')[0] : paytmOrderId;
+    const baseOrderId = paytmOrderId.toString().includes('-') 
+      ? paytmOrderId.toString().substring(0, paytmOrderId.toString().lastIndexOf('-'))
+      : paytmOrderId.toString();
 
     if (status === 'TXN_SUCCESS') {
       console.log(`[Paytm Success] Updating Order: ${baseOrderId} with Paytm ID: ${paytmOrderId}`);
