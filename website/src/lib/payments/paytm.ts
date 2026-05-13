@@ -99,7 +99,7 @@ export class PaytmService {
         ...(userDetails?.email && { "email": userDetails.email })
       },
       "industryTypeId": "Retail",
-      "channelId": "WEB"
+      "channelId": channel
     };
 
     try {
