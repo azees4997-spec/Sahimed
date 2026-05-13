@@ -17,6 +17,7 @@ class OrderStatusScreen extends StatefulWidget {
   final double? totalAmount;
   final String? patientName;
   final String? paymentMethod;
+  final String? expectedDelivery;
 
   const OrderStatusScreen({
     super.key,
@@ -25,6 +26,7 @@ class OrderStatusScreen extends StatefulWidget {
     this.totalAmount,
     this.patientName,
     this.paymentMethod,
+    this.expectedDelivery,
   });
 
   @override
@@ -244,7 +246,11 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
               child: Divider(height: 1, color: Color(0xFFF1F5F9)),
             ),
           ],
-          _rowItem(LucideIcons.truck, 'Expected Arrival', 'WITHIN 24-48 HOURS'),
+          _rowItem(
+            LucideIcons.truck, 
+            'Expected Arrival', 
+            widget.expectedDelivery?.toUpperCase() ?? 'WITHIN 24-48 HOURS'
+          ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: Divider(height: 1, color: Color(0xFFF1F5F9)),

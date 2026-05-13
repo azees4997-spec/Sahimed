@@ -284,7 +284,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     // Check serviceability
     try {
       final pincodeToCheck = _showAddressForm ? _pincodeController.text : _selectedAddress!['pincode'];
-      final isServiceable = await _apiService.checkServiceability(pincodeToCheck);
+      final shipway = await _apiService.getShipwayServiceability(pincodeToCheck);
+      final isServiceable = shipway?['serviceable'] == true;
+      final expectedDelivery = shipway?['edd'];
+
       if (!isServiceable) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -386,6 +389,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 totalAmount: confirmedTotal,
                 patientName: confirmedName,
                 paymentMethod: paymentId != null ? 'Online Payment' : 'Cash on Delivery',
+                expectedDelivery: expectedDelivery,
               ),
             ),
             (route) => route.isFirst,
