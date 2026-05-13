@@ -31,7 +31,7 @@ export class PaytmService {
   }
 
   private static get HOST() {
-    return this.ENV === 'PROD' ? 'secure.paytmpayments.com' : 'securestage.paytmpayments.com';
+    return this.ENV === 'PROD' ? 'securegw.paytm.in' : 'securestage.paytmpayments.com';
   }
 
   /**
