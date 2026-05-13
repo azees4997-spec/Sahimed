@@ -69,62 +69,90 @@ function ExpandableInfoTile({
   iconColor?: string,
   titleColor?: string
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   return (
-    <motion.div
-      layout
-      onClick={() => setIsExpanded(!isExpanded)}
-      className={cn(
-        "p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-white space-y-2 sm:space-y-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98]",
-        color,
-        isExpanded ? "ring-2 ring-primary/10 z-20" : "z-10"
-      )}
-    >
-      <div className="flex items-center gap-2 sm:gap-4">
-        <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", iconColor)} />
-        <h3 className={cn("text-[10px] sm:text-lg font-black tracking-tighter font-outfit uppercase", titleColor)}>
-          {title}
-        </h3>
-      </div>
-      <p className={cn(
-        "text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase tracking-tight transition-all",
-        !isExpanded && "line-clamp-3"
-      )}>
-        {text}
-      </p>
-    </motion.div>
+    <Dialog>
+      <DialogTrigger asChild>
+        <motion.div
+          layout
+          className={cn(
+            "p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-white space-y-2 sm:space-y-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98] z-10",
+            color
+          )}
+        >
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", iconColor)} />
+            <h3 className={cn("text-[10px] sm:text-lg font-black tracking-tighter font-outfit uppercase", titleColor)}>
+              {title}
+            </h3>
+          </div>
+          <p className="text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase tracking-tight line-clamp-3">
+            {text}
+          </p>
+        </motion.div>
+      </DialogTrigger>
+      <DialogContent className="max-w-[90vw] sm:max-w-2xl rounded-[32px] sm:rounded-[48px] p-8 sm:p-12 border-none shadow-3xl">
+        <div className="space-y-6 sm:space-y-8">
+           <div className="flex items-center gap-4">
+              <div className={cn("w-12 h-12 sm:w-16 sm:h-16 rounded-[16px] sm:rounded-[24px] flex items-center justify-center shadow-sm border border-slate-50", color.replace('bg-', 'text-'))}>
+                <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
+              </div>
+              <DialogTitle className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight font-outfit uppercase">
+                {title}
+              </DialogTitle>
+           </div>
+           <div className="bg-slate-50/80 p-6 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-slate-100">
+             <DialogDescription className="text-xs sm:text-base font-bold text-slate-600 leading-relaxed uppercase tracking-wide">
+               {text}
+             </DialogDescription>
+           </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function InteractionCard({ item }: { item: any }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   return (
-    <motion.div
-      layout
-      onClick={() => setIsExpanded(!isExpanded)}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={cn(
-        "p-4 sm:p-8 rounded-[24px] sm:rounded-[32px] flex flex-col gap-3 sm:gap-5 border border-white shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98]",
-        item.color,
-        isExpanded ? "ring-2 ring-primary/20 z-20" : "z-10"
-      )}
-    >
-      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[12px] sm:rounded-[16px] flex items-center justify-center text-primary shrink-0 shadow-sm border border-slate-50">
-        <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
-      </div>
-      <div className="flex flex-col gap-0.5 sm:gap-1">
-        <h4 className="text-[7px] sm:text-[9px] font-black tracking-[0.2em] text-slate-500/60 uppercase">{item.title}</h4>
-        <p className={cn(
-          "text-[9px] sm:text-[11px] font-black text-slate-800 leading-tight uppercase tracking-tight transition-all",
-          !isExpanded && "line-clamp-2"
-        )}>
-          {item.text || "CONSULT DOCTOR"}
-        </p>
-      </div>
-    </motion.div>
+    <Dialog>
+      <DialogTrigger asChild>
+        <motion.div
+          layout
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={cn(
+            "p-4 sm:p-8 rounded-[24px] sm:rounded-[32px] flex flex-col gap-3 sm:gap-5 border border-white shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98] z-10",
+            item.color
+          )}
+        >
+          <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[12px] sm:rounded-[16px] flex items-center justify-center text-primary shrink-0 shadow-sm border border-slate-50">
+            <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+          </div>
+          <div className="flex flex-col gap-0.5 sm:gap-1">
+            <h4 className="text-[7px] sm:text-[9px] font-black tracking-[0.2em] text-slate-500/60 uppercase">{item.title}</h4>
+            <p className="text-[9px] sm:text-[11px] font-black text-slate-800 leading-tight uppercase tracking-tight line-clamp-2">
+              {item.text || "CONSULT DOCTOR"}
+            </p>
+          </div>
+        </motion.div>
+      </DialogTrigger>
+      <DialogContent className="max-w-[90vw] sm:max-w-2xl rounded-[32px] sm:rounded-[48px] p-8 sm:p-12 border-none shadow-3xl">
+        <div className="space-y-6 sm:space-y-8">
+           <div className="flex items-center gap-4">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[16px] sm:rounded-[24px] bg-slate-50 flex items-center justify-center shadow-sm border border-slate-100">
+                <item.icon className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+              </div>
+              <DialogTitle className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight font-outfit uppercase">
+                {item.title}
+              </DialogTitle>
+           </div>
+           <div className="bg-slate-50/80 p-6 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-slate-100">
+             <DialogDescription className="text-xs sm:text-base font-bold text-slate-600 leading-relaxed uppercase tracking-wide">
+               {item.text || "NO INFORMATION AVAILABLE FOR THIS INTERACTION. PLEASE CONSULT A REGISTERED MEDICAL PRACTITIONER FOR GUIDANCE."}
+             </DialogDescription>
+           </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
