@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/layout/main_layout.dart';
 import '../../../core/services/api_service.dart';
+import 'package:pinput/pinput.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -21,11 +22,8 @@ class OtpScreen extends StatefulWidget {
 
 class _OtpScreenState extends State<OtpScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final List<TextEditingController> _controllers = List.generate(
-    6,
-    (_) => TextEditingController(),
-  );
-  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  final TextEditingController _pinController = TextEditingController();
+  final FocusNode _pinFocusNode = FocusNode();
   bool _isLoading = false;
   
   // Timer State
@@ -58,17 +56,13 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   void dispose() {
     if (_timer != null) _timer.cancel();
-    for (var controller in _controllers) {
-      controller.dispose();
-    }
-    for (var node in _focusNodes) {
-      node.dispose();
-    }
+    _pinController.dispose();
+    _pinFocusNode.dispose();
     super.dispose();
   }
 
-  Future<void> _verifyOtp() async {
-    final code = _controllers.map((c) => c.text).join();
+  Future<void> _verifyOtp([String? manualCode]) async {
+    final code = manualCode ?? _pinController.text;
     if (code.length != 6) return;
 
     setState(() => _isLoading = true);
@@ -196,60 +190,67 @@ class _OtpScreenState extends State<OtpScreen> {
                     ),
                     child: Column(
                       children: [
-                        Row(
-                          children: List.generate(6, (index) {
-                            return Expanded(
-                              child: Container(
-                                margin: EdgeInsets.only(
-                                  right: index == 5 ? 0 : 8,
-                                ),
-                                child: TextField(
-                                  controller: _controllers[index],
-                                  focusNode: _focusNodes[index],
-                                  keyboardType: TextInputType.number,
-                                  textAlign: TextAlign.center,
-                                  maxLength: 1,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFF0F172A),
-                                  ),
-                                  decoration: InputDecoration(
-                                    counterText: '',
-                                    filled: true,
-                                    fillColor: const Color(0xFFF8FAFC),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFFF1F5F9),
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: const BorderSide(
-                                        color: SahimedColors.primary,
-                                        width: 2,
-                                      ),
-                                    ),
-                                  ),
-                                  onChanged: (value) {
-                                    if (value.isNotEmpty && index < 5) {
-                                      _focusNodes[index + 1].requestFocus();
-                                    } else if (value.isEmpty && index > 0) {
-                                      _focusNodes[index - 1].requestFocus();
-                                    }
-
-                                    if (index == 5 && value.isNotEmpty) {
-                                      _verifyOtp();
-                                    }
-                                  },
-                                ),
+                        Pinput(
+                          length: 6,
+                          controller: _pinController,
+                          focusNode: _pinFocusNode,
+                          androidSmsAutofillMethod: AndroidSmsAutofillMethod.smsUserConsentApi,
+                          listenForSmsCode: true,
+                          autofocus: true,
+                          hapticFeedbackType: HapticFeedbackType.mediumImpact,
+                          onCompleted: (pin) => _verifyOtp(pin),
+                          defaultPinTheme: PinTheme(
+                            width: 48,
+                            height: 56,
+                            textStyle: GoogleFonts.outfit(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF0F172A),
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFF1F5F9)),
+                            ),
+                          ),
+                          focusedPinTheme: PinTheme(
+                            width: 52,
+                            height: 60,
+                            textStyle: GoogleFonts.outfit(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              color: SahimedColors.primary,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: SahimedColors.primary,
+                                width: 2,
                               ),
-                            );
-                          }),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: SahimedColors.primary.withOpacity(0.1),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                          ),
+                          submittedPinTheme: PinTheme(
+                            width: 48,
+                            height: 56,
+                            textStyle: GoogleFonts.outfit(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF0F172A),
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 32),
                         SizedBox(

@@ -185,10 +185,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         throw Exception('Failed to get transaction token');
       }
 
-      final String txnToken = response['txnToken'];
-      final String mid = response['mid'];
-      final String orderId = response['orderId'];
-      final String amount = response['amount'].toString();
+      final String txnToken = response['txnToken'] ?? "";
+      final String mid = response['mid'] ?? "";
+      final String orderId = response['orderId'] ?? "";
+      final String amount = (response['amount'] ?? 0).toString();
 
       // 2. Start Paytm SDK
       var result = await PaytmAllInOneSdk.startTransaction(
