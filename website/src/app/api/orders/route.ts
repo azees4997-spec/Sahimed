@@ -292,8 +292,7 @@ export async function POST(req: Request) {
       if (body[field] !== undefined) sanitizedBody[field] = body[field];
     });
     
-    // Force COD for all new orders (Online Payment Deactivated)
-    sanitizedBody.paymentType = 'Cash on Delivery';
+    // paymentType is already sanitized and included from body
     const walletUsed = Number(body.walletUsed || body.billingBreakdown?.walletUsed || 0);
     if (walletUsed > 0) {
       const mongoUser = await db.collection('users').findOne({ uid: user.uid });
