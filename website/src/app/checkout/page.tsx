@@ -323,7 +323,7 @@ export default function CheckoutPage() {
       setIsAddressModalOpen(false);
       toast({
         title: "Address Saved",
-        description: "Your new delivery point is ready."
+        description: "Your new delivery address is ready."
       });
     } catch (error) {
       toast({
@@ -355,9 +355,9 @@ export default function CheckoutPage() {
         const url = await getDownloadURL(storageRef);
         addPrescription(url);
       }
-      toast({ title: "Clinical files locked", description: "Prescription matrix updated." });
+      toast({ title: "Prescription uploaded", description: "File attached successfully." });
     } catch (err) {
-      toast({ variant: 'destructive', title: "Upload failed", description: "Could not sync clinical files to cloud." });
+      toast({ variant: 'destructive', title: "Upload failed", description: "Could not upload prescription. Please try again." });
     } finally {
       setIsUploading(false);
     }
@@ -366,7 +366,7 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async (body?: any) => {
     if (!user || !db) return;
     if (!selectedAddressId) {
-      toast({ variant: 'destructive', title: "No address", description: "Please select or add a delivery point to proceed." });
+      toast({ variant: 'destructive', title: "No address", description: "Please select or add a delivery address to proceed." });
       return;
     }
     if (!validate()) return;
@@ -782,7 +782,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  {/* Attachment Matrix Layer */}
+                  {/* Prescription Upload Layer */}
                   <AnimatePresence mode="wait">
                     {clinicalPath === 'attach' && (
                       <motion.div 
@@ -815,7 +815,7 @@ export default function CheckoutPage() {
                                     {isPDF ? (
                                       <div className="w-24 h-24 rounded-3xl bg-slate-50 border-2 border-slate-100 flex flex-col items-center justify-center text-rose-500">
                                         <FileText className="w-10 h-10" />
-                                        <p className="text-[8px] font-black mt-1 uppercase">CLINICAL DOC</p>
+                                        <p className="text-[8px] font-black mt-1 uppercase">PRESCRIPTION</p>
                                       </div>
                                     ) : (
                                       <img src={url} className="w-24 h-24 object-cover rounded-3xl border-2 border-slate-100 shadow-md" alt="" />
@@ -833,7 +833,7 @@ export default function CheckoutPage() {
                           ) : (
                             <div className="py-12 text-center rounded-[32px] bg-slate-50 border-2 border-dashed border-slate-100">
                               <Camera className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                              <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em]">No documentation synchronized</p>
+                              <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em]">No prescription uploaded</p>
                             </div>
                           )}
                         </div>
