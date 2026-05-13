@@ -13,6 +13,7 @@ import 'firebase_options.dart';
 import 'core/layout/main_layout.dart';
 import 'core/widgets/global_error_handler.dart';
 import 'core/services/reminder_service.dart';
+import 'core/services/notification_service.dart';
 import 'package:in_app_update/in_app_update.dart';
 
 void main() async {
@@ -45,6 +46,9 @@ void main() async {
     const double maxCacheSize = 50 * 1024 * 1024; // 50MB
     PaintingBinding.instance.imageCache.maximumSizeBytes = maxCacheSize.toInt();
     PaintingBinding.instance.imageCache.maximumSize = 100; // Max 100 images
+
+    // 4. Initialize Order Notifications (FCM + Local)
+    await NotificationService.init();
 
     debugPrint("Firebase Security: App Check & Auth Config initialized.");
   } catch (e) {

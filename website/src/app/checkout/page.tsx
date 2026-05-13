@@ -254,6 +254,12 @@ export default function CheckoutPage() {
   );
 
 
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
   const validate = () => {
     if (!orderInfo.patientName.trim()) {
       toast({ variant: 'destructive', title: "Name missing", description: "Recipient name is required." });
@@ -477,6 +483,13 @@ export default function CheckoutPage() {
         handlePaytmPayment(mongoOrderId, finalPayable);
       } else {
         clearCart();
+        // Trigger browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Order Placed Successfully! 🎉', {
+            body: `Your order #${mongoOrderId} has been received and is being processed.`,
+            icon: '/favicon.ico'
+          });
+        }
         router.push(`/order-success/${mongoOrderId}`);
       }
     } catch (err: any) {

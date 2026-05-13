@@ -13,6 +13,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/services/location_service.dart';
+import '../../../core/services/notification_service.dart';
 import 'order_status_screen.dart';
 import 'package:paytm_allinonesdk/paytm_allinonesdk.dart';
 
@@ -380,6 +381,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           final confirmedTotal = cart.finalTotal;
           final confirmedName = _nameController.text.trim();
           cart.clearCart();
+          
+          // Trigger local notification for immediate feedback
+          NotificationService.showLocalOrderNotification(
+            title: 'Order Placed Successfully! 🎉',
+            body: 'Your order #$orderId has been received and is being processed.',
+          );
+
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
