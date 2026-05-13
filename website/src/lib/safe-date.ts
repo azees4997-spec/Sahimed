@@ -27,7 +27,13 @@ export function safeFormat(
 
     if (!isValid(d)) return fallback;
 
-    return format(d, formula);
+    // FORCING IST (+5:30) for display consistency
+    const istDate = new Date(d.getTime() + (5.5 * 60 * 60 * 1000));
+    
+    // We use UTC methods or format with a fixed offset if we want to be absolute,
+    // but adding the offset to the timestamp and then formatting is the simplest 'force' method.
+    // NOTE: This assumes the input was UTC.
+    return format(istDate, formula);
   } catch (error) {
     console.error('SafeFormat Error:', error);
     return fallback;
