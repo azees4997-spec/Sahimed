@@ -65,6 +65,11 @@
         <meta-data
             android:name="com.truecaller.android.sdk.ClientId"
             android:value="l9zzfybz1y6un_rgpdlbijfjp4bfgiflvm63dwuruoo"/>
+
+        <!-- Default Notification Channel for FCM -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="order_updates" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
