@@ -74,7 +74,7 @@ export async function POST(req: Request) {
       }
 
       // Redirect to success page
-      return NextResponse.redirect(`https://sahimed.com/orders/success?id=${baseOrderId}`, 303);
+      return NextResponse.redirect(`https://sahimed.com/order-success?id=${baseOrderId}`, 303);
     } else {
       // Update Order as Failed
       await db.collection('orders').updateOne(
@@ -82,7 +82,7 @@ export async function POST(req: Request) {
         { $set: { status: 'Payment Failed', updatedAt: new Date() } }
       );
       
-      return NextResponse.redirect(`https://sahimed.com/checkout?error=Payment+Failed`, 303);
+      return NextResponse.redirect(`https://sahimed.com/payment-failed?error=Payment+Failed`, 303);
     }
 
   } catch (err: any) {
