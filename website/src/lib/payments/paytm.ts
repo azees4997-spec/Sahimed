@@ -96,19 +96,8 @@ export class PaytmService {
         ...(userDetails?.mobile && { "mobile": userDetails.mobile.replace(/\D/g, '').slice(-10) }),
         ...(userDetails?.email && { "email": userDetails.email })
       },
+      "industryTypeId": "Retail"
     };
-
-    // Add Shipping Info if available
-    if (userDetails?.shipping) {
-      bodyData.shippingInfo = {
-        ...(userDetails.firstName && { "firstName": userDetails.firstName }),
-        ...(userDetails.shipping.address1 && { "address1": userDetails.shipping.address1 }),
-        ...(userDetails.shipping.address2 && { "address2": userDetails.shipping.address2 }),
-        ...(userDetails.shipping.cityName && { "cityName": userDetails.shipping.cityName }),
-        ...(userDetails.shipping.stateName && { "stateName": userDetails.shipping.stateName }),
-        ...(userDetails.shipping.zipCode && { "zipCode": userDetails.shipping.zipCode })
-      };
-    }
 
     try {
       // Generate checksum from the JSON string of the body only
@@ -120,8 +109,7 @@ export class PaytmService {
 
       const paytmParams = {
         "head": {
-          "signature": signature,
-          "channelId": channel
+          "signature": signature
         },
         "body": bodyData
       };
