@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
-import { getDbAdmin } from '@/lib/firebase-admin';
+import { getDbAdmin, getAuthAdmin } from '@/lib/firebase-admin';
 
 /**
  * MASTER MIGRATION API
