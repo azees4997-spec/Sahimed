@@ -589,15 +589,15 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
               </div>
             </div>
 
-            {/* Flipkart-style Delivery Timer */}
-            <div className="mt-4 flex items-center justify-center sm:justify-start gap-2 text-emerald-700">
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100 animate-pulse">
-                <Clock className="w-3 h-3" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Order within {timeLeft}</span>
+            <div className="mt-4 flex items-center justify-center sm:justify-start">
+              <div className="flex items-center gap-3 px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
+                <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-inner">
+                   <Clock className="w-3 h-3 text-emerald-600 animate-pulse" />
+                </div>
+                <p className="text-[9px] sm:text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  FREE DELIVERY BY <span className="text-emerald-600 font-black">{edd || 'MAY 16 SATURDAY'}</span> IF YOU ORDER WITHIN <span className="text-emerald-600 font-black tabular-nums">{timeLeft}</span>
+                </p>
               </div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                for <span className="text-emerald-600">{edd ? edd.split(' ').pop() : 'Express'}</span> delivery
-              </span>
             </div>
           </motion.div>
 

@@ -498,57 +498,49 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                       child: _isServiceable 
                         ? Column(
                             children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: const BoxDecoration(color: Color(0xFFDCFCE7), shape: BoxShape.circle),
-                                    child: const Icon(LucideIcons.check, size: 14, color: Color(0xFF166534)),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  RichText(
-                                    text: TextSpan(
-                                      style: GoogleFonts.outfit(fontSize: 14, color: const Color(0xFF475569)),
-                                      children: [
-                                        const TextSpan(text: 'FREE Delivery by '),
-                                        TextSpan(
-                                          text: _edd.isNotEmpty ? _edd : '...',
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF0FDF4),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: const Color(0xFFDCFCE7)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(LucideIcons.truck, size: 16, color: Color(0xFF166534)),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: RichText(
+                                        text: TextSpan(
                                           style: GoogleFonts.outfit(
-                                            fontWeight: FontWeight.w900,
-                                            color: const Color(0xFF0F172A),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color(0xFF166534),
+                                            height: 1.4,
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (_timerText.isNotEmpty) ...[
-                                const SizedBox(height: 12),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFFF7ED),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: const Color(0xFFFFEDD5)),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(LucideIcons.timer, size: 14, color: Color(0xFFC2410C)),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        _timerText,
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: const Color(0xFFC2410C),
+                                          children: [
+                                            const TextSpan(text: 'FREE DELIVERY BY '),
+                                            TextSpan(
+                                              text: _edd.isNotEmpty ? _edd.toUpperCase() : '...',
+                                              style: const TextStyle(fontWeight: FontWeight.w900),
+                                            ),
+                                            if (_timerText.isNotEmpty) ...[
+                                              const TextSpan(text: ' IF YOU ORDER WITHIN '),
+                                              TextSpan(
+                                                text: _timerText,
+                                                style: const TextStyle(
+                                                  color: Color(0xFFC2410C),
+                                                  fontWeight: FontWeight.w900,
+                                                ),
+                                              ),
+                                            ],
+                                          ],
                                         ),
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ],
                           )
                         : Text(
