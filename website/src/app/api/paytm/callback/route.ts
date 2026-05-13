@@ -74,7 +74,7 @@ export async function POST(req: Request) {
       }
 
       // Redirect to success page
-      return NextResponse.redirect(`https://sahimed.com/order-success?id=${baseOrderId}`, 303);
+      return NextResponse.redirect(`https://sahimed.com/order-success/${baseOrderId}`, 303);
     } else {
       // Update Order as Failed
       await db.collection('orders').updateOne(
