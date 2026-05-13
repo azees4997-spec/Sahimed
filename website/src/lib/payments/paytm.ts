@@ -74,7 +74,9 @@ export class PaytmService {
     const baseUrl = host ? `https://${host}` : (process.env.NEXT_PUBLIC_APP_URL || 'https://sahimed.com');
     const cleanOrderId = orderId.replace(/[^a-zA-Z0-9_-]/g, '');
     const uniqueOrderId = `${cleanOrderId}-${Date.now()}`; 
-    const callbackUrl = `${baseUrl}/api/paytm/callback`;
+    const callbackUrl = this.ENV === 'PROD' 
+      ? 'https://sahimed.com/api/paytm/callback'
+      : `${baseUrl}/api/paytm/callback`;
     
     const cleanCustId = userId.replace(/[^a-zA-Z0-9_-]/g, '');
     
