@@ -458,15 +458,15 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
       </Card>
 
       <Dialog open={!!selectedOrder} onOpenChange={o => !o && (setSelectedOrder(null), setIsEditing(false), setStatusUpdateTarget(null))}>
-        <DialogContent className="rounded-[40px] max-w-2xl border-none p-0 overflow-hidden">
+        <DialogContent className="rounded-[40px] max-w-5xl border-none p-0 overflow-hidden">
           <DialogHeader className="bg-primary p-8 text-white flex flex-row items-center justify-between space-y-0">
             <div className="flex flex-col gap-1">
-              <DialogTitle className="text-2xl font-black text-white">Order #{selectedOrder?.orderId || 'Detail'}</DialogTitle>
-              <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest uppercase">
+              <DialogTitle className="text-4xl font-black text-white">Order #{selectedOrder?.orderId || 'Detail'}</DialogTitle>
+              <DialogDescription className="text-xs font-black text-white/60 tracking-widest uppercase">
                 Full transaction history and logistics status
               </DialogDescription>
             </div>
-            <Badge className="bg-white/20 text-white border-none font-black text-[10px] uppercase tracking-widest">{selectedOrder?.status}</Badge>
+            <Badge className="bg-white/20 text-white border-none font-black text-xs uppercase tracking-widest px-6 py-2 rounded-full">{selectedOrder?.status}</Badge>
           </DialogHeader>
           <div className="p-8 space-y-8 max-h-[80vh] overflow-y-auto scrollbar-hide">
             {isEditing ? (
@@ -512,15 +512,15 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-8">
-                  <div><h4 className="text-[10px] font-black text-gray-400 mb-2">Patient</h4><p className="font-black text-sm">{selectedOrder?.patientName}</p><p className="text-xs text-gray-500">{selectedOrder?.phoneNumber}</p></div>
+                <div className="grid grid-cols-2 gap-12">
+                  <div><h4 className="text-xs font-black text-gray-400 mb-3 uppercase tracking-widest">Patient / Customer</h4><p className="font-black text-2xl tracking-tight">{selectedOrder?.patientName}</p><p className="text-base font-bold text-gray-500">{selectedOrder?.phoneNumber}</p></div>
                   <div>
-                    <h4 className="text-[10px] font-black text-gray-400 mb-2">Delivery Matrix</h4>
-                    <p className="text-[11px] font-bold leading-relaxed uppercase">
+                    <h4 className="text-xs font-black text-gray-400 mb-3 uppercase tracking-widest">Delivery Matrix</h4>
+                    <p className="text-lg font-bold leading-relaxed uppercase">
                       {selectedOrder?.shippingDetails?.houseNumber ? `${selectedOrder.shippingDetails.houseNumber}, ` : ''}
                       {selectedOrder?.shippingDetails?.street}
                     </p>
-                    <p className="text-[10px] font-black text-primary uppercase opacity-60">
+                    <p className="text-sm font-black text-primary uppercase opacity-60">
                       {selectedOrder?.shippingDetails?.city} {selectedOrder?.shippingDetails?.pincode}
                     </p>
                   </div>
@@ -566,34 +566,34 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                 )}
 
                 {selectedOrder?.timeline && selectedOrder.timeline.length > 0 && (
-                  <div className="bg-slate-50 p-6 rounded-[32px] border border-slate-100 space-y-4">
-                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-primary" /> Fulfillment Journey
+                  <div className="bg-slate-50 p-8 rounded-[40px] border border-slate-100 space-y-6">
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-primary" /> Fulfillment Journey
                     </h4>
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       {selectedOrder.timeline.map((entry: any, idx: number) => (
-                        <div key={idx} className="flex gap-4 items-start relative">
+                        <div key={idx} className="flex gap-6 items-start relative">
                           {idx !== selectedOrder.timeline.length - 1 && (
-                            <div className="absolute left-[11px] top-6 -bottom-4 w-0.5 bg-slate-200" />
+                            <div className="absolute left-[15px] top-8 -bottom-6 w-0.5 bg-slate-200" />
                           )}
                           <div className={cn(
-                            "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2 border-white shadow-sm",
+                            "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-4 border-white shadow-md",
                             idx === selectedOrder.timeline.length - 1 ? "bg-primary text-white scale-110" : "bg-slate-200 text-slate-500"
                           )}>
-                            <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                            <div className="w-2 h-2 rounded-full bg-current" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2">
-                              <p className={cn("text-[10px] font-black uppercase tracking-tight", 
+                              <p className={cn("text-sm font-black uppercase tracking-tight", 
                                 idx === selectedOrder.timeline.length - 1 ? "text-primary" : "text-slate-600"
                               )}>
                                 {entry.status}
                               </p>
-                              <p className="text-[8px] font-black text-slate-400 uppercase whitespace-nowrap">
+                              <p className="text-[10px] font-black text-slate-400 uppercase whitespace-nowrap">
                                 {safeFormat(entry.timestamp, 'HH:mm | dd MMM')}
                               </p>
                             </div>
-                            <p className="text-[9px] font-bold text-slate-400 mt-0.5 line-clamp-1">{entry.message}</p>
+                            <p className="text-xs font-bold text-slate-400 mt-1">{entry.message}</p>
                           </div>
                         </div>
                       ))}
@@ -601,31 +601,31 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                   </div>
                 )}
 
-                <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
-                  <h4 className="text-[10px] font-black text-gray-400">Manage Fulfillment Pipeline</h4>
+                <div className="bg-gray-50 p-8 rounded-[40px] border space-y-6">
+                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Manage Fulfillment Pipeline</h4>
                   <div className="grid grid-cols-2 gap-3">
                     {selectedOrder?.status === 'Pending Pharmacist' ? (
                       <>
                         <Button 
                           disabled={isUpdating}
                           onClick={() => updateOrderStatus(selectedOrder._id, 'Confirmed', { action: 'pharmacist_accept' })}
-                          className="col-span-2 rounded-2xl h-14 bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 shadow-lg shadow-emerald-100 gap-2"
+                          className="col-span-2 rounded-[32px] h-24 bg-emerald-600 text-white font-black text-xl uppercase tracking-widest hover:bg-emerald-700 shadow-2xl shadow-emerald-100 gap-4"
                         >
-                           <CheckCircle className="w-4 h-4" /> Pharmacist Accept
+                           <CheckCircle className="w-8 h-8" /> Pharmacist Accept
                         </Button>
                         <Button 
                           disabled={isUpdating}
                           onClick={() => updateOrderStatus(selectedOrder._id, 'Pending Consult', { action: 'pharmacist_consult_req' })}
-                          className="rounded-2xl h-12 bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-blue-600"
+                          className="rounded-[32px] h-20 bg-blue-500 text-white font-black text-xs uppercase tracking-widest hover:bg-blue-600 shadow-xl"
                         >
-                           <Stethoscope className="w-3.5 h-3.5 mr-2" /> Consult Req
+                           <Stethoscope className="w-5 h-5 mr-3" /> Consult Req
                         </Button>
                         <Button 
                           disabled={isUpdating}
                           onClick={() => updateOrderStatus(selectedOrder._id, 'Cancelled', { action: 'pharmacist_reject' })}
-                          className="rounded-2xl h-12 bg-red-50 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-100"
+                          className="rounded-[32px] h-20 bg-red-50 text-red-500 font-black text-xs uppercase tracking-widest hover:bg-red-100 border-4 border-red-100"
                         >
-                           <X className="w-3.5 h-3.5 mr-2" /> Reject
+                           <X className="w-5 h-5 mr-3" /> Reject
                         </Button>
                       </>
                     ) : selectedOrder?.status === 'Pending Consult' ? (
@@ -635,7 +635,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                             placeholder="Paste Prescription Link (Google Drive/S3)" 
                             value={shippingInfo.awb} // Reuse awb state temporarily or use new one
                             onChange={e => setShippingInfo({...shippingInfo, awb: e.target.value})} 
-                            className="rounded-2xl h-12 bg-white border font-bold text-xs" 
+                            className="rounded-[32px] h-20 bg-white border-4 border-slate-100 font-bold text-base px-8" 
                           />
                           <Button 
                             disabled={isUpdating}
@@ -643,68 +643,68 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                               action: 'doctor_submit_rx', 
                               prescriptionLink: shippingInfo.awb 
                             })}
-                            className="rounded-2xl h-14 bg-primary text-white font-black text-[10px] uppercase tracking-widest hover:bg-primary/90 shadow-xl shadow-primary/10 gap-3"
+                            className="rounded-[32px] h-24 bg-primary text-white font-black text-lg uppercase tracking-widest hover:bg-primary/90 shadow-2xl shadow-primary/10 gap-4"
                           >
-                             <FileCheck className="w-4 h-4" /> Submit Doctor RX
+                             <FileCheck className="w-8 h-8" /> Submit Doctor RX
                           </Button>
                         </div>
                       </div>
                     ) : (
                       ['Packing', 'Packed', 'Shipped', 'Delivered', 'Returned', 'Cancelled'].map(s => (
-                        <Button key={s} variant="outline" onClick={() => setStatusUpdateTarget(s)} className={cn("rounded-2xl h-12 font-black text-[10px] border-2", selectedOrder?.status === s ? "border-primary bg-primary/5 text-primary" : "text-gray-400")}>{s}</Button>
+                        <Button key={s} variant="outline" onClick={() => setStatusUpdateTarget(s)} className={cn("rounded-[32px] h-20 font-black text-xs border-4 uppercase tracking-widest", selectedOrder?.status === s ? "border-primary bg-primary/5 text-primary shadow-lg" : "text-gray-400 border-slate-100 hover:bg-white")}>{s}</Button>
                       ))
                     )}
                   </div>
                 </div>
-                <div className="bg-gray-50 p-6 rounded-[32px] border space-y-4">
-                  <h4 className="text-[10px] font-black text-gray-400">Order Items</h4>
+                <div className="bg-gray-50 p-8 rounded-[40px] border-2 space-y-6">
+                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Order Inventory / Items</h4>
                   {selectedOrder?.items?.map((it: any, i: number) => (
-                    <div key={i} className="flex justify-between items-center bg-white p-3 rounded-2xl border border-slate-100">
-                      <div className="space-y-0.5">
-                        <p className="text-[11px] font-black uppercase text-slate-800">{it.name}</p>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase">Qty: {it.quantity} × ₹{it.unitPrice}</p>
+                    <div key={i} className="flex justify-between items-center bg-white p-5 rounded-3xl border-2 border-slate-100 shadow-sm">
+                      <div className="space-y-1">
+                        <p className="text-base font-black uppercase text-slate-800">{it.name}</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase">Quantity: {it.quantity} × ₹{it.unitPrice}</p>
                       </div>
-                      <span className="font-black text-xs">₹{(it.unitPrice * it.quantity).toFixed(2)}</span>
+                      <span className="font-black text-xl">₹{(it.unitPrice * it.quantity).toFixed(2)}</span>
                     </div>
                   ))}
                   
-                  <div className="pt-4 space-y-2 border-t mt-4">
-                    <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <div className="pt-8 space-y-4 border-t-4 border-slate-200 border-dashed mt-6">
+                    <div className="flex justify-between items-center text-xs font-black text-slate-400 uppercase tracking-widest">
                       <span>Gross MRP</span>
                       <span>₹{Number(selectedOrder?.billingBreakdown?.grossMrp || selectedOrder?.totalAmount).toFixed(2)}</span>
                     </div>
                     {selectedOrder?.billingBreakdown?.campaignDiscount && (
-                      <div className="flex justify-between items-center text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
+                      <div className="flex justify-between items-center text-xs font-black text-emerald-500 uppercase tracking-widest">
                         <span>Campaign Saving</span>
                         <span>-₹{Number(selectedOrder.billingBreakdown.campaignDiscount).toFixed(2)}</span>
                       </div>
                     )}
                     {selectedOrder?.billingBreakdown?.deliveryFees && (
-                      <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      <div className="flex justify-between items-center text-xs font-black text-slate-400 uppercase tracking-widest">
                         <span>Fulfillment Fees</span>
                         <span>₹{Number(selectedOrder.billingBreakdown.deliveryFees).toFixed(2)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between items-center font-black text-primary pt-2 border-t border-dashed">
-                      <span className="text-[10px] uppercase tracking-widest">Net Payable</span>
-                      <span className="text-xl">₹{Number(selectedOrder?.totalAmount || 0).toFixed(2)}</span>
+                    <div className="flex justify-between items-center font-black text-primary pt-6 border-t-4 border-primary/20">
+                      <span className="text-sm uppercase tracking-[0.3em]">Total Net Payable</span>
+                      <span className="text-5xl font-outfit tracking-tighter">₹{Number(selectedOrder?.totalAmount || 0).toFixed(2)}</span>
                     </div>
                   </div>
                   
                   <Button 
                     onClick={() => handlePrint(selectedOrder)}
-                    className="w-full h-14 rounded-2xl bg-slate-900 border-4 border-white text-white font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl mt-4"
+                    className="w-full h-24 rounded-[32px] bg-slate-900 border-8 border-white text-white font-black text-lg uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-2xl mt-8"
                   >
-                    Print Order Summary
+                    Print Order Summary (Invoice)
                   </Button>
                   
                   {selectedOrder?.shipping?.awb && !selectedOrder?.shipping?.labelUrl && (
                     <Button 
                       disabled={isUpdating}
                       onClick={() => updateOrderStatus(selectedOrder._id, selectedOrder.status, { action: 'manifest_order' })}
-                      className="w-full h-14 rounded-2xl bg-emerald-600 border-4 border-white text-white font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl mt-2"
+                      className="w-full h-20 rounded-[32px] bg-emerald-600 border-8 border-white text-white font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-2xl mt-4"
                     >
-                      <FileText className="w-4 h-4 mr-2" /> Generate Shipping Label
+                      <FileText className="w-6 h-6 mr-3" /> Generate Shipping Label
                     </Button>
                   )}
                   
