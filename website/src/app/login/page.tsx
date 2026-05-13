@@ -20,6 +20,7 @@ function LoginForm() {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState('Initializing Secure Session...');
   
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -70,14 +71,31 @@ function LoginForm() {
     }
     
     setLoading(true);
+    
+    // Distraction Logic: Cycle through premium loading messages
+    const messages = [
+      "Initializing Secure Session...",
+      "Verifying reCAPTCHA Identity...",
+      "Connecting to SahiMed Gateway...",
+      "Generating Encrypted OTP...",
+      "Dispatching to your Device..."
+    ];
+    let msgIdx = 0;
+    const interval = setInterval(() => {
+      msgIdx = (msgIdx + 1) % messages.length;
+      setLoadingMessage(messages[msgIdx]);
+    }, 1800);
+
     try {
       const appVerifier = (window as any).recaptchaVerifier;
       const formatPhone = `+91${phone}`;
       const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
+      clearInterval(interval);
       setConfirmationResult(result);
       setStep(2);
       toast({ title: 'OTP Sent', description: `Check your phone for the code.` });
     } catch (err: any) {
+      clearInterval(interval);
       console.error("OTP Send Error:", err);
       toast({ variant: 'destructive', title: 'Error', description: err.message || 'Failed to send OTP.' });
       
@@ -147,8 +165,56 @@ function LoginForm() {
             </div>
           </CardHeader>
           
-          <CardContent className="p-6 sm:p-10 pb-12 sm:pb-10">
+          <CardContent className="p-6 sm:p-10 pb-12 sm:pb-10 relative">
             <AnimatePresence mode="wait">
+              {loading && step === 1 ? (
+                <motion.div
+                  key="loading-distraction"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.05 }}
+                  className="absolute inset-0 z-50 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center p-10 text-center"
+                >
+                  <div className="relative w-24 h-24 mb-8">
+                    <motion.div 
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-0 border-4 border-primary/10 border-t-primary rounded-full"
+                    />
+                    <motion.div 
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute inset-0 flex items-center justify-center"
+                    >
+                      <ShieldCheck className="w-10 h-10 text-primary" />
+                    </motion.div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <motion.p
+                      key={loadingMessage}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-sm font-black text-slate-800 uppercase tracking-widest"
+                    >
+                      {loadingMessage}
+                    </motion.p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] max-w-[200px] mx-auto leading-relaxed">
+                      Securing your account with enterprise-grade encryption
+                    </p>
+                  </div>
+
+                  <div className="mt-12 w-full max-w-[150px] h-1 bg-slate-100 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ x: "-100%" }}
+                      animate={{ x: "100%" }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      className="w-full h-full bg-gradient-to-r from-transparent via-primary to-transparent"
+                    />
+                  </div>
+                </motion.div>
+              ) : null}
+
               {step === 1 ? (
                 <motion.form 
                   key="step1"
