@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         txnToken: result.body.txnToken,
         mid: process.env.PAYTM_MID || '',
-        orderId: result.body.uniqueOrderId || orderId, // Use the unique ID for the payment window
+        orderId: result.orderId,
         amount: amount
       });
     } else {

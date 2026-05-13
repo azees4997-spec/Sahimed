@@ -613,7 +613,7 @@ export default function CheckoutPage() {
       <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
       <Navbar />
       <Script
-        src="https://securegw.paytm.in/merchantpgpui/checkoutjs/merchants/CHcLYu65677128003960.js"
+        src="https://secure.paytmpayments.com/merchantpgpui/checkoutjs/merchants/CHcLYu65677128003960.js"
         strategy="afterInteractive"
         crossOrigin="anonymous"
       />
