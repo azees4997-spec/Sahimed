@@ -180,10 +180,26 @@ export default function AddressForm({ initialData, onSave, isLoading }: AddressF
         onClick={handleLocateMe}
         variant="outline" 
         type="button"
-        className="h-14 w-full rounded-2xl border-2 border-primary/20 text-primary bg-white hover:bg-primary/5 font-black text-[10px] gap-3 transition-all shadow-xl uppercase tracking-widest"
+        disabled={isLocating}
+        className="h-14 w-full rounded-2xl border-2 border-primary/20 text-primary bg-white hover:bg-primary/5 font-black text-[10px] gap-3 transition-all shadow-xl uppercase tracking-widest relative overflow-hidden"
       >
-        {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <LocateFixed className="w-4 h-4" />}
-        Use Current Location
+        {isLocating ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Finding you...</span>
+            <motion.div 
+              initial={{ x: "-100%" }}
+              animate={{ x: "100%" }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+              className="absolute bottom-0 left-0 h-1 w-full bg-primary/20"
+            />
+          </>
+        ) : (
+          <>
+            <LocateFixed className="w-4 h-4" />
+            <span>Use Current Location</span>
+          </>
+        )}
       </Button>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

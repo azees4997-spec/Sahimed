@@ -69,6 +69,20 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
                 </button>
               ))}
             </div>
+
+            <div className="pt-4">
+              <Link 
+                href="https://play.google.com/store/apps/details?id=com.sahimed.app" 
+                target="_blank"
+                className="inline-block transition-all hover:scale-105 active:scale-95"
+              >
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
+                  alt="Get it on Google Play" 
+                  className="h-12 w-auto"
+                />
+              </Link>
+            </div>
           </div>
 
           {/* Column 2: Quick Shop */}
@@ -153,11 +167,13 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
           <p className="text-[9px] font-black text-gray-600 tracking-[0.3em] uppercase">
             © {new Date().getFullYear()} Sahimed clinical healthcare. <span className="text-gray-700 mx-2">•</span> Precision Pharmacy Protocol
           </p>
-          <div className="flex items-center gap-6 grayscale opacity-30 hover:grayscale-0 hover:opacity-100 transition-all duration-700">
-            <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest mr-2 underline underline-offset-4 decoration-primary/30">Secure Gateways</span>
-            <div className="h-4 w-10 bg-gray-800 rounded sm" />
-            <div className="h-4 w-10 bg-gray-800 rounded sm" />
-            <div className="h-4 w-10 bg-gray-800 rounded sm" />
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-6 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700">
+            <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest mr-2">We Accept</span>
+            <div className="flex items-center gap-4 bg-white/5 px-4 py-2 rounded-2xl border border-white/5">
+              {['UPI', 'VISA', 'MASTER', 'RUPAY', 'NETBANK'].map((m) => (
+                <span key={m} className="text-[7px] font-black tracking-tighter text-gray-400 uppercase">{m}</span>
+              ))}
+            </div>
           </div>
         </div>
       </div>

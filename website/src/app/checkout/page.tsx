@@ -92,7 +92,7 @@ export default function CheckoutPage() {
   const [isAddressFormLoading, setIsAddressFormLoading] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'Online'>('COD');
+  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'Online'>('Online');
   
   const { toast } = useToast();
   const router = useRouter();
