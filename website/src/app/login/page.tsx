@@ -74,11 +74,11 @@ function LoginForm() {
     
     // Distraction Logic: Cycle through premium loading messages
     const messages = [
-      "Initializing Secure Session...",
-      "Verifying reCAPTCHA Identity...",
-      "Connecting to SahiMed Gateway...",
-      "Generating Encrypted OTP...",
-      "Dispatching to your Device..."
+      "Securing your SahiMed experience...",
+      "Connecting to Pharmacy Network...",
+      "Fetching your health records...",
+      "Generating unique access key...",
+      "Almost there! Sending OTP..."
     ];
     let msgIdx = 0;
     const interval = setInterval(() => {
