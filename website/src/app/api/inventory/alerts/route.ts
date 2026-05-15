@@ -73,10 +73,17 @@ export async function GET(request: Request) {
                     { $eq: ['$_id', '$$prodId'] },
                     { $eq: [{ $toString: '$_id' }, '$$prodId'] },
                     { 
-                      $and: [
-                        { $eq: [{ $strLenCP: '$$prodId' }, 24] },
-                        { $eq: ['$_id', { $toObjectId: '$$prodId' }] }
-                      ]
+                      $eq: [
+                        '$_id', 
+                        { 
+                          $convert: { 
+                            input: '$$prodId', 
+                            to: 'objectId', 
+                            onError: null, 
+                            onNull: null 
+                          } 
+                        }
+                      ] 
                     }
                   ]
                 }
