@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/providers/cart_provider.dart';
+import '../../../core/services/api_service.dart';
 import '../../../shared/models/models.dart';
 import '../screens/product_detail_screen.dart';
 
@@ -286,7 +287,17 @@ class SahimedProductCard extends StatelessWidget {
                     HapticFeedback.mediumImpact();
                     context.read<CartProvider>().addItem(product);
                   }
-                : null,
+                : () async {
+                    final success = await ApiService().logInventoryRequest(product.id);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(success ? "We'll notify you when ${product.name} is back!" : "Failed to set alert."),
+                          backgroundColor: success ? SahimedColors.primary : Colors.red,
+                        ),
+                      );
+                    }
+                  },
               child: Container(
                 width: double.infinity,
                 height: 28,
@@ -306,7 +317,7 @@ class SahimedProductCard extends StatelessWidget {
                 child: Center(
                   child: Text(
                     product.availableQuantity <= 0 
-                        ? 'OUT OF STOCK' 
+                        ? 'NOTIFY ME' 
                         : (qty > 0 ? 'ADDED ($qty)' : 'ADD TO CART'),
                     style: GoogleFonts.outfit(
                       fontSize: 8,

@@ -104,9 +104,27 @@ function ProductCardComponent({ product }: { product: Product }) {
       <div className="mt-1 sm:mt-2">
         <AnimatePresence mode="wait">
           {((Number(product.availableQuantity) <= 0 && (!product.liveData || Number(product.liveData.stock_quantity) <= 0))) ? (
-            <div className="h-6 sm:h-8 w-full bg-slate-100 text-slate-400 font-black text-[7px] sm:text-[9px] tracking-widest uppercase rounded-[10px] sm:rounded-[14px] flex items-center justify-center gap-1 border border-slate-200 cursor-not-allowed">
-              OUT OF STOCK
-            </div>
+            <button 
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                  const res = await fetch('/api/inventory/alerts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId: product.id })
+                  });
+                  if (res.ok) {
+                    toast({ title: "Notification Set", description: "We'll alert you when this is back!" });
+                  }
+                } catch (e) {
+                  toast({ variant: 'destructive', title: "Error", description: "Failed to set alert." });
+                }
+              }}
+              className="h-6 sm:h-8 w-full bg-slate-800 text-white font-black text-[7px] sm:text-[9px] tracking-widest uppercase rounded-[10px] sm:rounded-[14px] flex items-center justify-center gap-1 border border-slate-200 hover:bg-slate-900 transition-all active:scale-95"
+            >
+              NOTIFY ME
+            </button>
           ) : quantity > 0 ? (
             <motion.div 
               key="quantity-selector"

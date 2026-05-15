@@ -731,4 +731,19 @@ class ApiService {
       return false;
     }
   }
+
+  Future<bool> logInventoryRequest(String productId) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/inventory/alerts'),
+        headers: headers,
+        body: json.encode({'productId': productId}),
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint('Error logging inventory request: $e');
+      return false;
+    }
+  }
 }
