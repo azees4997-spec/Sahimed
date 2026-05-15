@@ -25,6 +25,13 @@ import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SectionHeader } from './SectionHeader';
+import { 
+  Download, 
+  Upload, 
+  FileSpreadsheet, 
+  AlertCircle,
+  Clock
+} from 'lucide-react';
 
 export function InventoryTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,6 +39,10 @@ export function InventoryTab({ db, isVerified, onBack }: { db: any, isVerified: 
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState<string | null>(null);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useUser();
   const { toast } = useToast();
 
@@ -58,14 +69,13 @@ export function InventoryTab({ db, isVerified, onBack }: { db: any, isVerified: 
     fetchProducts();
   }, [debouncedSearch]);
 
-  const handleUpdate = async (product: any, updates: any) => {
+  const handleUpdate = async (product: any, updates: any, silent = false) => {
     const productId = product.id || product._id;
-    setIsSaving(productId);
+    if (!silent) setIsSaving(productId);
     
     try {
       const token = await user?.getIdToken();
       
-      // 1. Sync to MongoDB
       const res = await fetch(`/api/products/${productId}`, {
         method: 'PUT',
         headers: { 
@@ -77,7 +87,6 @@ export function InventoryTab({ db, isVerified, onBack }: { db: any, isVerified: 
       
       if (!res.ok) throw new Error('MongoDB Sync Failed');
 
-      // 2. Sync to Firestore product_live_data (for real-time stock)
       if (product.sku) {
         await setDocumentNonBlocking(doc(db, 'product_live_data', product.sku), { 
            mrp: Number(updates.mrp ?? product.mrp), 
@@ -86,22 +95,125 @@ export function InventoryTab({ db, isVerified, onBack }: { db: any, isVerified: 
            updatedAt: serverTimestamp() 
         }, { merge: true });
         
-        // Also sync to main medicines doc
         await setDocumentNonBlocking(doc(db, 'medicines', productId), { 
            ...updates,
            updatedAt: serverTimestamp() 
         }, { merge: true });
       }
 
-      toast({ title: "Inventory Updated", description: `${product.name} synchronized.` });
-      
-      // Update local state
-      setProducts(prev => prev.map(p => (p.id === productId || p._id === productId) ? { ...p, ...updates } : p));
+      if (!silent) toast({ title: "Inventory Updated", description: `${product.name} synchronized.` });
+      return true;
     } catch (err: any) {
-      toast({ variant: 'destructive', title: "Update Failed", description: err.message });
+      if (!silent) toast({ variant: 'destructive', title: "Update Failed", description: err.message });
+      return false;
     } finally {
-      setIsSaving(null);
+      if (!silent) setIsSaving(null);
     }
+  };
+
+  const handleExport = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/products?limit=5000&showDisabled=true`);
+      if (!res.ok) throw new Error("Failed to fetch export data");
+      const data = await res.json();
+      
+      const headers = ["ID", "SKU", "Name", "MRP", "Price", "Stock"];
+      const rows = data.map((p: any) => [
+        p._id || p.id,
+        p.sku || "",
+        (p.name || "").replace(/,/g, ""), // Simple comma escaping
+        p.mrp || 0,
+        p.price || 0,
+        p.availableQuantity || 0
+      ]);
+
+      const csvContent = [headers, ...rows].map(r => r.join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute("download", `Sahimed_Inventory_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({ title: "Export Ready", description: `${data.length} items exported to CSV.` });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Export Failed", description: err.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTemplate = () => {
+    const headers = ["ID", "SKU", "Name", "MRP", "Price", "Stock"];
+    const example = ["65f...", "SAHI001", "Example Medicine", "100", "80", "50"];
+    const csvContent = [headers, example].map(r => r.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", "Sahimed_Inventory_Template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+      const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+      
+      const rows = lines.slice(1).map(line => {
+        const values = line.split(",").map(v => v.trim());
+        const obj: any = {};
+        headers.forEach((header, i) => { obj[header] = values[i]; });
+        return obj;
+      });
+
+      if (rows.length === 0) {
+        toast({ variant: "destructive", title: "Import Error", description: "No data rows found in CSV." });
+        return;
+      }
+
+      setIsBulkProcessing(true);
+      setBulkProgress({ current: 0, total: rows.length });
+      
+      let successCount = 0;
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        setBulkProgress(p => ({ ...p, current: i + 1 }));
+        
+        // Find existing product (by SKU or ID)
+        const updates = {
+          mrp: Number(row.mrp),
+          price: Number(row.price),
+          availableQuantity: Number(row.stock)
+        };
+
+        const productId = row.id;
+        if (!productId) continue;
+
+        const ok = await handleUpdate({ id: productId, sku: row.sku, name: row.name }, updates, true);
+        if (ok) successCount++;
+      }
+
+      setIsBulkProcessing(false);
+      toast({ 
+        title: "Import Complete", 
+        description: `Successfully updated ${successCount} of ${rows.length} items.` 
+      });
+      
+      // Refresh current view
+      const res = await fetch(`/api/products?q=${encodeURIComponent(debouncedSearch)}&limit=50&showDisabled=true`);
+      if (res.ok) setProducts(await res.json());
+    };
+    reader.readAsText(file);
+    e.target.value = ""; // Reset
   };
 
   return (
@@ -111,6 +223,49 @@ export function InventoryTab({ db, isVerified, onBack }: { db: any, isVerified: 
         subtitle="Quickly update MRP, Price, and Stock Levels"
         onBack={onBack}
       />
+
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleImport} 
+        accept=".csv" 
+        className="hidden" 
+      />
+
+      {/* Bulk Actions Protocol */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Button 
+          onClick={handleExport}
+          disabled={isLoading}
+          className="h-20 rounded-[32px] bg-white text-slate-900 border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all group font-black uppercase text-[10px] tracking-[0.2em] gap-4"
+        >
+          <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Download className="w-5 h-5" />
+          </div>
+          Export Full Inventory
+        </Button>
+
+        <Button 
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isLoading || isBulkProcessing}
+          className="h-20 rounded-[32px] bg-white text-slate-900 border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all group font-black uppercase text-[10px] tracking-[0.2em] gap-4"
+        >
+          <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Upload className="w-5 h-5" />
+          </div>
+          Import CSV Updates
+        </Button>
+
+        <Button 
+          onClick={handleTemplate}
+          className="h-20 rounded-[32px] bg-white text-slate-900 border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all group font-black uppercase text-[10px] tracking-[0.2em] gap-4"
+        >
+          <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FileSpreadsheet className="w-5 h-5" />
+          </div>
+          Download Template
+        </Button>
+      </div>
 
       {/* Search Protocol */}
       <div className="relative group">
@@ -129,6 +284,47 @@ export function InventoryTab({ db, isVerified, onBack }: { db: any, isVerified: 
           </div>
         )}
       </div>
+
+      {/* Bulk Processing Overlay */}
+      <AnimatePresence>
+        {isBulkProcessing && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-8"
+          >
+            <Card className="w-full max-w-md bg-white rounded-[56px] p-12 text-center space-y-8 shadow-4xl border-none">
+              <div className="w-24 h-24 bg-primary/10 rounded-[40px] flex items-center justify-center mx-auto">
+                <Clock className="w-12 h-12 text-primary animate-pulse" />
+              </div>
+              <div className="space-y-3">
+                <h2 className="text-3xl font-black tracking-tight uppercase">Bulk Synchronizing</h2>
+                <p className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase">Updating Inventory Matrix...</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-primary"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}
+                  />
+                </div>
+                <div className="flex justify-between items-center px-2">
+                  <span className="text-[10px] font-black text-primary uppercase">Progress: {bulkProgress.current} / {bulkProgress.total}</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase">{Math.round((bulkProgress.current / bulkProgress.total) * 100)}%</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 justify-center bg-slate-50 p-4 rounded-2xl">
+                <AlertCircle className="w-4 h-4 text-orange-500" />
+                <p className="text-[9px] font-bold text-slate-500 uppercase">Do not close this tab until the protocol completes.</p>
+              </div>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 gap-4">
         <AnimatePresence mode="popLayout">
