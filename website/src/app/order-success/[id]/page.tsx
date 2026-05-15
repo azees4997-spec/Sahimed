@@ -21,21 +21,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 import { safeFormat } from '@/lib/safe-date';
 import { cn } from '@/lib/utils';
-import { useWindowSize } from 'react-use';
-import Confetti from 'react-confetti';
 
 export default function OrderSuccessPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const orderId = resolvedParams?.id;
   const { user } = useUser();
   const db = useFirestore();
-  const { width, height } = useWindowSize();
-  const [showConfetti, setShowConfetti] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowConfetti(false), 8000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const orderRef = useMemoFirebase(() => {
     if (!db || !user || !orderId) return null;
@@ -81,7 +72,6 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
-        {showConfetti && <Confetti width={width} height={height} numberOfPieces={200} recycle={false} colors={['#10b981', '#34d399', '#059669', '#6ee7b7']} />}
         <Navbar />
 
         <main className="flex-1 max-w-lg mx-auto px-6 py-6 md:py-12 flex flex-col items-center w-full">
