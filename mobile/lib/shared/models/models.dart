@@ -66,6 +66,7 @@ class ProductModel {
   final String? kidneyInteraction;
   final String? liverInteraction;
   final String category;
+  final int availableQuantity;
 
   ProductModel({
     required this.id,
@@ -98,6 +99,7 @@ class ProductModel {
     this.kidneyInteraction,
     this.liverInteraction,
     required this.category,
+    this.availableQuantity = 0,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -120,6 +122,9 @@ class ProductModel {
             (live?['mrp'] ?? json['mrp'] ?? 0).toString(),
           )?.toDouble() ??
           0.0,
+      availableQuantity: int.tryParse(
+            (live?['stock_quantity'] ?? json['availableQuantity'] ?? 0).toString(),
+          ) ?? 0,
       imageUrl: images.isNotEmpty
           ? images.first
           : (json['imageUrl'] ??
@@ -187,6 +192,7 @@ class ProductModel {
       'isBestSeller': isBestSeller,
       'isTopSelection': isTopSelection,
       'isActive': isActive,
+      'availableQuantity': availableQuantity,
     };
   }
 }

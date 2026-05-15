@@ -281,27 +281,33 @@ class SahimedProductCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
             child: GestureDetector(
-              onTap: () {
-                HapticFeedback.mediumImpact();
-                context.read<CartProvider>().addItem(product);
-              },
+              onTap: product.availableQuantity > 0 
+                ? () {
+                    HapticFeedback.mediumImpact();
+                    context.read<CartProvider>().addItem(product);
+                  }
+                : null,
               child: Container(
                 width: double.infinity,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: SahimedColors.primary,
+                  color: product.availableQuantity > 0 
+                      ? SahimedColors.primary 
+                      : Colors.grey.shade400,
                   borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
+                  boxShadow: product.availableQuantity > 0 ? [
                     BoxShadow(
                       color: SahimedColors.primary.withAlpha(50),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
-                  ],
+                  ] : [],
                 ),
                 child: Center(
                   child: Text(
-                    qty > 0 ? 'ADDED ($qty)' : 'ADD TO CART',
+                    product.availableQuantity <= 0 
+                        ? 'OUT OF STOCK' 
+                        : (qty > 0 ? 'ADDED ($qty)' : 'ADD TO CART'),
                     style: GoogleFonts.outfit(
                       fontSize: 8,
                       fontWeight: FontWeight.w900,

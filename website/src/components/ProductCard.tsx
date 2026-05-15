@@ -103,7 +103,11 @@ function ProductCardComponent({ product }: { product: Product }) {
       
       <div className="mt-1 sm:mt-2">
         <AnimatePresence mode="wait">
-          {quantity > 0 ? (
+          {((Number(product.availableQuantity) <= 0 && (!product.liveData || Number(product.liveData.stock_quantity) <= 0))) ? (
+            <div className="h-6 sm:h-8 w-full bg-slate-100 text-slate-400 font-black text-[7px] sm:text-[9px] tracking-widest uppercase rounded-[10px] sm:rounded-[14px] flex items-center justify-center gap-1 border border-slate-200 cursor-not-allowed">
+              OUT OF STOCK
+            </div>
+          ) : quantity > 0 ? (
             <motion.div 
               key="quantity-selector"
               initial={{ scale: 0.9, opacity: 0 }}
