@@ -597,7 +597,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
               </div>
 
               <div className="w-full sm:w-auto flex items-center justify-between gap-1 sm:gap-3 pl-4 sm:pl-6 pr-1.5 py-1.5 bg-white rounded-full border border-emerald-100 shadow-sm group focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
                   <input
                     type="text"
@@ -607,7 +607,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                     onChange={handlePincodeChange}
                     placeholder="Pincode"
                     className={cn(
-                      "bg-transparent border-none outline-none text-[11px] sm:text-sm font-black text-emerald-900 uppercase tracking-[0.1em] w-full max-w-[80px] sm:max-w-[100px] placeholder:text-slate-300",
+                      "bg-transparent border-none outline-none text-[11px] sm:text-sm font-black text-emerald-900 uppercase tracking-[0.1em] w-[65px] sm:w-[85px] placeholder:text-slate-300",
                       !isEditingPincode && "cursor-not-allowed opacity-70"
                     )}
                   />

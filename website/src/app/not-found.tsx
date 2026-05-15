@@ -38,7 +38,7 @@ export default function NotFound() {
       {/* Support Row */}
       <div className="flex items-center gap-4 mb-10">
         <a
-          href="https://wa.me/918985969860"
+          href="https://wa.me/917349499898"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2.5 px-5 py-3 rounded-full bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] font-black text-[11px] uppercase tracking-widest hover:bg-[#25D366]/20 transition-all"
@@ -50,7 +50,7 @@ export default function NotFound() {
           WhatsApp Support
         </a>
         <a
-          href="tel:+918985969860"
+          href="tel:+917349499898"
           className="flex items-center gap-2.5 px-5 py-3 rounded-full bg-primary/10 border border-primary/20 text-primary font-black text-[11px] uppercase tracking-widest hover:bg-primary/20 transition-all"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

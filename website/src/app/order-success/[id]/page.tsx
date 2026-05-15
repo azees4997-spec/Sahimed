@@ -171,17 +171,17 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
 
             {/* Actions */}
             <div className="flex flex-col gap-4 pt-4">
-              <Link href="/profile/orders" className="w-full">
-                <Button className="w-full h-20 rounded-[28px] bg-slate-900 text-white font-black text-sm uppercase tracking-[0.2em] hover:bg-slate-800 active:scale-[0.98] transition-all shadow-xl shadow-slate-200 gap-4">
+              <Button asChild className="w-full h-20 rounded-[28px] bg-slate-900 text-white font-black text-sm uppercase tracking-[0.2em] hover:bg-slate-800 active:scale-[0.98] transition-all shadow-xl shadow-slate-200 gap-4">
+                <Link href="/orders">
                   Track Your Order
                   <PackageCheck className="w-5 h-5" />
-                </Button>
-              </Link>
-              <Link href="/" className="w-full">
-                <Button variant="outline" className="w-full h-20 rounded-[28px] border-2 border-slate-100 bg-white font-black text-sm uppercase tracking-[0.2em] hover:bg-slate-50 active:scale-[0.98] transition-all text-slate-600">
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full h-20 rounded-[28px] border-2 border-slate-100 bg-white font-black text-sm uppercase tracking-[0.2em] hover:bg-slate-50 active:scale-[0.98] transition-all text-slate-600">
+                <Link href="/">
                   Continue Shopping
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
 
             <div className="pt-8 text-center">
