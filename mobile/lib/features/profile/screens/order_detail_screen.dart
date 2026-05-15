@@ -20,8 +20,9 @@ class OrderDetailScreen extends StatelessWidget {
     DateTime? orderDate;
     try {
       final rawDate = billing['orderDate'] ?? billing['createdAt'];
-      if (rawDate is String) orderDate = DateTime.tryParse(rawDate)?.toLocal();
-      else if (rawDate is Map && rawDate['_seconds'] != null) {
+      if (rawDate is String) {
+        orderDate = DateTime.tryParse(rawDate)?.toLocal();
+      } else if (rawDate is Map && rawDate['_seconds'] != null) {
         orderDate = DateTime.fromMillisecondsSinceEpoch((rawDate['_seconds'] as int) * 1000, isUtc: true).toLocal();
       }
     } catch (_) {}
@@ -507,7 +508,7 @@ class OrderDetailScreen extends StatelessWidget {
               height: 120,
               width: double.infinity,
               fit: BoxFit.cover,
-              errorBuilder: (ctx, _, __) => Container(
+              errorBuilder: (ctx, _, _) => Container(
                 height: 120,
                 color: SahimedColors.slate100,
                 child: const Icon(LucideIcons.fileImage, color: SahimedColors.slate300),

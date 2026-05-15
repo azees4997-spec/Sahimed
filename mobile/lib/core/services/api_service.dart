@@ -71,14 +71,19 @@ class ApiService {
     return [];
   }
 
-  Future<List<ProductModel>> getProducts({bool isBestSeller = false}) async {
-    final cacheKey = 'products_${isBestSeller ? "bestseller" : "all"}';
+  Future<List<ProductModel>> getProducts({
+    bool isBestSeller = false,
+    bool isTopSelection = false,
+  }) async {
+    final cacheKey =
+        'products_${isBestSeller ? "bestseller" : isTopSelection ? "topselection" : "all"}';
     final cached = _getCached(cacheKey);
     if (cached != null) return List<ProductModel>.from(cached);
 
     try {
       String url = '$baseUrl/products?limit=20';
       if (isBestSeller) url += '&isBestSeller=true';
+      if (isTopSelection) url += '&isTopSelection=true';
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);

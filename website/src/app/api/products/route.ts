@@ -119,15 +119,21 @@ export async function GET(request: Request) {
     }
 
     let searchOr: any[] = [];
-    if (q) {
-      searchOr = [
-        { name: { $regex: `^${q}`, $options: 'i' } },
-        { name: { $regex: q, $options: 'i' } },
-        { saltComposition: { $regex: q, $options: 'i' } },
-        { salt: { $regex: q, $options: 'i' } },
-        { composition: { $regex: q, $options: 'i' } },
-        { molecule: { $regex: q, $options: 'i' } }
-      ];
+    if (qStr) {
+      const terms = qStr.split(/\s+/).filter(t => t.length > 0);
+      if (terms.length > 0) {
+        // Create a regex that requires ALL terms to be present in the field (any order)
+        const pattern = terms.map(t => `(?=.*${escapeRegExp(t)})`).join('');
+        const flexibleRegex = { $regex: pattern, $options: 'i' };
+        
+        searchOr = [
+          { name: flexibleRegex },
+          { saltComposition: flexibleRegex },
+          { salt: flexibleRegex },
+          { composition: flexibleRegex },
+          { molecule: flexibleRegex }
+        ];
+      }
     }
 
     // Combine filters intelligently

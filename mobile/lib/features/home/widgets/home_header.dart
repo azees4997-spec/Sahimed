@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,7 +8,6 @@ import '../../../core/theme/colors.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/services/api_service.dart';
 import '../../products/screens/search_screen.dart';
-import '../screens/cart_screen.dart';
 
 class HomeHeader extends StatefulWidget {
   const HomeHeader({super.key});
@@ -23,6 +20,7 @@ class _HomeHeaderState extends State<HomeHeader> {
   String _currentAddress = 'Loading...';
   final LocationService _locationService = LocationService();
   bool _isCheckingPincode = false;
+  bool? _isServiceable;
 
   @override
   void initState() {
@@ -41,7 +39,29 @@ class _HomeHeaderState extends State<HomeHeader> {
 
     if (mounted) {
       setState(() => _currentAddress = address);
+      _checkAddressServiceability(address);
     }
+  }
+
+  Future<void> _checkAddressServiceability(String address) async {
+    // Attempt to find a 6-digit pincode in the address string
+    final RegExp pincodeRegex = RegExp(r'\b\d{6}\b');
+    final match = pincodeRegex.firstMatch(address);
+    
+    if (match != null) {
+      final pincode = match.group(0);
+      if (pincode != null) {
+        final shipway = await ApiService().getShipwayServiceability(pincode);
+        if (mounted) {
+          setState(() => _isServiceable = shipway?['serviceable'] == true);
+        }
+        return;
+      }
+    }
+    
+    // If no pincode found, we might still be serviceable if we have a city
+    // but for now, we'll leave it as null (unknown) to avoid false positives
+    if (mounted) setState(() => _isServiceable = null);
   }
 
 
@@ -174,13 +194,16 @@ class _HomeHeaderState extends State<HomeHeader> {
                       child: ListView.separated(
                         shrinkWrap: true,
                         itemCount: addresses.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           final addr = addresses[index];
                           return GestureDetector(
                             onTap: () {
                               final formatted = '${addr['houseNumber']}, ${addr['street']}, ${addr['city']}';
-                              setState(() => _currentAddress = formatted);
+                              if (mounted) {
+                                setState(() => _currentAddress = formatted);
+                                _checkAddressServiceability(formatted);
+                              }
                               Navigator.pop(context);
                             },
                             child: Container(
@@ -559,6 +582,14 @@ class _HomeHeaderState extends State<HomeHeader> {
                               ),
                             ),
                           ),
+                          if (_isServiceable != null) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              _isServiceable! ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                              size: 10,
+                              color: _isServiceable! ? SahimedColors.success : SahimedColors.accent,
+                            ),
+                          ],
                         ],
                       ),
                     ),

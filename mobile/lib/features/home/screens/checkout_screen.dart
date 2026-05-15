@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,7 +14,7 @@ import '../../../core/services/api_service.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/services/notification_service.dart';
 import 'order_status_screen.dart';
-import 'package:paytm_allinonesdk/paytm_allinonesdk.dart';
+import 'package:paytmpayments_allinonesdk/paytmpayments_allinonesdk.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final File? initialPrescription;
@@ -48,19 +47,82 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Map<String, dynamic>? _selectedAddress;
   bool _showAddressForm = true;
 
-  String _paymentMethod = 'COD';
+  String _paymentMethod = 'Online';
+  String? _expectedDelivery;
 
 
   @override
   void initState() {
     super.initState();
     _prescriptionImage = widget.initialPrescription;
-    
-    _prescriptionImage = widget.initialPrescription;
     _loadData();
   }
 
   // Payment handlers removed as Paytm uses async call
+  
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message.toUpperCase(),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10),
+        ),
+        backgroundColor: SahimedColors.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        margin: const EdgeInsets.all(20),
+      ),
+    );
+  }
+
+  Future<bool> _validateBeforeProcessing() async {
+    // 1. Basic Form Validation
+    if (_showAddressForm) {
+      if (!_formKey.currentState!.validate()) return false;
+    } else if (_selectedAddress == null) {
+      _showError('PLEASE SELECT A DELIVERY ADDRESS');
+      return false;
+    }
+
+    // 2. Mandatory Patient Details (Enhanced Enforcement)
+    if (_nameController.text.trim().isEmpty || 
+        _nameController.text == 'Sahimed User' || 
+        _nameController.text == 'N/A') {
+      _showError('PATIENT NAME IS MANDATORY FOR ORDER PROCESSING');
+      return false;
+    }
+    if (_phoneController.text.trim().isEmpty || _phoneController.text.length < 10) {
+      _showError('VALID 10-DIGIT MOBILE NUMBER IS REQUIRED');
+      return false;
+    }
+
+    // 3. Prescription Check
+    final cart = context.read<CartProvider>();
+    if (cart.isRxRequired && _prescriptionImage == null && !_isConsultationRequired) {
+      _showError('PRESCRIPTION REQUIRED • PLEASE UPLOAD OR OPT FOR CONSULTATION');
+      return false;
+    }
+
+    // 4. Serviceability Check (Location)
+    setState(() => _isProcessing = true);
+    try {
+      final pincodeToCheck = _showAddressForm ? _pincodeController.text : _selectedAddress!['pincode'];
+      final shipway = await _apiService.getShipwayServiceability(pincodeToCheck);
+      final isServiceable = shipway?['serviceable'] == true;
+      _expectedDelivery = shipway?['edd'];
+
+      if (!isServiceable) {
+        _showError('WE CURRENTLY DO NOT DELIVER TO $pincodeToCheck');
+        setState(() => _isProcessing = false);
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Serviceability check failed: $e');
+    }
+    
+    return true;
+  }
 
 
 
@@ -85,11 +147,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           _selectedAddress = addresses.first;
           _showAddressForm = false;
           _fillFormWithAddress(addresses.first);
-        } else {
-          // New User: Auto-detect location to save time
-          _autoDetectLocation();
         }
       });
+    }
+  }
+
+  void _onCheckout() async {
+    if (_paymentMethod == 'Online') {
+      await _handleOnlinePayment();
+    } else {
+      if (await _validateBeforeProcessing()) {
+        await _placeOrder();
+      }
     }
   }
 
@@ -162,18 +231,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _handleOnlinePayment() async {
-    // 1. Validation Logic
-    if (_showAddressForm) {
-      if (!_formKey.currentState!.validate()) return;
-    } else if (_selectedAddress == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select an address')));
-      return;
-    }
+    if (!(await _validateBeforeProcessing())) return;
 
-    setState(() => _isProcessing = true);
-
+    if (!mounted) return;
     final cart = context.read<CartProvider>();
-    final user = FirebaseAuth.instance.currentUser;
     
     try {
       // 1. Initiate Transaction with Backend
@@ -182,39 +243,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         channel: 'WAP', // Mobile uses WAP
       );
 
-      if (response == null || response['txnToken'] == null) {
-        throw Exception('Failed to get transaction token');
-      }
+      if (response != null && response['txnToken'] != null) {
+        final txnToken = response['txnToken'];
+        final orderId = response['orderId'];
+        final mid = response['mid'];
+        final callbackUrl = response['callbackUrl'];
 
-      final String txnToken = response['txnToken'] ?? "";
-      final String mid = response['mid'] ?? "";
-      final String orderId = response['orderId'] ?? "";
-      final String amount = (response['amount'] ?? 0).toString();
-
-      // 2. Start Paytm SDK
-      var result = await PaytmAllInOneSdk.startTransaction(
-        mid,
-        orderId,
-        amount,
-        txnToken,
-        "", // callbackUrl (can be empty for SDK)
-        false, // isStaging
-        false, // restrictAppInvoke
-      );
-
-      if (result != null && result['STATUS'] == 'TXN_SUCCESS') {
-        // 3. Place order with transaction details
-        await _placeOrder(
-          paymentId: result['TXNID'],
-          paytmOrderId: orderId,
+        // 2. Open Paytm SDK
+        var paytmResponse = await PaytmPaymentsAllinonesdk().startTransaction(
+          mid?.toString() ?? "",
+          orderId?.toString() ?? "",
+          cart.finalTotal.toString(),
+          txnToken?.toString() ?? "",
+          callbackUrl?.toString() ?? "",
+          false, // isStaging (production)
+          false, // restrictAppInvoke
         );
-      } else {
-        String msg = result?['RESPMSG'] ?? "Payment Cancelled or Failed";
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+
+        if (paytmResponse != null && paytmResponse['STATUS'] == 'TXN_SUCCESS') {
+          await _placeOrder(
+            paymentId: paytmResponse['TXNID'],
+            paytmOrderId: orderId,
+          );
+        } else {
+          _showError('PAYMENT FAILED: ${paytmResponse?['RESPMSG'] ?? 'Unknown Error'}');
+        }
       }
     } catch (e) {
-      debugPrint('Paytm Error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Payment Error: $e')));
+      _showError('PAYMENT INITIATION FAILED: $e');
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
@@ -224,86 +280,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     String? paymentId,
     String? paytmOrderId,
   }) async {
-    // 1. Validation Logic
+    // 1. Final Safety Check (already mostly handled by _validateBeforeProcessing)
     if (_showAddressForm) {
       if (!_formKey.currentState!.validate()) return;
-    } else {
-      if (_selectedAddress == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select an address')),
-        );
-        return;
-      }
-      // Ensure name and phone are actually present
-      if (_nameController.text.trim().isEmpty || 
-          _nameController.text == 'Sahimed User' || 
-          _nameController.text == 'N/A') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PATIENT NAME IS MANDATORY')),
-        );
-        return;
-      }
-      if (_phoneController.text.trim().isEmpty || _phoneController.text.length < 10) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('VALID 10-DIGIT MOBILE NUMBER IS REQUIRED')),
-        );
-        return;
-      }
+    } else if (_selectedAddress == null) {
+      _showError('Please select an address');
+      return;
     }
 
     final cart = context.read<CartProvider>();
     List<String> prescriptions = [];
 
-    // Soft Gate Check
-    if (cart.isRxRequired &&
-        _prescriptionImage == null &&
-        !_isConsultationRequired) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'PRESCRIPTION REQUIRED • PLEASE UPLOAD OR TOGGLE CONSULTATION',
-            style: GoogleFonts.outfit(
-              fontWeight: FontWeight.w900,
-              fontSize: 10,
-            ),
-          ),
-          backgroundColor: SahimedColors.primary,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          margin: const EdgeInsets.all(20),
-        ),
-      );
-      return;
-    }
-
+    // Ensure processing state
     setState(() => _isProcessing = true);
-
-    /* Online Payment Deactivated */
-
-    // Check serviceability
-    try {
-      final pincodeToCheck = _showAddressForm ? _pincodeController.text : _selectedAddress!['pincode'];
-      final shipway = await _apiService.getShipwayServiceability(pincodeToCheck);
-      final isServiceable = shipway?['serviceable'] == true;
-      final expectedDelivery = shipway?['edd'];
-
-      if (!isServiceable) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('We currently do not deliver to $pincodeToCheck'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        setState(() => _isProcessing = false);
-        return;
-      }
-    } catch (e) {
-      debugPrint('Serviceability check failed: $e');
-    }
 
     try {
       if (_prescriptionImage != null) {
@@ -397,7 +386,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 totalAmount: confirmedTotal,
                 patientName: confirmedName,
                 paymentMethod: paymentId != null ? 'Online Payment' : 'Cash on Delivery',
-                expectedDelivery: expectedDelivery,
+                expectedDelivery: _expectedDelivery,
               ),
             ),
             (route) => route.isFirst,
@@ -781,7 +770,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               child: ElevatedButton(
                 onPressed: _isProcessing 
                     ? null 
-                    : (_paymentMethod == 'Online' ? _handleOnlinePayment : _placeOrder),
+                    : _onCheckout,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: SahimedColors.primary,
                   foregroundColor: Colors.white,
@@ -1267,111 +1256,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildGlassPlaceOrderBar(CartProvider cart) {
-    return ClipRRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-          decoration: BoxDecoration(
-            color: SahimedColors.white.withOpacity(0.8),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(40),
-              topRight: Radius.circular(40),
-            ),
-            border: Border.all(
-              color: SahimedColors.white.withOpacity(0.3),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 30,
-                offset: const Offset(0, -10),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Order Total',
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: SahimedColors.textSecondary,
-                    ),
-                  ),
-                  Text(
-                    '₹${cart.finalTotal.toStringAsFixed(2)}',
-                    style: GoogleFonts.outfit(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      color: SahimedColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: Opacity(
-                  opacity:
-                      (cart.isRxRequired &&
-                          _prescriptionImage == null &&
-                          !_isConsultationRequired)
-                      ? 0.6
-                      : 1.0,
-                  child: ElevatedButton(
-                    onPressed: _isProcessing ? null : _placeOrder,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: SahimedColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      elevation:
-                          (cart.isRxRequired &&
-                              _prescriptionImage == null &&
-                              !_isConsultationRequired)
-                          ? 0
-                          : 8,
-                      shadowColor: SahimedColors.primary.withOpacity(0.4),
-                    ),
-                    child: _isProcessing
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            (cart.isRxRequired &&
-                                    _prescriptionImage == null &&
-                                    !_isConsultationRequired)
-                                ? 'Upload Rx to Place Order'
-                                : 'Securely Place Order',
-                            style: GoogleFonts.outfit(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

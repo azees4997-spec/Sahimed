@@ -72,6 +72,11 @@ class NotificationService {
     });
 
     // 7. Get token for server-side use
+    await syncToken();
+    debugPrint('FCM Token sync requested');
+  }
+
+  static Future<void> syncToken() async {
     String? token = await _messaging.getToken();
     if (token != null) {
       await ApiService().updateFcmToken(token);

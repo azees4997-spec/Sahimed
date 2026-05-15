@@ -5,7 +5,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
 
 import '../../../core/services/api_service.dart';
@@ -39,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<CategoryModel> _categories = [];
   List<ProductModel> _bestSellers = [];
+  List<ProductModel> _topSelections = [];
   List<ProductModel> _medicines = [];
   bool _isLoading = true;
   // BUG-09 FIX: Removed dead _pincode variable
@@ -51,10 +51,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _requestInitialPermissions() async {
-    // Non-blocking request for notifications on app start
+    // Non-blocking request for notifications and location on app start
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
       PermissionService.requestNotifications(context);
+      PermissionService.requestLocation(context);
     }
   }
 
@@ -64,13 +65,15 @@ class _HomeScreenState extends State<HomeScreen> {
       final results = await Future.wait([
         _api.getCategories(),
         _api.getProducts(isBestSeller: true),
+        _api.getProducts(isTopSelection: true),
         _api.getProducts(),
       ]);
       if (mounted) {
         setState(() {
           _categories = (results[0] as List<CategoryModel>?) ?? [];
           _bestSellers = (results[1] as List<ProductModel>?)?.take(3).toList() ?? [];
-          _medicines = (results[2] as List<ProductModel>?)?.take(20).toList() ?? [];
+          _topSelections = (results[2] as List<ProductModel>?)?.take(10).toList() ?? [];
+          _medicines = (results[3] as List<ProductModel>?)?.take(20).toList() ?? [];
           _isLoading = false;
         });
       }
@@ -164,7 +167,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 28),
                   _buildSection(
-                    title: 'Best Sellers',
+                    title: 'Top Selections',
+                    trailing: Badge(
+                      label: Text('CURATED', style: GoogleFonts.outfit(fontSize: 7, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
+                      backgroundColor: SahimedColors.primary.withOpacity(0.1),
+                    ),
+                    child: _isLoading ? _shimmerHScroll() : _horizontalTopSelections(context),
+                  ),
+                  const SizedBox(height: 28),
+                  _buildSection(
+                    title: 'Featured Medicines',
                     child: _isLoading ? _shimmerHScroll() : _horizontalProductScroll(context),
                   ),
                   const SizedBox(height: 120),
@@ -263,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 120,
                 fit: BoxFit.cover,
                 alignment: Alignment.topCenter,
-                errorWidget: (ctx, _, __) => Container(
+                errorWidget: (ctx, _, _) => Container(
                   width: 110,
                   height: 120,
                   color: _lavender,
@@ -355,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(title.toUpperCase(), style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
-              if (trailing != null) trailing,
+              ?trailing,
             ],
           ),
           const SizedBox(height: 12),
@@ -410,7 +422,7 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.only(bottom: 10),
         scrollDirection: Axis.horizontal,
         itemCount: _bestSellers.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (_, i) => SizedBox(width: 165, child: SahimedProductCard(product: _bestSellers[i])),
       ),
     );
@@ -476,8 +488,20 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _medicines.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (_, i) => SizedBox(width: 155, child: SahimedProductCard(product: _medicines[i])),
+      ),
+    );
+  }
+
+  Widget _horizontalTopSelections(BuildContext context) {
+    return SizedBox(
+      height: 245,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _topSelections.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
+        itemBuilder: (_, i) => SizedBox(width: 155, child: SahimedProductCard(product: _topSelections[i])),
       ),
     );
   }
@@ -494,7 +518,7 @@ class _HomeScreenState extends State<HomeScreen> {
         childAspectRatio: count == 9 ? 0.85 : 0.68,
       ),
       itemCount: count,
-      itemBuilder: (_, __) => _shimmerBox(radius: 16),
+      itemBuilder: (_, _) => _shimmerBox(radius: 16),
     );
   }
 
@@ -504,8 +528,8 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: 4,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (_, __) => SizedBox(width: 155, child: _shimmerBox(radius: 16)),
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
+        itemBuilder: (_, _) => SizedBox(width: 155, child: _shimmerBox(radius: 16)),
       ),
     );
   }

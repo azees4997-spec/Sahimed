@@ -43,18 +43,21 @@ async function getCategories() {
   }
 }
 
-async function getProducts(isBestSeller = false) {
+async function getProducts(filterType: 'bestSeller' | 'topSelection' | 'all' = 'all') {
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
     const query: any = { isActive: { $ne: false } };
-    if (isBestSeller) {
+    
+    if (filterType === 'bestSeller') {
       query.isBestSeller = { $in: [true, 'true'] };
+    } else if (filterType === 'topSelection') {
+      query.isTopSelection = { $in: [true, 'true'] };
     }
     
     const products = await db.collection('products')
       .find(query)
-      .limit(isBestSeller ? 20 : 50)
+      .limit(filterType === 'all' ? 50 : 20)
       .toArray();
     
     return products.map(p => ({ ...p, id: p._id.toString() }));
@@ -65,11 +68,12 @@ async function getProducts(isBestSeller = false) {
 }
 
 export default async function Home() {
-  const [banners, categories, bestSellers, medicines] = await Promise.all([
+  const [banners, categories, bestSellers, topSelections, medicines] = await Promise.all([
     getBanners(),
     getCategories(),
-    getProducts(true),
-    getProducts(false)
+    getProducts('bestSeller'),
+    getProducts('topSelection'),
+    getProducts('all')
   ]);
 
   return (
@@ -141,6 +145,7 @@ export default async function Home() {
             banners={banners}
             categories={categories}
             bestSellers={bestSellers}
+            topSelections={topSelections}
             medicines={medicines}
           />
         </main>

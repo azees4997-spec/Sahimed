@@ -665,7 +665,9 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     matrixTabLabel: initialData?.matrixTabLabel || 'Matrix',
     imageUrl: initialData?.imageUrl || '',
     imageUrl2: initialData?.imageUrls?.[1] || '',
-    imageUrl3: initialData?.imageUrls?.[2] || ''
+    imageUrl3: initialData?.imageUrls?.[2] || '',
+    isTopSelection: initialData?.isTopSelection || false,
+    isActive: initialData?.isActive !== false
   });
 
   const [liveData, setLiveData] = useState({ price: 0, mrp: 0, availableQuantity: 0 });
@@ -761,7 +763,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       <Tabs defaultValue="basic" className="w-full">
         <TabsList className="bg-gray-100 p-1 rounded-2xl h-14 w-full flex mb-8">
           <TabsTrigger value="basic" className="flex-1 rounded-xl font-black text-[10px]">Identity</TabsTrigger>
-          <TabsTrigger value="live" className="flex-1 rounded-xl font-black text-[10px] text-primary">Live stock</TabsTrigger>
+          <TabsTrigger value="live" className="flex-1 rounded-xl font-black text-[10px] text-primary">Inventory & Sku</TabsTrigger>
           <TabsTrigger value="images" className="flex-1 rounded-xl font-black text-[10px]">Media</TabsTrigger>
           <TabsTrigger value="clinical" className="flex-1 rounded-xl font-black text-[10px]">Clinical</TabsTrigger>
         </TabsList>
@@ -803,14 +805,35 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                 className="rounded-2xl h-14 bg-gray-50 border-none font-bold" 
               />
             </div>
-            <div className="col-span-2 flex items-center space-x-10 pt-4">
-              <div className="flex items-center space-x-2"><Checkbox id="rx-req" checked={form.prescriptionRequired} onCheckedChange={(c) => setForm({...form, prescriptionRequired: !!c})} /><Label htmlFor="rx-req" className="text-[10px] font-black text-red-500">Rx required</Label></div>
-              <div className="flex items-center space-x-2"><Checkbox id="is-generic" checked={form.isGeneric} onCheckedChange={(c) => setForm({...form, isGeneric: !!c})} /><Label htmlFor="is-generic" className="text-[10px] font-black text-accent">SahiMed generic</Label></div>
+            <div className="col-span-2 flex items-center space-x-8 pt-4 flex-wrap gap-y-4">
+              <div className="flex items-center space-x-2"><Checkbox id="is-active" checked={form.isActive} onCheckedChange={(c) => setForm({...form, isActive: !!c})} /><Label htmlFor="is-active" className="text-[10px] font-black uppercase text-emerald-600">Active / Live</Label></div>
+              <div className="flex items-center space-x-2"><Checkbox id="is-top-selection" checked={form.isTopSelection} onCheckedChange={(c) => setForm({...form, isTopSelection: !!c})} /><Label htmlFor="is-top-selection" className="text-[10px] font-black uppercase text-blue-600">Top Selection</Label></div>
+              <div className="flex items-center space-x-2"><Checkbox id="rx-req" checked={form.prescriptionRequired} onCheckedChange={(c) => setForm({...form, prescriptionRequired: !!c})} /><Label htmlFor="rx-req" className="text-[10px] font-black text-red-500 uppercase">Rx required</Label></div>
+              <div className="flex items-center space-x-2"><Checkbox id="is-generic" checked={form.isGeneric} onCheckedChange={(c) => setForm({...form, isGeneric: !!c})} /><Label htmlFor="is-generic" className="text-[10px] font-black text-accent uppercase">SahiMed generic</Label></div>
               <div className="flex items-center space-x-2"><Checkbox id="is-best-seller" checked={form.isBestSeller} onCheckedChange={(c) => setForm({...form, isBestSeller: !!c})} /><Label htmlFor="is-best-seller" className="text-[10px] font-black text-yellow-500 uppercase">Best Seller</Label></div>
             </div>
           </div>
         </TabsContent>
-        <TabsContent value="live" className="space-y-6"><div className="grid grid-cols-3 gap-6 bg-primary/5 p-8 rounded-[32px] border border-primary/10"><div className="space-y-2"><Label className="text-[10px] font-black text-primary">Live price</Label><Input type="number" value={liveData.price} onChange={e => setLiveData({...liveData, price: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-black text-xl" /></div><div className="space-y-2"><Label className="text-[10px] font-black">Mrp</Label><Input type="number" value={liveData.mrp} onChange={e => setLiveData({...liveData, mrp: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-bold" /></div><div className="space-y-2"><Label className="text-[10px] font-black">Stock</Label><Input type="number" value={liveData.availableQuantity} onChange={e => setLiveData({...liveData, availableQuantity: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-bold" /></div></div></TabsContent>
+        <TabsContent value="live" className="space-y-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 bg-primary/5 p-8 rounded-[32px] border border-primary/10">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black text-primary">Item Code (SKU)</Label>
+              <Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} className="rounded-2xl h-14 bg-white border-none font-black text-base" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black text-primary">Live price</Label>
+              <Input type="number" value={liveData.price} onChange={e => setLiveData({...liveData, price: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-black text-xl" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black">Mrp</Label>
+              <Input type="number" value={liveData.mrp} onChange={e => setLiveData({...liveData, mrp: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-bold" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black">Stock</Label>
+              <Input type="number" value={liveData.availableQuantity} onChange={e => setLiveData({...liveData, availableQuantity: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-bold" />
+            </div>
+          </div>
+        </TabsContent>
         <TabsContent value="images" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">

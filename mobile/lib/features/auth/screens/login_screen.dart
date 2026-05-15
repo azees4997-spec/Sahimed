@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/layout/main_layout.dart';
+import '../../../core/services/api_service.dart';
+import '../../../core/services/notification_service.dart';
 import 'otp_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,13 +24,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Optimization: Pre-cache assets to ensure butter-smooth loading
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      precacheImage(
-        const AssetImage('assets/images/login_illustration_wellness.png'),
-        context,
-      );
-    });
   }
 
   @override
@@ -55,6 +50,12 @@ class _LoginScreenState extends State<LoginScreen> {
         phoneNumber: '+91$phone',
         verificationCompleted: (PhoneAuthCredential credential) async {
           await _auth.signInWithCredential(credential);
+          try {
+            await ApiService().syncUser();
+            await NotificationService.syncToken();
+          } catch (e) {
+            debugPrint("Sync Error: $e");
+          }
           _navigateToHome();
         },
         verificationFailed: (FirebaseAuthException e) {
@@ -111,59 +112,46 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: SahimedColors.background,
-      body: Stack(
-        children: [
-          // Background Aesthetic Blobs
-          Positioned(
-            top: -120,
-            right: -60,
-            child: _buildBlob(350, SahimedColors.primary.withOpacity(0.08)),
-          ),
-          Positioned(
-            bottom: -80,
-            left: -40,
-            child: _buildBlob(280, SahimedColors.accent.withOpacity(0.05)),
-          ),
-
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                children: [
-                  const SizedBox(height: 32),
-
-                  // App Branding
-                  Row(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            if (_isLoading)
+              const LinearProgressIndicator(
+                backgroundColor: Colors.white,
+                valueColor: AlwaysStoppedAnimation<Color>(SahimedColors.primary),
+                minHeight: 2,
+              ),
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      _buildStepIndicator(1),
+                      const SizedBox(height: 48),
+                      // App Branding (Modern & Focused)
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: SahimedColors.primary,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: SahimedColors.primary.withOpacity(0.2),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
+                          color: SahimedColors.primary.withOpacity(0.05),
+                          shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.health_and_safety_rounded,
-                          color: Colors.white,
-                          size: 28,
+                          color: SahimedColors.primary,
+                          size: 64,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(height: 24),
                       RichText(
                         text: TextSpan(
                           children: [
                             TextSpan(
                               text: 'Sahi',
                               style: GoogleFonts.outfit(
-                                fontSize: 32,
+                                fontSize: 40,
                                 fontWeight: FontWeight.w900,
                                 color: const Color(0xFF0F172A),
                                 letterSpacing: -1,
@@ -172,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextSpan(
                               text: 'Med',
                               style: GoogleFonts.outfit(
-                                fontSize: 32,
+                                fontSize: 40,
                                 fontWeight: FontWeight.w900,
                                 color: SahimedColors.primary,
                                 letterSpacing: -1,
@@ -181,68 +169,114 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Sahi dawai sahi daam pe'.toUpperCase(),
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: SahimedColors.primary.withOpacity(0.5),
+                          letterSpacing: 2,
+                        ),
+                      ),
+
+                      const SizedBox(height: 48),
+
+                      Text(
+                        'Premium Healthcare',
+                        style: GoogleFonts.outfit(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Access your generic medicines and health\nrecords with one secure login.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          color: const Color(0xFF64748B),
+                          height: 1.5,
+                        ),
+                      ),
+
+                      const SizedBox(height: 48),
+
+                      // Phone Input
+                      _buildPhoneInput(),
+
+                      const SizedBox(height: 24),
+                      _buildTermsCheckbox(),
+
+                      const SizedBox(height: 48),
                     ],
                   ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                  const SizedBox(height: 48),
+  Widget _buildStepIndicator(int currentStep) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildStep(1, "Mobile", currentStep >= 1),
+        Container(
+          width: 40,
+          height: 2,
+          margin: const EdgeInsets.only(left: 8, right: 8, bottom: 14),
+          color: currentStep > 1 ? SahimedColors.primary : const Color(0xFFE2E8F0),
+        ),
+        _buildStep(2, "OTP", currentStep >= 2),
+      ],
+    );
+  }
 
-                  // Hero Illustration
-                  Container(
-                    height: 280,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(40),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 40,
-                          offset: const Offset(0, 20),
-                        ),
-                      ],
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: Image.asset(
-                      'assets/images/login_illustration_wellness.png',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-
-                  const SizedBox(height: 48),
-
-                  Text(
-                    'Premium Healthcare',
-                    style: GoogleFonts.outfit(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Access your generic medicines and health records with one secure login.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      color: const Color(0xFF64748B),
-                      height: 1.5,
-                    ),
-                  ),
-
-                  const SizedBox(height: 48),
-
-                  // Phone Input
-                  _buildPhoneInput(),
-
-                  const SizedBox(height: 24),
-                  _buildTermsCheckbox(),
-
-                  const SizedBox(height: 48),
-                ],
+  Widget _buildStep(int step, String label, bool isActive) {
+    return Column(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: isActive ? SahimedColors.primary : Colors.white,
+            border: Border.all(color: isActive ? SahimedColors.primary : const Color(0xFFE2E8F0), width: 2),
+            shape: BoxShape.circle,
+            boxShadow: isActive ? [
+              BoxShadow(
+                color: SahimedColors.primary.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              )
+            ] : null,
+          ),
+          child: Center(
+            child: Text(
+              step.toString(),
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: isActive ? Colors.white : const Color(0xFF94A3B8),
               ),
             ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            color: isActive ? SahimedColors.primary : const Color(0xFF94A3B8),
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
     );
   }
 
@@ -363,14 +397,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildBlob(double size, Color color) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }

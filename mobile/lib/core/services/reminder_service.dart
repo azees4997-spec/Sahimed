@@ -30,21 +30,6 @@ class ReminderService {
         // Handle notification tap
       },
     );
-
-    // CRITICAL: Request OS-level permissions
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      final androidImplementation = _notifications.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
-      await androidImplementation?.requestNotificationsPermission();
-      await androidImplementation?.requestExactAlarmsPermission();
-    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-      await _notifications.resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-    }
   }
 
   static Future<void> scheduleReminder({

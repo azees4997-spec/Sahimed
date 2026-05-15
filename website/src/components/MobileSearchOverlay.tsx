@@ -256,6 +256,11 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
                   <h4 className="font-black text-slate-800 text-sm truncate uppercase tracking-tight">
                     {item.name || item.molecule}
                   </h4>
+                  {item._type === 'medicine' && (item.saltComposition || item.composition || item.salt) && (
+                    <p className="text-[10px] text-slate-500 truncate italic">
+                      {item.saltComposition || item.composition || item.salt}
+                    </p>
+                  )}
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant="secondary" className="bg-slate-100 text-slate-500 font-bold text-[8px] px-1.5 py-0.5 rounded-md border-none uppercase tracking-widest shrink-0">
                       {item._type}

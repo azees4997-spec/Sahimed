@@ -845,6 +845,11 @@ export default function Navbar() {
                             <p className="font-extrabold text-xs sm:text-sm text-slate-800 truncate cursor-pointer hover:text-primary transition-colors">
                               {item.term}
                             </p>
+                            {item.type === 'Brand' && (item as any).product?.saltComposition && (
+                              <p className="text-[10px] text-slate-500 truncate italic">
+                                {(item as any).product.saltComposition}
+                              </p>
+                            )}
                             <div className="flex items-center gap-2 mt-1">
                               <Badge variant="secondary" className="bg-slate-100 text-slate-500 font-bold text-[8px] px-1.5 py-0 rounded-md border-none uppercase tracking-widest shrink-0">
                                 {item.type}

@@ -22,10 +22,11 @@ interface HomeClientProps {
   banners: any[];
   categories: any[];
   bestSellers: any[];
+  topSelections: any[];
   medicines: any[];
 }
 
-export default function HomeClient({ banners, categories, bestSellers, medicines }: HomeClientProps) {
+export default function HomeClient({ banners, categories, bestSellers, topSelections, medicines }: HomeClientProps) {
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
@@ -189,9 +190,26 @@ export default function HomeClient({ banners, categories, bestSellers, medicines
         </div>
       </section>
  
-      {/* Best Sellers */}
+      {/* Top Selections section */}
+      {topSelections && topSelections.length > 0 && (
+        <section className="space-y-3 sm:space-y-5 max-w-full">
+          <div className="flex items-center justify-between px-1 sm:px-2">
+            <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tighter uppercase font-outfit">Top Selections</h2>
+            <Badge variant="outline" className="font-black text-[7px] sm:text-[8px] uppercase tracking-widest text-primary border-primary/20">Curated for you</Badge>
+          </div>
+          <div className="flex gap-3 sm:gap-5 overflow-x-auto scrollbar-hide pb-4 sm:pb-6 px-1 sm:px-2">
+            {topSelections.map((p: any) => (
+              <div key={p.id} className="min-w-[120px] sm:min-w-[180px]">
+                <ProductCard product={p} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Featured Items / Medicines section */}
       <section className="space-y-3 sm:space-y-5 max-w-full">
-        <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tighter uppercase font-outfit px-1 sm:px-2">Top Selections</h2>
+        <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tighter uppercase font-outfit px-1 sm:px-2">Featured Medicines</h2>
         <div className="flex gap-3 sm:gap-5 overflow-x-auto scrollbar-hide pb-4 sm:pb-6 px-1 sm:px-2">
           {medicines.map((p: any) => (
             <div key={p.id} className="min-w-[120px] sm:min-w-[180px]">

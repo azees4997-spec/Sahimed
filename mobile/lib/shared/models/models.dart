@@ -52,6 +52,8 @@ class ProductModel {
   final bool rxRequired;
   final bool prescriptionRequired;
   final bool isBestSeller;
+  final bool isTopSelection;
+  final bool isActive;
 
   // Clinical Metadata for Website Parity
   final String? treatment;
@@ -84,6 +86,8 @@ class ProductModel {
     this.liveData,
     this.moleculeData,
     this.isBestSeller = false,
+    this.isTopSelection = false,
+    this.isActive = true,
     this.treatment,
     this.description,
     this.safetyAdvice,
@@ -136,6 +140,9 @@ class ProductModel {
       moleculeData: json['moleculeData'],
       isBestSeller:
           json['isBestSeller'] == true || json['isBestSeller'] == "true",
+      isTopSelection:
+          json['isTopSelection'] == true || json['isTopSelection'] == "true",
+      isActive: json['isActive'] != false && json['isActive'] != "false",
       treatment: json['treatment'],
       description: json['description'] ?? json['medicalDescription'],
       safetyAdvice: json['safetyAdvice'],
@@ -177,6 +184,9 @@ class ProductModel {
       'kidneyInteraction': kidneyInteraction,
       'liverInteraction': liverInteraction,
       'category': category,
+      'isBestSeller': isBestSeller,
+      'isTopSelection': isTopSelection,
+      'isActive': isActive,
     };
   }
 }

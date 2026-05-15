@@ -90,10 +90,13 @@ class _SahimedAppState extends State<SahimedApp> {
     try {
       final info = await InAppUpdate.checkForUpdate();
       if (info.updateAvailability == UpdateAvailability.updateAvailable) {
-        // If there's an update, start a flexible update (non-blocking)
-        // or an immediate update if you want to force it.
-        // We'll use performImmediateUpdate for critical medicine app parity
-        await InAppUpdate.performImmediateUpdate();
+        // [UPDATE REFACTOR] Enforce In-App Update flow to prevent redirecting to Play Store
+        // We use immediate update for critical medicine safety and version parity.
+        // This keeps the user INSIDE the app during the update process.
+        await InAppUpdate.performImmediateUpdate().catchError((e) {
+          debugPrint("Immediate Update Error: $e");
+          return AppUpdateResult.inAppUpdateFailed;
+        });
       }
     } catch (e) {
       debugPrint("In-App Update Check Failed: $e");

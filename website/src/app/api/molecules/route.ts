@@ -30,13 +30,18 @@ export async function GET(request: Request) {
     const db = client.db('sahimed');
     
     let query = {};
-    if (q) {
-      query = { 
-        $or: [
-          { molecule: { $regex: q, $options: 'i' } },
-          { masterId: { $regex: q, $options: 'i' } }
-        ]
-      };
+    if (qRaw) {
+      const terms = qRaw.split(/\s+/).filter(t => t.length > 0);
+      if (terms.length > 0) {
+        // Match if the molecule name is any of the terms or contains them
+        const pattern = terms.map(t => escapeRegExp(t)).join('|');
+        query = { 
+          $or: [
+            { molecule: { $regex: pattern, $options: 'i' } },
+            { masterId: { $regex: qRaw, $options: 'i' } }
+          ]
+        };
+      }
     }
 
     const molecules = await db.collection('molecules')
