@@ -33,11 +33,12 @@ export async function GET(request: Request) {
     if (qRaw) {
       const terms = qRaw.split(/\s+/).filter(t => t.length > 0);
       if (terms.length > 0) {
-        // Match if the molecule name is any of the terms or contains them
-        const pattern = terms.map(t => escapeRegExp(t)).join('|');
+        // Strict match: ALL terms in the query must be present in the molecule name
         query = { 
           $or: [
-            { molecule: { $regex: pattern, $options: 'i' } },
+            { 
+              $and: terms.map(t => ({ molecule: { $regex: escapeRegExp(t), $options: 'i' } })) 
+            },
             { masterId: { $regex: qRaw, $options: 'i' } }
           ]
         };

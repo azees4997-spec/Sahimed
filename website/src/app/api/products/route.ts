@@ -122,16 +122,17 @@ export async function GET(request: Request) {
     if (qStr) {
       const terms = qStr.split(/\s+/).filter(t => t.length > 0);
       if (terms.length > 0) {
-        // Create a regex that requires ALL terms to be present in the field (any order)
-        const pattern = terms.map(t => `(?=.*${escapeRegExp(t)})`).join('');
-        const flexibleRegex = { $regex: pattern, $options: 'i' };
-        
+        // Create a match condition for a single field where ALL terms must match
+        const makeMatchAll = (fieldName: string) => ({
+          $and: terms.map(t => ({ [fieldName]: { $regex: escapeRegExp(t), $options: 'i' } }))
+        });
+
         searchOr = [
-          { name: flexibleRegex },
-          { saltComposition: flexibleRegex },
-          { salt: flexibleRegex },
-          { composition: flexibleRegex },
-          { molecule: flexibleRegex }
+          makeMatchAll('name'),
+          makeMatchAll('saltComposition'),
+          makeMatchAll('salt'),
+          makeMatchAll('composition'),
+          makeMatchAll('molecule')
         ];
       }
     }
