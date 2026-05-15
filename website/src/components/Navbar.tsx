@@ -824,68 +824,96 @@ export default function Navbar() {
                   transition={{ type: "spring", damping: 25, stiffness: 200 }}
                   className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] overflow-hidden z-[110] border border-slate-100 shadow-2xl"
                 >
-                  <div className="max-h-[40vh] sm:max-h-[500px] overflow-y-auto scrollbar-hide py-1 sm:py-2">
-                    {displayedSuggestions.map((item) => (
-                      <div 
-                        key={item.id}
-                        className="w-full px-3 sm:px-6 py-2 flex items-center gap-2 sm:gap-3 hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group"
-                      >
-                        {item.type !== 'Salt' && (
-                          <div className="relative w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[10px] sm:rounded-[14px] flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
-                            <Image 
-                              src={(item as any).imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
-                              alt={item.term} 
-                              fill 
-                              className="object-contain p-1 sm:p-1.5" 
-                            />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0 flex items-center justify-between gap-1 sm:gap-4">
-                          <div className="flex-1 min-w-0" onClick={() => handleSuggestionClick(item)}>
-                            <p className="font-extrabold text-xs sm:text-sm text-slate-800 truncate cursor-pointer hover:text-primary transition-colors">
-                              {item.term}
-                            </p>
-                            {item.type === 'Brand' && (item as any).product?.saltComposition && (
-                              <p className="text-[10px] text-slate-500 truncate italic">
-                                {(item as any).product.saltComposition}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant="secondary" className="bg-slate-100 text-slate-500 font-bold text-[8px] px-1.5 py-0 rounded-md border-none uppercase tracking-widest shrink-0">
-                                {item.type}
-                              </Badge>
-                              {(item as any).price > 0 && (
-                                 <span className="text-[10px] sm:text-xs font-black text-primary">₹{(item as any).price}</span>
-                              )}
+                  <div className="max-h-[40vh] sm:max-h-[500px] overflow-y-auto scrollbar-hide py-1 sm:py-2 divide-y divide-slate-50">
+                    {/* Medicines / Brands Section */}
+                    {displayedSuggestions.filter(s => s.type === 'Brand').length > 0 && (
+                      <div className="pb-2">
+                        <div className="px-6 py-2 bg-slate-50/50 flex items-center justify-between">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Medicines / Brands</span>
+                        </div>
+                        {displayedSuggestions.filter(s => s.type === 'Brand').map((item) => (
+                          <div 
+                            key={item.id}
+                            className="w-full px-3 sm:px-6 py-3 flex items-center gap-2 sm:gap-4 hover:bg-slate-50 transition-all group"
+                          >
+                            <div className="relative w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[10px] sm:rounded-[14px] flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
+                              <Image 
+                                src={(item as any).imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
+                                alt={item.term} 
+                                fill 
+                                className="object-contain p-1 sm:p-1.5" 
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0 flex items-center justify-between gap-1 sm:gap-4">
+                              <div className="flex-1 min-w-0" onClick={() => handleSuggestionClick(item)}>
+                                <p className="font-extrabold text-xs sm:text-sm text-slate-800 truncate cursor-pointer hover:text-primary transition-colors">
+                                  {item.term}
+                                </p>
+                                {(item as any).product?.saltComposition && (
+                                  <p className="text-[10px] text-slate-500 truncate italic">
+                                    {(item as any).product.saltComposition}
+                                  </p>
+                                )}
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-[8px] font-black text-slate-400 uppercase bg-slate-100 px-1.5 py-0.5 rounded">BRAND</span>
+                                  {(item as any).price > 0 && (
+                                    <span className="text-[10px] sm:text-xs font-black text-primary">₹{(item as any).price}</span>
+                                  )}
+                                </div>
+                              </div>
+                              <Button 
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  addToCart((item as any).product);
+                                  toast({ title: "Added to Basket" });
+                                }}
+                                className="h-7 sm:h-8 px-3 sm:px-5 rounded-full bg-primary text-white font-black text-[8px] sm:text-[9px] uppercase tracking-widest shadow-md shadow-primary/20 hover:scale-105 active:scale-95 transition-all w-fit"
+                              >
+                                Add +
+                              </Button>
                             </div>
                           </div>
-                          {item.type === 'Brand' && (item as any).product && (
-                            <Button 
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                addToCart((item as any).product);
-                                toast({ title: "Added to Basket" });
-                              }}
-                              className="h-7 sm:h-8 px-3 sm:px-5 rounded-full bg-primary text-white font-black text-[8px] sm:text-[9px] uppercase tracking-widest shadow-md shadow-primary/20 hover:scale-105 active:scale-95 transition-all w-fit"
-                            >
-                              Add +
-                            </Button>
-                          )}
-                           {item.type === 'Salt' && (
-                             <div className="flex items-center gap-2">
-                               <Button 
-                                  variant="ghost"
-                                  onClick={(e) => { e.stopPropagation(); handleSuggestionClick(item); }}
-                                  className="h-7 sm:h-8 px-3 sm:px-4 rounded-full text-slate-500 font-bold text-[8px] sm:text-[9px] uppercase tracking-widest hover:bg-slate-100 transition-all gap-1 sm:gap-2 border border-slate-200 shrink-0"
-                               >
-                                  Browse <ArrowUpRight className="w-3 h-3" />
-                               </Button>
-                             </div>
-                          )}
-                        </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
+
+                    {/* Salts / Molecules Section */}
+                    {displayedSuggestions.filter(s => s.type === 'Salt').length > 0 && (
+                      <div className="pt-2">
+                        <div className="px-6 py-2 bg-slate-50/50 flex items-center justify-between">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Salts / Molecules</span>
+                        </div>
+                        {displayedSuggestions.filter(s => s.type === 'Salt').map((item) => (
+                          <div 
+                            key={item.id}
+                            className="w-full px-3 sm:px-6 py-3 flex items-center gap-2 sm:gap-4 hover:bg-slate-50 transition-all group"
+                          >
+                            <div className="w-8 h-8 sm:w-12 sm:h-12 bg-primary/5 rounded-[10px] sm:rounded-[14px] flex items-center justify-center shrink-0 border border-primary/10">
+                              <ShoppingCart className="w-4 h-4 sm:w-6 sm:h-6 text-primary/40" />
+                            </div>
+                            <div className="flex-1 min-w-0 flex items-center justify-between gap-1 sm:gap-4">
+                              <div className="flex-1 min-w-0" onClick={() => handleSuggestionClick(item)}>
+                                <p className="font-extrabold text-xs sm:text-sm text-slate-800 truncate cursor-pointer hover:text-primary transition-colors uppercase">
+                                  {item.term}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-[8px] font-black text-primary/60 uppercase bg-primary/5 px-1.5 py-0.5 rounded">SALT</span>
+                                  <span className="text-[9px] font-bold text-slate-400">View all products</span>
+                                </div>
+                              </div>
+                              <Button 
+                                variant="ghost"
+                                onClick={(e) => { e.stopPropagation(); handleSuggestionClick(item); }}
+                                className="h-7 sm:h-8 px-3 sm:px-4 rounded-full text-slate-500 font-bold text-[8px] sm:text-[9px] uppercase tracking-widest hover:bg-slate-100 transition-all gap-1 sm:gap-2 border border-slate-200 shrink-0"
+                              >
+                                Browse <ArrowUpRight className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
