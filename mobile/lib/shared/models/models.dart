@@ -277,7 +277,13 @@ class OrderModel {
       carrierId: json['shipping']?['courier'] ?? json['carrierId'],
       walletUsed: num.tryParse((json['walletUsed'] ?? 0).toString())?.toDouble() ?? 0.0,
       createdAt: json['createdAt'] != null 
-        ? (json['createdAt'] is String ? DateTime.parse(json['createdAt']) : (json['createdAt'] is Map ? DateTime.fromMillisecondsSinceEpoch(json['createdAt']['_seconds'] * 1000) : DateTime.now()))
+        ? (json['createdAt'] is String 
+            ? DateTime.parse(json['createdAt']) 
+            : (json['createdAt'] is Map 
+                ? DateTime.fromMillisecondsSinceEpoch((json['createdAt']['_seconds'] ?? 0) * 1000) 
+                : (json['createdAt'] is int 
+                    ? DateTime.fromMillisecondsSinceEpoch(json['createdAt']) 
+                    : DateTime.now())))
         : DateTime.now(),
       expectedDeliveryDate: json['expectedDeliveryDate']?.toString(),
     );

@@ -738,7 +738,10 @@ class ApiService {
       final response = await http.post(
         Uri.parse('$baseUrl/inventory/alerts'),
         headers: headers,
-        body: json.encode({'productId': productId}),
+        body: json.encode({
+          'productId': productId,
+          'platform': 'app',
+        }),
       );
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {

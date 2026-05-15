@@ -286,15 +286,43 @@ const ComparisonCard = ({
         </div>
 
         <div className="mt-2 sm:mt-4">
-          <Button
-            onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })}
-            className={cn(
-              "w-full h-7 sm:h-12 rounded-full font-black text-[7px] sm:text-[10px] tracking-[0.1em] sm:tracking-[0.15em] uppercase gap-1.5 sm:gap-2 shadow-md sm:shadow-lg active:scale-95 transition-all border-none",
-              isAlt ? "bg-accent text-white hover:bg-accent/90" : "bg-primary text-white hover:bg-primary/90"
-            )}
-          >
-            {qty > 0 ? `IN CART (${qty})` : "ADD"} <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
-          </Button>
+          {((Number(product.availableQuantity) <= 0 && (!product.liveData || Number(product.liveData.stock_quantity) <= 0))) ? (
+            <Button
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                  const res = await fetch('/api/inventory/alerts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                      productId: product.id || product._id,
+                      platform: 'web',
+                      pincode: localStorage.getItem('activePincode') || 'Unknown'
+                    })
+                  });
+                  if (res.ok) {
+                    toast({ title: "Notification Set", description: "We'll alert you when this is back!" });
+                  }
+                } catch (e) {
+                  toast({ variant: 'destructive', title: "Error", description: "Failed to set alert." });
+                }
+              }}
+              className="w-full h-7 sm:h-12 bg-[#FFF1F2] text-[#E11D48] font-black text-[7px] sm:text-[10px] tracking-widest uppercase rounded-full flex items-center justify-center gap-1 border border-[#FFE4E6] hover:bg-[#FFE4E6] transition-all active:scale-95 shadow-md shadow-[#E11D48]/5"
+            >
+              NOTIFY ME
+            </Button>
+          ) : (
+            <Button
+              onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })}
+              className={cn(
+                "w-full h-7 sm:h-12 rounded-full font-black text-[7px] sm:text-[10px] tracking-[0.1em] sm:tracking-[0.15em] uppercase gap-1.5 sm:gap-2 shadow-md sm:shadow-lg active:scale-[0.98] transition-all border-none",
+                isAlt ? "bg-accent text-white hover:bg-accent/90" : "bg-primary text-white hover:bg-primary/90"
+              )}
+            >
+              {qty > 0 ? `IN CART (${qty})` : "ADD"} <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+            </Button>
+          )}
         </div>
       </Card>
     </motion.div>

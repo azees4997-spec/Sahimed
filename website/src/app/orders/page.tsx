@@ -204,7 +204,7 @@ export default function OrdersPage() {
                           <div className="flex items-center gap-3">
                             <Calendar className="w-4 h-4 text-slate-400" />
                             <span className="text-[10px] font-black text-slate-500 tracking-[0.2em] uppercase">
-                              {safeFormat(order.orderDate, 'dd MMM yyyy')}
+                              {safeFormat(order.orderDate, 'dd MMM yyyy HH:mm')}
                             </span>
                           </div>
                           <div className="flex items-center gap-3">
@@ -257,7 +257,7 @@ export default function OrdersPage() {
                   <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start gap-6">
                     <div className="space-y-3">
                       <DialogDescription className="text-[10px] font-black tracking-[0.4em] text-white/60 uppercase">
-                        Order Status & History
+                        Order Status & History • {safeFormat(selectedOrder?.orderDate, 'dd MMM yyyy HH:mm')}
                       </DialogDescription>
                       <DialogTitle className="text-3xl font-black tracking-tighter uppercase font-outfit">Order Details</DialogTitle>
                     </div>

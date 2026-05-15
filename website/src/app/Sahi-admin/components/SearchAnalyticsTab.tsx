@@ -111,7 +111,7 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
     const headers = ["Platform", "Mobile", "Keyword", "Results", "Pincode", "Timestamp"];
     const csvContent = [
       headers.join(","),
-      ...logs.map(log => `"${log.platform || 'web'}","${log.mobile}","${(log.keyword || '').replace(/"/g, '""')}","${log.resultsCount ?? 'N/A'}","${log.pincode || ''}","${log.timestamp ? format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss') : 'N/A'}"`)
+      ...logs.map(log => `"${log.platform || 'web'}","${log.mobile}","${(log.keyword || '').replace(/"/g, '""')}","${log.resultsCount ?? 'N/A'}","${log.pincode || ''}","${log.timestamp ? safeFormat(log.timestamp, 'yyyy-MM-dd HH:mm:ss') : 'N/A'}"`)
     ].join("\n");
 
 

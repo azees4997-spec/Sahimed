@@ -27,13 +27,27 @@ export function safeFormat(
 
     if (!isValid(d)) return fallback;
 
-    // FORCING IST (+5:30) for display consistency
-    const istDate = new Date(d.getTime() + (5.5 * 60 * 60 * 1000));
+    // Proper way to get a Date object "representing" the time in a specific timezone
+    // for formatting purposes:
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', second: 'numeric',
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(d);
+    const getPart = (type: string) => parts.find(p => p.type === type)?.value;
     
-    // We use UTC methods or format with a fixed offset if we want to be absolute,
-    // but adding the offset to the timestamp and then formatting is the simplest 'force' method.
-    // NOTE: This assumes the input was UTC.
-    return format(istDate, formula);
+    const istD = new Date(
+      Number(getPart('year')),
+      Number(getPart('month')) - 1,
+      Number(getPart('day')),
+      Number(getPart('hour')),
+      Number(getPart('minute')),
+      Number(getPart('second'))
+    );
+
+    return format(istD, formula);
   } catch (error) {
     console.error('SafeFormat Error:', error);
     return fallback;

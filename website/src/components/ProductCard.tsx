@@ -113,7 +113,11 @@ function ProductCardComponent({ product, priority = false }: { product: Product,
                   const res = await fetch('/api/inventory/alerts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productId: product.id })
+                    body: JSON.stringify({ 
+                      productId: product.id,
+                      platform: 'web',
+                      pincode: location
+                    })
                   });
                   if (res.ok) {
                     toast({ title: "Notification Set", description: "We'll alert you when this is back!" });

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
+import '../../../core/utils/date_formatter.dart';
 import '../../../core/theme/colors.dart';
 import '../../../shared/models/models.dart';
 
@@ -16,16 +17,7 @@ class OrderDetailScreen extends StatelessWidget {
     final items = order.items;
     final billing = order.billingBreakdown;
     final shipping = order.shippingDetails;
-    // BUG-M2 FIX: Parse actual order date from billing or createdAt metadata
-    DateTime? orderDate;
-    try {
-      final rawDate = billing['orderDate'] ?? billing['createdAt'];
-      if (rawDate is String) {
-        orderDate = DateTime.tryParse(rawDate)?.toLocal();
-      } else if (rawDate is Map && rawDate['_seconds'] != null) {
-        orderDate = DateTime.fromMillisecondsSinceEpoch((rawDate['_seconds'] as int) * 1000, isUtc: true).toLocal();
-      }
-    } catch (_) {}
+    final orderDateStr = DateFormatter.formatToIST(order.createdAt);
     final prescription = order.prescriptionUrls.isNotEmpty ? order.prescriptionUrls.first : null;
 
     return Scaffold(
@@ -39,33 +31,31 @@ class OrderDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (orderDate != null) ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'PLACED ON ${orderDateStr.toUpperCase()}',
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: SahimedColors.slate400,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      if (!status.toLowerCase().contains('delivered') && !status.toLowerCase().contains('cancelled'))
                         Text(
-                          'PLACED ON ${orderDate.day} ${_getMonth(orderDate.month)} ${orderDate.year}',
+                          _calculateEDDString(order),
                           style: GoogleFonts.outfit(
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
-                            color: SahimedColors.slate400,
-                            letterSpacing: 1,
+                            color: const Color(0xFF10B981),
+                            letterSpacing: 0.5,
                           ),
                         ),
-                        if (!status.toLowerCase().contains('delivered') && !status.toLowerCase().contains('cancelled'))
-                          Text(
-                            _calculateEDDString(order),
-                            style: GoogleFonts.outfit(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF10B981),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                  ],
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   _buildOrderStepper(status),
                   const SizedBox(height: 32),
 

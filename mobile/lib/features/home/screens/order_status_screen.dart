@@ -10,6 +10,7 @@ import '../../../core/providers/navigation_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'package:lottie/lottie.dart';
+import '../../profile/screens/orders_screen.dart';
 
 class OrderStatusScreen extends StatefulWidget {
   final bool isSuccess;
@@ -391,9 +392,12 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
             child: OutlinedButton.icon(
               onPressed: () {
                 HapticFeedback.mediumImpact();
-                // Switch to Profile/Orders tab
+                // Navigate to orders directly
                 Navigator.of(context).popUntil((route) => route.isFirst);
-                context.read<NavigationProvider>().switchTab(3); // Profile tab where orders are
+                context.read<NavigationProvider>().switchTab(3); // Keep tab synced
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const OrdersScreen()),
+                );
               },
               icon: const Icon(LucideIcons.packageSearch, size: 18),
               label: Text(

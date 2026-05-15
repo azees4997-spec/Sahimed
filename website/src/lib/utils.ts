@@ -7,3 +7,17 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export { generateSlug }
+
+export function formatInIST(date: Date | string | number) {
+  if (!date) return 'N/A';
+  const d = new Date(date);
+  return d.toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+}

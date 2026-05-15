@@ -9,9 +9,9 @@ export const revalidate = 0;
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { productId } = body;
+    const { productId, platform, pincode, phone, name } = body;
 
-    console.log(`[Notify] Received request for Product: ${productId}`);
+    console.log(`[Notify] Received request for Product: ${productId} from ${platform || 'unknown'}`);
 
     if (!productId) {
       return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
@@ -32,8 +32,10 @@ export async function POST(request: Request) {
     await db.collection('inventoryRequests').insertOne({
       productId,
       userId: user?.uid || null,
-      userPhone: user?.phoneNumber || body.phone || null,
-      userName: body.name || null,
+      userPhone: user?.phoneNumber || phone || null,
+      userName: name || null,
+      platform: platform || 'web',
+      pincode: pincode || null,
       createdAt: new Date(),
       status: 'pending'
     });
@@ -47,10 +49,61 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const detailed = searchParams.get('detailed') === 'true';
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+
     const client = await clientPromise;
     const db = client.db('sahimed');
 
-    // Aggregate requests by productId to show in Admin Panel
+    if (detailed) {
+      const query: any = { status: 'pending' };
+      if (startDate || endDate) {
+        query.createdAt = {};
+        if (startDate) query.createdAt.$gte = new Date(startDate);
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          query.createdAt.$lte = end;
+        }
+      }
+
+      const requests = await db.collection('inventoryRequests').aggregate([
+        { $match: query },
+        { $sort: { createdAt: -1 } },
+        {
+          $lookup: {
+            from: 'products',
+            let: { prodId: '$productId' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $or: [
+                      { $eq: ['$_id', '$$prodId'] },
+                      { $eq: [{ $toString: '$_id' }, '$$prodId'] },
+                      { 
+                        $eq: [
+                          '$_id', 
+                          { $convert: { input: '$$prodId', to: 'objectId', onError: null, onNull: null } }
+                        ] 
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            as: 'product'
+          }
+        },
+        { $unwind: { path: '$product', preserveNullAndEmptyArrays: true } }
+      ]).toArray();
+
+      return NextResponse.json(requests);
+    }
+
+    // Default: Aggregate requests by productId to show summary cards
     const alerts = await db.collection('inventoryRequests').aggregate([
       { $match: { status: 'pending' } },
       {
@@ -75,14 +128,7 @@ export async function GET(request: Request) {
                     { 
                       $eq: [
                         '$_id', 
-                        { 
-                          $convert: { 
-                            input: '$$prodId', 
-                            to: 'objectId', 
-                            onError: null, 
-                            onNull: null 
-                          } 
-                        }
+                        { $convert: { input: '$$prodId', to: 'objectId', onError: null, onNull: null } }
                       ] 
                     }
                   ]

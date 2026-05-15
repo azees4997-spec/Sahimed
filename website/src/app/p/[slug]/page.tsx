@@ -7,6 +7,7 @@ import { getFirestore } from 'firebase/firestore';
 import { initializeApp, getApps, initializeApp as initApp } from 'firebase/app';
 import { firebaseConfig } from '@/firebase/config';
 import Navbar from '@/components/Navbar';
+import { safeFormat } from '@/lib/safe-date';
 
 // Initialize Firebase for Server-Side Rendering
 const app = getApps().length === 0 ? initApp(firebaseConfig) : getApps()[0];
@@ -75,7 +76,7 @@ export default async function DynamicPage({ params }: PageProps) {
               </h1>
               {page.lastUpdated && (
                 <p className="text-[10px] font-bold text-slate-400 mt-6 tracking-widest uppercase">
-                  Last Updated: {new Date(page.lastUpdated).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  Last Updated: {safeFormat(page.lastUpdated, 'MMMM dd, yyyy')}
                 </p>
               )}
            </div>

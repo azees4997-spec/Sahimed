@@ -32,6 +32,7 @@ import { OrderCreationForm } from './OrderCreationForm';
 import { EnquiryEditForm } from './EnquiryEditForm';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
+import { safeFormat } from '@/lib/safe-date';
 
 export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const { toast } = useToast();
@@ -151,7 +152,10 @@ export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: 
 
               <div className="px-1">
                 <p className="font-black text-sm mb-1 truncate uppercase tracking-tight text-gray-900">{enq?.patientName || 'Patient Name'}</p>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">#{enq.id.slice(-6)} • {enq.phoneNumber || 'NO MOBILE'}</p>
+                <div className="flex items-center justify-between mb-6">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">#{enq.id.slice(-6)} • {enq.phoneNumber || 'NO MOBILE'}</p>
+                  <p className="text-[9px] font-black text-slate-300 uppercase tracking-tighter">{safeFormat(enq.uploadDate || enq.createdAt, 'dd MMM HH:mm')}</p>
+                </div>
                 
                 {enq.pendingRemarks && (
                   <div className="mb-6 p-4 rounded-2xl bg-amber-50/50 border border-amber-100 flex gap-3">

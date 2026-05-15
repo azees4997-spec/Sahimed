@@ -91,6 +91,11 @@ export async function PUT(
       }
     }
 
+    // 1. Fetch current product to check old stock
+    const currentProduct = await db.collection("products").findOne(query);
+    const oldStock = Number(currentProduct?.availableQuantity || 0);
+    const newStock = Number(updateData.availableQuantity || 0);
+
     const result = await db.collection("products").updateOne(
       query,
       { 
@@ -101,6 +106,39 @@ export async function PUT(
 
     if (result.matchedCount === 0) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    // 2. TRIGGER NOTIFICATIONS: If stock went from 0 to >0
+    if (oldStock === 0 && newStock > 0) {
+      console.log(`[BackInStock] Product ${id} replenished. Triggering notifications...`);
+      
+      // Find pending requests for this product
+      const requests = await db.collection('inventoryRequests').find({ 
+        productId: id, 
+        status: 'pending' 
+      }).toArray();
+
+      if (requests.length > 0) {
+        // Send notifications (async background loop)
+        const notifyUsers = async () => {
+          for (const req of requests) {
+            try {
+              // Send FCM or just log for now
+              console.log(`[BackInStock] Notifying user: ${req.userPhone || req.userId}`);
+              
+              // Mark as notified
+              await db.collection('inventoryRequests').updateOne(
+                { _id: req._id },
+                { $set: { status: 'notified', notifiedAt: new Date() } }
+              );
+            } catch (notifyErr) {
+              console.error(`[BackInStock] Failed to notify ${req._id}`, notifyErr);
+            }
+          }
+        };
+        // Fire and forget (don't block the API response)
+        notifyUsers();
+      }
     }
 
     return NextResponse.json({ success: true, modifiedCount: result.modifiedCount });

@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+import '../../../core/utils/date_formatter.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/providers/cart_provider.dart';
@@ -375,6 +376,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
                             fontWeight: FontWeight.w900,
                             color: SahimedColors.slate400,
                             letterSpacing: 1,
+                          ),
+                        ),
+                        Text(
+                          DateFormatter.formatToIST(order.createdAt).toUpperCase(),
+                          style: GoogleFonts.outfit(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: SahimedColors.slate300,
                           ),
                         ),
                         const SizedBox(height: 4),

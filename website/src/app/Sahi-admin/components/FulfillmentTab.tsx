@@ -369,7 +369,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
               ) : (!Array.isArray(orders) || orders.length === 0) ? (<tr><td colSpan={7} className="p-20 text-center font-bold text-gray-400 text-[10px]">No orders found</td></tr>) : orders.map(order => (
                 <tr key={order._id || order.id} className="hover:bg-gray-50/50">
                   <td className="px-8 py-6 font-black text-xs uppercase">{order.orderId}</td>
-                  <td className="px-8 py-6 text-[10px] font-black">{safeFormat(order.orderDate, 'dd MMM yyyy')}</td>
+                  <td className="px-8 py-6 text-[10px] font-black">{safeFormat(order.orderDate, 'dd MMM yyyy HH:mm')}</td>
                   <td className="px-8 py-6"><p className="font-bold text-xs">{order.patientName}</p><p className="text-[10px] text-gray-400">{order.phoneNumber}</p></td>
                   <td className="px-8 py-6 max-w-[250px]">
                     <p className="text-[10px] font-bold text-gray-600 line-clamp-1 uppercase">
