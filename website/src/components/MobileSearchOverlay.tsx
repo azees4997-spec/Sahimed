@@ -319,6 +319,8 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
                 ) : (
                   <div className="p-10 text-center opacity-30">
                     <p className="text-[9px] font-black uppercase">No products matched</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
