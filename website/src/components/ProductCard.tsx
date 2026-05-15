@@ -121,7 +121,7 @@ function ProductCardComponent({ product }: { product: Product }) {
                   toast({ variant: 'destructive', title: "Error", description: "Failed to set alert." });
                 }
               }}
-              className="h-6 sm:h-8 w-full bg-slate-800 text-white font-black text-[7px] sm:text-[9px] tracking-widest uppercase rounded-[10px] sm:rounded-[14px] flex items-center justify-center gap-1 border border-slate-200 hover:bg-slate-900 transition-all active:scale-95"
+              className="h-6 sm:h-8 w-full bg-[#FFF1F2] text-[#E11D48] font-black text-[7px] sm:text-[9px] tracking-widest uppercase rounded-[10px] sm:rounded-[14px] flex items-center justify-center gap-1 border border-[#FFE4E6] hover:bg-[#FFE4E6] transition-all active:scale-95"
             >
               NOTIFY ME
             </button>

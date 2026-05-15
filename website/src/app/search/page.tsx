@@ -120,6 +120,7 @@ function SearchResults() {
         <main className="max-w-7xl mx-auto px-4 py-8 md:py-16">
           <div className="flex flex-col md:flex-row gap-12">
             <aside className="w-full md:w-80 space-y-8 hidden md:block">
+              {/* Matching Molecules Section (New Priority) */}
               <motion.div 
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
@@ -127,52 +128,80 @@ function SearchResults() {
               >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="font-black text-[10px] tracking-[0.2em] text-slate-400 flex items-center gap-3 uppercase">
-                    <Filter className="w-4 h-4 text-primary" /> Filter Results
+                    <Sparkles className="w-4 h-4 text-primary" /> Matching Molecules
+                  </h3>
+                </div>
+                
+                <div className="space-y-2 max-h-[400px] overflow-y-auto scrollbar-hide">
+                  {isSearching ? (
+                    <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-2xl" />)}</div>
+                  ) : (
+                    // We can derive matching molecules from the products or fetch them
+                    // For now, let's show a list of unique molecules from the results
+                    Array.from(new Set(medicines?.map(m => m.moleculeId).filter(Boolean)))
+                      .slice(0, 10)
+                      .map((mId: any, idx) => {
+                        const product = medicines?.find(m => m.moleculeId === mId);
+                        const mName = product?.saltComposition || product?.composition || 'Unknown Salt';
+                        return (
+                          <motion.div
+                            key={mId}
+                            initial={{ x: -10, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ delay: 0.1 + idx * 0.05 }}
+                          >
+                            <Link href={`/search?moleculeId=${mId}${rawQ ? `&q=${encodeURIComponent(rawQ)}` : ''}`} className="block">
+                              <div className={cn(
+                                "px-4 py-3 rounded-2xl flex items-center gap-3 transition-all group border border-transparent",
+                                moleculeId === mId ? 'bg-primary/5 border-primary/20 text-primary' : 'hover:bg-slate-50'
+                              )}>
+                                <div className={cn(
+                                  "w-8 h-8 rounded-xl flex items-center justify-center transition-all",
+                                  moleculeId === mId ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary'
+                                )}>
+                                  <Zap className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className={cn(
+                                    "text-[10px] font-black uppercase tracking-tight truncate",
+                                    moleculeId === mId ? 'text-primary' : 'text-slate-600'
+                                  )}>{mName}</p>
+                                  <p className="text-[8px] font-bold text-slate-400 uppercase">View Combinations</p>
+                                </div>
+                              </div>
+                            </Link>
+                          </motion.div>
+                        );
+                      })
+                  )}
+                  {!isSearching && (!medicines || medicines.length === 0) && (
+                    <p className="text-[10px] font-bold text-slate-400 text-center py-4 uppercase">No molecules found</p>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Advanced Filters (Collapsible) */}
+              <motion.div 
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white border border-slate-100 rounded-[40px] p-8 shadow-sm"
+              >
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="font-black text-[10px] tracking-[0.2em] text-slate-400 flex items-center gap-3 uppercase">
+                    <Filter className="w-4 h-4 text-primary" /> Refine Results
                   </h3>
                   {activeFilterCount > 0 && (
                     <button
                       onClick={clearAllFilters}
                       className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-opacity"
                     >
-                      Clear ({activeFilterCount})
+                      Clear
                     </button>
                   )}
                 </div>
-                <div className="space-y-6">
-
-                  {/* Clinical Category */}
-                  <div>
-                    <label className="text-[10px] font-black tracking-[0.2em] text-slate-400 mb-3 block px-1 uppercase opacity-60">Clinical category</label>
-                    <div className="space-y-1">
-                      {catsLoading ? (
-                        <div className="space-y-3">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-2xl" />)}</div>
-                      ) : categories?.map((cat, idx) => (
-                        <motion.div
-                          key={cat.id}
-                          initial={{ x: -10, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          transition={{ delay: 0.1 + idx * 0.05 }}
-                        >
-                          <Link href={`/search?c=${encodeURIComponent(cat.name)}${rawQ ? `&q=${encodeURIComponent(rawQ)}` : ''}`} className="block">
-                            <div className={cn(
-                              "px-4 py-3 rounded-2xl flex items-center gap-4 transition-all group",
-                              c === cat.name ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'hover:bg-slate-50'
-                            )}>
-                              <div className={cn(
-                                "w-1.5 h-1.5 rounded-full transition-all",
-                                c === cat.name ? 'bg-white animate-pulse' : 'bg-slate-200 group-hover:bg-primary'
-                              )} />
-                              <span className={cn(
-                                "text-[10px] tracking-tight uppercase font-black transition-colors",
-                                c === cat.name ? 'text-white' : 'text-slate-500'
-                              )}>{cat.name}</span>
-                            </div>
-                          </Link>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-
+                
+                <div className="space-y-8">
                   {/* Price Range */}
                   <div>
                     <label className="text-[10px] font-black tracking-[0.2em] text-slate-400 mb-3 block px-1 uppercase opacity-60">Price Range (₹)</label>
@@ -201,26 +230,20 @@ function SearchResults() {
                         onClick={() => setDosageExpanded(p => !p)}
                         className="w-full flex items-center justify-between text-[10px] font-black tracking-[0.2em] text-slate-400 mb-3 px-1 uppercase opacity-60 hover:opacity-100 transition-opacity"
                       >
-                        Dosage Form {filterDosageForm.length > 0 && <span className="bg-primary text-white rounded-full px-1.5 py-0.5 text-[8px]">{filterDosageForm.length}</span>}
+                        Dosage Form
                         <ChevronDown className={cn("w-3 h-3 transition-transform", dosageExpanded && "rotate-180")} />
                       </button>
                       {dosageExpanded && (
-                        <div className="space-y-1 max-h-40 overflow-y-auto scrollbar-hide">
+                        <div className="space-y-1 max-h-40 overflow-y-auto scrollbar-hide pt-2">
                           {availableDosageForms.map(form => (
                             <button
                               key={form}
                               onClick={() => toggleDosageForm(form)}
                               className={cn(
                                 "w-full px-4 py-2.5 rounded-xl flex items-center gap-3 transition-all text-left",
-                                filterDosageForm.includes(form) ? 'bg-primary text-white' : 'hover:bg-slate-50'
+                                filterDosageForm.includes(form) ? 'bg-primary text-white shadow-md' : 'hover:bg-slate-50'
                               )}
                             >
-                              <div className={cn(
-                                "w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-all",
-                                filterDosageForm.includes(form) ? 'bg-white border-white' : 'border-slate-300'
-                              )}>
-                                {filterDosageForm.includes(form) && <div className="w-1.5 h-1.5 rounded-sm bg-primary" />}
-                              </div>
                               <span className={cn("text-[9px] uppercase font-black tracking-wide truncate", filterDosageForm.includes(form) ? 'text-white' : 'text-slate-500')}>{form}</span>
                             </button>
                           ))}
@@ -229,43 +252,27 @@ function SearchResults() {
                     </div>
                   )}
 
-                  {/* Marketer */}
-                  {availableMarketers.length > 0 && (
-                    <div>
-                      <button
-                        onClick={() => setMarketerExpanded(p => !p)}
-                        className="w-full flex items-center justify-between text-[10px] font-black tracking-[0.2em] text-slate-400 mb-3 px-1 uppercase opacity-60 hover:opacity-100 transition-opacity"
-                      >
-                        Most Searched Brands {filterMarketer.length > 0 && <span className="bg-primary text-white rounded-full px-1.5 py-0.5 text-[8px]">{filterMarketer.length}</span>}
-                        <ChevronDown className={cn("w-3 h-3 transition-transform", marketerExpanded && "rotate-180")} />
-                      </button>
-                      {marketerExpanded && (
-                        <div className="space-y-1 max-h-48 overflow-y-auto scrollbar-hide">
-                          {availableMarketers.map(name => (
-                            <button
-                              key={name}
-                              onClick={() => toggleMarketer(name)}
-                              className={cn(
-                                "w-full px-4 py-2.5 rounded-xl flex items-center gap-3 transition-all text-left",
-                                filterMarketer.includes(name) ? 'bg-primary text-white' : 'hover:bg-slate-50'
-                              )}
-                            >
-                              <div className={cn(
-                                "w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-all",
-                                filterMarketer.includes(name) ? 'bg-white border-white' : 'border-slate-300'
-                              )}>
-                                {filterMarketer.includes(name) && <div className="w-1.5 h-1.5 rounded-sm bg-primary" />}
-                              </div>
-                              <span className={cn("text-[9px] uppercase font-black tracking-wide truncate", filterMarketer.includes(name) ? 'text-white' : 'text-slate-500')}>{name}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                  {/* Clinical Category */}
+                  <div>
+                    <label className="text-[10px] font-black tracking-[0.2em] text-slate-400 mb-3 block px-1 uppercase opacity-60">Clinical category</label>
+                    <div className="space-y-1">
+                      {catsLoading ? (
+                        <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-2xl" />)}</div>
+                      ) : categories?.slice(0, 6).map((cat, idx) => (
+                        <Link key={cat.id} href={`/search?c=${encodeURIComponent(cat.name)}${rawQ ? `&q=${encodeURIComponent(rawQ)}` : ''}`} className="block">
+                          <div className={cn(
+                            "px-4 py-3 rounded-2xl flex items-center gap-3 transition-all group",
+                            c === cat.name ? 'bg-slate-900 text-white shadow-lg' : 'hover:bg-slate-50 text-slate-500'
+                          )}>
+                            <span className="text-[9px] uppercase font-black truncate">{cat.name}</span>
+                          </div>
+                        </Link>
+                      ))}
                     </div>
-                  )}
-
+                  </div>
                 </div>
               </motion.div>
+            </aside>
               
               <motion.div 
                 initial={{ y: 20, opacity: 0 }}

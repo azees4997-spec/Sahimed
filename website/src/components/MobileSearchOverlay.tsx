@@ -230,94 +230,108 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
         )}
 
         {suggestions.length > 0 && !isSearching && (
-          <div className="divide-y divide-slate-100 pb-20">
-            {/* Medicines / Brands Section */}
-            {suggestions.filter(s => s._type === 'medicine').length > 0 && (
-              <>
-                <div className="sticky top-0 z-10 bg-slate-50 px-4 py-2 flex items-center justify-between">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Medicines & Brands</span>
-                  <Badge variant="outline" className="text-[8px] border-slate-200 text-slate-400 font-black">PRODUCT</Badge>
-                </div>
-                {suggestions.filter(s => s._type === 'medicine').map((item) => (
-                  <div 
-                    key={item._id || item.id}
-                    className="bg-white p-4 flex items-center gap-4 active:bg-slate-50 transition-colors"
-                    onClick={() => handleItemClick(item)}
-                  >
-                    <div className="relative w-14 h-14 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden">
-                      <Image 
-                        src={item.imageUrl || `https://picsum.photos/seed/${item._id}/200/200`}
-                        alt={item.name}
-                        fill
-                        className="object-contain p-2"
-                      />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-black text-slate-800 text-sm truncate uppercase tracking-tight">
-                        {item.name}
-                      </h4>
-                      {(item.saltComposition || item.composition || item.salt) && (
-                        <p className="text-[10px] text-slate-500 truncate italic">
-                          {item.saltComposition || item.composition || item.salt}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[8px] font-black text-slate-400 uppercase bg-slate-100 px-1.5 py-0.5 rounded">BRAND</span>
-                        {item.liveData?.sahimed_price && (
-                          <span className="text-sm font-black text-primary">₹{item.liveData.sahimed_price}</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <Button
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addToCart(item);
-                        toast({ title: "Added to Basket" });
-                      }}
-                      className="h-8 px-4 rounded-full bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20"
+          <div className="flex-1 bg-white overflow-hidden flex flex-col md:flex-row">
+            {/* LEFT COLUMN: MOLECULES / SALTS (Desktop: Scrollable, Mobile: Part of flow) */}
+            <div className="w-full md:w-[400px] border-r border-slate-100 flex flex-col bg-slate-50/20">
+              <div className="sticky top-0 z-10 bg-slate-50/80 backdrop-blur-sm px-6 py-3 flex items-center justify-between border-b border-slate-100">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" /> Molecules & Salts
+                </span>
+                <Badge variant="outline" className="text-[8px] border-slate-200 text-slate-400 font-black">COMPOSITION</Badge>
+              </div>
+              <div className="flex-1 overflow-y-auto divide-y divide-slate-100/50">
+                {suggestions.filter(s => s._type === 'molecule' || s._type === 'salt').length > 0 ? (
+                  suggestions.filter(s => s._type === 'molecule' || s._type === 'salt').map((item) => (
+                    <div 
+                      key={item._id || item.id}
+                      className="bg-white p-6 flex items-center gap-4 active:bg-slate-50 transition-colors cursor-pointer group"
+                      onClick={() => handleItemClick(item)}
                     >
-                      Add
-                    </Button>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {/* Salts / Molecules Section */}
-            {suggestions.filter(s => s._type === 'molecule' || s._type === 'salt').length > 0 && (
-              <>
-                <div className="sticky top-0 z-10 bg-slate-50 px-4 py-2 flex items-center justify-between mt-4">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Salts & Molecules</span>
-                  <Badge variant="outline" className="text-[8px] border-slate-200 text-slate-400 font-black">COMPOSITION</Badge>
-                </div>
-                {suggestions.filter(s => s._type === 'molecule' || s._type === 'salt').map((item) => (
-                  <div 
-                    key={item._id || item.id}
-                    className="bg-white p-4 flex items-center gap-4 active:bg-slate-50 transition-colors"
-                    onClick={() => handleItemClick(item)}
-                  >
-                    <div className="w-14 h-14 bg-primary/5 rounded-xl border border-primary/10 flex items-center justify-center shrink-0">
-                      <ShoppingCart className="w-6 h-6 text-primary/40" />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-black text-slate-800 text-sm truncate uppercase tracking-tight">
-                        {item.name || item.molecule}
-                      </h4>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[8px] font-black text-primary/60 uppercase bg-primary/5 px-1.5 py-0.5 rounded">SALT</span>
-                        <span className="text-[9px] font-bold text-slate-400">View all products</span>
+                      <div className="w-10 h-10 bg-primary/5 rounded-xl border border-primary/10 flex items-center justify-center shrink-0">
+                        <Search className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-extrabold text-slate-800 text-[13px] truncate uppercase tracking-tight group-hover:text-primary transition-colors">
+                          {item.name || item.molecule}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[8px] font-black text-primary/60 uppercase bg-primary/5 px-1.5 py-0.5 rounded">SALT</span>
+                          <span className="text-[9px] font-bold text-slate-400">View all matches</span>
+                        </div>
+                      </div>
+                      <ArrowUpRight className="w-4 h-4 text-slate-200 group-hover:text-primary transition-all" />
                     </div>
-
-                    <ArrowUpRight className="w-5 h-5 text-slate-300" />
+                  ))
+                ) : (
+                  <div className="p-10 text-center opacity-30">
+                    <p className="text-[10px] font-black uppercase">No molecules matched</p>
                   </div>
-                ))}
-              </>
-            )}
+                )}
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: MEDICINES / BRANDS */}
+            <div className="flex-1 flex flex-col">
+              <div className="sticky top-0 z-10 bg-slate-50/80 backdrop-blur-sm px-6 py-3 flex items-center justify-between border-b border-slate-100">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Brands & Products
+                </span>
+                <Badge variant="outline" className="text-[8px] border-slate-200 text-slate-400 font-black">ITEMS</Badge>
+              </div>
+              <div className="flex-1 overflow-y-auto divide-y divide-slate-100/50">
+                {suggestions.filter(s => s._type === 'medicine').length > 0 ? (
+                  suggestions.filter(s => s._type === 'medicine').map((item) => (
+                    <div 
+                      key={item._id || item.id}
+                      className="bg-white p-6 flex items-center gap-6 active:bg-slate-50 transition-colors cursor-pointer group"
+                      onClick={() => handleItemClick(item)}
+                    >
+                      <div className="relative w-16 h-16 bg-white rounded-2xl border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden shadow-sm group-hover:scale-105 transition-transform">
+                        <Image 
+                          src={item.imageUrl || `https://picsum.photos/seed/${item._id}/200/200`}
+                          alt={item.name}
+                          fill
+                          className="object-contain p-2"
+                        />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-extrabold text-slate-800 text-[15px] truncate uppercase tracking-tight group-hover:text-primary transition-colors">
+                          {item.name}
+                        </h4>
+                        {(item.saltComposition || item.composition || item.salt) && (
+                          <p className="text-[10px] text-slate-400 truncate italic mt-0.5">
+                            {item.saltComposition || item.composition || item.salt}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-3 mt-2">
+                          {item.liveData?.sahimed_price && (
+                            <span className="text-base font-black text-slate-900">₹{item.liveData.sahimed_price}</span>
+                          )}
+                          <span className="text-[8px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full uppercase">IN STOCK</span>
+                        </div>
+                      </div>
+
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart(item);
+                          toast({ title: "Added to Basket" });
+                        }}
+                        className="h-10 px-6 rounded-xl bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/10 active:scale-95 transition-all"
+                      >
+                        Add +
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-20 text-center opacity-30">
+                    <p className="text-[10px] font-black uppercase">No products matched</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

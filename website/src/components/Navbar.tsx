@@ -824,96 +824,98 @@ export default function Navbar() {
                   transition={{ type: "spring", damping: 25, stiffness: 200 }}
                   className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] overflow-hidden z-[110] border border-slate-100 shadow-2xl"
                 >
-                  <div className="max-h-[40vh] sm:max-h-[500px] overflow-y-auto scrollbar-hide py-1 sm:py-2 divide-y divide-slate-50">
-                    {/* Medicines / Brands Section */}
-                    {displayedSuggestions.filter(s => s.type === 'Brand').length > 0 && (
-                      <div className="pb-2">
-                        <div className="px-6 py-2 bg-slate-50/50 flex items-center justify-between">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Medicines / Brands</span>
-                        </div>
-                        {displayedSuggestions.filter(s => s.type === 'Brand').map((item) => (
+                  <div className="max-h-[85vh] sm:max-h-[650px] overflow-y-auto scrollbar-hide py-0 grid grid-cols-1 sm:grid-cols-12 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 bg-white">
+                    {/* LEFT COLUMN: SUGGESTIONS (Salts & Short Brands) - 5 columns wide */}
+                    <div className="sm:col-span-5 bg-slate-50/30">
+                      <div className="px-6 py-4 border-b border-slate-100/50">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                          <div className="w-1 h-1 rounded-full bg-primary" /> Suggestions
+                        </span>
+                      </div>
+                      <div className="divide-y divide-slate-100/50">
+                        {suggestions.map((item) => (
                           <div 
                             key={item.id}
-                            className="w-full px-3 sm:px-6 py-3 flex items-center gap-2 sm:gap-4 hover:bg-slate-50 transition-all group"
+                            onClick={() => handleSuggestionClick(item)}
+                            className="w-full px-6 py-4 flex items-center gap-4 hover:bg-white transition-all group cursor-pointer"
                           >
-                            <div className="relative w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[10px] sm:rounded-[14px] flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
-                              <Image 
-                                src={(item as any).imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
-                                alt={item.term} 
-                                fill 
-                                className="object-contain p-1 sm:p-1.5" 
-                              />
+                            <SearchIcon className="w-3.5 h-3.5 text-slate-300 group-hover:text-primary transition-colors" />
+                            <div className="flex-1 min-w-0 flex items-center gap-3">
+                              <span className="font-extrabold text-[13px] text-slate-600 truncate group-hover:text-slate-900 transition-colors uppercase">
+                                {item.term}
+                              </span>
+                              <Badge variant="secondary" className="text-[8px] bg-slate-100 text-slate-400 font-bold border-none uppercase h-4 px-1.5">
+                                {item.type === 'Salt' ? 'Molecule' : 'Brand'}
+                              </Badge>
                             </div>
-                            <div className="flex-1 min-w-0 flex items-center justify-between gap-1 sm:gap-4">
-                              <div className="flex-1 min-w-0" onClick={() => handleSuggestionClick(item)}>
-                                <p className="font-extrabold text-xs sm:text-sm text-slate-800 truncate cursor-pointer hover:text-primary transition-colors">
-                                  {item.term}
-                                </p>
-                                {(item as any).product?.saltComposition && (
-                                  <p className="text-[10px] text-slate-500 truncate italic">
-                                    {(item as any).product.saltComposition}
-                                  </p>
-                                )}
-                                <div className="flex items-center gap-2 mt-1">
-                                  <span className="text-[8px] font-black text-slate-400 uppercase bg-slate-100 px-1.5 py-0.5 rounded">BRAND</span>
-                                  {(item as any).price > 0 && (
-                                    <span className="text-[10px] sm:text-xs font-black text-primary">₹{(item as any).price}</span>
-                                  )}
-                                </div>
-                              </div>
-                              <Button 
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  addToCart((item as any).product);
-                                  toast({ title: "Added to Basket" });
-                                }}
-                                className="h-7 sm:h-8 px-3 sm:px-5 rounded-full bg-primary text-white font-black text-[8px] sm:text-[9px] uppercase tracking-widest shadow-md shadow-primary/20 hover:scale-105 active:scale-95 transition-all w-fit"
-                              >
-                                Add +
-                              </Button>
-                            </div>
+                            <ArrowUpRight className="w-3.5 h-3.5 text-slate-200 group-hover:text-primary transition-all opacity-0 group-hover:opacity-100" />
                           </div>
                         ))}
                       </div>
-                    )}
+                    </div>
 
-                    {/* Salts / Molecules Section */}
-                    {displayedSuggestions.filter(s => s.type === 'Salt').length > 0 && (
-                      <div className="pt-2">
-                        <div className="px-6 py-2 bg-slate-50/50 flex items-center justify-between">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Salts / Molecules</span>
-                        </div>
-                        {displayedSuggestions.filter(s => s.type === 'Salt').map((item) => (
-                          <div 
-                            key={item.id}
-                            className="w-full px-3 sm:px-6 py-3 flex items-center gap-2 sm:gap-4 hover:bg-slate-50 transition-all group"
-                          >
-                            <div className="w-8 h-8 sm:w-12 sm:h-12 bg-primary/5 rounded-[10px] sm:rounded-[14px] flex items-center justify-center shrink-0 border border-primary/10">
-                              <ShoppingCart className="w-4 h-4 sm:w-6 sm:h-6 text-primary/40" />
-                            </div>
-                            <div className="flex-1 min-w-0 flex items-center justify-between gap-1 sm:gap-4">
-                              <div className="flex-1 min-w-0" onClick={() => handleSuggestionClick(item)}>
-                                <p className="font-extrabold text-xs sm:text-sm text-slate-800 truncate cursor-pointer hover:text-primary transition-colors uppercase">
-                                  {item.term}
-                                </p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <span className="text-[8px] font-black text-primary/60 uppercase bg-primary/5 px-1.5 py-0.5 rounded">SALT</span>
-                                  <span className="text-[9px] font-bold text-slate-400">View all products</span>
-                                </div>
-                              </div>
-                              <Button 
-                                variant="ghost"
-                                onClick={(e) => { e.stopPropagation(); handleSuggestionClick(item); }}
-                                className="h-7 sm:h-8 px-3 sm:px-4 rounded-full text-slate-500 font-bold text-[8px] sm:text-[9px] uppercase tracking-widest hover:bg-slate-100 transition-all gap-1 sm:gap-2 border border-slate-200 shrink-0"
-                              >
-                                Browse <ArrowUpRight className="w-3 h-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
+                    {/* RIGHT COLUMN: PRODUCTS (Detailed Cards) - 7 columns wide */}
+                    <div className="sm:col-span-7 bg-white">
+                      <div className="px-6 py-4 border-b border-slate-100/50 flex items-center justify-between">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                          <div className="w-1 h-1 rounded-full bg-emerald-500" /> Top Matches
+                        </span>
+                        <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Instant Results</span>
                       </div>
-                    )}
+                      <div className="divide-y divide-slate-100/50 max-h-[500px] overflow-y-auto">
+                        {displayedSuggestions.filter(s => s.type === 'Brand').length > 0 ? (
+                          displayedSuggestions.filter(s => s.type === 'Brand').map((item) => (
+                            <div 
+                              key={`prod-${item.id}`}
+                              className="w-full px-6 py-5 flex items-center gap-5 hover:bg-slate-50/50 transition-all group"
+                            >
+                              <div className="relative w-16 h-16 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
+                                <Image 
+                                  src={(item as any).imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
+                                  alt={item.term} 
+                                  fill 
+                                  className="object-contain p-2" 
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0 flex items-center justify-between gap-4">
+                                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => router.push(`/product/${(item as any).product?.id}`)}>
+                                  <p className="font-extrabold text-[14px] text-slate-800 line-clamp-1 group-hover:text-primary transition-colors">
+                                    {item.term}
+                                  </p>
+                                  <div className="flex items-center gap-3 mt-1.5">
+                                    {(item as any).price > 0 && (
+                                      <span className="text-[15px] font-black text-slate-900">₹{(item as any).price}</span>
+                                    )}
+                                    <span className="text-[9px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                                      20% OFF
+                                    </span>
+                                  </div>
+                                </div>
+                                <Button 
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    addToCart((item as any).product);
+                                    toast({ title: "Added to Basket" });
+                                  }}
+                                  variant="outline"
+                                  className="h-10 px-6 rounded-xl border-primary/20 text-primary hover:bg-primary hover:text-white font-black text-[10px] uppercase tracking-widest shadow-sm active:scale-95 transition-all"
+                                >
+                                  Add +
+                                </Button>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-20 text-center space-y-3 opacity-40">
+                             <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
+                               <Package className="w-6 h-6 text-slate-300" />
+                             </div>
+                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Search for products</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               )}

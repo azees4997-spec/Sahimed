@@ -71,8 +71,13 @@ export async function GET(request: Request) {
                 $expr: {
                   $or: [
                     { $eq: ['$_id', '$$prodId'] },
-                    { $eq: ['$_id', { $toObjectId: '$$prodId' }] },
-                    { $eq: [{ $toString: '$_id' }, '$$prodId'] }
+                    { $eq: [{ $toString: '$_id' }, '$$prodId'] },
+                    { 
+                      $and: [
+                        { $eq: [{ $strLenCP: '$$prodId' }, 24] },
+                        { $eq: ['$_id', { $toObjectId: '$$prodId' }] }
+                      ]
+                    }
                   ]
                 }
               }

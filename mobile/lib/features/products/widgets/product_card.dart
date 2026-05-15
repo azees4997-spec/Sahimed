@@ -304,8 +304,11 @@ class SahimedProductCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: product.availableQuantity > 0 
                       ? SahimedColors.primary 
-                      : Colors.grey.shade400,
+                      : const Color(0xFFFFF1F2),
                   borderRadius: BorderRadius.circular(8),
+                  border: product.availableQuantity > 0 
+                      ? null 
+                      : Border.all(color: const Color(0xFFFFE4E6)),
                   boxShadow: product.availableQuantity > 0 ? [
                     BoxShadow(
                       color: SahimedColors.primary.withAlpha(50),
@@ -322,7 +325,9 @@ class SahimedProductCard extends StatelessWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 8,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
+                      color: product.availableQuantity > 0 
+                          ? Colors.white 
+                          : const Color(0xFFE11D48),
                       letterSpacing: 0.5,
                     ),
                   ),
