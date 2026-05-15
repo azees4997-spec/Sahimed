@@ -100,7 +100,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _onSearchChanged() {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
+    _debounce = Timer(const Duration(milliseconds: 300), () {
       final query = _searchController.text.trim();
       if (_currentQuery != query) {
         setState(() {
@@ -108,18 +108,38 @@ class _SearchScreenState extends State<SearchScreen> {
           _showSmartBanner = false;
           _smartAlternative = null;
         });
+        
         if (query.length >= 2) {
-          _performSearch(query);
+          _fetchSuggestions(query);
         } else {
           setState(() {
-            _results = [];
             _moleculeResults = [];
+            _results = [];
             _smartAlternative = null;
             _showSmartBanner = false;
           });
         }
       }
     });
+  }
+
+  Future<void> _fetchSuggestions(String query) async {
+    // Only fetch minimal suggestions for the overlay
+    try {
+      final results = await Future.wait([
+        _apiService.searchProducts(query, limit: 5),
+        _apiService.searchMolecules(query),
+      ]);
+      
+      if (mounted && _currentQuery == query) {
+        setState(() {
+          _results = results[0] as List<ProductModel>;
+          _moleculeResults = results[1] as List<Map<String, dynamic>>;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching suggestions: $e');
+    }
   }
 
 
@@ -239,97 +259,207 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildSuggestionsOverlay() {
+    if (_currentQuery.isEmpty) return const SizedBox.shrink();
+
     return Positioned(
-      top: 60, // Adjust based on header height
+      top: 60, // Below search bar
       left: 16,
       right: 16,
       child: Container(
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
+        constraints:
+            BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.6),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withOpacity(0.12),
               blurRadius: 30,
               offset: const Offset(0, 10),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: ListView(
-            shrinkWrap: true,
-            padding: EdgeInsets.zero,
-            children: [
-              if (_moleculeResults.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Text(
-                    'MOLECULES',
-                    style: GoogleFonts.outfit(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      color: SahimedColors.slate400,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                ),
-                ..._moleculeResults.take(3).map((mol) {
-                  final name = mol['molecule'] ?? mol['name'] ?? '';
-                  return ListTile(
-                    leading: const Icon(LucideIcons.flaskConical, size: 18, color: SahimedColors.primary),
-                    title: Text(
-                      name.toUpperCase(),
-                      style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold),
-                    ),
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      _searchController.text = name;
-                      _performSearch(name);
-                      setState(() {});
-                    },
-                  );
-                }),
-              ],
-              if (_results.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Text(
-                    'MEDICINES',
-                    style: GoogleFonts.outfit(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      color: SahimedColors.slate400,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                ),
-                ..._results.take(3).map((prod) {
-                  return ListTile(
-                    leading: const Icon(LucideIcons.pill, size: 18, color: SahimedColors.primary),
-                    title: Text(
-                      prod.name.toUpperCase(),
-                      style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      prod.brand.toUpperCase(),
-                      style: GoogleFonts.inter(fontSize: 10, color: SahimedColors.slate500),
-                    ),
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      _saveToHistory(_currentQuery);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProductDetailScreen(product: prod),
+          borderRadius: BorderRadius.circular(24),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left Column: Molecules (Salts)
+                Expanded(
+                  flex: 5,
+                  child: Container(
+                    color: const Color(0xFFF8FAFC),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  color: SahimedColors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'MOLECULES',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF94A3B8),
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      );
-                    },
-                  );
-                }),
+                        const SizedBox(height: 12),
+                        if (_moleculeResults.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Text(
+                              'NO SALTS FOUND',
+                              style: GoogleFonts.inter(
+                                  fontSize: 10, color: const Color(0xFFCBD5E1)),
+                            ),
+                          )
+                        else
+                          Expanded(
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.zero,
+                              itemCount: _moleculeResults.length.clamp(0, 8),
+                              itemBuilder: (context, index) {
+                                final mol = _moleculeResults[index];
+                                final name =
+                                    mol['molecule'] ?? mol['name'] ?? '';
+                                return ListTile(
+                                  dense: true,
+                                  visualDensity: VisualDensity.compact,
+                                  title: Text(
+                                    name.toUpperCase(),
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF334155),
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    _searchController.text = name;
+                                    _performSearch(name);
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Divider
+                Container(width: 1, color: const Color(0xFFE2E8F0)),
+                // Right Column: Brands (Medicines)
+                Expanded(
+                  flex: 6,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF10B981),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'BRANDS',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF94A3B8),
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        if (_results.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Text(
+                              'NO PRODUCTS FOUND',
+                              style: GoogleFonts.inter(
+                                  fontSize: 10, color: const Color(0xFFCBD5E1)),
+                            ),
+                          )
+                        else
+                          Expanded(
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.zero,
+                              itemCount: _results.length.clamp(0, 8),
+                              itemBuilder: (context, index) {
+                                final prod = _results[index];
+                                return ListTile(
+                                  dense: true,
+                                  visualDensity: VisualDensity.compact,
+                                  title: Text(
+                                    prod.name.toUpperCase(),
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w900,
+                                      color: SahimedColors.primary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  subtitle: Text(
+                                    '₹${prod.price}',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    _saveToHistory(prod.name);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ProductDetailScreen(product: prod),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -388,6 +518,11 @@ class _SearchScreenState extends State<SearchScreen> {
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF0F172A),
                       ),
+                      onSubmitted: (value) {
+                        if (value.trim().isNotEmpty) {
+                          _performSearch(value.trim());
+                        }
+                      },
                       decoration: InputDecoration(
                         hintText: 'Search Medicines, Health Products...',
                         hintStyle: GoogleFonts.inter(

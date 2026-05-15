@@ -732,7 +732,8 @@ class ApiService {
     }
   }
 
-  Future<bool> logInventoryRequest(String productId) async {
+  Future<bool> submitStockAlert(String productId,
+      {String? pincode, String? phone, String? name}) async {
     try {
       final headers = await _getHeaders();
       final response = await http.post(
@@ -741,6 +742,9 @@ class ApiService {
         body: json.encode({
           'productId': productId,
           'platform': 'app',
+          'pincode': pincode,
+          'phone': phone,
+          'name': name,
         }),
       );
       return response.statusCode == 200 || response.statusCode == 201;

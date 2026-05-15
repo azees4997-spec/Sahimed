@@ -823,45 +823,83 @@ class _ComparisonCard extends StatelessWidget {
 
           const SizedBox(height: 10),
 
-          // ADD / IN CART button (matches website button exactly)
+          // ADD / IN CART / NOTIFY ME button (matches website button exactly)
           GestureDetector(
-            onTap: () {
+            onTap: () async {
               HapticFeedback.mediumImpact();
-              context.read<CartProvider>().addItem(product);
+              if (product.availableQuantity <= 0) {
+                final prefs = await SharedPreferences.getInstance();
+                final pin = prefs.getString('user_pincode');
+                final user = FirebaseAuth.instance.currentUser;
+                
+                final success = await ApiService().submitStockAlert(
+                  product.id, 
+                  pincode: pin,
+                  phone: user?.phoneNumber,
+                  name: user?.displayName,
+                );
+                
+                if (success && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('WE\'LL NOTIFY YOU WHEN IT\'S BACK!'),
+                      backgroundColor: SahimedColors.primary,
+                    ),
+                  );
+                }
+              } else {
+                context.read<CartProvider>().addItem(product);
+              }
             },
             child: Container(
               width: double.infinity,
               height: 34,
               decoration: BoxDecoration(
-                color: isAlt ? SahimedColors.accent : SahimedColors.primary,
+                color: product.availableQuantity > 0
+                    ? (isAlt ? SahimedColors.accent : SahimedColors.primary)
+                    : const Color(0xFFFFF1F2),
                 borderRadius: BorderRadius.circular(100),
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        (isAlt ? SahimedColors.accent : SahimedColors.primary)
-                            .withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                border: product.availableQuantity > 0
+                    ? null
+                    : Border.all(color: const Color(0xFFFFE4E6)),
+                boxShadow: product.availableQuantity > 0
+                    ? [
+                        BoxShadow(
+                          color: (isAlt
+                                  ? SahimedColors.accent
+                                  : SahimedColors.primary)
+                              .withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : [],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    displayQty > 0 ? 'IN CART ($displayQty)' : 'ADD',
+                    product.availableQuantity <= 0
+                        ? 'NOTIFY ME'
+                        : (displayQty > 0 ? 'IN CART ($displayQty)' : 'ADD'),
                     style: GoogleFonts.outfit(
                       fontSize: 9,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
+                      color: product.availableQuantity > 0
+                          ? Colors.white
+                          : const Color(0xFFE11D48),
                       letterSpacing: 1,
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Icon(
-                    LucideIcons.shoppingCart,
+                  Icon(
+                    product.availableQuantity <= 0
+                        ? LucideIcons.bell
+                        : LucideIcons.shoppingCart,
                     size: 12,
-                    color: Colors.white,
+                    color: product.availableQuantity > 0
+                        ? Colors.white
+                        : const Color(0xFFE11D48),
                   ),
                 ],
               ),
