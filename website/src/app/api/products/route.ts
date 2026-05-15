@@ -151,6 +151,27 @@ export async function GET(request: Request) {
 
     const pipeline: any[] = [
       { $match: query },
+      {
+        $addFields: {
+          searchScore: {
+            $cond: [
+              // 1. Highest priority: Name starts with search string
+              { $regexMatch: { input: "$name", regex: `^${escapeRegExp(qStr || '')}`, options: "i" } },
+              10,
+              {
+                $cond: [
+                  // 2. Medium priority: Name contains search string
+                  { $regexMatch: { input: "$name", regex: escapeRegExp(qStr || ''), options: "i" } },
+                  5,
+                  // 3. Low priority: Salt match only
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      { $sort: { searchScore: -1, name: 1 } },
       { $limit: limitValue },
       {
         $lookup: {
