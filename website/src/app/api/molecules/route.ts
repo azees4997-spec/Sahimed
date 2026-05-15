@@ -6,6 +6,9 @@ import * as admin from 'firebase-admin';
 import { ObjectId } from 'mongodb';
 import { generateSlug } from '@/lib/slug';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const getQuery = (id: string) => {
   try {
     if (id.length === 24) return { _id: new ObjectId(id) };

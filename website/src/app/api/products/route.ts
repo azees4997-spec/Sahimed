@@ -3,6 +3,9 @@ import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

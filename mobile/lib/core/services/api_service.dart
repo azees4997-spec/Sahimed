@@ -23,8 +23,8 @@ class ApiService {
   static final Map<String, dynamic> _cache = {};
   static final Map<String, DateTime> _cacheTime = {};
   static const Duration _cacheDuration = Duration(
-    seconds: 30,
-  ); // Fast cache for real-time sync
+    seconds: 1,
+  ); // Minimal cache for near-instant MongoDB sync
 
   dynamic _getCached(String key) {
     if (_cache.containsKey(key)) {
