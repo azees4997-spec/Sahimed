@@ -438,6 +438,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                               
                               if (!res.ok) throw new Error('Failed to delete from MongoDB');
                               
+                              await deleteDocumentNonBlocking(doc(db, 'medicines', docId));
                               toast({ title: "Product deleted" });
                               refetch?.();
                             } catch (err: any) {
@@ -736,7 +737,21 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
       
       if (!res.ok) throw new Error('Failed to sync with MongoDB');
 
-      toast({ title: "Product synchronized", description: "Saved to MongoDB Master" });
+      const firestoreDocPromise = setDocumentNonBlocking(doc(db, 'medicines', docId), { ...combinedPayload, updatedAt: serverTimestamp() }, { merge: true });
+      let liveDataPromise = Promise.resolve();
+      if (form.sku) {
+        // Sync to live data collection in Firestore for backwards compatibility/real-time stock
+        liveDataPromise = setDocumentNonBlocking(doc(db, 'product_live_data', form.sku), { 
+           mrp: Number(liveData.mrp), 
+           sahimed_price: Number(liveData.price), 
+           stock_quantity: Number(liveData.availableQuantity),
+           updatedAt: serverTimestamp() 
+        }, { merge: true });
+      }
+
+      await Promise.all([firestoreDocPromise, liveDataPromise]);
+
+      toast({ title: "Product synchronized", description: "Updated in MongoDB and Firestore" });
       onSuccess();
     } catch (err: any) {
       toast({ variant: 'destructive', title: "Sync failed", description: err.message });
