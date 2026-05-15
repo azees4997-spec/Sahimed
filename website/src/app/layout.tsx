@@ -108,16 +108,21 @@ export default async function RootLayout({
   let initialPages: any[] = [];
   try {
     const dbAdmin = getDbAdmin();
+    // Only attempt fetch if we have a valid admin instance
     if (dbAdmin) {
       const snapshot = await dbAdmin.collection('pages').orderBy('lastUpdated', 'desc').get();
       initialPages = snapshot.docs.map(doc => ({ 
         id: doc.id, 
         ...doc.data(),
       }));
+    } else {
+      console.log("[RootLayout] Firebase Admin not available. Footer will use client-side fallback.");
     }
   } catch (error) {
-    console.error("Error fetching pages for layout footer:", error);
-    // Silent fail - footer will fall back to client-side fetching
+    // Only log if it's NOT the project ID error we already expect during build
+    if (!(error instanceof Error && error.message.includes('Project Id'))) {
+      console.error("Error fetching pages for layout footer:", error);
+    }
   }
 
   const organizationJsonLd = {
