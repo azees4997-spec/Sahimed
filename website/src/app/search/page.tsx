@@ -254,7 +254,7 @@ function SearchResults() {
 
                   {/* Clinical Category */}
                   <div>
-                    <label className="text-[10px] font-black tracking-[0.2em] text-slate-400 mb-3 block px-1 uppercase opacity-60">Clinical category</label>
+                    <label className="text-[10px] font-black tracking-[0.2em] text-slate-400 mb-3 block px-1 uppercase opacity-60">Medicine category</label>
                     <div className="space-y-1">
                       {catsLoading ? (
                         <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-2xl" />)}</div>
@@ -348,7 +348,7 @@ function SearchResults() {
                       {rawQ.length > 0 && rawQ.length < 3 ? <Info className="w-8 h-8 text-orange-400" /> : <SearchIcon className="w-8 h-8 text-slate-300" />}
                     </div>
                     <h3 className="text-2xl font-black mb-3 tracking-tighter font-outfit uppercase">
-                      {rawQ.length > 0 && rawQ.length < 3 ? "Minimum Input Required" : "No clinical matches"}
+                      {rawQ.length > 0 && rawQ.length < 3 ? "Minimum Input Required" : "No medicine matches"}
                     </h3>
                     <p className="text-slate-400 font-bold mb-10 text-[10px] uppercase tracking-[0.2em] max-w-xs mx-auto opacity-70">
                       Our database couldn't find matches for your query. Try searching by Salt or Therapeutic category.

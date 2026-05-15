@@ -108,35 +108,36 @@ class CartProvider with ChangeNotifier {
 
   double get deliveryFee {
     double feeTotal = 0.0;
+    double netSubtotal = total - promoDiscount;
+    
     for (var fee in _activeFees) {
       if (!fee.isActive) continue;
 
       if (fee.tiers != null && fee.tiers!.isNotEmpty) {
-        // Find the highest tier that the current total qualifies for
-        // Sort tiers descending by minOrder
+        // Find the highest tier that the current net subtotal qualifies for
         final sortedTiers = List<Map<String, dynamic>>.from(fee.tiers!)
           ..sort((a, b) => (b['minOrder'] as num).compareTo(a['minOrder'] as num));
 
         final matchingTier = sortedTiers.firstWhere(
-          (t) => total >= (t['minOrder'] as num),
+          (t) => netSubtotal >= (t['minOrder'] as num),
           orElse: () => {},
         );
 
         if (matchingTier.isNotEmpty) {
           feeTotal += (matchingTier['charge'] as num).toDouble();
-          continue; // Skip fallback for this fee object
+          continue; 
         }
       }
 
       // Fallback to legacy single threshold logic
-      if (fee.minPurchase > 0 && total >= fee.minPurchase) {
+      if (fee.minPurchase > 0 && netSubtotal >= fee.minPurchase) {
         continue;
       }
 
       if (fee.type == 'fixed') {
         feeTotal += fee.amount;
       } else {
-        feeTotal += (total * (fee.amount / 100));
+        feeTotal += (netSubtotal * (fee.amount / 100));
       }
     }
     return feeTotal;

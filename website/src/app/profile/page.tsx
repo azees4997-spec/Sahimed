@@ -455,7 +455,7 @@ export default function ProfilePage() {
                   <div className="bg-white/40 backdrop-blur-md p-8 rounded-[40px] border border-white text-center shadow-xl">
                       <div className="flex items-center justify-center gap-3 py-2 text-slate-400">
                         <ShieldCheck className="w-4 h-4" />
-                        <span className="text-[8px] font-black tracking-[0.4em] uppercase">Clinical Encryption Active</span>
+                        <span className="text-[8px] font-black tracking-[0.4em] uppercase">Medical-Grade Encryption Active</span>
                       </div>
                   </div>
                </motion.div>

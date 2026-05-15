@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const page = await getPage(slug);
   return {
     title: page ? `${page.title} | SahiMed` : 'Page Not Found',
-    description: `Official ${page?.title || 'policy'} document for SahiMed Clinical Healthcare Pharmacy.`,
+    description: `Official ${page?.title || 'policy'} document for SahiMed Healthcare Pharmacy.`,
   };
 }
 

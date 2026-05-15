@@ -542,7 +542,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
              setForm(prev => ({
                 ...prev,
                 ...data,
-                clinicalTabLabel: data.clinicalTabLabel || 'Intelligence',
+                medicalTabLabel: data.medicalTabLabel || 'Intelligence',
                 safetyTabLabel: data.safetyTabLabel || 'Protocol',
                 matrixTabLabel: data.matrixTabLabel || 'Matrix',
                 // PULL COMPOSITION FROM LEGACY FALLBACKS
@@ -659,7 +659,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     drivingInteraction: initialData?.drivingInteraction || '',
     kidneyInteraction: initialData?.kidneyInteraction || '',
     liverInteraction: initialData?.liverInteraction || '',
-    clinicalTabLabel: initialData?.clinicalTabLabel || 'Intelligence',
+    medicalTabLabel: initialData?.medicalTabLabel || 'Intelligence',
     safetyTabLabel: initialData?.safetyTabLabel || 'Protocol',
     matrixTabLabel: initialData?.matrixTabLabel || 'Matrix',
     imageUrl: initialData?.imageUrl || '',
@@ -692,7 +692,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
 
     // MANDATORY VALIDATION WITH SPECIFIC FEEDBACK
     const missing = [];
-    if (!form.clinicalTabLabel) missing.push("Clinical Label");
+    if (!form.medicalTabLabel) missing.push("Medical Label");
     if (!form.safetyTabLabel) missing.push("Safety Label");
     if (!form.matrixTabLabel) missing.push("Matrix Label");
     if (!form.saltComposition) missing.push("Salt Composition");
@@ -750,7 +750,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
           <TabsTrigger value="basic" className="flex-1 rounded-xl font-black text-[10px]">Identity</TabsTrigger>
           <TabsTrigger value="live" className="flex-1 rounded-xl font-black text-[10px] text-primary">Inventory & Sku</TabsTrigger>
           <TabsTrigger value="images" className="flex-1 rounded-xl font-black text-[10px]">Media</TabsTrigger>
-          <TabsTrigger value="clinical" className="flex-1 rounded-xl font-black text-[10px]">Clinical</TabsTrigger>
+          <TabsTrigger value="medical" className="flex-1 rounded-xl font-black text-[10px]">Medical</TabsTrigger>
         </TabsList>
         <TabsContent value="basic" className="space-y-6">
           <div className="grid grid-cols-2 gap-6">
@@ -854,7 +854,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
             </div>
           </div>
         </TabsContent>
-        <TabsContent value="clinical" className="space-y-10">
+        <TabsContent value="medical" className="space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div className="space-y-8 bg-slate-50/50 p-6 rounded-[32px] border border-slate-100">
               <div className="flex items-center gap-3 mb-2 px-1">
@@ -975,10 +975,10 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
                   </div>
                </div>
                <div className="flex gap-4">
-                  <LimitedInput label="Intelligence Header (Required)" value={form.clinicalTabLabel} onChange={(v: string) => setForm({...form, clinicalTabLabel: v})} limit={20} placeholder="e.g. INTELLIGENCE" required />
+                  <LimitedInput label="Medical Header (Required)" value={form.medicalTabLabel} onChange={(v: string) => setForm({...form, medicalTabLabel: v})} limit={20} placeholder="e.g. MEDICAL INFO" required />
                </div>
                <div className="space-y-4">
-                  <LimitedTextarea label="Clinical Indication" value={form.treatment} onChange={(v: string) => setForm({...form, treatment: v})} limit={150} placeholder="Enter clinical usage..." />
+                  <LimitedTextarea label="Medical Indication" value={form.treatment} onChange={(v: string) => setForm({...form, treatment: v})} limit={150} placeholder="Enter medical usage..." />
                   <LimitedTextarea label="Pharmacology" value={form.description} onChange={(v: string) => setForm({...form, description: v})} limit={150} placeholder="Enter medical formulation details..." />
                </div>
             </div>

@@ -45,9 +45,9 @@ export async function POST(req: Request) {
     if (status === 'TXN_SUCCESS') {
       console.log(`[Paytm Success] Updating Order: ${baseOrderId} with Paytm ID: ${paytmOrderId}`);
       
-      // 1. Update Order in MongoDB
-      await db.collection('orders').updateOne(
-        { orderId: baseOrderId },
+      // 1. Update Order in MongoDB (Only if it's still Payment Pending)
+      const updateRes = await db.collection('orders').updateOne(
+        { orderId: baseOrderId, status: 'Payment Pending' },
         { 
           $set: { 
             status: 'Confirmed', 
@@ -66,8 +66,9 @@ export async function POST(req: Request) {
         }
       );
 
-      // 2. Sync to Firestore (Real-time update for App)
-      try {
+      // 2. Sync to Firestore (Only if MongoDB update actually changed the status)
+      if (updateRes.modifiedCount > 0) {
+        try {
         const order = await db.collection('orders').findOne({ orderId: baseOrderId });
         if (order && order.userId) {
           const { getDbAdmin } = await import('@/lib/firebase-admin');
@@ -82,6 +83,7 @@ export async function POST(req: Request) {
       } catch (fsErr: any) {
         console.error("[Paytm Callback Sync Error]", fsErr.message);
       }
+    }
 
       // Redirect to success page
       return NextResponse.redirect(`https://sahimed.com/order-success/${baseOrderId}`, 303);

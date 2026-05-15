@@ -173,7 +173,7 @@ export function MaintenanceTab({ onBack }: { onBack: () => void }) {
             <div className="bg-amber-50 p-6 rounded-3xl border border-amber-100 flex gap-4">
               <AlertCircle className="w-6 h-6 text-amber-500 shrink-0" />
               <p className="text-[10px] font-bold text-amber-700 leading-normal uppercase">
-                Caution: This is a heavy operation. It will iterate through every user in the clinical registry. 
+                Caution: This is a heavy operation. It will iterate through every user in the pharmacy records. 
                 Use during low-traffic periods.
               </p>
             </div>
@@ -196,7 +196,7 @@ export function MaintenanceTab({ onBack }: { onBack: () => void }) {
               className="w-full h-16 rounded-full font-black text-[10px] tracking-[0.2em] bg-slate-900 text-white hover:bg-black uppercase shadow-xl active:scale-95 transition-all gap-3"
             >
               {isMigrating ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCcw className="w-5 h-5" />}
-              {isMigrating ? "Synchronizing Clinical Matrix..." : "Start Full Database Mirroring"}
+              {isMigrating ? "Synchronizing Pharmacy Core..." : "Start Full Database Mirroring"}
             </Button>
           </CardContent>
         </Card>
@@ -222,7 +222,7 @@ export function MaintenanceTab({ onBack }: { onBack: () => void }) {
             {isSafeMirroring && (
               <div className="space-y-4 bg-white p-6 rounded-3xl border border-emerald-100 animate-in fade-in zoom-in-95">
                 <div className="flex justify-between text-[10px] font-black text-emerald-600 uppercase tracking-widest">
-                  <span>Mirroring Clinical Data...</span>
+                  <span>Mirroring Medical Data...</span>
                   <span>{Math.round((safeMirrorProgress.current / safeMirrorProgress.total) * 100)}%</span>
                 </div>
                 <Progress value={(safeMirrorProgress.current / safeMirrorProgress.total) * 100} className="h-3 bg-emerald-100" />
@@ -274,7 +274,7 @@ export function MaintenanceTab({ onBack }: { onBack: () => void }) {
                 </h4>
                 <p className="text-sm font-medium text-slate-600 leading-relaxed">
                   To mirror your data between Firestore and MongoDB, the server needs a <strong>Service Account</strong>. 
-                  This allows the backend to securely access your clinical registry.
+                  This allows the backend to securely access your pharmacy records.
                 </p>
               </div>
 

@@ -63,7 +63,7 @@ export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: 
     try {
       const path = selectedEnquiry.__path || selectedEnquiry.path || `prescriptions/${selectedEnquiry.id}`;
       await deleteDocumentNonBlocking(doc(db, path));
-      toast({ title: "Enquiry deleted", description: "Record has been removed from the clinical queue." });
+      toast({ title: "Enquiry deleted", description: "Record has been removed from the prescription queue." });
       setSelectedEnquiry(null);
     } catch (err: any) {
       toast({ variant: 'destructive', title: "Deletion failed", description: err.message });
@@ -82,7 +82,7 @@ export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: 
         remarks: completionRemark,
         completedAt: serverTimestamp()
       });
-      toast({ title: "Clinical order completed", description: "The enquiry has been marked as finished." });
+      toast({ title: "Prescription order completed", description: "The enquiry has been marked as finished." });
       setSelectedEnquiry(null);
       setCompletionRemark('');
     } catch (err: any) {
@@ -94,7 +94,7 @@ export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: 
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Digitize enquiries" subtitle="Manage and process clinical records" onBack={onBack} />
+      <SectionHeader title="Digitize enquiries" subtitle="Manage and process prescription records" onBack={onBack} />
       
       <div className="bg-white p-1 rounded-full border flex w-fit gap-1 mb-8">
         {['Pending', 'Open', 'Completed'].map((status) => (
@@ -215,7 +215,7 @@ export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: 
             <div>
               <DialogTitle className="text-2xl font-black italic tracking-tighter text-white">CREATE MANUAL ORDER</DialogTitle>
               <DialogDescription className="text-[10px] font-black text-white/50 tracking-widest mt-1 uppercase">
-                Authorize terminal entry and prescription digitization
+                Authorize record entry and prescription digitization
               </DialogDescription>
             </div>
           </DialogHeader>
@@ -254,7 +254,7 @@ export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: 
       <Dialog open={actionMode === 'COMPLETE'} onOpenChange={o => !o && setActionMode(null)}>
         <DialogContent className="rounded-[40px] max-w-md border-none p-0 overflow-hidden shadow-2xl">
           <DialogHeader className="bg-green-600 p-8 text-white space-y-2">
-             <DialogTitle className="text-xl font-black uppercase tracking-tighter text-white">Close Clinical Queue</DialogTitle>
+             <DialogTitle className="text-xl font-black uppercase tracking-tighter text-white">Close Medical Queue</DialogTitle>
              <DialogDescription className="text-[10px] font-black text-white/50 tracking-widest uppercase">Add final remarks to complete this entry</DialogDescription>
           </DialogHeader>
           <div className="p-8 bg-white space-y-6">
@@ -291,7 +291,7 @@ export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: 
              <DialogHeader>
                 <DialogTitle className="text-xl font-black uppercase tracking-tighter">Purge Record?</DialogTitle>
                 <DialogDescription className="text-xs font-bold text-gray-400 leading-relaxed px-4">
-                  This clinical record will be permanently purged from the server. This action cannot be undone.
+                  This prescription record will be permanently purged from the server. This action cannot be undone.
                 </DialogDescription>
              </DialogHeader>
              <div className="flex flex-col gap-3">

@@ -76,7 +76,7 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
         retryTimeoutRef.current = setTimeout(() => fetchLogs(attempt + 1), delay);
       } else {
         setConnectionStatus('error');
-        toast({ variant: 'destructive', title: "Insight Error", description: "Could not retrieve clinical trends after multiple attempts." });
+        toast({ variant: 'destructive', title: "Insight Error", description: "Could not retrieve medicine trends after multiple attempts." });
       }
     } finally {
       if (attempt === 0) setIsLoading(false);
@@ -125,12 +125,12 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
     link.click();
     document.body.removeChild(link);
     
-    toast({ title: "Report Exported", description: "Search matrix is ready for analysis." });
+    toast({ title: "Report Exported", description: "Search data is ready for analysis." });
   };
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <SectionHeader title="Clinical Interest Engine" subtitle="Direct Customer Search Analytics" onBack={onBack}>
+      <SectionHeader title="Medicine Search Trends" subtitle="Direct Customer Search Analytics" onBack={onBack}>
         {/* Connection Status Indicator */}
         <div className="flex items-center gap-3 mr-4">
           {connectionStatus === 'live' ? (
@@ -154,7 +154,7 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
           )}
         </div>
         <Button onClick={downloadCSV} disabled={logs.length === 0} className="rounded-full h-14 px-10 font-black text-[10px] bg-primary text-white shadow-2xl shadow-primary/30 uppercase tracking-widest hover:scale-105 transition-all border-4 border-white active:scale-95 disabled:opacity-50">
-          <Download className="w-5 h-5 mr-3" /> Export Matrix
+          <Download className="w-5 h-5 mr-3" /> Export Logs
         </Button>
       </SectionHeader>
 
@@ -188,7 +188,7 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
                 <BarChart3 className="w-6 h-6 text-fuchsia-600" />
               </div>
               <div className="flex flex-col">
-                <span className="font-black text-xs uppercase tracking-tight text-slate-900">Log Matrix</span>
+                <span className="font-black text-xs uppercase tracking-tight text-slate-900">Analytics Log</span>
                 <span className="text-[10px] font-bold text-slate-400 tracking-widest">REAL-TIME INGESTION FEED</span>
               </div>
             </div>

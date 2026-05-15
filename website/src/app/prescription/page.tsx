@@ -154,7 +154,7 @@ export default function PrescriptionPage() {
               
               <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight font-outfit uppercase mb-4">Login Required</h1>
               <p className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase max-w-xs mx-auto mb-12">
-                Secure your health history. Please login to upload clinical documents.
+                Secure your health history. Please login to upload prescriptions.
               </p>
               
               <Button 

@@ -55,7 +55,7 @@ class ProductModel {
   final bool isTopSelection;
   final bool isActive;
 
-  // Clinical Metadata for Website Parity
+  // Fulfillment Metadata for Website Parity
   final String? treatment;
   final String? description;
   final String? safetyAdvice;
@@ -228,7 +228,7 @@ class OrderModel {
   final String paymentType;
   final String status;
   final bool isConsultationRequired;
-  final String clinicalPath;
+  final String fulfillmentPath;
   final String? awbNumber;
   final String? carrierId;
   final double walletUsed;
@@ -249,7 +249,7 @@ class OrderModel {
     this.paymentType = 'Cash on Delivery',
     this.status = 'Pending Consult',
     this.isConsultationRequired = false,
-    this.clinicalPath = 'consult',
+    this.fulfillmentPath = 'consult',
     this.awbNumber,
     this.carrierId,
     this.walletUsed = 0,
@@ -272,7 +272,7 @@ class OrderModel {
       paymentType: json['paymentType'] ?? 'COD',
       status: json['status'] ?? 'Pending',
       isConsultationRequired: json['isConsultationRequired'] == true,
-      clinicalPath: json['clinicalPath'] ?? 'normal',
+      fulfillmentPath: json['fulfillmentPath'] ?? 'normal',
       awbNumber: json['shipping']?['awb'] ?? json['awbNumber'],
       carrierId: json['shipping']?['courier'] ?? json['carrierId'],
       walletUsed: num.tryParse((json['walletUsed'] ?? 0).toString())?.toDouble() ?? 0.0,
@@ -302,7 +302,7 @@ class OrderModel {
       'paymentType': paymentType,
       'status': status,
       'isConsultationRequired': isConsultationRequired,
-      'clinicalPath': clinicalPath,
+      'fulfillmentPath': fulfillmentPath,
       'awbNumber': awbNumber,
       'carrierId': carrierId,
       'walletUsed': walletUsed,

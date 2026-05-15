@@ -425,7 +425,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      'CLINICAL ENCRYPTION ACTIVE',
+                                      'MEDICAL-GRADE ENCRYPTION ACTIVE',
                                       style: GoogleFonts.outfit(
                                         fontSize: 9,
                                         fontWeight: FontWeight.w900,

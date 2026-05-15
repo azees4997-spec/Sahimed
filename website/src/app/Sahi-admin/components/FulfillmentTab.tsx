@@ -99,7 +99,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
   useEffect(() => { setPage(1); }, [statusFilter, startDate, endDate, searchTerm]);
 
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [statusUpdateTarget, setStatusUpdateTarget] = useState<any>(null);
+  const [nextStatus, setNextStatus] = useState<any>(null);
   const [shippingInfo, setShippingInfo] = useState({ partner: '', awb: '' });
   const [cancelReason, setCancelReason] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -128,10 +128,10 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
         if (result.shipway && !result.shipway.success) {
           toast({ variant: 'destructive', title: "Logistics Sync Failed", description: result.shipway.error || "Shipway push failed" });
         } else {
-          toast({ title: `Order ${newStatus}`, description: "Status successfully updated in clinical matrix." });
+          toast({ title: `Order ${newStatus}`, description: "Status successfully updated in prescription records." });
         }
         await fetchOrders();
-        setStatusUpdateTarget(null);
+        setNextStatus(null);
         setSelectedOrder(null);
       } else {
         throw new Error(result.error || "Update protocol failed");
@@ -248,7 +248,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
               <div style="font-weight: 600; color: #444;">${order.phoneNumber}</div>
             </div>
             <div style="flex: 1;">
-              <div class="section-title">Delivery Matrix</div>
+              <div class="section-title">Delivery Address</div>
               <div style="font-weight: 700; font-size: 13px; line-height: 1.4;">
                 ${order.shippingDetails?.houseNumber ? order.shippingDetails.houseNumber + '<br>' : ''}
                 ${order.shippingDetails?.street || ''}<br>
@@ -256,16 +256,16 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
               </div>
             </div>
           </div>
-          <div class="section-title">Inventory Provisioning</div>
+          <div class="section-title">Order Items</div>
           <div style="margin-bottom: 40px;">${itemsHtml}</div>
           <div style="max-width: 400px; margin-left: auto;">
              <div class="total-row"><span>Gross MRP</span><span>₹${Number(order.billingBreakdown?.grossMrp || order.totalAmount).toFixed(2)}</span></div>
-             <div class="total-row" style="color: #059669;"><span>Campaign Savings</span><span>-₹${Number(order.billingBreakdown?.campaignDiscount || 0).toFixed(2)}</span></div>
+             <div class="total-row" style="color: #059669;"><span>Item Savings</span><span>-₹${Number(order.billingBreakdown?.campaignDiscount || order.billingBreakdown?.promoDiscount || 0).toFixed(2)}</span></div>
              <div class="total-row"><span>Delivery Fees</span><span>₹${Number(order.billingBreakdown?.deliveryFees || 0).toFixed(2)}</span></div>
              <div class="total-row grand-total"><span>Net Paid</span><span>₹${Number(order.totalAmount).toFixed(2)}</span></div>
           </div>
           <div style="margin-top: 80px; text-align: center; border-top: 1px dashed #ccc; padding-top: 20px; font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 2px;">
-            Authorized clinical signature required for Schedule H1 drugs fulfillment
+            Authorized medical signature required for Schedule H1 drugs fulfillment
           </div>
           <script>window.onload = () => { window.print(); window.close(); }</script>
         </body>
@@ -333,8 +333,8 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
 
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
         <div className="bg-white/60 backdrop-blur-md p-1.5 rounded-full border border-white shadow-xl flex w-fit gap-1.5 overflow-x-auto no-scrollbar">
-          {['All', 'Pending Consult', 'Confirmed', 'Packing', 'Packed', 'Shipped', 'Delivered', 'Returned', 'Cancelled'].map((status) => (
-            <button key={status} onClick={() => setStatusFilter(status)} className={cn("px-8 py-3.5 rounded-full text-[9px] font-black tracking-[0.2em] transition-all uppercase whitespace-nowrap", statusFilter === status ? "bg-primary text-white shadow-lg shadow-primary/30" : "text-slate-400 hover:bg-white/80")}>{status}</button>
+          {['All', 'Pending', 'Pending Pharmacist', 'Pending Consult', 'Confirmed', 'Packing', 'Packed', 'Shipped', 'Delivered', 'Returned', 'Cancelled'].map((status) => (
+            <button key={status} onClick={() => setStatusFilter(status)} className={cn("px-6 py-3.5 rounded-full text-[9px] font-black tracking-[0.2em] transition-all uppercase whitespace-nowrap", statusFilter === status ? "bg-primary text-white shadow-lg shadow-primary/30" : "text-slate-400 hover:bg-white/80")}>{status}</button>
           ))}
         </div>
       </div>
@@ -457,7 +457,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
         )}
       </Card>
 
-      <Dialog open={!!selectedOrder} onOpenChange={o => !o && (setSelectedOrder(null), setIsEditing(false), setStatusUpdateTarget(null))}>
+      <Dialog open={!!selectedOrder} onOpenChange={o => !o && (setSelectedOrder(null), setIsEditing(false), setNextStatus(null))}>
         <DialogContent className="rounded-[40px] max-w-5xl border-none p-0 overflow-hidden">
           <DialogHeader className="bg-primary p-8 text-white flex flex-row items-center justify-between space-y-0">
             <div className="flex flex-col gap-1">
@@ -482,10 +482,10 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                   {isUpdating ? <Loader2 className="w-5 h-5 animate-spin mx-auto text-white" /> : "Save Changes"}
                 </Button>
               </div>
-            ) : statusUpdateTarget ? (
+            ) : nextStatus ? (
                <div className="space-y-6">
-                 <h3 className="text-sm font-black">Finalize status: {statusUpdateTarget}</h3>
-                 {(statusUpdateTarget === 'Shipped' || statusUpdateTarget === 'Returned') && (
+                 <h3 className="text-sm font-black">Finalize status: {nextStatus}</h3>
+                 {(nextStatus === 'Shipped' || nextStatus === 'Returned') && (
                      <div className="space-y-4">
                        <div className="p-6 bg-primary/5 border-2 border-primary/20 rounded-2xl">
                          <p className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
@@ -499,12 +499,12 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                        <Input placeholder="Manual AWB (Optional)" value={shippingInfo.awb} onChange={e => setShippingInfo({...shippingInfo, awb: e.target.value, partner: 'Shipway'})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
                      </div>
                  )}
-                 {statusUpdateTarget === 'Cancelled' && (
+                 {nextStatus === 'Cancelled' && (
                    <Textarea placeholder="Reason for cancellation" value={cancelReason} onChange={e => setCancelReason(e.target.value)} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" />
                  )}
                  <Button 
                    disabled={isUpdating}
-                   onClick={() => updateOrderStatus(selectedOrder._id, statusUpdateTarget, (statusUpdateTarget === 'Shipped' || statusUpdateTarget === 'Returned') ? { shipping: shippingInfo } : statusUpdateTarget === 'Cancelled' ? { cancellationReason: cancelReason } : {})} 
+                   onClick={() => updateOrderStatus(selectedOrder._id, nextStatus, (nextStatus === 'Shipped' || nextStatus === 'Returned') ? { shipping: shippingInfo } : nextStatus === 'Cancelled' ? { cancellationReason: cancelReason } : {})} 
                    className="w-full h-16 rounded-full font-black bg-primary text-white shadow-xl transition-all active:scale-95 disabled:opacity-50"
                  >
                    {isUpdating ? <Loader2 className="w-5 h-5 animate-spin mx-auto text-white" /> : "Confirm update"}
@@ -529,7 +529,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                 {((selectedOrder?.prescriptionUrls?.length > 0) || (selectedOrder?.doctorConsultation?.prescriptionLink)) && (
                   <div className="bg-emerald-50/50 p-6 rounded-[32px] border border-emerald-100 space-y-3">
                     <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
-                      <FileCheck className="w-4 h-4" /> Clinical Attachments
+                      <FileCheck className="w-4 h-4" /> Prescriptions
                     </h4>
                     <div className="grid grid-cols-1 gap-2">
                       {selectedOrder?.prescriptionUrls?.map((url: string, idx: number) => (
@@ -651,7 +651,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                       </div>
                     ) : (
                       ['Packing', 'Packed', 'Shipped', 'Delivered', 'Returned', 'Cancelled'].map(s => (
-                        <Button key={s} variant="outline" onClick={() => setStatusUpdateTarget(s)} className={cn("rounded-[32px] h-20 font-black text-xs border-4 uppercase tracking-widest", selectedOrder?.status === s ? "border-primary bg-primary/5 text-primary shadow-lg" : "text-gray-400 border-slate-100 hover:bg-white")}>{s}</Button>
+                        <Button key={s} variant="outline" onClick={() => setNextStatus(s)} className={cn("rounded-[32px] h-20 font-black text-xs border-4 uppercase tracking-widest", selectedOrder?.status === s ? "border-primary bg-primary/5 text-primary shadow-lg" : "text-gray-400 border-slate-100 hover:bg-white")}>{s}</Button>
                       ))
                     )}
                   </div>

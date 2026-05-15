@@ -150,7 +150,7 @@ function AdminConsoleContent() {
     } catch (err) {
       console.error("ADMIN_AUTH_FAILURE:", err);
       const error = err as { code?: string; message?: string };
-      const errorCode = error.code || 'unknown-matrix-error';
+      const errorCode = error.code || 'unknown-system-error';
       const errorMessage = error.message || 'Invalid credentials or network rejection.';
       
       toast({ 
@@ -232,7 +232,7 @@ function AdminConsoleContent() {
         >
           <Loader2 className="w-12 h-12 text-primary" />
         </motion.div>
-        <p className="text-[10px] font-black tracking-[0.4em] text-slate-400 uppercase">Synchronizing Matrix...</p>
+        <p className="text-[10px] font-black tracking-[0.4em] text-slate-400 uppercase">Synchronizing System...</p>
       </div>
     );
   }
@@ -255,7 +255,7 @@ function AdminConsoleContent() {
                 <CardTitle className="text-3xl font-black tracking-tighter text-white uppercase font-outfit relative z-10">Admin Access</CardTitle>
                 <p className="text-[10px] font-black text-white/50 tracking-[0.3em] uppercase relative z-10">SahiMed Administrative Console</p>
                 <div className="mt-4 pt-4 border-t border-white/10 relative z-10">
-                  <p className="text-[8px] font-black text-white/40 tracking-[0.2em] uppercase">Matrix Identity: {auth?.app.options.projectId || 'Unknown Sector'}</p>
+                  <p className="text-[8px] font-black text-white/40 tracking-[0.2em] uppercase">System Identity: {auth?.app.options.projectId || 'Unknown Sector'}</p>
                 </div>
               </CardHeader>
               <CardContent className="p-10">

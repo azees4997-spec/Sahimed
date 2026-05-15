@@ -23,8 +23,8 @@ class ApiService {
   static final Map<String, dynamic> _cache = {};
   static final Map<String, DateTime> _cacheTime = {};
   static const Duration _cacheDuration = Duration(
-    seconds: 1,
-  ); // Minimal cache for near-instant MongoDB sync
+    minutes: 5,
+  ); // 5-minute cache to reduce MongoDB hits
 
   dynamic _getCached(String key) {
     if (_cache.containsKey(key)) {
@@ -39,6 +39,11 @@ class ApiService {
   void _setCache(String key, dynamic data) {
     _cache[key] = data;
     _cacheTime[key] = DateTime.now();
+  }
+
+  void clearCache() {
+    _cache.clear();
+    _cacheTime.clear();
   }
 
   Future<Map<String, String>> _getHeaders() async {
@@ -465,7 +470,7 @@ class ApiService {
         billingBreakdown: billingBreakdown,
         prescriptionUrls: prescriptions,
         isConsultationRequired: isConsultationRequired,
-        clinicalPath: isConsultationRequired ? 'consult' : 'normal',
+        fulfillmentPath: isConsultationRequired ? 'consult' : 'normal',
         walletUsed: 0.0,
         createdAt: DateTime.now(),
       );
@@ -487,6 +492,7 @@ class ApiService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);
+        clearCache(); // Invalidate cache after ordering to reflect new stock levels
         return data['orderId'];
       }
     } catch (e) {

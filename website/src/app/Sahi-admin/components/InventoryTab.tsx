@@ -286,7 +286,7 @@ export function InventoryTab({ db, isVerified, onBack }: { db: any, isVerified: 
               </div>
               <div className="space-y-3">
                 <h2 className="text-3xl font-black tracking-tight uppercase">Bulk Synchronizing</h2>
-                <p className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase">Updating Inventory Matrix...</p>
+                <p className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase">Updating Inventory Core...</p>
               </div>
               
               <div className="space-y-4">
@@ -329,7 +329,7 @@ export function InventoryTab({ db, isVerified, onBack }: { db: any, isVerified: 
             <div className="w-20 h-20 bg-slate-100 rounded-[32px] flex items-center justify-center mx-auto opacity-50">
                <Inbox className="w-8 h-8 text-slate-400" />
             </div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">No products found in matrix</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">No products found in catalog</p>
           </div>
         )}
       </div>
@@ -420,7 +420,7 @@ function InventoryRow({ product, onSave, isSaving }: { product: any, onSave: (up
             {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : (
               <>
                 <Save className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Update Matrix</span>
+                <span className="hidden sm:inline">Update Inventory</span>
               </>
             )}
           </Button>

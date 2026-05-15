@@ -15,8 +15,8 @@ export async function POST(req: Request) {
     const isMaster = (process.env.MASTER_UIDS || "").includes(requester.uid);
     const canManageStaff = requester.permissions?.staff_manage === true;
 
-    if (!isMaster && !canManageStaff) {
-      return NextResponse.json({ error: "Forbidden: You do not have Matrix Clearance for credential overrides." }, { status: 403 });
+    if (requester.role !== 'admin') {
+      return NextResponse.json({ error: "Forbidden: You do not have System Authorization for credential overrides." }, { status: 403 });
     }
 
     const { uid, newPassword } = await req.json();

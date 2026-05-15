@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart'; // Using image_picker which is more stable in this environment
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/colors.dart';
@@ -62,6 +63,14 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                   onTap: () {
                     Navigator.pop(context);
                     _captureImage(ImageSource.gallery);
+                  },
+                ),
+                _buildSourceOption(
+                  icon: LucideIcons.fileText,
+                  label: 'FILES',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickFromFiles();
                   },
                 ),
               ],
@@ -126,6 +135,29 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error selecting images: $e')));
+      }
+    }
+  }
+
+  Future<void> _pickFromFiles() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+        allowMultiple: true,
+      );
+
+      if (result != null) {
+        setState(() {
+          _selectedFiles.addAll(result.paths.where((path) => path != null).map((path) => File(path!)));
+        });
+      }
+    } catch (e) {
+      debugPrint('FilePicker error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error selecting files: $e')));
       }
     }
   }
@@ -265,7 +297,7 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                         ),
                       ),
                       Text(
-                        'JPG, PNG (IMAGE ONLY)',
+                        'JPG, PNG, PDF SUPPORTED',
                         style: GoogleFonts.outfit(
                           fontSize: 10,
                           color: Colors.grey,
@@ -281,7 +313,7 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        '${_selectedFiles.length} IMAGES SELECTED',
+                        '${_selectedFiles.length} FILES SELECTED',
                         style: GoogleFonts.outfit(
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
@@ -319,12 +351,23 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                           Center(
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(20),
-                              child: Image.file(
-                                _selectedFiles[index],
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                              ),
+                              child: _selectedFiles[index].path.toLowerCase().endsWith('.pdf')
+                                  ? Container(
+                                      color: Colors.red.withOpacity(0.1),
+                                      child: const Center(
+                                        child: Icon(
+                                          LucideIcons.fileText,
+                                          color: Colors.red,
+                                          size: 32,
+                                        ),
+                                      ),
+                                    )
+                                  : Image.file(
+                                      _selectedFiles[index],
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                    ),
                             ),
                           ),
                           Positioned(

@@ -245,7 +245,9 @@ export async function POST(req: Request) {
     }
 
     // 3.7. PRICE INTEGRITY CHECK: Recalculate total from DB prices
-    const itemIds = (body.items || []).map((it: any) => it.medicineId || it.id).filter(Boolean);
+    const itemIds = (body.items || []).map((it: any) => {
+      try { return new ObjectId(it.medicineId || it.id); } catch(e) { return null; }
+    }).filter(Boolean);
     const dbProducts = await db.collection('products').find({ _id: { $in: itemIds } }).toArray();
     
     let calculatedSubtotal = 0;
@@ -255,7 +257,11 @@ export async function POST(req: Request) {
       calculatedSubtotal += price * Number(item.quantity || 1);
     });
 
-    const expectedTotal = calculatedSubtotal - Number(body.walletUsed || 0) - Number(body.discountAmount || 0);
+    const deliveryFee = Number(body.billingBreakdown?.deliveryFees || body.billingBreakdown?.deliveryFee || 0);
+    const promoDiscount = Number(body.billingBreakdown?.promoDiscount || body.billingBreakdown?.campaignDiscount || body.discountAmount || 0);
+    const walletUsed = Number(body.walletUsed || body.billingBreakdown?.walletUsed || 0);
+    const expectedTotal = calculatedSubtotal + deliveryFee - walletUsed - promoDiscount;
+    
     // Allow for a 1 rupee rounding tolerance
     if (Math.abs(expectedTotal - Number(body.totalAmount)) > 1 && !isAdmin) {
       return NextResponse.json({ 
@@ -268,7 +274,7 @@ export async function POST(req: Request) {
 
     // 4. Clinical Status Logic: Check if any items require a prescription
     const hasRxItems = (body.items || []).some((it: any) => it.prescriptionRequired === true);
-    const isConsultation = body.clinicalPath === 'consult' || body.isConsultationRequired === true;
+    const isConsultation = body.fulfillmentPath === 'consult' || body.isConsultationRequired === true;
     
     let initialStatus = 'Confirmed';
     if (hasRxItems) {
@@ -283,8 +289,8 @@ export async function POST(req: Request) {
     const allowedFields = [
       'userId', 'patientName', 'phoneNumber', 'shippingDetails', 'billingBreakdown', 
       'items', 'totalAmount', 'prescriptionUrls', 'isConsultationRequired', 
-      'clinicalPath', 'couponCode', 'discountAmount', 'paymentType', 
-      'paymentId', 'razorpayOrderId', 'signature', 'walletUsed'
+      'fulfillmentPath', 'couponCode', 'discountAmount', 'paymentType', 
+      'paymentId', 'razorpayOrderId', 'paytmOrderId', 'signature', 'walletUsed'
     ];
     
     const sanitizedBody: any = {};
@@ -804,7 +810,7 @@ export async function DELETE(req: Request) {
       console.error(`[Order Delete Sync Error] Failed to delete from Firestore:`, fsErr.message);
     }
 
-    return NextResponse.json({ success: true, message: "Order purged from clinical matrix" });
+    return NextResponse.json({ success: true, message: "Order purged from prescription records" });
   } catch (err: any) {
     console.error("[Orders Delete Error]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });

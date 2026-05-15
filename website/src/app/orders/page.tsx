@@ -160,7 +160,7 @@ export default function OrdersPage() {
                 className="space-y-6"
               >
                 {orders.map((order) => (
-                  <motion.div key={order.id} variants={itemVariants}>
+                  <motion.div key={order._id || order.orderId || order.id} variants={itemVariants}>
                     <Card 
                       onClick={() => setSelectedOrder(order)}
                       className="group rounded-[48px] border-none shadow-xl overflow-hidden bg-white/40 backdrop-blur-md hover:bg-white hover:shadow-2xl transition-all duration-500 cursor-pointer active:scale-[0.98] border border-white"
@@ -305,7 +305,7 @@ export default function OrdersPage() {
                             <img 
                               src={selectedOrder.prescriptionUrls?.[0] || selectedOrder.prescriptionUrl} 
                               className="w-full h-full object-contain p-6 group-hover:scale-105 transition-transform duration-700" 
-                              alt="Clinical Attachment" 
+                              alt="Prescription Attachment" 
                             />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-slate-900/10 transition-colors flex items-center justify-center">
                               <div className="bg-white/95 backdrop-blur-md px-8 py-3 rounded-full shadow-2xl opacity-0 group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0 flex items-center gap-4">
@@ -316,7 +316,7 @@ export default function OrdersPage() {
                           </div>
                         </DialogTrigger>
                         <DialogContent className="max-w-[95vw] sm:max-w-4xl border-none p-0 bg-black/80 backdrop-blur-3xl shadow-none z-[200]">
-                          <DialogTitle className="sr-only">Clinical Document Matrix</DialogTitle>
+                          <DialogTitle className="sr-only">Prescription Registry</DialogTitle>
                           <div className="relative aspect-[3/4] w-full max-h-[90vh] flex items-center justify-center p-6">
                             <img src={selectedOrder.prescriptionUrls?.[0] || selectedOrder.prescriptionUrl} className="max-w-full max-h-full object-contain rounded-[40px] shadow-3xl" alt="Full Analysis" />
                           </div>

@@ -52,6 +52,11 @@ export const getAuthAdmin = () => {
   return app ? (app as admin.app.App).auth() : null;
 };
 
+export const getMessagingAdmin = () => {
+  const app = getFirebaseAdmin();
+  return app ? (app as admin.app.App).messaging() : null;
+};
+
 /**
  * STABILIZATION: Use Proxies for db and auth to prevent build-time crashes.
  * If the Admin SDK is not initialized, these will return a mock object 
@@ -72,6 +77,16 @@ export const auth: admin.auth.Auth = new Proxy({} as admin.auth.Auth, {
     const instance = getAuthAdmin();
     if (!instance) {
       throw new Error("Firebase Auth Admin accessed but not configured.");
+    }
+    return (instance as any)[prop];
+  }
+});
+
+export const messaging: admin.messaging.Messaging = new Proxy({} as admin.messaging.Messaging, {
+  get: (target, prop) => {
+    const instance = getMessagingAdmin();
+    if (!instance) {
+      throw new Error("Firebase Messaging Admin accessed but not configured.");
     }
     return (instance as any)[prop];
   }

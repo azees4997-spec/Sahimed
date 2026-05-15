@@ -30,8 +30,8 @@ export const metadata: Metadata = {
     default: 'SahiMed - Sahi Dawai, Sahi Daam Pe',
     template: '%s | SahiMed'
   },
-  description: 'SahiMed - Clinical Healthcare Pharmacy. High-quality medicine delivery at the right price. Sahi Dawai, Sahi Daam Pe.',
-  keywords: ['online pharmacy', 'medicine delivery', 'healthcare', 'affordable medicines', 'SahiMed', 'clinical pharmacy India'],
+  description: 'SahiMed - Trusted Medical Healthcare Pharmacy. Sahi Dawai, Sahi Daam Pe.',
+  keywords: ['online pharmacy', 'medicine delivery', 'healthcare', 'affordable medicines', 'SahiMed', 'pharmacy India'],
   authors: [{ name: 'SahiMed Team' }],
   creator: 'SahiMed',
   publisher: 'SahiMed',
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     url: 'https://sahimed.com',
     siteName: 'SahiMed',
     title: 'SahiMed - Sahi Dawai, Sahi Daam Pe',
-    description: 'Get high-quality medicines delivered to your doorstep at the best prices. SahiMed is your trusted clinical healthcare partner.',
+    description: 'Get high-quality medicines delivered to your doorstep at the best prices. SahiMed is your trusted medical healthcare partner.',
     images: [
       {
         url: '/icon.png',
@@ -62,8 +62,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SahiMed - Sahi Dawai, Sahi Daam Pe',
-    description: 'Affordable medicines and clinical healthcare delivery.',
+    title: 'SahiMed - Trusted Medical Healthcare',
+    description: 'Affordable medicines and medical healthcare delivery.',
     images: ['/icon.png'],
   },
   appleWebApp: {

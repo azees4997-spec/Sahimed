@@ -195,8 +195,8 @@ export default function CheckoutPage() {
     otherTag: ''
   });
 
-  // Clinical Matrix Path
-  const [clinicalPath, setClinicalPath] = useState<'attach' | 'consult'>('attach');
+  // Fulfillment Path Matrix
+  const [fulfillmentPath, setFulfillmentPath] = useState<'attach' | 'consult'>('attach');
 
 
   const addressesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'addresses'), orderBy('updatedAt', 'desc')) : null, [db, user]);
@@ -267,8 +267,8 @@ export default function CheckoutPage() {
     }
 
     const requiresPrescription = cart.some(item => item.prescriptionRequired);
-    if (requiresPrescription && clinicalPath === 'attach' && attachedPrescriptions.length === 0) {
-      toast({ variant: 'destructive', title: "Clinical File Required", description: "Please attach your prescription or select Doctor Consultation." });
+    if (requiresPrescription && fulfillmentPath === 'attach' && attachedPrescriptions.length === 0) {
+      toast({ variant: 'destructive', title: "Prescription Required", description: "Please attach your prescription or select Doctor Consultation." });
       return false;
     }
     
@@ -364,11 +364,6 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async (body?: any) => {
-    if (!user || !db) return;
-    if (!selectedAddressId) {
-      toast({ variant: 'destructive', title: "No address", description: "Please select or add a delivery address to proceed." });
-      return;
-    }
     if (!validate()) return;
 
     setLoading(true);
@@ -400,14 +395,14 @@ export default function CheckoutPage() {
       userId: user.uid,
       orderDate: serverTimestamp(),
       totalAmount: finalPayable,
-      status: 'Pending',
+      status: paymentMethod === 'Online' ? 'Payment Pending' : 'Pending',
       paymentType: paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online',
-      paymentId: body?.paymentId || null, // Capture Paytm transaction ID
+      paymentId: body?.paymentId || null, 
       paytmOrderId: body?.paytmOrderId || null,
       patientName: orderInfo.patientName,
       phoneNumber: `+91${cleanPhone}`,
-      clinicalPath: clinicalPath,
-      isConsultationRequired: clinicalPath === 'consult',
+      fulfillmentPath: fulfillmentPath,
+      isConsultationRequired: fulfillmentPath === 'consult',
       prescriptionUrls: attachedPrescriptions,
       shippingDetails: {
         houseNumber: orderInfo.houseNumber,
@@ -423,7 +418,7 @@ export default function CheckoutPage() {
         medicineId: item.id,
         quantity: item.quantity,
         unitPrice: item.price,
-        mrp: item.mrp || item.price + 50,
+        mrp: item.mrp || item.price,
         name: item.name,
         brand: item.brand || '',
         imageUrl: item.imageUrl || '',
@@ -459,7 +454,7 @@ export default function CheckoutPage() {
 
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.error || 'Clinical transmission failed');
+        throw new Error(result.error || 'Transaction failed');
       }
 
       const mongoOrderId = result.orderId; // The ORD00xx ID
@@ -488,7 +483,7 @@ export default function CheckoutPage() {
       }
     } catch (err: any) {
       setLoading(false);
-      toast({ variant: 'destructive', title: "Order failed", description: err.message || "Failed to sync order with clinical hub." });
+      toast({ variant: 'destructive', title: "Order failed", description: err.message || "Failed to sync order with Sahimed Fulfillment." });
     }
   };
 
@@ -570,7 +565,6 @@ export default function CheckoutPage() {
   };
 
   const onPlaceOrderClick = () => {
-    if (!validate()) return;
     handlePlaceOrder();
   };
 
@@ -680,7 +674,7 @@ export default function CheckoutPage() {
                             lng: addr.lng || 0,
                             tag: addr.tag
                           }));
-                          toast({ title: `Target locked: ${addr.tag}` });
+                          toast({ title: `Address selected: ${addr.tag}` });
                         }}
                         className={cn(
                           "p-8 rounded-[48px] border-2 cursor-pointer transition-all flex items-center justify-between bg-white/40 backdrop-blur-md shadow-xl hover:shadow-2xl group relative overflow-hidden",
@@ -746,14 +740,14 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {/* Attach Option */}
                     <div 
-                      onClick={() => setClinicalPath('attach')}
+                      onClick={() => setFulfillmentPath('attach')}
                       className={cn(
                         "p-8 rounded-[48px] border-2 cursor-pointer transition-all bg-white/40 backdrop-blur-md shadow-xl relative overflow-hidden group",
-                        clinicalPath === 'attach' ? "border-primary bg-white ring-4 ring-primary/5" : "border-transparent"
+                        fulfillmentPath === 'attach' ? "border-primary bg-white ring-4 ring-primary/5" : "border-transparent"
                       )}
                     >
                       <div className="flex items-center gap-6 relative z-10">
-                        <div className={cn("w-14 h-14 rounded-[20px] flex items-center justify-center shadow-inner", clinicalPath === 'attach' ? "bg-primary text-white" : "bg-white text-slate-300")}>
+                        <div className={cn("w-14 h-14 rounded-[20px] flex items-center justify-center shadow-inner", fulfillmentPath === 'attach' ? "bg-primary text-white" : "bg-white text-slate-300")}>
                           <FileText className="w-7 h-7" />
                         </div>
                         <div>
@@ -761,21 +755,21 @@ export default function CheckoutPage() {
                           <p className="text-[9px] font-bold text-slate-400 tracking-widest uppercase mt-1">Upload verified files</p>
                         </div>
                       </div>
-                      <div className={cn("absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center border-2", clinicalPath === 'attach' ? "bg-primary border-primary" : "border-slate-100")}>
-                        {clinicalPath === 'attach' && <Check className="w-3.5 h-3.5 text-white" />}
+                      <div className={cn("absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center border-2", fulfillmentPath === 'attach' ? "bg-primary border-primary" : "border-slate-100")}>
+                        {fulfillmentPath === 'attach' && <Check className="w-3.5 h-3.5 text-white" />}
                       </div>
                     </div>
 
                     {/* Consult Option */}
                     <div 
-                      onClick={() => setClinicalPath('consult')}
+                      onClick={() => setFulfillmentPath('consult')}
                       className={cn(
                         "p-8 rounded-[48px] border-2 cursor-pointer transition-all bg-white/40 backdrop-blur-md shadow-xl relative overflow-hidden group",
-                        clinicalPath === 'consult' ? "border-emerald-500 bg-white ring-4 ring-emerald-500/5" : "border-transparent"
+                        fulfillmentPath === 'consult' ? "border-emerald-500 bg-white ring-4 ring-emerald-500/5" : "border-transparent"
                       )}
                     >
                       <div className="flex items-center gap-6 relative z-10">
-                        <div className={cn("w-14 h-14 rounded-[20px] flex items-center justify-center shadow-inner", clinicalPath === 'consult' ? "bg-emerald-500 text-white" : "bg-white text-slate-300")}>
+                        <div className={cn("w-14 h-14 rounded-[20px] flex items-center justify-center shadow-inner", fulfillmentPath === 'consult' ? "bg-emerald-500 text-white" : "bg-white text-slate-300")}>
                           <Stethoscope className="w-7 h-7" />
                         </div>
                         <div>
@@ -783,15 +777,15 @@ export default function CheckoutPage() {
                           <p className="text-[9px] font-bold text-slate-400 tracking-widest uppercase mt-1">Free digital consultation</p>
                         </div>
                       </div>
-                      <div className={cn("absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center border-2", clinicalPath === 'consult' ? "bg-emerald-500 border-emerald-500" : "border-slate-100")}>
-                        {clinicalPath === 'consult' && <Check className="w-3.5 h-3.5 text-white" />}
+                      <div className={cn("absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center border-2", fulfillmentPath === 'consult' ? "bg-emerald-500 border-emerald-500" : "border-slate-100")}>
+                        {fulfillmentPath === 'consult' && <Check className="w-3.5 h-3.5 text-white" />}
                       </div>
                     </div>
                   </div>
 
                   {/* Prescription Upload Layer */}
                   <AnimatePresence mode="wait">
-                    {clinicalPath === 'attach' && (
+                    {fulfillmentPath === 'attach' && (
                       <motion.div 
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
@@ -847,7 +841,7 @@ export default function CheckoutPage() {
                       </motion.div>
                     )}
 
-                    {clinicalPath === 'consult' && (
+                    {fulfillmentPath === 'consult' && (
                       <motion.div 
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}

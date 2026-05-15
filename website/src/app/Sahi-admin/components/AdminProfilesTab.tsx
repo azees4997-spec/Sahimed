@@ -43,7 +43,7 @@ import { cn } from '@/lib/utils';
 import { safeFormat } from '@/lib/safe-date';
 
 const PERMISSIONS = [
-  { key: 'orders_view', label: 'Order Processing', icon: Box, desc: 'View and search matrix orders' },
+  { key: 'orders_view', label: 'Order Processing', icon: Box, desc: 'View and search system orders' },
   { key: 'orders_create', label: 'Manual Creation', icon: PlusCircle, desc: 'Initiate manual procurement' },
   { key: 'shipping_edit', label: 'Shipment Control', icon: Truck, desc: 'Manage tracking and dispatch' },
   { key: 'inventory_manage', label: 'Product Catalog', icon: Database, desc: 'Edit items and molecule master' },
@@ -131,7 +131,7 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
         body: JSON.stringify({ id: uid, ...updates })
       });
       if (res.ok) {
-        toast({ title: "Authority Matrix Updated" });
+        toast({ title: "Authorization Level Updated" });
         fetchAdmins();
       }
     } catch (err) {
@@ -177,7 +177,7 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Override Rejected");
       
-      toast({ title: "Matrix Override Success", description: `Access key re-provisioned for ${resetData.email}` });
+      toast({ title: "Credential Override Success", description: `Access key re-provisioned for ${resetData.email}` });
       setResetData({ isOpen: false, uid: '', email: '', newPassword: '' });
     } catch (err: any) {
       toast({ variant: 'destructive', title: "Override Failure", description: err.message });
@@ -298,7 +298,7 @@ export function AdminProfilesTab({ db, isVerified, onBack }: { db: any, isVerifi
             </div>
             <DialogTitle className="text-3xl font-black font-outfit uppercase tracking-tighter text-white">Issue Credentials</DialogTitle>
             <DialogDescription className="text-xs font-black text-white/60 tracking-widest mt-2 uppercase">
-              Granting authority to the Sahimed Matrix
+              Granting authority to the Sahimed System
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateAdmin} className="p-10 space-y-8">

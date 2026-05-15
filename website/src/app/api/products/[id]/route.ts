@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
+import { messaging } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -94,7 +95,9 @@ export async function PUT(
     // 1. Fetch current product to check old stock
     const currentProduct = await db.collection("products").findOne(query);
     const oldStock = Number(currentProduct?.availableQuantity || 0);
-    const newStock = Number(updateData.availableQuantity || 0);
+    const newStock = updateData.availableQuantity !== undefined 
+      ? Number(updateData.availableQuantity) 
+      : oldStock;
 
     const result = await db.collection("products").updateOne(
       query,
@@ -119,20 +122,52 @@ export async function PUT(
       }).toArray();
 
       if (requests.length > 0) {
+        const productName = currentProduct?.name || "A product you were watching";
+
         // Send notifications (async background loop)
         const notifyUsers = async () => {
           for (const req of requests) {
             try {
-              // Send FCM or just log for now
-              console.log(`[BackInStock] Notifying user: ${req.userPhone || req.userId}`);
+              let fcmToken = null;
+              if (req.userId) {
+                const userDoc = await db.collection('users').findOne({ uid: req.userId });
+                fcmToken = userDoc?.fcmToken;
+              }
+
+              if (fcmToken) {
+                try {
+                  await messaging.send({
+                    token: fcmToken,
+                    notification: {
+                      title: 'Back in Stock! 💊',
+                      body: `${productName} is now available at Sahimed. Order now before it runs out!`,
+                    },
+                    data: {
+                      type: 'stock_update',
+                      productId: id.toString(),
+                    },
+                    android: {
+                      priority: 'high',
+                      notification: {
+                        channelId: 'stock_alerts'
+                      }
+                    }
+                  });
+                  console.log(`[BackInStock] Notified user: ${req.userId} via FCM`);
+                } catch (fcmErr: any) {
+                  console.error(`[BackInStock] FCM Send Error for ${req.userId}:`, fcmErr.message);
+                }
+              } else {
+                console.log(`[BackInStock] No FCM token for user: ${req.userPhone || req.userId}`);
+              }
               
-              // Mark as notified
+              // Mark as notified regardless of FCM success (to avoid spamming on next update if FCM fails)
               await db.collection('inventoryRequests').updateOne(
                 { _id: req._id },
                 { $set: { status: 'notified', notifiedAt: new Date() } }
               );
             } catch (notifyErr) {
-              console.error(`[BackInStock] Failed to notify ${req._id}`, notifyErr);
+              console.error(`[BackInStock] Failed to process notification request ${req._id}`, notifyErr);
             }
           }
         };

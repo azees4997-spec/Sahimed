@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -56,6 +57,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.initState();
     _prescriptionImage = widget.initialPrescription;
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _houseController.dispose();
+    _streetController.dispose();
+    _cityController.dispose();
+    _stateController.dispose();
+    _pincodeController.dispose();
+    _landmarkController.dispose();
+    _phoneController.dispose();
+    super.dispose();
   }
 
   // Payment handlers removed as Paytm uses async call
@@ -212,9 +226,116 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() => _prescriptionImage = File(image.path));
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(30),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'SELECT SOURCE',
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: Colors.black,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildPickerOption(
+                  icon: LucideIcons.camera,
+                  label: 'CAMERA',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _handlePick(ImageSource.camera);
+                  },
+                ),
+                _buildPickerOption(
+                  icon: LucideIcons.image,
+                  label: 'GALLERY',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _handlePick(ImageSource.gallery);
+                  },
+                ),
+                _buildPickerOption(
+                  icon: LucideIcons.fileText,
+                  label: 'FILES',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickFromFiles();
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPickerOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: SahimedColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Icon(icon, color: SahimedColors.primary, size: 28),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handlePick(ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(source: source);
+      if (image != null) {
+        setState(() => _prescriptionImage = File(image.path));
+      }
+    } catch (e) {
+      _showError('PICKER ERROR: $e');
+    }
+  }
+
+  Future<void> _pickFromFiles() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        setState(() => _prescriptionImage = File(result.files.single.path!));
+      }
+    } catch (e) {
+      _showError('FILE PICKER ERROR: $e');
     }
   }
 
@@ -227,6 +348,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _pincodeController.dispose();
     _landmarkController.dispose();
     _phoneController.dispose();
+    _stateController.dispose();
     super.dispose();
   }
 
@@ -341,13 +463,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       }
 
       final billingBreakdown = {
-        'subtotal': cart.total, // Total of items
+        'grossMrp': cart.subtotal,
+        'subtotal': cart.total,
         'promoDiscount': cart.promoDiscount,
         'promoCode': cart.appliedPromo?.code,
         'walletUsed': 0.0,
-        'deliveryFee': cart.total < 499 ? 49.0 : 0.0,
+        'deliveryFees': cart.deliveryFee, // KEY FIX: must match server-side validator
         'total': cart.finalTotal,
-        'campaignDiscount': cart.promoDiscount, // For compatibility with older detail screens
+        'campaignDiscount': cart.promoDiscount,
       };
 
       final orderId = await _apiService.createOrder(
@@ -896,7 +1019,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildAddressCard(Map<String, dynamic> addr) {
-    bool isSelected = _selectedAddress?['id'] == addr['id'];
+    bool isSelected = (_selectedAddress?['id'] ?? _selectedAddress?['_id']) == (addr['id'] ?? addr['_id']);
     return GestureDetector(
       onTap: () => setState(() {
         _selectedAddress = addr;
@@ -979,7 +1102,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: _prescriptionImage != null
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(22),
-                child: Image.file(_prescriptionImage!, fit: BoxFit.cover),
+                child: _prescriptionImage!.path.toLowerCase().endsWith('.pdf')
+                    ? Container(
+                        color: Colors.red.withOpacity(0.1),
+                        child: const Center(
+                          child: Icon(
+                            LucideIcons.fileText,
+                            color: Colors.red,
+                            size: 40,
+                          ),
+                        ),
+                      )
+                    : Image.file(_prescriptionImage!, fit: BoxFit.cover),
               )
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,

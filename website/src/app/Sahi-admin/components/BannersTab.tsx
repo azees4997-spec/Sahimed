@@ -127,7 +127,7 @@ export function BannersTab({ db, isVerified, onBack }: { db: any, isVerified: bo
              </div>
              <DialogTitle className="text-3xl font-black font-outfit uppercase tracking-tighter text-white">Visual Configuration</DialogTitle>
              <DialogDescription className="text-xs font-black text-white/60 tracking-widest mt-2 uppercase">
-                Promotion Matrix & Carousel Orchestration
+                Promotion Registry & Carousel Orchestration
              </DialogDescription>
           </DialogHeader>
           <div className="p-10">
@@ -207,7 +207,7 @@ function BannerForm({ db, initialData, defaultOrder, onSuccess }: { db: any, ini
       </div>
 
       <Button type="submit" className="w-full h-20 rounded-full font-black text-xs tracking-[0.3em] bg-primary text-white shadow-2xl shadow-primary/30 uppercase hover:scale-[1.02] active:scale-95 transition-all">
-        {initialData?.id ? 'Patch Global Matrix' : 'Commit New Promotion'}
+        {initialData?.id ? 'Patch Global Catalog' : 'Commit New Promotion'}
       </Button>
     </form>
   );

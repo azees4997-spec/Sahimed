@@ -60,14 +60,21 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
               </div>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed max-w-[280px] font-medium">
-              Revolutionizing medication accessibility through precision technology and clinical excellence. Your trust, our priority.
+              Revolutionizing medication accessibility through precision technology and medical excellence. Your trust, our priority.
             </p>
             <div className="flex gap-4">
-              {[Instagram, Twitter, Linkedin, MessageCircle].map((Icon, i) => (
-                <button key={i} className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary transition-all active:scale-90 group">
-                  <Icon className="w-5 h-5" />
-                </button>
-              ))}
+              <a href="https://instagram.com/sahimed" target="_blank" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary transition-all active:scale-90 group">
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a href="https://twitter.com/sahimed" target="_blank" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary transition-all active:scale-90 group">
+                <Twitter className="w-5 h-5" />
+              </a>
+              <a href="https://linkedin.com/company/sahimed" target="_blank" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary transition-all active:scale-90 group">
+                <Linkedin className="w-5 h-5" />
+              </a>
+              <a href="https://wa.me/917349499898" target="_blank" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary transition-all active:scale-90 group">
+                <MessageCircle className="w-5 h-5" />
+              </a>
             </div>
 
             <div className="pt-4">
@@ -130,8 +137,8 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
 
           {/* Column 4: Contact & Operations */}
           <div className="space-y-8">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-500">Clinical Support</h4>
-            <div className="space-y-5">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-500">Pharma Support</h4>
+            <div className="space-y-6">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
                   <Phone className="w-4 h-4 text-emerald-500" />
@@ -141,21 +148,15 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
                   <p className="text-sm font-bold text-gray-200">+91 7349499898</p>
                 </div>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                  <Mail className="w-4 h-4 text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Email Terminal</p>
-                  <p className="text-sm font-bold text-gray-200 whitespace-nowrap">support@sahimed.com</p>
-                </div>
+              
+              <div>
+                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Support Email</p>
+                <a href="mailto:support@sahimed.com" className="text-sm font-bold text-gray-200 hover:text-primary transition-colors">support@sahimed.com</a>
               </div>
-              <div className="flex items-start gap-4 pt-4 border-t border-white/5">
-                <Clock className="w-4 h-4 text-gray-500 mt-1" />
-                <div>
-                  <p className="text-[10px] font-bold text-gray-400">OPEN: 24/7 EMERGENCY FULFILLMENT</p>
-                  <p className="text-[9px] text-gray-600 mt-1 font-medium">Standard Hours: 09:00 - 22:00 IST</p>
-                </div>
+
+              <div>
+                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">WhatsApp Support</p>
+                <a href="https://wa.me/917349499898" target="_blank" className="text-sm font-bold text-gray-200 hover:text-primary transition-colors">+91 73494 99898</a>
               </div>
             </div>
           </div>
@@ -163,10 +164,10 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-12 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-6">
-          <p className="text-[9px] font-black text-gray-600 tracking-[0.3em] uppercase">
-            © 2026 Sahimed clinical healthcare. <span className="text-gray-700 mx-2">•</span> Precision Pharmacy Protocol
-          </p>
+        <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            © 2026 Sahimed medical healthcare. <span className="text-gray-700 mx-2">•</span> Pharmacy Standard Protocol
+          </div>
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-6 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700">
             <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest mr-2">We Accept</span>
             <div className="flex items-center gap-4 bg-white/5 px-4 py-2 rounded-2xl border border-white/5">

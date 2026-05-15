@@ -97,7 +97,7 @@ export async function verifyAdmin(request: Request) {
 
     const { role, permissions } = adminProfile;
     if (!['admin', 'pharmacist', 'sub-admin'].includes(role)) {
-      throw new Error('Forbidden: Insufficient clinical clearance');
+      throw new Error('Forbidden: Insufficient medical authorization');
     }
 
     return { uid, role, email, permissions: permissions || {} };
