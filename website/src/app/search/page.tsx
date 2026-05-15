@@ -272,7 +272,6 @@ function SearchResults() {
                   </div>
                 </div>
               </motion.div>
-            </aside>
               
               <motion.div 
                 initial={{ y: 20, opacity: 0 }}
