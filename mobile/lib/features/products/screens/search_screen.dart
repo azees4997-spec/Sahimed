@@ -110,7 +110,7 @@ class _SearchScreenState extends State<SearchScreen> {
         });
         
         if (query.length >= 2) {
-          _fetchSuggestions(query);
+          _performSearch(query);
         } else {
           setState(() {
             _moleculeResults = [];
@@ -121,25 +121,6 @@ class _SearchScreenState extends State<SearchScreen> {
         }
       }
     });
-  }
-
-  Future<void> _fetchSuggestions(String query) async {
-    // Only fetch minimal suggestions for the overlay
-    try {
-      final results = await Future.wait([
-        _apiService.searchProducts(query),
-        _apiService.searchMolecules(query),
-      ]);
-      
-      if (mounted && _currentQuery == query) {
-        setState(() {
-          _results = results[0] as List<ProductModel>;
-          _moleculeResults = results[1] as List<Map<String, dynamic>>;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error fetching suggestions: $e');
-    }
   }
 
 
@@ -242,9 +223,6 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
             ),
 
-            // Suggestions Overlay
-            if (_currentQuery.isNotEmpty && (_moleculeResults.isNotEmpty || _results.isNotEmpty) && !_isLoading && _results.length > 3)
-               _buildSuggestionsOverlay(),
 
             if (_isLoading)
               const Positioned.fill(

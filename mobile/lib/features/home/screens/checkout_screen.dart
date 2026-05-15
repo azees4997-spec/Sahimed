@@ -921,17 +921,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       child: Column(
         children: [
           _buildPaymentOption(
-            id: 'COD',
-            title: 'Cash on Delivery',
-            subtitle: 'Pay at your doorstep',
-            icon: LucideIcons.banknote,
-          ),
-          const SizedBox(height: 12),
-          _buildPaymentOption(
             id: 'Online',
             title: 'Paytm / Online',
             subtitle: 'UPI, Wallet, Cards & Netbanking',
             icon: LucideIcons.creditCard,
+            isRecommended: true,
+          ),
+          const SizedBox(height: 12),
+          _buildPaymentOption(
+            id: 'COD',
+            title: 'Cash on Delivery',
+            subtitle: 'Pay at your doorstep',
+            icon: LucideIcons.banknote,
           ),
         ],
       ),
@@ -943,6 +944,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     required String title,
     required String subtitle,
     required IconData icon,
+    bool isRecommended = false,
   }) {
     bool isSelected = _paymentMethod == id;
     return GestureDetector(
@@ -976,13 +978,35 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                      color: SahimedColors.textPrimary,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          color: SahimedColors.textPrimary,
+                        ),
+                      ),
+                      if (isRecommended) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'RECOMMENDED',
+                            style: GoogleFonts.outfit(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   Text(
                     subtitle,

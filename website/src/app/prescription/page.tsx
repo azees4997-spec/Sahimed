@@ -291,7 +291,7 @@ export default function PrescriptionPage() {
             </CardContent>
           </Card>
  
-          <input id="file-upload" type="file" accept=".jpg,.jpeg,.png,.pdf" multiple className="hidden" onChange={handleFileChange} />
+          <input id="file-upload" type="file" accept="image/*,application/pdf" multiple className="hidden" onChange={handleFileChange} />
 
           <div className="space-y-6 animate-in slide-in-from-bottom-6 duration-500">
             <div className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 space-y-8">
