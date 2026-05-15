@@ -131,9 +131,9 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
             </div>
           </div>
           <div className="flex gap-3 sm:gap-5 overflow-x-auto scrollbar-hide pb-2 sm:pb-4 px-1 sm:px-2">
-            {bestSellers.slice(0, 5).map((p: any) => (
+            {bestSellers.slice(0, 5).map((p: any, i: number) => (
               <div key={p.id} className="min-w-[120px] sm:min-w-[180px]">
-                <ProductCard product={p} />
+                <ProductCard product={p} priority={i < 4} />
               </div>
             ))}
           </div>
@@ -159,7 +159,8 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
                   width={120} 
                   height={120} 
                   className="object-cover w-full h-full transition-transform duration-700 group-hover/cat:scale-110" 
-                  loading="lazy"
+                  loading={i < 3 ? undefined : "lazy"}
+                  priority={i < 3}
                 />
               </div>
               <span className="text-[9px] sm:text-[10px] font-black text-slate-700 tracking-tight uppercase text-center line-clamp-1 h-4 px-1">{cat.name}</span>
@@ -198,9 +199,9 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
             <Badge variant="outline" className="font-black text-[7px] sm:text-[8px] uppercase tracking-widest text-primary border-primary/20">Curated for you</Badge>
           </div>
           <div className="flex gap-3 sm:gap-5 overflow-x-auto scrollbar-hide pb-4 sm:pb-6 px-1 sm:px-2">
-            {topSelections.map((p: any) => (
+            {topSelections.map((p: any, i: number) => (
               <div key={p.id} className="min-w-[120px] sm:min-w-[180px]">
-                <ProductCard product={p} />
+                <ProductCard product={p} priority={i < 2} />
               </div>
             ))}
           </div>
@@ -211,9 +212,9 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
       <section className="space-y-3 sm:space-y-5 max-w-full">
         <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tighter uppercase font-outfit px-1 sm:px-2">Featured Medicines</h2>
         <div className="flex gap-3 sm:gap-5 overflow-x-auto scrollbar-hide pb-4 sm:pb-6 px-1 sm:px-2">
-          {medicines.map((p: any) => (
+          {medicines.map((p: any, i: number) => (
             <div key={p.id} className="min-w-[120px] sm:min-w-[180px]">
-              <ProductCard product={p} />
+              <ProductCard product={p} priority={i < 1} />
             </div>
           ))}
         </div>

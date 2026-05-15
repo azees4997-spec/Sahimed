@@ -183,6 +183,14 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${outfit.variable} ${poppins.variable}`}>
       <head>
+        {/* Critical Resource Hints */}
+        <link rel="preconnect" href="https://apis.google.com" />
+        <link rel="preconnect" href="https://www.googleapis.com" />
+        <link rel="preconnect" href="https://firestore.googleapis.com" />
+        <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
+        <link rel="dns-prefetch" href="https://apis.google.com" />
+        <link rel="dns-prefetch" href="https://www.googleapis.com" />
+        
         <Script
           id="organization-jsonld"
           type="application/ld+json"
@@ -198,7 +206,6 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(pharmacyJsonLd) }}
         />
-
       </head>
       <body className="font-outfit antialiased bg-[#F8FAFC]">
         <FirebaseClientProvider>

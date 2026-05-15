@@ -13,7 +13,7 @@ import RibbonBadge from './RibbonBadge';
 
 import { memo } from 'react';
 
-function ProductCardComponent({ product }: { product: Product }) {
+function ProductCardComponent({ product, priority = false }: { product: Product, priority?: boolean }) {
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
   const { toast } = useToast();
   
@@ -51,8 +51,9 @@ function ProductCardComponent({ product }: { product: Product }) {
             src={safeImageUrl} 
             alt={product.name} 
             fill 
-            sizes="(max-width: 768px) 100px, 200px"
-            loading="lazy"
+            sizes="(max-width: 640px) 140px, 240px"
+            loading={priority ? undefined : "lazy"}
+            priority={priority}
             className="object-contain p-0.5 sm:p-1 transition-transform duration-700 group-hover:scale-105" 
           />
         </div>
