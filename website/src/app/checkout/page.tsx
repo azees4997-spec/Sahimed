@@ -248,17 +248,11 @@ export default function CheckoutPage() {
 
 
   if (!mounted) return (
-    <div className="min-h-screen bg-[#F4F7F6] flex items-center justify-center">
+    <div className="min-h-screen bg-[#F4F7F6] flex flex-col items-center justify-center">
        <Loader2 className="w-12 h-12 animate-spin text-primary opacity-20" />
+       <p className="mt-4 text-[10px] font-black text-slate-300 uppercase tracking-widest">Initializing Secure Checkout...</p>
     </div>
   );
-
-
-  useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-  }, []);
 
   const validate = () => {
     if (!orderInfo.patientName.trim()) {
@@ -990,7 +984,7 @@ export default function CheckoutPage() {
                     <div className="mt-6 flex justify-between items-center text-xs sm:text-sm font-black text-emerald-700 bg-emerald-50 p-4 rounded-[16px] border border-emerald-100 shadow-inner">
                       <span className="flex items-center gap-2 uppercase tracking-widest">Total Savings</span>
                       <span className="bg-emerald-100 px-3 py-1.5 rounded-md text-[10px] sm:text-xs uppercase tracking-widest border border-emerald-200">
-                        Saved ₹{totalSavings.toFixed(2)} ({Math.round((totalSavings / totalMrp) * 100)}%)
+                        Saved ₹{totalSavings.toFixed(2)} {totalMrp > 0 ? `(${Math.round((totalSavings / totalMrp) * 100)}%)` : ''}
                       </span>
                     </div>
                   )}
