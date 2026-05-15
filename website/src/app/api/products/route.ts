@@ -200,7 +200,34 @@ export async function GET(request: Request) {
     ];
 
     const startTime = Date.now();
-    const products = await collection.aggregate(pipeline).toArray();
+    let products = await collection.aggregate(pipeline).toArray();
+    
+    // FUZZY FALLBACK: If no results found with strict Match All, try Match Any of the terms
+    // This helps with spelling mistakes and partial queries
+    if (products.length === 0 && terms.length > 1) {
+      const fuzzyOr = [
+        { name: { $regex: terms.join('|'), $options: 'i' } },
+        { saltComposition: { $regex: terms.join('|'), $options: 'i' } }
+      ];
+      
+      const fuzzyPipeline = [
+        { $match: { $or: fuzzyOr } },
+        { $sort: { name: 1 } },
+        { $limit: limitValue },
+        {
+          $lookup: {
+            from: 'molecules',
+            let: { mId: '$moleculeId' },
+            pipeline: [
+              { $match: { $expr: { $or: [{ $eq: ['$_id', '$$mId'] }, { $eq: [{ $toString: '$_id' }, '$$mId'] }] } } }
+            ],
+            as: 'moleculeData'
+          }
+        },
+        { $addFields: { moleculeData: { $arrayElemAt: ['$moleculeData', 0] }, isFuzzy: true } }
+      ];
+      products = await collection.aggregate(fuzzyPipeline).toArray();
+    }
     const duration = Date.now() - startTime;
     
     console.log(`[Search API] Aggregation Params: mol=${moleculeId || 'none'}, q=${q || 'none'} | Result: ${products.length} in ${duration}ms`);

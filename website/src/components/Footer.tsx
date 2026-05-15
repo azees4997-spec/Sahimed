@@ -165,7 +165,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
         {/* Bottom bar */}
         <div className="pt-12 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-6">
           <p className="text-[9px] font-black text-gray-600 tracking-[0.3em] uppercase">
-            © {new Date().getFullYear()} Sahimed clinical healthcare. <span className="text-gray-700 mx-2">•</span> Precision Pharmacy Protocol
+            © 2026 Sahimed clinical healthcare. <span className="text-gray-700 mx-2">•</span> Precision Pharmacy Protocol
           </p>
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-6 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700">
             <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest mr-2">We Accept</span>

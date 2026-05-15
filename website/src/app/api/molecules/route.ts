@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       };
     }
 
-    const molecules = await db.collection('molecules')
+    let molecules = await db.collection('molecules')
       .aggregate([
         { $match: query },
         {
@@ -65,6 +65,18 @@ export async function GET(request: Request) {
         },
         { $limit: limitValue }
       ]).toArray();
+
+    // FUZZY FALLBACK: If no results found with strict Match All, try Match Any
+    if (molecules.length === 0 && terms.length > 1) {
+      const fuzzyQuery = { molecule: { $regex: terms.join('|'), $options: 'i' } };
+      molecules = await db.collection('molecules')
+        .aggregate([
+          { $match: fuzzyQuery },
+          { $addFields: { isCombination: { $regexMatch: { input: "$molecule", regex: /[\+\&]| and /i } }, isFuzzy: true } },
+          { $sort: { isCombination: 1, molecule: 1 } },
+          { $limit: limitValue }
+        ]).toArray();
+    }
 
     // --- AUTOMATIC SEARCH ANALYTICS LOGGING ---
     if (qRaw && qRaw.length >= 2) {
