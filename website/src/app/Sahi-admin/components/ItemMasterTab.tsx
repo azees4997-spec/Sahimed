@@ -217,7 +217,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
       
       const fetchSuggestions = async () => {
         try {
-          const res = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=10&showDisabled=true`);
+          const res = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=10&showDisabled=true`, { cache: 'no-store' });
           if (res.ok) {
             const data = await res.json();
             if (Array.isArray(data)) {
@@ -535,7 +535,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     const refreshProduct = async () => {
        setIsRefreshing(true);
        try {
-          const res = await fetch(`/api/products/${docId}`);
+          const res = await fetch(`/api/products/${docId}`, { cache: 'no-store' });
           if (res.ok) {
              const data = await res.json();
              // Merge/Reset form with latest data
@@ -566,7 +566,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
              if (data.moleculeId) {
                 const fetchMol = async () => {
                    try {
-                      const mRes = await fetch(`/api/molecules/${data.moleculeId}`);
+                      const mRes = await fetch(`/api/molecules/${data.moleculeId}`, { cache: 'no-store' });
                       if (mRes.ok) {
                          const mData = await mRes.json();
                          const molName = mData.molecule || mData.name;
@@ -610,7 +610,7 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
     const fetchMols = async () => {
       setIsMolsLoading(true);
       try {
-        const res = await fetch(`/api/molecules?q=${encodeURIComponent(molSearch)}&limit=20`);
+        const res = await fetch(`/api/molecules?q=${encodeURIComponent(molSearch)}&limit=20`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           setMolecules(data);

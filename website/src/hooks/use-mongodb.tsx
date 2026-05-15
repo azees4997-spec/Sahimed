@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 // GLOBAL MEMORY CACHE
 // Reduces API calls by storing results for 5 minutes
 const queryCache: Record<string, { data: any, timestamp: number }> = {};
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 1 * 1000; // 1 second for near real-time updates
 
 export function useMongoDBCollection<T = any>(options: { 
   limit?: number; 

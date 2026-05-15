@@ -55,7 +55,7 @@ export function InventoryTab({ db, isVerified, onBack }: { db: any, isVerified: 
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/products?q=${encodeURIComponent(debouncedSearch)}&limit=50&showDisabled=true`);
+        const res = await fetch(`/api/products?q=${encodeURIComponent(debouncedSearch)}&limit=50&showDisabled=true`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           setProducts(data);
