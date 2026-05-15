@@ -230,85 +230,73 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
         )}
 
         {suggestions.length > 0 && !isSearching && (
-          <div className="flex-1 bg-white overflow-hidden flex flex-col md:flex-row">
-            {/* LEFT COLUMN: MOLECULES / SALTS (Desktop: Scrollable, Mobile: Part of flow) */}
-            <div className="w-full md:w-[400px] border-r border-slate-100 flex flex-col bg-slate-50/20">
-              <div className="sticky top-0 z-10 bg-slate-50/80 backdrop-blur-sm px-6 py-3 flex items-center justify-between border-b border-slate-100">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary" /> Molecules & Salts
+          <div className="flex-1 bg-white overflow-hidden flex flex-row h-full">
+            {/* LEFT COLUMN: MOLECULES / SALTS */}
+            <div className="w-[120px] sm:w-[300px] md:w-[400px] border-r border-slate-100 flex flex-col bg-slate-50/20 shrink-0">
+              <div className="sticky top-0 z-10 bg-slate-50/80 backdrop-blur-sm px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-between border-b border-slate-100">
+                <span className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
+                  <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-primary" /> Molecules
                 </span>
-                <Badge variant="outline" className="text-[8px] border-slate-200 text-slate-400 font-black">COMPOSITION</Badge>
               </div>
               <div className="flex-1 overflow-y-auto divide-y divide-slate-100/50">
                 {suggestions.filter(s => s._type === 'molecule' || s._type === 'salt').length > 0 ? (
                   suggestions.filter(s => s._type === 'molecule' || s._type === 'salt').map((item) => (
                     <div 
                       key={item._id || item.id}
-                      className="bg-white p-6 flex items-center gap-4 active:bg-slate-50 transition-colors cursor-pointer group"
+                      className="bg-white p-3 sm:p-6 flex items-center gap-2 sm:gap-4 active:bg-slate-50 transition-colors cursor-pointer group"
                       onClick={() => handleItemClick(item)}
                     >
-                      <div className="w-10 h-10 bg-primary/5 rounded-xl border border-primary/10 flex items-center justify-center shrink-0">
-                        <Search className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
+                      <div className="w-6 h-6 sm:w-10 sm:h-10 bg-primary/5 rounded-lg sm:rounded-xl border border-primary/10 flex items-center justify-center shrink-0">
+                        <Search className="w-3 h-3 sm:w-4 sm:h-4 text-primary/40 group-hover:text-primary transition-colors" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-extrabold text-slate-800 text-[13px] truncate uppercase tracking-tight group-hover:text-primary transition-colors">
+                        <h4 className="font-extrabold text-slate-800 text-[10px] sm:text-[13px] truncate uppercase tracking-tight group-hover:text-primary transition-colors">
                           {item.name || item.molecule}
                         </h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[8px] font-black text-primary/60 uppercase bg-primary/5 px-1.5 py-0.5 rounded">SALT</span>
-                          <span className="text-[9px] font-bold text-slate-400">View all matches</span>
-                        </div>
                       </div>
-                      <ArrowUpRight className="w-4 h-4 text-slate-200 group-hover:text-primary transition-all" />
                     </div>
                   ))
                 ) : (
-                  <div className="p-10 text-center opacity-30">
-                    <p className="text-[10px] font-black uppercase">No molecules matched</p>
+                  <div className="p-4 text-center opacity-30">
+                    <p className="text-[8px] font-black uppercase">No matches</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* RIGHT COLUMN: MEDICINES / BRANDS */}
-            <div className="flex-1 flex flex-col">
-              <div className="sticky top-0 z-10 bg-slate-50/80 backdrop-blur-sm px-6 py-3 flex items-center justify-between border-b border-slate-100">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Brands & Products
+            <div className="flex-1 flex flex-col min-w-0">
+              <div className="sticky top-0 z-10 bg-slate-50/80 backdrop-blur-sm px-4 sm:px-6 py-2 sm:py-3 flex items-center justify-between border-b border-slate-100">
+                <span className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
+                  <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-emerald-500" /> Products
                 </span>
-                <Badge variant="outline" className="text-[8px] border-slate-200 text-slate-400 font-black">ITEMS</Badge>
               </div>
               <div className="flex-1 overflow-y-auto divide-y divide-slate-100/50">
                 {suggestions.filter(s => s._type === 'medicine').length > 0 ? (
                   suggestions.filter(s => s._type === 'medicine').map((item) => (
                     <div 
                       key={item._id || item.id}
-                      className="bg-white p-6 flex items-center gap-6 active:bg-slate-50 transition-colors cursor-pointer group"
+                      className="bg-white p-3 sm:p-6 flex items-center gap-3 sm:gap-6 active:bg-slate-50 transition-colors cursor-pointer group"
                       onClick={() => handleItemClick(item)}
                     >
-                      <div className="relative w-16 h-16 bg-white rounded-2xl border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden shadow-sm group-hover:scale-105 transition-transform">
+                      <div className="relative w-10 h-10 sm:w-16 sm:h-16 bg-white rounded-lg sm:rounded-2xl border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden shadow-sm group-hover:scale-105 transition-transform">
                         <Image 
                           src={item.imageUrl || `https://picsum.photos/seed/${item._id}/200/200`}
                           alt={item.name}
                           fill
-                          className="object-contain p-2"
+                          className="object-contain p-1 sm:p-2"
                         />
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-extrabold text-slate-800 text-[15px] truncate uppercase tracking-tight group-hover:text-primary transition-colors">
+                        <h4 className="font-extrabold text-slate-800 text-[11px] sm:text-[15px] truncate uppercase tracking-tight group-hover:text-primary transition-colors leading-tight">
                           {item.name}
                         </h4>
-                        {(item.saltComposition || item.composition || item.salt) && (
-                          <p className="text-[10px] text-slate-400 truncate italic mt-0.5">
-                            {item.saltComposition || item.composition || item.salt}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-3 mt-2">
+                        <div className="flex items-center gap-2 mt-1">
                           {item.liveData?.sahimed_price && (
-                            <span className="text-base font-black text-slate-900">₹{item.liveData.sahimed_price}</span>
+                            <span className="text-[11px] sm:text-base font-black text-slate-900 leading-none">₹{item.liveData.sahimed_price}</span>
                           )}
-                          <span className="text-[8px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full uppercase">IN STOCK</span>
+                          <span className="text-[7px] sm:text-[8px] font-black text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded-full uppercase leading-none">STOCK</span>
                         </div>
                       </div>
 
@@ -317,17 +305,17 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
                         onClick={(e) => {
                           e.stopPropagation();
                           addToCart(item);
-                          toast({ title: "Added to Basket" });
+                          toast({ title: "Added" });
                         }}
-                        className="h-10 px-6 rounded-xl bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/10 active:scale-95 transition-all"
+                        className="h-7 sm:h-10 px-3 sm:px-6 rounded-lg sm:rounded-xl bg-primary text-white font-black text-[8px] sm:text-[10px] uppercase tracking-widest shadow-lg shadow-primary/10 active:scale-95 transition-all shrink-0"
                       >
                         Add +
                       </Button>
                     </div>
                   ))
                 ) : (
-                  <div className="p-20 text-center opacity-30">
-                    <p className="text-[10px] font-black uppercase">No products matched</p>
+                  <div className="p-10 text-center opacity-30">
+                    <p className="text-[9px] font-black uppercase">No products matched</p>
                   </div>
                 )}
               </div>
