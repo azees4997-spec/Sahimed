@@ -15,7 +15,8 @@ import {
   Shield,
   FileCode,
   LineChart,
-  Database
+  Database,
+  Zap
 } from 'lucide-react';
 import { Card, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
