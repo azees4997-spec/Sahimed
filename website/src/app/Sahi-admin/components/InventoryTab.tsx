@@ -87,21 +87,7 @@ export function InventoryTab({ db, isVerified, onBack }: { db: any, isVerified: 
       
       if (!res.ok) throw new Error('MongoDB Sync Failed');
 
-      if (product.sku) {
-        await setDocumentNonBlocking(doc(db, 'product_live_data', product.sku), { 
-           mrp: Number(updates.mrp ?? product.mrp), 
-           sahimed_price: Number(updates.price ?? product.price), 
-           stock_quantity: Number(updates.availableQuantity ?? product.availableQuantity),
-           updatedAt: serverTimestamp() 
-        }, { merge: true });
-        
-        await setDocumentNonBlocking(doc(db, 'medicines', productId), { 
-           ...updates,
-           updatedAt: serverTimestamp() 
-        }, { merge: true });
-      }
-
-      if (!silent) toast({ title: "Inventory Updated", description: `${product.name} synchronized.` });
+      if (!silent) toast({ title: "Inventory Updated", description: `${product.name} saved to MongoDB.` });
       return true;
     } catch (err: any) {
       if (!silent) toast({ variant: 'destructive', title: "Update Failed", description: err.message });
