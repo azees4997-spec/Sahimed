@@ -141,7 +141,7 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
 
   Future<void> _pickFromFiles() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      FilePickerResult? result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
         allowMultiple: true,

@@ -127,7 +127,7 @@ class _SearchScreenState extends State<SearchScreen> {
     // Only fetch minimal suggestions for the overlay
     try {
       final results = await Future.wait([
-        _apiService.searchProducts(query, limit: 5),
+        _apiService.searchProducts(query),
         _apiService.searchMolecules(query),
       ]);
       

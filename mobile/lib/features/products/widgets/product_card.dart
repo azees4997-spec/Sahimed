@@ -288,7 +288,7 @@ class SahimedProductCard extends StatelessWidget {
                     context.read<CartProvider>().addItem(product);
                   }
                 : () async {
-                    final success = await ApiService().logInventoryRequest(product.id);
+                    final success = await ApiService().submitStockAlert(product.id);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

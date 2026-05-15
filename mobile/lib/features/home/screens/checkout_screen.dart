@@ -229,7 +229,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(30),
       ),
       builder: (context) => Container(
@@ -326,7 +326,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Future<void> _pickFromFiles() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      FilePickerResult? result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
       );
@@ -337,19 +337,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     } catch (e) {
       _showError('FILE PICKER ERROR: $e');
     }
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _houseController.dispose();
-    _streetController.dispose();
-    _cityController.dispose();
-    _pincodeController.dispose();
-    _landmarkController.dispose();
-    _phoneController.dispose();
-    _stateController.dispose();
-    super.dispose();
   }
 
   Future<void> _handleOnlinePayment() async {
