@@ -230,49 +230,51 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
         )}
 
         {suggestions.length > 0 && !isSearching && (
-          <div className="flex-1 bg-white overflow-hidden flex flex-row h-full">
-            {/* LEFT COLUMN: MOLECULES / SALTS */}
-            <div className="w-[170px] sm:w-[320px] md:w-[450px] border-r border-slate-100 flex flex-col bg-slate-50/20 shrink-0">
-              <div className="sticky top-0 z-10 bg-slate-50/80 backdrop-blur-sm px-4 py-2.5 flex items-center justify-between border-b border-slate-100">
-                <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Molecules
-                </span>
-              </div>
-              <div className="flex-1 overflow-y-auto divide-y divide-slate-100/50 scrollbar-thin scrollbar-thumb-slate-200">
-                {suggestions.filter(s => s._type === 'molecule' || s._type === 'salt').length > 0 ? (
-                  suggestions.filter(s => s._type === 'molecule' || s._type === 'salt').map((item) => (
-                    <div 
-                      key={item._id || item.id}
-                      className="bg-white p-4 flex items-center gap-3 active:bg-slate-50 transition-colors cursor-pointer group"
-                      onClick={() => handleItemClick(item)}
-                    >
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/5 rounded-xl border border-primary/10 flex items-center justify-center shrink-0">
-                        <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary/40 group-hover:text-primary transition-colors" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-extrabold text-slate-800 text-[11px] sm:text-[13px] uppercase tracking-tight group-hover:text-primary transition-colors leading-tight line-clamp-2 whitespace-normal">
-                          {item.name || item.molecule}
-                        </h4>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-10 text-center opacity-30">
-                    <p className="text-[10px] font-black uppercase tracking-widest">No matches</p>
+          <div className="flex-1 bg-white overflow-hidden flex flex-col h-full">
+            <div className="flex-1 overflow-x-auto scrollbar-hide">
+              <div className="flex flex-row h-full min-w-fit">
+                {/* LEFT COLUMN: MOLECULES / SALTS */}
+                <div className="w-[220px] sm:w-[350px] md:w-[450px] border-r border-slate-100 flex flex-col bg-slate-50/20 shrink-0">
+                  <div className="sticky top-0 z-10 bg-slate-50/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between border-b border-slate-100 shadow-sm">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Molecules
+                    </span>
                   </div>
-                )}
-              </div>
-            </div>
+                  <div className="flex-1 overflow-y-auto divide-y divide-slate-100/50">
+                    {suggestions.filter(s => s._type === 'molecule' || s._type === 'salt').length > 0 ? (
+                      suggestions.filter(s => s._type === 'molecule' || s._type === 'salt').map((item) => (
+                        <div 
+                          key={item._id || item.id}
+                          className="bg-white p-5 flex items-center gap-4 active:bg-slate-50 transition-colors cursor-pointer group"
+                          onClick={() => handleItemClick(item)}
+                        >
+                          <div className="w-10 h-10 bg-primary/5 rounded-xl border border-primary/10 flex items-center justify-center shrink-0">
+                            <Search className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-extrabold text-slate-800 text-[12px] sm:text-[14px] uppercase tracking-tight group-hover:text-primary transition-colors leading-tight whitespace-normal">
+                              {item.name || item.molecule}
+                            </h4>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-10 text-center opacity-30">
+                        <p className="text-[10px] font-black uppercase tracking-widest">No matches</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-            {/* RIGHT COLUMN: MEDICINES / BRANDS */}
-            <div className="flex-1 flex flex-col min-w-0">
-              <div className="sticky top-0 z-10 bg-slate-50/80 backdrop-blur-sm px-5 sm:px-6 py-2.5 flex items-center justify-between border-b border-slate-100">
-                <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Products
-                </span>
-                <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest sm:block hidden">Swipe for more</span>
-              </div>
-              <div className="flex-1 overflow-y-auto divide-y divide-slate-100/50 scrollbar-thin scrollbar-thumb-slate-200">
+                {/* RIGHT COLUMN: MEDICINES / BRANDS */}
+                <div className="w-[300px] sm:w-auto flex-1 flex flex-col min-w-[300px] sm:min-w-[400px]">
+                  <div className="sticky top-0 z-10 bg-slate-50/80 backdrop-blur-sm px-6 py-3 flex items-center justify-between border-b border-slate-100 shadow-sm">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Products
+                    </span>
+                    <Badge variant="secondary" className="text-[8px] bg-emerald-50 text-emerald-600 font-black border-none uppercase h-4 px-2">Matches Found</Badge>
+                  </div>
+                  <div className="flex-1 overflow-y-auto divide-y divide-slate-100/50">
                 {suggestions.filter(s => s._type === 'medicine').length > 0 ? (
                   suggestions.filter(s => s._type === 'medicine').map((item) => (
                     <div 
