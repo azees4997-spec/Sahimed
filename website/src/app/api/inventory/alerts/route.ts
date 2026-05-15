@@ -3,6 +3,9 @@ import clientPromise from '@/lib/mongodb';
 import { verifyAuth } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -75,7 +78,7 @@ export async function GET(request: Request) {
           as: 'product'
         }
       },
-      { $unwind: '$product' }
+      { $unwind: { path: '$product', preserveNullAndEmptyArrays: true } }
     ]).toArray();
 
     return NextResponse.json(alerts);
