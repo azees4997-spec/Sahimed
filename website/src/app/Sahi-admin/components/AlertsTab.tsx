@@ -9,8 +9,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SectionHeader } from './SectionHeader';
+import { useToast } from '@/hooks/use-toast';
 
 export function AlertsTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
+  const { toast } = useToast();
   const [stockAlerts, setStockAlerts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -18,10 +20,15 @@ export function AlertsTab({ db, isVerified, onBack }: { db: any, isVerified: boo
     const fetchStockAlerts = async () => {
       try {
         const res = await fetch('/api/inventory/alerts', { cache: 'no-store' }); 
+        if (!res.ok) {
+           const errData = await res.json().catch(() => ({}));
+           throw new Error(errData.error || `Server Error: ${res.status}`);
+        }
         const data = await res.json();
         setStockAlerts(Array.isArray(data) ? data : []);
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
+        toast({ variant: 'destructive', title: "Fetch Failed", description: err.message });
       } finally {
         setIsLoading(false);
       }

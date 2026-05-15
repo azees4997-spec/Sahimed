@@ -11,6 +11,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { productId } = body;
 
+    console.log(`[Notify] Received request for Product: ${productId}`);
+
     if (!productId) {
       return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
     }
@@ -18,8 +20,9 @@ export async function POST(request: Request) {
     let user;
     try {
       user = await verifyAuth(request);
+      console.log(`[Notify] Linked to User: ${user.uid}`);
     } catch (e) {
-      // Allow anonymous notifications if needed, but preferably linked to user
+      console.log(`[Notify] Anonymous request`);
     }
 
     const client = await clientPromise;
