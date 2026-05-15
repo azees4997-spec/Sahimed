@@ -29,27 +29,42 @@ export async function GET(request: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
     
-    let query = {};
-    if (qRaw) {
-      const terms = qRaw.split(/\s+/).filter(t => t.length > 0);
-      if (terms.length > 0) {
-        // Strict match: ALL terms in the query must be present in the molecule name
-        query = { 
-          $or: [
-            { 
-              $and: terms.map(t => ({ molecule: { $regex: escapeRegExp(t), $options: 'i' } })) 
-            },
-            { masterId: { $regex: qRaw, $options: 'i' } }
-          ]
-        };
-      }
+    let query: any = {};
+    const terms = qRaw ? qRaw.replace(/[()]/g, ' ').split(/\s+/).filter(t => t.length > 0) : [];
+    
+    if (terms.length > 0) {
+      // Strict match: ALL terms in the query must be present in the molecule name
+      query = { 
+        $or: [
+          { 
+            $and: terms.map(t => ({ molecule: { $regex: escapeRegExp(t), $options: 'i' } })) 
+          },
+          { masterId: { $regex: qRaw || "", $options: 'i' } }
+        ]
+      };
     }
 
     const molecules = await db.collection('molecules')
-      .find(query)
-      .sort({ molecule: 1 })
-      .limit(limitValue)
-      .toArray();
+      .aggregate([
+        { $match: query },
+        {
+          $addFields: {
+            isCombination: {
+              $regexMatch: { 
+                input: "$molecule", 
+                regex: /[\+\&]| and /i 
+              }
+            }
+          }
+        },
+        { 
+          $sort: { 
+            isCombination: 1, // false (0) first, then true (1)
+            molecule: 1 
+          } 
+        },
+        { $limit: limitValue }
+      ]).toArray();
 
     // --- AUTOMATIC SEARCH ANALYTICS LOGGING ---
     if (qRaw && qRaw.length >= 2) {

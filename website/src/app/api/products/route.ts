@@ -120,7 +120,7 @@ export async function GET(request: Request) {
 
     let searchOr: any[] = [];
     if (qStr) {
-      const terms = qStr.split(/\s+/).filter(t => t.length > 0);
+      const terms = qStr.replace(/[()]/g, ' ').split(/\s+/).filter(t => t.length > 0);
       if (terms.length > 0) {
         // Create a match condition for a single field where ALL terms must match
         const makeMatchAll = (fieldName: string) => ({
