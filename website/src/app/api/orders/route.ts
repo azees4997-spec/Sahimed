@@ -299,7 +299,6 @@ export async function POST(req: Request) {
     });
     
     // paymentType is already sanitized and included from body
-    const walletUsed = Number(body.walletUsed || body.billingBreakdown?.walletUsed || 0);
     if (walletUsed > 0) {
       const mongoUser = await db.collection('users').findOne({ uid: user.uid });
       const currentBalance = mongoUser?.walletBalance || 0;
