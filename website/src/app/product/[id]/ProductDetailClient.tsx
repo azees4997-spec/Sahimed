@@ -301,20 +301,57 @@ const ComparisonCard = ({
   );
 };
 
+import { useFirestore, useUser } from '@/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+
 // --- MAIN COMPONENT ---
 
 export default function ProductDetailClient({ initialProduct, id }: { initialProduct: any, id: string }) {
   const { toast } = useToast();
+  const { user } = useUser();
+  const db_fs = useFirestore();
   const { addToCart, getItemQuantity } = useCart();
   const [edd, setEdd] = useState<string>('');
   const [activePincode, setActivePincode] = useState<string>('560068');
   const [zone, setZone] = useState<string>('');
 
   useEffect(() => {
-    const stored = typeof window !== 'undefined' ? (localStorage.getItem('activePincode') || '560068') : '560068';
-    setActivePincode(stored);
-    fetchEdd(stored);
-  }, []);
+    const loadPincode = async () => {
+      // 1. Try local storage first
+      const stored = typeof window !== 'undefined' ? (localStorage.getItem('activePincode')) : null;
+      
+      if (stored && stored.length === 6) {
+        setActivePincode(stored);
+        fetchEdd(stored);
+        return;
+      }
+
+      // 2. Try logged in user profile
+      if (user) {
+        try {
+          const profileRef = doc(db_fs, 'userProfiles', user.uid);
+          const snap = await getDoc(profileRef);
+          if (snap.exists()) {
+            const data = snap.data();
+            if (data.pincode && data.pincode.length === 6) {
+              setActivePincode(data.pincode);
+              localStorage.setItem('activePincode', data.pincode);
+              fetchEdd(data.pincode);
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to fetch user profile pincode", e);
+        }
+      }
+
+      // 3. Fallback to default
+      setActivePincode('560068');
+      fetchEdd('560068');
+    };
+
+    loadPincode();
+  }, [user, db_fs]);
 
   const fetchEdd = async (pin: string) => {
     if (!pin || pin.length !== 6) return;
@@ -559,8 +596,8 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                 </div>
               </div>
 
-              <div className="w-full sm:w-auto flex items-center gap-2 pl-3 sm:pl-4 pr-1 py-1 bg-white rounded-full border border-emerald-100 shadow-sm group focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
-                <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+              <div className="w-full sm:w-auto flex items-center gap-1 sm:gap-3 pl-4 sm:pl-6 pr-1.5 py-1.5 bg-white rounded-full border border-emerald-100 shadow-sm group focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
                 <input
                   type="text"
                   maxLength={6}
@@ -569,23 +606,25 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                   onChange={handlePincodeChange}
                   placeholder="Pincode"
                   className={cn(
-                    "bg-transparent border-none outline-none text-[10px] sm:text-xs font-black text-emerald-900 uppercase tracking-wider w-16 sm:w-20",
+                    "bg-transparent border-none outline-none text-[11px] sm:text-sm font-black text-emerald-900 uppercase tracking-[0.1em] w-16 sm:w-24 placeholder:text-slate-300",
                     !isEditingPincode && "cursor-not-allowed opacity-70"
                   )}
                 />
-                <button
-                  onClick={() => setIsEditingPincode(!isEditingPincode)}
-                  className="p-2 hover:bg-emerald-50 rounded-full transition-colors"
-                  title="Edit Pincode"
-                >
-                  <Edit2 className={cn("w-3 h-3 sm:w-4 sm:h-4", isEditingPincode ? "text-emerald-600" : "text-slate-400")} />
-                </button>
-                <button
-                  onClick={onCheckPincode}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[7px] sm:text-[9px] px-3 sm:px-5 py-1.5 sm:py-2 rounded-full uppercase tracking-widest transition-all active:scale-95 shadow-sm ml-1"
-                >
-                  Check
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setIsEditingPincode(!isEditingPincode)}
+                    className="p-1.5 sm:p-2 hover:bg-emerald-50 rounded-full transition-colors shrink-0"
+                    title="Edit Pincode"
+                  >
+                    <Edit2 className={cn("w-3 h-3 sm:w-4 sm:h-4", isEditingPincode ? "text-emerald-600" : "text-slate-400")} />
+                  </button>
+                  <button
+                    onClick={onCheckPincode}
+                    className="h-7 sm:h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[8px] sm:text-[10px] px-4 sm:px-8 rounded-full uppercase tracking-widest transition-all active:scale-95 shadow-md shadow-emerald-600/10 ml-1 flex items-center justify-center shrink-0"
+                  >
+                    Check
+                  </button>
+                </div>
               </div>
             </div>
 
