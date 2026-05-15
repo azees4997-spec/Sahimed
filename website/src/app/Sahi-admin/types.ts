@@ -1,1 +1,1 @@
-export type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'promocodes' | 'fees' | 'categories' | 'customers' | 'stockAlerts' | 'itemMaster' | 'moleculeMaster' | 'banners' | 'admins' | 'pages' | 'searchAnalytics' | 'maintenance' | 'wallet';
+export type AdminTab = 'overview' | 'enquiries' | 'fulfillment' | 'promocodes' | 'fees' | 'categories' | 'customers' | 'stockAlerts' | 'itemMaster' | 'moleculeMaster' | 'banners' | 'admins' | 'pages' | 'searchAnalytics' | 'maintenance' | 'wallet' | 'inventory';

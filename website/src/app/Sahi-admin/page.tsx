@@ -52,6 +52,7 @@ import { AdminProfilesTab } from './components/AdminProfilesTab';
 import { PagesTab } from './components/PagesTab';
 import { SearchAnalyticsTab } from './components/SearchAnalyticsTab';
 import { MaintenanceTab } from './components/MaintenanceTab';
+import { InventoryTab } from './components/InventoryTab';
 
 const MASTER_UIDS = ["BM9HheYflheT0Wyj6olaEnyCAHl1", "RzB6nqlQumg1VEniFcZrgbcDdRA2"];
 
@@ -391,6 +392,7 @@ function AdminConsoleContent() {
               {(permissions.staff_manage || userRole === 'admin') && activeTab === 'admins' && <AdminProfilesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'pages' && <PagesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'searchAnalytics' && <SearchAnalyticsTab onBack={() => handleTabChange('overview')} />}
+              {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'inventory' && <InventoryTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {(permissions.staff_manage || userRole === 'admin') && activeTab === 'maintenance' && <MaintenanceTab onBack={() => handleTabChange('overview')} />}
             </motion.div>
           </AnimatePresence>
