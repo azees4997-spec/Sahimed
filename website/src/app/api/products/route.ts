@@ -21,6 +21,7 @@ export async function GET(request: Request) {
   const moleculeId = searchParams.get('moleculeId');
   const isGeneric = searchParams.get('isGeneric');
   const isBestSeller = searchParams.get('isBestSeller');
+  const isTopSelection = searchParams.get('isTopSelection');
   const marketerName = searchParams.get('marketerName');   // comma-separated list
   const dosageForm = searchParams.get('dosageForm');       // comma-separated list
   const minPrice = searchParams.get('minPrice');
@@ -65,6 +66,12 @@ export async function GET(request: Request) {
     if (isBestSeller !== null) {
       const isTrue = isBestSeller === 'true';
       query.isBestSeller = { $in: [isTrue, isBestSeller] };
+    }
+
+    // 2.5 Handle isTopSelection (Robust)
+    if (isTopSelection !== null) {
+      const isTrue = isTopSelection === 'true';
+      query.isTopSelection = { $in: [isTrue, isTopSelection] };
     }
 
     // 3. Marketer name multi-select filter (Includes Manufacturer fallback)
