@@ -56,6 +56,7 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
   );
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [paymentType, setPaymentType] = useState<'COD' | 'PREPAID'>('COD');
   const storage = useStorage();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -186,8 +187,8 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
         discount: totals.discount,
         promoDiscount: totals.promo,
         promocode: activePromo?.code || null,
-        paymentType: 'COD',
-        status: 'Confirmed',
+        paymentType: paymentType,
+        status: paymentType === 'PREPAID' ? 'Pending Payment' : 'Confirmed',
         orderDate: new Date(),
         prescriptionUrls: prescriptions
       };
@@ -205,7 +206,11 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
       const result = await res.json();
 
       if (res.ok) {
-        toast({ title: "Order created successfully", description: `ID: ${result.orderId}` });
+        if (paymentType === 'PREPAID') {
+           toast({ title: "Order created & SMS Sent", description: `ID: ${result.orderId}. Link sent via Paytm.` });
+        } else {
+           toast({ title: "Order created successfully", description: `ID: ${result.orderId}` });
+        }
         onSuccess();
       } else {
         throw new Error(result.error || 'Failed to create order');
@@ -434,8 +439,26 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
              </div>
           </div>
           
+          <div className="bg-white p-6 rounded-[32px] border shadow-sm space-y-4">
+             <h4 className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Payment Method</h4>
+             <div className="flex gap-4">
+               <button 
+                 onClick={() => setPaymentType('COD')}
+                 className={cn("flex-1 p-4 rounded-2xl border-2 font-black text-xs transition-all", paymentType === 'COD' ? "border-primary bg-primary/5 text-primary" : "border-gray-100 text-gray-400")}
+               >
+                 Cash on Delivery
+               </button>
+               <button 
+                 onClick={() => setPaymentType('PREPAID')}
+                 className={cn("flex-1 p-4 rounded-2xl border-2 font-black text-xs transition-all", paymentType === 'PREPAID' ? "border-primary bg-primary/5 text-primary" : "border-gray-100 text-gray-400")}
+               >
+                 Prepaid (Paytm SMS)
+               </button>
+             </div>
+          </div>
+          
           <Button disabled={isSubmitting || items.length === 0} onClick={handleSubmit} className="w-full h-16 rounded-full font-black bg-primary text-white shadow-xl shadow-primary/20 disabled:grayscale">
-            {isSubmitting ? <Loader2 className="animate-spin" /> : "Confirm Order (COD)"}
+            {isSubmitting ? <Loader2 className="animate-spin" /> : (paymentType === 'PREPAID' ? "Send Payment Link (SMS)" : "Confirm Order (COD)")}
           </Button>
         </div>
       </div>

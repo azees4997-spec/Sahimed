@@ -163,5 +163,77 @@ export class PaytmService {
     }
   }
 
-  // generateSignature removed as it's in PaytmChecksum
+  /**
+   * Generates a Paytm Payment Link and optionally notifies customer via SMS
+   */
+  static async createPaymentLink(
+    orderId: string,
+    amount: number,
+    customerMobile: string,
+    customerName: string = 'Customer'
+  ) {
+    const baseUrl = this.ENV === 'PROD' 
+      ? 'https://securegw.paytm.in' 
+      : 'https://securegw-stage.paytm.in';
+    
+    // Create a robust, unguessable reference ID to track the link internally
+    const linkOrderId = `${orderId.replace(/[^a-zA-Z0-9_-]/g, '')}-${Date.now()}`;
+
+    const bodyData = {
+      mid: this.MID,
+      linkType: "GENERIC",
+      linkDescription: `Payment for Sahimed Order ${orderId}`,
+      linkName: `Sahimed Order ${orderId}`,
+      amount: parseFloat(amount.toString()).toFixed(2),
+      merchantRequestId: linkOrderId,
+      customerContact: {
+        customerName: customerName.substring(0, 50),
+        customerMobile: customerMobile.replace(/\D/g, '').slice(-10)
+      },
+      notifyBy: ["SMS"]
+    };
+
+    try {
+      const bodyString = JSON.stringify(bodyData);
+      const signature = await PaytmChecksum.generateSignature(bodyString, this.MKEY);
+      
+      const paytmParams = {
+        head: {
+          tokenType: "AES",
+          signature: signature
+        },
+        body: bodyData
+      };
+
+      const url = `${baseUrl}/link/create`;
+      console.log(`[Paytm Payment Link Request] URL: ${url}`);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paytmParams)
+      });
+
+      const result = await response.json();
+      console.log(`[Paytm Payment Link Response]`, JSON.stringify(result));
+      
+      if (result.body && result.body.resultInfo && result.body.resultInfo.resultStatus === 'SUCCESS') {
+        return {
+          success: true,
+          linkId: result.body.linkId,
+          shortUrl: result.body.shortUrl,
+          merchantRequestId: linkOrderId
+        };
+      } else {
+        return {
+          success: false,
+          error: result.body?.resultInfo?.resultMsg || 'Failed to generate link',
+          details: result.body?.resultInfo
+        };
+      }
+    } catch (err: any) {
+      console.error(`[Paytm Payment Link Error]`, err);
+      throw err;
+    }
+  }
 }

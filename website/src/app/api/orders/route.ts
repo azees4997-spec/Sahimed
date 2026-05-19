@@ -339,7 +339,7 @@ export async function POST(req: Request) {
       });
     }
 
-    const orderData = {
+    const orderData: any = {
       ...sanitizedBody,
       orderId: nextId,
       orderDate: new Date(), // ALWAYS capture real server time
@@ -352,6 +352,23 @@ export async function POST(req: Request) {
       ],
       shipping: body.shipping || { partner: 'Shipway' }
     };
+
+    if (orderData.paymentType === 'PREPAID') {
+      try {
+        const { PaytmService } = await import('@/lib/payments/paytm');
+        const linkRes = await PaytmService.createPaymentLink(
+          nextId,
+          orderData.totalAmount,
+          orderData.phoneNumber,
+          orderData.patientName
+        );
+        if (linkRes.success && linkRes.shortUrl) {
+          orderData.paymentLinkUrl = linkRes.shortUrl;
+        }
+      } catch (err: any) {
+         console.error("[Paytm Link Generation Error]", err);
+      }
+    }
 
     const result = await db.collection('orders').insertOne(orderData);
 
