@@ -300,7 +300,35 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
   };
 
   const handleExport = () => {
-    // ... existing export code ...
+    if (!orders || orders.length === 0) return;
+    const headers = ["Order ID", "Date", "Patient Name", "Phone", "Address", "City", "PIN", "Items", "MRP", "Discount", "Fees", "Net Amount", "Status"];
+    const rows = orders.map(order => {
+      const itemsStr = (order.items || []).map((it: any) => `${it.name} x${it.quantity}`).join(" | ");
+      const fullAddr = `${order.shippingDetails?.houseNumber ? order.shippingDetails.houseNumber + ', ' : ''}${order.shippingDetails?.street || ''}`;
+      
+      return [
+        order.orderId, 
+        safeFormat(order.orderDate, 'yyyy-MM-dd HH:mm'), 
+        order.patientName, 
+        order.phoneNumber, 
+        `"${fullAddr.replace(/"/g, '""')}"`, 
+        order.shippingDetails?.city || '',
+        order.shippingDetails?.pincode || '',
+        `"${itemsStr.replace(/"/g, '""')}"`,
+        order.billingBreakdown?.grossMrp || '',
+        order.billingBreakdown?.campaignDiscount || '',
+        order.billingBreakdown?.deliveryFees || '',
+        order.totalAmount,
+        order.status
+      ].join(",");
+    });
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `orders_${safeFormat(new Date(), 'yyyyMMdd')}.csv`;
+    a.click();
   };
 
   const syncShipwayManual = async () => {
@@ -341,36 +369,6 @@ ${itemsStr}
 
     navigator.clipboard.writeText(text);
     toast({ title: "Copied!", description: "Order info copied for WhatsApp." });
-  };
-    if (!orders || orders.length === 0) return;
-    const headers = ["Order ID", "Date", "Patient Name", "Phone", "Address", "City", "PIN", "Items", "MRP", "Discount", "Fees", "Net Amount", "Status"];
-    const rows = orders.map(order => {
-      const itemsStr = (order.items || []).map((it: any) => `${it.name} x${it.quantity}`).join(" | ");
-      const fullAddr = `${order.shippingDetails?.houseNumber ? order.shippingDetails.houseNumber + ', ' : ''}${order.shippingDetails?.street || ''}`;
-      
-      return [
-        order.orderId, 
-        safeFormat(order.orderDate, 'yyyy-MM-dd HH:mm'), 
-        order.patientName, 
-        order.phoneNumber, 
-        `"${fullAddr.replace(/"/g, '""')}"`, 
-        order.shippingDetails?.city || '',
-        order.shippingDetails?.pincode || '',
-        `"${itemsStr.replace(/"/g, '""')}"`,
-        order.billingBreakdown?.grossMrp || '',
-        order.billingBreakdown?.campaignDiscount || '',
-        order.billingBreakdown?.deliveryFees || '',
-        order.totalAmount,
-        order.status
-      ].join(",");
-    });
-    const csv = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `orders_${safeFormat(new Date(), 'yyyyMMdd')}.csv`;
-    a.click();
   };
 
   const handlePrint = (order: any) => {
