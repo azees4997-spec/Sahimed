@@ -124,7 +124,7 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
       id: prod._id, 
       name: prod.name, 
       mrp: prod.mrp || 0, 
-      price: prod.sahimed_price || prod.mrp || 0, 
+      price: prod.sahimed_price || prod.price || prod.mrp || 0, 
       qty: 1,
       rx: prod.prescriptionRequired || false 
     }]);
@@ -284,7 +284,7 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
                         <p className="text-xs font-black">{p.name}</p>
                         {p.prescriptionRequired && <Badge className="bg-red-50 text-red-500 text-[8px] border-none font-black uppercase">RX</Badge>}
                       </div>
-                      <p className="text-[10px] font-bold text-gray-400">₹{p.sahimed_price} <span className="line-through opacity-50 ml-1">₹{p.mrp}</span></p>
+                      <p className="text-[10px] font-bold text-gray-400">₹{p.sahimed_price || p.price} <span className="line-through opacity-50 ml-1">₹{p.mrp}</span></p>
                     </div>
                     <Plus className="w-4 h-4 text-primary opacity-0 group-hover:opacity-100 transition-all" />
                   </button>
