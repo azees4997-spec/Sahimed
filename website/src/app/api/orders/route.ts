@@ -451,6 +451,13 @@ export async function POST(req: Request) {
         // Note: MongoDB insert was successful, so the order exists, but visibility in Firestore is pending.
       }
     }
+    // Trigger Email Notification for New Orders
+    try {
+      const { sendOrderNotification } = await import('@/lib/email-service');
+      await sendOrderNotification(orderData, 'NEW_ORDER');
+    } catch (emailErr: any) {
+      console.error("[Email Notification Error]", emailErr.message);
+    }
 
     return NextResponse.json({ success: true, id: result.insertedId, orderId: nextId });
   } catch (err: any) {
@@ -852,6 +859,19 @@ export async function PUT(req: Request) {
       console.error(`[Firebase Sync Error] Failed to sync order ${id}:`, fsErr.message);
     }
     
+    // Trigger Email Notification for Status Updates
+    try {
+      if (updates.status) {
+        const orderForEmail = await db.collection('orders').findOne({ _id: new ObjectId(id) });
+        if (orderForEmail) {
+          const { sendOrderNotification } = await import('@/lib/email-service');
+          await sendOrderNotification(orderForEmail, 'STATUS_UPDATE');
+        }
+      }
+    } catch (emailErr: any) {
+      console.error("[Email Notification Error]", emailErr.message);
+    }
+
     return NextResponse.json({ 
       success: true, 
       modifiedCount: result.modifiedCount,
