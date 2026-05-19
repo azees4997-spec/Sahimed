@@ -32,6 +32,8 @@ export async function GET(req: Request) {
     const start = searchParams.get('start');
     const end = searchParams.get('end');
     const searchTerm = searchParams.get('search');
+    const paymentMethodRaw = searchParams.get('paymentMethod');
+    const paymentMethod = paymentMethodRaw && paymentMethodRaw !== 'All' ? escapeRegExp(paymentMethodRaw) : null;
     
     const query: any = {};
     const andConditions: any[] = [];
@@ -113,7 +115,11 @@ export async function GET(req: Request) {
 
     // 2. Status Filter
     if (status) {
-      andConditions.push({ status: { $regex: new RegExp(status, 'i') } });
+      andConditions.push({ status: { $regex: new RegExp(`^${status}$`, 'i') } });
+    }
+
+    if (paymentMethod) {
+      andConditions.push({ paymentMethod: { $regex: new RegExp(`^${paymentMethod}$`, 'i') } });
     }
 
     // 3. Date Filter
