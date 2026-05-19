@@ -408,7 +408,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
 
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
         <div className="bg-white/60 backdrop-blur-md p-1.5 rounded-full border border-white shadow-xl flex w-fit gap-1.5 overflow-x-auto no-scrollbar">
-          {['All', 'Pending', 'Pending Pharmacist', 'Pending Consult', 'Confirmed', 'Packing', 'Packed', 'Shipped', 'Delivered', 'Returned', 'Cancelled'].map((status) => (
+          {['All', 'Pending', 'Pending Pharmacist', 'Pending Consult', 'Confirmed', 'Packed', 'In Transit', 'Out for Delivery', 'Delivered', 'Returned', 'Cancelled'].map((status) => (
             <button key={status} onClick={() => setStatusFilter(status)} className={cn("px-6 py-3.5 rounded-full text-[9px] font-black tracking-[0.2em] transition-all uppercase whitespace-nowrap", statusFilter === status ? "bg-primary text-white shadow-lg shadow-primary/30" : "text-slate-400 hover:bg-white/80")}>{status}</button>
           ))}
         </div>
@@ -459,7 +459,9 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                       order.status === 'Pending Pharmacist' ? "bg-orange-500 text-white shadow-sm" :
                       order.status === 'Pending Consult' ? "bg-emerald-100 text-emerald-600 border border-emerald-200" :
                       order.status === 'Confirmed' ? "bg-blue-100 text-blue-600" :
-                      order.status === 'Shipped' ? "bg-purple-100 text-purple-600" :
+                      order.status === 'Packed' ? "bg-orange-100 text-orange-600" :
+                      order.status === 'In Transit' ? "bg-purple-100 text-purple-600" :
+                      order.status === 'Out for Delivery' ? "bg-indigo-100 text-indigo-600" :
                       order.status === 'Delivered' ? "bg-green-100 text-green-600" :
                       order.status === 'Returned' ? "bg-orange-100 text-orange-600" :
                       order.status === 'Cancelled' ? "bg-red-100 text-red-600" : "bg-gray-100"
@@ -560,7 +562,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
             ) : nextStatus ? (
                <div className="space-y-6">
                  <h3 className="text-sm font-black">Finalize status: {nextStatus}</h3>
-                 {(nextStatus === 'Shipped' || nextStatus === 'Returned') && (
+                 {(nextStatus === 'In Transit' || nextStatus === 'Returned') && (
                      <div className="space-y-4">
                        <div className="p-6 bg-primary/5 border-2 border-primary/20 rounded-2xl">
                          <p className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
@@ -579,7 +581,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                  )}
                  <Button 
                    disabled={isUpdating}
-                   onClick={() => updateOrderStatus(selectedOrder._id, nextStatus, (nextStatus === 'Shipped' || nextStatus === 'Returned') ? { shipping: shippingInfo } : nextStatus === 'Cancelled' ? { cancellationReason: cancelReason } : {})} 
+                   onClick={() => updateOrderStatus(selectedOrder._id, nextStatus, (nextStatus === 'In Transit' || nextStatus === 'Returned') ? { shipping: shippingInfo } : nextStatus === 'Cancelled' ? { cancellationReason: cancelReason } : {})} 
                    className="w-full h-16 rounded-full font-black bg-primary text-white shadow-xl transition-all active:scale-95 disabled:opacity-50"
                  >
                    {isUpdating ? <Loader2 className="w-5 h-5 animate-spin mx-auto text-white" /> : "Confirm update"}
@@ -677,7 +679,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                 )}
 
                 {/* Shipway Live Tracking History */}
-                {(!selectedOrder?.shipping?.awb && ['Confirmed', 'Packed', 'Shipped'].includes(selectedOrder?.status)) ? (
+                {(!selectedOrder?.shipping?.awb && ['Confirmed', 'Packed', 'In Transit'].includes(selectedOrder?.status)) ? (
                   <div className="bg-orange-50/50 p-8 rounded-[40px] border border-orange-100 space-y-6">
                     <h4 className="text-xs font-black text-orange-600 uppercase tracking-widest flex items-center gap-2">
                       <Truck className="w-5 h-5 text-orange-500" /> Shipway Logistics
@@ -767,7 +769,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                         </div>
                       </div>
                     ) : (
-                      ['Packing', 'Packed', 'Shipped', 'Delivered', 'Returned', 'Cancelled'].map(s => (
+                      ['Confirmed', 'Packed', 'In Transit', 'Out for Delivery', 'Delivered', 'Returned', 'Cancelled'].map(s => (
                         <Button key={s} variant="outline" onClick={() => setNextStatus(s)} className={cn("rounded-[32px] h-20 font-black text-xs border-4 uppercase tracking-widest", selectedOrder?.status === s ? "border-primary bg-primary/5 text-primary shadow-lg" : "text-gray-400 border-slate-100 hover:bg-white")}>{s}</Button>
                       ))
                     )}
