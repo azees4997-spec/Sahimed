@@ -375,8 +375,8 @@ export class ShipwayService {
    * Can be used for tracking order status updates based on shipment_status.
    */
   static async getOrders(params: {
-    orderid?: string;
-    awb_number?: string;
+    order_id?: string;
+    awb?: string;
     tags?: string;
     date_from?: string;
     date_to?: string;
@@ -387,17 +387,15 @@ export class ShipwayService {
   }) {
     try {
       const headers = this.getHeaders();
-      const payload = { ...params };
+      const queryParams = new URLSearchParams(params as any).toString();
       
-      const response = await fetch(`${this.API_URL}/getorders`, {
-        method: 'POST', // Most Shipway APIs default to POST with JSON payload for data retrieval, but if it expects GET we can append query string
-        headers,
-        body: JSON.stringify(payload),
+      const response = await fetch(`${this.API_URL}/getorders?${queryParams}`, {
+        method: 'GET',
+        headers
       });
 
-      // Let's also support GET if POST fails gracefully or as fallback, but typically Shipway uses JSON POST for their endpoints like pushOrderData
       const data = await response.json().catch(() => ({}));
-      return { success: response.ok, data };
+      return { success: response.ok && data.success === 1, data };
     } catch (err: any) {
       console.error("[Shipway] getorders failed:", err.message);
       return { success: false, error: err.message };
