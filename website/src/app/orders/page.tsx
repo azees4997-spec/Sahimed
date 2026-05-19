@@ -76,6 +76,33 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [trackingHistory, setTrackingHistory] = useState<any>(null);
+  const [isTrackingLoading, setIsTrackingLoading] = useState(false);
+
+  useEffect(() => {
+    if (selectedOrder?.shipping?.awb) {
+      const fetchTracking = async () => {
+        setIsTrackingLoading(true);
+        try {
+          const token = await user?.getIdToken();
+          const res = await fetch(`/api/orders/track?awb=${selectedOrder.shipping.awb}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (!res.ok) throw new Error('Tracking fetch failed');
+          const data = await res.json();
+          setTrackingHistory(data);
+        } catch (err) {
+          console.error("Failed to fetch tracking history", err);
+          setTrackingHistory(null);
+        } finally {
+          setIsTrackingLoading(false);
+        }
+      };
+      fetchTracking();
+    } else {
+      setTrackingHistory(null);
+    }
+  }, [selectedOrder?.shipping?.awb, user]);
 
   // BUG-C2 FIX: Replaced Firestore read with MongoDB API fetch (same source as mobile app)
   // This ensures orders placed on mobile AND web both appear correctly
@@ -382,37 +409,57 @@ export default function OrdersPage() {
                     </div>
                   </div>
 
-                  {(selectedOrder?.shipping?.trackingData || selectedOrder?.returnShipping?.trackingData) && (
+                  {/* Live Shipway Tracking History */}
+                  {selectedOrder?.shipping?.awb && (
                     <div className="space-y-6">
                       <h4 className="text-[10px] font-black tracking-[0.3em] text-slate-400 flex items-center gap-4 uppercase opacity-60">
-                        <Truck className="w-4 h-4" /> Logistics Tracking
+                        <Truck className="w-4 h-4" /> Live Tracking Activity
                       </h4>
-                      <div className="bg-white/60 backdrop-blur-md p-8 rounded-[40px] border border-white shadow-xl space-y-4">
-                        {selectedOrder?.shipping?.trackingData && (
-                          <div className="space-y-2">
-                            <p className="text-[9px] font-black text-primary uppercase tracking-widest">Forward Shipment (AWB: {selectedOrder.shipping.awb})</p>
-                            <div className="flex items-center gap-3">
-                              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                              <p className="font-bold text-sm uppercase text-slate-900">{selectedOrder.shipping.trackingData.status || 'In Transit'}</p>
-                            </div>
-                            {selectedOrder.shipping.trackingData.message && (
-                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{selectedOrder.shipping.trackingData.message}</p>
-                            )}
+                      <div className="bg-white/60 backdrop-blur-md p-8 rounded-[40px] border border-white shadow-xl space-y-6">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[9px] font-black text-primary uppercase tracking-widest">Courier Partner</p>
+                          <span className="text-[9px] bg-primary/10 text-primary px-3 py-1 rounded-full font-black">AWB: {selectedOrder.shipping.awb}</span>
+                        </div>
+                        
+                        {isTrackingLoading ? (
+                          <div className="flex items-center gap-3 text-primary text-xs font-bold uppercase py-4">
+                            <Loader2 className="w-5 h-5 animate-spin" /> Fetching latest movement...
+                          </div>
+                        ) : trackingHistory?.success === false || trackingHistory?.data?.tracking_data?.track_status === 0 || !trackingHistory?.data?.tracking_data?.track_details ? (
+                          <div className="py-4">
+                            <p className="text-xs font-bold text-slate-400">Shipment has been scheduled.</p>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Live tracking will appear once picked up by courier.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-6 pt-4 border-t border-dashed border-slate-200">
+                            {trackingHistory.data.tracking_data.track_details.slice().reverse().map((entry: any, idx: number, arr: any[]) => (
+                              <div key={idx} className="flex gap-6 items-start relative">
+                                {idx !== arr.length - 1 && (
+                                  <div className="absolute left-[15px] top-8 -bottom-6 w-0.5 bg-primary/20" />
+                                )}
+                                <div className={cn(
+                                  "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-4 border-white shadow-md",
+                                  idx === 0 ? "bg-primary text-white scale-110" : "bg-primary/10 text-primary/40"
+                                )}>
+                                  <div className="w-2 h-2 rounded-full bg-current" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <p className={cn("text-sm font-black uppercase tracking-tight", 
+                                      idx === 0 ? "text-primary" : "text-slate-600"
+                                    )}>
+                                      {entry.status || entry.activity || entry.scan_status || 'Update'}
+                                    </p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase whitespace-nowrap">
+                                      {entry.time} | {entry.date}
+                                    </p>
+                                  </div>
+                                  <p className="text-xs font-bold text-slate-400 mt-1">{entry.location}</p>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         )}
-                        {selectedOrder?.returnShipping?.trackingData && (
-                          <div className="space-y-2 pt-4 border-t border-dashed">
-                            <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest">Return Shipment (AWB: {selectedOrder.returnShipping.awb})</p>
-                            <div className="flex items-center gap-3">
-                              <div className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
-                              <p className="font-bold text-sm uppercase text-slate-900">{selectedOrder.returnShipping.trackingData.status || 'In Transit'}</p>
-                            </div>
-                            {selectedOrder.returnShipping.trackingData.message && (
-                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{selectedOrder.returnShipping.trackingData.message}</p>
-                            )}
-                          </div>
-                        )}
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest pt-2">Tracking updates every 1 hour</p>
                       </div>
                     </div>
                   )}

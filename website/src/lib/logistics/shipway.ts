@@ -412,5 +412,39 @@ export class ShipwayService {
       console.error("[Shipway] getorders failed:", err.message);
       return { success: false, error: err.message };
     }
+
+  /**
+   * Tracks a shipment using the getOrderShipmentDetails API.
+   * Returns the current status and transit history.
+   */
+  static async trackShipment(awb: string) {
+    try {
+      const payload = {
+        awb: awb,
+        carrier_id: 0
+      };
+
+      const response = await fetch('https://shipway.in/api/getOrderShipmentDetails', {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+      
+      // UsuallyShipway returns something like { status: 'Success', tracking_details: [...] }
+      if (!response.ok || data.status === 'error' || data.status === 'Failed') {
+        console.error(`[Shipway] Tracking Error:`, data.message || data.error);
+        return { success: false, error: data.message || data.error || 'Tracking failed' };
+      }
+
+      return {
+        success: true,
+        data: data
+      };
+    } catch (err: any) {
+      console.error("[Shipway] Tracking failed:", err.message);
+      return { success: false, error: err.message };
+    }
   }
 }
