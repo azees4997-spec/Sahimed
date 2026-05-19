@@ -1007,7 +1007,7 @@ ${itemsStr}
                   )}
                   
                   <div className="pt-8 border-t border-dashed border-slate-200 mt-8">
-                    {confirmDeleteId === selectedOrder._id ? (
+                    {confirmDeleteId === selectedOrder?._id ? (
                       <div className="space-y-3">
                         <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest text-center">Are you sure? This is permanent.</p>
                         <div className="flex gap-4">
