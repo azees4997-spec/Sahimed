@@ -615,7 +615,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                         onClick={() => updateOrderStatus(selectedOrder._id, selectedOrder.status, { action: 'push_to_shipway' })}
                         className="rounded-full bg-orange-500 hover:bg-orange-600 font-bold tracking-widest text-xs h-10 px-6"
                       >
-                        Push to Shipway
+                        Pull AWB / Push to Shipway
                       </Button>
                     </div>
                   </div>
