@@ -156,11 +156,28 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [paymentFilter, setPaymentFilter] = useState('All');
   const [page, setPage] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [metrics, setMetrics] = useState<any>(null);
   const { user } = useUser();
   const { toast } = useToast();
+
+  const fetchMetrics = async () => {
+    try {
+      const token = await user?.getIdToken();
+      let url = '/api/orders/metrics?';
+      if (startDate) url += `&start=${startDate}`;
+      if (endDate) url += `&end=${endDate}`;
+      const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) {
+        setMetrics(await res.json());
+      }
+    } catch (err) {
+      console.error('Error fetching metrics', err);
+    }
+  };
 
   const fetchOrders = async () => {
     setIsLoading(true);
@@ -170,6 +187,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
       if (startDate) sp.append('start', startDate);
       if (endDate) sp.append('end', endDate);
       if (searchTerm) sp.append('search', searchTerm);
+      if (paymentFilter !== 'All') sp.append('paymentMethod', paymentFilter);
       sp.append('page', page.toString());
       sp.append('limit', '50');
       
@@ -200,8 +218,12 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
     }
   };
 
-  useEffect(() => { fetchOrders(); }, [statusFilter, startDate, endDate, searchTerm, page]);
-  useEffect(() => { setPage(1); }, [statusFilter, startDate, endDate, searchTerm]);
+  useEffect(() => { 
+    fetchOrders(); 
+    fetchMetrics();
+  }, [statusFilter, startDate, endDate, searchTerm, paymentFilter, page]);
+  
+  useEffect(() => { setPage(1); }, [statusFilter, startDate, endDate, searchTerm, paymentFilter]);
 
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [nextStatus, setNextStatus] = useState<any>(null);
@@ -277,6 +299,48 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
   };
 
   const handleExport = () => {
+    // ... existing export code ...
+  };
+
+  const syncShipwayManual = async () => {
+    setIsUpdating(true);
+    try {
+      const token = await user?.getIdToken();
+      const res = await fetch('/api/cron/shipway-sync', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        toast({ title: 'Sync Successful', description: 'Logistics statuses updated.' });
+        fetchOrders();
+        fetchMetrics();
+      } else {
+        throw new Error('Sync failed');
+      }
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Sync Error', description: e.message });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const copyToWhatsApp = (order: any) => {
+    const itemsStr = (order.items || []).map((it: any) => `- ${it.name} x${it.quantity}`).join("\n");
+    const fullAddr = `${order.shippingDetails?.houseNumber ? order.shippingDetails.houseNumber + ', ' : ''}${order.shippingDetails?.street || ''}, ${order.shippingDetails?.city || ''} - ${order.shippingDetails?.pincode || ''}`;
+    
+    const text = `*Order ID:* ${order.orderId}
+*Name:* ${order.patientName}
+*Phone:* ${order.phoneNumber}
+*Address:* ${fullAddr}
+
+*Items:*
+${itemsStr}
+
+*Amount:* ₹${Number(order.totalAmount).toFixed(2)} (${order.paymentMethod || 'COD'})
+*Status:* ${order.status}`;
+
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied!", description: "Order info copied for WhatsApp." });
+  };
     if (!orders || orders.length === 0) return;
     const headers = ["Order ID", "Date", "Patient Name", "Phone", "Address", "City", "PIN", "Items", "MRP", "Discount", "Fees", "Net Amount", "Status"];
     const rows = orders.map(order => {
@@ -381,6 +445,26 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
 
   return (
     <div className="space-y-10">
+      {metrics && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-2">
+          <div className="bg-orange-50/50 border border-orange-100 p-6 rounded-3xl flex flex-col items-center justify-center shadow-sm">
+            <span className="text-3xl font-black text-orange-500">{metrics.pendingApproval}</span>
+            <span className="text-[10px] font-bold text-orange-600/70 uppercase tracking-widest mt-1">Pending Approval</span>
+          </div>
+          <div className="bg-blue-50/50 border border-blue-100 p-6 rounded-3xl flex flex-col items-center justify-center shadow-sm">
+            <span className="text-3xl font-black text-blue-500">{metrics.readyToPack}</span>
+            <span className="text-[10px] font-bold text-blue-600/70 uppercase tracking-widest mt-1">Ready to Pack</span>
+          </div>
+          <div className="bg-purple-50/50 border border-purple-100 p-6 rounded-3xl flex flex-col items-center justify-center shadow-sm">
+            <span className="text-3xl font-black text-purple-500">{metrics.inTransit}</span>
+            <span className="text-[10px] font-bold text-purple-600/70 uppercase tracking-widest mt-1">In Transit</span>
+          </div>
+          <div className="bg-emerald-50/50 border border-emerald-100 p-6 rounded-3xl flex flex-col items-center justify-center shadow-sm">
+            <span className="text-3xl font-black text-emerald-500">₹{metrics.totalRevenue?.toLocaleString()}</span>
+            <span className="text-[10px] font-bold text-emerald-600/70 uppercase tracking-widest mt-1">Net Revenue</span>
+          </div>
+        </div>
+      )}
       <SectionHeader title="Order Fulfillment" subtitle="Manage and track customer orders" onBack={onBack}>
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-4 bg-white/60 backdrop-blur-md rounded-full px-6 h-14 border border-slate-200 shadow-sm min-w-[300px]">
@@ -430,6 +514,23 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
               </Button>
             )}
           </div>
+          
+          <div className="flex items-center gap-2 bg-slate-100 rounded-full px-2 h-14 border border-slate-200 shadow-inner min-w-[200px]">
+            <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+              <SelectTrigger className="w-full h-10 bg-white rounded-full border-none shadow-sm text-xs font-bold px-4">
+                <SelectValue placeholder="Payment Method" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Payments</SelectItem>
+                <SelectItem value="COD">Cash on Delivery</SelectItem>
+                <SelectItem value="Prepaid">Prepaid</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button onClick={syncShipwayManual} disabled={isUpdating} variant="outline" className="rounded-full h-14 px-8 font-black text-[10px] border-2 gap-3 uppercase tracking-widest hover:bg-white transition-all active:scale-95 border-purple-500/20 text-purple-600">
+            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />} Sync Logistics
+          </Button>
           <Button onClick={handleExport} variant="outline" className="rounded-full h-14 px-8 font-black text-[10px] border-2 gap-3 uppercase tracking-widest hover:bg-white transition-all active:scale-95 border-primary/20 text-primary">
             <Download className="w-4 h-4" /> Export Ledger
           </Button>
@@ -453,6 +554,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                 <th className="px-8 py-6">Date</th>
                 <th className="px-8 py-6">Patient</th>
                 <th className="px-8 py-6">Address</th>
+                <th className="px-8 py-6 text-center">Payment</th>
                 <th className="px-8 py-6">Status</th>
                 <th className="px-8 py-6 text-right">Amount</th>
                 <th className="px-8 py-6 text-right">Action</th>
@@ -476,13 +578,20 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                   <td className="px-8 py-6 font-black text-xs uppercase">{order.orderId}</td>
                   <td className="px-8 py-6 text-[10px] font-black">{safeFormat(order.orderDate, 'dd MMM yyyy HH:mm')}</td>
                   <td className="px-8 py-6"><p className="font-bold text-xs">{order.patientName}</p><p className="text-[10px] text-gray-400">{order.phoneNumber}</p></td>
-                  <td className="px-8 py-6 max-w-[250px]">
+                  <td className="px-8 py-6">
                     <p className="text-[10px] font-bold text-gray-600 line-clamp-1 uppercase">
                       {order.shippingDetails?.houseNumber ? `${order.shippingDetails.houseNumber}, ` : ''}{order.shippingDetails?.street}
                     </p>
                     <p className="text-[9px] font-black text-primary opacity-60 uppercase tracking-tighter">
                       {order.shippingDetails?.city} - {order.shippingDetails?.pincode}
                     </p>
+                  </td>
+                  <td className="px-8 py-6 text-center">
+                    {order.paymentMethod === 'Prepaid' ? (
+                      <Badge className="bg-emerald-100 text-emerald-600 font-black text-[9px] pointer-events-none border-0 shadow-none px-2 h-5">P</Badge>
+                    ) : (
+                      <Badge className="bg-orange-100 text-orange-600 font-black text-[9px] pointer-events-none border-0 shadow-none px-2 h-5">C</Badge>
+                    )}
                   </td>
                   <td className="px-8 py-6">
                     <Badge className={cn("font-black text-[8px] whitespace-nowrap pointer-events-none border-0", 
@@ -502,8 +611,9 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                   </td>
                   <td className="px-8 py-6 text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)}><Eye className="w-4 h-4 text-primary" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(order); setIsEditing(true); }}><Edit2 className="w-4 h-4 text-gray-300" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => copyToWhatsApp(order)} title="Copy Info"><FileText className="w-4 h-4 text-emerald-500" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)} title="View Order"><Eye className="w-4 h-4 text-primary" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(order); setIsEditing(true); }} title="Edit Order"><Edit2 className="w-4 h-4 text-gray-300" /></Button>
                     </div>
                   </td>
                 </tr>
