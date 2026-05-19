@@ -74,14 +74,15 @@ export async function GET(request: Request) {
       query.isTopSelection = { $in: [isTrue, isTopSelection] };
     }
 
+    let andConditions: any[] = [];
+
     // 3. Marketer name multi-select filter (Includes Manufacturer fallback)
     if (marketerName) {
       const names = marketerName.split(',').map(n => n.trim()).filter(Boolean);
       const marketerQueries = names.map(n => ({ marketer_name: { $regex: escapeRegExp(n), $options: 'i' } }));
       const manufacturerQueries = names.map(n => ({ manufacturer: { $regex: escapeRegExp(n), $options: 'i' } }));
       
-      query.$or = query.$or || [];
-      query.$or.push({ $or: [...marketerQueries, ...manufacturerQueries] });
+      andConditions.push({ $or: [...marketerQueries, ...manufacturerQueries] });
     }
 
     // 4. Dosage form multi-select filter
@@ -89,8 +90,7 @@ export async function GET(request: Request) {
       const forms = dosageForm.split(',').map(f => f.trim()).filter(Boolean);
       const dosageQueries = forms.map(f => ({ dosage_form: { $regex: escapeRegExp(f), $options: 'i' } }));
       
-      query.$or = query.$or || [];
-      query.$or.push({ $or: dosageQueries });
+      andConditions.push({ $or: dosageQueries });
     }
 
     // 5. Price range filter
@@ -102,35 +102,50 @@ export async function GET(request: Request) {
 
     let moleculeOr: any[] = [];
     if (moleculeId) {
+      let objectIdFromMol: ObjectId | null = null;
       try {
         if (moleculeId.length === 24) {
-          moleculeOr = [
-            { moleculeId: moleculeId },
-            { moleculeId: new ObjectId(moleculeId) }
-          ];
-        } else {
-          moleculeOr = [{ moleculeId: moleculeId }];
+          objectIdFromMol = new ObjectId(moleculeId);
         }
+      } catch (e) {}
 
+      moleculeOr = [{ moleculeId: moleculeId }];
+      if (objectIdFromMol) {
+        moleculeOr.push({ moleculeId: objectIdFromMol });
+      }
+
+      try {
         // AUTO-MAPPING FALLBACK
-        const moleculeDoc = await db.collection('molecules').findOne(
-          (moleculeId.length === 24 ? { _id: new ObjectId(moleculeId) } : { _id: moleculeId }) as any
-        );
+        const moleculeQuery = objectIdFromMol 
+          ? { $or: [{ _id: objectIdFromMol }, { _id: moleculeId }] }
+          : { _id: moleculeId };
+
+        const moleculeDoc = await db.collection('molecules').findOne(moleculeQuery as any);
         
         if (moleculeDoc && (moleculeDoc.molecule || moleculeDoc.name)) {
-          const saltName = moleculeDoc.molecule || moleculeDoc.name;
-          moleculeOr.push({ saltComposition: { $regex: saltName, $options: 'i' } });
-          moleculeOr.push({ salt: { $regex: saltName, $options: 'i' } });
-          moleculeOr.push({ composition: { $regex: saltName, $options: 'i' } });
+          let saltName = moleculeDoc.molecule || moleculeDoc.name;
+          const baseNameMatch = saltName.split(/[\s(]/)[0];
+          if (baseNameMatch && baseNameMatch.length > 2) {
+             const safeBaseName = escapeRegExp(baseNameMatch);
+             moleculeOr.push({ saltComposition: { $regex: safeBaseName, $options: 'i' } });
+             moleculeOr.push({ salt: { $regex: safeBaseName, $options: 'i' } });
+             moleculeOr.push({ composition: { $regex: safeBaseName, $options: 'i' } });
+          } else {
+             const safeSaltName = escapeRegExp(saltName);
+             moleculeOr.push({ saltComposition: { $regex: safeSaltName, $options: 'i' } });
+             moleculeOr.push({ salt: { $regex: safeSaltName, $options: 'i' } });
+             moleculeOr.push({ composition: { $regex: safeSaltName, $options: 'i' } });
+          }
         }
       } catch (e) {
-        moleculeOr = [{ moleculeId: moleculeId }];
+        console.error("Molecule fallback error:", e);
       }
     }
 
     let searchOr: any[] = [];
+    let terms: string[] = [];
     if (qStr) {
-      const terms = qStr.replace(/[()]/g, ' ').split(/\s+/).filter(t => t.length > 0);
+      terms = qStr.replace(/[()]/g, ' ').split(/\s+/).filter(t => t.length > 0);
       if (terms.length > 0) {
         // Create a match condition for a single field where ALL terms must match
         const makeMatchAll = (fieldName: string) => ({
@@ -148,15 +163,19 @@ export async function GET(request: Request) {
     }
 
     // Combine filters intelligently
-    if (moleculeOr.length > 0 && searchOr.length > 0) {
-      query.$and = [
-        { $or: moleculeOr },
-        { $or: searchOr }
-      ];
-    } else if (moleculeOr.length > 0) {
-      query.$or = moleculeOr;
-    } else if (searchOr.length > 0) {
-      query.$or = searchOr;
+    if (moleculeOr.length > 0) {
+      andConditions.push({ $or: moleculeOr });
+    }
+    if (searchOr.length > 0) {
+      andConditions.push({ $or: searchOr });
+    }
+
+    if (andConditions.length > 0) {
+      if (query.$and) {
+        query.$and = [...query.$and, ...andConditions];
+      } else {
+        query.$and = andConditions;
+      }
     }
 
     const pipeline: any[] = [
