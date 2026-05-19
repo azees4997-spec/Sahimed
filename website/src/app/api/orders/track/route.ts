@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ShipwayService } from '@/lib/logistics/shipway';
-import { adminAuth } from '@/lib/firebase-admin';
+import { auth } from '@/lib/firebase-admin';
 
 export async function GET(request: Request) {
   try {
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    await adminAuth.verifyIdToken(token);
+    await auth.verifyIdToken(token);
 
     const trackingResult = await ShipwayService.trackShipment(awb);
 
