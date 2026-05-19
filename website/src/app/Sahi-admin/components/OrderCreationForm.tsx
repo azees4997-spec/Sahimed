@@ -170,7 +170,7 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
       }
 
       const orderData = {
-        enquiryPath: enquiry?.__path || enquiry?.path || `prescriptions/${enquiry.id}`,
+        enquiryPath: enquiry?.id ? (enquiry?.__path || enquiry?.path || `prescriptions/${enquiry.id}`) : null,
         patientName: customer.name,
         phoneNumber: customer.mobile,
         shippingDetails: { 

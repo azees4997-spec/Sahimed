@@ -6,7 +6,8 @@ import {
   CheckCircle,
   Edit3,
   Trash2,
-  AlertCircle
+  AlertCircle,
+  Plus
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -94,7 +95,14 @@ export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: 
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Digitize enquiries" subtitle="Manage and process prescription records" onBack={onBack} />
+      <SectionHeader title="Digitize enquiries" subtitle="Manage and process prescription records" onBack={onBack}>
+        <Button 
+          onClick={() => handleAction({}, 'DIGITIZE')} 
+          className="rounded-full h-12 bg-primary text-white font-black px-6 shadow-xl shadow-primary/20 flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" /> Create Manual Order
+        </Button>
+      </SectionHeader>
       
       <div className="bg-white p-1 rounded-full border flex w-fit gap-1 mb-8">
         {['Pending', 'Open', 'Completed'].map((status) => (
