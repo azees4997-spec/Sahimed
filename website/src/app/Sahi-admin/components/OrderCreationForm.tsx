@@ -369,7 +369,7 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
                       <div className="flex-1">
                         <p className="text-sm font-black text-gray-900 leading-tight mb-1">{it.name}</p>
                         <div className="flex items-center gap-2">
-                           <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded-full">Unit: ₹{it.price}</span>
+                           <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded-full">Sale Price: ₹{it.price}</span>
                            <span className="text-[9px] font-bold text-gray-400 line-through">MRP: ₹{it.mrp}</span>
                         </div>
                       </div>
@@ -426,8 +426,8 @@ export function OrderCreationForm({ enquiry, db, onSuccess }: { enquiry: any, db
           <div className="bg-primary/5 p-6 rounded-[32px] border border-primary/10 space-y-4">
              <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest"><span>Summary</span><span>Amount</span></div>
              <div className="flex justify-between text-sm font-bold"><span>Total MRP</span><span>₹{totals.mrp.toFixed(2)}</span></div>
-             <div className="flex justify-between text-sm font-bold text-green-600"><span>Product Discount</span><span>-₹{totals.discount.toFixed(2)}</span></div>
-             <div className="flex justify-between text-sm font-bold text-blue-600"><span>Promo Discount</span><span>-₹{totals.promo.toFixed(2)}</span></div>
+             <div className="flex justify-between text-sm font-bold text-green-600"><span>Total Product Discount</span><span>-₹{totals.discount.toFixed(2)}</span></div>
+             <div className="flex justify-between text-sm font-bold text-blue-600"><span>Total Promocode</span><span>-₹{totals.promo.toFixed(2)}</span></div>
              <div className="flex justify-between items-center pt-4 border-t border-primary/20">
                <div><p className="text-base font-black text-primary">Payable</p><p className="text-[8px] font-black text-green-600 uppercase">You saved ₹{totals.discount.toFixed(0)} ({((totals.discount/totals.mrp)*100 || 0).toFixed(0)}%)</p></div>
                <p className="text-2xl font-black text-primary">₹{totals.total.toFixed(2)}</p>
