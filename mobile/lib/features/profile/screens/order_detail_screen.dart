@@ -662,16 +662,16 @@ class OrderDetailScreen extends StatelessWidget {
     final steps = [
       {'label': 'Confirmed', 'icon': LucideIcons.check},
       {'label': 'Packed', 'icon': LucideIcons.package},
-      {'label': 'Shipped', 'icon': LucideIcons.truck},
-      {'label': 'Delivered', 'icon': LucideIcons.house},
+      {'label': 'In Transit', 'icon': LucideIcons.truck},
+      {'label': 'Out for Delivery', 'icon': LucideIcons.mapPin},
+      {'label': 'Delivered', 'icon': LucideIcons.home},
     ];
 
     int activeIndex = 0;
     if (currentStatus.contains('pack')) activeIndex = 1;
-    if (currentStatus.contains('ship') || currentStatus.contains('out')) {
-      activeIndex = 2;
-    }
-    if (currentStatus.contains('deliver')) activeIndex = 3;
+    if (currentStatus.contains('transit') || currentStatus.contains('ship')) activeIndex = 2;
+    if (currentStatus.contains('out') || currentStatus.contains('delivery')) activeIndex = 3;
+    if (currentStatus.contains('deliver')) activeIndex = 4;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
