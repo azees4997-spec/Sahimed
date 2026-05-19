@@ -402,6 +402,7 @@ export class ShipwayService {
       console.error("[Shipway] getorders failed:", err.message);
       return { success: false, error: err.message };
     }
+  }
 
   /**
    * Tracks a shipment using the getOrderShipmentDetails API.
