@@ -208,6 +208,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
   const [shippingInfo, setShippingInfo] = useState({ partner: '', awb: '' });
   const [cancelReason, setCancelReason] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const [isUpdating, setIsUpdating] = useState(false);
   const updateOrderStatus = async (id: string, newStatus: string, extra = {}) => {
@@ -249,7 +250,6 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
   };
   
   const handleDeleteOrder = async (id: string) => {
-    if (!window.confirm("Are you sure? This will PERMANENTLY delete this order from both MongoDB and Firestore. This cannot be undone.")) return;
     
     setIsUpdating(true);
     try {
@@ -899,15 +899,42 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                   )}
                   
                   <div className="pt-8 border-t border-dashed border-slate-200 mt-8">
-                    <Button 
-                      variant="ghost" 
-                      disabled={isUpdating}
-                      onClick={() => handleDeleteOrder(selectedOrder._id)}
-                      className="w-full h-12 rounded-xl text-rose-500 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-rose-50 hover:text-rose-600 gap-2"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Hard Delete Order
-                    </Button>
+                    {confirmDeleteId === selectedOrder._id ? (
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest text-center">Are you sure? This is permanent.</p>
+                        <div className="flex gap-4">
+                          <Button 
+                            variant="destructive" 
+                            disabled={isUpdating}
+                            onClick={() => {
+                              handleDeleteOrder(selectedOrder._id);
+                              setConfirmDeleteId(null);
+                            }}
+                            className="flex-1 h-12 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-red-500/20"
+                          >
+                            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm Delete"}
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            disabled={isUpdating}
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="flex-1 h-12 rounded-xl font-black text-[10px] uppercase tracking-[0.2em]"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button 
+                        variant="ghost" 
+                        disabled={isUpdating}
+                        onClick={() => setConfirmDeleteId(selectedOrder._id)}
+                        className="w-full h-12 rounded-xl text-rose-500 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-rose-50 hover:text-rose-600 gap-2"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Hard Delete Order
+                      </Button>
+                    )}
                   </div>
                 </div>
               </>
