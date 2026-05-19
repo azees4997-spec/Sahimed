@@ -535,8 +535,70 @@ export async function PUT(req: Request) {
         return NextResponse.json({ error: err.message }, { status: 500 });
       }
     } else if (updates.action === 'push_to_shipway') {
-      delete updates.action;
-      // We don't change the status, we just let the Shipway Automation catch it
+      try {
+        const { ShipwayService } = await import('@/lib/logistics/shipway');
+        // 1. Try to PULL the order first in case it was created manually or already exists
+        const pullRes = await ShipwayService.getOrders({ order_id: currentOrder.orderId });
+        if (pullRes.success && pullRes.data) {
+          const resultList = pullRes.data.result || [];
+          const match = resultList.find((r: any) => r.order_id === currentOrder.orderId);
+          if (match && match.awb_number) {
+            const awb = match.awb_number;
+            await db.collection('orders').updateOne(
+              { _id: new ObjectId(id) },
+              { $set: { 'shipping.awb': awb, updatedAt: new Date() } }
+            );
+            return NextResponse.json({ success: true, message: `AWB Pulled: ${awb}`, awb });
+          }
+        }
+
+        // 2. If pull failed or no AWB, try to PUSH (Create Forward Order)
+        const pushRes = await ShipwayService.createForwardOrder({
+          orderId: currentOrder.orderId,
+          billingCustomerName: currentOrder.patientName,
+          orderItems: (currentOrder.items || []).map((it: any) => ({
+            name: it.name,
+            quantity: it.quantity,
+            price: Number(it.unitPrice),
+            sku: it.productId || it.name
+          })),
+          warehouseId: '93743', 
+          shippingDetails: {
+            address: `${currentOrder.shippingDetails?.houseNumber || ''}, ${currentOrder.shippingDetails?.street || ''}`,
+            city: currentOrder.shippingDetails?.city || '',
+            state: currentOrder.shippingDetails?.state || '',
+            pincode: currentOrder.shippingDetails?.pincode || '',
+            phone: currentOrder.phoneNumber
+          },
+          totalAmount: Number(currentOrder.totalAmount),
+          paymentMode: currentOrder.paymentType === 'Cash on Delivery' ? 'COD' : 'PREPAID'
+        });
+
+        if (pushRes.success && pushRes.data) {
+          const vData = pushRes.data.result || pushRes.data;
+          const awb = vData?.awb_number || vData?.awb;
+          const label = vData?.label_url || vData?.manifest_url || vData?.label;
+          const courier = vData?.courier_name || vData?.courier;
+
+          if (awb) {
+            await db.collection('orders').updateOne(
+              { _id: new ObjectId(id) },
+              { $set: { 'shipping.awb': awb, 'shipping.labelUrl': label, 'shipping.courier': courier, updatedAt: new Date() } }
+            );
+            return NextResponse.json({ success: true, message: `AWB Generated: ${awb}`, awb });
+          } else {
+             // Handle case where it succeeded but didn't return an AWB (e.g. Order already exists)
+             if (JSON.stringify(pushRes.data).toLowerCase().includes('already exists')) {
+                return NextResponse.json({ error: 'Order already exists in Shipway but AWB could not be pulled automatically.' }, { status: 400 });
+             }
+             return NextResponse.json({ error: 'Pushed to Shipway but no AWB was returned.' }, { status: 400 });
+          }
+        } else {
+          return NextResponse.json({ error: pushRes.error || JSON.stringify(pushRes.data) }, { status: 400 });
+        }
+      } catch (err: any) {
+        return NextResponse.json({ error: err.message }, { status: 500 });
+      }
     }
 
     const result = await db.collection('orders').updateOne(
