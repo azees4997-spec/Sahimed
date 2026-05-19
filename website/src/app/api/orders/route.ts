@@ -414,7 +414,7 @@ export async function POST(req: Request) {
                 "shipping.labelUrl": label || "",
                 "shipping.courier": courier || "Shipway",
                 "shipping.partner": "Shipway",
-                status: 'Shipped', // Automatically move to Shipped once AWB is generated
+                status: 'Packed', // Automatically move to Packed once AWB is generated
                 updatedAt: new Date()
               }}
             );
@@ -714,7 +714,7 @@ export async function PUT(req: Request) {
     let shipwayStatus = null;
 
     // SHIPWAY AUTOMATION: Trigger when status is Confirmed, Packed or Shipped
-    if ((updates.status === 'Confirmed' || updates.status === 'Packed' || updates.status === 'Shipped')) {
+    if ((updates.status === 'Confirmed' || updates.status === 'Packed' || updates.status === 'In Transit')) {
       console.log(`[Shipway Automation] Attempting push for order ${id}. Status: ${updates.status}`);
       try {
         if (refreshedOrder) {

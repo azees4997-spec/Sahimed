@@ -9,7 +9,7 @@ export async function GET() {
     
     // Find orders that are shipped but not delivered or cancelled
     const activeOrders = await db.collection('orders').find({
-      status: { $in: ['shipped', 'out_for_delivery'] },
+      status: { $in: ['Packed', 'In Transit', 'Out for Delivery'] },
       awb: { $exists: true, $ne: null }
     }).toArray();
 
@@ -20,14 +20,14 @@ export async function GET() {
     // Shipment Status to System Status mapping
     const STATUS_MAP: Record<string, string> = {
       'DEL': 'Delivered',
-      'INT': 'Shipped',
+      'INT': 'In Transit',
       'UND': 'Undelivered',
-      'RTO': 'RTO',
-      'RTD': 'RTO Delivered',
+      'RTO': 'Returned',
+      'RTD': 'Returned',
       'CAN': 'Cancelled',
       'SCH': 'Confirmed',
       'ONH': 'On Hold',
-      'OOD': 'out_for_delivery'
+      'OOD': 'Out for Delivery'
     };
 
     let updatedCount = 0;
