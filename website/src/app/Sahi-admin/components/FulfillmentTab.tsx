@@ -161,6 +161,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
   const [totalOrders, setTotalOrders] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [metrics, setMetrics] = useState<any>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   const { user } = useUser();
   const { toast } = useToast();
 
