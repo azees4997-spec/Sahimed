@@ -104,33 +104,6 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
   const [shippingInfo, setShippingInfo] = useState({ partner: '', awb: '' });
   const [cancelReason, setCancelReason] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const [trackingHistory, setTrackingHistory] = useState<any>(null);
-  const [isTrackingLoading, setIsTrackingLoading] = useState(false);
-
-  useEffect(() => {
-    if (selectedOrder?.shipping?.awb) {
-      const fetchTracking = async () => {
-        setIsTrackingLoading(true);
-        try {
-          const token = await user?.getIdToken();
-          const res = await fetch(`/api/orders/track?awb=${selectedOrder.shipping.awb}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (!res.ok) throw new Error('Tracking fetch failed');
-          const data = await res.json();
-          setTrackingHistory(data);
-        } catch (err) {
-          console.error("Failed to fetch tracking history", err);
-          setTrackingHistory(null);
-        } finally {
-          setIsTrackingLoading(false);
-        }
-      };
-      fetchTracking();
-    } else {
-      setTrackingHistory(null);
-    }
-  }, [selectedOrder?.shipping?.awb, user]);
 
   const [isUpdating, setIsUpdating] = useState(false);
   const updateOrderStatus = async (id: string, newStatus: string, extra = {}) => {
@@ -650,46 +623,12 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                   <div className="bg-blue-50/50 p-8 rounded-[40px] border border-blue-100 space-y-6">
                     <h4 className="text-xs font-black text-blue-600 uppercase tracking-widest flex items-center justify-between">
                       <span className="flex items-center gap-2">
-                        <Truck className="w-5 h-5 text-blue-500" /> Live Shipway Tracking
+                        <Truck className="w-5 h-5 text-blue-500" /> Logistics Information
                       </span>
-                      <span className="text-[9px] bg-blue-100 px-3 py-1 rounded-full">AWB: {selectedOrder.shipping.awb}</span>
+                      <span className="text-[10px] bg-white border border-blue-200 text-blue-700 px-4 py-2 rounded-full font-black">
+                        AWB: {selectedOrder.shipping.awb}
+                      </span>
                     </h4>
-                    {isTrackingLoading ? (
-                      <div className="flex items-center gap-2 text-blue-400 text-xs font-bold uppercase">
-                        <Loader2 className="w-4 h-4 animate-spin" /> Fetching live status...
-                      </div>
-                    ) : trackingHistory?.success === false || trackingHistory?.data?.tracking_data?.track_status === 0 || !trackingHistory?.data?.tracking_data?.track_details ? (
-                      <p className="text-xs font-bold text-slate-400">Tracking information is currently unavailable or AWB is not yet scanned by courier.</p>
-                    ) : (
-                      <div className="space-y-6">
-                        {trackingHistory.data.tracking_data.track_details.slice().reverse().map((entry: any, idx: number, arr: any[]) => (
-                          <div key={idx} className="flex gap-6 items-start relative">
-                            {idx !== arr.length - 1 && (
-                              <div className="absolute left-[15px] top-8 -bottom-6 w-0.5 bg-blue-200" />
-                            )}
-                            <div className={cn(
-                              "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-4 border-white shadow-md",
-                              idx === 0 ? "bg-blue-500 text-white scale-110" : "bg-blue-100 text-blue-400"
-                            )}>
-                              <div className="w-2 h-2 rounded-full bg-current" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2">
-                                <p className={cn("text-sm font-black uppercase tracking-tight", 
-                                  idx === 0 ? "text-blue-600" : "text-slate-600"
-                                )}>
-                                  {entry.status || entry.activity || entry.scan_status || 'Update'}
-                                </p>
-                                <p className="text-[10px] font-black text-slate-400 uppercase whitespace-nowrap">
-                                  {entry.time} | {entry.date}
-                                </p>
-                              </div>
-                              <p className="text-xs font-bold text-slate-400 mt-1">{entry.location}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 )}
 
