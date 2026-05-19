@@ -119,6 +119,36 @@ function LiveShipwayTracking({ awb }: { awb: string }) {
   );
 }
 
+const getStatusColorClasses = (status: string, isSelected: boolean) => {
+  if (isSelected) {
+    switch (status) {
+      case 'Pending Pharmacist': return "bg-orange-500 text-white shadow-lg shadow-orange-500/30 border-orange-500";
+      case 'Pending Consult': return "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 border-emerald-500";
+      case 'Confirmed': return "bg-blue-500 text-white shadow-lg shadow-blue-500/30 border-blue-500";
+      case 'Packed': return "bg-orange-500 text-white shadow-lg shadow-orange-500/30 border-orange-500";
+      case 'In Transit': return "bg-purple-500 text-white shadow-lg shadow-purple-500/30 border-purple-500";
+      case 'Out for Delivery': return "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30 border-indigo-500";
+      case 'Delivered': return "bg-green-500 text-white shadow-lg shadow-green-500/30 border-green-500";
+      case 'Returned': return "bg-orange-500 text-white shadow-lg shadow-orange-500/30 border-orange-500";
+      case 'Cancelled': return "bg-red-500 text-white shadow-lg shadow-red-500/30 border-red-500";
+      default: return "bg-primary text-white shadow-lg shadow-primary/30 border-primary";
+    }
+  } else {
+    switch (status) {
+      case 'Pending Pharmacist': return "text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200";
+      case 'Pending Consult': return "text-emerald-500 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200";
+      case 'Confirmed': return "text-blue-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200";
+      case 'Packed': return "text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200";
+      case 'In Transit': return "text-purple-500 hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200";
+      case 'Out for Delivery': return "text-indigo-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200";
+      case 'Delivered': return "text-green-500 hover:bg-green-50 hover:text-green-600 hover:border-green-200";
+      case 'Returned': return "text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200";
+      case 'Cancelled': return "text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200";
+      default: return "text-slate-400 hover:bg-slate-50 hover:text-primary hover:border-slate-200";
+    }
+  }
+}
+
 export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const [statusFilter, setStatusFilter] = useState('All');
   const [orders, setOrders] = useState<any[]>([]);
@@ -409,7 +439,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
         <div className="bg-white/60 backdrop-blur-md p-1.5 rounded-full border border-white shadow-xl flex w-fit gap-1.5 overflow-x-auto no-scrollbar">
           {['All', 'Pending', 'Pending Pharmacist', 'Pending Consult', 'Confirmed', 'Packed', 'In Transit', 'Out for Delivery', 'Delivered', 'Returned', 'Cancelled'].map((status) => (
-            <button key={status} onClick={() => setStatusFilter(status)} className={cn("px-6 py-3.5 rounded-full text-[9px] font-black tracking-[0.2em] transition-all uppercase whitespace-nowrap", statusFilter === status ? "bg-primary text-white shadow-lg shadow-primary/30" : "text-slate-400 hover:bg-white/80")}>{status}</button>
+            <button key={status} onClick={() => setStatusFilter(status)} className={cn("px-6 py-3.5 rounded-full text-[9px] font-black tracking-[0.2em] transition-all uppercase whitespace-nowrap border-2", statusFilter === status ? getStatusColorClasses(status, true) : cn("border-transparent", getStatusColorClasses(status, false)))}>{status}</button>
           ))}
         </div>
       </div>
@@ -455,9 +485,9 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                     </p>
                   </td>
                   <td className="px-8 py-6">
-                    <Badge className={cn("font-black text-[8px] whitespace-nowrap", 
+                    <Badge className={cn("font-black text-[8px] whitespace-nowrap pointer-events-none border-0", 
                       order.status === 'Pending Pharmacist' ? "bg-orange-500 text-white shadow-sm" :
-                      order.status === 'Pending Consult' ? "bg-emerald-100 text-emerald-600 border border-emerald-200" :
+                      order.status === 'Pending Consult' ? "bg-emerald-100 text-emerald-600" :
                       order.status === 'Confirmed' ? "bg-blue-100 text-blue-600" :
                       order.status === 'Packed' ? "bg-orange-100 text-orange-600" :
                       order.status === 'In Transit' ? "bg-purple-100 text-purple-600" :
@@ -770,7 +800,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                       </div>
                     ) : (
                       ['Confirmed', 'Packed', 'In Transit', 'Out for Delivery', 'Delivered', 'Returned', 'Cancelled'].map(s => (
-                        <Button key={s} variant="outline" onClick={() => setNextStatus(s)} className={cn("rounded-[32px] h-20 font-black text-xs border-4 uppercase tracking-widest", selectedOrder?.status === s ? "border-primary bg-primary/5 text-primary shadow-lg" : "text-gray-400 border-slate-100 hover:bg-white")}>{s}</Button>
+                        <Button key={s} variant="outline" onClick={() => setNextStatus(s)} className={cn("rounded-[32px] h-20 font-black text-xs border-4 uppercase tracking-widest transition-all duration-300", getStatusColorClasses(s, selectedOrder?.status === s))}>{s}</Button>
                       ))
                     )}
                   </div>
