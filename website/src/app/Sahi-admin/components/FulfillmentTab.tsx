@@ -630,7 +630,23 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                 )}
 
                 {/* Shipway Live Tracking History */}
-                {selectedOrder?.shipping?.awb && (
+                {(!selectedOrder?.shipping?.awb && ['Confirmed', 'Packed', 'Shipped'].includes(selectedOrder?.status)) ? (
+                  <div className="bg-orange-50/50 p-8 rounded-[40px] border border-orange-100 space-y-6">
+                    <h4 className="text-xs font-black text-orange-600 uppercase tracking-widest flex items-center gap-2">
+                      <Truck className="w-5 h-5 text-orange-500" /> Shipway Logistics
+                    </h4>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold text-slate-500">No AWB has been generated for this order yet.</p>
+                      <Button 
+                        disabled={isUpdating}
+                        onClick={() => updateOrderStatus(selectedOrder._id, selectedOrder.status, { action: 'push_to_shipway' })}
+                        className="rounded-full bg-orange-500 hover:bg-orange-600 font-bold tracking-widest text-xs h-10 px-6"
+                      >
+                        Push to Shipway
+                      </Button>
+                    </div>
+                  </div>
+                ) : selectedOrder?.shipping?.awb && (
                   <div className="bg-blue-50/50 p-8 rounded-[40px] border border-blue-100 space-y-6">
                     <h4 className="text-xs font-black text-blue-600 uppercase tracking-widest flex items-center justify-between">
                       <span className="flex items-center gap-2">
