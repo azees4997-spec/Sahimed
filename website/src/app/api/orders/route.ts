@@ -539,14 +539,16 @@ export async function PUT(req: Request) {
         const { ShipwayService } = await import('@/lib/logistics/shipway');
         // 1. Try to PULL the order first in case it was created manually or already exists
         const pullRes = await ShipwayService.getOrders({ order_id: currentOrder.orderId });
-        if (pullRes.success && pullRes.data) {
-          const resultList = pullRes.data.result || [];
-          const match = resultList.find((r: any) => r.order_id === currentOrder.orderId);
-          if (match && match.awb_number) {
-            const awb = match.awb_number;
+        if (pullRes.success && pullRes.data && Array.isArray(pullRes.data.message)) {
+          const resultList = pullRes.data.message;
+          // Shipway might return SHM-H0ITD instead of SHM-HOITD, so we take the first result since we queried by specific ID
+          const match = resultList.length > 0 ? resultList[0] : null;
+          if (match && match.tracking_number) {
+            const awb = match.tracking_number;
+            const courier = match.carrier_title || match.name;
             await db.collection('orders').updateOne(
               { _id: new ObjectId(id) },
-              { $set: { 'shipping.awb': awb, updatedAt: new Date() } }
+              { $set: { 'shipping.awb': awb, 'shipping.courier': courier, updatedAt: new Date() } }
             );
             return NextResponse.json({ success: true, message: `AWB Pulled: ${awb}`, awb });
           }
@@ -591,7 +593,7 @@ export async function PUT(req: Request) {
              if (JSON.stringify(pushRes.data).toLowerCase().includes('already exists')) {
                 return NextResponse.json({ error: 'Order already exists in Shipway but AWB could not be pulled automatically.' }, { status: 400 });
              }
-             return NextResponse.json({ error: 'Pushed to Shipway but no AWB was returned.' }, { status: 400 });
+             return NextResponse.json({ error: `Pushed to Shipway but no AWB was returned. Response: ${JSON.stringify(pushRes.data)}` }, { status: 400 });
           }
         } else {
           return NextResponse.json({ error: pushRes.error || JSON.stringify(pushRes.data) }, { status: 400 });
