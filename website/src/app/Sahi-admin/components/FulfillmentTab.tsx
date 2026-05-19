@@ -18,7 +18,8 @@ import {
   Printer,
   Trash2,
   Clock,
-  Truck
+  Truck,
+  ExternalLink
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,79 @@ import { cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
 import { safeFormat } from '@/lib/safe-date';
 import { SectionHeader } from './SectionHeader';
+
+function LiveShipwayTracking({ awb }: { awb: string }) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const { user } = useUser();
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchTracking() {
+      if (!user) return;
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch(`/api/orders/track?awb=${awb}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const json = await res.json();
+        if (isMounted) {
+          setData(json);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    fetchTracking();
+    return () => { isMounted = false; };
+  }, [awb, user]);
+
+  if (loading) return (
+    <div className="flex items-center justify-center p-8">
+      <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+    </div>
+  );
+  if (!data || data.error) return null;
+
+  const scans = data.tracking_data?.shipment_track_activities || [];
+  if (scans.length === 0) return null;
+
+  return (
+    <div className="mt-6 pt-6 border-t border-blue-100">
+      <h5 className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-6">Live Carrier Timeline</h5>
+      <div className="space-y-6">
+        {scans.map((scan: any, idx: number) => (
+          <div key={idx} className="flex gap-4 items-start relative">
+            {idx !== scans.length - 1 && (
+              <div className="absolute left-[9px] top-6 -bottom-8 w-0.5 bg-blue-100" />
+            )}
+            <div className={cn(
+              "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2 border-white shadow-sm",
+              idx === 0 ? "bg-blue-500 text-white scale-110" : "bg-blue-100 text-blue-400"
+            )}>
+              <div className="w-1.5 h-1.5 rounded-full bg-current" />
+            </div>
+            <div className="flex-1 min-w-0 -mt-1">
+              <div className="flex items-center justify-between gap-2">
+                <p className={cn("text-xs font-black uppercase tracking-tight", 
+                  idx === 0 ? "text-blue-600" : "text-slate-500"
+                )}>
+                  {scan.activity || scan.status}
+                </p>
+                <p className="text-[9px] font-black text-slate-400 uppercase whitespace-nowrap">
+                  {scan.date}
+                </p>
+              </div>
+              <p className="text-[10px] font-bold text-slate-400 mt-0.5">{scan.location}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const [statusFilter, setStatusFilter] = useState('All');
@@ -459,7 +533,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
       </Card>
 
       <Dialog open={!!selectedOrder} onOpenChange={o => !o && (setSelectedOrder(null), setIsEditing(false), setNextStatus(null))}>
-        <DialogContent className="rounded-[40px] max-w-5xl border-none p-0 overflow-hidden">
+        <DialogContent className="rounded-[40px] max-w-7xl border-none p-0 overflow-hidden">
           <DialogHeader className="bg-primary p-8 text-white flex flex-row items-center justify-between space-y-0">
             <div className="flex flex-col gap-1">
               <DialogTitle className="text-4xl font-black text-white">Order #{selectedOrder?.orderId || 'Detail'}</DialogTitle>
@@ -625,10 +699,22 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
                       <span className="flex items-center gap-2">
                         <Truck className="w-5 h-5 text-blue-500" /> Logistics Information
                       </span>
-                      <span className="text-[10px] bg-white border border-blue-200 text-blue-700 px-4 py-2 rounded-full font-black">
-                        AWB: {selectedOrder.shipping.awb}
-                      </span>
+                      <a href={`https://track.shipway.com/t/${selectedOrder.shipping.awb}`} target="_blank" rel="noopener noreferrer" className="text-[10px] bg-white border border-blue-200 text-blue-700 hover:bg-blue-600 hover:text-white transition-all px-4 py-2 rounded-full font-black flex items-center gap-2 cursor-pointer shadow-sm">
+                        TRACK AWB: {selectedOrder.shipping.awb} <ExternalLink className="w-3 h-3" />
+                      </a>
                     </h4>
+                    {selectedOrder?.shipping?.courier && (
+                      <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-blue-100">
+                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                          <Package className="w-5 h-5 text-blue-500" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Courier Partner</p>
+                          <p className="text-sm font-black text-slate-700">{selectedOrder.shipping.courier}</p>
+                        </div>
+                      </div>
+                    )}
+                    <LiveShipwayTracking awb={selectedOrder.shipping.awb} />
                   </div>
                 )}
 
