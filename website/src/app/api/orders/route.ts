@@ -534,6 +534,9 @@ export async function PUT(req: Request) {
       } catch (err: any) {
         return NextResponse.json({ error: err.message }, { status: 500 });
       }
+    } else if (updates.action === 'push_to_shipway') {
+      delete updates.action;
+      // We don't change the status, we just let the Shipway Automation catch it
     }
 
     const result = await db.collection('orders').updateOne(
@@ -646,8 +649,8 @@ export async function PUT(req: Request) {
     const refreshedOrder = await db.collection('orders').findOne({ _id: new ObjectId(id) });
     let shipwayStatus = null;
 
-    // SHIPWAY AUTOMATION: Trigger when status is Confirmed or Shipped
-    if ((updates.status === 'Confirmed' || updates.status === 'Shipped')) {
+    // SHIPWAY AUTOMATION: Trigger when status is Confirmed, Packed or Shipped
+    if ((updates.status === 'Confirmed' || updates.status === 'Packed' || updates.status === 'Shipped')) {
       console.log(`[Shipway Automation] Attempting push for order ${id}. Status: ${updates.status}`);
       try {
         if (refreshedOrder) {
