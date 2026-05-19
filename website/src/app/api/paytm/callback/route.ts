@@ -83,6 +83,17 @@ export async function POST(req: Request) {
       } catch (fsErr: any) {
         console.error("[Paytm Callback Sync Error]", fsErr.message);
       }
+      
+      // 3. Trigger Email Notification
+      try {
+        const orderForEmail = await db.collection('orders').findOne({ orderId: baseOrderId });
+        if (orderForEmail) {
+          const { sendOrderNotification } = await import('@/lib/email-service');
+          await sendOrderNotification(orderForEmail, 'NEW_ORDER');
+        }
+      } catch (emailErr: any) {
+        console.error("[Email Notification Error]", emailErr.message);
+      }
     }
 
       // Redirect to success page
