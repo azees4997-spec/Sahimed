@@ -17,13 +17,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 export function MarketingTab({ onBack }: { onBack: () => void }) {
   const { toast } = useToast();
   const [contents, setContents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
   const [topic, setTopic] = useState('');
+
+  const generationSteps = [
+    { label: 'Initializing Gemini AI Engine', icon: Sparkles },
+    { label: 'Analyzing Trending Health Topics in India', icon: Search },
+    { label: 'Researching Clinical Data & Symptoms', icon: FileText },
+    { label: 'Drafting SEO-Optimized Article', icon: TrendingUp },
+    { label: 'Finalizing & Syncing with MongoDB', icon: Rocket }
+  ];
 
   const fetchContent = async () => {
     setIsLoading(true);
@@ -45,8 +55,13 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
   const handleGenerate = async () => {
     if (!topic) return;
     setIsGenerating(true);
-    toast({ title: 'AI Activated', description: 'Gemini is researching and writing your SEO article...' });
+    setCurrentStep(0);
     
+    // Progress simulation for better UX feel
+    const stepInterval = setInterval(() => {
+      setCurrentStep(prev => (prev < generationSteps.length - 1 ? prev + 1 : prev));
+    }, 4000);
+
     try {
       const res = await fetch('/api/marketing/generate', {
         method: 'POST',
@@ -55,13 +70,18 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
       });
       
       if (res.ok) {
-        toast({ title: 'Success', description: 'Article generated and stored in MongoDB' });
-        setTopic('');
-        fetchContent();
+        clearInterval(stepInterval);
+        setCurrentStep(generationSteps.length - 1);
+        setTimeout(() => {
+          toast({ title: 'Success', description: 'Article generated and stored in MongoDB' });
+          setTopic('');
+          setIsGenerating(false);
+          fetchContent();
+        }, 1000);
       }
     } catch (err) {
+      clearInterval(stepInterval);
       toast({ variant: 'destructive', title: 'Gen Error', description: 'AI failed to complete the task' });
-    } finally {
       setIsGenerating(false);
     }
   };
@@ -110,14 +130,15 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
           </CardTitle>
           <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase">Target trending topics in India</p>
         </CardHeader>
-        <CardContent className="p-10">
+        <CardContent className="p-10 space-y-8">
           <div className="flex flex-col md:flex-row gap-4">
             <input 
               type="text" 
               placeholder="e.g. Health benefits of Ashwagandha or Delhi Pollution Precautions"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              className="flex-1 h-20 bg-slate-100/50 rounded-[24px] px-8 font-black outline-none focus:bg-white focus:ring-4 ring-primary/5 transition-all text-sm"
+              disabled={isGenerating}
+              className="flex-1 h-20 bg-slate-100/50 rounded-[24px] px-8 font-black outline-none focus:bg-white focus:ring-4 ring-primary/5 transition-all text-sm disabled:opacity-50"
             />
             <Button 
               onClick={handleGenerate} 
@@ -128,6 +149,63 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
               Generate SEO Article
             </Button>
           </div>
+
+          <AnimatePresence>
+            {isGenerating && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-4 pt-4"
+              >
+                <div className="flex justify-between items-end mb-2">
+                   <p className="text-[10px] font-black text-primary tracking-[0.2em] uppercase">AI Mission Progress</p>
+                   <p className="text-[10px] font-black text-slate-300 uppercase">{Math.round(((currentStep + 1) / generationSteps.length) * 100)}% Complete</p>
+                </div>
+                
+                {/* Progress Bar */}
+                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${((currentStep + 1) / generationSteps.length) * 100}%` }}
+                    className="h-full bg-primary shadow-[0_0_15px_rgba(46,91,255,0.5)]"
+                  />
+                </div>
+
+                {/* Steps List */}
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 pt-4">
+                  {generationSteps.map((step, idx) => {
+                    const Icon = step.icon;
+                    const isActive = idx === currentStep;
+                    const isCompleted = idx < currentStep;
+                    
+                    return (
+                      <div 
+                        key={idx} 
+                        className={cn(
+                          "flex flex-col items-center text-center gap-3 transition-all duration-500",
+                          isActive ? "opacity-100 scale-105" : isCompleted ? "opacity-50" : "opacity-20"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                          isActive ? "bg-primary text-white shadow-lg" : isCompleted ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"
+                        )}>
+                           {isCompleted ? <Plus className="w-5 h-5 rotate-45" /> : <Icon className={cn("w-5 h-5", isActive && "animate-pulse")} />}
+                        </div>
+                        <p className={cn(
+                          "text-[8px] font-black tracking-widest uppercase leading-tight px-2",
+                          isActive ? "text-slate-900" : "text-slate-400"
+                        )}>
+                          {step.label}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </CardContent>
       </Card>
 
