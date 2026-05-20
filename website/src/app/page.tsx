@@ -13,7 +13,6 @@ import TrustSection from '@/components/TrustSection';
 import HowItWorks from '@/components/home/HowItWorks';
 import SEOContent from '@/components/home/SEOContent';
 import FAQSection from '@/components/home/FAQSection';
-import SideDecorations from '@/components/SideDecorations';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -91,7 +90,6 @@ export default async function Home() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#F8FAFC]">
-        <SideDecorations />
         <Navbar />
         
         {/* Mega Banner Hero Section */}
