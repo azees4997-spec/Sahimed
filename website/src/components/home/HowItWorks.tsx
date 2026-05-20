@@ -46,51 +46,44 @@ export default function HowItWorks() {
           </p>
         </div>
 
-        {/* Mobile Horizontal Scroll / Desktop Grid */}
-        <div className="flex overflow-x-auto pt-4 pb-8 sm:pb-0 sm:grid sm:grid-cols-4 gap-8 sm:gap-12 scrollbar-hide snap-x snap-mandatory px-4 sm:px-0">
+        {/* Mobile Grid / Desktop Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-12 px-2 sm:px-0">
           {STEPS.map((step, i) => (
             <motion.div 
               key={i}
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="min-w-[280px] sm:min-w-0 snap-center relative space-y-6 group flex flex-col sm:items-center sm:text-center"
+              className="relative space-y-3 sm:space-y-6 group flex flex-col items-center text-center p-4 bg-slate-50/50 sm:bg-transparent rounded-[32px] sm:rounded-none"
             >
-              {i < STEPS.length - 1 && (
-                <div className="hidden sm:block absolute top-10 left-[60%] w-full h-[2px] bg-slate-100 z-0" />
-              )}
-              
-              <div className="flex sm:flex-col items-center gap-6 w-full sm:w-auto">
-                <div className={`w-16 h-16 sm:w-20 sm:h-20 ${step.color} rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-lg shadow-slate-200/50 relative z-10 group-hover:scale-110 transition-transform duration-500 shrink-0`}>
-                  <step.icon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                  <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 w-6 h-6 sm:w-8 sm:h-8 bg-slate-900 text-white rounded-full flex items-center justify-center font-black text-xs sm:text-sm shadow-xl">
+              <div className="flex flex-col items-center gap-3 sm:gap-6 w-full">
+                <div className={`w-12 h-12 sm:w-20 sm:h-20 ${step.color} rounded-xl sm:rounded-3xl flex items-center justify-center shadow-lg shadow-slate-200/50 relative z-10 group-hover:scale-110 transition-transform duration-500 shrink-0`}>
+                  <step.icon className="w-6 h-6 sm:w-10 sm:h-10 text-white" />
+                  <div className="absolute -top-1.5 -right-1.5 sm:-top-3 sm:-right-3 w-5 h-5 sm:w-8 sm:h-8 bg-slate-900 text-white rounded-full flex items-center justify-center font-black text-[10px] sm:text-sm shadow-xl">
                     {i + 1}
                   </div>
                 </div>
 
-                <div className="sm:hidden space-y-1">
-                  <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight font-outfit leading-tight">
+                <div className="space-y-1">
+                  <h3 className="text-[11px] sm:text-xl font-black text-slate-900 uppercase tracking-tight font-outfit leading-tight px-1">
                     {step.title}
                   </h3>
-                  <p className="text-xs text-slate-500 font-bold leading-normal">
-                    Step {i + 1} of 4
+                  <p className="sm:hidden text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                    Step {i + 1}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-2 hidden sm:block">
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight font-outfit">
-                  {step.title}
-                </h3>
                 <p className="text-sm text-slate-500 font-medium leading-relaxed max-w-[240px]">
                   {step.desc}
                 </p>
               </div>
 
-              {/* Mobile-only desc */}
-              <div className="sm:hidden space-y-2">
-                <p className="text-slate-500 font-medium leading-relaxed text-sm">
+              {/* Mobile-only desc - subtle and small */}
+              <div className="sm:hidden">
+                <p className="text-slate-400 font-medium leading-tight text-[9px] px-2">
                   {step.desc}
                 </p>
               </div>

@@ -31,34 +31,34 @@ export default function FAQSection() {
   const [openIndex, setOpenIndex] = React.useState<number | null>(null);
 
   return (
-    <section className="py-24 max-w-4xl mx-auto px-6">
-      <div className="text-center space-y-4 mb-16">
+    <section className="py-12 sm:py-24 max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="text-center space-y-3 sm:space-y-4 mb-10 sm:mb-16">
         <div className="flex justify-center">
-          <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
-            <HelpCircle className="w-6 h-6 text-primary" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-xl sm:rounded-2xl flex items-center justify-center">
+            <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
           </div>
         </div>
-        <h2 className="text-4xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none">
+        <h2 className="text-2xl sm:text-4xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none px-4">
           Frequently Asked <span className="text-primary italic">Questions</span>
         </h2>
-        <p className="text-slate-500 font-medium">Everything you need to know about Sahimed's authentic healthcare services.</p>
+        <p className="text-slate-500 text-xs sm:text-base font-medium">Everything you need to know about Sahimed's authentic healthcare services.</p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {FAQS.map((faq, i) => (
           <div 
             key={i} 
-            className={`bg-white rounded-[32px] border ${openIndex === i ? 'border-primary shadow-xl shadow-primary/5' : 'border-slate-100'} transition-all duration-300 overflow-hidden`}
+            className={`bg-white rounded-[24px] sm:rounded-[32px] border ${openIndex === i ? 'border-primary shadow-lg shadow-primary/5' : 'border-slate-100'} transition-all duration-300 overflow-hidden`}
           >
             <button
               onClick={() => setOpenIndex(openIndex === i ? null : i)}
-              className="w-full px-8 py-7 flex items-center justify-between text-left group"
+              className="w-full px-5 py-4 sm:px-8 sm:py-7 flex items-center justify-between text-left group gap-4"
             >
-              <span className={`text-lg font-black tracking-tight font-outfit uppercase ${openIndex === i ? 'text-primary' : 'text-slate-900'}`}>
+              <span className={`text-sm sm:text-lg font-black tracking-tight font-outfit uppercase ${openIndex === i ? 'text-primary' : 'text-slate-900'}`}>
                 {faq.question}
               </span>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${openIndex === i ? 'bg-primary text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'}`}>
-                {openIndex === i ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all shrink-0 ${openIndex === i ? 'bg-primary text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'}`}>
+                {openIndex === i ? <Minus className="w-3 h-3 sm:w-4 sm:h-4" /> : <Plus className="w-3 h-3 sm:w-4 sm:h-4" />}
               </div>
             </button>
             <AnimatePresence>
@@ -69,7 +69,7 @@ export default function FAQSection() {
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="px-8 pb-8 text-slate-500 font-medium leading-relaxed">
+                  <div className="px-5 pb-5 sm:px-8 sm:pb-8 text-slate-500 text-xs sm:text-base font-medium leading-relaxed">
                     {faq.answer}
                   </div>
                 </motion.div>
