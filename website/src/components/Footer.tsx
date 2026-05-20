@@ -115,8 +115,15 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
 
           {/* Column 3: Resources & Legal */}
           <div className="space-y-8">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">Company & Legal</h4>
+            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">Blogs</h4>
             <ul className="space-y-4">
+              {['Latest News', 'Health Tips', 'Medicine Guides', 'Wellness'].map((item) => (
+                <li key={item}>
+                  <Link href="/blogs" className="text-gray-400 hover:text-white text-sm font-bold uppercase tracking-tight transition-all">
+                    {item}
+                  </Link>
+                </li>
+              ))}
               {footerPages?.length ? (
                 footerPages.map((page: any) => (
                   <li key={page.id}>

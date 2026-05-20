@@ -1,72 +1,110 @@
 'use client';
 
 import * as React from 'react';
-import { ShieldCheck, Award, Heart, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Award, Heart, CheckCircle2, Star } from 'lucide-react';
+import Image from 'next/image';
 
 export default function SEOContent() {
   return (
-    <section className="py-24 max-w-7xl mx-auto px-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-        <div className="space-y-8">
-          <div className="space-y-4">
-            <h2 className="text-4xl sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none">
-              SahiMed: India's Trusted <br/>
+    <section className="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-12 sm:gap-20 items-start lg:items-center">
+        
+        {/* Text Content Area - Col Span 7 on Desktop */}
+        <div className="lg:col-span-7 space-y-8 sm:space-y-12 w-full">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="flex items-center gap-3 px-3 py-1.5 bg-green-50 rounded-full border border-green-100 w-fit">
+              <div className="flex -space-x-1">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star key={s} className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                ))}
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-green-700">Google Verified Pharmacy</span>
+            </div>
+            
+            <h2 className="text-3xl sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-[0.95]">
+              SahiMed: India's Trusted <br className="hidden sm:block"/>
               <span className="text-primary italic">Digital Pharmacy Partner</span>
             </h2>
-            <p className="text-xl text-slate-600 font-medium leading-relaxed">
+            <p className="text-base sm:text-xl text-slate-600 font-medium leading-relaxed max-w-2xl">
               At SahiMed, we believe that healthcare should be accessible, affordable, and most importantly—authentic. In a world of rising medical costs and uncertainty, we stand as a beacon of trust for millions of Indian families.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {[
               { icon: ShieldCheck, title: "100% Authentic", desc: "Every medicine is sourced directly from licensed manufacturers and verified by our SahiMed quality team." },
               { icon: Award, title: "Best Prices", desc: "Sahi Dawai, Sahi Daam Pe. We eliminate middlemen to provide you the most affordable rates in India." },
               { icon: Heart, title: "Expert Care", desc: "Our team of certified pharmacists is always available to guide you through your healthcare journey." },
               { icon: CheckCircle2, title: "Safe Delivery", desc: "Special temperature-controlled packaging ensures your medicines remain effective and safe." }
             ].map((item, i) => (
-              <div key={i} className="p-6 bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/30 space-y-3">
+              <div key={i} className="p-5 sm:p-6 bg-white rounded-2xl sm:rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/20 space-y-3 hover:border-primary/20 transition-colors">
                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
                   <item.icon className="w-5 h-5 text-primary" />
                 </div>
-                <h3 className="font-black text-slate-900 uppercase text-sm tracking-tight">{item.title}</h3>
-                <p className="text-xs text-slate-500 font-medium leading-normal">{item.desc}</p>
+                <h3 className="font-black text-slate-900 uppercase text-xs sm:text-sm tracking-tight">{item.title}</h3>
+                <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-normal">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-slate-900 rounded-[60px] p-12 sm:p-20 text-white relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/20 to-transparent pointer-events-none" />
-          <div className="relative z-10 space-y-8">
-            <h3 className="text-3xl font-black uppercase tracking-tighter font-outfit leading-tight">
-              Why Millions of Indians <br/> Choose Sahimed
-            </h3>
-            <div className="space-y-6">
-              {[
-                "Direct-to-consumer model ensuring 100% authenticity",
-                "Advanced prescription verification by licensed professionals",
-                "Pan-India delivery reaching even the most remote corners",
-                "Dedicated customer support for chronic care patients",
-                "Transparent pricing with no hidden shipping charges"
-              ].map((point, i) => (
-                <div key={i} className="flex items-start gap-4">
-                  <div className="mt-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="w-3 h-3 text-white" />
-                  </div>
-                  <p className="text-slate-300 font-medium leading-snug">{point}</p>
+        {/* Dark Feature Card - Col Span 5 on Desktop */}
+        <div className="lg:col-span-5 w-full">
+          <div className="bg-slate-900 rounded-[40px] sm:rounded-[60px] p-8 sm:p-16 text-white relative overflow-hidden group shadow-2xl shadow-slate-900/40">
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/30 to-transparent pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
+            <div className="relative z-10 space-y-8 sm:space-y-10">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="h-px w-8 bg-primary" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Why Choose Us</span>
                 </div>
-              ))}
-            </div>
-            
-            <div className="pt-8 border-t border-white/10 flex items-center gap-10">
-              <div>
-                <p className="text-4xl font-black text-primary font-outfit">50K+</p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Happy Users</p>
+                <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter font-outfit leading-none">
+                  Why Millions <br className="hidden sm:block"/> of Indians <br className="hidden sm:block"/> Choose Sahimed
+                </h3>
               </div>
-              <div>
-                <p className="text-4xl font-black text-primary font-outfit">100%</p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Genuine Stock</p>
+              
+              <div className="space-y-5 sm:space-y-6">
+                {[
+                  "Direct-to-consumer model for 100% authenticity",
+                  "Advanced prescription verification by experts",
+                  "Pan-India delivery reaching remote corners",
+                  "Dedicated support for chronic care patients"
+                ].map((point, i) => (
+                  <div key={i} className="flex items-start gap-4 group/item">
+                    <div className="mt-1 w-5 h-5 bg-primary/20 rounded-full flex items-center justify-center shrink-0 group-hover/item:bg-primary transition-colors">
+                      <CheckCircle2 className="w-3 h-3 text-primary group-hover/item:text-white" />
+                    </div>
+                    <p className="text-slate-300 group-hover/item:text-white font-medium leading-snug transition-colors text-sm sm:text-base">{point}</p>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="pt-8 border-t border-white/10 flex items-center">
+                <div>
+                  <p className="text-3xl sm:text-5xl font-black text-primary font-outfit tracking-tighter">100%</p>
+                  <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-slate-500">Genuine Stock</p>
+                </div>
+              </div>
+
+              {/* Google Verified Logo Placement */}
+              <div className="pt-6 flex justify-center">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-4 rounded-2xl flex items-center gap-4 w-full">
+                  <div className="relative w-8 h-8 shrink-0">
+                    <Image 
+                      src="https://www.gstatic.com/images/branding/product/2x/googleg_48dp.png" 
+                      alt="Google Logo" 
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] font-black uppercase tracking-tight text-white leading-none">Verified Merchant</p>
+                    <div className="flex items-center gap-1">
+                      <Star className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />
+                      <span className="text-[10px] font-bold text-slate-300">4.9/5 Trust Score</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

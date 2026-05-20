@@ -13,7 +13,7 @@ import TrustSection from '@/components/TrustSection';
 import HowItWorks from '@/components/home/HowItWorks';
 import SEOContent from '@/components/home/SEOContent';
 import FAQSection from '@/components/home/FAQSection';
-import LatestBlogs from '@/components/home/LatestBlogs';
+import SideDecorations from '@/components/SideDecorations';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -79,35 +79,19 @@ async function getProducts(filterType: 'bestSeller' | 'topSelection' | 'all' = '
   }
 }
 
-async function getLatestBlogs() {
-  try {
-    const client = await clientPromise;
-    const db = client.db('sahimed');
-    const blogs = await db.collection('seo_content')
-      .find({})
-      .sort({ createdAt: -1 })
-      .limit(3)
-      .toArray();
-    return blogs.map(b => ({ ...b, id: b._id.toString() })) as any[];
-  } catch (err) {
-    console.error("Failed to fetch latest blogs:", err);
-    return [];
-  }
-}
-
 export default async function Home() {
-  const [banners, categories, bestSellers, topSelections, medicines, latestBlogs] = await Promise.all([
+  const [banners, categories, bestSellers, topSelections, medicines] = await Promise.all([
     getBanners(),
     getCategories(),
     getProducts('bestSeller'),
     getProducts('topSelection'),
-    getProducts('all'),
-    getLatestBlogs()
+    getProducts('all')
   ]);
 
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#F8FAFC]">
+        <SideDecorations />
         <Navbar />
         
         {/* Mega Banner Hero Section */}
@@ -180,8 +164,6 @@ export default async function Home() {
 
           <HowItWorks />
           
-          <LatestBlogs blogs={latestBlogs} />
-
           <TrustSection />
 
           <SEOContent />
