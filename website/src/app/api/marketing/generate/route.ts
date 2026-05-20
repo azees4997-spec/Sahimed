@@ -20,16 +20,30 @@ export async function POST(req: NextRequest) {
 
     const genAI = new GoogleGenerativeAI(key);
     
-    // Try multiple model names as fallbacks
-    const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-pro"];
+    // Try multiple model names as fallbacks (Updated for 2026 models)
+    const modelNames = [
+      "gemini-2.5-flash", 
+      "gemini-2.5-pro", 
+      "gemini-2.0-flash", 
+      "gemini-2.0-pro",
+      "gemini-1.5-flash", 
+      "gemini-1.5-pro"
+    ];
     let model;
     let success = false;
     let lastError = null;
+    let attemptedModels = [];
 
     for (const modelName of modelNames) {
       try {
+        attemptedModels.push(modelName);
         model = genAI.getGenerativeModel({ model: modelName });
-        const testResult = await model.generateContent({ contents: [{ role: 'user', parts: [{ text: 'ping' }] }], generationConfig: { maxOutputTokens: 5 } });
+        // Use a simple prompt to verify the model is active
+        const testResult = await model.generateContent({ 
+          contents: [{ role: 'user', parts: [{ text: 'hi' }] }], 
+          generationConfig: { maxOutputTokens: 5 } 
+        });
+        
         if (testResult) {
           success = true;
           console.log(`Successfully initialized with model: ${modelName}`);
@@ -42,7 +56,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!success || !model) {
-      throw lastError || new Error("Could not initialize any Gemini model. Please check your API key permissions.");
+      throw new Error(`Failed to initialize any Gemini model. Attempted: ${attemptedModels.join(", ")}. Last error: ${lastError?.message}`);
     }
 
     const prompt = `
