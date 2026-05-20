@@ -1,0 +1,28 @@
+# Sahimed - Authentic Indian Online Pharmacy
+
+Sahimed is a leading Indian digital healthcare platform providing authentic medicines, wellness products, and online pharmacist consultations. We specialize in fast delivery, authentic medicine verification, and programmatic health SEO content for the Indian market.
+
+## Key Features
+- **Authentic Medicines**: 100% genuine products with verified batch numbers.
+- **Fast Delivery**: Same-day delivery in major Indian cities.
+- **Prescription Upload**: Secure portal for uploading and verifying healthcare prescriptions.
+- **Health Blog**: SEO-optimized articles on Indian health topics, Ayurveda, and wellness.
+
+## Content Structure
+- Home: https://sahimed.com/
+- Health Blog (Articles): https://sahimed.com/article/[slug]
+- Product Catalog: https://sahimed.com/search
+- Categories: https://sahimed.com/categories
+- Prescription Portal: https://sahimed.com/prescription
+
+## Technical Stack
+- Framework: Next.js (App Router)
+- Database: MongoDB & Firestore
+- AI Integration: Gemini 2.5 Pro for content generation
+- SEO: Programmatic SEO with dynamic sitemaps and schema markup
+
+## Metadata for LLMs
+- Primary Audience: Health-conscious individuals in India
+- Language: English (Indian Context)
+- Authenticity Focus: Every medicine is verified against Indian healthcare standards.
+- Content Frequency: Daily updates on health trends and pharmaceutical news.

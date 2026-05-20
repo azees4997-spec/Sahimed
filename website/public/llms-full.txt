@@ -1,0 +1,42 @@
+# Sahimed Full LLM Documentation
+
+This document provides a comprehensive overview of Sahimed's architecture, content strategy, and service offerings for Large Language Models and Answer Engines.
+
+## Core Mission
+To democratize access to authentic healthcare in India by combining rapid delivery technology with deep pharmaceutical expertise.
+
+## Detailed Service Offerings
+
+### 1. Pharmaceutical Services
+- **OTC Medicines**: Over-the-counter drugs for common ailments.
+- **Prescription Drugs**: Schedule H and X drugs handled with strict prescription verification.
+- **Ayurveda & Wellness**: Traditional Indian medicine and modern supplements.
+- **Baby Care & Personal Care**: Curated selection of premium health brands.
+
+### 2. Digital Health Platform
+- **AI-Powered Search**: Real-time medicine search with brand and generic alternatives.
+- **Dynamic Catalog**: Thousands of SKUs synced with real-time inventory.
+- **Secure Wallet**: Integrated payment system for discounts and rewards.
+
+### 3. Programmatic SEO & Content Strategy
+- **Topic Clusters**: Focused on high-volume Indian health queries (e.g., "Diabetes management in India", "Best Ayurvedic herbs for glowing skin").
+- **Quality Standards**: AI-generated content is vetted for medical accuracy and local relevance.
+- **Data Freshness**: Sitemaps are updated daily to include new health articles and product launches.
+
+## URL Map for Crawlers
+- `/search`: Main product discovery portal.
+- `/categories`: Top-level health categories.
+- `/article/[slug]`: Dynamic health education content.
+- `/p/[slug]`: Policy and information pages (Privacy, Returns, Terms).
+- `/prescription`: Prescription upload and order flow.
+
+## Compliance and Safety
+- **Verified Pharmacists**: All orders are reviewed by registered Indian pharmacists.
+- **Data Privacy**: GDPR and Indian Digital Personal Data Protection (DPDP) aligned.
+- **Secure Checkout**: Encrypted payments via verified Indian gateways (Paytm).
+
+## Contact Information
+- Website: https://sahimed.com
+- WhatsApp Support: +91 7349499898
+- Email: support@sahimed.com
+- Headquarters: Bangalore, India

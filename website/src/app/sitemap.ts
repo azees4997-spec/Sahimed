@@ -29,7 +29,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching products for sitemap:', error);
   }
 
-  // 2. Fetch dynamic pages from Firestore
+  // 2. Fetch SEO Articles from MongoDB
+  let articleUrls: MetadataRoute.Sitemap = [];
+  try {
+    const client = await clientPromise;
+    const db = client.db('sahimed');
+    const articles = await db.collection('seo_content').find({}, { projection: { slug: 1, updatedAt: 1 } }).toArray();
+
+    articleUrls = articles.map((article) => ({
+      url: `${baseUrl}/article/${article.slug}`,
+      lastModified: article.updatedAt || new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }));
+  } catch (error) {
+    console.error('Error fetching articles for sitemap:', error);
+  }
+
+  // 3. Fetch dynamic pages from Firestore
   let pageUrls: MetadataRoute.Sitemap = [];
   try {
     const pagesSnap = await getDocs(fireCollection(firestore, 'pages'));
@@ -46,7 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching pages for sitemap:', error);
   }
 
-  // 3. Static routes
+  // 4. Static routes
   const staticUrls = [
     {
       url: baseUrl,
@@ -80,5 +97,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticUrls, ...pageUrls, ...productUrls];
+  return [...staticUrls, ...pageUrls, ...productUrls, ...articleUrls];
 }
