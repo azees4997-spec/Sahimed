@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import { Star, CheckCircle2, Quote } from 'lucide-react';
 import { motion } from 'framer-motion';
