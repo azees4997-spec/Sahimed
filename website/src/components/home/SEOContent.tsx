@@ -6,22 +6,22 @@ import Image from 'next/image';
 
 export default function SEOContent() {
   return (
-    <section className="py-12 sm:py-32 max-w-7xl mx-auto px-4 sm:px-6">
-      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-12 sm:gap-20 items-start lg:items-center">
+    <section className="py-8 sm:py-32 max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 sm:gap-20 items-start lg:items-center">
         
         {/* Text Content Area - Col Span 7 on Desktop */}
-        <div className="lg:col-span-7 space-y-8 sm:space-y-12 w-full">
-          <div className="space-y-4 sm:space-y-6">
-            <div className="flex items-center gap-3 px-3 py-1.5 bg-green-50 rounded-full border border-green-100 w-fit">
+        <div className="lg:col-span-7 space-y-6 sm:space-y-12 w-full">
+          <div className="space-y-3 sm:space-y-6">
+            <div className="flex items-center gap-2.5 px-2.5 py-1 bg-green-50 rounded-full border border-green-100 w-fit">
               <div className="flex -space-x-1">
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <Star key={s} className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                  <Star key={s} className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />
                 ))}
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-green-700">Google Verified Pharmacy</span>
+              <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-green-700">Google Verified Pharmacy</span>
             </div>
             
-            <h2 className="text-xl sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-[0.95]">
+            <h2 className="text-base sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-[0.95]">
               SahiMed: India's Trusted <br className="hidden sm:block"/>
               <span className="text-primary italic">Digital Pharmacy Partner</span>
             </h2>
@@ -53,12 +53,12 @@ export default function SEOContent() {
           <div className="bg-slate-900 rounded-[40px] sm:rounded-[60px] p-8 sm:p-16 text-white relative overflow-hidden group shadow-2xl shadow-slate-900/40">
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/30 to-transparent pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
             <div className="relative z-10 space-y-8 sm:space-y-10">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="h-px w-8 bg-primary" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Why Choose Us</span>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-px w-6 bg-primary" />
+                  <span className="text-[8px] font-black uppercase tracking-[0.2em] text-primary">Why Choose Us</span>
                 </div>
-                <h3 className="text-xl sm:text-4xl font-black uppercase tracking-tighter font-outfit leading-none">
+                <h3 className="text-base sm:text-4xl font-black uppercase tracking-tighter font-outfit leading-none">
                   Why Millions <br className="hidden sm:block"/> of Indians <br className="hidden sm:block"/> Choose Sahimed
                 </h3>
               </div>

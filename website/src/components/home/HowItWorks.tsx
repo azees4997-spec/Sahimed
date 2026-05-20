@@ -33,12 +33,12 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section className="py-12 sm:py-32 bg-white rounded-[40px] sm:rounded-[60px] my-6 sm:my-10 border border-slate-100 shadow-sm overflow-hidden relative">
+    <section className="py-8 sm:py-32 bg-white rounded-[32px] sm:rounded-[60px] my-4 sm:my-10 border border-slate-100 shadow-sm overflow-hidden relative">
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
-        <div className="text-center space-y-2 sm:space-y-4 mb-10 sm:mb-20">
-          <h2 className="text-xl sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none">
+        <div className="text-center space-y-1.5 sm:space-y-4 mb-8 sm:mb-20">
+          <h2 className="text-base sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none">
             How Sahimed <span className="text-primary italic">Works</span>
           </h2>
           <p className="text-slate-500 text-[10px] sm:text-lg font-medium max-w-2xl mx-auto px-4">
