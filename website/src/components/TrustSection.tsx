@@ -107,9 +107,9 @@ export default function TrustSection() {
         `}</style>
 
         {/* Google Stats Bar */}
-        <div className="mt-8 sm:mt-20 flex flex-row items-center justify-center gap-4 sm:gap-16 transition-all duration-700">
-           <div className="flex items-center gap-2 sm:gap-3">
-             <div className="w-6 h-6 sm:w-8 sm:h-8 shrink-0">
+        <div className="mt-8 sm:mt-20 flex flex-row flex-nowrap items-center justify-center gap-2 sm:gap-16 transition-all duration-700">
+           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+             <div className="w-5 h-5 sm:w-8 sm:h-8 shrink-0">
                <svg viewBox="0 0 24 24" className="w-full h-full">
                  <path
                    fill="#4285F4"
@@ -130,18 +130,18 @@ export default function TrustSection() {
                </svg>
              </div>
               <div className="text-left">
-                 <p className="text-slate-900 font-black text-[9px] sm:text-xs uppercase leading-none">Google Verified</p>
-                 <p className="text-slate-500 font-bold text-[7px] sm:text-[9px] uppercase tracking-widest">Business Partner</p>
+                 <p className="text-slate-900 font-black text-[8px] sm:text-xs uppercase leading-none">Google Verified</p>
+                 <p className="text-slate-500 font-bold text-[6px] sm:text-[9px] uppercase tracking-widest">Business Partner</p>
               </div>
            </div>
-           <div className="w-px h-6 bg-slate-200 sm:hidden" />
-           <div className="flex items-center gap-2 sm:gap-3">
-             <div className="bg-emerald-500/10 p-1.5 sm:p-2 rounded-lg sm:rounded-xl shrink-0">
-               <ShieldCheck className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-500" />
+           <div className="w-px h-5 bg-slate-200 shrink-0" />
+           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+             <div className="bg-[#34A853]/10 p-1 sm:p-2 rounded-lg sm:rounded-xl shrink-0">
+               <ShieldCheck className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-[#34A853]" />
              </div>
              <div className="text-left">
-                <p className="text-slate-900 font-black text-[9px] sm:text-xs uppercase leading-none">Safe & Secure</p>
-                <p className="text-slate-500 font-bold text-[7px] sm:text-[9px] uppercase tracking-widest">SSL Certified</p>
+                <p className="text-slate-900 font-black text-[8px] sm:text-xs uppercase leading-none">Safe & Secure</p>
+                <p className="text-slate-500 font-bold text-[6px] sm:text-[9px] uppercase tracking-widest">SSL Certified</p>
              </div>
            </div>
         </div>
