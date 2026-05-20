@@ -141,6 +141,28 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
              AI Content Generator
           </CardTitle>
           <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase">Target trending topics in India</p>
+
+          {/* Cloud Config Warning */}
+          <AnimatePresence>
+            {!isLoading && contents.length === 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 p-6 bg-amber-50 rounded-[32px] border border-amber-100 flex gap-4 items-start"
+              >
+                <div className="h-10 w-10 bg-amber-500 rounded-xl flex items-center justify-center shrink-0">
+                  <Globe className="text-white w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-black text-amber-900 uppercase tracking-widest mb-1">Cloud Sync Required</h4>
+                  <p className="text-[10px] font-medium text-amber-700 leading-relaxed">
+                    It looks like your <span className="font-black">GEMINI_API_KEY</span> is missing in your Vercel Dashboard. 
+                    To fix this, go to <span className="font-black italic">Settings &gt; Environment Variables</span> and add your key there.
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </CardHeader>
         <CardContent className="p-10 space-y-8">
           <div className="flex flex-col md:flex-row gap-4">

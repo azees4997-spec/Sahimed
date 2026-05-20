@@ -2,16 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { saveSEOContent } from '@/lib/marketing-db';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req: NextRequest) {
   try {
-    const { topic, category } = await req.json();
+    const key = process.env.GEMINI_API_KEY;
+    if (!key || key === "") {
+      return NextResponse.json({ 
+        error: "AI_KEY_MISSING", 
+        message: "Your GEMINI_API_KEY is not set in the environment. Please add it to your Vercel/Hosting environment variables." 
+      }, { status: 500 });
+    }
 
+    const { topic, category } = await req.json();
     if (!topic) {
       return NextResponse.json({ error: "Topic is required" }, { status: 400 });
     }
 
+    const genAI = new GoogleGenerativeAI(key);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
     const prompt = `
