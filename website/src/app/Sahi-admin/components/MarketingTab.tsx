@@ -27,6 +27,7 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [topic, setTopic] = useState('');
   const [previewData, setPreviewData] = useState<any>(null);
+  const [config, setConfig] = useState({ isAiConfigured: true, isDbConfigured: true });
 
   const generationSteps = [
     { label: 'Initializing Gemini AI Engine', icon: Sparkles },
@@ -40,8 +41,9 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
     setIsLoading(true);
     try {
       const res = await fetch('/api/marketing/content');
-      const data = await res.json();
-      if (Array.isArray(data)) setContents(data);
+      const result = await res.json();
+      if (result.data) setContents(result.data);
+      if (result.config) setConfig(result.config);
     } catch (err) {
       toast({ variant: 'destructive', title: 'Fetch Error', description: 'Failed to sync with MongoDB' });
     } finally {
@@ -89,7 +91,7 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
         setIsGenerating(false);
         fetchContent();
       } else {
-        throw new Error(result.error || 'Generation failed');
+        throw new Error(result.error || result.message || 'Generation failed');
       }
     } catch (err: any) {
       clearInterval(stepInterval);
@@ -144,7 +146,7 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
 
           {/* Cloud Config Warning */}
           <AnimatePresence>
-            {!isLoading && contents.length === 0 && (
+            {!isLoading && (!config.isAiConfigured || !config.isDbConfigured) && (
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -156,8 +158,13 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
                 <div>
                   <h4 className="text-[10px] font-black text-amber-900 uppercase tracking-widest mb-1">Cloud Sync Required</h4>
                   <p className="text-[10px] font-medium text-amber-700 leading-relaxed">
-                    It looks like your <span className="font-black">GEMINI_API_KEY</span> is missing in your Vercel Dashboard. 
-                    To fix this, go to <span className="font-black italic">Settings &gt; Environment Variables</span> and add your key there.
+                    {!config.isAiConfigured && (
+                      <>It looks like your <span className="font-black">GEMINI_API_KEY</span> is missing. </>
+                    )}
+                    {!config.isDbConfigured && (
+                      <>Your <span className="font-black">MONGODB_URI</span> is not set. </>
+                    )}
+                    Go to <span className="font-black italic text-primary underline">Settings &gt; Environment Variables</span> in Vercel to fix this.
                   </p>
                 </div>
               </motion.div>
