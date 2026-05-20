@@ -4,6 +4,15 @@ import clientPromise from '@/lib/mongodb';
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600; // Cache for 1 hour
 
+function escapeXml(unsafe: string) {
+  return (unsafe || '').toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 export async function GET() {
   try {
     const client = await clientPromise;
@@ -21,17 +30,16 @@ export async function GET() {
   <channel>
     <title>Sahimed Product Feed</title>
     <link>${baseUrl}</link>
-    <description>Quality medicines delivered across India</description>
+    <description>Authentic medicines and healthcare products at honest prices.</description>
     ${products.map(product => {
-      // Basic data cleaning
-      const id = product._id.toString();
-      const title = (product.name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const description = (product.description || `Buy ${product.name} at best prices on Sahimed. Quality medicines and healthcare products.`).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const link = `${baseUrl}/product/${id}`;
-      const imageLink = product.images && product.images.length > 0 ? product.images[0] : (product.image || `${baseUrl}/placeholder-medicine.png`);
-      const price = `${product.price || 0} INR`;
-      const brand = (product.marketer_name || product.manufacturer || 'Sahimed').replace(/&/g, '&amp;');
-      const category = product.category || 'Medications';
+      const id = escapeXml(product._id.toString());
+      const title = escapeXml(product.name || '');
+      const description = escapeXml(product.description || `Buy ${product.name} at best prices on Sahimed. Quality medicines and healthcare products.`);
+      const link = escapeXml(`${baseUrl}/product/${id}`);
+      const imageLink = escapeXml(product.images && product.images.length > 0 ? product.images[0] : (product.image || `${baseUrl}/placeholder-medicine.png`));
+      const price = escapeXml(`${product.price || 0} INR`);
+      const brand = escapeXml(product.marketer_name || product.manufacturer || 'Sahimed');
+      const category = escapeXml(product.category || 'Medications');
 
       return `
     <item>
