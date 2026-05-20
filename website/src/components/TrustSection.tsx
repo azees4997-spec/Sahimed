@@ -30,7 +30,7 @@ const REVIEWS = [
 
 export default function TrustSection() {
   return (
-    <section className="py-20 sm:py-32 relative overflow-hidden">
+    <section className="py-12 sm:py-32 relative overflow-hidden">
       {/* Background Accents */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl px-4 pointer-events-none -z-10">
          <div className="absolute top-20 left-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
@@ -38,17 +38,17 @@ export default function TrustSection() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center space-y-4 mb-20">
+        <div className="text-center space-y-2 sm:space-y-4 mb-10 sm:mb-20">
           <div className="flex items-center justify-center gap-1 mb-2">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-5 h-5 fill-[#FACC15] text-[#FACC15]" />
+              <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-[#FACC15] text-[#FACC15]" />
             ))}
-            <span className="ml-2 text-slate-900 font-black text-sm uppercase tracking-tighter">4.9/5 on Google</span>
+            <span className="ml-2 text-slate-900 font-black text-[10px] sm:text-sm uppercase tracking-tighter">4.9/5 on Google</span>
           </div>
-          <h2 className="text-4xl sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none">
-            Trusted by <span className="text-primary italic">Thousands</span> <br/> of Happy Indians
+          <h2 className="text-xl sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none">
+            Trusted by <span className="text-primary italic">Thousands</span> <br className="hidden sm:block"/> of Happy Indians
           </h2>
-          <p className="text-slate-500 text-lg font-medium max-w-2xl mx-auto">
+          <p className="text-slate-500 text-[10px] sm:text-lg font-medium max-w-2xl mx-auto">
             Real stories from real customers who switched to Sahimed for authentic and affordable healthcare.
           </p>
         </div>

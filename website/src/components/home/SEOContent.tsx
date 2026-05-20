@@ -6,7 +6,7 @@ import Image from 'next/image';
 
 export default function SEOContent() {
   return (
-    <section className="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6">
+    <section className="py-12 sm:py-32 max-w-7xl mx-auto px-4 sm:px-6">
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-12 sm:gap-20 items-start lg:items-center">
         
         {/* Text Content Area - Col Span 7 on Desktop */}
@@ -21,11 +21,11 @@ export default function SEOContent() {
               <span className="text-[10px] font-black uppercase tracking-widest text-green-700">Google Verified Pharmacy</span>
             </div>
             
-            <h2 className="text-2xl sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-[0.95]">
+            <h2 className="text-xl sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-[0.95]">
               SahiMed: India's Trusted <br className="hidden sm:block"/>
               <span className="text-primary italic">Digital Pharmacy Partner</span>
             </h2>
-            <p className="text-base sm:text-xl text-slate-900 font-bold sm:font-medium leading-relaxed max-w-2xl">
+            <p className="text-[10px] sm:text-xl text-slate-900 font-bold sm:font-medium leading-relaxed max-w-2xl">
               At SahiMed, we believe that healthcare should be accessible, affordable, and most importantly—authentic. In a world of rising medical costs and uncertainty, we stand as a beacon of trust for millions of Indian families.
             </p>
           </div>
@@ -58,7 +58,7 @@ export default function SEOContent() {
                   <div className="h-px w-8 bg-primary" />
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Why Choose Us</span>
                 </div>
-                <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter font-outfit leading-none">
+                <h3 className="text-xl sm:text-4xl font-black uppercase tracking-tighter font-outfit leading-none">
                   Why Millions <br className="hidden sm:block"/> of Indians <br className="hidden sm:block"/> Choose Sahimed
                 </h3>
               </div>

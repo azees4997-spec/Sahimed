@@ -31,17 +31,17 @@ export default function FAQSection() {
   const [openIndex, setOpenIndex] = React.useState<number | null>(null);
 
   return (
-    <section className="py-12 sm:py-24 max-w-4xl mx-auto px-4 sm:px-6">
-      <div className="text-center space-y-3 sm:space-y-4 mb-10 sm:mb-16">
+    <section className="py-12 sm:py-32 max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="text-center space-y-2 sm:space-y-4 mb-10 sm:mb-16">
         <div className="flex justify-center">
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-xl sm:rounded-2xl flex items-center justify-center">
             <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
           </div>
         </div>
-        <h2 className="text-2xl sm:text-4xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none px-4">
+        <h2 className="text-xl sm:text-4xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none px-4">
           Frequently Asked <span className="text-primary italic">Questions</span>
         </h2>
-        <p className="text-slate-500 text-xs sm:text-base font-medium">Everything you need to know about Sahimed's authentic healthcare services.</p>
+        <p className="text-slate-500 text-[10px] sm:text-base font-medium">Everything you need to know about Sahimed's authentic healthcare services.</p>
       </div>
 
       <div className="space-y-3 sm:space-y-4">
