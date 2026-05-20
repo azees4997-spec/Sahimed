@@ -6,23 +6,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const FAQS = [
   {
-    question: "Are the medicines sold on Sahimed 100% authentic?",
+    question: "Are the medicines sold 100% authentic?",
     answer: "Yes, absolutely. Every product on Sahimed is sourced directly from licensed pharmaceutical manufacturers or their authorized distributors. We have a strict quality-check protocol to ensure that only genuine, unexpired medicines reach your doorstep."
   },
   {
-    question: "Do I need to upload a prescription to buy medicines?",
+    question: "Is a prescription required for medicines?",
     answer: "For all prescription-only (Rx) medicines, a valid prescription from a registered medical practitioner is mandatory. You can easily upload a photo or PDF of your prescription during checkout. Our certified pharmacists verify every prescription for your safety."
   },
   {
-    question: "How long does it take for Sahimed to deliver medicines?",
+    question: "How long does delivery usually take?",
     answer: "We offer fast and safe delivery across India. Delivery times typically range from 24-48 hours in major cities like Bangalore, Mumbai, and Delhi, and 3-5 days for other regions. We focus on ensuring the medicines are transported safely and securely."
   },
   {
-    question: "Can I order medicines via WhatsApp or phone call?",
+    question: "Can I order via WhatsApp or phone call?",
     answer: "Yes! We understand that some customers prefer a more personal touch. You can reach out to our team at +91 7349499898 via WhatsApp or call us to place your order directly. Our experts will help you with the process."
   },
   {
-    question: "What makes Sahimed's prices more affordable?",
+    question: "Why are Sahimed's prices so affordable?",
     answer: "Our motto is 'Sahi Dawai, Sahi Daam Pe'. We achieve this by optimizing our supply chain, removing unnecessary intermediaries, and passing those savings directly to you. We aim to make chronic healthcare affordable for every Indian household."
   }
 ];
@@ -38,7 +38,7 @@ export default function FAQSection() {
             <HelpCircle className="w-4 h-4 sm:w-6 sm:h-6 text-primary" />
           </div>
         </div>
-        <h2 className="text-base sm:text-4xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none px-4">
+        <h2 className="text-sm sm:text-4xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none px-4">
           Frequently Asked <span className="text-primary italic">Questions</span>
         </h2>
         <p className="text-slate-500 text-[10px] sm:text-base font-medium">Everything you need to know about Sahimed's authentic healthcare services.</p>
@@ -52,9 +52,9 @@ export default function FAQSection() {
           >
             <button
               onClick={() => setOpenIndex(openIndex === i ? null : i)}
-              className="w-full px-4 py-4 sm:px-8 sm:py-7 flex items-center justify-between text-left group gap-3"
+              className="w-full px-3 py-4 sm:px-8 sm:py-7 flex items-center justify-between text-left group gap-2"
             >
-              <span className={`text-[10px] sm:text-lg font-black tracking-tighter sm:tracking-tight font-outfit uppercase truncate whitespace-nowrap pr-2 ${openIndex === i ? 'text-primary' : 'text-slate-900'}`}>
+              <span className={`flex-1 min-w-0 text-[11px] sm:text-lg font-bold sm:font-black tracking-tight font-outfit sm:uppercase truncate whitespace-nowrap pr-2 ${openIndex === i ? 'text-primary' : 'text-slate-900'}`}>
                 {faq.question}
               </span>
               <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all shrink-0 ${openIndex === i ? 'bg-primary text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'}`}>
