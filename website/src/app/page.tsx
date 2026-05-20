@@ -9,6 +9,7 @@ import HomeClient from '@/components/HomeClient';
 import clientPromise from '@/lib/mongodb';
 import HeroSearch from '@/components/HeroSearch';
 import { getDbAdmin } from '@/lib/firebase-admin';
+import TrustSection from '@/components/TrustSection';
 
 export const revalidate = 60; // Revalidate every minute
 
@@ -148,6 +149,8 @@ export default async function Home() {
             topSelections={topSelections}
             medicines={medicines}
           />
+
+          <TrustSection />
         </main>
       </div>
     </PageTransition>
