@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -71,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         setState(() {
           _categories = (results[0] as List<CategoryModel>?) ?? [];
-          _bestSellers = (results[1] as List<ProductModel>?)?.take(3).toList() ?? [];
+          _bestSellers = (results[1] as List<ProductModel>?)?.take(10).toList() ?? [];
           _topSelections = (results[2] as List<ProductModel>?)?.take(10).toList() ?? [];
           _medicines = (results[3] as List<ProductModel>?)?.take(20).toList() ?? [];
           _isLoading = false;
@@ -142,43 +143,51 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(vertical: 20),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  _buildSection(
-                    title: 'Most Popular Brands',
-                    child: _isLoading ? _shimmerHScroll() : _horizontalPopularBrands(context),
-                  ),
-                  const SizedBox(height: 28),
-                  _buildSection(
-                    title: 'Top Categories',
-                    trailing: GestureDetector(
-                      onTap: () => _goSearch(context),
-                      child: Row(
-                        children: [
-                          Text('EXPLORE ALL', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
-                          const Icon(LucideIcons.chevronRight, size: 14, color: SahimedColors.primary),
-                        ],
-                      ),
+                  if (_isLoading || _bestSellers.isNotEmpty) ...[
+                    _buildSection(
+                      title: 'Most Popular Brands',
+                      child: _isLoading ? _shimmerHScroll() : _horizontalPopularBrands(context),
                     ),
-                    child: _isLoading ? _shimmerGrid(9) : _categoryGrid(context),
-                  ),
-                  const SizedBox(height: 28),
+                    const SizedBox(height: 28),
+                  ],
+                  if (_isLoading || _categories.isNotEmpty) ...[
+                    _buildSection(
+                      title: 'Top Categories',
+                      trailing: GestureDetector(
+                        onTap: () => _goSearch(context),
+                        child: Row(
+                          children: [
+                            Text('EXPLORE ALL', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
+                            const Icon(LucideIcons.chevronRight, size: 14, color: SahimedColors.primary),
+                          ],
+                        ),
+                      ),
+                      child: _isLoading ? _shimmerGrid(9) : _categoryGrid(context),
+                    ),
+                    const SizedBox(height: 28),
+                  ],
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: _buildDeliveryBanner(context),
                   ),
                   const SizedBox(height: 28),
-                  _buildSection(
-                    title: 'Top Selections',
-                    trailing: Badge(
-                      label: Text('CURATED', style: GoogleFonts.outfit(fontSize: 7, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
-                      backgroundColor: SahimedColors.primary.withOpacity(0.1),
+                  if (_isLoading || _topSelections.isNotEmpty) ...[
+                    _buildSection(
+                      title: 'Top Selections',
+                      trailing: Badge(
+                        label: Text('CURATED', style: GoogleFonts.outfit(fontSize: 7, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
+                        backgroundColor: SahimedColors.primary.withOpacity(0.1),
+                      ),
+                      child: _isLoading ? _shimmerHScroll() : _horizontalTopSelections(context),
                     ),
-                    child: _isLoading ? _shimmerHScroll() : _horizontalTopSelections(context),
-                  ),
-                  const SizedBox(height: 28),
-                  _buildSection(
-                    title: 'Featured Medicines',
-                    child: _isLoading ? _shimmerHScroll() : _horizontalProductScroll(context),
-                  ),
+                    const SizedBox(height: 28),
+                  ],
+                  if (_isLoading || _medicines.isNotEmpty) ...[
+                    _buildSection(
+                      title: 'Featured Medicines',
+                      child: _isLoading ? _shimmerHScroll() : _horizontalProductScroll(context),
+                    ),
+                  ],
                   const SizedBox(height: 120),
                 ]),
               ),
@@ -219,6 +228,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(100),
                     border: Border.all(color: Colors.black.withOpacity(0.05)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: SahimedColors.primary.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -236,54 +252,54 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                ),
+                ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.2),
                 const SizedBox(height: 16),
                 RichText(
                   text: TextSpan(
-                    style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w900, height: 1.1, color: const Color(0xFF0F172A)),
+                    style: GoogleFonts.outfit(fontSize: 30, fontWeight: FontWeight.w900, height: 1.0, color: const Color(0xFF0F172A)),
                     children: [
-                      const TextSpan(text: 'AFFORDABLE MEDICINES\n'),
+                      const TextSpan(text: 'AFFORDABLE\nMEDICINES\n'),
                       TextSpan(
-                        text: 'FOR EVERYDAY HEALTH',
+                        text: 'FOR HEALTH',
                         style: GoogleFonts.outfit(color: SahimedColors.primary, fontStyle: FontStyle.italic),
                       ),
                     ],
                   ),
-                ),
+                ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.1),
               ],
             ),
           ),
           const SizedBox(width: 12),
           Container(
-            padding: const EdgeInsets.all(4),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
                   color: SahimedColors.primary.withOpacity(0.15),
-                  blurRadius: 30,
-                  offset: const Offset(0, 15),
+                  blurRadius: 40,
+                  offset: const Offset(0, 20),
                 ),
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(22),
               child: CachedNetworkImage(
                 imageUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop',
-                width: 110,
-                height: 120,
+                width: 120,
+                height: 140,
                 fit: BoxFit.cover,
                 alignment: Alignment.topCenter,
                 errorWidget: (ctx, _, _) => Container(
-                  width: 110,
-                  height: 120,
+                  width: 120,
+                  height: 140,
                   color: _lavender,
                   child: const Icon(LucideIcons.stethoscope, color: SahimedColors.primary, size: 40),
                 ),
               ),
             ),
-          ),
+          ).animate().fadeIn(duration: 800.ms, delay: 400.ms).scale(begin: const Offset(0.8, 0.8)),
         ],
       ),
     );
@@ -334,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
         ],
-      ),
+      ).animate().fadeIn(duration: 600.ms, delay: 600.ms).slideY(begin: 0.2),
     );
   }
 
@@ -365,13 +381,36 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(title.toUpperCase(), style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
-              ?trailing,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 24,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: SahimedColors.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    title.toUpperCase(),
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF0F172A),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+              if (trailing != null) trailing,
             ],
           ),
-          const SizedBox(height: 12),
-          child,
+          const SizedBox(height: 16),
+          child.animate().fadeIn(duration: 800.ms).slideY(begin: 0.05, curve: Curves.easeOutCubic),
         ],
       ),
     );
@@ -561,41 +600,49 @@ class _StickySearchDelegate extends SliverPersistentHeaderDelegate {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          height: 56,
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          height: 60,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: SahimedColors.primary.withOpacity(0.1),
+                color: SahimedColors.primary.withOpacity(0.08),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
             ],
-            border: Border.all(color: const Color(0xFFF1F5F9), width: 2),
+            border: Border.all(color: SahimedColors.primary.withOpacity(0.05), width: 2),
           ),
           child: Row(
             children: [
+              Icon(LucideIcons.search, size: 20, color: SahimedColors.primary.withOpacity(0.6)),
+              const SizedBox(width: 16),
               Expanded(
                 child: Text(
-                  'SEARCH MEDICINES...',
+                  'Search 10,000+ medicines...',
                   style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w600,
                     color: const Color(0xFF94A3B8),
-                    letterSpacing: 1.5,
-                    fontSize: 14,
+                    fontSize: 15,
                   ),
                 ),
               ),
               Container(
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(
-                  color: SahimedColors.primary,
-                  shape: BoxShape.circle,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: SahimedColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(100),
                 ),
-                child: const Icon(LucideIcons.search, size: 22, color: Colors.white),
+                child: Text(
+                  'FIND',
+                  style: GoogleFonts.outfit(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: SahimedColors.primary,
+                    letterSpacing: 1,
+                  ),
+                ),
               ),
             ],
           ),

@@ -1,4 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -480,140 +482,155 @@ class _HomeHeaderState extends State<HomeHeader> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withOpacity(0.8),
         border: Border(
-          bottom: BorderSide(color: const Color(0xFFF1F5F9), width: 1),
+          bottom: BorderSide(color: Colors.black.withOpacity(0.05), width: 1),
         ),
       ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Column(
             children: [
-              // 1. Logo Section
-              GestureDetector(
-                onTap: () =>
-                    Navigator.of(context).popUntil((route) => route.isFirst),
-                child: Row(
-                  children: [
-                    SvgPicture.asset(
-                      'assets/icons/logo.svg',
-                      width: 38,
-                      height: 38,
-                    ),
-                    const SizedBox(width: 6),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // 1. Logo Section
+                  GestureDetector(
+                    onTap: () =>
+                        Navigator.of(context).popUntil((route) => route.isFirst),
+                    child: Row(
                       children: [
-                        RichText(
-                          text: TextSpan(
-                            children: [
-                              TextSpan(
-                                text: 'Sahi',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF0F172A),
-                                  letterSpacing: -0.5,
-                                ),
+                        SvgPicture.asset(
+                          'assets/icons/logo.svg',
+                          width: 42,
+                          height: 42,
+                        ).animate().fadeIn(duration: 600.ms).scale(delay: 200.ms),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: 'Sahi',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF0F172A),
+                                      letterSpacing: -0.8,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: 'Med',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w900,
+                                      color: SahimedColors.primary,
+                                      letterSpacing: -0.8,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              TextSpan(
-                                text: 'Med',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w900,
-                                  color: SahimedColors.primary,
-                                  letterSpacing: -0.5,
-                                ),
+                            ),
+                            Text(
+                              'Sahi dawai sahi daam pe'.toUpperCase(),
+                              style: GoogleFonts.outfit(
+                                fontSize: 7,
+                                fontWeight: FontWeight.w900,
+                                color: SahimedColors.primary.withOpacity(0.8),
+                                letterSpacing: 1.5,
+                                height: 0.8,
                               ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          'Sahi dawai sahi daam pe'.toUpperCase(),
-                          style: GoogleFonts.outfit(
-                            fontSize: 6.5,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF64748B),
-                            letterSpacing: 1.2,
-                            height: 0.8,
-                          ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-
-              // 2. Right Actions
-              Row(
-                children: [
-                  // Location Picker (Minimalist like web)
-                  GestureDetector(
-                    onTap: _showLocationSheet,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(100),
-                        border: Border.all(color: const Color(0xFFF1F5F9)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            LucideIcons.mapPin,
-                            size: 12,
-                            color: SahimedColors.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 70),
-                            child: Text(
-                              _currentAddress,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.outfit(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF334155),
-                              ),
-                            ),
-                          ),
-                          if (_isServiceable != null) ...[
-                            const SizedBox(width: 4),
-                            Icon(
-                              _isServiceable! ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                              size: 10,
-                              color: _isServiceable! ? SahimedColors.success : SahimedColors.accent,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
                   ),
-                  const SizedBox(width: 10),
 
-                  // Search Trigger
-                  _NavbarIcon(
-                    icon: LucideIcons.search,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SearchScreen(),
+                  // 2. Right Actions
+                  Row(
+                    children: [
+                      // Location Picker (Minimalist like web)
+                      GestureDetector(
+                        onTap: _showLocationSheet,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: SahimedColors.primary.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(color: SahimedColors.primary.withOpacity(0.1)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                LucideIcons.mapPin,
+                                size: 14,
+                                color: SahimedColors.primary,
+                              ),
+                              const SizedBox(width: 6),
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 80),
+                                child: Text(
+                                  _currentAddress,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF1E293B),
+                                  ),
+                                ),
+                              ),
+                              if (_isServiceable != null) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: _isServiceable! ? SahimedColors.success : SahimedColors.rose500,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: (_isServiceable! ? SahimedColors.success : SahimedColors.rose500).withOpacity(0.4),
+                                        blurRadius: 4,
+                                        spreadRadius: 1,
+                                      )
+                                    ]
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                    backgroundColor: SahimedColors.primary,
-                    iconColor: Colors.white,
-                    shadow: true,
+                      const SizedBox(width: 12),
+
+                      // Search Trigger
+                      _NavbarIcon(
+                        icon: LucideIcons.search,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SearchScreen(),
+                          ),
+                        ),
+                        backgroundColor: SahimedColors.primary,
+                        iconColor: Colors.white,
+                        shadow: true,
+                      ),
+                    ],
                   ),
                 ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

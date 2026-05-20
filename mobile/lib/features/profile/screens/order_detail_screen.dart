@@ -664,7 +664,7 @@ class OrderDetailScreen extends StatelessWidget {
       {'label': 'Packed', 'icon': LucideIcons.package},
       {'label': 'In Transit', 'icon': LucideIcons.truck},
       {'label': 'Out for Delivery', 'icon': LucideIcons.mapPin},
-      {'label': 'Delivered', 'icon': LucideIcons.home},
+      {'label': 'Delivered', 'icon': LucideIcons.house},
     ];
 
     int activeIndex = 0;

@@ -8,7 +8,7 @@
 | Component | Version | Build Status | Deployment Status |
 | :--- | :--- | :--- | :--- |
 | **Mobile (Flutter)** | `1.0.0+1` | 🟡 Pending Setup | ⚪ Not Deployed |
-| **Website (Next.js)** | `0.1.0` | 🟢 Ready | 🟡 Staging Active |
+| **Website (Next.js)** | `0.1.0` | 🟢 Ready | 🟢 Live (asia-southeast1) |
 | **Backend (Firebase)** | N/A | 🟢 Active | 🟢 Functions Live |
 
 ---
@@ -30,5 +30,6 @@ I can execute these for you directly:
 
 ## 🧬 Ecosystem Health
 - **Firebase Project**: `studio-9756314138-8403b`
-- **Region**: `asia-southeast1` (Database)
+- **Production URL**: https://sahimed--studio-9756314138-8403b.asia-southeast1.hosted.app/
+- **Region**: `asia-southeast1` (Database & Primary Hosting)
 - **Control Center Path**: `c:/Sahimed/commander`

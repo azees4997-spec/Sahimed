@@ -9,6 +9,7 @@ import {
   Tag, 
   Users, 
   Megaphone, 
+  Rocket,
   Package, 
   Dna, 
   ArrowRight,
@@ -28,6 +29,7 @@ export function OverviewTab({ setTab, role }: { setTab: (t: AdminTab) => void, r
   const allStats = [
     { label: 'Prescriptions', icon: FileText, desc: 'Process uploaded Rx', tab: 'enquiries', color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Orders', icon: ShoppingBag, desc: 'Manage fulfillment', tab: 'fulfillment', color: 'text-sky-500', bg: 'bg-sky-50' },
+    { label: 'Growth', icon: Rocket, desc: 'AI SEO & Marketing', tab: 'marketing', color: 'text-rose-600', bg: 'bg-rose-50' },
     { label: 'Coupons', icon: Ticket, desc: 'Manage discounts', tab: 'promocodes', color: 'text-purple-500', bg: 'bg-purple-50' },
     { label: 'Fees', icon: Receipt, desc: 'Delivery & packing', tab: 'fees', color: 'text-orange-500', bg: 'bg-orange-50' },
     { label: 'Banners', icon: ImageIcon, desc: 'Home promotions', tab: 'banners', color: 'text-amber-500', bg: 'bg-amber-50' },

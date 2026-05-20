@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
 import 'product_detail_screen.dart';
@@ -217,17 +218,23 @@ class _SearchScreenState extends State<SearchScreen> {
                           right: 0,
                           child: _buildSmartBanner(),
                         ),
+                      
+                      // SUGGESTIONS OVERLAY - Now actually integrated!
+                      if (_currentQuery.isNotEmpty && (_results.isNotEmpty || _moleculeResults.isNotEmpty))
+                        _buildSuggestionsOverlay(),
                     ],
                   ),
                 ),
               ],
             ),
 
-
-            if (_isLoading)
-              const Positioned.fill(
-                child: Center(
-                  child: CircularProgressIndicator(color: SahimedColors.primary),
+            if (_isLoading && _results.isEmpty)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.white.withOpacity(0.5),
+                  child: const Center(
+                    child: CircularProgressIndicator(color: SahimedColors.primary),
+                  ),
                 ),
               ),
           ],
@@ -240,26 +247,28 @@ class _SearchScreenState extends State<SearchScreen> {
     if (_currentQuery.isEmpty) return const SizedBox.shrink();
 
     return Positioned(
-      top: 60, // Below search bar
-      left: 16,
-      right: 16,
+      top: 0, 
+      left: 0,
+      right: 0,
+      bottom: 0,
       child: Container(
-        constraints:
-            BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.6),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.12),
-              blurRadius: 30,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: IntrinsicHeight(
+        color: Colors.white.withOpacity(0.95),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: SahimedColors.primary.withOpacity(0.12),
+                blurRadius: 40,
+                offset: const Offset(0, 15),
+              ),
+            ],
+            border: Border.all(color: SahimedColors.primary.withOpacity(0.05), width: 1.5),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -268,7 +277,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   flex: 5,
                   child: Container(
                     color: const Color(0xFFF8FAFC),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -277,34 +286,34 @@ class _SearchScreenState extends State<SearchScreen> {
                           child: Row(
                             children: [
                               Container(
-                                width: 6,
-                                height: 6,
+                                width: 8,
+                                height: 8,
                                 decoration: const BoxDecoration(
                                   color: SahimedColors.primary,
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 10),
                               Text(
                                 'MOLECULES',
                                 style: GoogleFonts.outfit(
-                                  fontSize: 9,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.w900,
                                   color: const Color(0xFF94A3B8),
-                                  letterSpacing: 1.5,
+                                  letterSpacing: 2,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         if (_moleculeResults.isEmpty)
                           Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(20),
                             child: Text(
                               'NO SALTS FOUND',
                               style: GoogleFonts.inter(
-                                  fontSize: 10, color: const Color(0xFFCBD5E1)),
+                                  fontSize: 11, color: const Color(0xFFCBD5E1), fontWeight: FontWeight.bold),
                             ),
                           )
                         else
@@ -312,19 +321,19 @@ class _SearchScreenState extends State<SearchScreen> {
                             child: ListView.builder(
                               shrinkWrap: true,
                               padding: EdgeInsets.zero,
-                              itemCount: _moleculeResults.length.clamp(0, 8),
+                              itemCount: _moleculeResults.length.clamp(0, 12),
                               itemBuilder: (context, index) {
                                 final mol = _moleculeResults[index];
                                 final name =
                                     mol['molecule'] ?? mol['name'] ?? '';
                                 return ListTile(
                                   dense: true,
-                                  visualDensity: VisualDensity.compact,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                                   title: Text(
                                     name.toUpperCase(),
                                     style: GoogleFonts.outfit(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
                                       color: const Color(0xFF334155),
                                     ),
                                     maxLines: 2,
@@ -332,7 +341,9 @@ class _SearchScreenState extends State<SearchScreen> {
                                   ),
                                   onTap: () {
                                     HapticFeedback.lightImpact();
-                                    _searchController.text = name;
+                                    setState(() {
+                                      _searchController.text = name;
+                                    });
                                     _performSearch(name);
                                   },
                                 );
@@ -343,13 +354,13 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                   ),
                 ),
-                // Divider
-                Container(width: 1, color: const Color(0xFFE2E8F0)),
+                // Vertical Divider
+                Container(width: 1.5, color: const Color(0xFFF1F5F9)),
                 // Right Column: Brands (Medicines)
                 Expanded(
                   flex: 6,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -358,34 +369,34 @@ class _SearchScreenState extends State<SearchScreen> {
                           child: Row(
                             children: [
                               Container(
-                                width: 6,
-                                height: 6,
+                                width: 8,
+                                height: 8,
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF10B981),
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 10),
                               Text(
                                 'BRANDS',
                                 style: GoogleFonts.outfit(
-                                  fontSize: 9,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.w900,
                                   color: const Color(0xFF94A3B8),
-                                  letterSpacing: 1.5,
+                                  letterSpacing: 2,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         if (_results.isEmpty)
                           Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(20),
                             child: Text(
                               'NO PRODUCTS FOUND',
                               style: GoogleFonts.inter(
-                                  fontSize: 10, color: const Color(0xFFCBD5E1)),
+                                  fontSize: 11, color: const Color(0xFFCBD5E1), fontWeight: FontWeight.bold),
                             ),
                           )
                         else
@@ -393,16 +404,16 @@ class _SearchScreenState extends State<SearchScreen> {
                             child: ListView.builder(
                               shrinkWrap: true,
                               padding: EdgeInsets.zero,
-                              itemCount: _results.length.clamp(0, 8),
+                              itemCount: _results.length.clamp(0, 12),
                               itemBuilder: (context, index) {
                                 final prod = _results[index];
                                 return ListTile(
                                   dense: true,
-                                  visualDensity: VisualDensity.compact,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                                   title: Text(
                                     prod.name.toUpperCase(),
                                     style: GoogleFonts.outfit(
-                                      fontSize: 11,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w900,
                                       color: SahimedColors.primary,
                                     ),
@@ -412,8 +423,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                   subtitle: Text(
                                     '₹${prod.price}',
                                     style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
                                       color: const Color(0xFF64748B),
                                     ),
                                   ),
@@ -439,14 +450,24 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
             ),
           ),
-        ),
+        ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, curve: Curves.easeOutCubic),
       ),
     );
   }
 
   Widget _buildSearchHeader(bool canPop) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           if (canPop) ...[
@@ -456,11 +477,17 @@ class _SearchScreenState extends State<SearchScreen> {
                 Navigator.pop(context);
               },
               child: Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: SahimedColors.primary.withOpacity(0.05),
+                      blurRadius: 10,
+                    ),
+                  ],
                 ),
                 child: const Icon(
                   LucideIcons.chevronLeft,
@@ -473,27 +500,28 @@ class _SearchScreenState extends State<SearchScreen> {
           ],
           Expanded(
             child: Container(
-              height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              height: 56,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(16),
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: SahimedColors.primary.withOpacity(0.08), width: 1.5),
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     LucideIcons.search,
-                    size: 18,
-                    color: Color(0xFF94A3B8),
+                    size: 20,
+                    color: SahimedColors.primary.withOpacity(0.6),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: TextField(
                       controller: _searchController,
                       autofocus: true,
                       style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                         color: const Color(0xFF0F172A),
                       ),
                       onSubmitted: (value) {
@@ -502,9 +530,9 @@ class _SearchScreenState extends State<SearchScreen> {
                         }
                       },
                       decoration: InputDecoration(
-                        hintText: 'Search Medicines, Health Products...',
-                        hintStyle: GoogleFonts.inter(
-                          fontSize: 13,
+                        hintText: 'Search medicines or salts...',
+                        hintStyle: GoogleFonts.outfit(
+                          fontSize: 15,
                           color: const Color(0xFF94A3B8),
                           fontWeight: FontWeight.w500,
                         ),
@@ -513,25 +541,27 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                     ),
                   ),
-                  if (_isLoading)
-                    const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: SahimedColors.primary,
-                      ),
-                    )
-                  else if (_currentQuery.isNotEmpty)
+                  if (_currentQuery.isNotEmpty)
                     GestureDetector(
                       onTap: () {
                         HapticFeedback.selectionClick();
                         _searchController.clear();
+                        setState(() {
+                          _results = [];
+                          _moleculeResults = [];
+                        });
                       },
-                      child: const Icon(
-                        Icons.cancel_rounded,
-                        size: 20,
-                        color: Color(0xFFCBD5E1),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFCBD5E1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          size: 14,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                 ],
@@ -803,9 +833,9 @@ class _SearchScreenState extends State<SearchScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 0.8,
+                    mainAxisSpacing: 20,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 0.85,
                   ),
                   itemCount: _categories.length.clamp(0, 6),
                   itemBuilder: (context, i) {
@@ -823,41 +853,51 @@ class _SearchScreenState extends State<SearchScreen> {
                       child: Column(
                         children: [
                           Container(
-                            height: 80,
-                            width: 80,
+                            height: 84,
+                            width: 84,
+                            padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                color: const Color(0xFFF1F5F9),
-                              ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.04),
-                                  blurRadius: 10,
+                                  color: SahimedColors.primary.withOpacity(0.08),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
                                 ),
                               ],
+                              border: Border.all(
+                                color: SahimedColors.primary.withOpacity(0.05),
+                                width: 1.5,
+                              ),
                             ),
-                            child: ClipOval(
-                              child: CachedNetworkImage(
-                                imageUrl: cat.imageUrl,
-                                fit: BoxFit.cover,
-                                errorWidget: (c, u, e) => const Icon(
-                                  LucideIcons.pill,
-                                  color: SahimedColors.primary,
-                                  size: 24,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: _catBg(i),
+                                shape: BoxShape.circle,
+                              ),
+                              child: ClipOval(
+                                child: CachedNetworkImage(
+                                  imageUrl: cat.imageUrl,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (c, u, e) => const Icon(
+                                    LucideIcons.pill,
+                                    color: SahimedColors.primary,
+                                    size: 24,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 10),
                           Text(
                             cat.name.toUpperCase(),
                             textAlign: TextAlign.center,
                             style: GoogleFonts.outfit(
                               fontSize: 9,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w900,
                               color: const Color(0xFF1E293B),
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ],
@@ -1059,4 +1099,11 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
     );
   }
+
+  Color _catBg(int i) => [
+        const Color(0xFFEDE9FE), // lavender
+        const Color(0xFFFFF1F2), // sahiPink
+        const Color(0xFFEFF6FF), // sahiBlue
+        const Color(0xFFECFDF5)  // sahiGreen
+      ][i % 4];
 }
