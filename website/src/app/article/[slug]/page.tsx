@@ -1,0 +1,162 @@
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import clientPromise from '@/lib/mongodb';
+import Navbar from '@/components/Navbar';
+import { Sparkles, Calendar, User, Clock, Share2, ArrowLeft, Bookmark } from 'lucide-react';
+import { safeFormat } from '@/lib/safe-date';
+
+export const revalidate = 3600; // Cache for 1 hour
+
+interface PageProps {
+  params: Promise<{ slug: string }>;
+}
+
+async function getArticle(slug: string) {
+  try {
+    const client = await clientPromise;
+    const db = client.db('sahimed');
+    const article = await db.collection('seo_content').findOne({ slug: slug });
+    return article;
+  } catch (error) {
+    console.error("Error fetching article:", error);
+    return null;
+  }
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const article = await getArticle(slug);
+  
+  if (!article) return { title: 'Article Not Found | Sahimed' };
+
+  return {
+    title: `${article.title} | Sahimed Health Blog`,
+    description: article.excerpt,
+    keywords: article.keywords,
+    openGraph: {
+      title: article.title,
+      description: article.excerpt,
+      type: 'article',
+      publishedTime: article.createdAt?.toISOString(),
+      authors: ['Sahimed Health Team'],
+    }
+  };
+}
+
+export default async function ArticlePage({ params }: PageProps) {
+  const { slug } = await params;
+  const article = await getArticle(slug);
+
+  if (!article) {
+    notFound();
+  }
+
+  // Estimated reading time
+  const wordCount = article.content.split(/\s+/).length;
+  const readingTime = Math.ceil(wordCount / 200);
+
+  return (
+    <div className="min-h-screen bg-[#FDFEFF]">
+      <Navbar />
+      
+      {/* Premium Hero Header */}
+      <div className="relative pt-32 pb-20 overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-blue-50/50 to-white -z-10" />
+        <div className="absolute top-20 right-[-10%] w-[500px] h-[500px] bg-blue-100/30 rounded-full blur-3xl -z-10 animate-pulse" />
+        
+        <div className="max-w-4xl mx-auto px-6">
+          <button className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors mb-12 group font-bold text-xs uppercase tracking-widest">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            Back to Health Blog
+          </button>
+
+          <div className="space-y-8">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                <Sparkles className="w-3 h-3" />
+                {article.category || 'Health Advice'}
+              </span>
+              <span className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                <Clock className="w-3 h-3" />
+                {readingTime} Min Read
+              </span>
+            </div>
+
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tighter text-slate-900 leading-[0.95] font-outfit uppercase">
+              {article.title}
+            </h1>
+
+            <p className="text-xl sm:text-2xl text-slate-500 font-medium leading-relaxed max-w-3xl">
+              {article.excerpt}
+            </p>
+
+            <div className="flex items-center justify-between pt-8 border-t border-slate-100">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary to-blue-400 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-primary/20">
+                  S
+                </div>
+                <div>
+                  <p className="text-slate-900 font-black uppercase text-sm tracking-tight">Sahimed Health Team</p>
+                  <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Verified Content</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                 <button className="p-3 rounded-2xl border border-slate-100 text-slate-400 hover:bg-slate-50 hover:text-primary transition-all shadow-sm">
+                   <Share2 className="w-5 h-5" />
+                 </button>
+                 <button className="p-3 rounded-2xl border border-slate-100 text-slate-400 hover:bg-slate-50 hover:text-primary transition-all shadow-sm">
+                   <Bookmark className="w-5 h-5" />
+                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <main className="max-w-4xl mx-auto px-6 pb-32">
+        <article 
+          className="prose prose-slate prose-lg max-w-none 
+            prose-headings:font-black prose-headings:tracking-tight prose-headings:uppercase prose-headings:font-outfit prose-headings:text-slate-900
+            prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-xl
+            prose-strong:text-slate-900 prose-strong:font-black
+            prose-ul:list-disc prose-li:text-slate-600 prose-li:text-lg
+            prose-img:rounded-[32px] prose-img:shadow-2xl prose-img:border prose-img:border-slate-100"
+          dangerouslySetInnerHTML={{ __html: article.content }}
+        />
+
+        {/* Tags */}
+        <div className="mt-20 pt-10 border-t border-slate-100 flex flex-wrap gap-2">
+          {article.keywords?.map((keyword: string) => (
+            <span key={keyword} className="bg-slate-50 text-slate-500 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-100 transition-colors cursor-pointer">
+              #{keyword}
+            </span>
+          ))}
+        </div>
+
+        {/* CTA Section */}
+        <div className="mt-20 bg-gradient-to-br from-slate-900 to-slate-800 rounded-[48px] p-10 sm:p-16 relative overflow-hidden text-center group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700" />
+          
+          <div className="relative z-10 space-y-6">
+            <h3 className="text-3xl sm:text-5xl font-black text-white tracking-tighter uppercase font-outfit leading-none">
+              Get Authentic Medicines <br/> Delivered in Minutes
+            </h3>
+            <p className="text-slate-400 text-lg font-medium max-w-xl mx-auto">
+              Don't wait. Sahimed delivers authentic healthcare products at your doorstep with verified prescriptions.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+              <a href="/" className="bg-primary hover:bg-blue-600 text-white px-10 py-5 rounded-2xl font-black uppercase tracking-tighter text-lg shadow-xl shadow-primary/30 transition-all hover:scale-105 active:scale-95">
+                Shop Medicines Now
+              </a>
+              <a href="/prescription" className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-10 py-5 rounded-2xl font-black uppercase tracking-tighter text-lg backdrop-blur-md transition-all">
+                Upload Prescription
+              </a>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

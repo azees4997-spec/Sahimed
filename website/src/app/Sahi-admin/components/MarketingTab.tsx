@@ -301,9 +301,16 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
 
               <div className="p-8 border-t border-slate-50 bg-slate-50/50 flex justify-between items-center">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Article Length: ~1200 words</p>
-                <div className="flex gap-4">
-                  <Button variant="outline" onClick={() => setPreviewData(null)} className="h-14 px-8 rounded-full font-black uppercase text-[10px] tracking-widest">Close Preview</Button>
-                  <Button onClick={() => setPreviewData(null)} className="h-14 px-10 rounded-full bg-primary font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">Edit in Pages</Button>
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" className="rounded-2xl h-12 px-6 font-bold uppercase tracking-tight" onClick={() => setPreviewData(null)}>
+                    Close Preview
+                  </Button>
+                  <Button 
+                    className="bg-primary hover:bg-blue-600 rounded-2xl h-12 px-8 font-black uppercase tracking-tight shadow-lg shadow-primary/20"
+                    onClick={() => window.open(`/article/${previewData.slug}`, '_blank')}
+                  >
+                    View Live Article
+                  </Button>
                 </div>
               </div>
             </motion.div>
