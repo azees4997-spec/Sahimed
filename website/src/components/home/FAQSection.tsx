@@ -69,7 +69,7 @@ export default function FAQSection() {
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="px-5 pb-5 sm:px-8 sm:pb-8 text-slate-500 text-xs sm:text-base font-medium leading-relaxed">
+                  <div className="px-5 pb-5 sm:px-8 sm:pb-8 text-slate-700 text-xs sm:text-base font-bold sm:font-medium leading-relaxed">
                     {faq.answer}
                   </div>
                 </motion.div>

@@ -103,7 +103,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
                 { label: 'Exclusive Offers', href: '/p/offers' },
               ].map((link, i) => (
                 <li key={i}>
-                  <Link href={link.href} className="group flex items-center gap-2 text-gray-400 hover:text-white transition-all text-sm font-bold uppercase tracking-tight">
+                  <Link href={link.href} className="group flex items-center gap-2 text-slate-300 hover:text-white transition-all text-sm font-bold uppercase tracking-tight">
                     <ChevronRight className="w-4 h-4 text-primary opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300" />
                     {link.label}
                   </Link>
@@ -118,14 +118,14 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
             <ul className="space-y-4">
               {footerPages?.map((page: any) => (
                 <li key={page.id}>
-                  <Link href={`/p/${page.id}`} className="group flex items-center gap-2 text-gray-400 hover:text-white transition-all text-sm font-bold uppercase tracking-tight">
+                  <Link href={`/p/${page.id}`} className="group flex items-center gap-2 text-slate-300 hover:text-white transition-all text-sm font-bold uppercase tracking-tight">
                     <ChevronRight className="w-4 h-4 text-accent opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300" />
                     {page.title}
                   </Link>
                 </li>
               ))}
               <li>
-                <Link href="/contact" className="group flex items-center gap-2 text-gray-400 hover:text-white transition-all text-sm font-bold uppercase tracking-tight">
+                <Link href="/contact" className="group flex items-center gap-2 text-slate-300 hover:text-white transition-all text-sm font-bold uppercase tracking-tight">
                   <ChevronRight className="w-4 h-4 text-accent opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300" />
                   Contact Us
                 </Link>
@@ -142,19 +142,19 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
                   <Phone className="w-4 h-4 text-emerald-500" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Direct Line</p>
-                  <p className="text-sm font-bold text-gray-200">+91 7349499898</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Direct Line</p>
+                  <p className="text-sm font-bold text-slate-100">+91 7349499898</p>
                 </div>
               </div>
               
               <div>
-                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Support Email</p>
-                <a href="mailto:support@sahimed.com" className="text-sm font-bold text-gray-200 hover:text-primary transition-colors">support@sahimed.com</a>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Support Email</p>
+                <a href="mailto:support@sahimed.com" className="text-sm font-bold text-slate-100 hover:text-primary transition-colors">support@sahimed.com</a>
               </div>
 
               <div>
-                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">WhatsApp Support</p>
-                <a href="https://wa.me/917349499898" target="_blank" className="text-sm font-bold text-gray-200 hover:text-primary transition-colors">+91 73494 99898</a>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">WhatsApp Support</p>
+                <a href="https://wa.me/917349499898" target="_blank" className="text-sm font-bold text-slate-100 hover:text-primary transition-colors">+91 73494 99898</a>
               </div>
             </div>
           </div>

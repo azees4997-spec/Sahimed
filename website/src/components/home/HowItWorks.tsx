@@ -83,7 +83,7 @@ export default function HowItWorks() {
 
               {/* Mobile-only desc - subtle and small */}
               <div className="sm:hidden">
-                <p className="text-slate-400 font-medium leading-tight text-[9px] px-2">
+                <p className="text-slate-600 font-bold leading-tight text-[10px] px-2">
                   {step.desc}
                 </p>
               </div>

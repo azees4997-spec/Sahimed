@@ -25,7 +25,7 @@ export default function SEOContent() {
               SahiMed: India's Trusted <br className="hidden sm:block"/>
               <span className="text-primary italic">Digital Pharmacy Partner</span>
             </h2>
-            <p className="text-base sm:text-xl text-slate-600 font-medium leading-relaxed max-w-2xl">
+            <p className="text-base sm:text-xl text-slate-900 font-bold sm:font-medium leading-relaxed max-w-2xl">
               At SahiMed, we believe that healthcare should be accessible, affordable, and most importantly—authentic. In a world of rising medical costs and uncertainty, we stand as a beacon of trust for millions of Indian families.
             </p>
           </div>
