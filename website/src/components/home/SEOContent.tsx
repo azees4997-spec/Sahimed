@@ -7,10 +7,10 @@ import Image from 'next/image';
 export default function SEOContent() {
   return (
     <section className="py-8 sm:py-32 max-w-7xl mx-auto px-4 sm:px-6">
-      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 sm:gap-20 items-start lg:items-center">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 sm:gap-12 items-start lg:items-center">
         
         {/* Text Content Area - Col Span 7 on Desktop */}
-        <div className="lg:col-span-7 space-y-6 sm:space-y-12 w-full">
+        <div className="lg:col-span-7 space-y-5 sm:space-y-10 w-full">
           <div className="space-y-3 sm:space-y-6">
             <div className="flex items-center gap-2.5 px-2.5 py-1 bg-green-50 rounded-full border border-green-100 w-fit">
               <div className="flex -space-x-1">

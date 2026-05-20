@@ -71,7 +71,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
   }, [api]);
 
   return (
-    <div className="space-y-6 sm:space-y-12 pb-20 sm:pb-32 overflow-x-hidden max-w-full">
+    <div className="space-y-6 sm:space-y-12 pb-0 sm:pb-32 overflow-x-hidden max-w-full">
 
       {/* Banner Carousel */}
       {banners && banners.length > 0 && (

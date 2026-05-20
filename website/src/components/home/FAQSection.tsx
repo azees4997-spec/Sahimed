@@ -54,7 +54,7 @@ export default function FAQSection() {
               onClick={() => setOpenIndex(openIndex === i ? null : i)}
               className="w-full px-5 py-4 sm:px-8 sm:py-7 flex items-center justify-between text-left group gap-4"
             >
-              <span className={`text-sm sm:text-lg font-black tracking-tight font-outfit uppercase ${openIndex === i ? 'text-primary' : 'text-slate-900'}`}>
+              <span className={`text-sm sm:text-lg font-black tracking-tight font-outfit uppercase truncate whitespace-nowrap pr-2 ${openIndex === i ? 'text-primary' : 'text-slate-900'}`}>
                 {faq.question}
               </span>
               <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all shrink-0 ${openIndex === i ? 'bg-primary text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'}`}>

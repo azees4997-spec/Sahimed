@@ -33,7 +33,7 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section className="py-8 sm:py-32 bg-white rounded-[32px] sm:rounded-[60px] my-4 sm:my-10 border border-slate-100 shadow-sm overflow-hidden relative">
+    <section className="py-6 sm:py-32 bg-white rounded-[32px] sm:rounded-[60px] sm:my-10 border border-slate-100 shadow-sm overflow-hidden relative">
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
