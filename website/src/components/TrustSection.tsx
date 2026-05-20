@@ -53,47 +53,67 @@ export default function TrustSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {REVIEWS.map((review, i) => (
-            <motion.div 
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.8 }}
-              className="bg-white rounded-[40px] p-10 border border-slate-100 shadow-xl shadow-slate-200/50 relative group hover:-translate-y-2 transition-transform duration-500"
-            >
-              <div className="absolute top-8 right-10 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity">
-                <Quote className="w-16 h-16 text-primary" />
-              </div>
-
-              <div className="space-y-6 relative z-10">
-                <div className="flex gap-1">
-                  {[...Array(review.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-[#FACC15] text-[#FACC15]" />
-                  ))}
+        {/* Horizontal Slider Container */}
+        <div className="relative group">
+          <div className="flex flex-nowrap overflow-x-auto gap-6 pb-12 pt-4 px-4 -mx-4 scrollbar-hide snap-x snap-mandatory cursor-grab active:cursor-grabbing">
+            {[...REVIEWS, ...REVIEWS].map((review, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: (i % 3) * 0.1, duration: 0.8 }}
+                className="min-w-[320px] sm:min-w-[400px] bg-white rounded-[40px] p-8 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/50 relative group snap-center hover:-translate-y-2 transition-transform duration-500"
+              >
+                <div className="absolute top-8 right-10 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity">
+                  <Quote className="w-16 h-16 text-primary" />
                 </div>
 
-                <p className="text-slate-600 text-lg leading-relaxed font-medium italic">
-                  "{review.text}"
-                </p>
-
-                <div className="pt-6 border-t border-slate-50 flex items-center justify-between">
-                  <div>
-                    <h4 className="text-slate-900 font-black uppercase text-sm tracking-tight flex items-center gap-2">
-                      {review.name}
-                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
-                    </h4>
-                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">{review.location} • {review.date}</p>
+                <div className="space-y-6 relative z-10">
+                  <div className="flex gap-1">
+                    {[...Array(review.rating)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-[#FACC15] text-[#FACC15]" />
+                    ))}
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center grayscale hover:grayscale-0 transition-all">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Color_Icon.svg" alt="Google" className="w-5 h-5" />
+
+                  <p className="text-slate-600 text-lg leading-relaxed font-medium italic min-h-[120px]">
+                    "{review.text}"
+                  </p>
+
+                  <div className="pt-6 border-t border-slate-50 flex items-center justify-between">
+                    <div>
+                      <h4 className="text-slate-900 font-black uppercase text-sm tracking-tight flex items-center gap-2">
+                        {review.name}
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
+                      </h4>
+                      <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">{review.location} • {review.date}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center grayscale hover:grayscale-0 transition-all">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Color_Icon.svg" alt="Google" className="w-5 h-5" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
+          </div>
+          
+          {/* Scroll Indicators (Optional/Subtle) */}
+          <div className="flex justify-center gap-2 mt-4">
+            {REVIEWS.map((_, i) => (
+              <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-200 group-hover:bg-primary/20 transition-colors" />
+            ))}
+          </div>
         </div>
+
+        <style jsx global>{`
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
 
         {/* Google Stats Bar */}
         <div className="mt-20 flex flex-wrap items-center justify-center gap-8 sm:gap-16 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700">
