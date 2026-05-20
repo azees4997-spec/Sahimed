@@ -44,7 +44,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
       <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-accent/20 rounded-full blur-[120px] -ml-32 -mb-32 opacity-30 pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-16 mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-20">
           
           {/* Column 1: Brand & About */}
           <div className="space-y-8">
@@ -92,7 +92,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
             </div>
           </div>
 
-          {/* Column 2: Quick Shop & Policies */}
+          {/* Column 2: Quick Shop */}
           <div className="space-y-8">
             <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Discover Store</h4>
             <ul className="space-y-4">
@@ -109,18 +109,31 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
                   </Link>
                 </li>
               ))}
+            </ul>
+          </div>
+
+          {/* Column 3: Know Us */}
+          <div className="space-y-8">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">Know Us</h4>
+            <ul className="space-y-4">
               {footerPages?.map((page: any) => (
                 <li key={page.id}>
                   <Link href={`/p/${page.id}`} className="group flex items-center gap-2 text-gray-400 hover:text-white transition-all text-sm font-bold uppercase tracking-tight">
-                    <ChevronRight className="w-4 h-4 text-primary opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300" />
+                    <ChevronRight className="w-4 h-4 text-accent opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300" />
                     {page.title}
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link href="/contact" className="group flex items-center gap-2 text-gray-400 hover:text-white transition-all text-sm font-bold uppercase tracking-tight">
+                  <ChevronRight className="w-4 h-4 text-accent opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300" />
+                  Contact Us
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Column 3: Contact & Operations */}
+          {/* Column 4: Support */}
           <div className="space-y-8">
             <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-500">Pharma Support</h4>
             <div className="space-y-6">
