@@ -296,7 +296,7 @@ export async function POST(req: Request) {
       'userId', 'patientName', 'phoneNumber', 'shippingDetails', 'billingBreakdown', 
       'items', 'totalAmount', 'prescriptionUrls', 'isConsultationRequired', 
       'fulfillmentPath', 'couponCode', 'discountAmount', 'paymentType', 
-      'paymentId', 'razorpayOrderId', 'paytmOrderId', 'signature', 'walletUsed'
+      'paymentId', 'paytmOrderId', 'signature', 'walletUsed'
     ];
     
     const sanitizedBody: any = {};
