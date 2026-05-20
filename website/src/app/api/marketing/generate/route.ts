@@ -19,7 +19,31 @@ export async function POST(req: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(key);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    // Try multiple model names as fallbacks
+    const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-pro"];
+    let model;
+    let success = false;
+    let lastError = null;
+
+    for (const modelName of modelNames) {
+      try {
+        model = genAI.getGenerativeModel({ model: modelName });
+        const testResult = await model.generateContent({ contents: [{ role: 'user', parts: [{ text: 'ping' }] }], generationConfig: { maxOutputTokens: 5 } });
+        if (testResult) {
+          success = true;
+          console.log(`Successfully initialized with model: ${modelName}`);
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`Model ${modelName} failed:`, err.message);
+        lastError = err;
+      }
+    }
+
+    if (!success || !model) {
+      throw lastError || new Error("Could not initialize any Gemini model. Please check your API key permissions.");
+    }
 
     const prompt = `
       You are an expert Health Content Marketer and SEO specialist for "Sahimed", an Indian online pharmacy.
