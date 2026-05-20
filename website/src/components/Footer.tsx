@@ -206,15 +206,21 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
             <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mr-2">We Accept</span>
             <div className="flex items-center gap-5 bg-white/5 px-6 py-3 rounded-2xl border border-white/5 backdrop-blur-sm">
               {/* UPI */}
-              <svg viewBox="0 0 45 15" className="h-5 w-auto">
-                <path d="M4.3 10.3l1.8-4.4h1.1l-1.8 4.4H4.3zM10 5.9v2.8c0 .8-.4 1.2-1.1 1.2s-1.1-.4-1.1-1.2V5.9h-1v2.9c0 1.4.8 2.1 2.1 2.1s2.1-.7 2.1-2.1V5.9h-1zM14.2 5.9h-1.8v4.4h1v-1.5h.8c.8 0 1.4-.4 1.4-1.4s-.6-1.5-1.4-1.5zm-.1 2h-.7v-1.1h.7c.3 0 .5.1.5.5s-.2.6-.5.6z" fill="#fff"/>
-                <path d="M0 0l2.5 7.5L0 15h2.5l2.5-7.5L2.5 0H0z" fill="#097939"/>
-                <path d="M5 0l2.5 7.5L5 15h2.5l2.5-7.5L7.5 0H5z" fill="#ed752e"/>
+              <svg viewBox="0 0 100 35" className="h-5 w-auto">
+                {/* U */}
+                <path d="M8.2 8.5l-2.4 6.8c-.2.5-.5.8-1 .8s-.8-.3-.8-.8l1.4-4.1H3.6l-1.4 4.1c0 1.2.9 2.1 2.1 2.1s2.1-.9 2.1-2.1l2.4-6.8h-2.1v.1z" fill="#666"/>
+                {/* P */}
+                <path d="M14.5 8.5h-3.3l-2.4 6.8h1.9v-2.5h1.4c1.2 0 2.1-.6 2.1-2.1s-.6-2.2-2.1-2.2zm-.2 2.2h-1.2V9.6h1.2c.5 0 .8.2.8.7s-.3.6-.8.6z" fill="#666"/>
+                {/* I */}
+                <path d="M18.8 8.5h-1.9l2.4 6.8h1.9l-2.4-6.8z" fill="#666"/>
+                {/* NPCI Fast Forward Icon */}
+                <path d="M32 5l-4.5 11h2.5l4.5-11h-2.5z" fill="#f07e26"/>
+                <path d="M42 5l-4.5 11h2.5l4.5-11h-2.5z" fill="#097939"/>
               </svg>
               {/* VISA */}
-              <svg viewBox="0 0 32 10" className="h-4 w-auto">
-                <path d="M11.5 0.5H9.6L7.3 6.1L6.3 1.1C6.2 0.7 5.9 0.5 5.6 0.5H2.5V0.9C3.1 1.1 3.7 1.4 4.1 1.9C4.6 2.4 4.8 3.1 4.8 3.7V7.8H6.8L10.2 0.5H11.5ZM16.6 0.5H15.1L12.4 7.8H14.4L15.0 6.3H18.2L18.5 7.8H20.4L18.9 0.5H16.6ZM15.5 5.1L16.6 2.3L17.2 5.1H15.5ZM26.0 0.5H24.3L23.6 4.0L22.9 0.5H21.0V0.9C21.6 1.1 22.2 1.4 22.6 1.9C23.0 2.4 23.3 3.1 23.3 3.7V7.8H25.3L28.3 0.5H26.0Z" fill="#F7B600"/>
-                <path d="M0 0.5H2.1L3.3 7.8H1.2L0 0.5Z" fill="#1A1F71" />
+              <svg viewBox="0 0 100 31.8" className="h-4 w-auto">
+                <path d="M38.4 4.5h-5.9l-7.4 17.5-3.1-15.6c-.2-1-1-1.9-2-1.9h-9.9v1.2c2.1.5 4 1.5 5.4 3.1 1.4 1.6 2.1 3.5 2.1 5.5v12.7h6.4l9.7-22.5h4.7zm16.5 0h-5l-8.6 22.5h6.4l1.7-4.6h10.3l1 4.6h5.6l-4.5-22.5h-6.9zm-4.3 12.6l3.5-9.3 2 9.3h-5.5zm31.4-12.6l-5.3 15.6-2.2-11.1c-.4-1.9-1.9-4.5-4-4.5h-10v1.2c2 .5 3.9 1.4 5.3 3 1.4 1.6 2.1 3.5 2.1 5.4v13.3h6.4l9.8-22.9h-2.1z" fill="#1a1f71"/>
+                <path d="M20.4 4.5h-9.9v1.2c2.1.5 4 1.5 5.4 3.1 1.4 1.6 2.1 3.5 2.1 5.5v12.7h6.4l4.2-22.5h-8.2z" fill="#f7b600"/>
               </svg>
               {/* MASTER */}
               <div className="flex items-center -space-x-2">
