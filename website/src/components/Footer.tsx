@@ -148,6 +148,33 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
 
         </div>
 
+        {/* Service Areas SEO Strip */}
+        <div className="pt-10 mb-10 border-t border-white/5">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-500 mb-6 text-center lg:text-left">Popular Service Areas</p>
+          <div className="flex flex-wrap gap-x-6 gap-y-3 justify-center lg:justify-start">
+            {[
+              { name: 'Delhi NCR', id: 'delhi' },
+              { name: 'Mumbai', id: 'mumbai' },
+              { name: 'Bangalore', id: 'bangalore' },
+              { name: 'Hyderabad', id: 'hyderabad' },
+              { name: 'Chennai', id: 'chennai' },
+              { name: 'Kolkata', id: 'kolkata' },
+              { name: 'Pune', id: 'pune' },
+              { name: 'Ahmedabad', id: 'ahmedabad' },
+              { name: 'Lucknow', id: 'lucknow' },
+              { name: 'Jaipur', id: 'jaipur' }
+            ].map((city) => (
+              <Link 
+                key={city.id} 
+                href={`/delivery/${city.id}`}
+                className="text-[11px] font-bold text-gray-400 hover:text-primary transition-colors uppercase tracking-tight"
+              >
+                {city.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+
         {/* Bottom bar */}
         <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
@@ -155,10 +182,24 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
           </div>
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-6 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700">
             <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest mr-2">We Accept</span>
-            <div className="flex items-center gap-4 bg-white/5 px-4 py-2 rounded-2xl border border-white/5">
-              {['UPI', 'VISA', 'MASTER', 'RUPAY', 'NETBANK'].map((m) => (
-                <span key={m} className="text-[7px] font-black tracking-tighter text-gray-400 uppercase">{m}</span>
-              ))}
+            <div className="flex items-center gap-5 bg-white/5 px-6 py-3 rounded-2xl border border-white/5 backdrop-blur-sm">
+              {/* UPI */}
+              <svg viewBox="0 0 100 35" className="h-4 w-auto grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all">
+                <path fill="currentColor" d="M15.4 12.3c-.3 0-.6.1-.8.4l-4.1 5.3-2.1-2.7c-.2-.3-.5-.4-.8-.4s-.6.1-.8.4l-1.6 2.1c-.2.3-.2.6 0 .8l4.5 5.8c.2.3.5.4.8.4s.6-.1.8-.4l6.5-8.5c.2-.3.2-.6 0-.8l-1.6-2.1c-.2-.3-.5-.4-.8-.4z" />
+                <text x="25" y="24" className="font-black text-[14px] tracking-tighter" fill="currentColor">UPI</text>
+              </svg>
+              {/* VISA */}
+              <svg viewBox="0 0 100 32" className="h-3 w-auto grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all">
+                <path fill="currentColor" d="M38.4 4.5h-5.9l-7.4 17.5-3.1-15.6c-.2-1-1-1.9-2-1.9h-9.9v1.2c2.1.5 4 1.5 5.4 3.1 1.4 1.6 2.1 3.5 2.1 5.5v12.7h6.4l9.7-22.5h4.7zm16.5 0h-5l-8.6 22.5h6.4l1.7-4.6h10.3l1 4.6h5.6l-4.5-22.5h-6.9zm-4.3 12.6l3.5-9.3 2 9.3h-5.5zm31.4-12.6l-5.3 15.6-2.2-11.1c-.4-1.9-1.9-4.5-4-4.5h-10v1.2c2 .5 3.9 1.4 5.3 3 1.4 1.6 2.1 3.5 2.1 5.4v13.3h6.4l9.8-22.9h-2.1z" />
+              </svg>
+              {/* MASTER */}
+              <svg viewBox="0 0 100 60" className="h-5 w-auto grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all">
+                <circle cx="35" cy="30" r="25" fill="currentColor" fillOpacity="0.8" />
+                <circle cx="65" cy="30" r="25" fill="currentColor" fillOpacity="0.8" />
+              </svg>
+              {/* RUPAY */}
+              <div className="text-[10px] font-black italic tracking-tighter text-gray-400 uppercase border-r border-white/10 pr-4">RuPay</div>
+              <div className="text-[10px] font-black italic tracking-tighter text-gray-400 uppercase">NetBank</div>
             </div>
           </div>
         </div>
