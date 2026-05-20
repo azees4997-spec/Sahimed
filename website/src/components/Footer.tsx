@@ -206,14 +206,18 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
             <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mr-2">We Accept</span>
             <div className="flex items-center gap-5 bg-white/5 px-6 py-3 rounded-2xl border border-white/5 backdrop-blur-sm">
               {/* UPI */}
-              <svg viewBox="0 0 100 35" className="h-4 w-auto text-[#097939]">
-                <path fill="currentColor" d="M15.4 12.3c-.3 0-.6.1-.8.4l-4.1 5.3-2.1-2.7c-.2-.3-.5-.4-.8-.4s-.6.1-.8.4l-1.6 2.1c-.2.3-.2.6 0 .8l4.5 5.8c.2.3.5.4.8.4s.6-.1.8-.4l6.5-8.5c.2-.3.2-.6 0-.8l-1.6-2.1c-.2-.3-.5-.4-.8-.4z" />
-                <text x="25" y="24" className="font-black text-[14px] tracking-tighter" fill="#0072b8">UPI</text>
-              </svg>
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/UPI-Logo.png/640px-UPI-Logo.png" 
+                alt="UPI" 
+                className="h-4 sm:h-5 w-auto object-contain brightness-0 invert opacity-80"
+              />
               {/* VISA */}
-              <svg viewBox="0 0 100 32" className="h-3 w-auto text-[#1a1f71]">
-                <path fill="currentColor" d="M38.4 4.5h-5.9l-7.4 17.5-3.1-15.6c-.2-1-1-1.9-2-1.9h-9.9v1.2c2.1.5 4 1.5 5.4 3.1 1.4 1.6 2.1 3.5 2.1 5.5v12.7h6.4l9.7-22.5h4.7zm16.5 0h-5l-8.6 22.5h6.4l1.7-4.6h10.3l1 4.6h5.6l-4.5-22.5h-6.9zm-4.3 12.6l3.5-9.3 2 9.3h-5.5zm31.4-12.6l-5.3 15.6-2.2-11.1c-.4-1.9-1.9-4.5-4-4.5h-10v1.2c2 .5 3.9 1.4 5.3 3 1.4 1.6 2.1 3.5 2.1 5.4v13.3h6.4l9.8-22.9h-2.1z" />
-              </svg>
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" 
+                alt="VISA" 
+                className="h-3 sm:h-4 w-auto object-contain brightness-0 invert opacity-80"
+              />
+              {/* MASTER */}
               {/* MASTER */}
               <div className="flex items-center -space-x-2">
                 <div className="w-4 h-4 rounded-full bg-[#eb001b]" />
