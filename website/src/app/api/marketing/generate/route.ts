@@ -47,21 +47,34 @@ export async function POST(req: NextRequest) {
     const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim();
     const data = JSON.parse(jsonStr);
 
-    const saved = await saveSEOContent({
-      title: data.title,
-      slug: data.slug,
-      content: data.content,
-      excerpt: data.excerpt,
-      keywords: data.keywords,
-      trendTopic: topic,
-      category: category || 'General Health',
-      status: 'draft',
-      featuredProducts: []
-    });
+    let saved = null;
+    let dbError = null;
 
-    return NextResponse.json({ success: true, data: saved });
+    try {
+      saved = await saveSEOContent({
+        title: data.title,
+        slug: data.slug,
+        content: data.content,
+        excerpt: data.excerpt,
+        keywords: data.keywords,
+        trendTopic: topic,
+        category: category || 'General Health',
+        status: 'draft',
+        featuredProducts: []
+      });
+    } catch (err) {
+      console.error("MONGODB_SAVE_ERROR:", err);
+      dbError = "Content generated but could not be saved to MongoDB. Please check your connection.";
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      data: data, // Return the raw generated data
+      saved: saved,
+      warning: dbError
+    });
   } catch (error) {
     console.error("GENERATION_ERROR:", error);
-    return NextResponse.json({ error: "Failed to generate content" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to generate content. Please ensure your AI API key is valid." }, { status: 500 });
   }
 }

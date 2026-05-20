@@ -26,6 +26,7 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [topic, setTopic] = useState('');
+  const [previewData, setPreviewData] = useState<any>(null);
 
   const generationSteps = [
     { label: 'Initializing Gemini AI Engine', icon: Sparkles },
@@ -56,8 +57,8 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
     if (!topic) return;
     setIsGenerating(true);
     setCurrentStep(0);
+    setPreviewData(null);
     
-    // Progress simulation for better UX feel
     const stepInterval = setInterval(() => {
       setCurrentStep(prev => (prev < generationSteps.length - 1 ? prev + 1 : prev));
     }, 4000);
@@ -69,19 +70,30 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
         body: JSON.stringify({ topic, category: 'Trending Health' })
       });
       
-      if (res.ok) {
+      const result = await res.json();
+      
+      if (res.ok && result.success) {
         clearInterval(stepInterval);
         setCurrentStep(generationSteps.length - 1);
-        setTimeout(() => {
+        
+        // Show the preview immediately
+        setPreviewData(result.data);
+        
+        if (result.warning) {
+          toast({ variant: 'destructive', title: 'DB Sync Warning', description: result.warning });
+        } else {
           toast({ title: 'Success', description: 'Article generated and stored in MongoDB' });
-          setTopic('');
-          setIsGenerating(false);
-          fetchContent();
-        }, 1000);
+        }
+
+        setTopic('');
+        setIsGenerating(false);
+        fetchContent();
+      } else {
+        throw new Error(result.error || 'Generation failed');
       }
-    } catch (err) {
+    } catch (err: any) {
       clearInterval(stepInterval);
-      toast({ variant: 'destructive', title: 'Gen Error', description: 'AI failed to complete the task' });
+      toast({ variant: 'destructive', title: 'Gen Error', description: err.message || 'AI failed to complete the task' });
       setIsGenerating(false);
     }
   };
@@ -103,7 +115,7 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 pb-20">
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div>
@@ -208,6 +220,63 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
           </AnimatePresence>
         </CardContent>
       </Card>
+
+      {/* Live Preview Modal */}
+      <AnimatePresence>
+        {previewData && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-white w-full max-w-4xl max-h-[85vh] rounded-[56px] shadow-4xl overflow-hidden flex flex-col"
+            >
+              <div className="p-10 bg-primary text-white flex justify-between items-center">
+                <div>
+                  <p className="text-[10px] font-black tracking-[0.4em] uppercase opacity-60 mb-1">AI Mission Accomplished</p>
+                  <h3 className="text-2xl font-black uppercase tracking-tighter">Draft Review</h3>
+                </div>
+                <Button 
+                  onClick={() => setPreviewData(null)}
+                  className="rounded-full h-12 w-12 bg-white/10 hover:bg-white/20 text-white border-none"
+                >
+                  <Plus className="rotate-45" />
+                </Button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-12 space-y-8 scrollbar-hide">
+                <div className="space-y-4">
+                  <h1 className="text-4xl font-black tracking-tighter uppercase text-slate-900 leading-none">{previewData.title}</h1>
+                  <div className="flex gap-4 items-center">
+                    <span className="text-[10px] font-black text-primary bg-primary/5 px-4 py-2 rounded-full uppercase tracking-widest border border-primary/10">Slug: /{previewData.slug}</span>
+                    <div className="flex gap-2">
+                      {previewData.keywords?.map((k: string) => (
+                        <span key={k} className="text-[8px] font-black text-slate-400 uppercase tracking-widest">#{k}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div 
+                  className="prose prose-slate max-w-none prose-h2:text-xl prose-h2:font-black prose-h2:uppercase prose-h2:tracking-tight prose-p:text-slate-600 prose-p:font-medium prose-p:leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: previewData.content }}
+                />
+              </div>
+
+              <div className="p-8 border-t border-slate-50 bg-slate-50/50 flex justify-between items-center">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Article Length: ~1200 words</p>
+                <div className="flex gap-4">
+                  <Button variant="outline" onClick={() => setPreviewData(null)} className="h-14 px-8 rounded-full font-black uppercase text-[10px] tracking-widest">Close Preview</Button>
+                  <Button onClick={() => setPreviewData(null)} className="h-14 px-10 rounded-full bg-primary font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">Edit in Pages</Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Content List */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
