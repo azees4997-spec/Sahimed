@@ -65,10 +65,6 @@ export default function TrustSection() {
                 transition={{ delay: (i % 3) * 0.1, duration: 0.8 }}
                 className="min-w-[320px] sm:min-w-[400px] bg-white rounded-[40px] p-8 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/50 relative group snap-center hover:-translate-y-2 transition-transform duration-500"
               >
-                <div className="absolute top-8 right-10 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity">
-                  <Quote className="w-16 h-16 text-primary" />
-                </div>
-
                 <div className="space-y-6 relative z-10">
                   <div className="flex gap-1">
                     {[...Array(review.rating)].map((_, i) => (
@@ -80,17 +76,12 @@ export default function TrustSection() {
                     "{review.text}"
                   </p>
 
-                  <div className="pt-6 border-t border-slate-50 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-slate-900 font-black uppercase text-sm tracking-tight flex items-center gap-2">
-                        {review.name}
-                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
-                      </h4>
-                      <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">{review.location} • {review.date}</p>
-                    </div>
-                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center grayscale hover:grayscale-0 transition-all">
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Color_Icon.svg" alt="Google" className="w-5 h-5" />
-                    </div>
+                  <div className="pt-6 border-t border-slate-50">
+                    <h4 className="text-slate-900 font-black uppercase text-sm tracking-tight flex items-center gap-2">
+                      {review.name}
+                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
+                    </h4>
+                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">{review.location} • {review.date}</p>
                   </div>
                 </div>
               </motion.div>
