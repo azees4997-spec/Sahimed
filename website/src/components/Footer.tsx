@@ -99,6 +99,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
               {[
                 { label: 'Shop All Products', href: '/search' },
                 { label: 'Brand Categories', href: '/categories' },
+                { label: 'Health Blog', href: '/blog' },
                 { label: 'Prescription Checkout', href: '/prescription' },
                 { label: 'Exclusive Offers', href: '/p/offers' },
               ].map((link, i) => (

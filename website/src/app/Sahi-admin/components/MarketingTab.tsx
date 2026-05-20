@@ -84,7 +84,7 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
         if (result.warning) {
           toast({ variant: 'destructive', title: 'DB Sync Warning', description: result.warning });
         } else {
-          toast({ title: 'Success', description: 'Article generated and stored in MongoDB' });
+          toast({ title: 'Success', description: 'Blog generated and stored in MongoDB' });
         }
 
         setTopic('');
@@ -307,9 +307,9 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
                   </Button>
                   <Button 
                     className="bg-primary hover:bg-blue-600 rounded-2xl h-12 px-8 font-black uppercase tracking-tight shadow-lg shadow-primary/20"
-                    onClick={() => window.open(`/article/${previewData.slug}`, '_blank')}
+                    onClick={() => window.open(`/blog/${previewData.slug}`, '_blank')}
                   >
-                    View Live Article
+                    View Live Blog
                   </Button>
                 </div>
               </div>

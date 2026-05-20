@@ -11,48 +11,48 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-async function getArticle(slug: string) {
+async function getBlog(slug: string) {
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const article = await db.collection('seo_content').findOne({ slug: slug });
-    return article;
+    const blog = await db.collection('seo_content').findOne({ slug: slug });
+    return blog;
   } catch (error) {
-    console.error("Error fetching article:", error);
+    console.error("Error fetching blog:", error);
     return null;
   }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = await getArticle(slug);
+  const blog = await getBlog(slug);
   
-  if (!article) return { title: 'Article Not Found | Sahimed' };
+  if (!blog) return { title: 'Blog Not Found | Sahimed' };
 
   return {
-    title: `${article.title} | Sahimed Health Blog`,
-    description: article.excerpt,
-    keywords: article.keywords,
+    title: `${blog.title} | Sahimed Health Blog`,
+    description: blog.excerpt,
+    keywords: blog.keywords,
     openGraph: {
-      title: article.title,
-      description: article.excerpt,
+      title: blog.title,
+      description: blog.excerpt,
       type: 'article',
-      publishedTime: article.createdAt?.toISOString(),
+      publishedTime: blog.createdAt?.toISOString(),
       authors: ['Sahimed Health Team'],
     }
   };
 }
 
-export default async function ArticlePage({ params }: PageProps) {
+export default async function BlogPage({ params }: PageProps) {
   const { slug } = await params;
-  const article = await getArticle(slug);
+  const blog = await getBlog(slug);
 
-  if (!article) {
+  if (!blog) {
     notFound();
   }
 
   // Estimated reading time
-  const wordCount = article.content.split(/\s+/).length;
+  const wordCount = blog.content.split(/\s+/).length;
   const readingTime = Math.ceil(wordCount / 200);
 
   return (
@@ -74,7 +74,7 @@ export default async function ArticlePage({ params }: PageProps) {
             <div className="flex flex-wrap items-center gap-3">
               <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-2">
                 <Sparkles className="w-3 h-3" />
-                {article.category || 'Health Advice'}
+                {blog.category || 'Health Advice'}
               </span>
               <span className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
                 <Clock className="w-3 h-3" />
@@ -83,11 +83,11 @@ export default async function ArticlePage({ params }: PageProps) {
             </div>
 
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tighter text-slate-900 leading-[0.95] font-outfit uppercase">
-              {article.title}
+              {blog.title}
             </h1>
 
             <p className="text-xl sm:text-2xl text-slate-500 font-medium leading-relaxed max-w-3xl">
-              {article.excerpt}
+              {blog.excerpt}
             </p>
 
             <div className="flex items-center justify-between pt-8 border-t border-slate-100">
@@ -123,12 +123,12 @@ export default async function ArticlePage({ params }: PageProps) {
             prose-strong:text-slate-900 prose-strong:font-black
             prose-ul:list-disc prose-li:text-slate-600 prose-li:text-lg
             prose-img:rounded-[32px] prose-img:shadow-2xl prose-img:border prose-img:border-slate-100"
-          dangerouslySetInnerHTML={{ __html: article.content }}
+          dangerouslySetInnerHTML={{ __html: blog.content }}
         />
 
         {/* Tags */}
         <div className="mt-20 pt-10 border-t border-slate-100 flex flex-wrap gap-2">
-          {article.keywords?.map((keyword: string) => (
+          {blog.keywords?.map((keyword: string) => (
             <span key={keyword} className="bg-slate-50 text-slate-500 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-100 transition-colors cursor-pointer">
               #{keyword}
             </span>
