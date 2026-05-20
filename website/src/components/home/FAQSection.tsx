@@ -1,0 +1,102 @@
+'use client';
+
+import * as React from 'react';
+import { Plus, Minus, HelpCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const FAQS = [
+  {
+    question: "Are the medicines sold on Sahimed 100% authentic?",
+    answer: "Yes, absolutely. Every product on Sahimed is sourced directly from licensed pharmaceutical manufacturers or their authorized distributors. We have a strict quality-check protocol to ensure that only genuine, unexpired medicines reach your doorstep."
+  },
+  {
+    question: "Do I need to upload a prescription to buy medicines?",
+    answer: "For all prescription-only (Rx) medicines, a valid prescription from a registered medical practitioner is mandatory. You can easily upload a photo or PDF of your prescription during checkout. Our certified pharmacists verify every prescription for your safety."
+  },
+  {
+    question: "How long does it take for Sahimed to deliver medicines?",
+    answer: "We offer fast and safe delivery across India. Delivery times typically range from 24-48 hours in major cities like Bangalore, Mumbai, and Delhi, and 3-5 days for other regions. We focus on ensuring the medicines are transported safely and securely."
+  },
+  {
+    question: "Can I order medicines via WhatsApp or phone call?",
+    answer: "Yes! We understand that some customers prefer a more personal touch. You can reach out to our team at +91 7349499898 via WhatsApp or call us to place your order directly. Our experts will help you with the process."
+  },
+  {
+    question: "What makes Sahimed's prices more affordable?",
+    answer: "Our motto is 'Sahi Dawai, Sahi Daam Pe'. We achieve this by optimizing our supply chain, removing unnecessary intermediaries, and passing those savings directly to you. We aim to make chronic healthcare affordable for every Indian household."
+  }
+];
+
+export default function FAQSection() {
+  const [openIndex, setOpenIndex] = React.useState<number | null>(null);
+
+  return (
+    <section className="py-24 max-w-4xl mx-auto px-6">
+      <div className="text-center space-y-4 mb-16">
+        <div className="flex justify-center">
+          <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+            <HelpCircle className="w-6 h-6 text-primary" />
+          </div>
+        </div>
+        <h2 className="text-4xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none">
+          Frequently Asked <span className="text-primary italic">Questions</span>
+        </h2>
+        <p className="text-slate-500 font-medium">Everything you need to know about Sahimed's authentic healthcare services.</p>
+      </div>
+
+      <div className="space-y-4">
+        {FAQS.map((faq, i) => (
+          <div 
+            key={i} 
+            className={`bg-white rounded-[32px] border ${openIndex === i ? 'border-primary shadow-xl shadow-primary/5' : 'border-slate-100'} transition-all duration-300 overflow-hidden`}
+          >
+            <button
+              onClick={() => setOpenIndex(openIndex === i ? null : i)}
+              className="w-full px-8 py-7 flex items-center justify-between text-left group"
+            >
+              <span className={`text-lg font-black tracking-tight font-outfit uppercase ${openIndex === i ? 'text-primary' : 'text-slate-900'}`}>
+                {faq.question}
+              </span>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${openIndex === i ? 'bg-primary text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'}`}>
+                {openIndex === i ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              </div>
+            </button>
+            <AnimatePresence>
+              {openIndex === i && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="px-8 pb-8 text-slate-500 font-medium leading-relaxed">
+                    {faq.answer}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        ))}
+      </div>
+
+      {/* FAQ Schema for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": FAQS.map(faq => ({
+              "@type": "Question",
+              "name": faq.question,
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": faq.answer
+              }
+            }))
+          })
+        }}
+      />
+    </section>
+  );
+}

@@ -10,8 +10,19 @@ import clientPromise from '@/lib/mongodb';
 import HeroSearch from '@/components/HeroSearch';
 import { getDbAdmin } from '@/lib/firebase-admin';
 import TrustSection from '@/components/TrustSection';
+import HowItWorks from '@/components/home/HowItWorks';
+import SEOContent from '@/components/home/SEOContent';
+import FAQSection from '@/components/home/FAQSection';
+import LatestBlogs from '@/components/home/LatestBlogs';
+import { Metadata } from 'next';
 
-export const revalidate = 60; // Revalidate every minute
+export const metadata: Metadata = {
+  title: 'Sahimed - Authentic Medicines & Healthcare at Best Prices',
+  description: 'Buy genuine medicines online in India. Sahimed provides authentic stock, expert prescription verification, and fast delivery at affordable prices. Sahi Dawai, Sahi Daam Pe.',
+  keywords: ['online pharmacy india', 'authentic medicines online', 'buy medicines bangalore', 'genuine healthcare products', 'affordable medicines india', 'prescription delivery'],
+};
+
+export const revalidate = 3600; // Revalidate every hour
 
 async function getBanners() {
   try {
@@ -68,13 +79,30 @@ async function getProducts(filterType: 'bestSeller' | 'topSelection' | 'all' = '
   }
 }
 
+async function getLatestBlogs() {
+  try {
+    const client = await clientPromise;
+    const db = client.db('sahimed');
+    const blogs = await db.collection('seo_content')
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .toArray();
+    return blogs.map(b => ({ ...b, id: b._id.toString() })) as any[];
+  } catch (err) {
+    console.error("Failed to fetch latest blogs:", err);
+    return [];
+  }
+}
+
 export default async function Home() {
-  const [banners, categories, bestSellers, topSelections, medicines] = await Promise.all([
+  const [banners, categories, bestSellers, topSelections, medicines, latestBlogs] = await Promise.all([
     getBanners(),
     getCategories(),
     getProducts('bestSeller'),
     getProducts('topSelection'),
-    getProducts('all')
+    getProducts('all'),
+    getLatestBlogs()
   ]);
 
   return (
@@ -150,7 +178,15 @@ export default async function Home() {
             medicines={medicines}
           />
 
+          <HowItWorks />
+          
+          <LatestBlogs blogs={latestBlogs} />
+
           <TrustSection />
+
+          <SEOContent />
+
+          <FAQSection />
         </main>
       </div>
     </PageTransition>
