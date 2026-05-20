@@ -141,7 +141,7 @@ export default async function BlogPage({ params }: PageProps) {
           
           <div className="relative z-10 space-y-6">
             <h3 className="text-3xl sm:text-5xl font-black text-white tracking-tighter uppercase font-outfit leading-none">
-              Get Authentic Medicines <br/> Delivered in Minutes
+              Get Authentic Medicines <br/> Delivered Safely
             </h3>
             <p className="text-slate-400 text-lg font-medium max-w-xl mx-auto">
               Don't wait. Sahimed delivers authentic healthcare products at your doorstep with verified prescriptions.
