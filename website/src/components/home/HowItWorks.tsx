@@ -47,7 +47,7 @@ export default function HowItWorks() {
         </div>
 
         {/* Mobile Horizontal Scroll / Desktop Grid */}
-        <div className="flex overflow-x-auto pb-8 sm:pb-0 sm:grid sm:grid-cols-4 gap-8 sm:gap-12 scrollbar-hide snap-x snap-mandatory px-4 sm:px-0">
+        <div className="flex overflow-x-auto pt-4 pb-8 sm:pb-0 sm:grid sm:grid-cols-4 gap-8 sm:gap-12 scrollbar-hide snap-x snap-mandatory px-4 sm:px-0">
           {STEPS.map((step, i) => (
             <motion.div 
               key={i}
