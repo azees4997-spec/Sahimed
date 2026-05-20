@@ -95,7 +95,11 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
       }
     } catch (err: any) {
       clearInterval(stepInterval);
-      toast({ variant: 'destructive', title: 'Gen Error', description: err.message || 'AI failed to complete the task' });
+      toast({ 
+        variant: 'destructive', 
+        title: 'Gen Error', 
+        description: err.message || 'AI failed to complete the task' 
+      });
       setIsGenerating(false);
     }
   };

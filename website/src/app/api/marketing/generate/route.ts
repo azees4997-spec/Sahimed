@@ -76,12 +76,16 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ 
       success: true, 
-      data: data, // Return the raw generated data
+      data: data, 
       saved: saved,
       warning: dbError
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("GENERATION_ERROR:", error);
-    return NextResponse.json({ error: "Failed to generate content. Please ensure your AI API key is valid." }, { status: 500 });
+    return NextResponse.json({ 
+      error: "AI_GENERATION_FAILED", 
+      message: error.message || "Failed to generate content",
+      details: error.toString()
+    }, { status: 500 });
   }
 }
