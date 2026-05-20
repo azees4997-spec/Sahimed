@@ -63,7 +63,7 @@ export default function TrustSection() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: (i % 3) * 0.1, duration: 0.8 }}
-                className="min-w-[320px] sm:min-w-[400px] bg-white rounded-[40px] p-8 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/50 relative group snap-center hover:-translate-y-2 transition-transform duration-500"
+                className="min-w-[280px] sm:min-w-[400px] bg-white rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/50 relative group snap-center hover:-translate-y-2 transition-transform duration-500"
               >
                 <div className="space-y-6 relative z-10">
                   <div className="flex gap-1">

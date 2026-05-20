@@ -21,7 +21,7 @@ export default function SEOContent() {
               <span className="text-[10px] font-black uppercase tracking-widest text-green-700">Google Verified Pharmacy</span>
             </div>
             
-            <h2 className="text-3xl sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-[0.95]">
+            <h2 className="text-2xl sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-[0.95]">
               SahiMed: India's Trusted <br className="hidden sm:block"/>
               <span className="text-primary italic">Digital Pharmacy Partner</span>
             </h2>
@@ -41,8 +41,8 @@ export default function SEOContent() {
                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
                   <item.icon className="w-5 h-5 text-primary" />
                 </div>
-                <h3 className="font-black text-slate-900 uppercase text-xs sm:text-sm tracking-tight">{item.title}</h3>
-                <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-normal">{item.desc}</p>
+                <h3 className="font-black text-slate-900 uppercase text-[10px] sm:text-sm tracking-tight">{item.title}</h3>
+                <p className="text-[10px] sm:text-xs text-slate-500 font-medium leading-normal">{item.desc}</p>
               </div>
             ))}
           </div>
