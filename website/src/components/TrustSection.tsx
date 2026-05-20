@@ -8,23 +8,26 @@ const REVIEWS = [
   {
     name: "Arjun Sharma",
     location: "Bangalore",
-    text: "Excellent service! Got my medicines delivered in just 20 minutes. The pharmacist was very helpful with my prescription questions.",
+    text: "Excellent service! Got my medicines delivered quickly and safely. The pharmacist was very helpful with my prescription questions. Highly authentic stock.",
     rating: 5,
-    date: "2 days ago"
+    date: "2 days ago",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&h=150&auto=format&fit=crop"
   },
   {
     name: "Priya Patel",
     location: "Mumbai",
-    text: "Best price I've found online for chronic medicines. The packaging was discreet and the delivery was on time. Highly recommend Sahimed!",
+    text: "Best price I've found online for chronic medicines. The packaging was discreet and the delivery was prompt. Highly recommend Sahimed for authentic healthcare!",
     rating: 5,
-    date: "1 week ago"
+    date: "1 week ago",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&h=150&auto=format&fit=crop"
   },
   {
     name: "Rahul Verma",
     location: "Delhi",
-    text: "Very easy to upload prescriptions. I usually worry about authenticity, but Sahimed provides only genuine products. A trusted partner for health.",
+    text: "Very easy to upload prescriptions. I usually worry about authenticity, but Sahimed provides only genuine products. A trusted partner for long-term health needs.",
     rating: 5,
-    date: "3 days ago"
+    date: "3 days ago",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150&h=150&auto=format&fit=crop"
   }
 ];
 
@@ -63,8 +66,12 @@ export default function TrustSection() {
               transition={{ delay: i * 0.1, duration: 0.8 }}
               className="bg-white rounded-[40px] p-10 border border-slate-100 shadow-xl shadow-slate-200/50 relative group hover:-translate-y-2 transition-transform duration-500"
             >
-              <div className="absolute top-8 right-10 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity">
-                <Quote className="w-16 h-16 text-primary" />
+              <div className="absolute top-8 right-10 group-hover:scale-110 transition-transform duration-500">
+                <img 
+                  src={review.avatar} 
+                  alt={review.name} 
+                  className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-lg shadow-primary/10"
+                />
               </div>
 
               <div className="space-y-6 relative z-10">
@@ -79,14 +86,19 @@ export default function TrustSection() {
                 </p>
 
                 <div className="pt-6 border-t border-slate-50 flex items-center justify-between">
-                  <div>
-                    <h4 className="text-slate-900 font-black uppercase text-sm tracking-tight flex items-center gap-2">
-                      {review.name}
-                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
-                    </h4>
-                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">{review.location} • {review.date}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary/10 to-blue-500/10 flex items-center justify-center font-black text-primary text-xs">
+                      {review.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h4 className="text-slate-900 font-black uppercase text-sm tracking-tight flex items-center gap-2">
+                        {review.name}
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
+                      </h4>
+                      <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">{review.location} • {review.date}</p>
+                    </div>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center grayscale hover:grayscale-0 transition-all">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Color_Icon.svg" alt="Google" className="w-5 h-5" />
                   </div>
                 </div>
