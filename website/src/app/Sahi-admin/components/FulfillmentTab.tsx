@@ -19,7 +19,9 @@ import {
   Trash2,
   Clock,
   Truck,
-  ExternalLink
+  ExternalLink,
+  RefreshCw,
+  Settings
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -233,6 +235,8 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isEditingLogistics, setIsEditingLogistics] = useState(false);
+  const [tempLogistics, setTempLogistics] = useState({ awb: '', courier: '' });
   const updateOrderStatus = async (id: string, newStatus: string, extra = {}) => {
     if (!id) {
       toast({ variant: 'destructive', title: "Missing ID", description: "Internal selection error." });
@@ -260,7 +264,27 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
         }
         await fetchOrders();
         setNextStatus(null);
-        setSelectedOrder(null);
+        
+        // Refresh selectedOrder if it was a logistics update or push
+        if (extra.action === 'push_to_shipway' || extra.shipping) {
+          // If the API returned a new AWB, update it in the selected order
+          if (result.awb) {
+            setSelectedOrder((prev: any) => ({
+              ...prev,
+              shipping: {
+                ...(prev?.shipping || {}),
+                awb: result.awb
+              }
+            }));
+          } else if (extra.shipping) {
+            setSelectedOrder((prev: any) => ({
+              ...prev,
+              shipping: extra.shipping
+            }));
+          }
+        } else {
+          setSelectedOrder(null);
+        }
       } else {
         throw new Error(result.error || "Update protocol failed");
       }
@@ -839,22 +863,96 @@ ${itemsStr}
                       <span className="flex items-center gap-2">
                         <Truck className="w-5 h-5 text-blue-500" /> Logistics Information
                       </span>
-                      <a href={`https://track.shipway.com/t/${selectedOrder.shipping.awb}`} target="_blank" rel="noopener noreferrer" className="text-[10px] bg-white border border-blue-200 text-blue-700 hover:bg-blue-600 hover:text-white transition-all px-4 py-2 rounded-full font-black flex items-center gap-2 cursor-pointer shadow-sm">
-                        TRACK AWB: {selectedOrder.shipping.awb} <ExternalLink className="w-3 h-3" />
-                      </a>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          disabled={isUpdating}
+                          onClick={() => updateOrderStatus(selectedOrder._id, selectedOrder.status, { action: 'push_to_shipway' })}
+                          className="w-8 h-8 rounded-full bg-white border border-blue-100 flex items-center justify-center text-blue-500 hover:bg-blue-50 transition-all shadow-sm"
+                          title="Pull/Refresh from Shipway"
+                        >
+                          <RefreshCw className={cn("w-3.5 h-3.5", isUpdating && "animate-spin")} />
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setIsEditingLogistics(!isEditingLogistics);
+                            setTempLogistics({ 
+                              awb: selectedOrder.shipping.awb, 
+                              courier: selectedOrder.shipping.courier || '' 
+                            });
+                          }}
+                          className="w-8 h-8 rounded-full bg-white border border-blue-100 flex items-center justify-center text-blue-500 hover:bg-blue-50 transition-all shadow-sm"
+                          title="Edit Manually"
+                        >
+                          <Settings className="w-3.5 h-3.5" />
+                        </button>
+                        <a href={`https://track.shipway.com/t/${selectedOrder.shipping.awb}`} target="_blank" rel="noopener noreferrer" className="text-[10px] bg-white border border-blue-200 text-blue-700 hover:bg-blue-600 hover:text-white transition-all px-4 py-2 rounded-full font-black flex items-center gap-2 cursor-pointer shadow-sm">
+                          TRACK AWB: {selectedOrder.shipping.awb} <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
                     </h4>
-                    {selectedOrder?.shipping?.courier && (
-                      <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-blue-100">
-                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                          <Package className="w-5 h-5 text-blue-500" />
+
+                    {isEditingLogistics ? (
+                      <div className="grid grid-cols-2 gap-4 bg-white p-6 rounded-3xl border border-blue-100 shadow-sm animate-in fade-in slide-in-from-top-2">
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">AWB Number</label>
+                          <Input 
+                            value={tempLogistics.awb} 
+                            onChange={e => setTempLogistics({...tempLogistics, awb: e.target.value})}
+                            className="h-12 rounded-2xl bg-slate-50 border-none font-bold text-xs"
+                            placeholder="Enter AWB..."
+                          />
                         </div>
-                        <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Courier Partner</p>
-                          <p className="text-sm font-black text-slate-700">{selectedOrder.shipping.courier}</p>
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Courier Partner</label>
+                          <Input 
+                            value={tempLogistics.courier} 
+                            onChange={e => setTempLogistics({...tempLogistics, courier: e.target.value})}
+                            className="h-12 rounded-2xl bg-slate-50 border-none font-bold text-xs"
+                            placeholder="Enter Courier..."
+                          />
+                        </div>
+                        <div className="col-span-2 flex gap-2 pt-2">
+                          <Button 
+                            disabled={isUpdating}
+                            onClick={async () => {
+                              await updateOrderStatus(selectedOrder._id, selectedOrder.status, { 
+                                shipping: { 
+                                  ...selectedOrder.shipping, 
+                                  awb: tempLogistics.awb, 
+                                  courier: tempLogistics.courier 
+                                } 
+                              });
+                              setIsEditingLogistics(false);
+                            }}
+                            className="flex-1 h-12 rounded-2xl bg-blue-600 text-white font-bold text-xs"
+                          >
+                            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            onClick={() => setIsEditingLogistics(false)}
+                            className="h-12 px-6 rounded-2xl border-2 font-bold text-xs"
+                          >
+                            Cancel
+                          </Button>
                         </div>
                       </div>
+                    ) : (
+                      <>
+                        {selectedOrder?.shipping?.courier && (
+                          <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-blue-100">
+                            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                              <Package className="w-5 h-5 text-blue-500" />
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Courier Partner</p>
+                              <p className="text-sm font-black text-slate-700">{selectedOrder.shipping.courier}</p>
+                            </div>
+                          </div>
+                        )}
+                        <LiveShipwayTracking awb={selectedOrder.shipping.awb} />
+                      </>
                     )}
-                    <LiveShipwayTracking awb={selectedOrder.shipping.awb} />
                   </div>
                 )}
 
