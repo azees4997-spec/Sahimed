@@ -119,6 +119,7 @@ export function OrderTrackingVisual({ awb, orderId, currentStatus, isAdmin, onSt
     { label: 'Confirmed', icon: Package, active: true },
     { label: 'Packed', icon: Box, active: ['Packed', 'In Transit', 'Out for Delivery', 'Delivered'].includes(currentStatus || '') },
     { label: 'Shipped', icon: Truck, active: ['In Transit', 'Out for Delivery', 'Delivered'].includes(currentStatus || '') },
+    { label: 'Out for Delivery', icon: MapPin, active: ['Out for Delivery', 'Delivered'].includes(currentStatus || '') },
     { label: 'Delivered', icon: CheckCircle2, active: currentStatus === 'Delivered' }
   ];
 
