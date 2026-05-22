@@ -421,7 +421,7 @@ export class ShipwayService {
       const payload = {
         username: this.EMAIL,
         password: this.LICENSE_KEY,
-        awb: awb,
+        awbno: awb,
         carrier_id: 0
       };
 
