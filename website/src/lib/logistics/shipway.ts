@@ -431,13 +431,13 @@ export class ShipwayService {
         body: JSON.stringify(payload)
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       
       // Shipway returns "Success" on success, "failed" or "error" on failure
       const status = String(data.status || '').toLowerCase();
       if (!response.ok || status === 'error' || status === 'failed') {
-        console.error(`[Shipway] Tracking Error:`, data.message || data.msg || data.error);
-        return { success: false, error: data.message || data.msg || data.error || 'Tracking failed' };
+        console.warn(`[Shipway] API Tracking failed, trying scraper:`, data.message || data.msg || data.error);
+        return await this.scrapeTracking(awb);
       }
 
       return {
@@ -445,8 +445,56 @@ export class ShipwayService {
         data: data
       };
     } catch (err: any) {
-      console.error("[Shipway] Tracking failed:", err.message);
-      return { success: false, error: err.message };
+      console.warn("[Shipway] API Tracking exception, trying scraper:", err.message);
+      return await this.scrapeTracking(awb);
+    }
+  }
+
+  /**
+   * Scrapes the public tracking page as a fallback.
+   */
+  static async scrapeTracking(awb: string) {
+    try {
+      console.log(`[Shipway] Scraping public tracking for: ${awb}`);
+      const response = await fetch(`https://track.shipway.com/t/${awb}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      
+      const html = await response.text();
+      
+      // Extract carrier name
+      const carrierMatch = html.match(/<h2[^>]*><b>(.*?)\s*-\s*\d+<\/b><\/h2>/i);
+      const carrier = carrierMatch ? carrierMatch[1].trim() : 'Unknown';
+
+      // Extract rows
+      const rowRegex = /<tr>\s*<td>\s*([\s\S]*?)\s*<\/td>\s*<td>\s*([\s\S]*?)\s*<\/td>\s*<td>\s*([\s\S]*?)\s*<\/td>\s*<td>\s*([\s\S]*?)\s*<\/td>\s*<\/tr>/g;
+      let match;
+      const scans = [];
+      while ((match = rowRegex.exec(html)) !== null) {
+        scans.push({
+          date: match[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(),
+          time: match[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(),
+          activity: match[3].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(),
+          location: match[4].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+        });
+      }
+
+      if (scans.length === 0) {
+        return { success: false, error: 'No tracking history found on public page' };
+      }
+
+      return {
+        success: true,
+        data: {
+          status: 'Success',
+          tracking_data: {
+            carrier_name: carrier,
+            shipment_track_activities: scans
+          }
+        }
+      };
+    } catch (err: any) {
+      console.error("[Shipway] Scraper failed:", err.message);
+      return { success: false, error: `Scraping failed: ${err.message}` };
     }
   }
 }
