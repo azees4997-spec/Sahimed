@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ShipwayService } from '@/lib/logistics/shipway';
-import { auth } from '@/lib/firebase-admin';
+import { verifyAdmin } from '@/lib/auth-utils';
 
 export async function GET(request: Request) {
   try {
@@ -11,14 +11,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Missing awb parameter' }, { status: 400 });
     }
 
-    // Verify token to ensure security
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    await auth.verifyIdToken(token);
+    // Verify token to ensure security using robust auth-utils
+    await verifyAdmin(request);
 
     const trackingResult = await ShipwayService.trackShipment(awb);
 
