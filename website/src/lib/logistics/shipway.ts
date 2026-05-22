@@ -419,13 +419,17 @@ export class ShipwayService {
   static async trackShipment(awb: string) {
     try {
       const payload = {
+        username: this.EMAIL,
+        password: this.LICENSE_KEY,
         awb: awb,
         carrier_id: 0
       };
 
       const response = await fetch('https://shipway.in/api/getOrderShipmentDetails', {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(payload)
       });
 
