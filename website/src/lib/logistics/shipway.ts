@@ -29,7 +29,7 @@ export interface ShipwayOrder {
 
 export class ShipwayService {
   private static API_URL = process.env.SHIPWAY_API_URL || 'https://app.shipway.com/api';
-  private static EMAIL = process.env.SHIPWAY_EMAIL || 'Support@sahimed.com';
+  private static EMAIL = process.env.SHIPWAY_EMAIL || 'support@sahimed.com';
   private static LICENSE_KEY = process.env.SHIPWAY_LICENSE_KEY || '0E0UJ0Xqy7uor2V9WomPI850w9876m02';
 
   private static getAuthHeader(): string {
@@ -418,9 +418,11 @@ export class ShipwayService {
    */
   static async trackShipment(awb: string) {
     try {
+      const email = this.EMAIL.toLowerCase();
       const payload = {
-        username: this.EMAIL,
+        username: email,
         password: this.LICENSE_KEY,
+        awb: awb,
         awbno: awb,
         carrier_id: 0
       };
@@ -428,7 +430,8 @@ export class ShipwayService {
       const response = await fetch('https://shipway.in/api/getOrderShipmentDetails', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + Buffer.from(`${email}:${this.LICENSE_KEY}`).toString('base64')
         },
         body: JSON.stringify(payload)
       });
