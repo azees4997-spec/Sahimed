@@ -48,7 +48,7 @@ import { useUser } from '@/firebase';
 import { safeFormat } from '@/lib/safe-date';
 import { SectionHeader } from './SectionHeader';
 
-function LiveShipwayTracking({ awb }: { awb: string }) {
+function LiveShipwayTracking({ awb, orderId }: { awb: string, orderId?: string }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useUser();
@@ -59,7 +59,7 @@ function LiveShipwayTracking({ awb }: { awb: string }) {
       if (!user) return;
       try {
         const token = await user.getIdToken();
-        const res = await fetch(`/api/orders/track?awb=${awb}`, {
+        const res = await fetch(`/api/orders/track?awb=${awb}${orderId ? `&orderId=${orderId}` : ''}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const json = await res.json();
@@ -74,7 +74,7 @@ function LiveShipwayTracking({ awb }: { awb: string }) {
     }
     fetchTracking();
     return () => { isMounted = false; };
-  }, [awb, user]);
+  }, [awb, orderId, user]);
 
   if (loading) return (
     <div className="flex items-center justify-center p-8">
@@ -965,7 +965,7 @@ ${itemsStr}
                             </div>
                           </div>
                         )}
-                        <LiveShipwayTracking awb={selectedOrder.shipping.awb} />
+                        <LiveShipwayTracking awb={selectedOrder.shipping.awb} orderId={selectedOrder.orderId} />
                       </>
                     )}
                   </div>

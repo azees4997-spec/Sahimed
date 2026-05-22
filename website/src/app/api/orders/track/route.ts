@@ -6,6 +6,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const awb = searchParams.get('awb');
+    const orderId = searchParams.get('orderId');
 
     if (!awb) {
       return NextResponse.json({ error: 'Missing awb parameter' }, { status: 400 });
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
     // Verify token to ensure security using robust auth-utils
     await verifyAdmin(request);
 
-    const trackingResult = await ShipwayService.trackShipment(awb);
+    const trackingResult = await ShipwayService.trackShipment(awb, orderId || undefined);
 
     if (!trackingResult.success) {
       return NextResponse.json({ error: trackingResult.error }, { status: 500 });
