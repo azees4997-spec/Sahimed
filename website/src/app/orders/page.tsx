@@ -45,6 +45,7 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
+import { OrderTrackingVisual } from '@/components/logistics/OrderTrackingVisual';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -384,17 +385,10 @@ export default function OrdersPage() {
 
                   {/* Logistics Information */}
                   {selectedOrder?.shipping?.awb && (
-                    <div className="space-y-6">
-                      <h4 className="text-[10px] font-black tracking-[0.3em] text-slate-400 flex items-center gap-4 uppercase opacity-60">
-                        <Truck className="w-4 h-4" /> Logistics Information
-                      </h4>
-                      <div className="bg-white/60 backdrop-blur-md p-8 rounded-[40px] border border-white shadow-xl space-y-6">
-                        <div className="flex items-center justify-between">
-                          <p className="text-[9px] font-black text-primary uppercase tracking-widest">Courier Partner</p>
-                          <span className="text-[10px] bg-primary/10 border border-primary/20 text-primary px-4 py-2 rounded-full font-black">AWB: {selectedOrder.shipping.awb}</span>
-                        </div>
-                      </div>
-                    </div>
+                    <OrderTrackingVisual 
+                      awb={selectedOrder.shipping.awb} 
+                      orderId={selectedOrder.orderId} 
+                    />
                   )}
 
                   <div className="space-y-6">

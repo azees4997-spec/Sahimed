@@ -47,125 +47,8 @@ import { cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
 import { safeFormat } from '@/lib/safe-date';
 import { SectionHeader } from './SectionHeader';
+import { OrderTrackingVisual } from '@/components/logistics/OrderTrackingVisual';
 
-function LiveShipwayTracking({ awb, orderId, currentStatus, onStatusUpdate }: { awb: string, orderId?: string, currentStatus?: string, onStatusUpdate?: (status: string) => void }) {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const { user } = useUser();
-
-  useEffect(() => {
-    let isMounted = true;
-    async function fetchTracking() {
-      if (!user) return;
-      try {
-        const token = await user.getIdToken();
-        const res = await fetch(`/api/orders/track?awb=${awb}${orderId ? `&orderId=${orderId}` : ''}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const json = await res.json();
-        if (isMounted) {
-          setData(json);
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
-    fetchTracking();
-    return () => { isMounted = false; };
-  }, [awb, orderId, user]);
-
-  if (loading) return (
-    <div className="flex items-center justify-center p-8">
-      <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
-    </div>
-  );
-  if (!data || data.error) return null;
-
-  const scans = 
-    data.tracking_data?.shipment_track_activities || 
-    data.response?.tracking_data?.shipment_track_activities || 
-    data.response?.tracking_details ||
-    data.tracking_details ||
-    [];
-  if (scans.length === 0) return null;
-
-  const mapShipwayToInternalStatus = (shipwayStatus: string) => {
-    const s = shipwayStatus.toLowerCase();
-    if (s.includes('delivered')) return 'Delivered';
-    if (s.includes('out for delivery')) return 'Out for Delivery';
-    if (s.includes('transit') || s.includes('departed') || s.includes('picked up') || s.includes('dispatched') || s.includes('vehicle')) return 'In Transit';
-    if (s.includes('returned') || s.includes('rto')) return 'Returned';
-    if (s.includes('manifest') || s.includes('pickup scheduled') || s.includes('packed')) return 'Packed';
-    return null;
-  };
-
-  const latestActivity = scans[0]?.activity || scans[0]?.status || scans[0]?.remark || '';
-  const suggestedStatus = mapShipwayToInternalStatus(latestActivity);
-  const needsSync = suggestedStatus && suggestedStatus !== currentStatus;
-
-  return (
-    <div className="mt-6 pt-6 border-t border-blue-100 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex flex-col gap-1">
-          <h5 className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Live Carrier Timeline</h5>
-          {data.tracking_data?.carrier_name && (
-            <p className="text-[9px] font-black text-slate-400 uppercase">{data.tracking_data.carrier_name}</p>
-          )}
-        </div>
-        {needsSync && onStatusUpdate && (
-          <Button 
-            size="sm"
-            disabled={isSyncing}
-            onClick={async () => {
-              setIsSyncing(true);
-              await onStatusUpdate(suggestedStatus);
-              setIsSyncing(false);
-            }}
-            className="h-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase tracking-wider px-4 shadow-lg shadow-blue-100 animate-bounce"
-          >
-            {isSyncing ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <RefreshCw className="w-3 h-3 mr-2" />}
-            Sync Pipeline to {suggestedStatus}
-          </Button>
-        )}
-      </div>
-      <div className="space-y-6">
-        {scans.map((scan: any, idx: number) => (
-          <div key={idx} className="flex gap-4 items-start relative">
-            {idx !== scans.length - 1 && (
-              <div className="absolute left-[9px] top-6 -bottom-8 w-0.5 bg-blue-100" />
-            )}
-            <div className={cn(
-              "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2 border-white shadow-sm",
-              idx === 0 ? "bg-blue-500 text-white scale-110 shadow-md shadow-blue-200" : "bg-blue-50 text-blue-300"
-            )}>
-              <div className="w-1.5 h-1.5 rounded-full bg-current" />
-            </div>
-            <div className="flex-1 min-w-0 -mt-1">
-              <div className="flex items-center justify-between gap-2">
-                <p className={cn("text-xs font-black uppercase tracking-tight", 
-                  idx === 0 ? "text-blue-600" : "text-slate-600"
-                )}>
-                  {scan.activity || scan.status || scan.remark}
-                </p>
-                <p className="text-[9px] font-black text-slate-400 uppercase whitespace-nowrap">
-                  {scan.date} {scan.time}
-                </p>
-              </div>
-              {(scan.location || scan.city) && (
-                <p className="text-[10px] font-bold text-slate-400 mt-0.5 flex items-center gap-1">
-                  <span className="opacity-50">@</span> {scan.location || scan.city}
-                </p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 const getStatusColorClasses = (status: string, isSelected: boolean) => {
   if (isSelected) {
@@ -997,10 +880,11 @@ ${itemsStr}
                             </div>
                           </div>
                         )}
-                        <LiveShipwayTracking 
+                        <OrderTrackingVisual 
                           awb={selectedOrder.shipping.awb} 
                           orderId={selectedOrder.orderId} 
                           currentStatus={selectedOrder.status}
+                          isAdmin={true}
                           onStatusUpdate={(newStatus) => updateOrderStatus(selectedOrder._id, newStatus)}
                         />
                       </>
