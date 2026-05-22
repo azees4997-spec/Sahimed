@@ -11,7 +11,8 @@ import {
   ChevronUp,
   RefreshCw,
   Clock,
-  Box
+  Box,
+  ClipboardList
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -116,7 +117,8 @@ export function OrderTrackingVisual({ awb, orderId, currentStatus, isAdmin, onSt
 
   // Milestone logic
   const milestones = [
-    { label: 'Confirmed', icon: Package, active: true },
+    { label: 'Placed', icon: ClipboardList, active: true },
+    { label: 'Confirmed', icon: Package, active: ['Confirmed', 'Packed', 'In Transit', 'Out for Delivery', 'Delivered'].includes(currentStatus || '') },
     { label: 'Packed', icon: Box, active: ['Packed', 'In Transit', 'Out for Delivery', 'Delivered'].includes(currentStatus || '') },
     { label: 'Shipped', icon: Truck, active: ['In Transit', 'Out for Delivery', 'Delivered'].includes(currentStatus || '') },
     { label: 'Out for Delivery', icon: MapPin, active: ['Out for Delivery', 'Delivered'].includes(currentStatus || '') },
