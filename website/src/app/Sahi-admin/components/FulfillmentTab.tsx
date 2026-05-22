@@ -83,12 +83,17 @@ function LiveShipwayTracking({ awb }: { awb: string }) {
   );
   if (!data || data.error) return null;
 
-  const scans = data.tracking_data?.shipment_track_activities || [];
+  const scans = data.tracking_data?.shipment_track_activities || data.response?.tracking_data?.shipment_track_activities || [];
   if (scans.length === 0) return null;
 
   return (
-    <div className="mt-6 pt-6 border-t border-blue-100">
-      <h5 className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-6">Live Carrier Timeline</h5>
+    <div className="mt-6 pt-6 border-t border-blue-100 animate-in fade-in duration-500">
+      <div className="flex items-center justify-between mb-6">
+        <h5 className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Live Carrier Timeline</h5>
+        {data.tracking_data?.carrier_name && (
+          <Badge className="bg-blue-100 text-blue-600 border-none font-bold text-[8px] uppercase">{data.tracking_data.carrier_name}</Badge>
+        )}
+      </div>
       <div className="space-y-6">
         {scans.map((scan: any, idx: number) => (
           <div key={idx} className="flex gap-4 items-start relative">
@@ -97,22 +102,26 @@ function LiveShipwayTracking({ awb }: { awb: string }) {
             )}
             <div className={cn(
               "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2 border-white shadow-sm",
-              idx === 0 ? "bg-blue-500 text-white scale-110" : "bg-blue-100 text-blue-400"
+              idx === 0 ? "bg-blue-500 text-white scale-110 shadow-md shadow-blue-200" : "bg-blue-50 text-blue-300"
             )}>
               <div className="w-1.5 h-1.5 rounded-full bg-current" />
             </div>
             <div className="flex-1 min-w-0 -mt-1">
               <div className="flex items-center justify-between gap-2">
                 <p className={cn("text-xs font-black uppercase tracking-tight", 
-                  idx === 0 ? "text-blue-600" : "text-slate-500"
+                  idx === 0 ? "text-blue-600" : "text-slate-600"
                 )}>
-                  {scan.activity || scan.status}
+                  {scan.activity || scan.status || scan.remark}
                 </p>
                 <p className="text-[9px] font-black text-slate-400 uppercase whitespace-nowrap">
-                  {scan.date}
+                  {scan.date} {scan.time}
                 </p>
               </div>
-              <p className="text-[10px] font-bold text-slate-400 mt-0.5">{scan.location}</p>
+              {(scan.location || scan.city) && (
+                <p className="text-[10px] font-bold text-slate-400 mt-0.5 flex items-center gap-1">
+                  <span className="opacity-50">@</span> {scan.location || scan.city}
+                </p>
+              )}
             </div>
           </div>
         ))}
@@ -273,7 +282,8 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
               ...prev,
               shipping: {
                 ...(prev?.shipping || {}),
-                awb: result.awb
+                awb: result.awb,
+                courier: result.courier || prev?.shipping?.courier
               }
             }));
           } else if (extra.shipping) {

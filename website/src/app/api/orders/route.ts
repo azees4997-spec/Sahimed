@@ -563,7 +563,7 @@ export async function PUT(req: Request) {
               { _id: new ObjectId(id) },
               { $set: { 'shipping.awb': awb, 'shipping.courier': courier, updatedAt: new Date() } }
             );
-            return NextResponse.json({ success: true, message: `AWB Pulled: ${awb}`, awb });
+            return NextResponse.json({ success: true, message: `AWB Pulled: ${awb}`, awb, courier });
           }
         }
 
@@ -600,7 +600,7 @@ export async function PUT(req: Request) {
               { _id: new ObjectId(id) },
               { $set: { 'shipping.awb': awb, 'shipping.labelUrl': label, 'shipping.courier': courier, updatedAt: new Date() } }
             );
-            return NextResponse.json({ success: true, message: `AWB Generated: ${awb}`, awb });
+            return NextResponse.json({ success: true, message: `AWB Generated: ${awb}`, awb, courier });
           } else {
              // Handle case where it succeeded but didn't return an AWB (e.g. Order already exists)
              if (JSON.stringify(pushRes.data).toLowerCase().includes('already exists')) {
