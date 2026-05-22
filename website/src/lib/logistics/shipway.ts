@@ -435,10 +435,11 @@ export class ShipwayService {
 
       const data = await response.json();
       
-      // UsuallyShipway returns something like { status: 'Success', tracking_details: [...] }
-      if (!response.ok || data.status === 'error' || data.status === 'Failed') {
-        console.error(`[Shipway] Tracking Error:`, data.message || data.error);
-        return { success: false, error: data.message || data.error || 'Tracking failed' };
+      // Shipway returns "Success" on success, "failed" or "error" on failure
+      const status = String(data.status || '').toLowerCase();
+      if (!response.ok || status === 'error' || status === 'failed') {
+        console.error(`[Shipway] Tracking Error:`, data.message || data.msg || data.error);
+        return { success: false, error: data.message || data.msg || data.error || 'Tracking failed' };
       }
 
       return {

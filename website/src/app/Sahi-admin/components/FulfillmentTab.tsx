@@ -83,7 +83,12 @@ function LiveShipwayTracking({ awb }: { awb: string }) {
   );
   if (!data || data.error) return null;
 
-  const scans = data.tracking_data?.shipment_track_activities || data.response?.tracking_data?.shipment_track_activities || [];
+  const scans = 
+    data.tracking_data?.shipment_track_activities || 
+    data.response?.tracking_data?.shipment_track_activities || 
+    data.response?.tracking_details ||
+    data.tracking_details ||
+    [];
   if (scans.length === 0) return null;
 
   return (
