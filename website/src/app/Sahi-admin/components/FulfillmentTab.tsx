@@ -48,9 +48,10 @@ import { useUser } from '@/firebase';
 import { safeFormat } from '@/lib/safe-date';
 import { SectionHeader } from './SectionHeader';
 
-function LiveShipwayTracking({ awb, orderId }: { awb: string, orderId?: string }) {
+function LiveShipwayTracking({ awb, orderId, currentStatus, onStatusUpdate }: { awb: string, orderId?: string, currentStatus?: string, onStatusUpdate?: (status: string) => void }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const { user } = useUser();
 
   useEffect(() => {
@@ -91,12 +92,43 @@ function LiveShipwayTracking({ awb, orderId }: { awb: string, orderId?: string }
     [];
   if (scans.length === 0) return null;
 
+  const mapShipwayToInternalStatus = (shipwayStatus: string) => {
+    const s = shipwayStatus.toLowerCase();
+    if (s.includes('delivered')) return 'Delivered';
+    if (s.includes('out for delivery')) return 'Out for Delivery';
+    if (s.includes('transit') || s.includes('departed') || s.includes('picked up') || s.includes('dispatched') || s.includes('vehicle')) return 'In Transit';
+    if (s.includes('returned') || s.includes('rto')) return 'Returned';
+    if (s.includes('manifest') || s.includes('pickup scheduled') || s.includes('packed')) return 'Packed';
+    return null;
+  };
+
+  const latestActivity = scans[0]?.activity || scans[0]?.status || scans[0]?.remark || '';
+  const suggestedStatus = mapShipwayToInternalStatus(latestActivity);
+  const needsSync = suggestedStatus && suggestedStatus !== currentStatus;
+
   return (
     <div className="mt-6 pt-6 border-t border-blue-100 animate-in fade-in duration-500">
       <div className="flex items-center justify-between mb-6">
-        <h5 className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Live Carrier Timeline</h5>
-        {data.tracking_data?.carrier_name && (
-          <Badge className="bg-blue-100 text-blue-600 border-none font-bold text-[8px] uppercase">{data.tracking_data.carrier_name}</Badge>
+        <div className="flex flex-col gap-1">
+          <h5 className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Live Carrier Timeline</h5>
+          {data.tracking_data?.carrier_name && (
+            <p className="text-[9px] font-black text-slate-400 uppercase">{data.tracking_data.carrier_name}</p>
+          )}
+        </div>
+        {needsSync && onStatusUpdate && (
+          <Button 
+            size="sm"
+            disabled={isSyncing}
+            onClick={async () => {
+              setIsSyncing(true);
+              await onStatusUpdate(suggestedStatus);
+              setIsSyncing(false);
+            }}
+            className="h-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase tracking-wider px-4 shadow-lg shadow-blue-100 animate-bounce"
+          >
+            {isSyncing ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <RefreshCw className="w-3 h-3 mr-2" />}
+            Sync Pipeline to {suggestedStatus}
+          </Button>
         )}
       </div>
       <div className="space-y-6">
@@ -965,7 +997,12 @@ ${itemsStr}
                             </div>
                           </div>
                         )}
-                        <LiveShipwayTracking awb={selectedOrder.shipping.awb} orderId={selectedOrder.orderId} />
+                        <LiveShipwayTracking 
+                          awb={selectedOrder.shipping.awb} 
+                          orderId={selectedOrder.orderId} 
+                          currentStatus={selectedOrder.status}
+                          onStatusUpdate={(newStatus) => updateOrderStatus(selectedOrder._id, newStatus)}
+                        />
                       </>
                     )}
                   </div>
