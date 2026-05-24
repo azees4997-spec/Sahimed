@@ -4,13 +4,15 @@ import clientPromise from '@/lib/mongodb';
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600; // Cache for 1 hour
 
-function escapeXml(unsafe: string) {
-  return (unsafe || '').toString()
+function escapeXml(unsafe: any) {
+  if (unsafe === null || unsafe === undefined) return '';
+  return unsafe.toString()
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+    .replace(/'/g, '&apos;')
+    .replace(/[^\x09\x0A\x0D\x20-\xFF\x85\xA0-\uD7FF\uE000-\uFDCF\uFDE0-\uFFFD]/g, ''); // Remove illegal XML characters
 }
 
 export async function GET() {
@@ -24,54 +26,55 @@ export async function GET() {
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sahimed.com';
 
-    // Build the XML string
-    let xml = `<?xml version="1.0"?>
-<rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
-  <channel>
-    <title>SahiMed | Authentic Medicines &amp; Healthcare</title>
-    <link>${baseUrl}</link>
-    <description>Get authentic medicines, healthcare products, and wellness essentials delivered to your doorstep. Best prices guaranteed at SahiMed.</description>
-    ${products.map(product => {
-      const id = escapeXml(product._id.toString());
-      const title = escapeXml(product.name || '');
-      const description = escapeXml(product.description || `Buy ${product.name} at best prices on SahiMed. Quality medicines and healthcare products. Fast delivery across India.`);
-      const link = escapeXml(`${baseUrl}/product/${id}`);
-      
-      // Image Handling
-      const allImages = [
-        ...(product.imageUrls || []),
-        product.imageUrl,
-        product.image,
-        ...(product.images || [])
-      ].filter(Boolean).map(img => {
-        if (typeof img !== 'string') return null;
-        if (img.startsWith('http')) return img;
-        return `${baseUrl}${img.startsWith('/') ? '' : '/'}${img}`;
-      }).filter(Boolean) as string[];
+    let itemsXml = '';
+    
+    for (const product of products) {
+      try {
+        const id = product._id?.toString();
+        if (!id) continue;
 
-      const imageLink = escapeXml(allImages[0] || `${baseUrl}/medical_login_illustration.png`);
-      const additionalImageLinks = allImages.slice(1, 11).map(img => `<g:additional_image_link>${escapeXml(img)}</g:additional_image_link>`).join('\n      ');
-      
-      // Pricing
-      const salePrice = product.liveData?.sahimed_price || product.price || 0;
-      const mrp = product.liveData?.mrp || product.mrp || salePrice;
-      const priceStr = escapeXml(`${mrp} INR`);
-      const salePriceStr = salePrice < mrp ? `<g:sale_price>${escapeXml(`${salePrice} INR`)}</g:sale_price>` : '';
+        const title = escapeXml(product.name || '');
+        const description = escapeXml(product.description || `Buy ${product.name} at best prices on SahiMed.`);
+        const link = escapeXml(`${baseUrl}/product/${id}`);
+        
+        // Image Handling
+        const allImages = [
+          ...(product.imageUrls || []),
+          product.imageUrl,
+          product.image,
+          ...(product.images || [])
+        ].filter(Boolean).map(img => {
+          if (typeof img !== 'string') return null;
+          if (img.startsWith('http')) return img;
+          return `${baseUrl}${img.startsWith('/') ? '' : '/'}${img}`;
+        }).filter(Boolean) as string[];
 
-      // Product Identifiers
-      const brand = escapeXml(product.manufacturer || product.marketer_name || product.brand || 'SahiMed');
-      const mpn = escapeXml(product.sku || product.hsnCode || id);
-      const category = escapeXml(product.category || 'Medications');
+        const imageLink = escapeXml(allImages[0] || `${baseUrl}/medical_login_illustration.png`);
+        const additionalImages = allImages.slice(1, 11)
+          .map(img => `<g:additional_image_link>${escapeXml(img)}</g:additional_image_link>`)
+          .join('');
+        
+        // Pricing
+        const salePrice = Number(product.liveData?.sahimed_price || product.price || 0);
+        const mrp = Number(product.liveData?.mrp || product.mrp || salePrice);
+        const priceStr = escapeXml(`${mrp} INR`);
+        const salePriceStr = salePrice < mrp ? `<g:sale_price>${escapeXml(`${salePrice} INR`)}</g:sale_price>` : '';
 
-      return `
+        // Product Identifiers
+        const brand = escapeXml(product.manufacturer || product.marketer_name || product.brand || 'SahiMed');
+        const mpn = escapeXml(product.sku || product.hsnCode || id);
+        const category = escapeXml(product.category || 'Medications');
+        const inStock = (product.availableQuantity > 0 || product.stock > 0 || product.inStock !== false);
+
+        itemsXml += `
     <item>
-      <g:id>${id}</g:id>
+      <g:id>${escapeXml(id)}</g:id>
       <g:title>${title}</g:title>
       <g:description>${description}</g:description>
       <g:link>${link}</g:link>
-      <g:image_link>${imageLink}</g:image_link>${additionalImageLinks ? '\n      ' + additionalImageLinks : ''}
+      <g:image_link>${imageLink}</g:image_link>${additionalImages}
       <g:condition>new</g:condition>
-      <g:availability>${(product.stock > 0 || product.inStock !== false) ? 'in stock' : 'out of stock'}</g:availability>
+      <g:availability>${inStock ? 'in stock' : 'out of stock'}</g:availability>
       <g:price>${priceStr}</g:price>
       ${salePriceStr}
       <g:brand>${brand}</g:brand>
@@ -84,7 +87,19 @@ export async function GET() {
         <g:price>0 INR</g:price>
       </g:shipping>
     </item>`;
-    }).join('')}
+      } catch (err) {
+        console.error(`Error processing product ${product._id}:`, err);
+        continue;
+      }
+    }
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
+  <channel>
+    <title>SahiMed | Authentic Medicines &amp; Healthcare</title>
+    <link>${baseUrl}</link>
+    <description>Get authentic medicines, healthcare products, and wellness essentials delivered to your doorstep. Best prices guaranteed at SahiMed.</description>
+    ${itemsXml}
   </channel>
 </rss>`;
 
