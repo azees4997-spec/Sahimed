@@ -8,7 +8,15 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/Sahi-admin/', '/checkout/', '/order-success/'],
+        disallow: [
+          '/api/admin/', 
+          '/api/orders/', 
+          '/api/user/',
+          '/Sahi-admin/', 
+          '/checkout/', 
+          '/order-success/'
+        ],
+        allow: ['/api/feeds/'],
       },
       {
         userAgent: ['GPTBot', 'ChatGPT-User', 'Google-Extended', 'Amazonbot', 'Claude-Web', 'CCBot'],

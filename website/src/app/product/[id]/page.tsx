@@ -93,7 +93,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
     name: product.name,
     image: product.imageUrl || 'https://sahimed.com/logo.png',
     description: product.description || `Buy ${product.name} online at SahiMed. Genuine quality, lowest prices.`,
-    sku: id,
+    sku: product.sku || id,
+    mpn: product.hsnCode || product.sku || id,
     brand: {
       '@type': 'Brand',
       name: product.manufacturer || product.brand || 'SahiMed',
@@ -106,6 +107,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
       priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       itemCondition: 'https://schema.org/NewCondition',
       availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'IN',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnPeriod',
+        merchantReturnDays: 7,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn'
+      },
       shippingDetails: {
         '@type': 'OfferShippingDetails',
         shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'INR' },

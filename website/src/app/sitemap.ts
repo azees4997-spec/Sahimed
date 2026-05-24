@@ -17,7 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const client = await clientPromise;
     const db = client.db('sahimed');
     const productsCollection = db.collection('products');
-    const products = await productsCollection.find({}, { projection: { _id: 1, updatedAt: 1 } }).limit(1000).toArray();
+    const products = await productsCollection.find({}, { projection: { _id: 1, updatedAt: 1 } }).limit(50000).toArray();
 
     productUrls = products.map((product) => ({
       url: `${baseUrl}/product/${product._id}`,
