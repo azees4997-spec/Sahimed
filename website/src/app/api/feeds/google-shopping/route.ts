@@ -36,7 +36,21 @@ export async function GET() {
       const title = escapeXml(product.name || '');
       const description = escapeXml(product.description || `Buy ${product.name} at best prices on SahiMed. Quality medicines and healthcare products. Fast delivery across India.`);
       const link = escapeXml(`${baseUrl}/product/${id}`);
-      const imageLink = escapeXml(product.images && product.images.length > 0 ? product.images[0] : (product.imageUrl || product.image || `${baseUrl}/logo.png`));
+      
+      // Image Handling
+      const allImages = [
+        ...(product.imageUrls || []),
+        product.imageUrl,
+        product.image,
+        ...(product.images || [])
+      ].filter(Boolean).map(img => {
+        if (typeof img !== 'string') return null;
+        if (img.startsWith('http')) return img;
+        return `${baseUrl}${img.startsWith('/') ? '' : '/'}${img}`;
+      }).filter(Boolean) as string[];
+
+      const imageLink = escapeXml(allImages[0] || `${baseUrl}/medical_login_illustration.png`);
+      const additionalImageLinks = allImages.slice(1, 11).map(img => `<g:additional_image_link>${escapeXml(img)}</g:additional_image_link>`).join('\n      ');
       
       // Pricing
       const salePrice = product.liveData?.sahimed_price || product.price || 0;
@@ -55,7 +69,7 @@ export async function GET() {
       <g:title>${title}</g:title>
       <g:description>${description}</g:description>
       <g:link>${link}</g:link>
-      <g:image_link>${imageLink}</g:image_link>
+      <g:image_link>${imageLink}</g:image_link>${additionalImageLinks ? '\n      ' + additionalImageLinks : ''}
       <g:condition>new</g:condition>
       <g:availability>${(product.stock > 0 || product.inStock !== false) ? 'in stock' : 'out of stock'}</g:availability>
       <g:price>${priceStr}</g:price>
