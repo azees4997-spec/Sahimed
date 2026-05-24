@@ -91,7 +91,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
-    image: product.imageUrl || 'https://sahimed.com/logo.png',
+    image: (product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : (product.imageUrl || 'https://sahimed.com/medical_login_illustration.png')),
     description: product.description || `Buy ${product.name} online at SahiMed. Genuine quality, lowest prices.`,
     sku: product.sku || id,
     mpn: product.hsnCode || product.sku || id,
