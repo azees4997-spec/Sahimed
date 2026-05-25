@@ -1,6 +1,7 @@
-
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { revalidatePath } from 'next/cache';
+import { ObjectId } from 'mongodb';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,11 +35,15 @@ export async function POST(request: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
     const result = await db.collection('categories').insertOne({
-      _id: body.id,
       ...body,
       createdAt: new Date(),
       updatedAt: new Date()
     });
+    
+    // Invalidate caches
+    revalidatePath('/');
+    revalidatePath('/categories');
+    
     return NextResponse.json({ success: true, id: result.insertedId });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
