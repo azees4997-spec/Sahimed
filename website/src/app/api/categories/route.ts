@@ -2,6 +2,8 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
+export const dynamic = 'force-dynamic';
+
 // GET all categories
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -19,11 +21,7 @@ export async function GET(request: Request) {
       .limit(limitValue)
       .toArray();
 
-    return NextResponse.json(categories.map(c => ({ ...c, id: c._id.toString() })), {
-      headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60',
-      },
-    });
+    return NextResponse.json(categories.map(c => ({ ...c, id: c._id.toString() })));
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

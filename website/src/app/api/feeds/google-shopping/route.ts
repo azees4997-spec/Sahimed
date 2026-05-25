@@ -38,20 +38,24 @@ export async function GET() {
         const link = escapeXml(`${baseUrl}/product/${id}`);
         
         // Image Handling
-        const allImages = [
+        const rawImages = [
           ...(product.imageUrls || []),
           product.imageUrl,
           product.image,
           ...(product.images || [])
-        ].filter(Boolean).map(img => {
+        ].filter(Boolean);
+
+        // Deduplicate URLs using a Set
+        const uniqueImages = Array.from(new Set(rawImages)).map(img => {
           if (typeof img !== 'string') return null;
           if (img.startsWith('http')) return img;
           return `${baseUrl}${img.startsWith('/') ? '' : '/'}${img}`;
         }).filter(Boolean) as string[];
 
-        const imageLink = escapeXml(allImages[0] || `${baseUrl}/medical_login_illustration.png`);
-        const additionalImages = allImages.slice(1, 11)
-          .map(img => `<g:additional_image_link>${escapeXml(img)}</g:additional_image_link>`)
+        const imageLink = escapeXml(uniqueImages[0] || `${baseUrl}/medical_login_illustration.png`);
+        const additionalImages = uniqueImages.slice(1, 11)
+          .map(img => `
+      <g:additional_image_link>${escapeXml(img)}</g:additional_image_link>`)
           .join('');
         
         // Pricing
@@ -63,6 +67,9 @@ export async function GET() {
         // Product Identifiers
         const brand = escapeXml(product.manufacturer || product.marketer_name || product.brand || 'SahiMed');
         const mpn = escapeXml(product.sku || product.hsnCode || id);
+        const gtin = escapeXml(product.gtin || product.barcode || '');
+        const hasIdentifiers = !!(brand && (mpn || gtin));
+
         const category = escapeXml(product.category || 'Medications');
         const inStock = (product.availableQuantity > 0 || product.stock > 0 || product.inStock !== false);
 
@@ -79,6 +86,8 @@ export async function GET() {
       ${salePriceStr}
       <g:brand>${brand}</g:brand>
       <g:mpn>${mpn}</g:mpn>
+      ${gtin ? `<g:gtin>${gtin}</g:gtin>` : ''}
+      <g:identifier_exists>${hasIdentifiers ? 'yes' : 'no'}</g:identifier_exists>
       <g:google_product_category>Health &amp; Beauty &gt; Health Care &gt; Medications &amp; Treatments</g:google_product_category>
       <g:product_type>${category}</g:product_type>
       <g:shipping>
