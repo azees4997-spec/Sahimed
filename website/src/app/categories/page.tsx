@@ -43,7 +43,7 @@ export default function CategoriesPage() {
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
-    fetch('/api/categories?limit=50')
+    fetch('/api/categories?limit=50', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {

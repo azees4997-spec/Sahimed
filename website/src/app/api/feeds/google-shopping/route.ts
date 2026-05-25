@@ -45,12 +45,14 @@ export async function GET() {
           ...(product.images || [])
         ].filter(Boolean);
 
-        // Deduplicate URLs using a Set
-        const uniqueImages = Array.from(new Set(rawImages)).map(img => {
+        // Deduplicate URLs using a Set after mapping to absolute URLs
+        const absoluteImages = rawImages.map(img => {
           if (typeof img !== 'string') return null;
           if (img.startsWith('http')) return img;
           return `${baseUrl}${img.startsWith('/') ? '' : '/'}${img}`;
         }).filter(Boolean) as string[];
+
+        const uniqueImages = Array.from(new Set(absoluteImages));
 
         const imageLink = escapeXml(uniqueImages[0] || `${baseUrl}/medical_login_illustration.png`);
         const additionalImages = uniqueImages.slice(1, 11)
