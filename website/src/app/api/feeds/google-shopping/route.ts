@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 3600; // Cache for 1 hour
 
 function escapeXml(unsafe: any) {
   if (unsafe === null || unsafe === undefined) return '';
@@ -26,10 +25,12 @@ export async function GET() {
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sahimed.com';
 
-    let itemsXml = '';
+    const items: string[] = [];
     
     for (const product of products) {
       try {
+        if (!product.name || (!product.price && !product.liveData?.sahimed_price)) continue;
+        
         const id = product._id?.toString();
         if (!id) continue;
 
@@ -75,7 +76,7 @@ export async function GET() {
         const category = escapeXml(product.category || 'Medications');
         const inStock = (product.availableQuantity > 0 || product.stock > 0 || product.inStock !== false);
 
-        itemsXml += `
+        items.push(`
     <item>
       <g:id>${escapeXml(id)}</g:id>
       <g:title>${title}</g:title>
@@ -97,7 +98,7 @@ export async function GET() {
         <g:service>Standard</g:service>
         <g:price>0 INR</g:price>
       </g:shipping>
-    </item>`;
+    </item>`);
       } catch (err) {
         console.error(`Error processing product ${product._id}:`, err);
         continue;
@@ -110,7 +111,7 @@ export async function GET() {
     <title>SahiMed | Authentic Medicines &amp; Healthcare</title>
     <link>${baseUrl}</link>
     <description>Get authentic medicines, healthcare products, and wellness essentials delivered to your doorstep. Best prices guaranteed at SahiMed.</description>
-    ${itemsXml}
+    ${items.join('')}
   </channel>
 </rss>`;
 

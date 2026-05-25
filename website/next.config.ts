@@ -85,6 +85,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/api/feeds/google%20shopping',
+        destination: '/api/feeds/google-shopping',
+        permanent: true,
+      },
+      {
+        source: '/api/feeds/google%20shopping/',
+        destination: '/api/feeds/google-shopping',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
