@@ -94,26 +94,9 @@ export default async function Home() {
         
         {/* Mega Banner Hero Section */}
         <section className="relative w-full bg-[#FFF9F9] overflow-hidden pb-4 sm:pb-10 pt-2 sm:pt-8 border-b border-rose-50/50">
-        {/* Lite Contrast Medicine Placeholders */}
-        <div className="absolute top-[5%] right-[15%] w-32 h-32 opacity-[0.05] pointer-events-none rotate-12">
-          <svg viewBox="0 0 100 100" className="w-full h-full text-emerald-500 fill-current">
-            <rect x="30" y="20" width="40" height="60" rx="10" />
-            <rect x="40" y="10" width="20" height="10" rx="2" />
-          </svg>
-        </div>
-        <div className="absolute top-[20%] left-[10%] w-24 h-24 opacity-[0.04] pointer-events-none -rotate-12">
-          <svg viewBox="0 0 100 100" className="w-full h-full text-blue-500 fill-current">
-            <rect x="20" y="30" width="60" height="40" rx="8" />
-            <circle cx="35" cy="50" r="5" className="text-white fill-current" />
-            <circle cx="50" cy="50" r="5" className="text-white fill-current" />
-            <circle cx="65" cy="50" r="5" className="text-white fill-current" />
-          </svg>
-        </div>
-        <div className="absolute bottom-[10%] right-[30%] w-40 h-40 opacity-[0.03] pointer-events-none rotate-45">
-          <svg viewBox="0 0 100 100" className="w-full h-full text-rose-500 fill-current">
-            <path d="M50 20 L80 50 L50 80 L20 50 Z" />
-          </svg>
-        </div>
+          <div className="absolute top-0 right-0 w-48 h-48 bg-rose-100/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none" />
+          
           <div className="max-w-7xl mx-auto px-4 relative z-10">
             <div className="flex flex-col gap-4 sm:gap-6">
               
@@ -133,35 +116,21 @@ export default async function Home() {
                   </div>
                 </div>
  
-                {/* Desktop Doctor View (Frameless) */}
-                <div className="hidden sm:flex w-1/4 justify-end relative z-20">
-                  <div className="relative w-full aspect-[4/5] max-w-[320px] overflow-visible">
+                <div className="w-1/3 sm:w-1/4 flex justify-end">
+                  <div className="relative w-full aspect-square max-w-[120px] sm:max-w-[280px] rounded-xl sm:rounded-[32px] border-[4px] sm:border-[8px] border-white shadow-2xl overflow-hidden bg-white">
                     <Image 
-                      src="/images/doctor-cutout.png" 
+                      src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
                       alt="Healthcare Professional" 
                       fill
                       priority
-                      className="object-contain object-bottom drop-shadow-2xl" 
+                      className="object-cover object-top" 
                     />
                   </div>
                 </div>
               </div>
  
-              <div className="w-full max-w-2xl mx-auto relative z-30">
+              <div className="w-full max-w-2xl mx-auto">
                 <HeroSearch />
-                
-                {/* Mobile Overlapping Doctor (Frameless) */}
-                <div className="sm:hidden absolute -top-16 -right-4 w-40 h-64 z-[-1] opacity-90 pointer-events-none">
-                   <div className="relative w-full h-full">
-                    <Image 
-                      src="/images/doctor-cutout.png" 
-                      alt="Healthcare Professional" 
-                      fill
-                      priority
-                      className="object-contain object-bottom" 
-                    />
-                  </div>
-                </div>
               </div>
  
               <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-3xl mx-auto w-full">
