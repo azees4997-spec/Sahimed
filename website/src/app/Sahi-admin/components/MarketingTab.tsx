@@ -18,12 +18,14 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { VideoSuite } from './VideoSuite';
 
 export function MarketingTab({ onBack }: { onBack: () => void }) {
   const { toast } = useToast();
   const [contents, setContents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [viewMode, setViewMode] = useState<'blog' | 'video'>('blog');
   const [currentStep, setCurrentStep] = useState(0);
   const [topic, setTopic] = useState('');
   const [previewData, setPreviewData] = useState<any>(null);
@@ -128,24 +130,43 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
           <Button variant="ghost" onClick={onBack} className="mb-4 text-slate-400 font-black tracking-widest text-[10px] uppercase gap-2">
             ← Back to Fleet
           </Button>
-          <h2 className="text-5xl font-black tracking-tighter text-slate-900 uppercase font-outfit">Growth Engine</h2>
-          <p className="text-[10px] font-black tracking-[0.4em] text-primary uppercase mt-2">MongoDB-Powered SEO & Content Machine</p>
+          <h2 className="text-5xl font-black tracking-tighter text-slate-900 uppercase font-outfit">Marketing Hub</h2>
+          <p className="text-[10px] font-black tracking-[0.4em] text-primary uppercase mt-2">AI-Driven Content & Video Suite</p>
         </div>
         
         <div className="flex gap-4">
-          <div className="h-16 w-16 bg-white rounded-2xl shadow-xl flex items-center justify-center border border-slate-100">
-             <Rocket className="w-8 h-8 text-primary" />
+          <div className="flex bg-slate-100 p-2 rounded-[24px] gap-2">
+            <Button 
+              onClick={() => setViewMode('blog')}
+              className={cn(
+                "rounded-full px-6 font-black uppercase text-[10px] transition-all",
+                viewMode === 'blog' ? "bg-white text-primary shadow-lg" : "bg-transparent text-slate-400 hover:text-slate-600"
+              )}
+            >
+              SEO Blogs
+            </Button>
+            <Button 
+              onClick={() => setViewMode('video')}
+              className={cn(
+                "rounded-full px-6 font-black uppercase text-[10px] transition-all",
+                viewMode === 'video' ? "bg-white text-primary shadow-lg" : "bg-transparent text-slate-400 hover:text-slate-600"
+              )}
+            >
+              Video Suite
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Generation Tool */}
-      <Card className="rounded-[40px] border-none shadow-3xl bg-white/50 backdrop-blur-xl border border-white overflow-hidden">
-        <CardHeader className="p-10 pb-0">
-          <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
-             <Sparkles className="w-6 h-6 text-yellow-500" />
-             AI Content Generator
-          </CardTitle>
+      {viewMode === 'blog' ? (
+        <>
+          {/* Generation Tool */}
+          <Card className="rounded-[40px] border-none shadow-3xl bg-white/50 backdrop-blur-xl border border-white overflow-hidden">
+            <CardHeader className="p-10 pb-0">
+              <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
+                <Sparkles className="w-6 h-6 text-yellow-500" />
+                SEO Blog Agent
+              </CardTitle>
           <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase">Target trending topics in India</p>
 
           {/* Cloud Config Warning */}
@@ -393,7 +414,10 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
             ))
           )}
         </AnimatePresence>
-      </div>
+        </>
+      ) : (
+        <VideoSuite />
+      )}
     </div>
   );
 }

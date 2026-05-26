@@ -257,11 +257,17 @@ export async function POST(req: Request) {
     const dbProducts = await db.collection('products').find({ _id: { $in: itemIds } }).toArray();
     
     let calculatedSubtotal = 0;
-    (body.items || []).forEach((item: any) => {
+    for (const item of (body.items || [])) {
       const dbProduct = dbProducts.find(p => p._id.toString() === (item.medicineId || item.id));
+      if (!dbProduct && !isAdmin) {
+        return NextResponse.json({ 
+          error: `Verification failed: Item "${item.name}" not found in database.`,
+          itemId: item.medicineId || item.id
+        }, { status: 400 });
+      }
       const price = dbProduct?.price || Number(item.unitPrice || item.price || 0);
       calculatedSubtotal += price * Number(item.quantity || 1);
-    });
+    }
 
     const deliveryFee = Number(body.billingBreakdown?.deliveryFees || body.billingBreakdown?.deliveryFee || 0);
     const promoDiscount = Number(body.billingBreakdown?.promoDiscount || body.billingBreakdown?.campaignDiscount || body.discountAmount || 0);

@@ -20,44 +20,9 @@ export async function POST(req: NextRequest) {
 
     const genAI = new GoogleGenerativeAI(key);
     
-    // Try multiple model names as fallbacks (Updated for 2026 models)
-    const modelNames = [
-      "gemini-2.5-flash", 
-      "gemini-2.5-pro", 
-      "gemini-2.0-flash", 
-      "gemini-2.0-pro",
-      "gemini-1.5-flash", 
-      "gemini-1.5-pro"
-    ];
-    let model;
-    let success = false;
-    let lastError = null;
-    let attemptedModels = [];
-
-    for (const modelName of modelNames) {
-      try {
-        attemptedModels.push(modelName);
-        model = genAI.getGenerativeModel({ model: modelName });
-        // Use a simple prompt to verify the model is active
-        const testResult = await model.generateContent({ 
-          contents: [{ role: 'user', parts: [{ text: 'hi' }] }], 
-          generationConfig: { maxOutputTokens: 5 } 
-        });
-        
-        if (testResult) {
-          success = true;
-          console.log(`Successfully initialized with model: ${modelName}`);
-          break;
-        }
-      } catch (err: any) {
-        console.warn(`Model ${modelName} failed:`, err.message);
-        lastError = err;
-      }
-    }
-
-    if (!success || !model) {
-      throw new Error(`Failed to initialize any Gemini model. Attempted: ${attemptedModels.join(", ")}. Last error: ${lastError?.message}`);
-    }
+    // OPTIMIZATION: Use gemini-1.5-flash directly to reduce costs (Flash is ~50x cheaper than Pro)
+    // and removed the expensive verification "hi" loop.
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
       You are an expert Health Content Marketer and SEO specialist for "Sahimed", an Indian online pharmacy.
