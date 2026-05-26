@@ -10,11 +10,10 @@ import { Bell, ShoppingBag } from 'lucide-react';
 const ORDER_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
 
 export function OrderNotification() {
-  const db = useFirestore();
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const lastOrderTime = useRef<Timestamp>(Timestamp.now());
+  const lastCheckTime = useRef<string>(new Date().toISOString());
 
   useEffect(() => {
     // Preload sound
@@ -31,59 +30,56 @@ export function OrderNotification() {
   }, []);
 
   useEffect(() => {
-    if (!db) return;
+    let isMounted = true;
 
-    // Listen for new orders added after the current time
-    const q = query(
-      collection(db, 'orders'),
-      orderBy('orderDate', 'desc'),
-      limit(1)
-    );
+    const checkNewOrders = async () => {
+      try {
+        const res = await fetch(`/api/orders/check-new?since=${encodeURIComponent(lastCheckTime.current)}`);
+        if (!res.ok) return;
+        
+        const data = await res.json();
+        const orders = data.orders || [];
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added") {
-          const order = change.doc.data();
-          const orderDate = order.orderDate;
-
-          // Convert orderDate to Firestore Timestamp if it's not already
-          let orderTimestamp: Timestamp;
-          if (orderDate instanceof Timestamp) {
-            orderTimestamp = orderDate;
-          } else if (orderDate && orderDate.seconds) {
-            orderTimestamp = new Timestamp(orderDate.seconds, orderDate.nanoseconds);
-          } else if (typeof orderDate === 'string' || orderDate instanceof Date) {
-            orderTimestamp = Timestamp.fromDate(new Date(orderDate));
-          } else {
-            return; // Skip if date is missing
+        if (orders.length > 0 && isMounted) {
+          // Play sound
+          if (audioRef.current && isReady) {
+            audioRef.current.play().catch(e => console.log("Audio play blocked", e));
           }
 
-          // Check if this is a NEW order (not one that was just loaded)
-          if (orderTimestamp.toMillis() > lastOrderTime.current.toMillis()) {
-            lastOrderTime.current = orderTimestamp;
-            
-            // Play sound
-            if (audioRef.current && isReady) {
-              audioRef.current.play().catch(e => console.log("Audio play blocked", e));
-            }
-
-            // Show toast
+          // Show toasts for each new order
+          orders.forEach((order: any) => {
             toast({
-              title: "🔔 New Order Received!",
-              description: `Order #${order.orderId} from ${order.patientName || 'Customer'}`,
+              title: "🔔 New MongoDB Order!",
+              description: `Order #${order.orderId} from ${order.patientName || 'Customer'} (₹${order.totalAmount})`,
               action: (
                 <div className="bg-primary/10 p-2 rounded-full">
                   <ShoppingBag className="w-4 h-4 text-primary" />
                 </div>
               ),
             });
-          }
+          });
         }
-      });
-    });
+        
+        // Update the timestamp for the next check
+        if (data.serverTime) {
+          lastCheckTime.current = data.serverTime;
+        }
+      } catch (err) {
+        console.error("Failed to check for new orders:", err);
+      }
+    };
 
-    return () => unsubscribe();
-  }, [db, isReady, toast]);
+    // Poll every 10 seconds for new orders
+    const interval = setInterval(checkNewOrders, 10000);
+    
+    // Initial check
+    checkNewOrders();
 
-  return null; // This is a logic-only component
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [isReady, toast]);
+
+  return null;
 }
