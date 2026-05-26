@@ -102,6 +102,11 @@ body {
   .bg-sahi-blue { background-color: hsl(var(--blue-bg)); }
   .text-sahi-blue { color: hsl(var(--blue-text)); }
 
+  @keyframes progress-stripe {
+  from { background-position: 0 0; }
+  to { background-position: 40px 0; }
+}
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
