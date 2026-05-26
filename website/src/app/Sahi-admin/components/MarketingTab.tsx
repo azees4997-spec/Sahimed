@@ -414,10 +414,11 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
             ))
           )}
         </AnimatePresence>
-        </>
-      ) : (
-        <VideoSuite />
-      )}
-    </div>
+      </div>
+    </>
+  ) : (
+    <VideoSuite />
+  )}
+</div>
   );
 }
