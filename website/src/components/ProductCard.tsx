@@ -67,24 +67,24 @@ function ProductCardComponent({ product, priority = false }: { product: Product,
               )}
             </div>
             
-            <h3 className="font-extrabold text-black text-[10px] sm:text-[12px] leading-tight line-clamp-3 min-h-[36px] sm:min-h-[42px] font-outfit uppercase tracking-tight group-hover:text-primary transition-colors">
+            <h3 className="font-extrabold text-slate-950 text-[11px] sm:text-[13px] leading-tight line-clamp-none min-h-[36px] sm:min-h-[42px] font-outfit uppercase tracking-tight group-hover:text-primary transition-colors">
               {product.name}
             </h3>
 
-            <div className="h-2 sm:h-3">
+            <div className="h-auto">
               {moleculeName && (
-                <p className="text-[6px] sm:text-[8.5px] font-black text-blue-800 uppercase tracking-tight line-clamp-1 leading-none">
+                <p className="text-[7px] sm:text-[9.5px] font-black text-blue-900 uppercase tracking-tight leading-tight mb-1">
                   {moleculeName}
                 </p>
               )}
             </div>
             
-            <div className="flex items-center gap-1 min-w-0">
-              <p className="text-[6px] sm:text-[8px] font-black text-slate-800 tracking-tight truncate uppercase italic shrink-0">
+            <div className="flex flex-wrap items-center gap-1 min-w-0">
+              <p className="text-[7px] sm:text-[9px] font-black text-slate-950 tracking-tight uppercase italic">
                 {product.manufacturer || product.brand || 'Pharma'}
               </p>
               <div className="w-0.5 h-0.5 rounded-full bg-slate-400" />
-              <p className="text-[6px] sm:text-[8px] font-black text-slate-900 tracking-tight truncate uppercase">
+              <p className="text-[7px] sm:text-[9px] font-black text-slate-900 tracking-tight uppercase">
                 {product.packSize || 'Pack'}
               </p>
             </div>

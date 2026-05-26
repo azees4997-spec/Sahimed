@@ -27,7 +27,8 @@ import {
   Truck,
   MapPin,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Pencil
 } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
@@ -650,9 +651,12 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                 </div>
               </div>
 
-              <div className="w-full sm:w-auto flex items-center pl-4 sm:pl-6 pr-1.5 py-1.5 bg-white rounded-full border border-emerald-100 shadow-sm group focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+              <div className={cn(
+                "w-full sm:w-auto flex items-center pl-4 sm:pl-6 pr-1.5 py-1.5 bg-white rounded-full border shadow-sm group transition-all duration-300",
+                isEditingPincode ? "border-primary ring-4 ring-primary/10 scale-[1.02]" : "border-emerald-100"
+              )}>
                 <div className="flex items-center gap-1 sm:gap-2">
-                  <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <MapPin className={cn("w-4 h-4 shrink-0 transition-colors", isEditingPincode ? "text-primary" : "text-emerald-600")} />
                   <input
                     type="text"
                     maxLength={6}
@@ -661,21 +665,24 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                     onChange={handlePincodeChange}
                     placeholder="Pincode"
                     className={cn(
-                      "bg-transparent border-none outline-none text-[11px] sm:text-sm font-black text-emerald-900 uppercase tracking-[0.1em] w-[60px] sm:w-[85px] placeholder:text-slate-300 transition-all",
-                      !isEditingPincode ? "cursor-not-allowed opacity-70" : "text-emerald-600 scale-105"
+                      "bg-transparent border-none outline-none text-[11px] sm:text-sm font-black uppercase tracking-[0.1em] w-[60px] sm:w-[85px] placeholder:text-slate-300 transition-all",
+                      !isEditingPincode ? "cursor-not-allowed opacity-70 text-emerald-900" : "text-primary scale-105"
                     )}
                   />
                   <button
                     onClick={() => setIsEditingPincode(!isEditingPincode)}
-                    className="px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] font-black text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95 rounded-full transition-all uppercase tracking-wider shrink-0"
+                    className={cn(
+                      "p-2 rounded-full transition-all active:scale-90 shrink-0",
+                      isEditingPincode ? "text-rose-500 hover:bg-rose-50" : "text-emerald-600 hover:bg-emerald-50"
+                    )}
                   >
-                    {isEditingPincode ? "Cancel" : "Change"}
+                    {isEditingPincode ? <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                   </button>
                 </div>
                 <button
                   onClick={onCheckPincode}
                   className={cn(
-                    "ml-auto h-7 sm:h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[8px] sm:text-[10px] px-4 sm:px-8 rounded-full uppercase tracking-widest transition-all active:scale-95 shadow-md shadow-emerald-600/10 flex items-center justify-center shrink-0",
+                    "ml-auto h-7 sm:h-10 bg-primary hover:bg-primary/90 text-white font-black text-[8px] sm:text-[10px] px-4 sm:px-8 rounded-full uppercase tracking-widest transition-all active:scale-95 shadow-md shadow-primary/10 flex items-center justify-center shrink-0",
                     !isEditingPincode && "hidden"
                   )}
                 >

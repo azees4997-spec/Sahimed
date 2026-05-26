@@ -60,9 +60,15 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
         body: CustomScrollView(
           slivers: [
             // ── Header — matches website Categories page header ──────────────
-            // ── Top Nav Bar ──────────────────────────────────────────────
-            const SliverToBoxAdapter(
-              child: SahimedTopNav(showBack: true),
+            // ── Top Nav Bar — Sticky ──────────────────────────────────────────────
+            SliverAppBar(
+              pinned: true,
+              expandedHeight: 120, // Logo/Location + Search
+              collapsedHeight: 120,
+              toolbarHeight: 0,
+              backgroundColor: _bgPage,
+              elevation: 0,
+              flexibleSpace: const SahimedTopNav(showBack: true),
             ),
 
             // ── Category image hero card ───────────────────────────────────

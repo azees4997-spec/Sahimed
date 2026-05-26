@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
+import { getDbAdmin } from '@/lib/firebase-admin';
+import * as admin from 'firebase-admin';
+
 
 /**
  * GET: Fetch all administrative profiles from MongoDB.
@@ -57,6 +60,24 @@ export async function POST(req: Request) {
       { upsert: true }
     );
 
+    // --- SYNC TO FIRESTORE ---
+    try {
+      const firestore = getDbAdmin();
+      if (firestore) {
+        await firestore.collection('adminProfiles').doc(finalId).set({
+          ...profile,
+          permissions: permissions || {},
+          uid: finalId,
+          id: finalId,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        console.log(`[Admin Sync] Provisioned Firestore profile for: ${finalId}`);
+      }
+    } catch (fsErr) {
+      console.error("[Admin Sync Error] Firestore write failed:", fsErr);
+      // We don't throw here to ensure MongoDB success is returned
+    }
+
     return NextResponse.json({ success: true, result });
   } catch (err: any) {
     console.error("[Admin Profiles POST Error]", err);
@@ -82,6 +103,17 @@ export async function DELETE(req: Request) {
     const result = await db.collection('adminProfiles').deleteOne({ 
       $or: [{ id: id }, { uid: id }] 
     });
+
+    // --- SYNC TO FIRESTORE (DELETION) ---
+    try {
+      const firestore = getDbAdmin();
+      if (firestore) {
+        await firestore.collection('adminProfiles').doc(id).delete();
+        console.log(`[Admin Sync] Revoked Firestore profile for: ${id}`);
+      }
+    } catch (fsErr) {
+      console.error("[Admin Sync Deletion Error] Firestore delete failed:", fsErr);
+    }
 
     return NextResponse.json({ success: true, deletedCount: result.deletedCount });
   } catch (err: any) {

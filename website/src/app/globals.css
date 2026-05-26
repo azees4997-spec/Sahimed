@@ -15,11 +15,9 @@
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215 25% 27%;
+    --muted-foreground: 215 25% 25%;
     --accent: 346 84% 61%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221 83% 53%;
@@ -48,7 +46,7 @@
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted-foreground: 215 20.2% 75.1%;
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
@@ -70,7 +68,7 @@ html, body {
 
 body {
   @apply bg-background text-foreground font-outfit antialiased;
-  font-size: 14px; /* Reduced base for mobile app density */
+  font-size: 16px; /* Increased for better readability */
 }
 }
 
@@ -84,7 +82,7 @@ body {
   }
 
   .mobile-pill {
-    @apply rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest bg-white/10 backdrop-blur-md border border-white/20 shadow-lg;
+    @apply rounded-full px-4 py-1.5 text-[12px] font-black uppercase tracking-widest bg-white/10 backdrop-blur-md border border-white/20 shadow-lg;
   }
 }
 

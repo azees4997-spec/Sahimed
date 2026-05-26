@@ -2,24 +2,40 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     
+    // Helper: Check if user is admin via Firestore
+    function isAdmin() {
+      return request.auth != null && 
+        firestore.exists(/databases/(default)/documents/adminProfiles/$(request.auth.uid));
+    }
+
     // 1. AUTHENTICATED USER PRESCRIPTIONS
     // Users can only access their own labeled folders.
     match /prescriptions/{userId}/{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAdmin();
     }
 
-    // 3. ADMIN/CLINICAL ACCESS
-    // Admins and Pharmacists can read all prescriptions for order verification.
-    // Note: This relies on a check against the 'adminProfiles' collection in Firestore.
-    match /prescriptions/{userId}/{allPaths=**} {
-      allow read: if request.auth != null && 
-        firestore.exists(/databases/(default)/documents/adminProfiles/$(request.auth.uid));
+    // 2. SYSTEM ASSETS (Banners, Categories, Products)
+    // Publicly readable, writeable ONLY by admins.
+    match /banners/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /categories/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /products/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    // 4. DEFAULT SYSTEM RULES
-    // Ensure all other paths are only accessible by authenticated users.
+    // 3. DEFAULT SYSTEM RULES
+    // Ensure all other paths are only accessible by authenticated users for reading.
+    // Explicitly restrict writing to admins or owners of specific sub-paths.
     match /{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
   }
 }

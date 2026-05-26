@@ -215,9 +215,9 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
                   router.push(`/search?q=${encodeURIComponent(search.trim())}`);
                   onClose();
                 }}
-                className="h-9 px-3 bg-primary text-white rounded-lg flex items-center justify-center shadow-lg shadow-primary/20"
+                className="h-9 px-4 bg-primary text-white rounded-lg flex items-center justify-center shadow-lg shadow-primary/20 text-[9px] font-black tracking-widest uppercase"
               >
-                <ArrowUpRight className="w-4 h-4" />
+                SEARCH
               </button>
             )}
           </div>
@@ -306,7 +306,7 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-extrabold text-slate-900 text-[11px] sm:text-[15px] uppercase tracking-tight group-hover:text-primary transition-colors leading-tight line-clamp-2">
+                        <h4 className="font-extrabold text-slate-900 text-[11px] sm:text-[15px] uppercase tracking-tight group-hover:text-primary transition-colors leading-tight">
                           {item.name}
                         </h4>
                         <div className="flex items-center gap-2 mt-1">

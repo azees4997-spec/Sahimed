@@ -572,12 +572,20 @@ class _SearchScreenState extends State<SearchScreen> {
                         });
                       },
                       child: Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: SahimedColors.primary,
-                          borderRadius: BorderRadius.circular(10),
+                          color: SahimedColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(100),
                         ),
-                        child: const Icon(LucideIcons.arrowRight, size: 16, color: Colors.white),
+                        child: Text(
+                          'SEARCH',
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: SahimedColors.primary,
+                            letterSpacing: 1,
+                          ),
+                        ),
                       ),
                     ),
                   ],

@@ -400,33 +400,33 @@ ${itemsStr}
       {metrics && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-2">
           <div className="bg-orange-50/50 border border-orange-100 p-6 rounded-3xl flex flex-col items-center justify-center shadow-sm">
-            <span className="text-3xl font-black text-orange-500">{metrics.pendingApproval}</span>
-            <span className="text-[10px] font-bold text-orange-600/70 uppercase tracking-widest mt-1">Pending Approval</span>
+            <span className="text-3xl font-black text-orange-600">{metrics.pendingApproval}</span>
+            <span className="text-[12px] font-black text-orange-800 uppercase tracking-widest mt-1">Pending Approval</span>
           </div>
           <div className="bg-blue-50/50 border border-blue-100 p-6 rounded-3xl flex flex-col items-center justify-center shadow-sm">
-            <span className="text-3xl font-black text-blue-500">{metrics.readyToPack}</span>
-            <span className="text-[10px] font-bold text-blue-600/70 uppercase tracking-widest mt-1">Ready to Pack</span>
+            <span className="text-3xl font-black text-blue-600">{metrics.readyToPack}</span>
+            <span className="text-[12px] font-black text-blue-800 uppercase tracking-widest mt-1">Ready to Pack</span>
           </div>
           <div className="bg-purple-50/50 border border-purple-100 p-6 rounded-3xl flex flex-col items-center justify-center shadow-sm">
-            <span className="text-3xl font-black text-purple-500">{metrics.inTransit}</span>
-            <span className="text-[10px] font-bold text-purple-600/70 uppercase tracking-widest mt-1">In Transit</span>
+            <span className="text-3xl font-black text-purple-600">{metrics.inTransit}</span>
+            <span className="text-[12px] font-black text-purple-800 uppercase tracking-widest mt-1">In Transit</span>
           </div>
           <div className="bg-emerald-50/50 border border-emerald-100 p-6 rounded-3xl flex flex-col items-center justify-center shadow-sm">
-            <span className="text-3xl font-black text-emerald-500">₹{metrics.totalRevenue?.toLocaleString()}</span>
-            <span className="text-[10px] font-bold text-emerald-600/70 uppercase tracking-widest mt-1">Net Revenue</span>
+            <span className="text-3xl font-black text-emerald-600">₹{metrics.totalRevenue?.toLocaleString()}</span>
+            <span className="text-[12px] font-black text-emerald-800 uppercase tracking-widest mt-1">Net Revenue</span>
           </div>
         </div>
       )}
       <SectionHeader title="Order Fulfillment" subtitle="Manage and track customer orders" onBack={onBack}>
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-4 bg-white/60 backdrop-blur-md rounded-full px-6 h-14 border border-slate-200 shadow-sm min-w-[300px]">
-            <Search className="w-4 h-4 text-slate-400" />
+            <Search className="w-5 h-5 text-slate-500" />
             <input 
               type="text" 
               placeholder="Search by ID, Name or Phone..." 
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="bg-transparent border-none text-xs font-bold outline-none focus:ring-0 flex-1 placeholder:text-slate-500"
+              className="bg-transparent border-none text-sm font-bold outline-none focus:ring-0 flex-1 placeholder:text-slate-600"
             />
             {searchTerm && (
               <button onClick={() => setSearchTerm('')} className="text-slate-400 hover:text-slate-600">
@@ -500,7 +500,7 @@ ${itemsStr}
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[1000px]">
-            <thead className="bg-gray-50 text-[10px] font-black text-gray-600 border-b">
+            <thead className="bg-gray-50 text-[12px] font-black text-gray-900 border-b uppercase tracking-tight">
               <tr>
                 <th className="px-8 py-6">Order id</th>
                 <th className="px-8 py-6">Date</th>
@@ -527,14 +527,14 @@ ${itemsStr}
                 ))
               ) : (!Array.isArray(orders) || orders.length === 0) ? (<tr><td colSpan={7} className="p-20 text-center font-bold text-gray-400 text-[10px]">No orders found</td></tr>) : orders.map(order => (
                 <tr key={order._id || order.id} className="hover:bg-gray-50/50">
-                  <td className="px-8 py-6 font-black text-xs uppercase">{order.orderId}</td>
-                  <td className="px-8 py-6 text-[10px] font-black">{safeFormat(order.orderDate, 'dd MMM yyyy HH:mm')}</td>
-                  <td className="px-8 py-6"><p className="font-bold text-xs">{order.patientName}</p><p className="text-[10px] text-gray-600">{order.phoneNumber}</p></td>
+                  <td className="px-8 py-6 font-black text-sm uppercase">{order.orderId}</td>
+                  <td className="px-8 py-6 text-[11px] font-black">{safeFormat(order.orderDate, 'dd MMM yyyy HH:mm')}</td>
+                  <td className="px-8 py-6"><p className="font-bold text-sm">{order.patientName}</p><p className="text-[11px] text-gray-800 font-medium">{order.phoneNumber}</p></td>
                   <td className="px-8 py-6">
-                    <p className="text-[10px] font-bold text-gray-600 line-clamp-1 uppercase">
+                    <p className="text-[12px] font-bold text-gray-800 line-clamp-1 uppercase">
                       {order.shippingDetails?.houseNumber ? `${order.shippingDetails.houseNumber}, ` : ''}{order.shippingDetails?.street}
                     </p>
-                    <p className="text-[9px] font-black text-primary opacity-60 uppercase tracking-tighter">
+                    <p className="text-[11px] font-black text-primary opacity-80 uppercase tracking-tighter">
                       {order.shippingDetails?.city} - {order.shippingDetails?.pincode}
                     </p>
                   </td>

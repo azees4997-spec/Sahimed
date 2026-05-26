@@ -257,14 +257,14 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                />
-               <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="font-black text-2xl text-primary">{Math.round((importProgress.current / importProgress.total) * 100)}%</span>
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Progress</span>
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Progress</span>
                </div>
             </div>
             <div>
               <h3 className="text-2xl font-black text-slate-900 font-outfit uppercase tracking-tighter">Syncing Inventory</h3>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3 bg-slate-50 py-2 rounded-full">
+              <p className="text-[12px] font-black text-slate-600 uppercase tracking-[0.2em] mt-3 bg-slate-50 py-2 rounded-full">
                 Processing {importProgress.current} of {importProgress.total} SKUs
               </p>
             </div>
@@ -276,7 +276,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                 transition={{ duration: 0.5 }}
               />
             </div>
-            <p className="text-[10px] font-bold text-slate-400 italic">Establishing data links... Please keep this window open.</p>
+            <p className="text-[12px] font-bold text-slate-500 italic">Establishing data links... Please keep this window open.</p>
           </Card>
         </div>
       )}
@@ -285,7 +285,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
         <div className="fixed bottom-10 right-10 z-[150] w-[350px] animate-in slide-in-from-right-10 duration-500">
            <Card className="rounded-[32px] shadow-3xl border-none overflow-hidden bg-red-600 text-white">
               <div className="p-6 bg-red-700/50 flex items-center justify-between">
-                 <h4 className="font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+                 <h4 className="font-black text-[12px] uppercase tracking-widest flex items-center gap-2">
                     <ShieldAlert className="w-4 h-4" /> Import Rejections
                  </h4>
                  <Button variant="ghost" size="icon" onClick={() => setFailedList([])} className="h-8 w-8 text-white hover:bg-white/10"><X className="w-4 h-4" /></Button>
@@ -293,9 +293,9 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
               <ScrollArea className="h-64 p-6 pt-0">
                  <div className="space-y-4 pt-4">
                     {failedList.map((err, i) => (
-                       <div key={i} className="space-y-1 pb-4 border-b border-white/10 last:border-none">
-                          <p className="font-black text-[10px] uppercase truncate">{err.item || err.molecule || 'Unknown SKU'}</p>
-                          <p className="text-[9px] font-medium text-white/60 leading-relaxed">{err.reason}</p>
+                       <div key={i} className="space-y-1 pb-4 border-b border-white/20 last:border-none">
+                          <p className="font-black text-[12px] uppercase truncate">{err.item || err.molecule || 'Unknown SKU'}</p>
+                          <p className="text-[11px] font-medium text-white/80 leading-relaxed">{err.reason}</p>
                        </div>
                     ))}
                  </div>
@@ -307,17 +307,17 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
       <SectionHeader title="Product Inventory" subtitle="Manage and organize your store products" onBack={onBack}>
         <div className="flex flex-wrap items-center gap-4">
           <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".csv" />
-          <Button onClick={downloadTemplate} variant="ghost" className="rounded-full h-14 px-8 font-black text-[10px] text-slate-400 hover:text-primary gap-3 uppercase tracking-widest transition-all">
+          <Button onClick={downloadTemplate} variant="ghost" className="rounded-full h-14 px-8 font-black text-[12px] text-slate-500 hover:text-primary gap-3 uppercase tracking-widest transition-all">
             <Download className="w-4 h-4" /> Template
           </Button>
           <div className="w-px h-8 bg-slate-200 mx-2 hidden sm:block" />
-          <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full h-14 px-8 font-black text-[10px] border-2 gap-3 text-primary border-primary/20 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
+          <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full h-14 px-8 font-black text-[12px] border-2 gap-3 text-primary border-primary/20 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
             <Upload className="w-4 h-4" /> Bulk Upload
           </Button>
-          <Button onClick={handleExport} variant="outline" className="rounded-full h-14 px-8 font-black text-[10px] border-2 gap-3 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
+          <Button onClick={handleExport} variant="outline" className="rounded-full h-14 px-8 font-black text-[12px] border-2 gap-3 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
             <Download className="w-4 h-4" /> Export Matrix
           </Button>
-          <Button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="rounded-full h-14 px-10 font-black text-[10px] bg-primary text-white shadow-2xl shadow-primary/30 uppercase tracking-widest hover:scale-105 transition-all border-4 border-white active:scale-95">
+          <Button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="rounded-full h-14 px-10 font-black text-[12px] bg-primary text-white shadow-2xl shadow-primary/30 uppercase tracking-widest hover:scale-105 transition-all border-4 border-white active:scale-95">
             <Plus className="w-5 h-5" /> New Entity
           </Button>
         </div>
@@ -331,7 +331,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
           placeholder="SEARCH PRODUCT INVENTORY (E.G. D-VENIZ)..." 
           value={searchTerm} 
           onChange={e => setSearchTerm(e.target.value)} 
-          className="h-20 pl-20 rounded-[40px] border-none bg-white shadow-xl font-black text-sm tracking-tight placeholder:text-slate-300 focus:ring-4 focus:ring-primary/10 transition-all uppercase" 
+          className="h-20 pl-20 rounded-[40px] border-none bg-white shadow-xl font-black text-base tracking-tight placeholder:text-slate-500 focus:ring-4 focus:ring-primary/10 transition-all uppercase" 
         />
         {isSearching && (
           <div className="absolute right-8 top-1/2 -translate-y-1/2">
@@ -344,7 +344,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
         {suggestions.length > 0 && (
           <div className="absolute top-[calc(100%+20px)] left-0 right-0 bg-white/95 backdrop-blur-2xl rounded-[48px] shadow-3xl border border-white overflow-hidden z-[110] animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="px-10 py-5 bg-slate-50/50 border-b border-white">
-              <p className="text-[9px] font-black text-slate-400 tracking-[0.4em] uppercase opacity-60">Product Matches</p>
+              <p className="text-[11px] font-black text-slate-600 tracking-[0.4em] uppercase">Product Matches</p>
             </div>
             <div className="max-h-[400px] overflow-y-auto no-scrollbar">
               {suggestions.map((item) => (
@@ -360,8 +360,8 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                     {item.imageUrl ? <img src={item.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-6 h-6 text-slate-100" />}
                   </div>
                   <div className="flex-1 min-w-0 space-y-1">
-                    <p className="font-black text-base text-slate-900 truncate tracking-tighter uppercase font-outfit">{item.name}</p>
-                    <p className="text-[9px] font-black text-slate-400 tracking-[0.3em] truncate uppercase opacity-60">{item.sku} • {item.manufacturer}</p>
+                    <p className="font-black text-lg text-slate-900 truncate tracking-tighter uppercase font-outfit">{item.name}</p>
+                    <p className="text-[11px] font-black text-slate-600 tracking-[0.3em] truncate uppercase">{item.sku} • {item.manufacturer}</p>
                   </div>
                   <div className="bg-slate-50 p-3 rounded-full group-hover/item:bg-primary group-hover/item:text-white transition-all">
                     <ChevronRight className="w-4 h-4 text-slate-300 group-hover/item:text-white transition-all" />
@@ -376,7 +376,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[800px]">
-            <thead className="bg-gray-50 text-[10px] font-black text-gray-400 border-b">
+            <thead className="bg-gray-50 text-[12px] font-black text-gray-900 border-b uppercase tracking-tight">
               <tr><th className="px-10 py-8">Product detail</th><th className="px-10 py-8">Category</th><th className="px-10 py-8 text-right">Manage</th></tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -411,16 +411,16 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                       </div>
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
-                          <span className="font-black text-sm">{med.name}</span>
+                          <span className="font-black text-base">{med.name}</span>
                           {med.isActive === false && (
-                            <Badge variant="destructive" className="h-4 text-[7px] px-1 font-black uppercase">Inactive</Badge>
+                            <Badge variant="destructive" className="h-5 text-[10px] px-2 font-black uppercase">Inactive</Badge>
                           )}
                         </div>
-                        <span className="text-[9px] text-gray-400 uppercase">{med.sku} • {med.manufacturer}</span>
+                        <span className="text-[11px] text-gray-500 font-bold uppercase">{med.sku} • {med.manufacturer}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-10 py-8"><Badge variant="outline" className="font-black text-[8px]">{med.category}</Badge></td>
+                  <td className="px-10 py-8"><Badge variant="outline" className="font-black text-[11px] border-2">{med.category}</Badge></td>
                   <td className="px-10 py-8 text-right">
                      <div className="flex justify-end gap-2">
                        <Button variant="ghost" size="icon" onClick={() => { setEditingItem(med); setIsFormOpen(true); }}>

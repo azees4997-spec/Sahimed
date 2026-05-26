@@ -234,7 +234,7 @@ function AdminConsoleContent() {
         >
           <Loader2 className="w-12 h-12 text-primary" />
         </motion.div>
-        <p className="text-[10px] font-black tracking-[0.4em] text-slate-400 uppercase">Synchronizing System...</p>
+        <p className="text-[12px] font-black tracking-[0.4em] text-slate-500 uppercase">Synchronizing System...</p>
       </div>
     );
   }
@@ -255,20 +255,20 @@ function AdminConsoleContent() {
                 </div>
                 <Lock className="w-14 h-14 mx-auto mb-4 text-white/40 relative z-10" />
                 <CardTitle className="text-3xl font-black tracking-tighter text-white uppercase font-outfit relative z-10">Admin Access</CardTitle>
-                <p className="text-[10px] font-black text-white/50 tracking-[0.3em] uppercase relative z-10">SahiMed Administrative Console</p>
-                <div className="mt-4 pt-4 border-t border-white/10 relative z-10">
-                  <p className="text-[8px] font-black text-white/40 tracking-[0.2em] uppercase">System Identity: {auth?.app.options.projectId || 'Unknown Sector'}</p>
+                <p className="text-[12px] font-black text-white/70 tracking-[0.3em] uppercase relative z-10">SahiMed Administrative Console</p>
+                <div className="mt-4 pt-4 border-t border-white/20 relative z-10">
+                  <p className="text-[10px] font-black text-white/60 tracking-[0.2em] uppercase">System Identity: {auth?.app.options.projectId || 'Unknown Sector'}</p>
                 </div>
               </CardHeader>
               <CardContent className="p-10">
                 <form onSubmit={handleLogin} className="space-y-6">
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Admin Email</Label>
-                    <input type="email" placeholder="admin@sahimed.com" value={email} onChange={e => setEmail(e.target.value)} required className="w-full h-16 rounded-[24px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white px-6 font-black outline-none transition-all placeholder:text-slate-300" />
+                    <Label className="text-[12px] font-black tracking-[0.2em] text-slate-800 uppercase">Admin Email</Label>
+                    <input type="email" placeholder="admin@sahimed.com" value={email} onChange={e => setEmail(e.target.value)} required className="w-full h-16 rounded-[24px] bg-slate-50 border-2 border-slate-200 focus:border-primary focus:bg-white px-6 font-black outline-none transition-all placeholder:text-slate-400 text-slate-900" />
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Password</Label>
-                    <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="w-full h-16 rounded-[24px] bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white px-6 font-black outline-none transition-all placeholder:text-slate-300" />
+                    <Label className="text-[12px] font-black tracking-[0.2em] text-slate-800 uppercase">Password</Label>
+                    <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="w-full h-16 rounded-[24px] bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white px-6 font-black outline-none transition-all placeholder:text-slate-400 text-slate-900" />
                   </div>
                   <Button type="submit" disabled={authLoading} className="w-full h-20 rounded-full font-black tracking-[0.3em] mt-4 shadow-2xl shadow-primary/30 uppercase active:scale-95 text-xs bg-primary hover:scale-[1.02] transition-all">
                     {authLoading ? <Loader2 className="animate-spin" /> : "Authorize Protocol"}
@@ -296,7 +296,7 @@ function AdminConsoleContent() {
                     variant="ghost" 
                     onClick={handleResetPassword}
                     disabled={authLoading}
-                    className="w-full text-[10px] font-black tracking-widest text-slate-400 hover:text-primary uppercase"
+                    className="w-full text-[12px] font-black tracking-widest text-slate-500 hover:text-primary uppercase"
                   >
                     Set / Reset Master Password
                   </Button>
@@ -323,12 +323,12 @@ function AdminConsoleContent() {
               </div>
               <div className="space-y-3">
                 <h2 className="text-3xl font-black tracking-tight uppercase font-outfit">Restricted Sector</h2>
-                <p className="text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase opacity-60">Authentication Failure • Unauthorized Access</p>
+                <p className="text-[12px] font-black tracking-[0.3em] text-slate-500 uppercase opacity-100">Authentication Failure • Unauthorized Access</p>
               </div>
               <p className="text-sm font-medium text-slate-500 leading-relaxed px-4">Your current profile does not possess the requisite clearance for administrative operations.</p>
               <div className="flex flex-col gap-4">
-                <Button onClick={bootstrapAdmin} className="w-full h-16 rounded-full font-black text-[10px] tracking-[0.2em] bg-slate-900 shadow-xl active:scale-95 uppercase">Request Clearance</Button>
-                <Button variant="ghost" onClick={handleLogout} className="w-full h-16 rounded-full font-black text-[10px] tracking-[0.2em] text-slate-400 uppercase hover:text-slate-900 active:scale-95">Deauthorize Session</Button>
+                <Button onClick={bootstrapAdmin} className="w-full h-16 rounded-full font-black text-[12px] tracking-[0.2em] bg-slate-900 shadow-xl active:scale-95 uppercase">Request Clearance</Button>
+                <Button variant="ghost" onClick={handleLogout} className="w-full h-16 rounded-full font-black text-[12px] tracking-[0.2em] text-slate-500 uppercase hover:text-slate-900 active:scale-95">Deauthorize Session</Button>
               </div>
             </Card>
           </motion.div>
@@ -350,15 +350,15 @@ function AdminConsoleContent() {
                 </div>
                 <div className="hidden sm:block">
                   <h1 className="text-2xl font-black tracking-tighter text-slate-900 uppercase font-outfit leading-none">SahiMed</h1>
-                  <p className="text-[8px] font-black text-slate-400 tracking-[0.5em] uppercase opacity-60">Admin Dashboard 4.0</p>
+                  <p className="text-[10px] font-black text-slate-500 tracking-[0.5em] uppercase">Admin Dashboard 4.0</p>
                 </div>
               </Link>
             </div>
 
             <div className="flex items-center gap-6">
               <div className="hidden lg:flex flex-col items-end mr-6 border-r border-slate-200 pr-8">
-                 <p className="text-[9px] font-black text-slate-300 tracking-[0.3em] uppercase opacity-60">Session Active</p>
-                 <p className="text-xs font-black text-primary uppercase">{user?.email}</p>
+                 <p className="text-[11px] font-black text-slate-500 tracking-[0.3em] uppercase">Session Active</p>
+                 <p className="text-sm font-black text-primary uppercase">{user?.email}</p>
               </div>
               <Button 
                 onClick={handleLogout}

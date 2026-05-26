@@ -116,10 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _openAllCategories(BuildContext context) {
     HapticFeedback.mediumImpact();
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const CategoriesScreen()),
-    );
+    context.read<NavigationProvider>().switchTab(1);
   }
 
   @override

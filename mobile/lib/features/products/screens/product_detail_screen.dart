@@ -183,11 +183,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     return ScreenWithNav(
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
-        body: Column(
-          children: [
-            const SahimedTopNav(showBack: true),
-            Expanded(
-              child: SingleChildScrollView(
+        body: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              expandedHeight: 130,
+              collapsedHeight: 130,
+              toolbarHeight: 0,
+              backgroundColor: SahimedColors.background,
+              elevation: 0,
+              flexibleSpace: const SahimedTopNav(showBack: true),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
                 padding: const EdgeInsets.fromLTRB(8, 0, 8, 200),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -353,12 +361,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                           decoration: BoxDecoration(
                             color: SahimedColors.lavender,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
+                            border: Border.all(color: Colors.white, width: 2.5),
                             boxShadow: [
                               BoxShadow(
-                                color: SahimedColors.lavender.withOpacity(0.3),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
+                                color: SahimedColors.lavender.withOpacity(0.4),
+                                blurRadius: 14,
+                                offset: const Offset(0, 6),
                               ),
                             ],
                           ),
@@ -368,17 +376,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                               Text(
                                 '100%',
                                 style: GoogleFonts.outfit(
-                                  fontSize: 8,
+                                  fontSize: 9,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                 ),
                               ),
                               Text(
-                                'match',
+                                'MATCH',
                                 style: GoogleFonts.outfit(
                                   fontSize: 6,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w900,
                                   color: Colors.white,
+                                  letterSpacing: 0.5,
                                 ),
                               ),
                             ],
@@ -604,15 +613,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                 product: widget.product,
                 tabController: _tabController,
               ),
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    ],
-  ),
-),
-);
+    );
   }
 }
 
@@ -668,18 +676,20 @@ class _ComparisonCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isAlt ? SahimedColors.lavenderLight : Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: isAlt
-              ? SahimedColors.lavender.withOpacity(0.3)
+              ? SahimedColors.lavender.withOpacity(0.2)
               : const Color(0xFFF1F5F9),
           width: isAlt ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: isAlt 
+              ? SahimedColors.lavender.withOpacity(0.08)
+              : Colors.black.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -703,7 +713,7 @@ class _ComparisonCard extends StatelessWidget {
                       const Icon(LucideIcons.pill, size: 10, color: SahimedColors.lavender),
                       const SizedBox(width: 4),
                       Text(
-                        'SUBSTITUTE',
+                        'SAHI GENERIC',
                         style: GoogleFonts.outfit(
                           fontSize: 8,
                           fontWeight: FontWeight.w900,
@@ -887,7 +897,7 @@ class _ComparisonCard extends StatelessWidget {
             },
             child: Container(
               width: double.infinity,
-              height: 44,
+              height: 50,
               decoration: BoxDecoration(
                 color: product.availableQuantity > 0
                     ? (isAlt ? SahimedColors.lavender : SahimedColors.primary)
@@ -903,8 +913,8 @@ class _ComparisonCard extends StatelessWidget {
                                   ? SahimedColors.lavender
                                   : SahimedColors.primary)
                               .withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
                         ),
                       ]
                     : [],
@@ -929,9 +939,9 @@ class _ComparisonCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '$displayQty IN CART',
+                          '$displayQty',
                           style: GoogleFonts.outfit(
-                            fontSize: 11,
+                            fontSize: 14,
                             fontWeight: FontWeight.w900,
                             color: Colors.white,
                             letterSpacing: 1,

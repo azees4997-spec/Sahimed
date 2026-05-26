@@ -298,7 +298,7 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
             </div>
             <div>
               <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Uploading Ingredients</h3>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3 bg-slate-50 py-2 rounded-full px-4 inline-block">
+              <p className="text-[12px] font-black text-slate-600 uppercase tracking-[0.2em] mt-3 bg-slate-50 py-2 rounded-full px-4 inline-block">
                 {importProgress.current} / {importProgress.total} PROCESSED
               </p>
             </div>
@@ -308,7 +308,7 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
                 style={{ width: `${importProgress.total > 0 ? (importProgress.current / importProgress.total) * 100 : 0}%` }}
               />
             </div>
-            <p className="text-[10px] font-bold text-slate-400 italic animate-pulse">Syncing with database...</p>
+            <p className="text-[12px] font-bold text-slate-500 italic animate-pulse">Syncing with database...</p>
           </Card>
         </div>
       )}
@@ -325,9 +325,9 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
               <ScrollArea className="h-64 p-6 pt-0">
                  <div className="space-y-4 pt-4">
                     {failedList.map((err, i) => (
-                       <div key={i} className="space-y-1 pb-4 border-b border-white/10 last:border-none">
-                          <p className="font-black text-[10px] uppercase truncate">{err.molecule || err.item || 'Unknown Ingredient'}</p>
-                          <p className="text-[9px] font-medium text-white/60 leading-relaxed">{err.reason}</p>
+                       <div key={i} className="space-y-1 pb-4 border-b border-white/20 last:border-none">
+                          <p className="font-black text-[12px] uppercase truncate">{err.molecule || err.item || 'Unknown Ingredient'}</p>
+                          <p className="text-[11px] font-medium text-white/80 leading-relaxed">{err.reason}</p>
                        </div>
                     ))}
                  </div>
@@ -338,70 +338,70 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
       <SectionHeader title="Ingredient Database" subtitle="Manage scientific names and salt data" onBack={onBack}>
         <div className="flex flex-wrap items-center gap-4">
            <div className="relative w-64">
-             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
              <Input 
               placeholder="Search Ingredients..." 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="rounded-full pl-12 h-12 bg-white border-2 border-slate-100 font-bold text-[10px] uppercase tracking-widest focus:border-primary transition-all"
+              className="rounded-full pl-12 h-12 bg-white border-2 border-slate-200 font-bold text-[12px] uppercase tracking-widest focus:border-primary transition-all placeholder:text-slate-500"
              />
            </div>
            <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".csv" />
-           <Button onClick={downloadTemplate} variant="ghost" className="rounded-full h-12 px-6 font-black text-[10px] text-slate-400 hover:text-primary gap-2 uppercase tracking-widest transition-all">
+            <Button onClick={downloadTemplate} variant="ghost" className="rounded-full h-12 px-6 font-black text-[12px] text-slate-500 hover:text-primary gap-2 uppercase tracking-widest transition-all">
              <Download className="w-3.5 h-3.5" /> Template
            </Button>
-           <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] border-2 gap-2 text-primary border-primary/20 uppercase tracking-widest hover:bg-white transition-all">
+           <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full h-12 px-6 font-black text-[12px] border-2 gap-2 text-primary border-primary/20 uppercase tracking-widest hover:bg-white transition-all">
              <Upload className="w-3.5 h-3.5" /> Bulk Import
            </Button>
-           <Button onClick={handleExport} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] border-2 gap-2 uppercase tracking-widest hover:bg-white transition-all">
+           <Button onClick={handleExport} variant="outline" className="rounded-full h-12 px-6 font-black text-[12px] border-2 gap-2 uppercase tracking-widest hover:bg-white transition-all">
              <Download className="w-3.5 h-3.5" /> Export
            </Button>
            <div className="w-px h-8 bg-slate-200 mx-2" />
-           <Button onClick={() => { setEditingMol(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] bg-primary text-white"><Plus className="w-4 h-4" /> New Ingredient</Button>
+           <Button onClick={() => { setEditingMol(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[12px] bg-primary text-white"><Plus className="w-4 h-4" /> New Ingredient</Button>
         </div>
       </SectionHeader>
 
       {failedList.length > 0 && (
-        <Card className="rounded-[40px] border-2 border-red-100 bg-red-50/30 overflow-hidden animate-in slide-in-from-top-4">
-          <div className="bg-red-500 p-6 text-white flex justify-between items-center">
+        <Card className="rounded-[40px] border-2 border-red-200 bg-red-50/50 overflow-hidden animate-in slide-in-from-top-4">
+          <div className="bg-red-600 p-6 text-white flex justify-between items-center">
             <div>
-              <h3 className="text-sm font-black uppercase tracking-widest">Import Exception Report</h3>
-              <p className="text-[10px] font-medium opacity-80 mt-1">The following {failedList.length} items could not be processed</p>
+              <h3 className="text-base font-black uppercase tracking-widest">Import Exception Report</h3>
+              <p className="text-[12px] font-medium opacity-90 mt-1">The following {failedList.length} items could not be processed</p>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setFailedList([])} className="text-white hover:bg-white/10 rounded-full font-black text-[9px] uppercase">Dismiss</Button>
+            <Button variant="ghost" size="sm" onClick={() => setFailedList([])} className="text-white hover:bg-white/10 rounded-full font-black text-[11px] uppercase">Dismiss</Button>
           </div>
           <div className="max-h-64 overflow-y-auto">
             <table className="w-full text-left">
-              <thead className="bg-red-50 text-[9px] font-black text-red-400 uppercase tracking-widest border-b border-red-100">
+              <thead className="bg-red-50 text-[10px] font-black text-red-500 uppercase tracking-widest border-b border-red-100">
                 <tr>
                   <th className="px-10 py-4">Molecule</th>
                   <th className="px-10 py-4">Failure Reason</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-red-50">
+              <tbody className="divide-y divide-red-100">
                 {failedList.map((fail, idx) => (
                   <tr key={idx} className="hover:bg-red-50/50 transition-colors">
-                    <td className="px-10 py-4 font-black text-xs text-red-900 uppercase">{fail.molecule}</td>
-                    <td className="px-10 py-4 text-xs font-medium text-red-600">{fail.reason}</td>
+                    <td className="px-10 py-4 font-black text-[11px] text-red-900 uppercase">{fail.molecule}</td>
+                    <td className="px-10 py-4 text-[11px] font-medium text-red-700">{fail.reason}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           <div className="p-6 bg-white/50 border-t border-red-100">
-             <p className="text-[9px] font-black text-red-400 uppercase tracking-tighter">Tip: Check for duplicates or missing Master IDs in your CSV file.</p>
+             <p className="text-[10px] font-black text-red-400 uppercase tracking-tighter">Tip: Check for duplicates or missing Master IDs in your CSV file.</p>
           </div>
         </Card>
       )}
 
       {selectedIds.length > 0 && (
         <div className="bg-red-50 p-4 rounded-3xl flex justify-between items-center border border-red-100 animate-in fade-in slide-in-from-top-2">
-          <p className="text-[10px] font-black text-red-600 uppercase tracking-widest pl-4">
+          <p className="text-[11px] font-black text-red-600 uppercase tracking-widest pl-4">
             {selectedIds.length} ingredients selected for batch action
           </p>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])} className="text-red-400 hover:text-red-600 font-black text-[9px] uppercase">Cancel</Button>
-            <Button onClick={handleBulkDelete} variant="destructive" size="sm" className="rounded-full px-6 font-black text-[9px] uppercase bg-red-500">Delete Selected</Button>
+            <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])} className="text-red-400 hover:text-red-600 font-black text-[11px] uppercase">Cancel</Button>
+            <Button onClick={handleBulkDelete} variant="destructive" size="sm" className="rounded-full px-6 font-black text-[11px] uppercase bg-red-500">Delete Selected</Button>
           </div>
         </div>
       )}
@@ -409,7 +409,7 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-gray-50 text-[10px] font-black text-gray-400 border-b">
+            <thead className="bg-gray-50 text-[12px] font-black text-gray-900 border-b uppercase tracking-tight">
               <tr>
                 <th className="px-10 py-8 w-10">
                   <Checkbox checked={selectedIds.length === molecules?.length && molecules?.length > 0} onCheckedChange={toggleSelectAll} />
@@ -443,14 +443,14 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
                     </td>
                   </tr>
                 ))
-              ) : (!molecules || molecules.length === 0) ? (<tr><td colSpan={5} className="p-20 text-center text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">No ingredients found in MongoDB</td></tr>) : molecules.map(mol => (
+              ) : (!molecules || molecules.length === 0) ? (<tr><td colSpan={5} className="p-20 text-center text-slate-500 font-black text-[12px] uppercase tracking-[0.2em]">No ingredients found in MongoDB</td></tr>) : molecules.map(mol => (
                 <tr key={mol.id} className={cn("hover:bg-gray-50/50 transition-colors", selectedIds.includes(mol.id) && "bg-primary/5")}>
                   <td className="px-10 py-8">
                     <Checkbox checked={selectedIds.includes(mol.id)} onCheckedChange={() => toggleSelect(mol.id)} />
                   </td>
-                  <td className="px-6 py-8 font-black text-sm text-gray-900 uppercase tracking-tight">{mol.molecule}</td>
-                  <td className="px-10 py-8 font-bold text-primary">{mol.masterId}</td>
-                  <td className="px-10 py-8 font-bold text-gray-400">{mol.form}</td>
+                  <td className="px-6 py-8 font-black text-base text-gray-900 uppercase tracking-tight">{mol.molecule}</td>
+                  <td className="px-10 py-8 font-black text-primary">{mol.masterId}</td>
+                  <td className="px-10 py-8 font-bold text-gray-600">{mol.form}</td>
                   <td className="px-10 py-8 text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="icon" onClick={() => { setEditingMol(mol); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button>

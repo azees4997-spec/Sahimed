@@ -50,6 +50,22 @@ export default {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        lavender: {
+          DEFAULT: 'hsl(var(--lavender-bg))',
+          text: 'hsl(var(--lavender-text))',
+        },
+        'sahi-green': {
+          DEFAULT: 'hsl(var(--green-bg))',
+          text: 'hsl(var(--green-text))',
+        },
+        'sahi-pink': {
+          DEFAULT: 'hsl(var(--pink-bg))',
+          text: 'hsl(var(--pink-text))',
+        },
+        'sahi-blue': {
+          DEFAULT: 'hsl(var(--blue-bg))',
+          text: 'hsl(var(--blue-text))',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',

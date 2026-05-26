@@ -97,6 +97,8 @@ const nextConfig: NextConfig = {
         destination: '/api/feeds/google-shopping',
         permanent: true,
       },
+    ];
+  },
   async headers() {
     return [
       {

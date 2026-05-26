@@ -300,12 +300,12 @@ class SahimedProductCard extends StatelessWidget {
                   },
               child: Container(
                 width: double.infinity,
-                height: 28,
+                height: 34,
                 decoration: BoxDecoration(
                   color: product.availableQuantity > 0 
                       ? SahimedColors.primary 
                       : const Color(0xFFFFF1F2),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                   border: product.availableQuantity > 0 
                       ? null 
                       : Border.all(color: const Color(0xFFFFE4E6)),
@@ -327,19 +327,19 @@ class SahimedProductCard extends StatelessWidget {
                               context.read<CartProvider>().updateQuantity(product.id, qty - 1);
                             },
                             child: Container(
-                              width: 32,
-                              height: 28,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFE2E8F0),
-                                borderRadius: BorderRadius.horizontal(left: Radius.circular(8)),
+                              width: 40,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withAlpha(50),
+                                borderRadius: const BorderRadius.horizontal(left: Radius.circular(10)),
                               ),
-                              child: const Icon(Icons.remove, size: 14, color: Color(0xFF475569)),
+                              child: const Icon(Icons.remove, size: 16, color: Colors.white),
                             ),
                           ),
                           Text(
                             '$qty',
                             style: GoogleFonts.outfit(
-                              fontSize: 11,
+                              fontSize: 13,
                               fontWeight: FontWeight.w900,
                               color: Colors.white,
                             ),
@@ -350,13 +350,13 @@ class SahimedProductCard extends StatelessWidget {
                               context.read<CartProvider>().addItem(product);
                             },
                             child: Container(
-                              width: 32,
-                              height: 28,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFE2E8F0),
-                                borderRadius: BorderRadius.horizontal(right: Radius.circular(8)),
+                              width: 40,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withAlpha(50),
+                                borderRadius: const BorderRadius.horizontal(right: Radius.circular(10)),
                               ),
-                              child: const Icon(Icons.add, size: 14, color: Color(0xFF475569)),
+                              child: const Icon(Icons.add, size: 16, color: Colors.white),
                             ),
                           ),
                         ],
@@ -367,7 +367,7 @@ class SahimedProductCard extends StatelessWidget {
                               ? 'NOTIFY ME' 
                               : 'ADD TO CART',
                           style: GoogleFonts.outfit(
-                            fontSize: 8,
+                            fontSize: 9,
                             fontWeight: FontWeight.w900,
                             color: product.availableQuantity > 0 
                                 ? Colors.white 

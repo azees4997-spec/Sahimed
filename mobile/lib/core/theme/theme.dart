@@ -26,13 +26,13 @@ class SahimedTheme {
           color: SahimedColors.slate950,
         ),
         bodyLarge: GoogleFonts.inter(
-          fontSize: 16,
+          fontSize: 18,
           fontWeight: FontWeight.w500,
           color: SahimedColors.slate950,
         ),
         bodyMedium: GoogleFonts.inter(
-          fontSize: 14,
-          color: SahimedColors.slate500,
+          fontSize: 15,
+          color: SahimedColors.textPrimary,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -44,7 +44,7 @@ class SahimedTheme {
             borderRadius: BorderRadius.circular(20),
           ),
           textStyle: GoogleFonts.outfit(
-            fontSize: 16,
+            fontSize: 17,
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
           ),
@@ -70,8 +70,8 @@ class SahimedTheme {
           borderSide: const BorderSide(color: SahimedColors.primary, width: 2),
         ),
         hintStyle: GoogleFonts.inter(
-          color: SahimedColors.slate400,
-          fontSize: 14,
+          color: SahimedColors.slate500,
+          fontSize: 15,
         ),
       ),
     );
