@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useFirestore } from '@/firebase';
-import { doc, onSnapshot, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 export function VideoSuite() {
   const [topic, setTopic] = useState('');
@@ -115,37 +115,26 @@ export function VideoSuite() {
   ];
 
   const handleStartMission = async () => {
-    if (!topic || !db) return;
+    if (!topic) return;
     setIsProcessing(true);
     setCurrentStep(0);
     setMissionId(null);
     setMissionData(null);
 
     try {
-      // 1. Create Mission on Client Side (Guarantees document visibility)
-      const missionRef = await addDoc(collection(db, 'marketing_missions'), {
-        topic,
-        status: 'initializing',
-        progress: 5,
-        currentStep: 0,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        logs: [{ stage: 'system', message: 'Mission Initialized on Client', timestamp: new Date().toISOString() }]
-      });
-      
-      const newMissionId = missionRef.id;
-      setMissionId(newMissionId);
-
-      // 2. Trigger Background Processing
+      // Trigger mission creation on the server (Bypasses Client Security Rules)
       const res = await fetch('/api/marketing/video/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, missionId: newMissionId })
+        body: JSON.stringify({ topic })
       });
       
       const data = await res.json();
-      if (!data.success) {
-        throw new Error(data.error || "Failed to start processing");
+      
+      if (data.success && data.missionId) {
+        setMissionId(data.missionId);
+      } else {
+        throw new Error(data.error || "Failed to register mission");
       }
     } catch (err: any) {
       console.error("Mission start failed", err);

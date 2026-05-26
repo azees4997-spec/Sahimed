@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(req: NextRequest) {
   try {
-    let { topic, missionId } = await req.json();
+    const { topic } = await req.json();
     if (!topic) return NextResponse.json({ error: "Topic is required" }, { status: 400 });
 
     const db = getDbAdmin();
@@ -16,21 +16,20 @@ export async function POST(req: NextRequest) {
     const genAI = new GoogleGenerativeAI(key);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // If missionId is not provided (legacy), create one
-    if (!missionId) {
-      const missionRef = await db.collection('marketing_missions').add({
-        topic,
-        status: 'initializing',
-        progress: 0,
-        currentStep: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        logs: [{ stage: 'system', message: 'Mission Created via API Fallback' }]
-      });
-      missionId = missionRef.id;
-    }
+    // 1. Create Mission (Server Side - Bypasses Rules)
+    const missionRef = await db.collection('marketing_missions').add({
+      topic,
+      status: 'initializing',
+      progress: 5,
+      currentStep: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      logs: [{ stage: 'system', message: 'Mission Registered on Server', progress: 5, timestamp: new Date().toISOString() }]
+    });
 
-    // Start background processing
+    const missionId = missionRef.id;
+
+    // 2. Start background processing
     processMission(missionId, topic, model, db);
 
     return NextResponse.json({ success: true, missionId });
