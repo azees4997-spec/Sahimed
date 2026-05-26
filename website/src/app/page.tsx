@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Navbar from '@/components/Navbar';
-import { ShieldCheck, Search, FileText, MessageCircle, Phone } from 'lucide-react';
+import { ShieldCheck, Search, FileText, MessageCircle, Phone, Pill, HeartPulse, Stethoscope } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -94,8 +94,19 @@ export default async function Home() {
         
         {/* Mega Banner Hero Section */}
         <section className="relative w-full bg-[#FFF9F9] overflow-hidden pb-4 sm:pb-10 pt-2 sm:pt-8 border-b border-rose-50/50">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-rose-100/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none" />
+        {/* Medicine Background Decorations */}
+        <div className="absolute top-10 right-[10%] opacity-[0.03] pointer-events-none animate-pulse">
+          <Pill className="w-32 h-32 rotate-45" />
+        </div>
+        <div className="absolute bottom-10 left-[5%] opacity-[0.02] pointer-events-none">
+          <Stethoscope className="w-40 h-40 -rotate-12" />
+        </div>
+        <div className="absolute top-1/2 left-1/3 opacity-[0.02] pointer-events-none animate-bounce duration-[5000ms]">
+          <HeartPulse className="w-20 h-20" />
+        </div>
+        <div className="absolute top-20 right-1/4 opacity-[0.01] pointer-events-none">
+          <Pill className="w-16 h-16 -rotate-45" />
+        </div>
           
           <div className="max-w-7xl mx-auto px-4 relative z-10">
             <div className="flex flex-col gap-4 sm:gap-6">
@@ -116,21 +127,35 @@ export default async function Home() {
                   </div>
                 </div>
  
-                <div className="w-1/3 sm:w-1/4 flex justify-end">
-                  <div className="relative w-full aspect-square max-w-[120px] sm:max-w-[280px] rounded-xl sm:rounded-[32px] border-[4px] sm:border-[8px] border-white shadow-2xl overflow-hidden bg-white">
+                {/* Desktop Doctor View (Frameless) */}
+                <div className="hidden sm:flex w-1/4 justify-end relative z-20">
+                  <div className="relative w-full aspect-[4/5] max-w-[320px] overflow-visible">
                     <Image 
-                      src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
+                      src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?q=80&w=2070&auto=format&fit=crop" 
                       alt="Healthcare Professional" 
                       fill
                       priority
-                      className="object-cover object-top" 
+                      className="object-contain object-bottom drop-shadow-2xl" 
                     />
                   </div>
                 </div>
               </div>
  
-              <div className="w-full max-w-2xl mx-auto">
+              <div className="w-full max-w-2xl mx-auto relative z-30">
                 <HeroSearch />
+                
+                {/* Mobile Overlapping Doctor (Frameless) */}
+                <div className="sm:hidden absolute -top-16 -right-4 w-40 h-64 z-[-1] opacity-90">
+                   <div className="relative w-full h-full">
+                    <Image 
+                      src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?q=80&w=2070&auto=format&fit=crop" 
+                      alt="Healthcare Professional" 
+                      fill
+                      priority
+                      className="object-contain object-bottom" 
+                    />
+                  </div>
+                </div>
               </div>
  
               <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-3xl mx-auto w-full">
