@@ -54,6 +54,7 @@ import { SearchAnalyticsTab } from './components/SearchAnalyticsTab';
 import { MaintenanceTab } from './components/MaintenanceTab';
 import { InventoryTab } from './components/InventoryTab';
 import { MarketingTab } from './components/MarketingTab';
+import { OrderNotification } from './components/OrderNotification';
 
 const MASTER_UIDS = ["BM9HheYflheT0Wyj6olaEnyCAHl1", "RzB6nqlQumg1VEniFcZrgbcDdRA2"];
 
@@ -339,6 +340,7 @@ function AdminConsoleContent() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
+        <OrderNotification />
         <header className="fixed top-0 left-0 right-0 z-50 bg-white/40 backdrop-blur-2xl border-b border-white shadow-lg">
           <div className="max-w-[1600px] mx-auto px-8 md:px-12 h-24 flex items-center justify-between">
             <div className="flex items-center gap-8">
