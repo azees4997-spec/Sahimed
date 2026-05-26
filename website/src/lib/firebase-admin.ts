@@ -26,7 +26,16 @@ export function getFirebaseAdmin() {
 
   // Fallback: Check for explicit keys
   if (!projectId || !clientEmail || !privateKey) {
-    console.warn("[Firebase Admin] Configuration missing. Some features will be disabled.");
+    const missing = [];
+    if (!projectId) missing.push("FIREBASE_PROJECT_ID");
+    if (!clientEmail) missing.push("FIREBASE_CLIENT_EMAIL");
+    if (!privateKey) missing.push("FIREBASE_PRIVATE_KEY");
+    
+    console.warn(`[Firebase Admin] Configuration missing: ${missing.join(", ")}. 
+    Note: On Google Cloud/Firebase App Hosting, these are automatic. 
+    On Vercel/Local, you MUST provide them in .env.`);
+    
+    // In preview/local without keys, we return null so the API can handle it gracefully
     return null;
   }
 

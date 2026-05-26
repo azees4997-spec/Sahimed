@@ -8,7 +8,11 @@ export async function POST(req: NextRequest) {
     if (!topic) return NextResponse.json({ error: "Topic is required" }, { status: 400 });
 
     const db = getDbAdmin();
-    if (!db) return NextResponse.json({ error: "Firebase not configured" }, { status: 500 });
+    if (!db) {
+      return NextResponse.json({ 
+        error: "Firebase Credentials Missing. If you are on Vercel/Preview, you must add FIREBASE_PRIVATE_KEY, CLIENT_EMAIL, and PROJECT_ID to your Environment Variables. (In Production on Firebase App Hosting, this is automatic)." 
+      }, { status: 500 });
+    }
 
     const key = process.env.GEMINI_API_KEY;
     if (!key) return NextResponse.json({ error: "Gemini API key missing" }, { status: 500 });
