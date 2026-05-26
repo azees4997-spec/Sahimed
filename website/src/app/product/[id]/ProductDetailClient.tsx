@@ -624,27 +624,29 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                 </div>
               </div>
 
-              <div className="w-full sm:w-auto flex items-center gap-1 sm:gap-2 pl-4 sm:pl-6 pr-1.5 py-1.5 bg-white rounded-full border border-emerald-100 shadow-sm group focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
-                <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
-                <input
-                  type="text"
-                  maxLength={6}
-                  readOnly={!isEditingPincode}
-                  value={activePincode}
-                  onChange={handlePincodeChange}
-                  placeholder="Pincode"
-                  className={cn(
-                    "bg-transparent border-none outline-none text-[11px] sm:text-sm font-black text-emerald-900 uppercase tracking-[0.1em] w-[68px] sm:w-[85px] placeholder:text-slate-300",
-                    !isEditingPincode && "cursor-not-allowed opacity-70"
-                  )}
-                />
-                <button
-                  onClick={() => setIsEditingPincode(!isEditingPincode)}
-                  className="p-1.5 sm:p-2 hover:bg-emerald-50 rounded-full transition-colors shrink-0 self-center"
-                  title="Edit Pincode"
-                >
-                  <Edit2 className={cn("w-3 h-3 sm:w-3.5 sm:h-3.5", isEditingPincode ? "text-emerald-600" : "text-slate-400")} />
-                </button>
+              <div className="w-full sm:w-auto flex items-center pl-4 sm:pl-6 pr-1.5 py-1.5 bg-white rounded-full border border-emerald-100 shadow-sm group focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <input
+                    type="text"
+                    maxLength={6}
+                    readOnly={!isEditingPincode}
+                    value={activePincode}
+                    onChange={handlePincodeChange}
+                    placeholder="Pincode"
+                    className={cn(
+                      "bg-transparent border-none outline-none text-[11px] sm:text-sm font-black text-emerald-900 uppercase tracking-[0.1em] w-[60px] sm:w-[85px] placeholder:text-slate-300",
+                      !isEditingPincode && "cursor-not-allowed opacity-70"
+                    )}
+                  />
+                  <button
+                    onClick={() => setIsEditingPincode(!isEditingPincode)}
+                    className="p-1.5 sm:p-2 hover:bg-emerald-50 active:bg-emerald-100 active:scale-90 rounded-full transition-all shrink-0 self-center"
+                    title="Edit Pincode"
+                  >
+                    <Edit2 className={cn("w-3 h-3 sm:w-3.5 sm:h-3.5", isEditingPincode ? "text-emerald-600" : "text-slate-400")} />
+                  </button>
+                </div>
                 <button
                   onClick={onCheckPincode}
                   className="ml-auto h-7 sm:h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[8px] sm:text-[10px] px-4 sm:px-8 rounded-full uppercase tracking-widest transition-all active:scale-95 shadow-md shadow-emerald-600/10 flex items-center justify-center shrink-0"
