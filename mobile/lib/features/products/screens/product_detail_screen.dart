@@ -10,6 +10,7 @@ import '../../../core/services/api_service.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../shared/models/models.dart';
 import '../../../core/widgets/screen_with_nav.dart';
+import '../../../shared/widgets/sahimed_top_nav.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -182,23 +183,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     return ScreenWithNav(
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
-        appBar: AppBar(
-          backgroundColor: const Color(0xFFF8FAFC),
-          elevation: 0,
-          surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF0F172A)),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.pop(context);
-            },
-          ),
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 200),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        body: Column(
+          children: [
+            const SahimedTopNav(showBack: true),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 200),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
               // ── 1. RX Badge (centered, if needed) ──────────────────────────
               if (isRx)
                 Padding(
@@ -322,26 +315,75 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                   ),
                 )
               else if (showComparison)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    Expanded(
-                      child: _ComparisonCard(
-                        product: widget.product,
-                        label: 'Branded Version',
-                        isAlt: false,
-                        brandedMrp: brandedMrp,
-                        showComparison: true,
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _ComparisonCard(
+                            product: widget.product,
+                            label: 'Branded Version',
+                            isAlt: false,
+                            brandedMrp: brandedMrp,
+                            showComparison: true,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _ComparisonCard(
+                            product: _genericAlt!,
+                            label: 'Sahi Recommended',
+                            isAlt: true,
+                            brandedMrp: brandedMrp,
+                            showComparison: true,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _ComparisonCard(
-                        product: _genericAlt!,
-                        label: 'Sahi Recommended',
-                        isAlt: true,
-                        brandedMrp: brandedMrp,
-                        showComparison: true,
+                    // 100% Match Badge at the top intersection
+                    Positioned(
+                      top: -12,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: SahimedColors.lavender,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: SahimedColors.lavender.withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '100%',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                'match',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 6,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -562,11 +604,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                 product: widget.product,
                 tabController: _tabController,
               ),
+              ),
             ],
           ),
         ),
-      ), // Scaffold
-    ); // ScreenWithNav
+      ),
+    ],
+  ),
+),
+);
   }
 }
 
@@ -619,21 +665,21 @@ class _ComparisonCard extends StatelessWidget {
         : 0;
 
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isAlt ? SahimedColors.accent.withOpacity(0.03) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: isAlt ? SahimedColors.lavenderLight : Colors.white,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isAlt
-              ? SahimedColors.accent.withOpacity(0.2)
+              ? SahimedColors.lavender.withOpacity(0.3)
               : const Color(0xFFF1F5F9),
           width: isAlt ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -644,30 +690,32 @@ class _ComparisonCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
+              if (isAlt)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isAlt
-                        ? SahimedColors.accent
-                        : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(100),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: SahimedColors.lavender.withOpacity(0.2)),
                   ),
-                  child: Text(
-                    label.toUpperCase(),
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(
-                      fontSize: 7,
-                      fontWeight: FontWeight.w900,
-                      color: isAlt ? Colors.white : const Color(0xFF94A3B8),
-                      letterSpacing: 1,
-                    ),
+                  child: Row(
+                    children: [
+                      const Icon(LucideIcons.pill, size: 10, color: SahimedColors.lavender),
+                      const SizedBox(width: 4),
+                      Text(
+                        'SUBSTITUTE',
+                        style: GoogleFonts.outfit(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w900,
+                          color: SahimedColors.lavender,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
+                )
+              else
+                const SizedBox.shrink(),
+              
               if (_displaySavingsPct > 0)
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -735,94 +783,79 @@ class _ComparisonCard extends StatelessWidget {
               height: 1.2,
             ),
           ),
-
-          // Pack size
-          Text(
-            product.packSize ?? 'N/A',
-            style: GoogleFonts.outfit(
-              fontSize: 7,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF64748B),
-              letterSpacing: 1,
-            ),
-          ),
-
-          // Manufacturer
-          Text(
-            (product.company ?? product.brand).toUpperCase(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.outfit(
-              fontSize: 7,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF94A3B8),
-            ),
-          ),
-
-          const SizedBox(height: 8),
+          
+          // Features rows
+          const SizedBox(height: 12),
           const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
 
-          // Price block
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '₹${_price.toStringAsFixed(0)}',
-                style: GoogleFonts.outfit(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: SahimedColors.primary,
-                  height: 1,
-                ),
-              ),
-              const SizedBox(width: 6),
-              if (_mrp > _price)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '₹${_mrp.toStringAsFixed(0)}',
-                      style: GoogleFonts.outfit(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF94A3B8),
-                        decoration: TextDecoration.lineThrough,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 1,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFECFDF5),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'SAVE ₹${(_mrp - _price).toStringAsFixed(0)}',
-                        style: GoogleFonts.outfit(
-                          fontSize: 7,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF059669),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-            ],
+          // Manufacturer row
+          _FeatureRow(
+            text: (product.company ?? product.brand).toUpperCase(),
+            style: GoogleFonts.outfit(
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF475569),
+            ),
+          ),
+          
+          // Quality row
+          const _FeatureRow(
+            text: 'FDA APPROVED',
+            icon: LucideIcons.checkCircle,
           ),
 
-          Text(
-            '₹${_unitPrice.toStringAsFixed(2)} / unit',
+          // Salt row
+          _FeatureRow(
+            text: (product.molName ?? product.saltComposition ?? 'Medicine').toUpperCase(),
             style: GoogleFonts.outfit(
               fontSize: 8,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF94A3B8),
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF64748B),
             ),
           ),
 
-          const SizedBox(height: 10),
+          // Price row
+          _FeatureRow(
+            text: '₹${_unitPrice.toStringAsFixed(2)}/UNITS',
+            style: GoogleFonts.outfit(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+          
+          if (isAlt && showComparison)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: SahimedColors.lavender,
+                borderRadius: BorderRadius.circular(100),
+                boxShadow: [
+                  BoxShadow(
+                    color: SahimedColors.lavender.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  '$_displaySavingsPct% CHEAPER',
+                  style: GoogleFonts.outfit(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            )
+          else
+            const SizedBox(height: 40),
 
           // ADD / IN CART / NOTIFY ME button (matches website button exactly)
           GestureDetector(
@@ -854,10 +887,10 @@ class _ComparisonCard extends StatelessWidget {
             },
             child: Container(
               width: double.infinity,
-              height: 34,
+              height: 44,
               decoration: BoxDecoration(
                 color: product.availableQuantity > 0
-                    ? (isAlt ? SahimedColors.accent : SahimedColors.primary)
+                    ? (isAlt ? SahimedColors.lavender : SahimedColors.primary)
                     : const Color(0xFFFFF1F2),
                 borderRadius: BorderRadius.circular(100),
                 border: product.availableQuantity > 0
@@ -867,7 +900,7 @@ class _ComparisonCard extends StatelessWidget {
                     ? [
                         BoxShadow(
                           color: (isAlt
-                                  ? SahimedColors.accent
+                                  ? SahimedColors.lavender
                                   : SahimedColors.primary)
                               .withOpacity(0.3),
                           blurRadius: 8,
@@ -876,34 +909,79 @@ class _ComparisonCard extends StatelessWidget {
                       ]
                     : [],
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    product.availableQuantity <= 0
-                        ? 'NOTIFY ME'
-                        : (displayQty > 0 ? 'IN CART ($displayQty)' : 'ADD'),
-                    style: GoogleFonts.outfit(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      color: product.availableQuantity > 0
-                          ? Colors.white
-                          : const Color(0xFFE11D48),
-                      letterSpacing: 1,
+              child: displayQty > 0 && product.availableQuantity > 0
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            context.read<CartProvider>().updateQuantity(product.id, displayQty - 1);
+                          },
+                          child: Container(
+                            width: 48,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: const BorderRadius.horizontal(left: Radius.circular(100)),
+                            ),
+                            child: const Icon(LucideIcons.minus, size: 18, color: Colors.white),
+                          ),
+                        ),
+                        Text(
+                          '$displayQty IN CART',
+                          style: GoogleFonts.outfit(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            context.read<CartProvider>().addItem(product);
+                          },
+                          child: Container(
+                            width: 48,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: const BorderRadius.horizontal(right: Radius.circular(100)),
+                            ),
+                            child: const Icon(LucideIcons.plus, size: 18, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          product.availableQuantity <= 0
+                              ? 'NOTIFY ME'
+                              : 'ADD TO CART',
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            color: product.availableQuantity > 0
+                                ? Colors.white
+                                : const Color(0xFFE11D48),
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          product.availableQuantity <= 0
+                              ? LucideIcons.bell
+                              : LucideIcons.shoppingCart,
+                          size: 16,
+                          color: product.availableQuantity > 0
+                              ? Colors.white
+                              : const Color(0xFFE11D48),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Icon(
-                    product.availableQuantity <= 0
-                        ? LucideIcons.bell
-                        : LucideIcons.shoppingCart,
-                    size: 12,
-                    color: product.availableQuantity > 0
-                        ? Colors.white
-                        : const Color(0xFFE11D48),
-                  ),
-                ],
-              ),
             ),
           ),
         ],
@@ -923,7 +1001,7 @@ class _ComparisonCard extends StatelessWidget {
           ),
           padding: const EdgeInsets.all(24),
           child: CachedNetworkImage(
-            imageUrl: product.imageUrl,
+            imageUrl: widget.product.imageUrl,
             fit: BoxFit.contain,
             errorWidget: (c, u, e) => const Icon(
               LucideIcons.pill,
@@ -1420,6 +1498,47 @@ class _InteractionTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _FeatureRow extends StatelessWidget {
+  final String text;
+  final IconData? icon;
+  final TextStyle? style;
+
+  const _FeatureRow({required this.text, this.icon, this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 10, color: const Color(0xFF10B981)),
+            const SizedBox(width: 4),
+          ],
+          Flexible(
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: style ?? GoogleFonts.outfit(
+                fontSize: 8,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF64748B),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

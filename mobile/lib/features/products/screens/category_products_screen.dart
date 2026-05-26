@@ -7,6 +7,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/services/api_service.dart';
 import '../../../shared/models/models.dart';
 import '../../../core/widgets/screen_with_nav.dart';
+import '../../../shared/widgets/sahimed_top_nav.dart';
 import '../widgets/product_card.dart';
 import 'product_detail_screen.dart';
 
@@ -59,67 +60,9 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
         body: CustomScrollView(
           slivers: [
             // ── Header — matches website Categories page header ──────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 56, 16, 20),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Back button — round white pill exactly like website
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xFFF1F5F9)),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x14000000),
-                              blurRadius: 12,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          LucideIcons.arrowLeft,
-                          size: 18,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.category.name.toUpperCase(),
-                          style: GoogleFonts.outfit(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF0F172A),
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        Text(
-                          'THERAPEUTIC SEGMENTS',
-                          style: GoogleFonts.outfit(
-                            fontSize: 8,
-                            fontWeight: FontWeight.w900,
-                            color: SahimedColors.primary,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+            // ── Top Nav Bar ──────────────────────────────────────────────
+            const SliverToBoxAdapter(
+              child: SahimedTopNav(showBack: true),
             ),
 
             // ── Category image hero card ───────────────────────────────────

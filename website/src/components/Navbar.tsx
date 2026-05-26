@@ -799,7 +799,7 @@ export default function Navbar() {
                 <Input
                   type="text"
                   placeholder="Search for medicines or generics"
-                  className="w-full pl-14 pr-12 h-14 sm:h-16 text-sm sm:text-base font-bold bg-white border-slate-200 focus:border-primary/20 rounded-full shadow-2xl shadow-primary/5 transition-all outline-none"
+                  className="w-full pl-14 pr-32 h-14 sm:h-16 text-sm sm:text-base font-bold bg-white border-slate-200 focus:border-primary/20 rounded-full shadow-2xl shadow-primary/5 transition-all outline-none"
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
@@ -807,11 +807,20 @@ export default function Navbar() {
                   }}
                   onFocus={() => search.length >= 2 && setShowSuggestions(true)}
                 />
-                {isSearching && (
-                  <div className="absolute right-6 top-1/2 -translate-y-1/2">
-                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                  </div>
-                )}
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  {isSearching ? (
+                    <div className="mr-4">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    </div>
+                  ) : (
+                    <Button 
+                      type="submit"
+                      className="h-10 sm:h-12 px-6 sm:px-8 rounded-full bg-primary text-white font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                    >
+                      Search
+                    </Button>
+                  )}
+                </div>
               </div>
             </form>
 

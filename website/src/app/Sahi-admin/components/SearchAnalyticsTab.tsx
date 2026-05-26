@@ -162,16 +162,16 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
         <Card className="md:col-span-1 p-8 rounded-[44px] bg-white border-none shadow-xl flex flex-col gap-6 h-fit sticky top-24">
           <div className="flex flex-col gap-1.5">
             <h3 className="text-sm font-black uppercase tracking-tighter text-slate-900">Filter Range</h3>
-            <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Temporal window selection</p>
+            <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">Temporal window selection</p>
           </div>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Start Protocol</Label>
+              <Label className="text-[9px] font-black uppercase tracking-widest text-slate-600">Start Protocol</Label>
               <Input type="date" value={dateRange.startDate} onChange={e => setDateRange({...dateRange, startDate: e.target.value})} className="h-14 rounded-2xl bg-slate-50 border-none font-bold text-xs" />
             </div>
             <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">End Protocol</Label>
+              <Label className="text-[9px] font-black uppercase tracking-widest text-slate-600">End Protocol</Label>
               <Input type="date" value={dateRange.endDate} onChange={e => setDateRange({...dateRange, endDate: e.target.value})} className="h-14 rounded-2xl bg-slate-50 border-none font-bold text-xs" />
             </div>
           </div>
@@ -189,7 +189,7 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
               </div>
               <div className="flex flex-col">
                 <span className="font-black text-xs uppercase tracking-tight text-slate-900">Analytics Log</span>
-                <span className="text-[10px] font-bold text-slate-400 tracking-widest">REAL-TIME INGESTION FEED</span>
+                <span className="text-[10px] font-bold text-slate-500 tracking-widest">REAL-TIME INGESTION FEED</span>
               </div>
             </div>
             <div className="px-4 py-2 rounded-full bg-slate-50 border border-slate-100 font-black text-[10px] text-slate-500 uppercase tracking-widest">
@@ -201,12 +201,12 @@ export function SearchAnalyticsTab({ onBack }: { onBack: () => void }) {
             <table className="w-full text-left">
               <thead className="bg-slate-50 border-b border-slate-100">
                 <tr>
-                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Platform</th>
-                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Identity (Mobile)</th>
-                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Keyword (Search)</th>
-                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Results</th>
-                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Region</th>
-                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Timestamp</th>
+                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-600">Platform</th>
+                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-600">Identity (Mobile)</th>
+                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-600">Keyword (Search)</th>
+                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-600">Results</th>
+                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-600">Region</th>
+                  <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-600">Timestamp</th>
 
                 </tr>
               </thead>

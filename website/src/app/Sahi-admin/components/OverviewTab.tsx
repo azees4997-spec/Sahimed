@@ -72,7 +72,7 @@ export function OverviewTab({ setTab, role }: { setTab: (t: AdminTab) => void, r
             </div>
             <div className="space-y-1">
               <CardTitle className="text-sm font-black text-slate-900 tracking-tight uppercase font-outfit">{card.label}</CardTitle>
-              <p className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase opacity-60">{card.desc}</p>
+              <p className="text-[9px] font-black text-slate-600 tracking-[0.2em] uppercase opacity-60">{card.desc}</p>
             </div>
             <div className="mt-6 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
                <span className="text-[9px] font-black text-primary tracking-widest uppercase flex items-center gap-2">Open Section <ArrowRight className="w-3 h-3" /></span>

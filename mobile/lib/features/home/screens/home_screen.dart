@@ -14,6 +14,7 @@ import '../../../shared/models/models.dart';
 
 import 'prescription_screen.dart';
 import '../../products/screens/category_products_screen.dart';
+import '../../products/screens/categories_screen.dart';
 import '../../products/screens/search_screen.dart';
 
 import '../../products/widgets/product_card.dart';
@@ -113,6 +114,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openAllCategories(BuildContext context) {
+    HapticFeedback.mediumImpact();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CategoriesScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -154,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     _buildSection(
                       title: 'Top Categories',
                       trailing: GestureDetector(
-                        onTap: () => _goSearch(context),
+                        onTap: () => _openAllCategories(context),
                         child: Row(
                           children: [
                             Text('EXPLORE ALL', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: SahimedColors.primary)),
@@ -256,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 16),
                 RichText(
                   text: TextSpan(
-                    style: GoogleFonts.outfit(fontSize: 30, fontWeight: FontWeight.w900, height: 1.0, color: const Color(0xFF0F172A)),
+                    style: GoogleFonts.outfit(fontSize: 26, fontWeight: FontWeight.w900, height: 1.1, color: const Color(0xFF0F172A)),
                     children: [
                       const TextSpan(text: 'AFFORDABLE\nMEDICINES\n'),
                       TextSpan(
@@ -620,7 +629,7 @@ class _StickySearchDelegate extends SliverPersistentHeaderDelegate {
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
-                  'Search 10,000+ medicines...',
+                  'Search by Brand or Salt',
                   style: GoogleFonts.outfit(
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF94A3B8),
@@ -635,7 +644,7 @@ class _StickySearchDelegate extends SliverPersistentHeaderDelegate {
                   borderRadius: BorderRadius.circular(100),
                 ),
                 child: Text(
-                  'FIND',
+                  'SEARCH',
                   style: GoogleFonts.outfit(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,

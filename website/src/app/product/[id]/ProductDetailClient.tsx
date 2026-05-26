@@ -26,7 +26,6 @@ import {
   FlaskConical,
   Truck,
   MapPin,
-  Edit2,
   Clock,
   ArrowRight
 } from 'lucide-react';
@@ -204,12 +203,19 @@ const ComparisonCard = ({
   return (
     <motion.div variants={scaleInVariant} className="h-full">
       <Card className={cn(
-        "h-full rounded-[24px] sm:rounded-[40px] p-3 sm:p-7 flex flex-col justify-between border shadow-sm relative overflow-hidden transition-all duration-700",
-        isAlt ? "bg-accent/[0.03] ring-2 ring-accent/10 border-accent/20" : "bg-white border-slate-100"
+        "h-full rounded-[24px] sm:rounded-[48px] p-3 sm:p-10 flex flex-col justify-between border shadow-sm relative overflow-hidden transition-all duration-700",
+        isAlt ? "bg-lavender ring-2 ring-lavender-text/10 border-lavender-text/20" : "bg-white border-slate-100"
       )}>
         <div className="space-y-3 sm:space-y-6">
           <div className="flex items-center justify-between">
-            <Badge className={cn("rounded-full font-black text-[7px] sm:text-[9px] px-2 py-0.5 uppercase tracking-widest", isAlt ? "bg-accent text-white" : "bg-slate-100 text-slate-400")}>{label}</Badge>
+            {isAlt ? (
+              <div className="bg-white border border-lavender-text/20 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                 <Package className="w-3.5 h-3.5 text-lavender-text" />
+                 <span className="text-[9px] font-black text-lavender-text tracking-widest uppercase">SUBSTITUTE</span>
+              </div>
+            ) : (
+              <Badge className="rounded-full font-black text-[7px] sm:text-[9px] px-2 py-0.5 uppercase tracking-widest bg-slate-100 text-slate-400 border-none">{label}</Badge>
+            )}
             <RibbonBadge
               savingsPct={displaySavingsPct}
               variant={isAlt ? 'accent' : 'primary'}
@@ -266,22 +272,30 @@ const ComparisonCard = ({
               {product.manufacturer}
             </p>
 
-            <div className="pt-1.5 sm:pt-3 border-t border-dashed mt-1.5 sm:mt-3 space-y-0.5">
-              <div className="flex items-baseline gap-1.5 sm:gap-2">
-                <p className="text-lg sm:text-4xl font-black tracking-tighter text-primary font-outfit">
-                  ₹{Number(pPrice).toFixed(0)}
-                </p>
-                {pMrp > pPrice && (
-                  <div className="flex flex-col">
-                    <span className="text-[8px] sm:text-sm text-slate-400 line-through font-bold opacity-80 decoration-1">₹{Number(pMrp).toFixed(0)}</span>
-                    <span className="text-[7px] sm:text-[10px] font-black text-emerald-600 uppercase bg-emerald-50 px-1 py-0.5 rounded-md">SAVE ₹{Number(pMrp - pPrice).toFixed(0)}</span>
-                  </div>
-                )}
+          <div className="pt-3 sm:pt-6 border-t border-slate-100 space-y-4">
+            {/* Comparison Rows */}
+            <div className="space-y-3">
+              <div className="flex flex-col items-center justify-center py-3 border-b border-slate-50 text-center">
+                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tight">{product.manufacturer}</span>
               </div>
-              <p className="text-[8px] font-bold text-slate-350 tracking-tight uppercase">
-                ₹{unitPrice.toFixed(2)} / unit
-              </p>
+              <div className="flex items-center justify-center gap-2 py-3 border-b border-slate-50 text-center">
+                <ShieldAlert className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">FDA APPROVED</span>
+              </div>
+              <div className="flex flex-col items-center justify-center py-3 border-b border-slate-50 text-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight leading-tight">{product.saltComposition || product.molecule}</span>
+              </div>
+              <div className="flex flex-col items-center justify-center py-3 border-b border-slate-50 text-center">
+                <span className="text-sm font-black text-slate-900 tracking-tighter uppercase">₹{unitPrice.toFixed(2)} / unit</span>
+              </div>
             </div>
+
+            {isAlt && showComparison && (
+              <div className="w-full bg-lavender-text text-white py-3 sm:py-4 rounded-[16px] sm:rounded-[24px] flex items-center justify-center shadow-lg shadow-lavender-text/20">
+                <span className="text-[10px] sm:text-sm font-black tracking-widest uppercase">{displaySavingsPct}% CHEAPER</span>
+              </div>
+            )}
+          </div>
           </div>
         </div>
 
@@ -308,7 +322,7 @@ const ComparisonCard = ({
                   toast({ variant: 'destructive', title: "Error", description: "Failed to set alert." });
                 }
               }}
-              className="w-full h-7 sm:h-12 bg-[#FFF1F2] text-[#E11D48] font-black text-[7px] sm:text-[10px] tracking-widest uppercase rounded-full flex items-center justify-center gap-1 border border-[#FFE4E6] hover:bg-[#FFE4E6] transition-all active:scale-95 shadow-md shadow-[#E11D48]/5"
+              className="w-full h-8 sm:h-14 bg-[#FFF1F2] text-[#E11D48] font-black text-[8px] sm:text-[12px] tracking-widest uppercase rounded-full flex items-center justify-center gap-1 border border-[#FFE4E6] hover:bg-[#FFE4E6] transition-all active:scale-95 shadow-md shadow-[#E11D48]/5"
             >
               NOTIFY ME
             </Button>
@@ -316,11 +330,11 @@ const ComparisonCard = ({
             <Button
               onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })}
               className={cn(
-                "w-full h-7 sm:h-12 rounded-full font-black text-[7px] sm:text-[10px] tracking-[0.1em] sm:tracking-[0.15em] uppercase gap-1.5 sm:gap-2 shadow-md sm:shadow-lg active:scale-[0.98] transition-all border-none",
-                isAlt ? "bg-accent text-white hover:bg-accent/90" : "bg-primary text-white hover:bg-primary/90"
+                "w-full h-8 sm:h-14 rounded-full font-black text-[8px] sm:text-[12px] tracking-[0.1em] sm:tracking-[0.15em] uppercase gap-1.5 sm:gap-2 shadow-md sm:shadow-lg active:scale-[0.98] transition-all border-none",
+                isAlt ? "bg-lavender-text text-white hover:bg-lavender-text/90" : "bg-primary text-white hover:bg-primary/90"
               )}
             >
-              {qty > 0 ? `IN CART (${qty})` : "ADD"} <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+              {qty > 0 ? `IN CART (${qty})` : "ADD TO CART"} <ShoppingCart className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
             </Button>
           )}
         </div>
@@ -566,12 +580,24 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
             </motion.div>
           )}
 
-          <div className="mb-4 sm:mb-10 px-1">
+          <div className="mb-8 sm:mb-16 px-1 relative">
             {showComparison ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-6 items-stretch">
+              <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-12 items-stretch relative">
+                {/* 100% Match Floating Badge */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
+                  <motion.div 
+                    initial={{ scale: 0, rotate: -10 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    className="w-16 h-16 sm:w-24 sm:h-24 bg-lavender-text border-[4px] sm:border-[8px] border-white rounded-full flex flex-col items-center justify-center shadow-2xl shadow-lavender-text/40"
+                  >
+                    <span className="text-[10px] sm:text-sm font-black text-white leading-none">100%</span>
+                    <span className="text-[6px] sm:text-[8px] font-bold text-white/80 uppercase tracking-tighter">MATCH</span>
+                  </motion.div>
+                </div>
+
                 <ComparisonCard
                   product={brandedItem}
-                  label="BRANDED"
+                  label="BRANDED VERSION"
                   getItemQuantity={getItemQuantity}
                   addToCart={addToCart}
                   showComparison={showComparison}
@@ -635,23 +661,25 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                     onChange={handlePincodeChange}
                     placeholder="Pincode"
                     className={cn(
-                      "bg-transparent border-none outline-none text-[11px] sm:text-sm font-black text-emerald-900 uppercase tracking-[0.1em] w-[60px] sm:w-[85px] placeholder:text-slate-300",
-                      !isEditingPincode && "cursor-not-allowed opacity-70"
+                      "bg-transparent border-none outline-none text-[11px] sm:text-sm font-black text-emerald-900 uppercase tracking-[0.1em] w-[60px] sm:w-[85px] placeholder:text-slate-300 transition-all",
+                      !isEditingPincode ? "cursor-not-allowed opacity-70" : "text-emerald-600 scale-105"
                     )}
                   />
                   <button
                     onClick={() => setIsEditingPincode(!isEditingPincode)}
-                    className="p-1.5 sm:p-2 hover:bg-emerald-50 active:bg-emerald-100 active:scale-90 rounded-full transition-all shrink-0 self-center"
-                    title="Edit Pincode"
+                    className="px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] font-black text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95 rounded-full transition-all uppercase tracking-wider shrink-0"
                   >
-                    <Edit2 className={cn("w-3 h-3 sm:w-3.5 sm:h-3.5", isEditingPincode ? "text-emerald-600" : "text-slate-400")} />
+                    {isEditingPincode ? "Cancel" : "Change"}
                   </button>
                 </div>
                 <button
                   onClick={onCheckPincode}
-                  className="ml-auto h-7 sm:h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[8px] sm:text-[10px] px-4 sm:px-8 rounded-full uppercase tracking-widest transition-all active:scale-95 shadow-md shadow-emerald-600/10 flex items-center justify-center shrink-0"
+                  className={cn(
+                    "ml-auto h-7 sm:h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[8px] sm:text-[10px] px-4 sm:px-8 rounded-full uppercase tracking-widest transition-all active:scale-95 shadow-md shadow-emerald-600/10 flex items-center justify-center shrink-0",
+                    !isEditingPincode && "hidden"
+                  )}
                 >
-                  Check
+                  Apply
                 </button>
               </div>
             </div>

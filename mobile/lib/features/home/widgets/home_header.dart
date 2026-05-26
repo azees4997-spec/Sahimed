@@ -587,42 +587,9 @@ class _HomeHeaderState extends State<HomeHeader> {
                                   ),
                                 ),
                               ),
-                              if (_isServiceable != null) ...[
-                                const SizedBox(width: 6),
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: _isServiceable! ? SahimedColors.success : SahimedColors.rose500,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: (_isServiceable! ? SahimedColors.success : SahimedColors.rose500).withOpacity(0.4),
-                                        blurRadius: 4,
-                                        spreadRadius: 1,
-                                      )
-                                    ]
-                                  ),
-                                ),
                               ],
-                            ],
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-
-                      // Search Trigger
-                      _NavbarIcon(
-                        icon: LucideIcons.search,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SearchScreen(),
-                          ),
-                        ),
-                        backgroundColor: SahimedColors.primary,
-                        iconColor: Colors.white,
-                        shadow: true,
                       ),
                     ],
                   ),

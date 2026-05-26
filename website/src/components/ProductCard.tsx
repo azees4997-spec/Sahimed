@@ -67,24 +67,24 @@ function ProductCardComponent({ product, priority = false }: { product: Product,
               )}
             </div>
             
-            <h3 className="font-extrabold text-black text-[10px] sm:text-[12px] leading-tight line-clamp-2 min-h-[24px] sm:min-h-[28px] font-outfit uppercase tracking-tight group-hover:text-primary transition-colors">
+            <h3 className="font-extrabold text-black text-[10px] sm:text-[12px] leading-tight line-clamp-3 min-h-[36px] sm:min-h-[42px] font-outfit uppercase tracking-tight group-hover:text-primary transition-colors">
               {product.name}
             </h3>
 
             <div className="h-2 sm:h-3">
               {moleculeName && (
-                <p className="text-[6px] sm:text-[8.5px] font-bold text-blue-600 uppercase tracking-tight line-clamp-1 leading-none opacity-80">
+                <p className="text-[6px] sm:text-[8.5px] font-black text-blue-800 uppercase tracking-tight line-clamp-1 leading-none">
                   {moleculeName}
                 </p>
               )}
             </div>
             
-            <div className="flex items-center gap-1.5 pt-0.5">
-              <p className="text-[6px] sm:text-[8px] font-bold text-slate-400 tracking-tight truncate uppercase italic shrink-0">
+            <div className="flex items-center gap-1 min-w-0">
+              <p className="text-[6px] sm:text-[8px] font-black text-slate-800 tracking-tight truncate uppercase italic shrink-0">
                 {product.manufacturer || product.brand || 'Pharma'}
               </p>
-              <div className="w-0.5 h-0.5 rounded-full bg-slate-300" />
-              <p className="text-[6px] sm:text-[8px] font-black text-slate-600 tracking-tight truncate uppercase">
+              <div className="w-0.5 h-0.5 rounded-full bg-slate-400" />
+              <p className="text-[6px] sm:text-[8px] font-black text-slate-900 tracking-tight truncate uppercase">
                 {product.packSize || 'Pack'}
               </p>
             </div>
@@ -92,12 +92,12 @@ function ProductCardComponent({ product, priority = false }: { product: Product,
 
           <div className="space-y-0.5">
             <div className="flex items-center gap-1.5">
-               <span className="text-slate-400 line-through text-[8px] sm:text-[10px] font-bold decoration-1">₹{Math.round(currentMrp)}</span>
+               <span className="text-slate-500 line-through text-[8px] sm:text-[10px] font-bold decoration-1">₹{Math.round(currentMrp)}</span>
                <span className="text-emerald-500 font-black text-[7px] sm:text-[9px] uppercase tracking-tighter">Save ₹{Math.round(currentMrp - currentPrice)}</span>
             </div>
             <div className="flex items-baseline gap-1">
                <span className="text-black font-black text-base sm:text-lg font-outfit leading-none tracking-tighter">₹{Math.round(currentPrice)}</span>
-               <span className="text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest opacity-60">Sahi Price</span>
+               <span className="text-[7px] sm:text-[8px] font-black text-slate-700 uppercase tracking-widest">Sahi Price</span>
             </div>
           </div>
       </Link>

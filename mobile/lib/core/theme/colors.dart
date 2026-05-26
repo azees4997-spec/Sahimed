@@ -17,7 +17,8 @@ class SahimedColors {
   static const Color rose500 = Color(0xFFEF4444);
 
   // Custom Sahi Palettes
-  static const Color lavender = Color(0xFFE0E7FF);
+  static const Color lavender = Color(0xFF7C3AED); // Vibrant Purple for substitute
+  static const Color lavenderLight = Color(0xFFF5F3FF); // Light lavender background
   static const Color sahiBlue = Color(0xFFDBEAFE);
   static const Color sahiPink = Color(0xFFFCE7F3);
   static const Color sahiGreen = Color(0xFFDCFCE7);

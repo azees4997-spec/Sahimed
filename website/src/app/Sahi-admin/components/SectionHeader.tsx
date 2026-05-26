@@ -21,7 +21,7 @@ export function SectionHeader({ title, subtitle, onBack, children }: { title: st
         )}
         <div className="space-y-1">
           <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase font-outfit">{title}</h2>
-          <p className="text-[10px] font-black text-primary tracking-[0.4em] uppercase leading-none opacity-70">{subtitle}</p>
+          <p className="text-[10px] font-black text-primary tracking-[0.4em] uppercase leading-none">{subtitle}</p>
         </div>
       </div>
       <div className="flex flex-wrap justify-center gap-4">

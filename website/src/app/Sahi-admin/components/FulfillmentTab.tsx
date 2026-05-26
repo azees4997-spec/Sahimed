@@ -426,7 +426,7 @@ ${itemsStr}
               placeholder="Search by ID, Name or Phone..." 
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="bg-transparent border-none text-xs font-bold outline-none focus:ring-0 flex-1 placeholder:text-slate-300"
+              className="bg-transparent border-none text-xs font-bold outline-none focus:ring-0 flex-1 placeholder:text-slate-500"
             />
             {searchTerm && (
               <button onClick={() => setSearchTerm('')} className="text-slate-400 hover:text-slate-600">
@@ -500,7 +500,7 @@ ${itemsStr}
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[1000px]">
-            <thead className="bg-gray-50 text-[10px] font-black text-gray-400 border-b">
+            <thead className="bg-gray-50 text-[10px] font-black text-gray-600 border-b">
               <tr>
                 <th className="px-8 py-6">Order id</th>
                 <th className="px-8 py-6">Date</th>
@@ -529,7 +529,7 @@ ${itemsStr}
                 <tr key={order._id || order.id} className="hover:bg-gray-50/50">
                   <td className="px-8 py-6 font-black text-xs uppercase">{order.orderId}</td>
                   <td className="px-8 py-6 text-[10px] font-black">{safeFormat(order.orderDate, 'dd MMM yyyy HH:mm')}</td>
-                  <td className="px-8 py-6"><p className="font-bold text-xs">{order.patientName}</p><p className="text-[10px] text-gray-400">{order.phoneNumber}</p></td>
+                  <td className="px-8 py-6"><p className="font-bold text-xs">{order.patientName}</p><p className="text-[10px] text-gray-600">{order.phoneNumber}</p></td>
                   <td className="px-8 py-6">
                     <p className="text-[10px] font-bold text-gray-600 line-clamp-1 uppercase">
                       {order.shippingDetails?.houseNumber ? `${order.shippingDetails.houseNumber}, ` : ''}{order.shippingDetails?.street}
@@ -577,7 +577,7 @@ ${itemsStr}
         {/* Pagination Controls */}
         {!isLoading && totalPages > 1 && (
           <div className="px-8 py-6 bg-slate-50/50 border-t flex items-center justify-between">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
               Showing <span className="text-primary">{orders.length}</span> of <span className="text-primary">{totalOrders}</span> orders
             </p>
             <div className="flex items-center gap-2">
@@ -682,7 +682,7 @@ ${itemsStr}
             ) : (
               <>
                 <div className="grid grid-cols-2 gap-12">
-                  <div><h4 className="text-xs font-black text-gray-400 mb-3 uppercase tracking-widest">Patient / Customer</h4><p className="font-black text-2xl tracking-tight">{selectedOrder?.patientName}</p><p className="text-base font-bold text-gray-500">{selectedOrder?.phoneNumber}</p></div>
+                  <div><h4 className="text-xs font-black text-gray-600 mb-3 uppercase tracking-widest">Patient / Customer</h4><p className="font-black text-2xl tracking-tight">{selectedOrder?.patientName}</p><p className="text-base font-bold text-gray-500">{selectedOrder?.phoneNumber}</p></div>
                   <div>
                     <h4 className="text-xs font-black text-gray-400 mb-3 uppercase tracking-widest">Shipping Address</h4>
                     <p className="text-lg font-bold leading-relaxed uppercase">

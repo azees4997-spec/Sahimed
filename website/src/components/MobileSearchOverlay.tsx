@@ -188,7 +188,7 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
             ref={inputRef}
             type="text"
             placeholder="Search medicines..."
-            className="w-full pl-10 pr-10 h-11 bg-slate-50 border-none focus:ring-2 focus:ring-primary/20 rounded-xl font-bold text-sm"
+            className="w-full pl-10 pr-24 h-11 bg-slate-50 border-none focus:ring-2 focus:ring-primary/20 rounded-xl font-bold text-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => {
@@ -199,14 +199,28 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
               }
             }}
           />
-          {search && (
-            <button 
-              onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            {search && (
+              <button 
+                onClick={() => setSearch('')}
+                className="p-2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+            {search.trim() && (
+              <button 
+                onClick={() => {
+                  logSearch(search.trim());
+                  router.push(`/search?q=${encodeURIComponent(search.trim())}`);
+                  onClose();
+                }}
+                className="h-9 px-3 bg-primary text-white rounded-lg flex items-center justify-center shadow-lg shadow-primary/20"
+              >
+                <ArrowUpRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -252,7 +266,7 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
                             <Search className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-extrabold text-slate-800 text-[12px] sm:text-[14px] uppercase tracking-tight group-hover:text-primary transition-colors leading-tight whitespace-normal">
+                            <h4 className="font-extrabold text-slate-900 text-[12px] sm:text-[14px] uppercase tracking-tight group-hover:text-primary transition-colors leading-tight line-clamp-2 min-h-[32px]">
                               {item.name || item.molecule}
                             </h4>
                           </div>
@@ -292,7 +306,7 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-extrabold text-slate-800 text-[11px] sm:text-[15px] truncate uppercase tracking-tight group-hover:text-primary transition-colors leading-tight">
+                        <h4 className="font-extrabold text-slate-900 text-[11px] sm:text-[15px] uppercase tracking-tight group-hover:text-primary transition-colors leading-tight line-clamp-2">
                           {item.name}
                         </h4>
                         <div className="flex items-center gap-2 mt-1">
@@ -333,7 +347,7 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
             {/* Categories Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Top Categories</h3>
+                <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Top Categories</h3>
                 <button onClick={() => { router.push('/categories'); onClose(); }} className="text-[9px] font-black text-primary uppercase tracking-widest">See All</button>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
@@ -365,7 +379,7 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
 
             {/* Most Searched Brands */}
             <div className="space-y-4">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Most Searched Brands</h3>
+              <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Most Searched Brands</h3>
               <div className="flex flex-wrap gap-2">
                 {mostSearchedMeds.slice(0, 8).map((med, idx) => (
                   <button 
@@ -385,7 +399,7 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
 
             {/* Most Searched Salts (Molecules) */}
             <div className="space-y-4">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Most Searched Molecules</h3>
+              <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Most Searched Molecules</h3>
               <div className="flex flex-wrap gap-2">
                 {mostSearchedSalts.slice(0, 8).map((salt, idx) => (
                   <button 

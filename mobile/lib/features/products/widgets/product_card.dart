@@ -192,12 +192,12 @@ class SahimedProductCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
       
-                      // Slot 2: Name Slot (Fixed 2 lines)
+                      // Slot 2: Name Slot (Fixed 3 lines)
                       SizedBox(
-                        height: 26,
+                        height: 39,
                         child: Text(
                           product.name.toUpperCase(),
-                          maxLines: 2,
+                          maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.outfit(
                             fontSize: 10,
@@ -236,7 +236,7 @@ class SahimedProductCard extends StatelessWidget {
                                 style: GoogleFonts.outfit(
                                   fontSize: 7,
                                   fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF94A3B8),
+                                  color: const Color(0xFF64748B),
                                   letterSpacing: 0.3,
                                 ),
                               )
@@ -264,7 +264,7 @@ class SahimedProductCard extends StatelessWidget {
                               style: GoogleFonts.outfit(
                                 fontSize: 8,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF94A3B8),
+                                color: const Color(0xFF64748B),
                                 decoration: TextDecoration.lineThrough,
                               ),
                             ),
@@ -317,21 +317,65 @@ class SahimedProductCard extends StatelessWidget {
                     ),
                   ] : [],
                 ),
-                child: Center(
-                  child: Text(
-                    product.availableQuantity <= 0 
-                        ? 'NOTIFY ME' 
-                        : (qty > 0 ? 'ADDED ($qty)' : 'ADD TO CART'),
-                    style: GoogleFonts.outfit(
-                      fontSize: 8,
-                      fontWeight: FontWeight.w900,
-                      color: product.availableQuantity > 0 
-                          ? Colors.white 
-                          : const Color(0xFFE11D48),
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
+                child: qty > 0 && product.availableQuantity > 0
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              context.read<CartProvider>().updateQuantity(product.id, qty - 1);
+                            },
+                            child: Container(
+                              width: 32,
+                              height: 28,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFE2E8F0),
+                                borderRadius: BorderRadius.horizontal(left: Radius.circular(8)),
+                              ),
+                              child: const Icon(Icons.remove, size: 14, color: Color(0xFF475569)),
+                            ),
+                          ),
+                          Text(
+                            '$qty',
+                            style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              context.read<CartProvider>().addItem(product);
+                            },
+                            child: Container(
+                              width: 32,
+                              height: 28,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFE2E8F0),
+                                borderRadius: BorderRadius.horizontal(right: Radius.circular(8)),
+                              ),
+                              child: const Icon(Icons.add, size: 14, color: Color(0xFF475569)),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Center(
+                        child: Text(
+                          product.availableQuantity <= 0 
+                              ? 'NOTIFY ME' 
+                              : 'ADD TO CART',
+                          style: GoogleFonts.outfit(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                            color: product.availableQuantity > 0 
+                                ? Colors.white 
+                                : const Color(0xFFE11D48),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
               ),
             ),
           ),

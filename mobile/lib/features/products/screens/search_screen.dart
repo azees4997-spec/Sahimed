@@ -12,6 +12,7 @@ import '../../../core/services/api_service.dart';
 import 'product_detail_screen.dart';
 import '../../../shared/models/models.dart';
 import '../widgets/product_card.dart';
+import '../../home/widgets/home_header.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -39,6 +40,7 @@ class _SearchScreenState extends State<SearchScreen> {
   String? _selectedCategory;
   bool _isGenericOnly = false;
   bool _isBestSellerOnly = false;
+  bool _isSuggestionsDismissed = false;
 
 
   @override
@@ -108,6 +110,7 @@ class _SearchScreenState extends State<SearchScreen> {
           _currentQuery = query;
           _showSmartBanner = false;
           _smartAlternative = null;
+          _isSuggestionsDismissed = false;
         });
         
         if (query.length >= 2) {
@@ -198,6 +201,7 @@ class _SearchScreenState extends State<SearchScreen> {
           children: [
             Column(
               children: [
+                const HomeHeader(),
                 _buildSearchHeader(canPop),
                 // Filter Chips (Website Parity)
                 if (_results.isNotEmpty || _currentQuery.isNotEmpty)
@@ -220,7 +224,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                       
                       // SUGGESTIONS OVERLAY - Now actually integrated!
-                      if (_currentQuery.isNotEmpty && (_results.isNotEmpty || _moleculeResults.isNotEmpty))
+                      if (_currentQuery.isNotEmpty && (_results.isNotEmpty || _moleculeResults.isNotEmpty) && !_isSuggestionsDismissed)
                         _buildSuggestionsOverlay(),
                     ],
                   ),
@@ -297,10 +301,10 @@ class _SearchScreenState extends State<SearchScreen> {
                               Text(
                                 'MOLECULES',
                                 style: GoogleFonts.outfit(
-                                  fontSize: 10,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF94A3B8),
-                                  letterSpacing: 2,
+                                  color: const Color(0xFF475569),
+                                  letterSpacing: 2.5,
                                 ),
                               ),
                             ],
@@ -332,12 +336,13 @@ class _SearchScreenState extends State<SearchScreen> {
                                   title: Text(
                                     name.toUpperCase(),
                                     style: GoogleFonts.outfit(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF334155),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF0F172A),
+                                      height: 1.2,
                                     ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 3,
+                                    overflow: TextOverflow.visible,
                                   ),
                                   onTap: () {
                                     HapticFeedback.lightImpact();
@@ -380,10 +385,10 @@ class _SearchScreenState extends State<SearchScreen> {
                               Text(
                                 'BRANDS',
                                 style: GoogleFonts.outfit(
-                                  fontSize: 10,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF94A3B8),
-                                  letterSpacing: 2,
+                                  color: const Color(0xFF475569),
+                                  letterSpacing: 2.5,
                                 ),
                               ),
                             ],
@@ -413,19 +418,20 @@ class _SearchScreenState extends State<SearchScreen> {
                                   title: Text(
                                     prod.name.toUpperCase(),
                                     style: GoogleFonts.outfit(
-                                      fontSize: 12,
+                                      fontSize: 13,
                                       fontWeight: FontWeight.w900,
                                       color: SahimedColors.primary,
+                                      height: 1.2,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 3,
+                                    overflow: TextOverflow.visible,
                                   ),
                                   subtitle: Text(
                                     '₹${prod.price}',
                                     style: GoogleFonts.inter(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
-                                      color: const Color(0xFF64748B),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF1E293B),
                                     ),
                                   ),
                                   onTap: () {
@@ -527,10 +533,13 @@ class _SearchScreenState extends State<SearchScreen> {
                       onSubmitted: (value) {
                         if (value.trim().isNotEmpty) {
                           _performSearch(value.trim());
+                          setState(() {
+                            _isSuggestionsDismissed = true;
+                          });
                         }
                       },
                       decoration: InputDecoration(
-                        hintText: 'Search medicines or salts...',
+                        hintText: 'Search by Brand or Salt',
                         hintStyle: GoogleFonts.outfit(
                           fontSize: 15,
                           color: const Color(0xFF94A3B8),
@@ -547,23 +556,31 @@ class _SearchScreenState extends State<SearchScreen> {
                         HapticFeedback.selectionClick();
                         _searchController.clear();
                         setState(() {
-                          _results = [];
-                          _moleculeResults = [];
+                          _isSuggestionsDismissed = false;
+                        });
+                      },
+                      child: const Icon(LucideIcons.x, size: 16, color: Color(0xFF94A3B8)),
+                    ),
+                  if (_currentQuery.isNotEmpty) ...[
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.heavyImpact();
+                        _performSearch(_currentQuery);
+                        setState(() {
+                          _isSuggestionsDismissed = true;
                         });
                       },
                       child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFCBD5E1),
-                          shape: BoxShape.circle,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: SahimedColors.primary,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(
-                          Icons.close,
-                          size: 14,
-                          color: Colors.white,
-                        ),
+                        child: const Icon(LucideIcons.arrowRight, size: 16, color: Colors.white),
                       ),
                     ),
+                  ],
                 ],
               ),
             ),
@@ -572,6 +589,7 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
     );
   }
+
 
   Widget _buildFilterBar() {
     final filters = [
