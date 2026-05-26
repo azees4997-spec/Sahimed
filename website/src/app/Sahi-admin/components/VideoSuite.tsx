@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useFirestore } from '@/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export function VideoSuite() {
   const [topic, setTopic] = useState('');
@@ -115,25 +115,42 @@ export function VideoSuite() {
   ];
 
   const handleStartMission = async () => {
-    if (!topic) return;
+    if (!topic || !db) return;
     setIsProcessing(true);
     setCurrentStep(0);
     setMissionId(null);
     setMissionData(null);
 
     try {
+      // 1. Create Mission on Client Side (Guarantees document visibility)
+      const missionRef = await addDoc(collection(db, 'marketing_missions'), {
+        topic,
+        status: 'initializing',
+        progress: 5,
+        currentStep: 0,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        logs: [{ stage: 'system', message: 'Mission Initialized on Client', timestamp: new Date().toISOString() }]
+      });
+      
+      const newMissionId = missionRef.id;
+      setMissionId(newMissionId);
+
+      // 2. Trigger Background Processing
       const res = await fetch('/api/marketing/video/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic })
+        body: JSON.stringify({ topic, missionId: newMissionId })
       });
+      
       const data = await res.json();
-      if (data.missionId) {
-        setMissionId(data.missionId);
+      if (!data.success) {
+        throw new Error(data.error || "Failed to start processing");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Mission start failed", err);
       setIsProcessing(false);
+      setMissionData({ status: 'error', errorMessage: err.message });
     }
   };
 
@@ -186,6 +203,41 @@ export function VideoSuite() {
         </CardContent>
       </Card>
 
+      {/* Real-time Progress Bar */}
+      <AnimatePresence>
+        {isProcessing && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-4"
+          >
+            <div className="flex justify-between items-end">
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-tighter text-slate-900">Mission Progress</h3>
+                <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mt-1 animate-pulse">
+                  {missionData?.status?.toUpperCase() || 'INITIALIZING'} CHAIN ACTIVE
+                </p>
+              </div>
+              <p className="text-2xl font-black text-slate-900 font-outfit">
+                {missionData?.progress || 0}%
+              </p>
+            </div>
+            
+            <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden p-1 shadow-inner border border-slate-200/50">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${missionData?.progress || 0}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="h-full bg-gradient-to-r from-primary to-blue-400 rounded-full shadow-[0_0_20px_rgba(46,91,255,0.4)] relative"
+              >
+                <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent)] bg-[length:20px_20px] animate-[progress-stripe_2s_linear_infinite]" />
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Error State */}
       <AnimatePresence>
         {missionData?.status === 'error' && (
@@ -237,18 +289,33 @@ export function VideoSuite() {
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{agent.role}</p>
                 </CardHeader>
                 <CardContent className="p-8 pt-0 flex-1 flex flex-col justify-between">
-                  <p className="text-[10px] font-medium text-slate-500 leading-relaxed text-center">
-                    {agent.desc}
-                  </p>
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-medium text-slate-500 leading-relaxed text-center">
+                      {agent.desc}
+                    </p>
+                    
+                    {/* Live Agent Feed */}
+                    {isActive && (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="py-2 px-3 bg-slate-50 rounded-xl border border-slate-100"
+                      >
+                        <p className="text-[8px] font-black text-primary uppercase tracking-widest text-center animate-pulse">
+                          {missionData?.logs?.[missionData.logs.length - 1]?.message || 'Agent Thinking...'}
+                        </p>
+                      </motion.div>
+                    )}
+                  </div>
                   
                   <div className="mt-6 flex flex-col items-center">
                     {isActive ? (
                       <div className="flex flex-col items-center gap-2">
                         <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                        <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">Processing...</span>
+                        <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">Live Operation...</span>
                       </div>
                     ) : isCompleted ? (
-                      <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                      <CheckCircle2 className="w-6 h-6 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]" />
                     ) : (
                       <div className="w-2 h-2 rounded-full bg-slate-200" />
                     )}
