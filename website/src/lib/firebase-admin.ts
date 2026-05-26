@@ -8,18 +8,20 @@ export function getFirebaseAdmin() {
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
   // STRATEGY: Try to initialize without explicit keys first (GCP/Firebase App Hosting)
-  // Only attempt automatic init if we have at least the Project ID or we are NOT in build phase
   try {
     if (!projectId && !clientEmail && !privateKey) {
-      // In Vercel/Next build phase, admin.initializeApp() without args often fails cryptically
+      // If we are in build phase, don't try to init as it might fail
       if (process.env.NEXT_PHASE === 'phase-production-build') {
-        console.warn("[Firebase Admin] Build phase detected without credentials. Skipping automatic init.");
         return null;
       }
-      return admin.initializeApp();
+      // Fallback to the known Project ID from config if env is missing
+      return admin.initializeApp({
+        projectId: "studio-9756314138-8403b"
+      });
     }
   } catch (e) {
-    // Automatic init failed
+    // If already initialized or failed, move on
+    if (admin.apps.length > 0) return admin.apps[0];
   }
 
   // Fallback: Check for explicit keys
