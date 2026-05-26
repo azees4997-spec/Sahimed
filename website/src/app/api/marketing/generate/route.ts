@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     
     // OPTIMIZATION: Use gemini-1.5-flash directly to reduce costs (Flash is ~50x cheaper than Pro)
     // and removed the expensive verification "hi" loop.
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1" });
 
     const prompt = `
       You are an expert Health Content Marketer and SEO specialist for "Sahimed", an Indian online pharmacy.

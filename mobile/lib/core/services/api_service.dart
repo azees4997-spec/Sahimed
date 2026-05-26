@@ -144,6 +144,44 @@ class ApiService {
     return [];
   }
 
+  Future<ProductModel?> getProductById(String id) async {
+    final cacheKey = 'product_by_id_$id';
+    final cached = _getCached(cacheKey);
+    if (cached != null) return cached as ProductModel;
+
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/products/$id'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final product = ProductModel.fromJson(data);
+        _setCache(cacheKey, product);
+        return product;
+      }
+    } catch (e) {
+      debugPrint('Error fetching product by ID: $e');
+    }
+    return null;
+  }
+
+  Future<CategoryModel?> getCategoryByName(String name) async {
+    final cacheKey = 'category_by_name_${name.toLowerCase()}';
+    final cached = _getCached(cacheKey);
+    if (cached != null) return cached as CategoryModel;
+
+    try {
+      final categories = await getCategories();
+      final category = categories.firstWhere(
+        (c) => c.name.toLowerCase() == name.toLowerCase(),
+        orElse: () => throw Exception('Category not found'),
+      );
+      _setCache(cacheKey, category);
+      return category;
+    } catch (e) {
+      debugPrint('Error finding category by name: $e');
+    }
+    return null;
+  }
+
   Future<ProductModel?> getGenericAlternative(String moleculeId) async {
     final cacheKey = 'generic_$moleculeId';
     final cached = _getCached(cacheKey);

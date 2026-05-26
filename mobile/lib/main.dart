@@ -14,11 +14,15 @@ import 'core/layout/main_layout.dart';
 import 'core/widgets/global_error_handler.dart';
 import 'core/services/reminder_service.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/deep_link_service.dart';
 import 'package:in_app_update/in_app_update.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ReminderService.init();
+  DeepLinkService().init();
 
   try {
     if (Firebase.apps.isEmpty) {
@@ -124,6 +128,7 @@ class _SahimedAppState extends State<SahimedApp> {
           ChangeNotifierProvider(create: (_) => NavigationProvider()),
         ],
         child: MaterialApp(
+          navigatorKey: navigatorKey,
           title: 'Sahimed',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(

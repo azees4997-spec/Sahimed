@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     if (!key) return NextResponse.json({ error: "Gemini API key missing" }, { status: 500 });
 
     const genAI = new GoogleGenerativeAI(key);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1" });
 
     // 1. Create Mission (Server Side - Bypasses Rules)
     const missionRef = await db.collection('marketing_missions').add({
