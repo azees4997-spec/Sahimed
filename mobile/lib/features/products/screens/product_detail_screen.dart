@@ -812,7 +812,7 @@ class _ComparisonCard extends StatelessWidget {
           // Quality row
           const _FeatureRow(
             text: 'FDA APPROVED',
-            icon: LucideIcons.checkCircle,
+            icon: LucideIcons.circleCheck,
           ),
 
           // Salt row
@@ -1011,7 +1011,7 @@ class _ComparisonCard extends StatelessWidget {
           ),
           padding: const EdgeInsets.all(24),
           child: CachedNetworkImage(
-            imageUrl: widget.product.imageUrl,
+            imageUrl: product.imageUrl,
             fit: BoxFit.contain,
             errorWidget: (c, u, e) => const Icon(
               LucideIcons.pill,

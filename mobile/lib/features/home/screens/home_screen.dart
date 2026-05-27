@@ -6,9 +6,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/colors.dart';
 
 import '../../../core/services/api_service.dart';
+import '../../../core/providers/navigation_provider.dart';
 import '../../../core/services/permission_service.dart';
 import '../../../shared/models/models.dart';
 

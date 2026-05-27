@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../features/home/widgets/home_header.dart';
 import '../../features/products/screens/search_screen.dart';
-import '../theme/colors.dart';
+import '../../core/theme/colors.dart';
 
 class SahimedTopNav extends StatelessWidget {
   final bool showSearch;

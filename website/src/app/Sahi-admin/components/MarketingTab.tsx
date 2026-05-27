@@ -3,41 +3,39 @@
 import { useState, useEffect } from 'react';
 import { 
   Rocket, 
-  Search, 
-  TrendingUp, 
   Plus, 
   Trash2, 
   ExternalLink, 
   Loader2, 
-  Sparkles, 
   Globe,
-  FileText
+  FileText,
+  Save,
+  Settings,
+  Edit2
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import { VideoSuite } from './VideoSuite';
+import { cn, generateSlug } from '@/lib/utils';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription 
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 export function MarketingTab({ onBack }: { onBack: () => void }) {
   const { toast } = useToast();
   const [contents, setContents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [viewMode, setViewMode] = useState<'blog' | 'video'>('blog');
-  const [currentStep, setCurrentStep] = useState(0);
-  const [topic, setTopic] = useState('');
-  const [previewData, setPreviewData] = useState<any>(null);
-  const [config, setConfig] = useState({ isAiConfigured: true, isDbConfigured: true });
-
-  const generationSteps = [
-    { label: 'Initializing Gemini AI Engine', icon: Sparkles },
-    { label: 'Analyzing Trending Health Topics in India', icon: Search },
-    { label: 'Researching Clinical Data & Symptoms', icon: FileText },
-    { label: 'Drafting SEO-Optimized Article', icon: TrendingUp },
-    { label: 'Finalizing & Syncing with MongoDB', icon: Rocket }
-  ];
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingBlog, setEditingBlog] = useState<any | null>(null);
+  const [config, setConfig] = useState({ isDbConfigured: true });
 
   const fetchContent = async () => {
     setIsLoading(true);
@@ -57,56 +55,10 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
     fetchContent();
   }, []);
 
-  const handleGenerate = async () => {
-    if (!topic) return;
-    setIsGenerating(true);
-    setCurrentStep(0);
-    setPreviewData(null);
-    
-    const stepInterval = setInterval(() => {
-      setCurrentStep(prev => (prev < generationSteps.length - 1 ? prev + 1 : prev));
-    }, 4000);
-
-    try {
-      const res = await fetch('/api/marketing/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, category: 'Trending Health' })
-      });
-      
-      const result = await res.json();
-      
-      if (res.ok && result.success) {
-        clearInterval(stepInterval);
-        setCurrentStep(generationSteps.length - 1);
-        
-        // Show the preview immediately
-        setPreviewData(result.data);
-        
-        if (result.warning) {
-          toast({ variant: 'destructive', title: 'DB Sync Warning', description: result.warning });
-        } else {
-          toast({ title: 'Success', description: 'Blog generated and stored in MongoDB' });
-        }
-
-        setTopic('');
-        setIsGenerating(false);
-        fetchContent();
-      } else {
-        throw new Error(result.error || result.message || 'Generation failed');
-      }
-    } catch (err: any) {
-      clearInterval(stepInterval);
-      toast({ 
-        variant: 'destructive', 
-        title: 'Gen Error', 
-        description: err.message || 'AI failed to complete the task' 
-      });
-      setIsGenerating(false);
-    }
-  };
-
   const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to permanently delete this blog post?")) {
+      return;
+    }
     try {
       const res = await fetch('/api/marketing/content', {
         method: 'DELETE',
@@ -130,211 +82,37 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
           <Button variant="ghost" onClick={onBack} className="mb-4 text-slate-400 font-black tracking-widest text-[10px] uppercase gap-2">
             ← Back to Fleet
           </Button>
-          <h2 className="text-5xl font-black tracking-tighter text-slate-900 uppercase font-outfit">Marketing Hub</h2>
-          <p className="text-[10px] font-black tracking-[0.4em] text-primary uppercase mt-2">AI-Driven Content & Video Suite</p>
+          <h2 className="text-5xl font-black tracking-tighter text-slate-900 uppercase font-outfit">SEO Blog Hub</h2>
+          <p className="text-[10px] font-black tracking-[0.4em] text-primary uppercase mt-2">Manage Blog Articles & SEO Resources</p>
         </div>
         
-        <div className="flex gap-4">
-          <div className="flex bg-slate-100 p-2 rounded-[24px] gap-2">
-            <Button 
-              onClick={() => setViewMode('blog')}
-              className={cn(
-                "rounded-full px-6 font-black uppercase text-[10px] transition-all",
-                viewMode === 'blog' ? "bg-white text-primary shadow-lg" : "bg-transparent text-slate-400 hover:text-slate-600"
-              )}
-            >
-              SEO Blogs
-            </Button>
-            <Button 
-              onClick={() => setViewMode('video')}
-              className={cn(
-                "rounded-full px-6 font-black uppercase text-[10px] transition-all",
-                viewMode === 'video' ? "bg-white text-primary shadow-lg" : "bg-transparent text-slate-400 hover:text-slate-600"
-              )}
-            >
-              Video Suite
-            </Button>
-          </div>
+        <div>
+          <Button 
+            onClick={() => { setEditingBlog(null); setIsFormOpen(true); }} 
+            className="rounded-full h-14 px-10 font-black text-[10px] bg-primary text-white shadow-2xl shadow-primary/30 uppercase tracking-widest hover:scale-105 transition-all border-4 border-white active:scale-95"
+          >
+            <Plus className="w-5 h-5 mr-3" /> Create Blog Post
+          </Button>
         </div>
       </div>
 
-      {viewMode === 'blog' ? (
-        <>
-          {/* Generation Tool */}
-          <Card className="rounded-[40px] border-none shadow-3xl bg-white/50 backdrop-blur-xl border border-white overflow-hidden">
-            <CardHeader className="p-10 pb-0">
-              <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
-                <Sparkles className="w-6 h-6 text-yellow-500" />
-                SEO Blog Agent
-              </CardTitle>
-          <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase">Target trending topics in India</p>
-
-          {/* Cloud Config Warning */}
-          <AnimatePresence>
-            {!isLoading && (!config.isAiConfigured || !config.isDbConfigured) && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-6 p-6 bg-amber-50 rounded-[32px] border border-amber-100 flex gap-4 items-start"
-              >
-                <div className="h-10 w-10 bg-amber-500 rounded-xl flex items-center justify-center shrink-0">
-                  <Globe className="text-white w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-[10px] font-black text-amber-900 uppercase tracking-widest mb-1">Cloud Sync Required</h4>
-                  <p className="text-[10px] font-medium text-amber-700 leading-relaxed">
-                    {!config.isAiConfigured && (
-                      <>It looks like your <span className="font-black">GEMINI_API_KEY</span> is missing. </>
-                    )}
-                    {!config.isDbConfigured && (
-                      <>Your <span className="font-black">MONGODB_URI</span> is not set. </>
-                    )}
-                    Go to <span className="font-black italic text-primary underline">Settings &gt; Environment Variables</span> in Vercel to fix this.
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </CardHeader>
-        <CardContent className="p-10 space-y-8">
-          <div className="flex flex-col md:flex-row gap-4">
-            <input 
-              type="text" 
-              placeholder="e.g. Health benefits of Ashwagandha or Delhi Pollution Precautions"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              disabled={isGenerating}
-              className="flex-1 h-20 bg-slate-100/50 rounded-[24px] px-8 font-black outline-none focus:bg-white focus:ring-4 ring-primary/5 transition-all text-sm disabled:opacity-50"
-            />
-            <Button 
-              onClick={handleGenerate} 
-              disabled={isGenerating || !topic}
-              className="h-20 px-10 rounded-full bg-primary font-black uppercase tracking-widest text-xs gap-3 shadow-2xl shadow-primary/30 active:scale-95 transition-all"
-            >
-              {isGenerating ? <Loader2 className="animate-spin" /> : <TrendingUp className="w-5 h-5" />}
-              Generate SEO Article
-            </Button>
-          </div>
-
-          <AnimatePresence>
-            {isGenerating && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-4 pt-4"
-              >
-                <div className="flex justify-between items-end mb-2">
-                   <p className="text-[10px] font-black text-primary tracking-[0.2em] uppercase">AI Mission Progress</p>
-                   <p className="text-[10px] font-black text-slate-300 uppercase">{Math.round(((currentStep + 1) / generationSteps.length) * 100)}% Complete</p>
-                </div>
-                
-                {/* Progress Bar */}
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${((currentStep + 1) / generationSteps.length) * 100}%` }}
-                    className="h-full bg-primary shadow-[0_0_15px_rgba(46,91,255,0.5)]"
-                  />
-                </div>
-
-                {/* Steps List */}
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 pt-4">
-                  {generationSteps.map((step, idx) => {
-                    const Icon = step.icon;
-                    const isActive = idx === currentStep;
-                    const isCompleted = idx < currentStep;
-                    
-                    return (
-                      <div 
-                        key={idx} 
-                        className={cn(
-                          "flex flex-col items-center text-center gap-3 transition-all duration-500",
-                          isActive ? "opacity-100 scale-105" : isCompleted ? "opacity-50" : "opacity-20"
-                        )}
-                      >
-                        <div className={cn(
-                          "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
-                          isActive ? "bg-primary text-white shadow-lg" : isCompleted ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"
-                        )}>
-                           {isCompleted ? <Plus className="w-5 h-5 rotate-45" /> : <Icon className={cn("w-5 h-5", isActive && "animate-pulse")} />}
-                        </div>
-                        <p className={cn(
-                          "text-[8px] font-black tracking-widest uppercase leading-tight px-2",
-                          isActive ? "text-slate-900" : "text-slate-400"
-                        )}>
-                          {step.label}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </CardContent>
-      </Card>
-
-      {/* Live Preview Modal */}
+      {/* Cloud Config Warning */}
       <AnimatePresence>
-        {previewData && (
+        {!isLoading && !config.isDbConfigured && (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-6 bg-amber-50 rounded-[32px] border border-amber-100 flex gap-4 items-start"
           >
-            <motion.div 
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              className="bg-white w-full max-w-4xl max-h-[85vh] rounded-[56px] shadow-4xl overflow-hidden flex flex-col"
-            >
-              <div className="p-10 bg-primary text-white flex justify-between items-center">
-                <div>
-                  <p className="text-[10px] font-black tracking-[0.4em] uppercase opacity-60 mb-1">AI Mission Accomplished</p>
-                  <h3 className="text-2xl font-black uppercase tracking-tighter">Draft Review</h3>
-                </div>
-                <Button 
-                  onClick={() => setPreviewData(null)}
-                  className="rounded-full h-12 w-12 bg-white/10 hover:bg-white/20 text-white border-none"
-                >
-                  <Plus className="rotate-45" />
-                </Button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-12 space-y-8 scrollbar-hide">
-                <div className="space-y-4">
-                  <h1 className="text-4xl font-black tracking-tighter uppercase text-slate-900 leading-none">{previewData.title}</h1>
-                  <div className="flex gap-4 items-center">
-                    <span className="text-[10px] font-black text-primary bg-primary/5 px-4 py-2 rounded-full uppercase tracking-widest border border-primary/10">Slug: /{previewData.slug}</span>
-                    <div className="flex gap-2">
-                      {previewData.keywords?.map((k: string) => (
-                        <span key={k} className="text-[8px] font-black text-slate-400 uppercase tracking-widest">#{k}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div 
-                  className="prose prose-slate max-w-none prose-h2:text-xl prose-h2:font-black prose-h2:uppercase prose-h2:tracking-tight prose-p:text-slate-600 prose-p:font-medium prose-p:leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: previewData.content }}
-                />
-              </div>
-
-              <div className="p-8 border-t border-slate-50 bg-slate-50/50 flex justify-between items-center">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Article Length: ~1200 words</p>
-                <div className="flex items-center gap-3">
-                  <Button variant="outline" className="rounded-2xl h-12 px-6 font-bold uppercase tracking-tight" onClick={() => setPreviewData(null)}>
-                    Close Preview
-                  </Button>
-                  <Button 
-                    className="bg-primary hover:bg-blue-600 rounded-2xl h-12 px-8 font-black uppercase tracking-tight shadow-lg shadow-primary/20"
-                    onClick={() => window.open(`/blog/${previewData.slug}`, '_blank')}
-                  >
-                    View Live Blog
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
+            <div className="h-10 w-10 bg-amber-500 rounded-xl flex items-center justify-center shrink-0">
+              <Globe className="text-white w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-[10px] font-black text-amber-900 uppercase tracking-widest mb-1">Cloud Sync Required</h4>
+              <p className="text-[10px] font-medium text-amber-700 leading-relaxed">
+                Your <span className="font-black">MONGODB_URI</span> is not set. Go to <span className="font-black italic text-primary underline">Settings &gt; Environment Variables</span> in Vercel to fix this.
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -368,6 +146,9 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
                         <div className="flex items-center gap-2">
                           <span className="px-3 py-1 bg-primary/10 text-primary text-[8px] font-black rounded-full uppercase tracking-widest">
                             {item.category}
+                          </span>
+                          <span className="px-3 py-1 bg-slate-100 text-slate-600 text-[8px] font-black rounded-full uppercase tracking-widest">
+                            {item.status || 'draft'}
                           </span>
                           <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">
                             {new Date(item.createdAt).toLocaleDateString()}
@@ -404,8 +185,12 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
                          <Globe className="w-4 h-4" />
                          <span className="text-[10px] font-black uppercase tracking-widest">/{item.slug}</span>
                       </div>
-                      <Button variant="outline" className="rounded-full border-2 border-slate-50 text-[10px] font-black uppercase tracking-widest gap-2 hover:bg-primary hover:text-white hover:border-primary transition-all">
-                        Edit Draft <ExternalLink className="w-3 h-3" />
+                      <Button 
+                        variant="outline" 
+                        onClick={() => { setEditingBlog(item); setIsFormOpen(true); }}
+                        className="rounded-full border-2 border-slate-50 text-[10px] font-black uppercase tracking-widest gap-2 hover:bg-primary hover:text-white hover:border-primary transition-all"
+                      >
+                        Edit Post <Edit2 className="w-3 h-3" />
                       </Button>
                     </div>
                   </CardContent>
@@ -415,10 +200,249 @@ export function MarketingTab({ onBack }: { onBack: () => void }) {
           )}
         </AnimatePresence>
       </div>
-    </>
-  ) : (
-    <VideoSuite />
-  )}
-</div>
+
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[48px] border-none p-0 overflow-hidden shadow-4xl max-w-2xl bg-white max-h-[90vh] flex flex-col">
+          <DialogHeader className="bg-primary p-8 text-white relative shrink-0 space-y-2">
+            <div className="absolute top-0 right-0 p-6 opacity-10">
+              <Settings className="w-20 h-20" />
+            </div>
+            <DialogTitle className="text-2xl font-black font-outfit uppercase tracking-tighter text-white">
+              {editingBlog ? 'Edit Blog Post' : 'New Blog Post'}
+            </DialogTitle>
+            <DialogDescription className="text-xs font-black text-white/60 tracking-widest uppercase">
+              Publish authentic articles to public domain
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto">
+            <BlogEditor 
+              initialData={editingBlog} 
+              onSuccess={() => {
+                setIsFormOpen(false);
+                fetchContent();
+              }} 
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function BlogEditor({ 
+  initialData, 
+  onSuccess 
+}: { 
+  initialData?: any; 
+  onSuccess: () => void; 
+}) {
+  const { toast } = useToast();
+  const [form, setForm] = useState({
+    title: initialData?.title || '',
+    slug: initialData?.slug || '',
+    category: initialData?.category || 'General Health',
+    excerpt: initialData?.excerpt || '',
+    content: initialData?.content || '',
+    keywordsText: initialData?.keywords?.join(', ') || '',
+    imagesText: initialData?.images?.join('\n') || '',
+    videoLink: initialData?.videoLink || '',
+    attachmentsText: initialData?.attachments?.join('\n') || '',
+    status: initialData?.status || 'draft'
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.title || !form.slug) {
+      toast({ variant: 'destructive', title: 'Validation Error', description: 'Title and Slug are mandatory.' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const parsedKeywords = form.keywordsText
+        .split(/[,\n]/)
+        .map(k => k.trim())
+        .filter(k => k !== '');
+
+      const parsedImages = form.imagesText
+        .split('\n')
+        .map(url => url.trim())
+        .filter(url => url !== '');
+
+      const parsedAttachments = form.attachmentsText
+        .split('\n')
+        .map(url => url.trim())
+        .filter(url => url !== '');
+
+      const payload = {
+        id: initialData?._id,
+        title: form.title,
+        slug: form.slug,
+        category: form.category,
+        excerpt: form.excerpt,
+        content: form.content,
+        keywords: parsedKeywords,
+        images: parsedImages,
+        videoLink: form.videoLink,
+        attachments: parsedAttachments,
+        status: form.status
+      };
+
+      const res = await fetch('/api/marketing/content', {
+        method: initialData ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        toast({ title: 'Success', description: initialData ? 'Blog post updated' : 'Blog post created' });
+        onSuccess();
+      } else {
+        throw new Error(result.error || 'Failed to save blog');
+      }
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Error', description: err.message || 'Operation failed' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleTitleChange = (val: string) => {
+    setForm(prev => {
+      const next = { ...prev, title: val };
+      if (!initialData) {
+        next.slug = generateSlug(val);
+      }
+      return next;
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="p-8 space-y-6">
+      <div className="grid grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Blog Title</Label>
+          <Input 
+            placeholder="e.g. Health benefits of Ashwagandha" 
+            value={form.title} 
+            onChange={e => handleTitleChange(e.target.value)} 
+            className="h-14 rounded-2xl bg-slate-50 border-none font-bold" 
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Slug (URL)</Label>
+          <Input 
+            placeholder="e.g. health-benefits-ashwagandha" 
+            value={form.slug} 
+            onChange={e => setForm({...form, slug: generateSlug(e.target.value)})} 
+            disabled={!!initialData} 
+            className="h-14 rounded-2xl bg-slate-50 border-none font-bold disabled:opacity-50" 
+            required
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Category</Label>
+          <Input 
+            placeholder="e.g. Trending Health" 
+            value={form.category} 
+            onChange={e => setForm({...form, category: e.target.value})} 
+            className="h-14 rounded-2xl bg-slate-50 border-none font-bold" 
+          />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Publish Status</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {['draft', 'published'].map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setForm({...form, status: s})}
+                className={cn("h-14 rounded-2xl font-black text-[9px] uppercase tracking-widest transition-all border-2", 
+                  form.status === s ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-slate-50 text-slate-400 border-transparent hover:border-slate-200"
+                )}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Excerpt (SEO Summary / Meta Description)</Label>
+        <Textarea 
+          placeholder="Enter a brief, engaging summary of the post..." 
+          value={form.excerpt} 
+          onChange={e => setForm({...form, excerpt: e.target.value})}
+          className="min-h-[80px] rounded-2xl bg-slate-50 border-none font-medium p-4 leading-relaxed resize-none focus:ring-2 ring-primary/10" 
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Content (HTML or plain text from copy paste)</Label>
+        <Textarea 
+          placeholder="Paste or write your blog content here. You can use HTML tags (e.g. <p>, <h2>, <ul>) to structure your post." 
+          value={form.content} 
+          onChange={e => setForm({...form, content: e.target.value})}
+          className="min-h-[250px] rounded-2xl bg-slate-50 border-none font-medium p-6 leading-relaxed resize-none focus:ring-2 ring-primary/10" 
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Keywords (Comma or line separated)</Label>
+        <Textarea 
+          placeholder="e.g. ashwagandha, ayurveda, herbal health" 
+          value={form.keywordsText} 
+          onChange={e => setForm({...form, keywordsText: e.target.value})}
+          className="min-h-[60px] rounded-2xl bg-slate-50 border-none font-medium p-4 leading-relaxed resize-none focus:ring-2 ring-primary/10" 
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Images (Paste URLs, one per line)</Label>
+        <Textarea 
+          placeholder="e.g. https://example.com/image1.jpg&#10;https://example.com/image2.jpg" 
+          value={form.imagesText} 
+          onChange={e => setForm({...form, imagesText: e.target.value})}
+          className="min-h-[80px] rounded-2xl bg-slate-50 border-none font-medium p-4 leading-relaxed resize-none focus:ring-2 ring-primary/10" 
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Videos Link (YouTube, Vimeo, or direct MP4 URL)</Label>
+        <Input 
+          placeholder="e.g. https://www.youtube.com/watch?v=..." 
+          value={form.videoLink} 
+          onChange={e => setForm({...form, videoLink: e.target.value})}
+          className="h-14 rounded-2xl bg-slate-50 border-none font-bold" 
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Attachments (Paste URLs, one per line)</Label>
+        <Textarea 
+          placeholder="e.g. https://example.com/document.pdf" 
+          value={form.attachmentsText} 
+          onChange={e => setForm({...form, attachmentsText: e.target.value})}
+          className="min-h-[80px] rounded-2xl bg-slate-50 border-none font-medium p-4 leading-relaxed resize-none focus:ring-2 ring-primary/10" 
+        />
+      </div>
+
+      <Button 
+        type="submit" 
+        disabled={isSubmitting}
+        className="w-full h-16 rounded-full font-black text-xs tracking-[0.3em] bg-primary text-white shadow-2xl shadow-primary/30 uppercase hover:scale-[1.02] active:scale-95 transition-all"
+      >
+        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <Save className="w-5 h-5 mr-3" />}
+        {editingBlog ? 'Commit Changes' : 'Save Blog Post'}
+      </Button>
+    </form>
   );
 }

@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import clientPromise from '@/lib/mongodb';
 import Navbar from '@/components/Navbar';
-import { Sparkles, Calendar, User, Clock, Share2, ArrowLeft, Bookmark } from 'lucide-react';
+import { Sparkles, Calendar, User, Clock, Share2, ArrowLeft, Bookmark, Paperclip, FileText } from 'lucide-react';
 import { safeFormat } from '@/lib/safe-date';
 
 export const revalidate = 3600; // Cache for 1 hour
@@ -41,6 +41,62 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       authors: ['Sahimed Health Team'],
     }
   };
+}
+
+function renderVideoEmbed(url: string) {
+  if (!url) return null;
+  
+  // Check for YouTube
+  const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+  if (ytMatch) {
+    const videoId = ytMatch[1];
+    return (
+      <div className="my-12 aspect-video w-full overflow-hidden rounded-[32px] shadow-2xl border border-slate-100">
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}`}
+          title="YouTube video player"
+          className="w-full h-full border-none"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    );
+  }
+  
+  // Check for Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
+  if (vimeoMatch) {
+    const videoId = vimeoMatch[1];
+    return (
+      <div className="my-12 aspect-video w-full overflow-hidden rounded-[32px] shadow-2xl border border-slate-100">
+        <iframe
+          src={`https://player.vimeo.com/video/${videoId}`}
+          title="Vimeo video player"
+          className="w-full h-full border-none"
+          allowFullScreen
+        />
+      </div>
+    );
+  }
+
+  // Standard mp4 video player
+  if (url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.ogg')) {
+    return (
+      <div className="my-12 w-full overflow-hidden rounded-[32px] shadow-2xl border border-slate-100">
+        <video src={url} controls className="w-full" />
+      </div>
+    );
+  }
+
+  // Fallback: render link
+  return (
+    <div className="my-8 p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between">
+      <span className="text-sm font-bold text-slate-700 uppercase tracking-wider">Video Resource</span>
+      <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm font-black uppercase tracking-wider">
+        Watch Video
+      </a>
+    </div>
+  );
 }
 
 export default async function BlogPage({ params }: PageProps) {
@@ -125,6 +181,54 @@ export default async function BlogPage({ params }: PageProps) {
             prose-img:rounded-[32px] prose-img:shadow-2xl prose-img:border prose-img:border-slate-100"
           dangerouslySetInnerHTML={{ __html: blog.content }}
         />
+
+        {/* Images Gallery */}
+        {blog.images && blog.images.length > 0 && (
+          <div className="my-12 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {blog.images.map((imgUrl: string, idx: number) => (
+              <div key={idx} className="relative overflow-hidden rounded-[24px] shadow-lg border border-slate-100 group">
+                <img 
+                  src={imgUrl} 
+                  alt={`Blog image ${idx + 1}`} 
+                  className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500" 
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Video Embed */}
+        {blog.videoLink && renderVideoEmbed(blog.videoLink)}
+
+        {/* Attachments Section */}
+        {blog.attachments && blog.attachments.length > 0 && (
+          <div className="my-12 p-8 bg-slate-50 rounded-[32px] border border-slate-100">
+            <h4 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-4 flex items-center gap-2">
+              <Paperclip className="w-5 h-5 text-primary" />
+              Downloads & Attachments
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {blog.attachments.map((url: string, idx: number) => {
+                const fileName = url.substring(url.lastIndexOf('/') + 1) || `Document #${idx + 1}`;
+                return (
+                  <a 
+                    key={idx} 
+                    href={url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-slate-100 hover:border-primary hover:shadow-md transition-all group"
+                  >
+                    <FileText className="w-6 h-6 text-slate-400 group-hover:text-primary transition-colors" />
+                    <div className="overflow-hidden">
+                      <p className="text-sm font-bold text-slate-800 truncate uppercase group-hover:text-primary transition-colors">{fileName}</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Click to View</p>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Tags */}
         <div className="mt-20 pt-10 border-t border-slate-100 flex flex-wrap gap-2">

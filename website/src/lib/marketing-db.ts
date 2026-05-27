@@ -13,6 +13,9 @@ export interface SEOContent {
   status: 'draft' | 'published';
   views: number;
   featuredProducts: string[];
+  images?: string[];
+  videoLink?: string;
+  attachments?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +32,25 @@ export async function saveSEOContent(content: Omit<SEOContent, '_id' | 'createdA
     createdAt: now,
     updatedAt: now,
   });
+
+  return result;
+}
+
+export async function updateSEOContent(id: string, content: Partial<Omit<SEOContent, '_id' | 'createdAt' | 'updatedAt'>>) {
+  const client = await clientPromise;
+  const db = client.db('sahimed');
+  const collection = db.collection('seo_content');
+
+  const now = new Date();
+  const result = await collection.updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: {
+        ...content,
+        updatedAt: now
+      }
+    }
+  );
 
   return result;
 }

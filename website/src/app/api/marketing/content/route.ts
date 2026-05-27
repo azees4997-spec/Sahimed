@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSEOContent, deleteSEOContent } from '@/lib/marketing-db';
+import { getSEOContent, deleteSEOContent, saveSEOContent, updateSEOContent } from '@/lib/marketing-db';
 
 export async function GET(req: NextRequest) {
   try {
@@ -22,6 +22,64 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("FETCH_MARKETING_ERROR:", error);
     return NextResponse.json({ error: "Failed to fetch content" }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { title, slug, content, excerpt, keywords, category, images, videoLink, attachments } = body;
+    if (!title || !slug) {
+      return NextResponse.json({ error: "Title and slug are required" }, { status: 400 });
+    }
+
+    const saved = await saveSEOContent({
+      title,
+      slug,
+      content,
+      excerpt: excerpt || '',
+      keywords: keywords || [],
+      trendTopic: '',
+      category: category || 'General Health',
+      status: 'draft',
+      featuredProducts: [],
+      images: images || [],
+      videoLink: videoLink || '',
+      attachments: attachments || []
+    });
+
+    return NextResponse.json({ success: true, data: saved });
+  } catch (error: any) {
+    console.error("CREATE_BLOG_ERROR:", error);
+    return NextResponse.json({ error: error.message || "Failed to create content" }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, title, slug, content, excerpt, keywords, category, images, videoLink, attachments, status } = body;
+    if (!id || !title || !slug) {
+      return NextResponse.json({ error: "ID, title and slug are required" }, { status: 400 });
+    }
+
+    const updated = await updateSEOContent(id, {
+      title,
+      slug,
+      content,
+      excerpt: excerpt || '',
+      keywords: keywords || [],
+      category: category || 'General Health',
+      status: status || 'draft',
+      images: images || [],
+      videoLink: videoLink || '',
+      attachments: attachments || []
+    });
+
+    return NextResponse.json({ success: true, data: updated });
+  } catch (error: any) {
+    console.error("UPDATE_BLOG_ERROR:", error);
+    return NextResponse.json({ error: error.message || "Failed to update content" }, { status: 500 });
   }
 }
 
