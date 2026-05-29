@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'core/providers/cart_provider.dart';
 import 'core/providers/navigation_provider.dart';
 import 'features/auth/screens/splash_screen.dart';
@@ -21,6 +22,15 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // [120HZ] Request the highest supported refresh rate before the first frame.
+  // Uses flutter_displaymode package — gracefully handles devices that don't support high refresh.
+  try {
+    await FlutterDisplayMode.setHighRefreshRate();
+  } catch (_) {
+    // Non-critical — safe to ignore on unsupported devices
+  }
+
   await ReminderService.init();
   DeepLinkService().init();
 
@@ -131,6 +141,8 @@ class _SahimedAppState extends State<SahimedApp> {
           navigatorKey: navigatorKey,
           title: 'Sahimed',
           debugShowCheckedModeBanner: false,
+          // [120HZ] Apply bouncing physics & suppress Android overscroll glow app-wide
+          scrollBehavior: _SahimedScrollBehavior(),
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
@@ -166,3 +178,17 @@ class _SahimedAppState extends State<SahimedApp> {
   }
 }
 
+/// [120HZ] Global scroll behavior: smooth bouncing physics, no Android glow overscroll.
+class _SahimedScrollBehavior extends MaterialScrollBehavior {
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) =>
+      const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) =>
+      child; // Suppress Android glow — feels cleaner at high refresh rates
+}

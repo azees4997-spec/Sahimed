@@ -24,11 +24,13 @@ class MainLayout extends StatefulWidget {
 }
 
 class _MainLayoutState extends State<MainLayout> {
+  // [120HZ] Wrap each tab in RepaintBoundary — prevents inactive tabs from being
+  // invalidated when the active tab or nav bar repaints.
   final List<Widget> _screens = [
-    const HomeScreen(),
-    const CategoriesScreen(),
-    const CartScreen(),
-    const ProfileScreen(),
+    const RepaintBoundary(child: HomeScreen()),
+    const RepaintBoundary(child: CategoriesScreen()),
+    const RepaintBoundary(child: CartScreen()),
+    const RepaintBoundary(child: ProfileScreen()),
   ];
 
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
@@ -98,7 +100,7 @@ class _MainLayoutState extends State<MainLayout> {
                       left: 16,
                       right: 16,
                       child: _buildCartSummary(cart),
-                    ).animate().slideY(begin: 1, end: 0, curve: Curves.easeOutCubic, duration: 500.ms).fadeIn();
+                    ).animate().slideY(begin: 1, end: 0, curve: Curves.easeOutQuart, duration: 280.ms).fadeIn(duration: 200.ms);
                   }
                   return const SizedBox.shrink();
                 },
@@ -400,7 +402,8 @@ class _MainLayoutState extends State<MainLayout> {
                     ),
                   ),
                   AnimatedContainer(
-                    duration: 600.ms,
+                    duration: 280.ms,
+                    curve: Curves.easeOutQuart,
                     height: 4,
                     width: (MediaQuery.of(context).size.width - 64) * progress,
                     decoration: BoxDecoration(

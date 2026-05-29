@@ -522,16 +522,24 @@ class ApiService {
       };
 
       final headers = await _getHeaders();
+      // [ORDER FIX] 30-second timeout so slow connections don't hang silently
       final response = await http.post(
         Uri.parse('$baseUrl/orders'),
         headers: headers,
         body: json.encode(orderPayload),
-      );
+      ).timeout(const Duration(seconds: 30));
+
+      debugPrint('CREATE ORDER: status=${response.statusCode}');
+      if (kDebugMode) debugPrint('CREATE ORDER BODY: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);
-        clearCache(); // Invalidate cache after ordering to reflect new stock levels
-        return data['orderId'];
+        clearCache();
+        // [ORDER FIX] Accept multiple possible id field names from the server
+        final orderId = data['orderId'] ?? data['_id'] ?? data['id'];
+        return orderId?.toString();
+      } else {
+        debugPrint('CREATE ORDER FAILED ${response.statusCode}: ${response.body}');
       }
     } catch (e) {
       debugPrint('Error creating order: $e');

@@ -91,6 +91,11 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="order_updates" />
+
+        <!-- [120HZ] Disable post-processing (color enhancement etc.) to reduce display latency -->
+        <meta-data
+            android:name="android.max_aspect"
+            android:value="2.4" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

@@ -306,7 +306,8 @@ class OrderModel {
       'awbNumber': awbNumber,
       'carrierId': carrierId,
       'walletUsed': walletUsed,
-      'orderDate': {'_methodName': 'serverTimestamp'},
+      // [ORDER FIX] Use ISO timestamp — backend is REST/MongoDB, not Firestore
+      'orderDate': DateTime.now().toIso8601String(),
     };
   }
 

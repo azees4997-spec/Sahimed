@@ -133,6 +133,8 @@ class _HomeScreenState extends State<HomeScreen> {
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
+          // [120HZ] Pre-render 500px off-screen for seamless ahead-of-scroll loading
+          cacheExtent: 500,
           // BUG-01 FIX: Corrected all bracket nesting
           slivers: [
             const SliverToBoxAdapter(child: HomeHeader()),
@@ -418,7 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          child.animate().fadeIn(duration: 800.ms).slideY(begin: 0.05, curve: Curves.easeOutCubic),
+          child.animate().fadeIn(duration: 350.ms).slideY(begin: 0.05, curve: Curves.easeOutCubic),
         ],
       ),
     );
@@ -468,6 +470,9 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListView.separated(
         padding: const EdgeInsets.only(bottom: 10),
         scrollDirection: Axis.horizontal,
+        // [120HZ] Disable keep-alives for off-screen items; enable repaint boundaries
+        addAutomaticKeepAlives: false,
+        addRepaintBoundaries: true,
         itemCount: _bestSellers.length,
         separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (_, i) => SizedBox(width: 165, child: SahimedProductCard(product: _bestSellers[i])),
@@ -534,6 +539,8 @@ class _HomeScreenState extends State<HomeScreen> {
       height: 245,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
+        addAutomaticKeepAlives: false,
+        addRepaintBoundaries: true,
         itemCount: _medicines.length,
         separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (_, i) => SizedBox(width: 155, child: SahimedProductCard(product: _medicines[i])),
@@ -546,6 +553,8 @@ class _HomeScreenState extends State<HomeScreen> {
       height: 245,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
+        addAutomaticKeepAlives: false,
+        addRepaintBoundaries: true,
         itemCount: _topSelections.length,
         separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (_, i) => SizedBox(width: 155, child: SahimedProductCard(product: _topSelections[i])),
