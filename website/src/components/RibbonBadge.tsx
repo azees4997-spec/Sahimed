@@ -20,27 +20,65 @@ export default function RibbonBadge({
 }: RibbonBadgeProps) {
   if (savingsPct <= 0) return null;
 
-  // Branded Tag (Pink Luxury Coupon Ticket)
+  // Responsive dimensions & text sizes
+  const sizes = {
+    sm: {
+      width: '42px',
+      height: '56px',
+      saveText: 'text-[6px]',
+      pctText: 'text-[11px]',
+      offText: 'text-[6px]',
+      circleSize: '40px',
+      iconSize: 'w-2 h-2',
+      checkSize: 'w-1.5 h-1.5',
+      checkPadding: 'p-0.5',
+    },
+    md: {
+      width: '48px',
+      height: '66px',
+      saveText: 'text-[7px]',
+      pctText: 'text-[13px]',
+      offText: 'text-[7px]',
+      circleSize: '48px',
+      iconSize: 'w-2.5 h-2.5',
+      checkSize: 'w-2 h-2',
+      checkPadding: 'p-0.5',
+    },
+    lg: {
+      width: '58px',
+      height: '80px',
+      saveText: 'text-[8px]',
+      pctText: 'text-[16px]',
+      offText: 'text-[8px]',
+      circleSize: '58px',
+      iconSize: 'w-3 h-3',
+      checkSize: 'w-2.5 h-2.5',
+      checkPadding: 'p-1',
+    }
+  };
+
+  const s = sizes[size];
+
+  // 1. BRANDED DISCOUNT TAG (Premium Floating Shimmer Capsule)
   if (variant === 'primary') {
     return (
-      <div className={cn("absolute top-2 z-20 pointer-events-none drop-shadow-lg", className)}>
+      <div className={cn("absolute top-2 z-20 pointer-events-none drop-shadow-xl", className)}>
         <motion.div
           animate={{
-            y: [0, -4, 0],
+            y: [0, -3, 0],
           }}
           transition={{
             duration: 3,
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="relative flex flex-col items-center justify-between bg-gradient-to-b from-[#FF3B8E] via-[#FF0055] to-[#CC0044] text-white font-outfit border border-white/20 overflow-hidden shadow-[0_6px_16px_rgba(255,0,85,0.35)]"
+          className="relative flex flex-col items-center justify-between bg-gradient-to-b from-[#FF2E93] via-[#FF0055] to-[#D8004F] text-white font-outfit border border-white/25 shadow-[0_8px_16px_rgba(255,0,85,0.25)] rounded-[12px] overflow-hidden"
           style={{
-            borderRadius: '10px 10px 14px 14px',
-            width: size === 'sm' ? '38px' : size === 'md' ? '46px' : '56px',
-            height: size === 'sm' ? '52px' : size === 'md' ? '64px' : '78px',
+            width: s.width,
+            height: s.height,
           }}
         >
-          {/* Holographic Sheen Shimmer Sweep */}
+          {/* Holographic light reflection sweep */}
           <motion.div
             animate={{
               x: ['-200%', '200%'],
@@ -48,84 +86,83 @@ export default function RibbonBadge({
             transition={{
               duration: 2.5,
               repeat: Infinity,
-              repeatDelay: 2,
+              repeatDelay: 3,
               ease: "easeInOut",
             }}
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent skew-x-12 pointer-events-none"
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none"
           />
 
-          {/* Ticket Punch/Hole Cuts on Left and Right Edges */}
-          <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-4 bg-white rounded-full z-10 border-r border-slate-100" />
-          <div className="absolute right-[-4px] top-1/2 -translate-y-1/2 w-2 h-4 bg-white rounded-full z-10 border-l border-slate-100" />
+          {/* Golden Sparkle at the top */}
+          <div className="pt-1.5 flex items-center justify-center">
+            <motion.div
+              animate={{ scale: [1, 1.25, 1], opacity: [0.8, 1, 0.8] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Sparkles className={cn("text-pink-100", s.iconSize)} />
+            </motion.div>
+          </div>
 
-          {/* Tiny Animated Sparkle Icon */}
-          <motion.div
-            animate={{ scale: [1, 1.25, 1], opacity: [0.8, 1, 0.8] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-1 text-white/95"
-          >
-            <Sparkles className={cn(size === 'sm' ? 'w-2 h-2' : size === 'md' ? 'w-3 h-3' : 'w-4 h-4')} />
-          </motion.div>
-
-          {/* Text Contents */}
-          <div className="flex flex-col items-center justify-between h-full py-1.5 sm:py-2 z-10 select-none">
-            <span className="text-[5px] sm:text-[7px] font-black text-pink-100 uppercase tracking-[0.2em] leading-none">SAVE</span>
-            <span className="text-[11px] sm:text-[14px] font-black leading-tight drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.4)] font-outfit">
+          {/* Spaced Text Layout to prevent squishing */}
+          <div className="flex flex-col items-center justify-center flex-1 py-1">
+            <span className={cn("font-black tracking-[0.25em] text-pink-200 uppercase leading-none", s.saveText)}>SAVE</span>
+            <span className={cn("font-black tracking-tight leading-none my-1 font-outfit drop-shadow-md", s.pctText)}>
               {savingsPct}%
             </span>
-            <span className="text-[5px] sm:text-[7px] font-black text-pink-100 uppercase tracking-[0.15em] leading-none">OFF</span>
+            <span className={cn("font-black tracking-[0.2em] text-pink-200 uppercase leading-none", s.offText)}>OFF</span>
           </div>
+          
+          <div className="pb-1" />
         </motion.div>
       </div>
     );
   }
 
-  // Generic/Sahi Recommended Tag (Smart Green Badge)
+  // 2. GENERIC / SAHI RECOMMENDED TAG (Smart Choice Minimalist Circle Badge)
   return (
-    <div className={cn("absolute top-2 z-20 pointer-events-none drop-shadow-lg", className)}>
+    <div className={cn("absolute top-2 z-20 pointer-events-none drop-shadow-xl", className)}>
       <motion.div
         animate={{
-          scale: [1, 1.04, 1],
+          scale: [1, 1.03, 1],
           y: [0, -2, 0],
         }}
         transition={{
-          duration: 3.5,
+          duration: 4,
           repeat: Infinity,
           ease: "easeInOut",
         }}
-        className="relative flex flex-col items-center justify-center bg-gradient-to-br from-[#00F5A0] via-[#00D17B] to-[#00A862] text-white font-outfit shadow-[0_6px_16px_rgba(0,209,123,0.35)] border border-white/20 overflow-visible"
+        className="relative flex flex-col items-center justify-center bg-gradient-to-br from-[#10B981] via-[#059669] to-[#047857] text-white font-outfit shadow-[0_8px_16px_rgba(16,185,129,0.25)] border border-white/25 overflow-visible"
         style={{
           borderRadius: '50%',
-          width: size === 'sm' ? '42px' : size === 'md' ? '52px' : '64px',
-          height: size === 'sm' ? '42px' : size === 'md' ? '52px' : '64px',
+          width: s.circleSize,
+          height: s.circleSize,
         }}
       >
-        {/* Rotating Neon Dotted Dashing Border Ring */}
+        {/* Soft rotating pulse ring */}
         <motion.div
-          animate={{ rotate: 360 }}
+          animate={{ rotate: -360 }}
           transition={{
-            duration: 15,
+            duration: 25,
             repeat: Infinity,
             ease: "linear",
           }}
-          className="absolute inset-[-3px] rounded-full border border-dashed border-emerald-300/60 pointer-events-none"
+          className="absolute inset-[-3px] rounded-full border border-dashed border-emerald-400/30 pointer-events-none"
         />
 
-        {/* Glossy radial overlay for premium shine */}
-        <div className="absolute inset-0.5 rounded-full bg-gradient-to-tr from-white/0 via-white/20 to-white/0 pointer-events-none z-10" />
+        {/* Glow overlay */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/0 via-white/10 to-white/0 pointer-events-none" />
 
-        {/* Small floating Verification Check Badge */}
-        <div className="absolute -top-1 -right-1 bg-white text-emerald-600 rounded-full p-0.5 shadow-md border border-emerald-100 flex items-center justify-center z-20">
-          <Check className={cn(size === 'sm' ? 'w-2 h-2' : size === 'md' ? 'w-2.5 h-2.5' : 'w-3.5 h-3.5')} strokeWidth={4} />
+        {/* Tiny checkmark indicator at top-right */}
+        <div className={cn("absolute -top-0.5 -right-0.5 bg-white text-emerald-600 rounded-full shadow-md border border-emerald-100 flex items-center justify-center z-10", s.checkPadding)}>
+          <Check className={cn("stroke-[4px]", s.checkSize)} />
         </div>
 
-        {/* Text Contents */}
-        <div className="flex flex-col items-center justify-center text-center z-10 leading-none select-none">
-          <span className="text-[5px] sm:text-[7px] font-black text-emerald-50 tracking-[0.1em] uppercase">SMART</span>
-          <span className="text-[11px] sm:text-[14px] font-black leading-tight drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.3)] my-0.5 font-outfit">
+        {/* Dynamic percentage savings text */}
+        <div className="flex flex-col items-center justify-center leading-none text-center select-none z-10 px-1">
+          <span className="text-[5px] sm:text-[6px] font-black text-emerald-100 tracking-widest uppercase">SAVE</span>
+          <span className={cn("font-black tracking-tight drop-shadow-sm my-0.5 font-outfit", s.pctText)}>
             {savingsPct}%
           </span>
-          <span className="text-[5px] sm:text-[6px] font-black text-emerald-50 tracking-[0.15em] uppercase">SAVINGS</span>
+          <span className="text-[4px] sm:text-[5px] font-black text-emerald-100 tracking-widest uppercase">SMART</span>
         </div>
       </motion.div>
     </div>
