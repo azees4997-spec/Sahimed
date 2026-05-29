@@ -1,26 +1,45 @@
 <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="cross-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#3b82f6" />
-      <stop offset="100%" stop-color="#2563eb" />
-    </linearGradient>
-    <linearGradient id="check-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fb7185" />
-      <stop offset="100%" stop-color="#f43f5e" />
-    </linearGradient>
+    <!-- Mask to cut out a gap in the heart where the cross lies -->
+    <mask id="cross-cutout">
+      <rect x="0" y="0" width="100" height="100" fill="white" />
+      <path
+        d="M 54 34 L 54 66 M 38 50 L 70 50"
+        stroke="black"
+        stroke-width="20"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </mask>
   </defs>
 
-  {/* Translucent Base Layer */}
-  <rect x="38" y="15" width="24" height="70" rx="12" fill="#2563eb" opacity="0.15" />
-  <rect x="15" y="38" width="70" height="24" rx="12" fill="#2563eb" opacity="0.15" />
+  <!-- Blue Heart with Mask Applied -->
+  <g mask="url(#cross-cutout)">
+    <!-- Heart Left Symmetrical Loop (Primary Corporate Blue - #1E3A8A) -->
+    <path
+      d="M 50 24 C 28 4, 8 16, 8 46 C 8 72, 22 86, 38 76 C 48 70, 48 56, 40 48"
+      stroke="#1E3A8A"
+      stroke-width="8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
 
-  {/* Main Cross Body */}
-  <rect x="40" y="18" width="20" height="64" rx="10" fill="url(#cross-grad)" />
-  <rect x="18" y="40" width="64" height="20" rx="10" fill="url(#cross-grad)" />
+    <!-- Heart Right Symmetrical Loop (Primary Corporate Blue - #1E3A8A) -->
+    <path
+      d="M 50 24 C 72 4, 92 16, 92 46 C 92 72, 62 76 C 52 70, 52 56, 60 48"
+      stroke="#1E3A8A"
+      stroke-width="8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
 
-  {/* Premium Checkmark */}
-  <path d="M30 55 L45 70 L85 25" stroke="url(#check-grad)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
-  
-  {/* Glass Shine */}
-  <path d="M34 55 L45 66 L80 30" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.4" />
+  <!-- Green Medical Cross -->
+  <path
+    d="M 54 34 L 54 66 M 38 50 L 70 50"
+    stroke="#15803D"
+    stroke-width="12"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
 </svg>

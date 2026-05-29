@@ -43,14 +43,77 @@ class SplashScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Logo Group
-                  Image.asset(
-                    'assets/icons/sahimed_logo_transparent.png',
-                    width: 280,
-                    fit: BoxFit.contain,
-                  )
-                      .animate()
-                      .fadeIn(duration: 800.ms)
-                      .scale(begin: const Offset(0.9, 0.9)),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SvgPicture.asset(
+                        'assets/icons/logo.svg',
+                        width: 90,
+                        height: 90,
+                      )
+                          .animate()
+                          .fadeIn(duration: 800.ms)
+                          .scale(begin: const Offset(0.9, 0.9)),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Sahi',
+                            style: GoogleFonts.outfit(
+                              fontSize: 54,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF1E3A8A),
+                              letterSpacing: -2,
+                            ),
+                          )
+                              .animate()
+                              .fadeIn(duration: 800.ms)
+                              .slideX(begin: -0.2, end: 0, curve: Curves.easeOutCubic),
+                          Text(
+                            'Med',
+                            style: GoogleFonts.outfit(
+                              fontSize: 54,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF15803D),
+                              letterSpacing: -2,
+                            ),
+                          )
+                              .animate()
+                              .fadeIn(delay: 200.ms, duration: 800.ms)
+                              .slideX(begin: 0.2, end: 0, curve: Curves.easeOutCubic),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Sahi Dawai '.toUpperCase(),
+                              style: GoogleFonts.outfit(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF1E3A8A),
+                                letterSpacing: 2.5,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Sahi Daam Pe'.toUpperCase(),
+                              style: GoogleFonts.outfit(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF15803D),
+                                letterSpacing: 2.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(delay: 600.ms, duration: 800.ms)
+                          .shimmer(delay: 1.5.seconds, duration: 1.5.seconds),
+                    ],
+                  ),
                   
                   const SizedBox(height: 80),
                   

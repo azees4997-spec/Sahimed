@@ -499,11 +499,71 @@ class _HomeHeaderState extends State<HomeHeader> {
                   GestureDetector(
                     onTap: () =>
                         Navigator.of(context).popUntil((route) => route.isFirst),
-                    child: Image.asset(
-                      'assets/icons/sahimed_logo_transparent.png',
-                      height: 38,
-                      fit: BoxFit.contain,
-                    ).animate().fadeIn(duration: 600.ms).scale(delay: 200.ms),
+                    child: Row(
+                      children: [
+                        SvgPicture.asset(
+                          'assets/icons/logo.svg',
+                          width: 42,
+                          height: 42,
+                        ).animate().fadeIn(duration: 600.ms).scale(delay: 200.ms),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: 'Sahi',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF1E3A8A),
+                                      letterSpacing: -0.8,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: 'Med',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF15803D),
+                                      letterSpacing: -0.8,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: 'Sahi Dawai '.toUpperCase(),
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 7,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF1E3A8A),
+                                      letterSpacing: 1.5,
+                                      height: 0.8,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: 'Sahi Daam Pe'.toUpperCase(),
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 7,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF15803D),
+                                      letterSpacing: 1.5,
+                                      height: 0.8,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
 
                   // 2. Right Actions
