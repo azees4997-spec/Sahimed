@@ -20,149 +20,121 @@ export default function RibbonBadge({
 }: RibbonBadgeProps) {
   if (savingsPct <= 0) return null;
 
+  const isBranded = variant === 'primary';
+
   // Responsive dimensions & text sizes
   const sizes = {
     sm: {
-      width: '42px',
-      height: '56px',
+      circleSize: '44px',
       saveText: 'text-[6px]',
-      pctText: 'text-[11px]',
-      offText: 'text-[6px]',
-      circleSize: '40px',
+      pctText: 'text-[12px]',
+      labelTag: 'text-[5px]',
       iconSize: 'w-2 h-2',
-      checkSize: 'w-1.5 h-1.5',
-      checkPadding: 'p-0.5',
+      badgeSize: 'w-3.5 h-3.5',
+      badgeOffset: '-top-1.5 -right-1.5',
+      checkSize: 'w-2 h-2',
+      checkPadding: 'p-[1px]',
     },
     md: {
-      width: '48px',
-      height: '66px',
-      saveText: 'text-[7px]',
-      pctText: 'text-[13px]',
-      offText: 'text-[7px]',
-      circleSize: '48px',
+      circleSize: '54px',
+      saveText: 'text-[7.5px]',
+      pctText: 'text-[15px]',
+      labelTag: 'text-[6px]',
       iconSize: 'w-2.5 h-2.5',
-      checkSize: 'w-2 h-2',
+      badgeSize: 'w-4 h-4',
+      badgeOffset: '-top-1 -right-1',
+      checkSize: 'w-2.5 h-2.5',
       checkPadding: 'p-0.5',
     },
     lg: {
-      width: '58px',
-      height: '80px',
-      saveText: 'text-[8px]',
-      pctText: 'text-[16px]',
-      offText: 'text-[8px]',
-      circleSize: '58px',
+      circleSize: '66px',
+      saveText: 'text-[9px]',
+      pctText: 'text-[19px]',
+      labelTag: 'text-[7.5px]',
       iconSize: 'w-3 h-3',
-      checkSize: 'w-2.5 h-2.5',
-      checkPadding: 'p-1',
+      badgeSize: 'w-5 h-5',
+      badgeOffset: '-top-0.5 -right-0.5',
+      checkSize: 'w-3 h-3',
+      checkPadding: 'p-0.5',
     }
   };
 
   const s = sizes[size];
 
-  // 1. BRANDED DISCOUNT TAG (Premium Floating Shimmer Capsule)
-  if (variant === 'primary') {
-    return (
-      <div className={cn("absolute top-2 z-20 pointer-events-none drop-shadow-xl", className)}>
-        <motion.div
-          animate={{
-            y: [0, -3, 0],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-          className="relative flex flex-col items-center justify-between bg-gradient-to-b from-[#FF2E93] via-[#FF0055] to-[#D8004F] text-white font-outfit border border-white/25 shadow-[0_8px_16px_rgba(255,0,85,0.25)] rounded-[12px] overflow-hidden"
-          style={{
-            width: s.width,
-            height: s.height,
-          }}
-        >
-          {/* Holographic light reflection sweep */}
-          <motion.div
-            animate={{
-              x: ['-200%', '200%'],
-            }}
-            transition={{
-              duration: 2.5,
-              repeat: Infinity,
-              repeatDelay: 3,
-              ease: "easeInOut",
-            }}
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none"
-          />
+  // Electric, high-contrast neon gradients and glow colors
+  const theme = isBranded ? {
+    // Branded Tag: Neon Pink/Orange Gradient (High Serotonin/Dopamine!)
+    gradient: 'from-[#FF0055] via-[#FF007F] to-[#FF5E00]',
+    glow: 'shadow-[0_8px_20px_rgba(255,0,85,0.45)]',
+    borderColor: 'border-[#FF007F]/70',
+    label: 'OFF',
+    iconColor: 'text-[#FF0055]',
+    icon: Sparkles,
+  } : {
+    // Generic Tag: Neon Green/Mint/Emerald (Luminous Smart Choice!)
+    gradient: 'from-[#00FF87] via-[#00D15C] to-[#009E4B]',
+    glow: 'shadow-[0_8px_20px_rgba(0,255,135,0.45)]',
+    borderColor: 'border-[#00FF87]/70',
+    label: 'SMART',
+    iconColor: 'text-[#00A862]',
+    icon: Check,
+  };
 
-          {/* Golden Sparkle at the top */}
-          <div className="pt-1.5 flex items-center justify-center">
-            <motion.div
-              animate={{ scale: [1, 1.25, 1], opacity: [0.8, 1, 0.8] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <Sparkles className={cn("text-pink-100", s.iconSize)} />
-            </motion.div>
-          </div>
+  const TopRightIcon = theme.icon;
 
-          {/* Spaced Text Layout to prevent squishing */}
-          <div className="flex flex-col items-center justify-center flex-1 py-1">
-            <span className={cn("font-black tracking-[0.25em] text-pink-200 uppercase leading-none", s.saveText)}>SAVE</span>
-            <span className={cn("font-black tracking-tight leading-none my-1 font-outfit drop-shadow-md", s.pctText)}>
-              {savingsPct}%
-            </span>
-            <span className={cn("font-black tracking-[0.2em] text-pink-200 uppercase leading-none", s.offText)}>OFF</span>
-          </div>
-          
-          <div className="pb-1" />
-        </motion.div>
-      </div>
-    );
-  }
-
-  // 2. GENERIC / SAHI RECOMMENDED TAG (Smart Choice Minimalist Circle Badge)
   return (
-    <div className={cn("absolute top-2 z-20 pointer-events-none drop-shadow-xl", className)}>
+    <div className={cn("absolute top-2 z-20 pointer-events-none", className)}>
       <motion.div
         animate={{
-          scale: [1, 1.03, 1],
-          y: [0, -2, 0],
+          scale: [1, 1.05, 1],
+          y: [0, -3, 0],
         }}
         transition={{
-          duration: 4,
+          duration: 3,
           repeat: Infinity,
           ease: "easeInOut",
         }}
-        className="relative flex flex-col items-center justify-center bg-gradient-to-br from-[#10B981] via-[#059669] to-[#047857] text-white font-outfit shadow-[0_8px_16px_rgba(16,185,129,0.25)] border border-white/25 overflow-visible"
+        className={cn(
+          "relative flex flex-col items-center justify-center text-white border border-white/40 overflow-visible",
+          theme.gradient,
+          theme.glow
+        )}
         style={{
           borderRadius: '50%',
           width: s.circleSize,
           height: s.circleSize,
         }}
       >
-        {/* Soft rotating pulse ring */}
+        {/* Rotating Outer Dotted Dashing Ring */}
         <motion.div
-          animate={{ rotate: -360 }}
+          animate={{ rotate: isBranded ? 360 : -360 }}
           transition={{
-            duration: 25,
+            duration: 12,
             repeat: Infinity,
             ease: "linear",
           }}
-          className="absolute inset-[-3px] rounded-full border border-dashed border-emerald-400/30 pointer-events-none"
+          className={cn("absolute inset-[-4px] rounded-full border border-dashed pointer-events-none", theme.borderColor)}
         />
 
-        {/* Glow overlay */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/0 via-white/10 to-white/0 pointer-events-none" />
+        {/* Glossy overlay for rich liquid glass shine */}
+        <div className="absolute inset-0.5 rounded-full bg-gradient-to-tr from-white/0 via-white/30 to-white/0 pointer-events-none z-10" />
 
-        {/* Tiny checkmark indicator at top-right */}
-        <div className={cn("absolute -top-0.5 -right-0.5 bg-white text-emerald-600 rounded-full shadow-md border border-emerald-100 flex items-center justify-center z-10", s.checkPadding)}>
-          <Check className={cn("stroke-[4px]", s.checkSize)} />
+        {/* Small floating verification badge at the top-right corner */}
+        <div className={cn("absolute bg-white rounded-full shadow-lg border border-slate-100 flex items-center justify-center z-20", s.badgeOffset, s.checkPadding, s.badgeSize)}>
+          <TopRightIcon className={cn("stroke-[4px]", theme.iconColor, s.checkSize)} />
         </div>
 
-        {/* Dynamic percentage savings text */}
-        <div className="flex flex-col items-center justify-center leading-none text-center select-none z-10 px-1">
-          <span className="text-[5px] sm:text-[6px] font-black text-emerald-100 tracking-widest uppercase">SAVE</span>
-          <span className={cn("font-black tracking-tight drop-shadow-sm my-0.5 font-outfit", s.pctText)}>
+        {/* High contrast, high impact texts (Pure white with distinct dark text-shadow) */}
+        <div className="flex flex-col items-center justify-center leading-none text-center select-none z-10 px-1 font-outfit">
+          <span className={cn("font-black tracking-[0.2em] text-white/90 drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.6)]", s.saveText)}>
+            SAVE
+          </span>
+          <span className={cn("font-black tracking-tighter text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.75)] my-0.5 font-outfit", s.pctText)}>
             {savingsPct}%
           </span>
-          <span className="text-[4px] sm:text-[5px] font-black text-emerald-100 tracking-widest uppercase">SMART</span>
+          <span className={cn("font-black tracking-[0.15em] text-white/95 drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.6)]", s.labelTag)}>
+            {theme.label}
+          </span>
         </div>
       </motion.div>
     </div>
