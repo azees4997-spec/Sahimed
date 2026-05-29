@@ -559,7 +559,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
           ),
         ),
       ),
-    ),
   ],
 ),
 ), // Scaffold
