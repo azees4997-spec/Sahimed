@@ -3,6 +3,7 @@ import clientPromise from '@/lib/mongodb';
 import { getFirestore, collection as fireCollection, getDocs } from 'firebase/firestore';
 import { initializeApp, getApps } from 'firebase/app';
 import { firebaseConfig } from '@/firebase/config';
+import { INDIAN_CITIES } from '@/lib/city-data';
 
 // Initialize Firebase for sitemap generation
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
@@ -29,15 +30,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching products for sitemap:', error);
   }
 
-  // 2. Fetch SEO Articles from MongoDB
-  let articleUrls: MetadataRoute.Sitemap = [];
+  // 2. Fetch SEO Articles (Blogs) from MongoDB
+  let blogUrls: MetadataRoute.Sitemap = [];
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
     const articles = await db.collection('seo_content').find({}, { projection: { slug: 1, updatedAt: 1 } }).toArray();
 
-    articleUrls = articles.map((article) => ({
-      url: `${baseUrl}/article/${article.slug}`,
+    blogUrls = articles.map((article) => ({
+      url: `${baseUrl}/blog/${article.slug}`,
       lastModified: article.updatedAt || new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
@@ -63,7 +64,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching pages for sitemap:', error);
   }
 
-  // 4. Static routes
+  // 4. City-specific delivery landing pages for local SEO
+  const deliveryUrls = INDIAN_CITIES.map((city) => ({
+    url: `${baseUrl}/delivery/${city.id}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
+  // 5. Static routes
   const staticUrls = [
     {
       url: baseUrl,
@@ -84,6 +93,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/prescription`,
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
@@ -97,5 +112,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticUrls, ...pageUrls, ...productUrls, ...articleUrls];
+  return [...staticUrls, ...pageUrls, ...productUrls, ...blogUrls, ...deliveryUrls];
 }

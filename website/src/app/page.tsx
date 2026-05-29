@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   title: 'Sahimed - Authentic Medicines & Healthcare at Best Prices',
   description: 'Buy genuine medicines online in India. Sahimed provides authentic stock, expert prescription verification, and fast delivery at affordable prices. Sahi Dawai, Sahi Daam Pe.',
   keywords: ['online pharmacy india', 'authentic medicines online', 'buy medicines bangalore', 'genuine healthcare products', 'affordable medicines india', 'prescription delivery'],
+  alternates: {
+    canonical: 'https://sahimed.com',
+  },
 };
 
 export const revalidate = 60; // Revalidate every minute

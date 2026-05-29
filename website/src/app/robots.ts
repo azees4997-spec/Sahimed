@@ -14,7 +14,9 @@ export default function robots(): MetadataRoute.Robots {
           '/api/user/',
           '/Sahi-admin/', 
           '/checkout/', 
-          '/order-success/'
+          '/order-success/',
+          '/orders/',
+          '/profile/'
         ],
         allow: ['/api/feeds/'],
       },

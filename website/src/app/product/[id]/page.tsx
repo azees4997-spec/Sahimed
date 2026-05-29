@@ -70,6 +70,9 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   return {
     title: `Buy ${product.name} Online at ₹${price} | SahiMed - Authentic Medicines`,
     description: description,
+    alternates: {
+      canonical: `https://sahimed.com/product/${id}`,
+    },
     openGraph: {
       title: `${product.name} | SahiMed`,
       description: description,

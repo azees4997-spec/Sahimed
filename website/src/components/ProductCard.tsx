@@ -42,7 +42,7 @@ function ProductCardComponent({ product, priority = false }: { product: Product,
         savingsPct={savingsPct} 
         variant={(product.isGeneric === true || product.isGeneric === "true") ? 'accent' : 'primary'} 
         className="left-2.5 sm:left-4"
-        size="md"
+        size="sm"
       />
  
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 gap-1 sm:gap-1.5 w-full">

@@ -33,6 +33,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `${blog.title} | Sahimed Health Blog`,
     description: blog.excerpt,
     keywords: blog.keywords,
+    alternates: {
+      canonical: `https://sahimed.com/blog/${slug}`,
+    },
     openGraph: {
       title: blog.title,
       description: blog.excerpt,

@@ -18,6 +18,8 @@ import {
   AlertTriangle,
   Package,
   ShoppingCart,
+  Minus,
+  Plus,
   Zap,
   TrendingDown,
   Maximize2,
@@ -176,6 +178,7 @@ const ComparisonCard = ({
 }) => {
   if (!product) return null;
 
+  const { updateQuantity } = useCart();
   const qty = getItemQuantity(product.id || product._id);
   const pPriceRaw = product.liveData?.sahimed_price || product.price || 0;
   const pMrpRaw = product.liveData?.mrp || product.mrp || (Number(pPriceRaw) + 20);
@@ -320,6 +323,26 @@ const ComparisonCard = ({
             >
               NOTIFY ME
             </Button>
+          ) : qty > 0 ? (
+            <div className="flex items-center gap-2 w-full h-8 sm:h-14 bg-slate-100 rounded-full border border-slate-200 p-1 shadow-inner">
+              <Button
+                variant="ghost"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateQuantity(product._id || product.id, -1); }}
+                className="h-full flex-1 rounded-full flex items-center justify-center bg-white hover:bg-slate-50 text-slate-800 shadow-sm border border-slate-150 transition-all hover:scale-105 active:scale-95 py-0"
+              >
+                <Minus className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-slate-600 stroke-[3px]" />
+              </Button>
+              <span className="text-[10px] sm:text-sm font-black text-slate-800 flex-[1.5] text-center font-outfit select-none">
+                {qty} IN CART
+              </span>
+              <Button
+                variant="ghost"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateQuantity(product._id || product.id, 1); }}
+                className="h-full flex-1 rounded-full flex items-center justify-center bg-white hover:bg-slate-50 text-slate-800 shadow-sm border border-slate-150 transition-all hover:scale-105 active:scale-95 py-0"
+              >
+                <Plus className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-slate-600 stroke-[3px]" />
+              </Button>
+            </div>
           ) : (
             <Button
               onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })}
@@ -328,7 +351,7 @@ const ComparisonCard = ({
                 isAlt ? "bg-sahi-green-text text-white hover:bg-sahi-green-text/90" : "bg-primary text-white hover:bg-primary/90"
               )}
             >
-              {qty > 0 ? `IN CART (${qty})` : "ADD TO CART"} <ShoppingCart className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+              ADD TO CART <ShoppingCart className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
             </Button>
           )}
         </div>

@@ -40,9 +40,6 @@ export const metadata: Metadata = {
     address: true,
     email: true,
   },
-  alternates: {
-    canonical: '/',
-  },
   manifest: '/manifest.json',
   openGraph: {
     type: 'website',

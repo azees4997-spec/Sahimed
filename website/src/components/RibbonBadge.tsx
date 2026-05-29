@@ -63,20 +63,20 @@ export default function RibbonBadge({
 
   // Electric, high-contrast neon gradients and glow colors
   const theme = isBranded ? {
-    // Branded Tag: Neon Pink/Orange Gradient (High Serotonin/Dopamine!)
-    gradient: 'from-[#FF0055] via-[#FF007F] to-[#FF5E00]',
-    glow: 'shadow-[0_8px_20px_rgba(255,0,85,0.45)]',
-    borderColor: 'border-[#FF007F]/70',
+    // Branded Tag: Solid Deep Crimson/Red (Option 2)
+    gradient: 'from-[#D32F2F] via-[#C62828] to-[#B71C1C]',
+    glow: 'shadow-[0_8px_20px_rgba(198,40,40,0.45)]',
+    borderColor: 'border-[#C62828]/70',
     label: 'OFF',
-    iconColor: 'text-[#FF0055]',
+    iconColor: 'text-[#C62828]',
     icon: Sparkles,
   } : {
-    // Generic Tag: Neon Green/Mint/Emerald (Luminous Smart Choice!)
-    gradient: 'from-[#00FF87] via-[#00D15C] to-[#009E4B]',
-    glow: 'shadow-[0_8px_20px_rgba(0,255,135,0.45)]',
-    borderColor: 'border-[#00FF87]/70',
+    // Generic Tag: Solid Forest Green (Option 2)
+    gradient: 'from-[#2E7D32] via-[#1B5E20] to-[#0D3C13]',
+    glow: 'shadow-[0_8px_20px_rgba(27,94,32,0.45)]',
+    borderColor: 'border-[#1B5E20]/70',
     label: 'SMART',
-    iconColor: 'text-[#00A862]',
+    iconColor: 'text-[#1B5E20]',
     icon: Check,
   };
 
@@ -95,7 +95,7 @@ export default function RibbonBadge({
           ease: "easeInOut",
         }}
         className={cn(
-          "relative flex flex-col items-center justify-center text-white border border-white/40 overflow-visible",
+          "relative flex flex-col items-center justify-center text-white border border-white/40 overflow-visible bg-gradient-to-br",
           theme.gradient,
           theme.glow
         )}

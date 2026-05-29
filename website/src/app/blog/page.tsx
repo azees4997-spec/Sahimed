@@ -9,6 +9,9 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: 'Health Blog | Sahimed - Expert Medical Advice & Wellness',
   description: 'Explore the latest health tips, Ayurvedic wisdom, and medical guides from Sahimed health experts.',
+  alternates: {
+    canonical: 'https://sahimed.com/blog',
+  },
 };
 
 async function getBlogs() {

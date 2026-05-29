@@ -48,6 +48,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: page ? `${page.title} | SahiMed` : 'Page Not Found',
     description: `Official ${page?.title || 'policy'} document for SahiMed Healthcare Pharmacy.`,
+    alternates: {
+      canonical: `https://sahimed.com/p/${slug}`,
+    },
   };
 }
 
