@@ -3,7 +3,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { Sparkles, Check } from 'lucide-react';
 
 interface RibbonBadgeProps {
   savingsPct: number;
@@ -22,120 +21,97 @@ export default function RibbonBadge({
 
   const isBranded = variant === 'primary';
 
-  // Responsive dimensions & text sizes
+  // Beautiful high-visibility gradient colors
+  const colors = isBranded 
+    ? {
+        from: 'from-[#FF3B8E]',
+        via: 'via-[#FF0055]',
+        to: 'to-[#CC0044]',
+        serratedFill: 'fill-[#CC0044]',
+        fold: 'bg-[#990033]'
+      }
+    : {
+        from: 'from-[#00D991]',
+        via: 'via-[#00B377]',
+        to: 'to-[#008C5D]',
+        serratedFill: 'fill-[#008C5D]',
+        fold: 'bg-[#005A3C]'
+      };
+
+  // Responsive dimensions matching the original pixel-perfect layout
   const sizes = {
     sm: {
-      circleSize: '44px',
-      saveText: 'text-[6px]',
-      pctText: 'text-[12px]',
-      labelTag: 'text-[5px]',
-      iconSize: 'w-2 h-2',
-      badgeSize: 'w-3.5 h-3.5',
-      badgeOffset: '-top-1.5 -right-1.5',
-      checkSize: 'w-2 h-2',
-      checkPadding: 'p-[1px]',
+      container: "w-[24px] sm:w-[28px] h-[34px] sm:h-[40px]",
+      saveText: "text-[5.5px] sm:text-[6.5px]",
+      pctText: "text-[8.5px] sm:text-[10.5px]",
+      offText: "text-[4.5px] sm:text-[5.5px]",
+      bottomOffset: "-bottom-[4px]",
+      bottomHeight: "h-[4px]",
+      foldOffset: "-top-[1.5px]",
+      foldSize: "w-1 h-[1.5px]"
     },
     md: {
-      circleSize: '54px',
-      saveText: 'text-[7.5px]',
-      pctText: 'text-[15px]',
-      labelTag: 'text-[6px]',
-      iconSize: 'w-2.5 h-2.5',
-      badgeSize: 'w-4 h-4',
-      badgeOffset: '-top-1 -right-1',
-      checkSize: 'w-2.5 h-2.5',
-      checkPadding: 'p-0.5',
+      container: "w-[30px] sm:w-[36px] h-[42px] sm:h-[50px]",
+      saveText: "text-[6px] sm:text-[7.5px]",
+      pctText: "text-[10px] sm:text-[13px]",
+      offText: "text-[5px] sm:text-[6.5px]",
+      bottomOffset: "-bottom-[5px]",
+      bottomHeight: "h-[5px]",
+      foldOffset: "-top-[2px]",
+      foldSize: "w-1.5 h-[2px]"
     },
     lg: {
-      circleSize: '66px',
-      saveText: 'text-[9px]',
-      pctText: 'text-[19px]',
-      labelTag: 'text-[7.5px]',
-      iconSize: 'w-3 h-3',
-      badgeSize: 'w-5 h-5',
-      badgeOffset: '-top-0.5 -right-0.5',
-      checkSize: 'w-3 h-3',
-      checkPadding: 'p-0.5',
+      container: "w-[36px] sm:w-[44px] h-[52px] sm:h-[64px]",
+      saveText: "text-[7.5px] sm:text-[9px]",
+      pctText: "text-[12px] sm:text-[16px]",
+      offText: "text-[6.5px] sm:text-[8px]",
+      bottomOffset: "-bottom-[6px]",
+      bottomHeight: "h-[6px]",
+      foldOffset: "-top-[2.5px]",
+      foldSize: "w-2 h-[2.5px]"
     }
   };
 
   const s = sizes[size];
 
-  // Electric, high-contrast neon gradients and glow colors
-  const theme = isBranded ? {
-    // Branded Tag: Solid Deep Crimson/Red (Option 2)
-    gradient: 'from-[#D32F2F] via-[#C62828] to-[#B71C1C]',
-    glow: 'shadow-[0_8px_20px_rgba(198,40,40,0.45)]',
-    borderColor: 'border-[#C62828]/70',
-    label: 'OFF',
-    iconColor: 'text-[#C62828]',
-    icon: Sparkles,
-  } : {
-    // Generic Tag: Solid Forest Green (Option 2)
-    gradient: 'from-[#2E7D32] via-[#1B5E20] to-[#0D3C13]',
-    glow: 'shadow-[0_8px_20px_rgba(27,94,32,0.45)]',
-    borderColor: 'border-[#1B5E20]/70',
-    label: 'SMART',
-    iconColor: 'text-[#1B5E20]',
-    icon: Check,
-  };
-
-  const TopRightIcon = theme.icon;
-
   return (
-    <div className={cn("absolute top-2 z-20 pointer-events-none", className)}>
-      <motion.div
+    <div className={cn("absolute top-0 z-20 pointer-events-none drop-shadow-md", className)}>
+      <motion.div 
         animate={{
-          scale: [1, 1.05, 1],
-          y: [0, -3, 0],
+          y: [0, -2, 0],
         }}
         transition={{
           duration: 3,
           repeat: Infinity,
           ease: "easeInOut",
         }}
-        className={cn(
-          "relative flex flex-col items-center justify-center text-white border border-white/40 overflow-visible bg-gradient-to-br",
-          theme.gradient,
-          theme.glow
-        )}
-        style={{
-          borderRadius: '50%',
-          width: s.circleSize,
-          height: s.circleSize,
-        }}
+        className={cn("relative", s.container)}
       >
-        {/* Rotating Outer Dotted Dashing Ring */}
-        <motion.div
-          animate={{ rotate: isBranded ? 360 : -360 }}
-          transition={{
-            duration: 12,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-          className={cn("absolute inset-[-4px] rounded-full border border-dashed pointer-events-none", theme.borderColor)}
-        />
-
-        {/* Glossy overlay for rich liquid glass shine */}
-        <div className="absolute inset-0.5 rounded-full bg-gradient-to-tr from-white/0 via-white/30 to-white/0 pointer-events-none z-10" />
-
-        {/* Small floating verification badge at the top-right corner */}
-        <div className={cn("absolute bg-white rounded-full shadow-lg border border-slate-100 flex items-center justify-center z-20", s.badgeOffset, s.checkPadding, s.badgeSize)}>
-          <TopRightIcon className={cn("stroke-[4px]", theme.iconColor, s.checkSize)} />
-        </div>
-
-        {/* High contrast, high impact texts (Pure white with distinct dark text-shadow) */}
-        <div className="flex flex-col items-center justify-center leading-none text-center select-none z-10 px-1 font-outfit">
-          <span className={cn("font-black tracking-[0.2em] text-white/90 drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.6)]", s.saveText)}>
-            SAVE
+        {/* The Ribbon Body */}
+        <div className={cn(
+          "absolute inset-0 bg-gradient-to-b rounded-t-sm flex flex-col items-center pt-0.5 sm:pt-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]",
+          colors.from, colors.via, colors.to
+        )}>
+          <span className={cn("font-black text-white leading-none tracking-tighter uppercase drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]", s.saveText)}>
+            Save
           </span>
-          <span className={cn("font-black tracking-tighter text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.75)] my-0.5 font-outfit", s.pctText)}>
+          <span className={cn("font-black text-white leading-tight font-outfit drop-shadow-[0_1.5px_1px_rgba(0,0,0,0.5)] my-0.5", s.pctText)}>
             {savingsPct}%
           </span>
-          <span className={cn("font-black tracking-[0.15em] text-white/95 drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.6)]", s.labelTag)}>
-            {theme.label}
+          <span className={cn("font-black text-white uppercase tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]", s.offText)}>
+            OFF
           </span>
         </div>
+        
+        {/* Serrated Bottom Edge (SVG) */}
+        <div className={cn("absolute left-0 w-full", s.bottomOffset)}>
+          <svg viewBox="0 0 40 10" className={cn("w-full", s.bottomHeight)} preserveAspectRatio="none">
+            <path d="M0 0 L5 8 L10 0 L15 8 L20 0 L25 8 L30 0 L35 8 L40 0 V10 H0 Z" className={colors.serratedFill} />
+          </svg>
+        </div>
+
+        {/* Fold effect at top (The darker flap) */}
+        <div className={cn("absolute left-0 rounded-tl-sm -skew-x-[45deg] origin-bottom-left", s.foldOffset, s.foldSize, colors.fold)} />
       </motion.div>
     </div>
   );

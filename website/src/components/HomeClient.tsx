@@ -132,7 +132,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
           </div>
           <div className="flex gap-3 sm:gap-5 overflow-x-auto scrollbar-hide pb-2 sm:pb-4 px-1 sm:px-2">
             {bestSellers.slice(0, 5).map((p: any, i: number) => (
-              <div key={p.id} className="min-w-[120px] sm:min-w-[180px] flex flex-col h-full self-stretch">
+              <div key={p.id} className="min-w-[120px] sm:min-w-[180px]">
                 <ProductCard product={p} priority={i < 4} />
               </div>
             ))}
@@ -200,7 +200,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
           </div>
           <div className="flex gap-3 sm:gap-5 overflow-x-auto scrollbar-hide pb-4 sm:pb-6 px-1 sm:px-2">
             {topSelections.map((p: any, i: number) => (
-              <div key={p.id} className="min-w-[120px] sm:min-w-[180px] flex flex-col h-full self-stretch">
+              <div key={p.id} className="min-w-[120px] sm:min-w-[180px]">
                 <ProductCard product={p} priority={i < 2} />
               </div>
             ))}
@@ -213,7 +213,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tighter uppercase font-outfit px-1 sm:px-2">Featured Medicines</h2>
         <div className="flex gap-3 sm:gap-5 overflow-x-auto scrollbar-hide pb-4 sm:pb-6 px-1 sm:px-2">
           {medicines.map((p: any, i: number) => (
-            <div key={p.id} className="min-w-[120px] sm:min-w-[180px] flex flex-col h-full self-stretch">
+            <div key={p.id} className="min-w-[120px] sm:min-w-[180px]">
               <ProductCard product={p} priority={i < 1} />
             </div>
           ))}

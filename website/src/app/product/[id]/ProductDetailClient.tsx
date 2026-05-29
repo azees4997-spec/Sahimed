@@ -225,7 +225,7 @@ const ComparisonCard = ({
               savingsPct={displaySavingsPct}
               variant={isAlt ? 'accent' : 'primary'}
               className="right-2 sm:right-6"
-              size="sm"
+              size="md"
             />
           </div>
 
