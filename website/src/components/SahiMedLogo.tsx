@@ -36,9 +36,9 @@ export default function SahiMedLogo({
           <mask id="cross-cutout">
             <rect x="0" y="0" width="100" height="100" fill="white" />
             <path
-              d="M 54 34 L 54 66 M 38 50 L 70 50"
+              d="M 56 38 L 56 62 M 44 50 L 68 50"
               stroke="black"
-              strokeWidth="20"
+              strokeWidth="18"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -47,18 +47,18 @@ export default function SahiMedLogo({
 
         {/* Heart curves with mask to create cutout spacing */}
         <g mask="url(#cross-cutout)">
-          {/* Heart Left Symmetrical Loop */}
+          {/* Heart Left Symmetrical Loop (Meets at bottom tip 50 86) */}
           <path
-            d="M 50 24 C 28 4, 8 16, 8 46 C 8 72, 22 86, 38 76 C 48 70, 48 56, 40 48"
+            d="M 50 24 C 28 4, 8 16, 8 46 C 8 70, 24 82, 50 86 C 36 78, 36 62, 42 50"
             stroke={blueColor}
             strokeWidth="8"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
 
-          {/* Heart Right Symmetrical Loop */}
+          {/* Heart Right Symmetrical Loop (Meets at bottom tip 50 86) */}
           <path
-            d="M 50 24 C 72 4, 92 16, 92 46 C 92 72, 62 76 C 52 70, 52 56, 60 48"
+            d="M 50 24 C 72 4, 92 16, 92 46 C 92 70, 76 82, 50 86 C 64 78, 64 62, 58 50"
             stroke={blueColor}
             strokeWidth="8"
             strokeLinecap="round"
@@ -68,9 +68,9 @@ export default function SahiMedLogo({
 
         {/* Green Medical Cross */}
         <path
-          d="M 54 34 L 54 66 M 38 50 L 70 50"
+          d="M 56 38 L 56 62 M 44 50 L 68 50"
           stroke={greenColor}
-          strokeWidth="12"
+          strokeWidth="10"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
