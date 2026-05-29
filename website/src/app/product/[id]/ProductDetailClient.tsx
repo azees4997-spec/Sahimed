@@ -274,27 +274,22 @@ const ComparisonCard = ({
               {product.manufacturer}
             </p>
 
-          <div className="pt-3 sm:pt-6 border-t border-slate-100 space-y-4">
-            {/* Comparison Rows */}
-            <div className="space-y-3">
-              <div className="flex flex-col items-center justify-center py-3 border-b border-slate-50 text-center">
-                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tight">{product.manufacturer}</span>
+            <div className="pt-1.5 sm:pt-3 border-t border-dashed mt-1.5 sm:mt-3 space-y-0.5">
+              <div className="flex items-baseline gap-1.5 sm:gap-2">
+                <p className="text-lg sm:text-4xl font-black tracking-tighter text-primary font-outfit">
+                  ₹{Number(pPrice).toFixed(0)}
+                </p>
+                {pMrp > pPrice && (
+                  <div className="flex flex-col">
+                    <span className="text-[8px] sm:text-sm text-slate-400 line-through font-bold opacity-80 decoration-1">₹{Number(pMrp).toFixed(0)}</span>
+                    <span className="text-[7px] sm:text-[10px] font-black text-emerald-600 uppercase bg-emerald-50 px-1 py-0.5 rounded-md">SAVE ₹{Number(pMrp - pPrice).toFixed(0)}</span>
+                  </div>
+                )}
               </div>
-              {/* Removed FDA approved status for simple view */}
-              <div className="flex flex-col items-center justify-center py-3 border-b border-slate-50 text-center">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight leading-tight">{product.saltComposition || product.molecule}</span>
-              </div>
-              <div className="flex flex-col items-center justify-center py-3 border-b border-slate-50 text-center">
-                <span className="text-sm font-black text-slate-900 tracking-tighter uppercase">₹{unitPrice.toFixed(2)} / unit</span>
-              </div>
+              <p className="text-[8px] font-bold text-slate-350 tracking-tight uppercase">
+                ₹{unitPrice.toFixed(2)} / unit
+              </p>
             </div>
-
-            {isAlt && showComparison && (
-              <div className="w-full bg-lavender-text text-white py-3 sm:py-4 rounded-[16px] sm:rounded-[24px] flex items-center justify-center shadow-lg shadow-lavender-text/20">
-                <span className="text-[10px] sm:text-sm font-black tracking-widest uppercase">{displaySavingsPct}% CHEAPER</span>
-              </div>
-            )}
-          </div>
           </div>
         </div>
 
