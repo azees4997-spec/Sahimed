@@ -35,13 +35,13 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
   if (hideOnPaths.some(path => pathname.startsWith(path))) return null;
 
   return (
-    <footer className="relative bg-[#0A0E21] text-white pt-24 pb-32 sm:pb-12 border-t border-white/5 overflow-hidden">
+    <footer className="relative bg-[#FFF9F9] text-slate-800 pt-24 pb-32 sm:pb-12 border-t border-[#FFE4E4] overflow-hidden">
       {/* Premium Gradient Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       
       {/* Abstract Background Design */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[140px] -mr-64 -mt-64 opacity-40 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-accent/20 rounded-full blur-[120px] -ml-32 -mb-32 opacity-30 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[140px] -mr-64 -mt-64 opacity-25 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-accent/5 rounded-full blur-[120px] -ml-32 -mb-32 opacity-20 pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-20">
@@ -49,19 +49,19 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
           {/* Column 1: Brand & About */}
           <div className="space-y-8">
             <Link href="/" className="group block w-fit">
-              <SahiMedLogo variant="white" />
+              <SahiMedLogo placement="footer" />
             </Link>
-            <p className="text-gray-400 text-sm leading-relaxed max-w-[280px] font-medium">
+            <p className="text-slate-600 text-sm leading-relaxed max-w-[280px] font-medium">
               Revolutionizing medication accessibility through precision technology and medical excellence. Your trust, our priority.
             </p>
             <div className="flex gap-4">
-              <a href="https://instagram.com/sahimed" target="_blank" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary transition-all active:scale-90 group">
+              <a href="https://instagram.com/sahimed" target="_blank" className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-white hover:bg-primary hover:border-primary transition-all active:scale-90 group">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="https://twitter.com/sahimed" target="_blank" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary transition-all active:scale-90 group">
+              <a href="https://twitter.com/sahimed" target="_blank" className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-white hover:bg-primary hover:border-primary transition-all active:scale-90 group">
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="https://linkedin.com/company/sahimed" target="_blank" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary transition-all active:scale-90 group">
+              <a href="https://linkedin.com/company/sahimed" target="_blank" className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-white hover:bg-primary hover:border-primary transition-all active:scale-90 group">
                 <Linkedin className="w-5 h-5" />
               </a>
               <a href="https://wa.me/917349499898" target="_blank" className="w-10 h-10 rounded-xl bg-[#25D366]/10 border border-[#25D366]/20 flex items-center justify-center text-[#25D366] hover:bg-[#25D366] hover:text-white transition-all active:scale-90 group">
@@ -88,7 +88,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
 
           {/* Column 2: Quick Shop */}
           <div className="space-y-8">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Discover Store</h4>
+            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#1E3A8A]">Discover Store</h4>
             <ul className="space-y-4">
               {[
                 { label: 'Shop All Products', href: '/search' },
@@ -98,7 +98,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
                 { label: 'Browse Blogs', href: '/blog' },
               ].map((link, i) => (
                 <li key={i}>
-                  <Link href={link.href} className="group flex items-center gap-2 text-slate-300 hover:text-white transition-all text-sm font-bold uppercase tracking-tight">
+                  <Link href={link.href} className="group flex items-center gap-2 text-slate-600 hover:text-primary transition-all text-sm font-bold uppercase tracking-tight">
                     <ChevronRight className="w-4 h-4 text-primary opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300" />
                     {link.label}
                   </Link>
@@ -113,7 +113,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
             <ul className="space-y-4">
               {footerPages?.map((page: any) => (
                 <li key={page.id}>
-                  <Link href={`/p/${page.id}`} className="group flex items-center gap-2 text-slate-300 hover:text-white transition-all text-sm font-bold uppercase tracking-tight">
+                  <Link href={`/p/${page.id}`} className="group flex items-center gap-2 text-slate-600 hover:text-accent transition-all text-sm font-bold uppercase tracking-tight">
                     <ChevronRight className="w-4 h-4 text-accent opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300" />
                     {page.title}
                   </Link>
@@ -124,21 +124,21 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
 
           {/* Column 4: Support */}
           <div className="space-y-8">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-500">Pharma Support</h4>
+            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#15803D]">Pharma Support</h4>
             <div className="space-y-6">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                  <Phone className="w-4 h-4 text-emerald-500" />
+                  <Phone className="w-4 h-4 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Direct Line</p>
-                  <p className="text-sm font-bold text-slate-100">+91 7349499898</p>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Direct Line</p>
+                  <p className="text-sm font-bold text-slate-800">+91 7349499898</p>
                 </div>
               </div>
               
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Support Email</p>
-                <a href="mailto:support@sahimed.com" className="text-sm font-bold text-slate-100 hover:text-primary transition-colors">support@sahimed.com</a>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Support Email</p>
+                <a href="mailto:support@sahimed.com" className="text-sm font-bold text-slate-800 hover:text-primary transition-colors">support@sahimed.com</a>
               </div>
 
               <div className="flex items-center gap-4">
@@ -148,18 +148,17 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
                   </svg>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">WhatsApp Support</p>
-                  <a href="https://wa.me/917349499898" target="_blank" className="text-sm font-bold text-slate-100 hover:text-[#25D366] transition-colors">+91 73494 99898</a>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">WhatsApp Support</p>
+                  <a href="https://wa.me/917349499898" target="_blank" className="text-sm font-bold text-slate-800 hover:text-[#25D366] transition-colors">+91 73494 99898</a>
                 </div>
               </div>
             </div>
           </div>
-
         </div>
 
         {/* Service Areas SEO Strip */}
-        <div className="pt-10 mb-10 border-t border-white/5">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-500 mb-6 text-center lg:text-left">Popular Service Areas</p>
+        <div className="pt-10 mb-10 border-t border-[#FFE4E4]">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 mb-6 text-center lg:text-left">Popular Service Areas</p>
           <div className="flex flex-wrap gap-x-6 gap-y-3 justify-center lg:justify-start">
             {[
               { name: 'Delhi NCR', id: 'delhi' },
@@ -176,7 +175,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
               <Link 
                 key={city.id} 
                 href={`/delivery/${city.id}`}
-                className="text-[11px] font-bold text-gray-400 hover:text-primary transition-colors uppercase tracking-tight"
+                className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors uppercase tracking-tight"
               >
                 {city.name}
               </Link>
@@ -185,13 +184,13 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-            © 2026 Sahimed medical healthcare. <span className="text-gray-700 mx-2">•</span> Pharmacy Standard Protocol
+        <div className="pt-10 border-t border-[#FFE4E4] flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            © 2026 Sahimed medical healthcare. <span className="text-slate-300 mx-2">•</span> Pharmacy Standard Protocol
           </div>
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-6 transition-all duration-700">
             <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mr-2">We Accept</span>
-            <div className="flex items-center gap-5 bg-white/5 px-6 py-3 rounded-2xl border border-white/5 backdrop-blur-sm">
+            <div className="flex items-center gap-5 bg-white px-6 py-3 rounded-2xl border border-[#FFE4E4] shadow-sm">
               {/* UPI */}
               <svg viewBox="0 0 100 35" className="h-5 w-auto">
                 {/* U */}
@@ -206,7 +205,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
               </svg>
               {/* VISA */}
               <svg viewBox="0 0 100 31.8" className="h-4 w-auto">
-                <path d="M38.4 4.5h-5.9l-7.4 17.5-3.1-15.6c-.2-1-1-1.9-2-1.9h-9.9v1.2c2.1.5 4 1.5 5.4 3.1 1.4 1.6 2.1 3.5 2.1 5.5v12.7h6.4l9.7-22.5h4.7zm16.5 0h-5l-8.6 22.5h6.4l1.7-4.6h10.3l1 4.6h5.6l-4.5-22.5h-6.9zm-4.3 12.6l3.5-9.3 2 9.3h-5.5zm31.4-12.6l-5.3 15.6-2.2-11.1c-.4-1.9-1.9-4.5-4-4.5h-10v1.2c2 .5 3.9 1.4 5.3 3 1.4 1.6 2.1 3.5 2.1 5.4v13.3h6.4l9.8-22.9h-2.1z" fill="#1a1f71"/>
+                <path d="M38.4 4.5h-5.9l-7.4 17.5-3.1-15.6c-.2-1-1-1.9-2-1.9h-9.9v1.2c2.1.5 4 1.5 5.4 3.1(1.4 1.6 2.1 3.5 2.1 5.5v12.7h6.4l9.7-22.5h4.7zm16.5 0h-5l-8.6 22.5h6.4l1.7-4.6h10.3l1 4.6h5.6l-4.5-22.5h-6.9zm-4.3 12.6l3.5-9.3 2 9.3h-5.5zm31.4-12.6l-5.3 15.6-2.2-11.1c-.4-1.9-1.9-4.5-4-4.5h-10v1.2c2 .5 3.9 1.4 5.3 3 1.4 1.6 2.1 3.5 2.1 5.4v13.3h6.4l9.8-22.9h-2.1z" fill="#1a1f71"/>
                 <path d="M20.4 4.5h-9.9v1.2c2.1.5 4 1.5 5.4 3.1 1.4 1.6 2.1 3.5 2.1 5.5v12.7h6.4l4.2-22.5h-8.2z" fill="#f7b600"/>
               </svg>
               {/* MASTER */}
@@ -215,8 +214,8 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
                 <div className="w-4 h-4 rounded-full bg-[#f79e1b] opacity-80" />
               </div>
               {/* RUPAY */}
-              <div className="text-[10px] font-black italic tracking-tighter text-slate-300 uppercase border-r border-white/10 pr-4">RuPay</div>
-              <div className="text-[10px] font-black italic tracking-tighter text-slate-300 uppercase">NetBank</div>
+              <div className="text-[10px] font-black italic tracking-tighter text-slate-500 uppercase border-r border-[#FFE4E4] pr-4">RuPay</div>
+              <div className="text-[10px] font-black italic tracking-tighter text-slate-500 uppercase">NetBank</div>
             </div>
           </div>
         </div>

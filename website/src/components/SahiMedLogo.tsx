@@ -1,5 +1,9 @@
+"use client"
+
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 interface SahiMedLogoProps {
   className?: string;
@@ -7,6 +11,7 @@ interface SahiMedLogoProps {
   textClassName?: string;
   showText?: boolean;
   variant?: 'default' | 'white';
+  placement?: 'nav' | 'footer';
 }
 
 export default function SahiMedLogo({
@@ -14,14 +19,43 @@ export default function SahiMedLogo({
   iconClassName,
   textClassName,
   showText = true,
-  variant = 'default'
+  variant = 'default',
+  placement = 'nav'
 }: SahiMedLogoProps) {
+  const db = useFirestore();
+  const docRef = useMemoFirebase(() => doc(db, 'settings', 'logo'), [db]);
+  const { data: logoSettings, isLoading } = useDoc(docRef);
+
   const isWhite = variant === 'white';
   
   // Color codes
   const blueColor = isWhite ? '#FFFFFF' : '#1E3A8A';
   const greenColor = '#15803D'; // Corporate Green
-  
+
+  // Resolve custom uploaded logo url if present
+  const resolvedLogoUrl = isWhite 
+    ? (logoSettings?.whiteLogoUrl || logoSettings?.logoUrl) 
+    : logoSettings?.logoUrl;
+
+  if (resolvedLogoUrl) {
+    const desktopHeight = (placement === 'footer' ? logoSettings?.footerHeightDesktop : logoSettings?.navHeightDesktop) ?? 44;
+    const mobileHeight = (placement === 'footer' ? logoSettings?.footerHeightMobile : logoSettings?.navHeightMobile) ?? 32;
+
+    return (
+      <div className={cn("flex items-center select-none bg-transparent", className)}>
+        <img 
+          src={resolvedLogoUrl} 
+          style={{ 
+            '--logo-h-desktop': `${desktopHeight}px`, 
+            '--logo-h-mobile': `${mobileHeight}px` 
+          } as React.CSSProperties} 
+          className="w-auto object-contain h-[var(--logo-h-mobile)] sm:h-[var(--logo-h-desktop)]" 
+          alt="SahiMed" 
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={cn("flex items-center select-none bg-transparent", className)}>
       {/* Native Vector SVG Logo Icon */}

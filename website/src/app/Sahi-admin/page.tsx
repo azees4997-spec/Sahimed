@@ -55,6 +55,7 @@ import { MaintenanceTab } from './components/MaintenanceTab';
 import { InventoryTab } from './components/InventoryTab';
 import { MarketingTab } from './components/MarketingTab';
 import { OrderNotification } from './components/OrderNotification';
+import { BrandingTab } from './components/BrandingTab';
 
 const MASTER_UIDS = ["BM9HheYflheT0Wyj6olaEnyCAHl1", "RzB6nqlQumg1VEniFcZrgbcDdRA2"];
 
@@ -398,6 +399,7 @@ function AdminConsoleContent() {
               {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'inventory' && <InventoryTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {(permissions.staff_manage || userRole === 'admin') && activeTab === 'maintenance' && <MaintenanceTab onBack={() => handleTabChange('overview')} />}
               {activeTab === 'marketing' && <MarketingTab onBack={() => handleTabChange('overview')} />}
+              {userRole === 'admin' && activeTab === 'branding' && <BrandingTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
             </motion.div>
           </AnimatePresence>
         </main>

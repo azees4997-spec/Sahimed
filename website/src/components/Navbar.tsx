@@ -411,7 +411,7 @@ export default function Navbar() {
           )}>
             {/* Logo Section */}
             <Link href="/" className="group shrink-0 ml-1">
-              <SahiMedLogo />
+              <SahiMedLogo placement="nav" />
             </Link>
 
             {/* Desktop Navigation Links */}
