@@ -64,9 +64,18 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="sahimed.com" />
                 <data android:scheme="https" android:host="www.sahimed.com" />
+                <data android:pathPattern="/.*" />
                 <data android:pathPrefix="/product/" />
                 <data android:pathPrefix="/search" />
                 <data android:pathPrefix="/categories" />
+            </intent-filter>
+
+            <!-- Custom Scheme sahimed:// for deep linking -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="sahimed" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

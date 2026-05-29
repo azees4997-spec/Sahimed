@@ -28,7 +28,8 @@ import {
   MapPin,
   Clock,
   ArrowRight,
-  Pencil
+  Pencil,
+  X
 } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
@@ -357,6 +358,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
   const [edd, setEdd] = useState<string>('');
   const [activePincode, setActivePincode] = useState<string>('560068');
   const [zone, setZone] = useState<string>('');
+  const [isServiceable, setIsServiceable] = useState<boolean | null>(true);
 
   useEffect(() => {
     const loadPincode = async () => {
@@ -420,9 +422,11 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
         
         setEdd(`${formattedDate} ${dayName}`);
         setZone(data.zone || 'India');
+        setIsServiceable(true);
       } else {
         setEdd('');
         setZone('');
+        setIsServiceable(false);
         if (data.error) {
           toast({
             variant: 'destructive',
@@ -433,6 +437,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
       }
     } catch (e) {
       console.error("Failed to fetch EDD", e);
+      setIsServiceable(false);
       toast({
         variant: 'destructive',
         title: "Connection Error",
@@ -636,70 +641,106 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
             animate={{ opacity: 1, y: 0 }}
             className="mb-6 sm:mb-10 px-1"
           >
-            <div className="bg-emerald-50 border border-emerald-100 rounded-[20px] sm:rounded-[32px] p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between shadow-sm gap-4">
-              <div className="flex items-center gap-3 sm:gap-5 w-full">
-                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white rounded-full flex items-center justify-center shadow-sm border border-emerald-50 shrink-0">
-                  <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
+            <div className="bg-white border border-slate-100 rounded-[24px] p-5 shadow-sm space-y-4">
+              
+              {/* Delivering To Panel */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/8 text-primary rounded-full flex items-center justify-center">
+                    <MapPin className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-black text-slate-400 tracking-[0.12em] uppercase leading-none mb-1">
+                      DELIVERING TO
+                    </h4>
+                    <p className="text-base font-black text-slate-900 font-outfit uppercase leading-none">
+                      {activePincode}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <h3 className="text-[10px] sm:text-base font-black text-emerald-900 tracking-tight uppercase font-outfit">
-                    {edd ? `DELIVERY BY ${edd}` : "CHECK SERVICEABILITY"}
-                  </h3>
-                  <p className="text-[8px] sm:text-[11px] font-bold text-emerald-700/70 uppercase tracking-widest">
-                    {edd ? (zone ? `EXPRESS SHIPPING TO ${zone.toUpperCase()}` : "Guaranteed express shipping") : "Enter pincode to see delivery date"}
-                  </p>
-                </div>
+                
+                <button
+                  onClick={() => setIsEditingPincode(!isEditingPincode)}
+                  className="text-primary font-black text-xs uppercase tracking-widest px-4 py-2 hover:bg-primary/5 rounded-full transition-all"
+                >
+                  {isEditingPincode ? "CANCEL" : "CHANGE"}
+                </button>
               </div>
 
-              <div className={cn(
-                "w-full sm:w-auto flex items-center pl-4 sm:pl-6 pr-1.5 py-1.5 bg-white rounded-full border shadow-sm group transition-all duration-300",
-                isEditingPincode ? "border-primary ring-4 ring-primary/10 scale-[1.02]" : "border-emerald-100"
-              )}>
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <MapPin className={cn("w-4 h-4 shrink-0 transition-colors", isEditingPincode ? "text-primary" : "text-emerald-600")} />
+              {/* Inline Edit Input Field */}
+              {isEditingPincode && (
+                <div className="flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-100 rounded-[16px] animate-in fade-in duration-200">
                   <input
                     type="text"
                     maxLength={6}
-                    readOnly={!isEditingPincode}
                     value={activePincode}
                     onChange={handlePincodeChange}
-                    placeholder="Pincode"
-                    className={cn(
-                      "bg-transparent border-none outline-none text-[11px] sm:text-sm font-black uppercase tracking-[0.1em] w-[60px] sm:w-[85px] placeholder:text-slate-300 transition-all",
-                      !isEditingPincode ? "cursor-not-allowed opacity-70 text-emerald-900" : "text-primary scale-105"
-                    )}
+                    placeholder="Enter 6-digit Pincode"
+                    className="bg-transparent border-none outline-none text-sm font-bold tracking-[0.1em] px-3 py-1 flex-1 text-slate-800 placeholder:text-slate-300"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        onCheckPincode();
+                      }
+                    }}
                   />
                   <button
-                    onClick={() => setIsEditingPincode(!isEditingPincode)}
-                    className={cn(
-                      "p-2 rounded-full transition-all active:scale-90 shrink-0",
-                      isEditingPincode ? "text-rose-500 hover:bg-rose-50" : "text-emerald-600 hover:bg-emerald-50"
-                    )}
+                    onClick={onCheckPincode}
+                    className="w-8 h-8 rounded-full bg-primary hover:bg-primary/95 text-white flex items-center justify-center transition-all active:scale-95 shadow-md shadow-primary/10 shrink-0"
                   >
-                    {isEditingPincode ? <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+                    <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
-                <button
-                  onClick={onCheckPincode}
-                  className={cn(
-                    "ml-auto h-7 sm:h-10 bg-primary hover:bg-primary/90 text-white font-black text-[8px] sm:text-[10px] px-4 sm:px-8 rounded-full uppercase tracking-widest transition-all active:scale-95 shadow-md shadow-primary/10 flex items-center justify-center shrink-0",
-                    !isEditingPincode && "hidden"
-                  )}
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
+              )}
 
-            <div className="mt-4 flex items-center justify-center sm:justify-start">
-              <div className="flex items-center gap-3 px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
-                <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-inner">
-                   <Clock className="w-3 h-3 text-emerald-600 animate-pulse" />
+              {/* Divider */}
+              <div className="border-t border-slate-100/80 my-1" />
+
+              {/* Serviceability Status Banner */}
+              {isServiceable ? (
+                <div className="space-y-4">
+                  <div className="bg-emerald-50/80 border border-emerald-100/50 rounded-[20px] p-4 flex items-center gap-3 shadow-sm w-full">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0 border border-emerald-50">
+                      <Truck className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs sm:text-sm font-black text-emerald-900 tracking-tight uppercase font-outfit mb-0.5">
+                        {edd ? `DELIVERY BY ${edd}` : "CHECK SERVICEABILITY"}
+                      </h3>
+                      <p className="text-[9px] sm:text-[10px] font-bold text-emerald-700/70 uppercase tracking-widest leading-none">
+                        {edd ? (zone ? `EXPRESS SHIPPING TO ${zone.toUpperCase()}` : "Guaranteed express shipping") : "Enter pincode to see delivery date"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {edd && (
+                    <div className="flex items-center justify-center sm:justify-start">
+                      <div className="flex items-center gap-3 px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100/50 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
+                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-inner">
+                          <Clock className="w-3 h-3 text-emerald-600 animate-pulse" />
+                        </div>
+                        <p className="text-[9px] sm:text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                          FREE DELIVERY BY <span className="text-emerald-600 font-black">{edd}</span> IF YOU ORDER WITHIN <span className="text-emerald-600 font-black tabular-nums">{timeLeft}</span>
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <p className="text-[9px] sm:text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                  FREE DELIVERY BY <span className="text-emerald-600 font-black">{edd || 'MAY 16 SATURDAY'}</span> IF YOU ORDER WITHIN <span className="text-emerald-600 font-black tabular-nums">{timeLeft}</span>
-                </p>
-              </div>
+              ) : (
+                <div className="bg-rose-50 border border-rose-100 rounded-[20px] p-4 flex items-center gap-3 shadow-sm w-full animate-in shake duration-300">
+                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0 border border-rose-50">
+                    <AlertTriangle className="w-5 h-5 text-rose-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-black text-rose-900 tracking-tight uppercase font-outfit mb-0.5">
+                      NOT SERVICEABLE
+                    </h3>
+                    <p className="text-[9px] sm:text-[10px] font-bold text-rose-700/70 uppercase tracking-widest leading-none">
+                      DELIVERY IS NOT AVAILABLE TO THIS PINCODE
+                    </p>
+                  </div>
+                </div>
+              )}
+
             </div>
           </motion.div>
 

@@ -10,6 +10,7 @@ import '../../../core/services/api_service.dart';
 import '../../../core/providers/cart_provider.dart';
 import '../../../shared/models/models.dart';
 import '../../../core/widgets/screen_with_nav.dart';
+import '../../../shared/widgets/sahimed_top_nav.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -182,22 +183,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     return ScreenWithNav(
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
-        appBar: AppBar(
-          backgroundColor: const Color(0xFFF8FAFC),
-          elevation: 0,
-          surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF0F172A)),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.pop(context);
-            },
-          ),
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 200),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        body: Column(
+          children: [
+            const SahimedTopNav(showBack: true),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 200),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ── 1. RX Badge (centered, if needed) ──────────────────────────
               if (isRx)
@@ -565,8 +558,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
             ],
           ),
         ),
-      ), // Scaffold
-    ); // ScreenWithNav
+      ),
+    ),
+  ],
+),
+), // Scaffold
+); // ScreenWithNav
   }
 }
 
@@ -826,44 +823,55 @@ class _ComparisonCard extends StatelessWidget {
 
           // ADD / IN CART / NOTIFY ME button (matches website button exactly)
           GestureDetector(
-            onTap: () async {
-              HapticFeedback.mediumImpact();
-              if (product.availableQuantity <= 0) {
-                final prefs = await SharedPreferences.getInstance();
-                final pin = prefs.getString('user_pincode');
-                final user = FirebaseAuth.instance.currentUser;
-                
-                final success = await ApiService().submitStockAlert(
-                  product.id, 
-                  pincode: pin,
-                  phone: user?.phoneNumber,
-                  name: user?.displayName,
-                );
-                
-                if (success && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('WE\'LL NOTIFY YOU WHEN IT\'S BACK!'),
-                      backgroundColor: SahimedColors.primary,
-                    ),
-                  );
-                }
-              } else {
-                context.read<CartProvider>().addItem(product);
-              }
-            },
+            onTap: (displayQty > 0 && product.availableQuantity > 0)
+                ? null
+                : () async {
+                    HapticFeedback.mediumImpact();
+                    if (product.availableQuantity <= 0) {
+                      final prefs = await SharedPreferences.getInstance();
+                      final pin = prefs.getString('user_pincode');
+                      final user = FirebaseAuth.instance.currentUser;
+                      
+                      final success = await ApiService().submitStockAlert(
+                        product.id, 
+                        pincode: pin,
+                        phone: user?.phoneNumber,
+                        name: user?.displayName,
+                      );
+                      
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              success
+                                  ? 'WE\'LL NOTIFY YOU WHEN IT\'S BACK!'
+                                  : 'FAILED TO SUBMIT STOCK ALERT. PLEASE TRY AGAIN.',
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                            backgroundColor: success ? SahimedColors.primary : Colors.red,
+                          ),
+                        );
+                      }
+                    } else {
+                      context.read<CartProvider>().addItem(product);
+                    }
+                  },
             child: Container(
               width: double.infinity,
               height: 34,
               decoration: BoxDecoration(
                 color: product.availableQuantity > 0
-                    ? (isAlt ? SahimedColors.accent : SahimedColors.primary)
+                    ? (displayQty > 0
+                        ? (isAlt ? SahimedColors.accent : SahimedColors.primary).withOpacity(0.08)
+                        : (isAlt ? SahimedColors.accent : SahimedColors.primary))
                     : const Color(0xFFFFF1F2),
                 borderRadius: BorderRadius.circular(100),
                 border: product.availableQuantity > 0
-                    ? null
+                    ? (displayQty > 0
+                        ? Border.all(color: (isAlt ? SahimedColors.accent : SahimedColors.primary).withOpacity(0.15))
+                        : null)
                     : Border.all(color: const Color(0xFFFFE4E6)),
-                boxShadow: product.availableQuantity > 0
+                boxShadow: (product.availableQuantity > 0 && displayQty == 0)
                     ? [
                         BoxShadow(
                           color: (isAlt
@@ -876,34 +884,95 @@ class _ComparisonCard extends StatelessWidget {
                       ]
                     : [],
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    product.availableQuantity <= 0
-                        ? 'NOTIFY ME'
-                        : (displayQty > 0 ? 'IN CART ($displayQty)' : 'ADD'),
-                    style: GoogleFonts.outfit(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      color: product.availableQuantity > 0
-                          ? Colors.white
-                          : const Color(0xFFE11D48),
-                      letterSpacing: 1,
+              child: displayQty > 0 && product.availableQuantity > 0
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              context.read<CartProvider>().updateQuantity(product.id, -1);
+                            },
+                            child: Container(
+                              width: 26,
+                              height: 26,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(100),
+                                border: Border.all(color: (isAlt ? SahimedColors.accent : SahimedColors.primary).withOpacity(0.1)),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 2,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(Icons.remove, size: 14, color: isAlt ? SahimedColors.accent : SahimedColors.primary),
+                            ),
+                          ),
+                          Text(
+                            '$displayQty',
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                              color: isAlt ? SahimedColors.accent : SahimedColors.primary,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              context.read<CartProvider>().addItem(product);
+                            },
+                            child: Container(
+                              width: 26,
+                              height: 26,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(100),
+                                border: Border.all(color: (isAlt ? SahimedColors.accent : SahimedColors.primary).withOpacity(0.1)),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 2,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(Icons.add, size: 14, color: isAlt ? SahimedColors.accent : SahimedColors.primary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          product.availableQuantity <= 0 ? 'NOTIFY ME' : 'ADD',
+                          style: GoogleFonts.outfit(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: product.availableQuantity > 0
+                                ? Colors.white
+                                : const Color(0xFFE11D48),
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          product.availableQuantity <= 0
+                              ? LucideIcons.bell
+                              : LucideIcons.shoppingCart,
+                          size: 12,
+                          color: product.availableQuantity > 0
+                              ? Colors.white
+                              : const Color(0xFFE11D48),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Icon(
-                    product.availableQuantity <= 0
-                        ? LucideIcons.bell
-                        : LucideIcons.shoppingCart,
-                    size: 12,
-                    color: product.availableQuantity > 0
-                        ? Colors.white
-                        : const Color(0xFFE11D48),
-                  ),
-                ],
-              ),
             ),
           ),
         ],

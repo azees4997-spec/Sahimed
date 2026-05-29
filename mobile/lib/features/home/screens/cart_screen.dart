@@ -683,7 +683,10 @@ class _CartItemTile extends StatelessWidget {
               const SizedBox(height: 8),
               // Delete button
               GestureDetector(
-                onTap: () => cart.removeItem(p.id),
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  cart.removeItem(p.id);
+                },
                 child: Container(
                   width: 30,
                   height: 30,
@@ -1422,7 +1425,10 @@ class _LossAlertCard extends StatelessWidget {
                     ),
                   ),
                   GestureDetector(
-                    onTap: onSwap,
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      onSwap();
+                    },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,

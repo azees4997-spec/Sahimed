@@ -677,6 +677,39 @@ class ApiService {
     return null;
   }
 
+  Future<String?> uploadProfileImage(File file) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+
+      final extension = file.path.split('.').last;
+      final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.$extension';
+      final storagePath = 'profiles/${user.uid}/$fileName';
+
+      final ref = _storage.ref().child(storagePath);
+      final uploadTask = await ref.putFile(file);
+      return await uploadTask.ref.getDownloadURL();
+    } catch (e) {
+      debugPrint('Error uploading profile image to Firebase Storage: $e');
+    }
+    return null;
+  }
+
+  Future<bool> updateUserProfile(Map<String, dynamic> profileData) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/user/profile'),
+        headers: headers,
+        body: json.encode(profileData),
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint('Error updating user profile: $e');
+      return false;
+    }
+  }
+
   Future<bool> syncUser() async {
     try {
       final headers = await _getHeaders();

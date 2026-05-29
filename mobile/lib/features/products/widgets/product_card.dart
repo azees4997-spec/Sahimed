@@ -192,12 +192,12 @@ class SahimedProductCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
       
-                      // Slot 2: Name Slot (Fixed 3 lines)
+                      // Slot 2: Name Slot (Fixed 2 lines snugly)
                       SizedBox(
-                        height: 39,
+                        height: 24,
                         child: Text(
                           product.name.toUpperCase(),
-                          maxLines: 3,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.outfit(
                             fontSize: 10,
@@ -282,34 +282,45 @@ class SahimedProductCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
             child: GestureDetector(
-              onTap: product.availableQuantity > 0 
-                ? () {
-                    HapticFeedback.mediumImpact();
-                    context.read<CartProvider>().addItem(product);
-                  }
-                : () async {
-                    final success = await ApiService().submitStockAlert(product.id);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(success ? "We'll notify you when ${product.name} is back!" : "Failed to set alert."),
-                          backgroundColor: success ? SahimedColors.primary : Colors.red,
-                        ),
-                      );
-                    }
-                  },
+              onTap: (qty > 0 && product.availableQuantity > 0)
+                ? null
+                : (product.availableQuantity > 0 
+                    ? () {
+                        HapticFeedback.mediumImpact();
+                        context.read<CartProvider>().addItem(product);
+                      }
+                    : () async {
+                        final success = await ApiService().submitStockAlert(product.id);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                success 
+                                    ? "We'll notify you when ${product.name} is back!" 
+                                    : "Failed to set alert.",
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              ),
+                              backgroundColor: success ? SahimedColors.primary : Colors.red,
+                            ),
+                          );
+                        }
+                      }),
               child: Container(
                 width: double.infinity,
                 height: 34,
                 decoration: BoxDecoration(
                   color: product.availableQuantity > 0 
-                      ? SahimedColors.primary 
+                      ? (qty > 0 
+                          ? SahimedColors.primary.withOpacity(0.08) 
+                          : SahimedColors.primary)
                       : const Color(0xFFFFF1F2),
                   borderRadius: BorderRadius.circular(10),
                   border: product.availableQuantity > 0 
-                      ? null 
+                      ? (qty > 0 
+                          ? Border.all(color: SahimedColors.primary.withOpacity(0.15)) 
+                          : null)
                       : Border.all(color: const Color(0xFFFFE4E6)),
-                  boxShadow: product.availableQuantity > 0 ? [
+                  boxShadow: (product.availableQuantity > 0 && qty == 0) ? [
                     BoxShadow(
                       color: SahimedColors.primary.withAlpha(50),
                       blurRadius: 8,
@@ -318,48 +329,67 @@ class SahimedProductCard extends StatelessWidget {
                   ] : [],
                 ),
                 child: qty > 0 && product.availableQuantity > 0
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              context.read<CartProvider>().updateQuantity(product.id, qty - 1);
-                            },
-                            child: Container(
-                              width: 40,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withAlpha(50),
-                                borderRadius: const BorderRadius.horizontal(left: Radius.circular(10)),
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                context.read<CartProvider>().updateQuantity(product.id, -1);
+                              },
+                              child: Container(
+                                width: 26,
+                                height: 26,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: SahimedColors.primary.withOpacity(0.1)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 2,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(Icons.remove, size: 14, color: SahimedColors.primary),
                               ),
-                              child: const Icon(Icons.remove, size: 16, color: Colors.white),
                             ),
-                          ),
-                          Text(
-                            '$qty',
-                            style: GoogleFonts.outfit(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              context.read<CartProvider>().addItem(product);
-                            },
-                            child: Container(
-                              width: 40,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withAlpha(50),
-                                borderRadius: const BorderRadius.horizontal(right: Radius.circular(10)),
+                            Text(
+                              '$qty',
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                                color: SahimedColors.primary,
                               ),
-                              child: const Icon(Icons.add, size: 16, color: Colors.white),
                             ),
-                          ),
-                        ],
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                context.read<CartProvider>().addItem(product);
+                              },
+                              child: Container(
+                                width: 26,
+                                height: 26,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: SahimedColors.primary.withOpacity(0.1)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 2,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(Icons.add, size: 14, color: SahimedColors.primary),
+                              ),
+                            ),
+                          ],
+                        ),
                       )
                     : Center(
                         child: Text(

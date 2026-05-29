@@ -268,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       const TextSpan(text: 'AFFORDABLE\nMEDICINES\n'),
                       TextSpan(
-                        text: 'FOR HEALTH',
+                        text: 'FOR EVERYDAY HEALTH',
                         style: GoogleFonts.outfit(color: SahimedColors.primary, fontStyle: FontStyle.italic),
                       ),
                     ],

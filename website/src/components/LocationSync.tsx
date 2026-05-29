@@ -9,6 +9,20 @@ export default function LocationSync() {
   const { setLocation } = useCart();
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const hasRedirected = sessionStorage.getItem('sahimed_app_redirected');
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
+    if (isAndroid && !hasRedirected) {
+      sessionStorage.setItem('sahimed_app_redirected', 'true');
+      const currentPath = window.location.pathname + window.location.search;
+      const intentUrl = `intent://sahimed.com${currentPath}#Intent;scheme=https;package=com.sahimed.app;fallback=${encodeURIComponent(window.location.href)};end`;
+      window.location.href = intentUrl;
+    }
+  }, []);
+
+  useEffect(() => {
     const syncLocation = async () => {
       // Check if location is already captured
       const savedLocation = localStorage.getItem('sahimed_location');
