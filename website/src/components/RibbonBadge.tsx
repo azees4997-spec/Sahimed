@@ -110,8 +110,6 @@ export default function RibbonBadge({
           </svg>
         </div>
 
-        {/* Fold effect at top (The darker flap) */}
-        <div className={cn("absolute left-0 rounded-tl-sm -skew-x-[45deg] origin-bottom-left", s.foldOffset, s.foldSize, colors.fold)} />
       </motion.div>
     </div>
   );
