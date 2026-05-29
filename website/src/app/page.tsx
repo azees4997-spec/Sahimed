@@ -90,8 +90,61 @@ export default async function Home() {
     getProducts('all')
   ]);
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "question": "Are the medicines sold 100% authentic?",
+        "acceptedAnswer": {
+          "type": "Answer",
+          "text": "Yes, absolutely. Every product on Sahimed is sourced directly from licensed pharmaceutical manufacturers or their authorized distributors. We have a strict quality-check protocol to ensure that only genuine, unexpired medicines reach your doorstep."
+        }
+      },
+      {
+        "question": "Is a prescription required for medicines?",
+        "acceptedAnswer": {
+          "type": "Answer",
+          "text": "For all prescription-only (Rx) medicines, a valid prescription from a registered medical practitioner is mandatory. You can easily upload a photo or PDF of your prescription during checkout. Our certified pharmacists verify every prescription for your safety."
+        }
+      },
+      {
+        "question": "How long does delivery usually take?",
+        "acceptedAnswer": {
+          "type": "Answer",
+          "text": "We offer fast and safe delivery across India. Delivery times typically range from 24-48 hours in major cities like Bangalore, Mumbai, and Delhi, and 3-5 days for other regions. We focus on ensuring the medicines are transported safely and securely."
+        }
+      },
+      {
+        "question": "Can I order via WhatsApp or phone call?",
+        "acceptedAnswer": {
+          "type": "Answer",
+          "text": "Yes! We understand that some customers prefer a more personal touch. You can reach out to our team at +91 7349499898 via WhatsApp or call us to place your order directly. Our experts will help you with the process."
+        }
+      },
+      {
+        "question": "Why are Sahimed's prices so affordable?",
+        "acceptedAnswer": {
+          "type": "Answer",
+          "text": "Our motto is 'Sahi Dawai, Sahi Daam Pe'. We achieve this by optimizing our supply chain, removing unnecessary intermediaries, and passing those savings directly to you. We aim to make chronic healthcare affordable for every Indian household."
+        }
+      }
+    ].map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.acceptedAnswer.text
+      }
+    }))
+  };
+
   return (
     <PageTransition>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <div className="min-h-screen bg-[#F8FAFC]">
         <Navbar />
         

@@ -10,10 +10,16 @@ Sahimed is a leading Indian digital healthcare platform providing authentic medi
 
 ## Content Structure
 - Home: https://sahimed.com/
-- Health Blog (Articles): https://sahimed.com/article/[slug]
+- Health Blog (Articles): https://sahimed.com/blog/[slug]
 - Product Catalog: https://sahimed.com/search
 - Categories: https://sahimed.com/categories
 - Prescription Portal: https://sahimed.com/prescription
+
+## Public APIs for Discovery
+- **Product Search & Catalog**: `https://sahimed.com/api/products` (supports search, category filtering)
+- **Top Categories**: `https://sahimed.com/api/categories`
+- **Marketing Banners**: `https://sahimed.com/api/banners`
+- **Pincode Logistics Serviceability**: `https://sahimed.com/api/logistics/shipway/serviceability`
 
 ## Technical Stack
 - Framework: Next.js (App Router)
