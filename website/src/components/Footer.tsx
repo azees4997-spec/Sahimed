@@ -29,7 +29,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
   const { data: allPages } = useCollection(footerPagesQuery);
   
   const currentPages = allPages || initialPages;
-  const footerPages = currentPages?.filter((p: any) => p.placement === 'footer' || p.placement === 'both');
+  const footerPages = currentPages?.filter((p: any) => (p.placement === 'footer' || p.placement === 'both') && p.id !== 'contact');
 
   const hideOnPaths = ['/cart', '/checkout', '/Sahi-admin', '/login', '/prescription'];
   if (hideOnPaths.some(path => pathname.startsWith(path))) return null;
@@ -103,6 +103,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
                 { label: 'Brand Categories', href: '/categories' },
                 { label: 'Prescription Checkout', href: '/prescription' },
                 { label: 'Exclusive Offers', href: '/p/offers' },
+                { label: 'Browse Blogs', href: '/blog' },
               ].map((link, i) => (
                 <li key={i}>
                   <Link href={link.href} className="group flex items-center gap-2 text-slate-300 hover:text-white transition-all text-sm font-bold uppercase tracking-tight">
@@ -126,12 +127,6 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
                   </Link>
                 </li>
               ))}
-              <li>
-                <Link href="/contact" className="group flex items-center gap-2 text-slate-300 hover:text-white transition-all text-sm font-bold uppercase tracking-tight">
-                  <ChevronRight className="w-4 h-4 text-accent opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300" />
-                  Contact Us
-                </Link>
-              </li>
             </ul>
           </div>
 

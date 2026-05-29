@@ -798,7 +798,7 @@ export default function Navbar() {
                 <SearchIcon className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-5 h-5" />
                 <Input
                   type="text"
-                  placeholder="Search for medicines or generics"
+                  placeholder="Search by medicine or salt..."
                   className="w-full pl-14 pr-32 h-14 sm:h-16 text-sm sm:text-base font-bold bg-white border-slate-200 focus:border-primary/20 rounded-full shadow-2xl shadow-primary/5 transition-all outline-none"
                   value={search}
                   onChange={(e) => {

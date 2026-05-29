@@ -93,12 +93,12 @@ export default async function Home() {
         <Navbar />
         
         {/* Mega Banner Hero Section */}
-        <section className="relative w-full bg-[#FFF9F9] overflow-hidden pb-4 sm:pb-10 pt-2 sm:pt-8 border-b border-rose-50/50">
+        <section className="relative w-full bg-[#FFF9F9] overflow-hidden pb-3 md:pb-6 pt-2 md:pt-4 border-b border-rose-50/50">
           <div className="absolute top-0 right-0 w-48 h-48 bg-rose-100/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none" />
           
           <div className="max-w-7xl mx-auto px-4 relative z-10">
-            <div className="flex flex-col gap-4 sm:gap-6">
+            <div className="flex flex-col gap-3 md:gap-4">
               
               <div className="flex items-center justify-between gap-4 sm:gap-8">
                 <div className="flex-1 space-y-2 sm:space-y-4">
@@ -109,7 +109,7 @@ export default async function Home() {
                       </div>
                       <span className="text-slate-800 font-black uppercase tracking-[0.1em] text-[8px] sm:text-[9px]">Trusted Quality</span>
                     </div>
-                    <h1 className="text-xl sm:text-5xl font-black leading-[1.1] tracking-tighter text-slate-900 font-outfit uppercase">
+                    <h1 className="text-xl md:text-3xl lg:text-4xl font-black leading-[1.1] tracking-tighter text-slate-900 font-outfit uppercase">
                       Affordable Medicines <br/>
                       <span className="text-primary italic">for Everyday Health</span>
                     </h1>
@@ -117,7 +117,7 @@ export default async function Home() {
                 </div>
  
                 <div className="w-1/3 sm:w-1/4 flex justify-end">
-                  <div className="relative w-full aspect-square max-w-[120px] sm:max-w-[280px] rounded-xl sm:rounded-[32px] border-[4px] sm:border-[8px] border-white shadow-2xl overflow-hidden bg-white">
+                  <div className="relative w-full aspect-square max-w-[120px] md:max-w-[180px] lg:max-w-[210px] rounded-xl md:rounded-[24px] border-[4px] md:border-[6px] border-white shadow-2xl overflow-hidden bg-white">
                     <Image 
                       src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=2070&auto=format&fit=crop" 
                       alt="Healthcare Professional" 
@@ -133,7 +133,7 @@ export default async function Home() {
                 <HeroSearch />
               </div>
  
-              <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-3xl mx-auto w-full">
+              <div className="grid grid-cols-3 gap-2 md:gap-3 max-w-xl mx-auto w-full">
                 {[
                   { label: 'Upload Rx', href: '/prescription', color: 'bg-lavender', Icon: FileText, iconColor: 'bg-primary' },
                   { 
@@ -149,11 +149,11 @@ export default async function Home() {
                   },
                   { label: 'Order on Call', href: 'tel:+917349499898', color: 'bg-rose-50', Icon: Phone, iconColor: 'bg-rose-500' }
                 ].map((action, i) => (
-                  <Link key={i} href={action.href} className={cn("group p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-white shadow-lg shadow-slate-200/40 flex flex-col items-center justify-center text-center gap-1 sm:gap-2 transition-all active:scale-95", action.color)}>
-                    <div className={cn("w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg sm:rounded-xl shadow-md", action.iconColor)}>
-                      <action.Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
+                  <Link key={i} href={action.href} className={cn("group p-2 md:p-3 rounded-xl md:rounded-[20px] border border-white shadow-lg shadow-slate-200/40 flex flex-col items-center justify-center text-center gap-1 md:gap-1.5 transition-all active:scale-95", action.color)}>
+                    <div className={cn("w-7 h-7 md:w-9 md:h-9 flex items-center justify-center rounded-lg md:rounded-xl shadow-md", action.iconColor)}>
+                      <action.Icon className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-white" />
                     </div>
-                    <span className="font-black text-[7px] sm:text-[10px] tracking-tight text-slate-900 uppercase leading-none whitespace-nowrap">{action.label}</span>
+                    <span className="font-black text-[7px] md:text-[9px] tracking-tight text-slate-900 uppercase leading-none whitespace-nowrap">{action.label}</span>
                   </Link>
                 ))}
               </div>
@@ -161,7 +161,7 @@ export default async function Home() {
           </div>
         </section>
  
-        <main className="max-w-7xl mx-auto px-4 pt-0 pb-10 sm:pt-8 sm:pb-20">
+        <main className="max-w-7xl mx-auto px-4 pt-0 pb-10 md:pt-4 md:pb-12">
           <HomeClient 
             banners={banners}
             categories={categories}

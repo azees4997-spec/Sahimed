@@ -280,10 +280,7 @@ const ComparisonCard = ({
               <div className="flex flex-col items-center justify-center py-3 border-b border-slate-50 text-center">
                 <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tight">{product.manufacturer}</span>
               </div>
-              <div className="flex items-center justify-center gap-2 py-3 border-b border-slate-50 text-center">
-                <ShieldAlert className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">FDA APPROVED</span>
-              </div>
+              {/* Removed FDA approved status for simple view */}
               <div className="flex flex-col items-center justify-center py-3 border-b border-slate-50 text-center">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight leading-tight">{product.saltComposition || product.molecule}</span>
               </div>
@@ -589,17 +586,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
           <div className="mb-8 sm:mb-16 px-1 relative">
             {showComparison ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-12 items-stretch relative">
-                {/* 100% Match Floating Badge */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
-                  <motion.div 
-                    initial={{ scale: 0, rotate: -10 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    className="w-16 h-16 sm:w-24 sm:h-24 bg-lavender-text border-[4px] sm:border-[8px] border-white rounded-full flex flex-col items-center justify-center shadow-2xl shadow-lavender-text/40"
-                  >
-                    <span className="text-[10px] sm:text-sm font-black text-white leading-none">100%</span>
-                    <span className="text-[6px] sm:text-[8px] font-bold text-white/80 uppercase tracking-tighter">MATCH</span>
-                  </motion.div>
-                </div>
+                {/* Removed 100% match floating badge */}
 
                 <ComparisonCard
                   product={brandedItem}

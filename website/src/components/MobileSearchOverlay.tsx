@@ -187,7 +187,7 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
           <Input
             ref={inputRef}
             type="text"
-            placeholder="Search medicines..."
+            placeholder="Search by medicine or salt..."
             className="w-full pl-10 pr-24 h-11 bg-slate-50 border-none focus:ring-2 focus:ring-primary/20 rounded-xl font-bold text-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value)}

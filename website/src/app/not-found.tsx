@@ -65,7 +65,7 @@ export default function NotFound() {
         href="/search"
         className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] hover:text-primary transition-colors"
       >
-        Search medicines instead →
+        Search by medicine or salt instead →
       </Link>
     </div>
   );
