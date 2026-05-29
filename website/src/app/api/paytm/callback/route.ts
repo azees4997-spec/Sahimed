@@ -94,7 +94,19 @@ export async function POST(req: Request) {
       } catch (emailErr: any) {
         console.error("[Email Notification Error]", emailErr.message);
       }
+
+      // 4. Trigger WhatsApp Notification
+      try {
+        const orderForWhatsApp = await db.collection('orders').findOne({ orderId: baseOrderId });
+        if (orderForWhatsApp) {
+          const { sendAdminWhatsAppNotification } = await import('@/lib/whatsapp-service');
+          await sendAdminWhatsAppNotification(orderForWhatsApp);
+        }
+      } catch (waErr: any) {
+        console.error("[WhatsApp Notification Error]", waErr.message);
+      }
     }
+
 
       // Redirect to success page
       return NextResponse.redirect(`https://sahimed.com/order-success/${baseOrderId}`, 303);

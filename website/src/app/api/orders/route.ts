@@ -465,6 +465,15 @@ export async function POST(req: Request) {
       console.error("[Email Notification Error]", emailErr.message);
     }
 
+    // Trigger WhatsApp Notification for New Orders
+    try {
+      const { sendAdminWhatsAppNotification } = await import('@/lib/whatsapp-service');
+      await sendAdminWhatsAppNotification(orderData);
+    } catch (waErr: any) {
+      console.error("[WhatsApp Notification Error]", waErr.message);
+    }
+
+
     return NextResponse.json({ success: true, id: result.insertedId, orderId: nextId });
   } catch (err: any) {
     console.error("[Orders API Error]", err);
