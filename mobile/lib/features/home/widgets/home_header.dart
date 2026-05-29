@@ -499,55 +499,11 @@ class _HomeHeaderState extends State<HomeHeader> {
                   GestureDetector(
                     onTap: () =>
                         Navigator.of(context).popUntil((route) => route.isFirst),
-                    child: Row(
-                      children: [
-                        SvgPicture.asset(
-                          'assets/icons/logo.svg',
-                          width: 42,
-                          height: 42,
-                        ).animate().fadeIn(duration: 600.ms).scale(delay: 200.ms),
-                        const SizedBox(width: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            RichText(
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: 'Sahi',
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFF0F172A),
-                                      letterSpacing: -0.8,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: 'Med',
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w900,
-                                      color: SahimedColors.primary,
-                                      letterSpacing: -0.8,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Text(
-                              'Sahi dawai sahi daam pe'.toUpperCase(),
-                              style: GoogleFonts.outfit(
-                                fontSize: 7,
-                                fontWeight: FontWeight.w900,
-                                color: SahimedColors.primary.withOpacity(0.8),
-                                letterSpacing: 1.5,
-                                height: 0.8,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                    child: Image.asset(
+                      'assets/icons/sahimed_logo_transparent.png',
+                      height: 38,
+                      fit: BoxFit.contain,
+                    ).animate().fadeIn(duration: 600.ms).scale(delay: 200.ms),
                   ),
 
                   // 2. Right Actions

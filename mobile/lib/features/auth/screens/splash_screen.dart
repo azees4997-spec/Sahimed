@@ -43,51 +43,14 @@ class SplashScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Logo Group
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Sahi',
-                        style: GoogleFonts.outfit(
-                          fontSize: 72,
-                          fontWeight: FontWeight.w900,
-                          color: SahimedColors.primary,
-                          letterSpacing: -4,
-                        ),
-                      )
-                          .animate()
-                          .fadeIn(duration: 800.ms)
-                          .slideX(begin: -0.2, end: 0, curve: Curves.easeOutCubic),
-                      Text(
-                        'Med',
-                        style: GoogleFonts.outfit(
-                          fontSize: 72,
-                          fontWeight: FontWeight.w900,
-                          color: SahimedColors.accent,
-                          letterSpacing: -4,
-                        ),
-                      )
-                          .animate()
-                          .fadeIn(delay: 400.ms, duration: 800.ms)
-                          .slideX(begin: 0.2, end: 0, curve: Curves.easeOutCubic),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  // Tagline
-                  Text(
-                    'Sahi Dawai Sahi Daam Pe'.toUpperCase(),
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      color: SahimedColors.primary.withOpacity(0.4),
-                      letterSpacing: 4,
-                    ),
+                  Image.asset(
+                    'assets/icons/sahimed_logo_transparent.png',
+                    width: 280,
+                    fit: BoxFit.contain,
                   )
                       .animate()
-                      .fadeIn(delay: 1.seconds, duration: 800.ms)
-                      .shimmer(delay: 2.seconds, duration: 1.5.seconds),
+                      .fadeIn(duration: 800.ms)
+                      .scale(begin: const Offset(0.9, 0.9)),
                   
                   const SizedBox(height: 80),
                   
