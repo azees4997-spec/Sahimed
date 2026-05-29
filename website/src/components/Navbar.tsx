@@ -20,6 +20,7 @@ import dynamic from 'next/dynamic';
 const MobileSearchOverlay = dynamic(() => import('./MobileSearchOverlay'), { ssr: false });
 import { usePathname } from 'next/navigation';
 import { Product } from '@/types';
+import SahiMedLogo from './SahiMedLogo';
 
 export function SahiMedIcon({ className }: { className?: string }) {
   return (
@@ -409,15 +410,8 @@ export default function Navbar() {
             scrolled ? "bg-transparent" : "bg-transparent"
           )}>
             {/* Logo Section */}
-            <Link href="/" className="flex items-center gap-1.5 group shrink-0 ml-1">
-              <SahiMedIcon className="w-8 h-8 sm:w-11 sm:h-11 shadow-lg shadow-primary/10 rounded-xl" />
-              <div className="flex flex-col ml-1">
-                <div className="flex items-center leading-none">
-                  <span className={cn("font-black text-lg sm:text-2xl tracking-tight transition-colors", scrolled ? "text-slate-900" : "text-slate-900")}>Sahi</span>
-                  <span className="font-black text-lg sm:text-2xl text-primary tracking-tight">Med</span>
-                </div>
-                <span className="text-[7.5px] sm:text-[9px] font-black text-slate-500 tracking-[0.15em] uppercase mt-0.5">Sahi dawai sahi daam pe</span>
-              </div>
+            <Link href="/" className="group shrink-0 ml-1">
+              <SahiMedLogo />
             </Link>
 
             {/* Desktop Navigation Links */}

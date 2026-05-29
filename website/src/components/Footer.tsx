@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { SahiMedIcon } from './Navbar';
+import SahiMedLogo from './SahiMedLogo';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { 
@@ -48,17 +48,9 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
           
           {/* Column 1: Brand & About */}
           <div className="space-y-8">
-            <div className="flex items-center gap-3">
-              <div className="bg-white p-2 rounded-[18px] shadow-2xl shadow-primary/20 transition-transform hover:scale-105 duration-500">
-                <SahiMedIcon className="w-8 h-8" />
-              </div>
-              <div className="flex flex-col leading-none">
-                <span className="font-outfit font-black text-2xl tracking-tighter">
-                  Sahi<span className="text-primary italic">Med</span>
-                </span>
-                <span className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-500 mt-0.5">Sahi dawai sahi daam pe</span>
-              </div>
-            </div>
+            <Link href="/" className="group block w-fit">
+              <SahiMedLogo variant="white" />
+            </Link>
             <p className="text-gray-400 text-sm leading-relaxed max-w-[280px] font-medium">
               Revolutionizing medication accessibility through precision technology and medical excellence. Your trust, our priority.
             </p>
