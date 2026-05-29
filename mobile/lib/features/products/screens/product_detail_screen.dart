@@ -618,11 +618,11 @@ class _ComparisonCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: isAlt ? SahimedColors.accent.withOpacity(0.03) : Colors.white,
+        color: isAlt ? SahimedColors.sahiGreen.withOpacity(0.15) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isAlt
-              ? SahimedColors.accent.withOpacity(0.2)
+              ? SahimedColors.sahiGreenText.withOpacity(0.2)
               : const Color(0xFFF1F5F9),
           width: isAlt ? 2 : 1,
         ),
@@ -649,7 +649,7 @@ class _ComparisonCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isAlt
-                        ? SahimedColors.accent
+                        ? SahimedColors.sahiGreenText
                         : const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(100),
                   ),
@@ -862,20 +862,20 @@ class _ComparisonCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: product.availableQuantity > 0
                     ? (displayQty > 0
-                        ? (isAlt ? SahimedColors.accent : SahimedColors.primary).withOpacity(0.08)
-                        : (isAlt ? SahimedColors.accent : SahimedColors.primary))
+                        ? (isAlt ? SahimedColors.sahiGreenText : SahimedColors.primary).withOpacity(0.08)
+                        : (isAlt ? SahimedColors.sahiGreenText : SahimedColors.primary))
                     : const Color(0xFFFFF1F2),
                 borderRadius: BorderRadius.circular(100),
                 border: product.availableQuantity > 0
                     ? (displayQty > 0
-                        ? Border.all(color: (isAlt ? SahimedColors.accent : SahimedColors.primary).withOpacity(0.15))
+                        ? Border.all(color: (isAlt ? SahimedColors.sahiGreenText : SahimedColors.primary).withOpacity(0.15))
                         : null)
                     : Border.all(color: const Color(0xFFFFE4E6)),
                 boxShadow: (product.availableQuantity > 0 && displayQty == 0)
                     ? [
                         BoxShadow(
                           color: (isAlt
-                                  ? SahimedColors.accent
+                                  ? SahimedColors.sahiGreenText
                                   : SahimedColors.primary)
                               .withOpacity(0.3),
                           blurRadius: 8,
@@ -901,7 +901,7 @@ class _ComparisonCard extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(100),
-                                border: Border.all(color: (isAlt ? SahimedColors.accent : SahimedColors.primary).withOpacity(0.1)),
+                                border: Border.all(color: (isAlt ? SahimedColors.sahiGreenText : SahimedColors.primary).withOpacity(0.1)),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.05),
@@ -910,7 +910,7 @@ class _ComparisonCard extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              child: Icon(Icons.remove, size: 14, color: isAlt ? SahimedColors.accent : SahimedColors.primary),
+                              child: Icon(Icons.remove, size: 14, color: isAlt ? SahimedColors.sahiGreenText : SahimedColors.primary),
                             ),
                           ),
                           Text(
@@ -918,7 +918,7 @@ class _ComparisonCard extends StatelessWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 13,
                               fontWeight: FontWeight.w900,
-                              color: isAlt ? SahimedColors.accent : SahimedColors.primary,
+                              color: isAlt ? SahimedColors.sahiGreenText : SahimedColors.primary,
                             ),
                           ),
                           GestureDetector(
@@ -932,7 +932,7 @@ class _ComparisonCard extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(100),
-                                border: Border.all(color: (isAlt ? SahimedColors.accent : SahimedColors.primary).withOpacity(0.1)),
+                                border: Border.all(color: (isAlt ? SahimedColors.sahiGreenText : SahimedColors.primary).withOpacity(0.1)),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.05),
@@ -941,7 +941,7 @@ class _ComparisonCard extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              child: Icon(Icons.add, size: 14, color: isAlt ? SahimedColors.accent : SahimedColors.primary),
+                              child: Icon(Icons.add, size: 14, color: isAlt ? SahimedColors.sahiGreenText : SahimedColors.primary),
                             ),
                           ),
                         ],

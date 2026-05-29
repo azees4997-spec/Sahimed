@@ -325,7 +325,7 @@ const ComparisonCard = ({
               onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })}
               className={cn(
                 "w-full h-8 sm:h-14 rounded-full font-black text-[8px] sm:text-[12px] tracking-[0.1em] sm:tracking-[0.15em] uppercase gap-1.5 sm:gap-2 shadow-md sm:shadow-lg active:scale-[0.98] transition-all border-none",
-                isAlt ? "bg-lavender-text text-white hover:bg-lavender-text/90" : "bg-primary text-white hover:bg-primary/90"
+                isAlt ? "bg-sahi-green-text text-white hover:bg-sahi-green-text/90" : "bg-primary text-white hover:bg-primary/90"
               )}
             >
               {qty > 0 ? `IN CART (${qty})` : "ADD TO CART"} <ShoppingCart className="w-3.5 h-3.5 sm:w-5 sm:h-5" />

@@ -22,6 +22,7 @@ class SahimedColors {
   static const Color sahiBlue = Color(0xFFDBEAFE);
   static const Color sahiPink = Color(0xFFFCE7F3);
   static const Color sahiGreen = Color(0xFFDCFCE7);
+  static const Color sahiGreenText = Color(0xFF15803D); // Sahimed Green Text for substitute button
 
   // Text Colors
   static const Color textPrimary = Color(0xFF0F172A);
