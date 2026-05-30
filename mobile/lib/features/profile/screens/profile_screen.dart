@@ -70,12 +70,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _pickAndUploadProfileImage() async {
+  Future<void> _pickAndUploadProfileImage(ImageSource source) async {
     HapticFeedback.mediumImpact();
     final ImagePicker picker = ImagePicker();
     try {
       final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         maxWidth: 512,
         maxHeight: 512,
         imageQuality: 85,
@@ -124,6 +124,100 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
     }
+  }
+
+  void _showImageSourceBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(32),
+          topRight: Radius.circular(32),
+        ),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: SahimedColors.slate200,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'SELECT PROFILE PICTURE SOURCE',
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF0F172A),
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildSourceOption(
+                  icon: LucideIcons.camera,
+                  label: 'CAMERA',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndUploadProfileImage(ImageSource.camera);
+                  },
+                ),
+                _buildSourceOption(
+                  icon: LucideIcons.image,
+                  label: 'GALLERY',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndUploadProfileImage(ImageSource.gallery);
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSourceOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: SahimedColors.slate50,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: SahimedColors.slate100),
+            ),
+            child: Icon(icon, color: SahimedColors.primary, size: 28),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              color: SahimedColors.slate500,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildInitialsAvatar(String name) {
@@ -471,7 +565,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Stack(
                         children: [
                           GestureDetector(
-                            onTap: _pickAndUploadProfileImage,
+                            onTap: _showImageSourceBottomSheet,
                             child: Container(
                               width: 90,
                               height: 90,
@@ -507,7 +601,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             bottom: 0,
                             right: 0,
                             child: GestureDetector(
-                              onTap: _pickAndUploadProfileImage,
+                              onTap: _showImageSourceBottomSheet,
                               child: Container(
                                 padding: const EdgeInsets.all(6),
                                 decoration: const BoxDecoration(
