@@ -3,8 +3,6 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import SahiMedLogo from './SahiMedLogo';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
 import { 
   Phone, 
   Mail, 
@@ -18,18 +16,15 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// [COST FIX] Footer no longer holds a Firestore snapshot listener.
+// Pages are fetched once server-side in layout.tsx (with 10-min Next.js cache)
+// and passed down as a prop. Zero real-time Firestore connections per visitor.
 export default function Footer({ initialPages = [] }: { initialPages?: any[] }) {
   const pathname = usePathname();
-  const db = useFirestore();
 
-  const footerPagesQuery = useMemoFirebase(() => query(
-    collection(db, 'pages'), 
-    orderBy('lastUpdated', 'desc')
-  ), [db]);
-  const { data: allPages } = useCollection(footerPagesQuery);
-  
-  const currentPages = allPages || initialPages;
-  const footerPages = currentPages?.filter((p: any) => (p.placement === 'footer' || p.placement === 'both') && p.id !== 'contact');
+  const footerPages = initialPages?.filter(
+    (p: any) => (p.placement === 'footer' || p.placement === 'both') && p.id !== 'contact'
+  );
 
   const hideOnPaths = ['/cart', '/checkout', '/Sahi-admin', '/login', '/prescription'];
   if (hideOnPaths.some(path => pathname.startsWith(path))) return null;

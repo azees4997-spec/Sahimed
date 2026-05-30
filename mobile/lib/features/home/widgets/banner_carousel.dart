@@ -3,6 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/colors.dart';
 
+// --- Read-cost optimisation ---
+// Banners change rarely. Cache the result in-memory for 1 hour so every
+// active app user doesn't hold a permanent Firestore snapshot listener.
+List<Map<String, dynamic>>? _cachedBanners;
+DateTime? _bannersCachedAt;
+const _bannerCacheDuration = Duration(hours: 1);
+
 class BannerCarousel extends StatefulWidget {
   const BannerCarousel({super.key});
 
@@ -19,16 +26,29 @@ class _BannerCarouselState extends State<BannerCarousel> {
     super.dispose();
   }
 
+  Future<List<Map<String, dynamic>>> _fetchBanners() async {
+    // Return cache if still fresh
+    if (_cachedBanners != null &&
+        _bannersCachedAt != null &&
+        DateTime.now().difference(_bannersCachedAt!) < _bannerCacheDuration) {
+      return _cachedBanners!;
+    }
+    final snap = await FirebaseFirestore.instance
+        .collection('banners')
+        .where('isActive', isEqualTo: true)
+        .orderBy('order', descending: false)
+        .get();                              // ← one-time GET, not snapshots()
+    _cachedBanners = snap.docs.map((d) => {...d.data(), 'id': d.id}).toList();
+    _bannersCachedAt = DateTime.now();
+    return _cachedBanners!;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('banners')
-          .where('isActive', isEqualTo: true)
-          .orderBy('order', descending: false)
-          .snapshots(),
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _fetchBanners(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        if (!snapshot.hasData || (snapshot.data as List).isEmpty) {
           // Fallback gradient banner when no Firestore data
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -118,14 +138,14 @@ class _BannerCarouselState extends State<BannerCarousel> {
           );
         }
 
-        final banners = snapshot.data!.docs;
+        final banners = snapshot.data!;
         return SizedBox(
           height: 180,
           child: PageView.builder(
             controller: _pageController,
             itemCount: banners.length,
             itemBuilder: (context, index) {
-              final banner = banners[index].data() as Map<String, dynamic>;
+              final banner = banners[index];
               return Padding(
                 padding: EdgeInsets.only(
                   left: index == 0 ? 20 : 8,

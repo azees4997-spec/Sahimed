@@ -95,13 +95,23 @@ export default function Navbar() {
   const { user } = useUser();
   const { toast } = useToast();
 
-  const headerPagesQuery = useMemoFirebase(() => query(
-    collection(db, 'pages'), 
-    where('placement', 'in', ['header', 'both']),
-    orderBy('lastUpdated', 'desc')
-  ), [db]);
-  const { data: headerPages } = useCollection(headerPagesQuery);
-  
+  // [COST FIX] Pages fetched once via API with 10-min cache instead of
+  // a real-time Firestore listener running for every website visitor.
+  const [headerPages, setHeaderPages] = useState<any[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/pages')
+      .then(r => r.ok ? r.json() : [])
+      .then(data => {
+        if (!cancelled) {
+          const pages = Array.isArray(data) ? data : (data.pages || []);
+          setHeaderPages(pages.filter((p: any) => p.placement === 'header' || p.placement === 'both'));
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
   const addressesQuery = useMemoFirebase(() => user ? query(
     collection(db, 'userProfiles', user.uid, 'addresses'),
     orderBy('isDefault', 'desc')

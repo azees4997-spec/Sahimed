@@ -8,6 +8,7 @@ import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import { Outfit, Poppins } from 'next/font/google';
 import LocationSync from '@/components/LocationSync';
+import { unstable_cache } from 'next/cache';
 
 import Script from 'next/script';
 
@@ -101,24 +102,25 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Fetch pages for footer on the server to prevent syncing delay
+  // [COST FIX] Cache pages server-side for 10 minutes.
+  // Without this, every SSR request hit Firestore for the same pages data.
+  const getCachedPages = unstable_cache(
+    async () => {
+      const dbAdmin = getDbAdmin();
+      if (!dbAdmin) return [];
+      const snapshot = await dbAdmin.collection('pages').orderBy('lastUpdated', 'desc').get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    },
+    ['layout-pages'],
+    { revalidate: 600, tags: ['pages'] } // 10-minute server-side cache
+  );
+
   let initialPages: any[] = [];
   try {
-    const dbAdmin = getDbAdmin();
-    // Only attempt fetch if we have a valid admin instance
-    if (dbAdmin) {
-      const snapshot = await dbAdmin.collection('pages').orderBy('lastUpdated', 'desc').get();
-      initialPages = snapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data(),
-      }));
-    } else {
-      console.log("[RootLayout] Firebase Admin not available. Footer will use client-side fallback.");
-    }
+    initialPages = await getCachedPages();
   } catch (error) {
-    // Only log if it's NOT the project ID error we already expect during build
     if (!(error instanceof Error && error.message.includes('Project Id'))) {
-      console.error("Error fetching pages for layout footer:", error);
+      console.error('Error fetching pages for layout footer:', error);
     }
   }
 

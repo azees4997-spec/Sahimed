@@ -11,33 +11,43 @@ class CartProvider with ChangeNotifier {
   List<CartItem> _items = [];
   PromoModel? _appliedPromo;
   List<FeeModel> _activeFees = [];
-  StreamSubscription? _feeSubscription;
+  // [COST FIX] No more snapshot listener — track last fetch time instead
+  DateTime? _feesFetchedAt;
+  static const _feesCacheDuration = Duration(hours: 1);
   final String _prefKey = 'sahimed_cart';
 
   CartProvider() {
     _loadCart();
-    _listenToFees();
+    _fetchFees(); // one-time fetch, not a stream
   }
 
-  void _listenToFees() {
-    // MOB-01 FIX: Store subscription reference to cancel on dispose and prevent memory leaks
-    _feeSubscription = FirebaseFirestore.instance
-        .collection('fees')
-        .where('isActive', isEqualTo: true)
-        .snapshots()
-        .listen(
-          (snapshot) {
-            _activeFees = snapshot.docs
-                .map((doc) => FeeModel.fromJson({...doc.data(), 'id': doc.id}))
-                .toList();
-            notifyListeners();
-          },
-          onError: (e) {
-            // MOB-03 FIX: Log fee fetch failures instead of silently failing
-            debugPrint('CartProvider: Fee stream error: $e');
-          },
-        );
+  // [COST FIX] One-time get() with 1-hour cache instead of permanent snapshot listener.
+  // Fees change maybe once a month — real-time was wasting reads for every active user.
+  Future<void> _fetchFees({bool forceRefresh = false}) async {
+    final now = DateTime.now();
+    if (!forceRefresh &&
+        _feesFetchedAt != null &&
+        now.difference(_feesFetchedAt!) < _feesCacheDuration) {
+      return; // cache still fresh
+    }
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('fees')
+          .where('isActive', isEqualTo: true)
+          .get();                              // ← one-time GET
+      _activeFees = snapshot.docs
+          .map((doc) => FeeModel.fromJson({...doc.data(), 'id': doc.id}))
+          .toList();
+      _feesFetchedAt = now;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('CartProvider: Fee fetch error: $e');
+    }
   }
+
+  /// Call this to force a fresh fee fetch (e.g. on pull-to-refresh).
+  void refreshFees() => _fetchFees(forceRefresh: true);
+
 
   List<CartItem> get items => _items;
   PromoModel? get appliedPromo => _appliedPromo;
@@ -152,8 +162,7 @@ class CartProvider with ChangeNotifier {
 
   @override
   void dispose() {
-    // MOB-01 FIX: Cancel subscription to prevent memory leak on navigation
-    _feeSubscription?.cancel();
+    // No stream subscription to cancel anymore
     super.dispose();
   }
 
