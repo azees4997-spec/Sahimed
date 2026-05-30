@@ -86,7 +86,6 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
             <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#1E3A8A]">Discover Store</h4>
             <ul className="space-y-4">
               {[
-                { label: 'Shop All Products', href: '/search' },
                 { label: 'All Medicines', href: '/medicines' },
                 { label: 'Brand Categories', href: '/categories' },
                 { label: 'Prescription Checkout', href: '/prescription' },
