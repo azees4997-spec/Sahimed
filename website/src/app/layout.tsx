@@ -112,7 +112,7 @@ export default async function RootLayout({
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     },
     ['layout-pages'],
-    { revalidate: 600, tags: ['pages'] } // 10-minute server-side cache
+    { revalidate: 18000, tags: ['pages'] } // 5-hour server-side cache
   );
 
   let initialPages: any[] = [];

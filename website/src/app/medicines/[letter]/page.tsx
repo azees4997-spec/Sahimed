@@ -3,8 +3,8 @@ import clientPromise from '@/lib/mongodb';
 import MedicinesClient from './MedicinesClient';
 import { notFound } from 'next/navigation';
 
-// Cache sitemap and dynamic alphabetical routes for 24 hours on CDN
-export const revalidate = 86400;
+// Cache sitemap and dynamic alphabetical routes for 5 hours on CDN
+export const revalidate = 18000;
 
 // Pre-generate A-Z and 0-9 routes for immediate load speeds
 export async function generateStaticParams() {

@@ -8,7 +8,11 @@ export async function GET() {
       id: doc.id,
       ...doc.data()
     }));
-    return NextResponse.json(pages);
+    return NextResponse.json(pages, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=18000, stale-while-revalidate=9000'
+      }
+    });
   } catch (error) {
     console.error('[PAGES_API_ERROR]', error);
     return NextResponse.json({ error: 'Failed to fetch pages' }, { status: 500 });
