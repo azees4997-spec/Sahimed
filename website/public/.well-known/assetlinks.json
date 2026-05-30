@@ -1,11 +1,15 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.sahimed.app",
       "sha256_cert_fingerprints": [
-        "C6:4B:8A:DC:59:57:93:27:A3:F7:F2:49:B9:56:DB:90:9D:C1:DB:07:65:58:4E:40:07:6A:6D:43:4A:95:ED:0D"
+        "C6:4B:8A:DC:59:57:93:27:A3:F7:F2:49:B9:56:DB:90:9D:C1:DB:07:65:58:4E:40:07:6A:6D:43:4A:95:ED:0D",
+        "D0:AA:47:6F:59:E4:E6:44:A1:B0:9C:95:C9:C1:EA:8E:30:D1:F1:1D:4F:59:C4:97:67:B7:8A:77:38:E8"
       ]
     }
   }
