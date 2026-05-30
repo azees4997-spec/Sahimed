@@ -39,7 +39,7 @@ import { useStorage } from '@/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp, doc, getDoc, query, orderBy, addDoc } from 'firebase/firestore';
 import AddressForm from '@/components/AddressForm';
 import { cn } from '@/lib/utils';
@@ -201,6 +201,13 @@ export default function CheckoutPage() {
 
   const addressesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'addresses'), orderBy('updatedAt', 'desc')) : null, [db, user]);
   const { data: savedAddresses } = useCollection(addressesQuery);
+
+  const familyQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'familyMembers'), orderBy('createdAt', 'desc')) : null, [db, user]);
+  const { data: familyMembers } = useCollection(familyQuery);
+
+  const [selectedMemberId, setSelectedMemberId] = useState<string>('self');
+  const profileRef = useMemoFirebase(() => (db && user) ? doc(db, 'userProfiles', user.uid) : null, [db, user]);
+  const { data: profile } = useDoc(profileRef);
 
   useEffect(() => {
     const initProfile = async () => {
@@ -404,6 +411,12 @@ export default function CheckoutPage() {
       fulfillmentPath: fulfillmentPath,
       isConsultationRequired: fulfillmentPath === 'consult',
       prescriptionUrls: attachedPrescriptions,
+      patientDetails: {
+        isFamilyMember: selectedMemberId !== 'self',
+        memberId: selectedMemberId !== 'self' ? selectedMemberId : null,
+        name: orderInfo.patientName,
+        relationship: selectedMemberId !== 'self' ? (familyMembers?.find((m: any) => m.id === selectedMemberId)?.relationship || 'Family') : 'Self'
+      },
       shippingDetails: {
         houseNumber: orderInfo.houseNumber,
         street: orderInfo.buildingLocality,
@@ -643,6 +656,58 @@ export default function CheckoutPage() {
                 animate="show"
                 className="space-y-10"
               >
+                 {/* Patient Selection Segment */}
+                 <div className="bg-white/40 backdrop-blur-md p-8 rounded-[40px] border border-white shadow-xl space-y-6">
+                   <div className="flex items-center gap-3">
+                     <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
+                       <User className="w-5 h-5 text-primary" />
+                     </div>
+                     <div>
+                       <h3 className="font-black text-sm text-slate-900 tracking-tight font-outfit uppercase">Who is this order for?</h3>
+                       <p className="text-[7.5px] font-black text-slate-400 tracking-widest uppercase mt-0.5">Select a family member profile to associate medical checks</p>
+                     </div>
+                   </div>
+                   <div className="flex flex-wrap gap-2.5">
+                     <button 
+                       type="button"
+                       onClick={() => {
+                         setSelectedMemberId('self');
+                         setOrderInfo(prev => ({
+                           ...prev,
+                           patientName: profile?.name || user?.email?.split('@')[0] || ''
+                         }));
+                         toast({ title: "Patient: Myself selected" });
+                       }}
+                       className={cn(
+                         "px-5 py-2.5 rounded-full text-[8.5px] font-black tracking-wider uppercase transition-all border-2 active:scale-95",
+                         selectedMemberId === 'self' ? "bg-primary text-white border-primary shadow-md shadow-primary/20" : "bg-white text-slate-600 border-transparent hover:border-slate-100"
+                       )}
+                     >
+                       Myself
+                     </button>
+                     {familyMembers?.map((member: any) => (
+                       <button 
+                         type="button"
+                         key={member.id}
+                         onClick={() => {
+                           setSelectedMemberId(member.id);
+                           setOrderInfo(prev => ({
+                             ...prev,
+                             patientName: member.name
+                           }));
+                           toast({ title: `Patient: ${member.name} (${member.relationship}) selected` });
+                         }}
+                         className={cn(
+                           "px-5 py-2.5 rounded-full text-[8.5px] font-black tracking-wider uppercase transition-all border-2 active:scale-95",
+                           selectedMemberId === member.id ? "bg-primary text-white border-primary shadow-md shadow-primary/20" : "bg-white text-slate-600 border-transparent hover:border-slate-100"
+                         )}
+                       >
+                         {member.relationship}: {member.name}
+                       </button>
+                     ))}
+                   </div>
+                 </div>
+
                 <div className="flex items-center justify-between px-2">
                   <h3 className="text-lg font-black text-slate-900 tracking-tight font-outfit uppercase">Shipping Addresses</h3>
                   <button 

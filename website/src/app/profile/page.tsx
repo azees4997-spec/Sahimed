@@ -58,6 +58,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 import AddressForm from '@/components/AddressForm';
+import FamilyTab from '@/components/profile/FamilyTab';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -94,6 +95,7 @@ export default function ProfilePage() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [activeTab, setActiveTab] = useState<'profile' | 'family'>('profile');
 
   const profileRef = useMemoFirebase(() => (db && user) ? doc(db, 'userProfiles', user.uid) : null, [db, user]);
   const { data: profile } = useDoc(profileRef);
@@ -303,164 +305,239 @@ export default function ProfilePage() {
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-            <div className="lg:col-span-2 space-y-8">
-               <motion.div 
-                 variants={containerVariants}
-                 initial="hidden"
-                 animate="show"
-                 className="space-y-6"
-               >
-                  <div className="space-y-3">
-                    <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 ml-4 uppercase">Financial & Orders</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <motion.div variants={itemVariants}>
-                        <Link href="/orders" className="block h-full">
-                          <div className="bg-white/40 backdrop-blur-md p-5 rounded-[24px] border border-white flex items-center justify-between group h-full active:scale-[0.98] transition-all hover:shadow-xl shadow-lg hover:bg-white">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-[12px] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"><Package className="w-4 h-4" /></div>
-                              <div>
-                                <h3 className="text-xs font-black text-slate-900 tracking-tight font-outfit uppercase">Order History</h3>
-                                <p className="text-[7px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-0.5">Track items</p>
-                              </div>
-                            </div>
-                            <div className="bg-slate-50 w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-primary transition-all">
-                              <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-white transition-all group-hover:translate-x-1" />
-                            </div>
-                          </div>
-                        </Link>
-                      </motion.div>
+          </motion.div>
 
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between px-4">
-                      <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 uppercase">Address Management</h2>
-                      <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
-                        <DialogTrigger asChild>
-                          <button onClick={() => setAddressForm({ id: '', tag: 'Home', street: '', landmark: '', pincode: '', lat: 0, lng: 0 })} className="bg-white px-4 py-2 rounded-full border border-slate-100 text-[8px] font-black text-primary tracking-[0.2em] flex items-center gap-1.5 hover:bg-slate-50 transition-all uppercase active:scale-95">
-                            <Plus className="w-3 h-3" /> Add New
-                          </button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-md w-[94vw] rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white z-[110]">
-                          <div className="bg-primary p-8 text-white relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
-                              <MapPin className="w-20 h-20" />
-                            </div>
-                            <DialogTitle className="text-xl font-black tracking-tighter uppercase font-outfit">Address Details</DialogTitle>
-                            <DialogDescription className="text-[8px] font-black text-white/60 tracking-[0.2em] mt-2 uppercase">
-                              Save Delivery Information
-                            </DialogDescription>
-                          </div>
-                          <div className="p-6 overflow-y-auto max-h-[70vh]">
-                            <AddressForm 
-                              initialData={addressForm || {}}
-                              onSave={handleSaveAddress}
-                              isLoading={false}
-                            />
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                    
-                    <div className="space-y-6">
-                      {addressesLoading ? (
-                        <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
-                      ) : (!addresses || addresses.length === 0) ? (
-                        <div className="bg-white/40 backdrop-blur-md p-16 rounded-[48px] border border-white shadow-xl text-center">
-                          <MapPin className="w-12 h-12 text-slate-200 mx-auto mb-6" />
-                          <p className="text-[10px] font-black text-slate-300 tracking-[0.4em] uppercase">No saved addresses</p>
-                        </div>
-                      ) : addresses.map((addr) => (
-                        <motion.div 
-                          key={addr.id} 
-                          variants={itemVariants}
-                          className="bg-white/40 backdrop-blur-md p-6 rounded-[32px] border border-white shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all hover:bg-white"
-                        >
-                          <div className="flex items-start justify-between relative z-10">
-                            <div className="flex items-start gap-5">
-                              <div className="w-12 h-12 bg-primary/10 text-primary rounded-[16px] flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-all">
-                                {getTagIcon(addr.tag)}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1.5">
-                                  <span className="font-black text-[9px] text-primary tracking-[0.2em] uppercase">{addr.tag}</span>
-                                  {addr.lat !== 0 && <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" title="GPS Verified" />}
-                                </div>
-                                <p className="text-[11px] font-bold text-slate-900 leading-tight uppercase tracking-tight">
-                                  {addr.houseNumber}{addr.apartmentName ? `, ${addr.apartmentName}` : ''}
-                                </p>
-                                <p className="text-[10px] font-medium text-slate-600 leading-tight uppercase tracking-tight mt-1">{addr.street}</p>
-                                <p className="text-[8px] font-black text-gray-400 mt-2 tracking-[0.2em] uppercase opacity-60">{addr.city}, {addr.state} - {addr.pincode}</p>
-                              </div>
-                            </div>
-                            <div className="flex gap-1.5">
-                              <Button variant="ghost" size="icon" onClick={() => { setAddressForm(addr); setIsAddressDialogOpen(true); }} className="h-8 w-8 rounded-full bg-white shadow-sm text-slate-300 hover:text-primary active:scale-95"><Edit2 className="w-3.5 h-3.5" /></Button>
-                              <Button variant="ghost" size="icon" onClick={async () => {
-                                await deleteDocumentNonBlocking(doc(db, 'userProfiles', user.uid, 'addresses', addr.id));
-                                // [STABILIZATION] SYNC TO MONGODB: Ensure real-time mirror after address deletion
-                                try {
-                                  const idToken = await user.getIdToken();
-                                  await fetch('/api/user/sync', {
-                                    method: 'POST',
-                                    headers: { 
-                                      'Content-Type': 'application/json',
-                                      'Authorization': `Bearer ${idToken}`
-                                    }
-                                  });
-                                  toast({ title: "Address removed" });
-                                } catch (err) {
-                                  console.warn("[Sync] Address deletion sync failed", err);
-                                }
-                              }} className="h-8 w-8 rounded-full bg-white shadow-sm text-slate-300 hover:text-rose-500 active:scale-95"><Trash2 className="w-3.5 h-3.5" /></Button>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-               </motion.div>
-            </div>
-
-            <div className="lg:col-span-1">
-               <motion.div 
-                 initial={{ x: 20, opacity: 0 }}
-                 animate={{ x: 0, opacity: 1 }}
-                 transition={{ delay: 0.5 }}
-                 className="space-y-8 sticky top-32"
-               >
-                  <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 ml-4 uppercase">SahiMed App</h2>
-                  <div 
-                    onClick={handleInstallClick}
-                    className="bg-primary p-8 rounded-[40px] border border-white/20 flex flex-col items-center text-center gap-6 cursor-pointer hover:shadow-primary/30 transition-all group shadow-2xl relative overflow-hidden"
-                  >
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-12 -mt-12" />
-                    <div className="w-12 h-12 bg-white rounded-[16px] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500 relative z-10">
-                      <Smartphone className="w-6 h-6 text-primary" />
-                    </div>
-                    <div className="relative z-10">
-                      <h3 className="text-lg font-black text-white tracking-tight font-outfit uppercase leading-none">Download SahiMed App</h3>
-                      <p className="text-[8px] text-white/50 font-black mt-3 max-w-[180px] leading-relaxed tracking-widest uppercase italic">Install for premium healthcare logistics.</p>
-                    </div>
-                    <Button className="w-full rounded-full h-14 font-black text-[9px] tracking-[0.2em] gap-3 shadow-xl bg-white text-primary hover:bg-slate-50 uppercase active:scale-95 transition-all relative z-10">
-                      <Download className="w-4 h-4" /> Download Now
-                    </Button>
-                    <div className="flex items-center gap-2 opacity-30 relative z-10">
-                       <Zap className="w-3 h-3 text-white" />
-                       <span className="text-[7px] font-black text-white tracking-[0.3em] uppercase">PWA Optimized</span>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white/40 backdrop-blur-md p-8 rounded-[40px] border border-white text-center shadow-xl">
-                      <div className="flex items-center justify-center gap-3 py-2 text-slate-400">
-                        <ShieldCheck className="w-4 h-4" />
-                        <span className="text-[8px] font-black tracking-[0.4em] uppercase">Medical-Grade Encryption Active</span>
-                      </div>
-                  </div>
-               </motion.div>
-            </div>
+          {/* Tabs Selector */}
+          <div className="flex items-center gap-2 mb-8 bg-slate-200/50 backdrop-blur-md p-1.5 rounded-full border border-white/40 w-fit">
+            <button 
+              onClick={() => setActiveTab('profile')} 
+              className={cn(
+                "px-6 py-2.5 rounded-full text-[9px] font-black tracking-[0.2em] uppercase transition-all duration-300 active:scale-95",
+                activeTab === 'profile' ? "bg-primary text-white shadow-md shadow-primary/20" : "text-slate-500 hover:text-slate-800"
+              )}
+            >
+              Account & Address
+            </button>
+            <button 
+              onClick={() => setActiveTab('family')} 
+              className={cn(
+                "px-6 py-2.5 rounded-full text-[9px] font-black tracking-[0.2em] uppercase transition-all duration-300 active:scale-95",
+                activeTab === 'family' ? "bg-primary text-white shadow-md shadow-primary/20" : "text-slate-500 hover:text-slate-800"
+              )}
+            >
+              Family Profiles
+            </button>
           </div>
+
+          <AnimatePresence mode="wait">
+            {activeTab === 'profile' ? (
+              <motion.div 
+                key="profile-tab"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.2 }}
+                className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12"
+              >
+                <div className="lg:col-span-2 space-y-8">
+                   <motion.div 
+                     variants={containerVariants}
+                     initial="hidden"
+                     animate="show"
+                     className="space-y-6"
+                   >
+                      <div className="space-y-3">
+                        <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 ml-4 uppercase">Financial & Orders</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <motion.div variants={itemVariants}>
+                            <Link href="/orders" className="block h-full">
+                              <div className="bg-white/40 backdrop-blur-md p-5 rounded-[24px] border border-white flex items-center justify-between group h-full active:scale-[0.98] transition-all hover:shadow-xl shadow-lg hover:bg-white">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-[12px] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"><Package className="w-4 h-4" /></div>
+                                  <div>
+                                    <h3 className="text-xs font-black text-slate-900 tracking-tight font-outfit uppercase">Order History</h3>
+                                    <p className="text-[7px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-0.5">Track items</p>
+                                  </div>
+                                </div>
+                                <div className="bg-slate-50 w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-primary transition-all">
+                                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-white transition-all group-hover:translate-x-1" />
+                                </div>
+                              </div>
+                            </Link>
+                          </motion.div>
+
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between px-4">
+                          <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 uppercase">Address Management</h2>
+                          <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
+                            <DialogTrigger asChild>
+                              <button onClick={() => setAddressForm({ id: '', tag: 'Home', street: '', landmark: '', pincode: '', lat: 0, lng: 0 })} className="bg-white px-4 py-2 rounded-full border border-slate-100 text-[8px] font-black text-primary tracking-[0.2em] flex items-center gap-1.5 hover:bg-slate-50 transition-all uppercase active:scale-95">
+                                <Plus className="w-3 h-3" /> Add New
+                              </button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md w-[94vw] rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white z-[110]">
+                              <div className="bg-primary p-8 text-white relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
+                                  <MapPin className="w-20 h-20" />
+                                </div>
+                                <DialogTitle className="text-xl font-black tracking-tighter uppercase font-outfit">Address Details</DialogTitle>
+                                <DialogDescription className="text-[8px] font-black text-white/60 tracking-[0.2em] mt-2 uppercase">
+                                  Save Delivery Information
+                                </DialogDescription>
+                              </div>
+                              <div className="p-6 overflow-y-auto max-h-[70vh]">
+                                <AddressForm 
+                                  initialData={addressForm || {}}
+                                  onSave={handleSaveAddress}
+                                  isLoading={false}
+                                />
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          {addressesLoading ? (
+                            <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+                          ) : (!addresses || addresses.length === 0) ? (
+                            <div className="bg-white/40 backdrop-blur-md p-16 rounded-[48px] border border-white shadow-xl text-center">
+                              <MapPin className="w-12 h-12 text-slate-200 mx-auto mb-6" />
+                              <p className="text-[10px] font-black text-slate-300 tracking-[0.4em] uppercase">No saved addresses</p>
+                            </div>
+                          ) : addresses.map((addr) => (
+                            <motion.div 
+                              key={addr.id} 
+                              variants={itemVariants}
+                              className="bg-white/40 backdrop-blur-md p-6 rounded-[32px] border border-white shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all hover:bg-white"
+                            >
+                              <div className="flex items-start justify-between relative z-10">
+                                <div className="flex items-start gap-5">
+                                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-[16px] flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-all">
+                                    {getTagIcon(addr.tag)}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1.5">
+                                      <span className="font-black text-[9px] text-primary tracking-[0.2em] uppercase">{addr.tag}</span>
+                                      {addr.lat !== 0 && <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" title="GPS Verified" />}
+                                    </div>
+                                    <p className="text-[11px] font-bold text-slate-900 leading-tight uppercase tracking-tight">
+                                      {addr.houseNumber}{addr.apartmentName ? `, ${addr.apartmentName}` : ''}
+                                    </p>
+                                    <p className="text-[10px] font-medium text-slate-600 leading-tight uppercase tracking-tight mt-1">{addr.street}</p>
+                                    <p className="text-[8px] font-black text-gray-400 mt-2 tracking-[0.2em] uppercase opacity-60">{addr.city}, {addr.state} - {addr.pincode}</p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-1.5">
+                                  <Button variant="ghost" size="icon" onClick={() => { setAddressForm(addr); setIsAddressDialogOpen(true); }} className="h-8 w-8 rounded-full bg-white shadow-sm text-slate-300 hover:text-primary active:scale-95"><Edit2 className="w-3.5 h-3.5" /></Button>
+                                  <Button variant="ghost" size="icon" onClick={async () => {
+                                    await deleteDocumentNonBlocking(doc(db, 'userProfiles', user.uid, 'addresses', addr.id));
+                                    // [STABILIZATION] SYNC TO MONGODB: Ensure real-time mirror after address deletion
+                                    try {
+                                      const idToken = await user.getIdToken();
+                                      await fetch('/api/user/sync', {
+                                        method: 'POST',
+                                        headers: { 
+                                          'Content-Type': 'application/json',
+                                          'Authorization': `Bearer ${idToken}`
+                                        }
+                                      });
+                                      toast({ title: "Address removed" });
+                                    } catch (err) {
+                                      console.warn("[Sync] Address deletion sync failed", err);
+                                    }
+                                  }} className="h-8 w-8 rounded-full bg-white shadow-sm text-slate-300 hover:text-rose-500 active:scale-95"><Trash2 className="w-3.5 h-3.5" /></Button>
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                   </motion.div>
+                </div>
+
+                <div className="lg:col-span-1">
+                   <motion.div 
+                     initial={{ x: 20, opacity: 0 }}
+                     animate={{ x: 0, opacity: 1 }}
+                     transition={{ delay: 0.5 }}
+                     className="space-y-8 sticky top-32"
+                   >
+                      <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 ml-4 uppercase">SahiMed App</h2>
+                      <div 
+                        onClick={handleInstallClick}
+                        className="bg-primary p-8 rounded-[40px] border border-white/20 flex flex-col items-center text-center gap-6 cursor-pointer hover:shadow-primary/30 transition-all group shadow-2xl relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-12 -mt-12" />
+                        <div className="w-12 h-12 bg-white rounded-[16px] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500 relative z-10">
+                          <Smartphone className="w-6 h-6 text-primary" />
+                        </div>
+                        <div className="relative z-10">
+                          <h3 className="text-lg font-black text-white tracking-tight font-outfit uppercase leading-none">Download SahiMed App</h3>
+                          <p className="text-[8px] text-white/50 font-black mt-3 max-w-[180px] leading-relaxed tracking-widest uppercase italic">Install for premium healthcare logistics.</p>
+                        </div>
+                        <Button className="w-full rounded-full h-14 font-black text-[9px] tracking-[0.2em] gap-3 shadow-xl bg-white text-primary hover:bg-slate-50 uppercase active:scale-95 transition-all relative z-10">
+                          <Download className="w-4 h-4" /> Download Now
+                        </Button>
+                        <div className="flex items-center gap-2 opacity-30 relative z-10">
+                           <Zap className="w-3 h-3 text-white" />
+                           <span className="text-[7px] font-black text-white tracking-[0.3em] uppercase">PWA Optimized</span>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white/40 backdrop-blur-md p-8 rounded-[40px] border border-white text-center shadow-xl">
+                          <div className="flex items-center justify-center gap-3 py-2 text-slate-400">
+                            <ShieldCheck className="w-4 h-4" />
+                            <span className="text-[8px] font-black tracking-[0.4em] uppercase">Medical-Grade Encryption Active</span>
+                          </div>
+                      </div>
+                   </motion.div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="family-tab"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.2 }}
+                className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12"
+              >
+                <div className="lg:col-span-2">
+                  <FamilyTab />
+                </div>
+                
+                <div className="lg:col-span-1">
+                   <motion.div 
+                     initial={{ x: 20, opacity: 0 }}
+                     animate={{ x: 0, opacity: 1 }}
+                     transition={{ delay: 0.3 }}
+                     className="space-y-8 sticky top-32"
+                   >
+                      <div className="bg-primary p-8 rounded-[40px] border border-white/20 flex flex-col items-center text-center gap-6 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-12 -mt-12" />
+                        <div className="w-12 h-12 bg-white rounded-[16px] flex items-center justify-center shadow-2xl relative z-10">
+                          <ShieldCheck className="w-6 h-6 text-primary" />
+                        </div>
+                        <div className="relative z-10">
+                          <h3 className="text-sm font-black text-white tracking-tight font-outfit uppercase leading-none">Verified Patient Care</h3>
+                          <p className="text-[7.5px] text-white/60 font-black mt-3 leading-relaxed tracking-wider uppercase">Medicines tagged to profiles are verified by our pharmacists against respective prescriptions to prevent any counter-indications.</p>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white/40 backdrop-blur-md p-8 rounded-[40px] border border-white text-center shadow-xl">
+                          <div className="flex items-center justify-center gap-3 py-2 text-slate-400">
+                            <ShieldCheck className="w-4 h-4" />
+                            <span className="text-[8px] font-black tracking-[0.4em] uppercase">Medical-Grade Encryption Active</span>
+                          </div>
+                      </div>
+                   </motion.div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </main>
       </div>
     </PageTransition>

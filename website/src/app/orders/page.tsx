@@ -32,7 +32,8 @@ import {
   Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { 
   Dialog, 
   DialogContent, 
@@ -74,9 +75,15 @@ const itemVariants = {
 
 export default function OrdersPage() {
   const { user } = useUser();
+  const db = useFirestore();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const familyQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'userProfiles', user.uid, 'familyMembers'), orderBy('createdAt', 'desc')) : null, [db, user]);
+  const { data: familyMembers } = useCollection(familyQuery);
+
+  const [selectedRecipientFilter, setSelectedRecipientFilter] = useState<string>('all');
 
   // BUG-C2 FIX: Replaced Firestore read with MongoDB API fetch (same source as mobile app)
   // This ensures orders placed on mobile AND web both appear correctly
@@ -141,6 +148,42 @@ export default function OrdersPage() {
             </div>
           </motion.div>
 
+          {/* Recipient Filter Options */}
+          {familyMembers && familyMembers.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 mb-10 bg-slate-200/40 backdrop-blur-md p-1.5 rounded-full border border-white/40 w-fit">
+              <button 
+                onClick={() => setSelectedRecipientFilter('all')} 
+                className={cn(
+                  "px-5 py-2.5 rounded-full text-[8.5px] font-black tracking-wider uppercase transition-all duration-300 active:scale-95",
+                  selectedRecipientFilter === 'all' ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-800"
+                )}
+              >
+                All Orders
+              </button>
+              <button 
+                onClick={() => setSelectedRecipientFilter('self')} 
+                className={cn(
+                  "px-5 py-2.5 rounded-full text-[8.5px] font-black tracking-wider uppercase transition-all duration-300 active:scale-95",
+                  selectedRecipientFilter === 'self' ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-800"
+                )}
+              >
+                For Myself
+              </button>
+              {familyMembers.map((member: any) => (
+                <button 
+                  key={member.id}
+                  onClick={() => setSelectedRecipientFilter(member.id)} 
+                  className={cn(
+                    "px-5 py-2.5 rounded-full text-[8.5px] font-black tracking-wider uppercase transition-all duration-300 active:scale-95",
+                    selectedRecipientFilter === member.id ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-800"
+                  )}
+                >
+                  For {member.relationship} ({member.name.split(' ')[0]})
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="space-y-8">
             {isLoading ? (
               <div className="text-center py-32 bg-white/40 backdrop-blur-md rounded-[56px] border border-white shadow-2xl">
@@ -154,14 +197,30 @@ export default function OrdersPage() {
                 <p className="text-slate-400 font-black text-[10px] tracking-[0.3em] uppercase">Fetching your orders...</p>
               </div>
             ) : orders && orders.length > 0 ? (
-              <motion.div 
-                variants={containerVariants}
-                initial="hidden"
-                animate="show"
-                className="space-y-6"
-              >
-                {orders.map((order) => (
-                  <motion.div key={order._id || order.orderId || order.id} variants={itemVariants}>
+              (() => {
+                const filteredOrders = orders.filter(order => {
+                  if (selectedRecipientFilter === 'all') return true;
+                  if (selectedRecipientFilter === 'self') return !order.patientDetails?.isFamilyMember;
+                  return order.patientDetails?.isFamilyMember && order.patientDetails?.memberId === selectedRecipientFilter;
+                });
+
+                if (filteredOrders.length === 0) {
+                  return (
+                    <div className="text-center py-20 bg-white/40 backdrop-blur-md rounded-[48px] border border-white shadow-xl">
+                      <p className="text-slate-400 font-black text-xs uppercase">No orders found for this recipient</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <motion.div 
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="show"
+                    className="space-y-6"
+                  >
+                    {filteredOrders.map((order) => (
+                      <motion.div key={order._id || order.orderId || order.id} variants={itemVariants}>
                     <Card 
                       onClick={() => setSelectedOrder(order)}
                       className="group rounded-[48px] border-none shadow-xl overflow-hidden bg-white/40 backdrop-blur-md hover:bg-white hover:shadow-2xl transition-all duration-500 cursor-pointer active:scale-[0.98] border border-white"
@@ -175,10 +234,17 @@ export default function OrdersPage() {
                             )}>
                               {order.status === 'Delivered' ? <CheckCircle2 className="w-8 h-8" /> : <Package className="w-8 h-8" />}
                             </div>
-                            <div>
-                              <p className="text-[9px] font-black text-slate-400 tracking-[0.3em] mb-1.5 uppercase opacity-60">Order ID</p>
-                              <h3 className="font-black text-lg text-slate-900 tracking-tight font-outfit uppercase">#{(order.orderId || order.id.substring(0, 12)).toUpperCase()}</h3>
-                            </div>
+                             <div>
+                               <p className="text-[9px] font-black text-slate-400 tracking-[0.3em] mb-1.5 uppercase opacity-60">Order ID</p>
+                               <div className="flex flex-wrap items-center gap-2">
+                                 <h3 className="font-black text-lg text-slate-900 tracking-tight font-outfit uppercase">#{(order.orderId || order.id.substring(0, 12)).toUpperCase()}</h3>
+                                 {order.patientDetails?.isFamilyMember && (
+                                   <Badge className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary/10 text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                     For: {order.patientDetails.relationship} ({order.patientDetails.name})
+                                   </Badge>
+                                 )}
+                               </div>
+                             </div>
                           </div>
                           <div className="flex items-center gap-8">
                             <div className="text-right hidden sm:block">
@@ -225,9 +291,10 @@ export default function OrdersPage() {
                         </div>
                       </CardContent>
                     </Card>
+                    ))}
                   </motion.div>
-                ))}
-              </motion.div>
+                );
+              })()
             ) : (
               <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }}
