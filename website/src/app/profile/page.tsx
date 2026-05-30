@@ -305,8 +305,6 @@ export default function ProfilePage() {
             </div>
           </motion.div>
 
-          </motion.div>
-
           {/* Tabs Selector */}
           <div className="flex items-center gap-2 mb-8 bg-slate-200/50 backdrop-blur-md p-1.5 rounded-full border border-white/40 w-fit">
             <button 
