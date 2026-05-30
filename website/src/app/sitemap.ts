@@ -72,7 +72,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  // 5. Static routes
+  // 5. Fetch Categories from MongoDB
+  let categoryUrls: MetadataRoute.Sitemap = [];
+  try {
+    const client = await clientPromise;
+    const db = client.db('sahimed');
+    const categories = await db.collection('categories').find({}, { projection: { name: 1, updatedAt: 1 } }).toArray();
+
+    categoryUrls = categories.map((category) => ({
+      url: `${baseUrl}/search?c=${encodeURIComponent(category.name)}`,
+      lastModified: category.updatedAt || new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }));
+  } catch (error) {
+    console.error('Error fetching categories for sitemap:', error);
+  }
+
+  // 6. Static routes
   const staticUrls = [
     {
       url: baseUrl,
@@ -112,5 +129,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticUrls, ...pageUrls, ...productUrls, ...blogUrls, ...deliveryUrls];
+  return [...staticUrls, ...pageUrls, ...productUrls, ...blogUrls, ...deliveryUrls, ...categoryUrls];
 }
