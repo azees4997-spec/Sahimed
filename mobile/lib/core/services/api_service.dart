@@ -46,11 +46,12 @@ class ApiService {
     _cacheTime.clear();
   }
 
-  Future<Map<String, String>> _getHeaders() async {
+  Future<Map<String, String>> _getHeaders({bool forceRefresh = false}) async {
     final user = _auth.currentUser;
     final Map<String, String> headers = {'Content-Type': 'application/json'};
     if (user != null) {
-      final token = await user.getIdToken();
+      // forceRefresh=true ensures we never send an expired token
+      final token = await user.getIdToken(forceRefresh);
       headers['Authorization'] = 'Bearer $token';
     }
     return headers;
@@ -521,7 +522,11 @@ class ApiService {
         'paymentType': paymentId != null ? 'Online' : 'Cash on Delivery',
       };
 
-      final headers = await _getHeaders();
+      // [ORDER FIX] Force-refresh the ID token to avoid 401 from stale/expired tokens
+      final headers = await _getHeaders(forceRefresh: true);
+
+      debugPrint('CREATE ORDER: Sending to $baseUrl/orders with userId=${order.userId}');
+      
       // [ORDER FIX] 30-second timeout so slow connections don't hang silently
       final response = await http.post(
         Uri.parse('$baseUrl/orders'),
@@ -530,7 +535,7 @@ class ApiService {
       ).timeout(const Duration(seconds: 30));
 
       debugPrint('CREATE ORDER: status=${response.statusCode}');
-      if (kDebugMode) debugPrint('CREATE ORDER BODY: ${response.body}');
+      debugPrint('CREATE ORDER BODY: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);
@@ -540,9 +545,12 @@ class ApiService {
         return orderId?.toString();
       } else {
         debugPrint('CREATE ORDER FAILED ${response.statusCode}: ${response.body}');
+        // Surface error to UI if possible
+        throw Exception('Order failed (${response.statusCode}): ${response.body}');
       }
     } catch (e) {
       debugPrint('Error creating order: $e');
+      rethrow; // let checkout screen show the actual error to the user
     }
     return null;
   }
