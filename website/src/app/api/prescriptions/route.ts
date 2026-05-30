@@ -84,11 +84,17 @@ export async function POST(req: Request) {
     
     const client = await clientPromise;
     const db = client.db('sahimed');
+
+    // Fetch user profile from MongoDB 'users' collection to obtain account contact details
+    const mongoUser = await db.collection('users').findOne({ uid: user.uid });
+    const userPhone = mongoUser?.phone || mongoUser?.phoneNumber || user.phoneNumber || '';
+    const userName = mongoUser?.name || user.displayName || 'Sahimed Member';
     
     const prescriptionRecord = {
       userId: user.uid,
-      phoneNumber: body.phoneNumber || user.phoneNumber || '',
+      phoneNumber: body.phoneNumber || userPhone,
       patientName: body.patientName || 'Self',
+      customerName: userName,
       notes: body.notes || '',
       imageUrls: body.imageUrls || [],
       imageUrl: body.imageUrls?.[0] || '', // Primary image

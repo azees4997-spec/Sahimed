@@ -159,9 +159,25 @@ export function EnquiriesTab({ db, isVerified, onBack }: { db: any, isVerified: 
               </div>
 
               <div className="px-1">
-                <p className="font-black text-sm mb-1 truncate uppercase tracking-tight text-gray-900">{enq?.patientName || 'Patient Name'}</p>
+                <p className="font-black text-sm mb-1 truncate uppercase tracking-tight text-gray-900">
+                  {enq?.patientName || 'Patient Name'}
+                  {enq?.customerName && enq.customerName.toLowerCase() !== (enq.patientName || '').toLowerCase() && (
+                    <span className="text-[10px] text-gray-400 font-bold normal-case block mt-0.5">
+                      Account: {enq.customerName}
+                    </span>
+                  )}
+                </p>
                 <div className="flex items-center justify-between mb-6">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">#{enq.id.slice(-6)} • {enq.phoneNumber || 'NO MOBILE'}</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    #{enq.id.slice(-6)} • {' '}
+                    {enq.phoneNumber ? (
+                      <a href={`tel:${enq.phoneNumber}`} className="text-primary hover:underline font-extrabold">
+                        {enq.phoneNumber}
+                      </a>
+                    ) : (
+                      'NO MOBILE'
+                    )}
+                  </p>
                   <p className="text-[9px] font-black text-slate-300 uppercase tracking-tighter">{safeFormat(enq.uploadDate || enq.createdAt, 'dd MMM HH:mm')}</p>
                 </div>
                 
