@@ -633,7 +633,8 @@ class ApiService {
         return [];
       }
 
-      final headers = await _getHeaders();
+      // [COST & AUTH FIX] Force refresh the token to prevent stale tokens returning 401
+      final headers = await _getHeaders(forceRefresh: true);
       final phone = user.phoneNumber ?? 'NO_PHONE';
       final uid = user.uid;
       
@@ -669,12 +670,12 @@ class ApiService {
           return map;
         }).toList();
       } else {
-        debugPrint('Failed to load orders: ${response.statusCode} - ${response.body}');
+        throw Exception('Failed to load orders (${response.statusCode}): ${response.body}');
       }
     } catch (e) {
       debugPrint('DEBUG: Exception in getUserOrders: $e');
+      rethrow; // Rethrow to let the UI catch and show the error state
     }
-    return [];
   }
 
   Future<Map<String, dynamic>?> getUserProfile() async {
