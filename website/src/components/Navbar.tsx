@@ -90,7 +90,7 @@ interface SuggestionItem {
 }
 
 export default function Navbar() {
-  const { location, setLocation, totalItems, addToCart } = useCart();
+  const { location, setLocation, totalItems, addToCart, importSharedCart } = useCart();
   const db = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
@@ -98,6 +98,21 @@ export default function Navbar() {
   // [COST FIX] Pages fetched once via API with 10-min cache instead of
   // a real-time Firestore listener running for every website visitor.
   const [headerPages, setHeaderPages] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const shareCartParam = params.get('shareCart');
+      if (shareCartParam) {
+        importSharedCart(shareCartParam);
+        // Clean query param
+        params.delete('shareCart');
+        const newQuery = params.toString() ? `?${params.toString()}` : '';
+        window.history.replaceState(null, '', `${window.location.pathname}${newQuery}`);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     fetch('/api/pages')

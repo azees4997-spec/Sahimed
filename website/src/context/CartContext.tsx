@@ -3,6 +3,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useFirestore } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
 import { collection, getDocs } from 'firebase/firestore';
 import { Product, CartItem, Fee, PromoCode } from '@/types';
 
@@ -25,6 +26,7 @@ interface CartContextType {
   setAttachedPrescriptions: (imgs: string[]) => void;
   addPrescription: (img: string) => void;
   removePrescription: (index: number) => void;
+  importSharedCart: (itemsString: string) => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -175,14 +177,70 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setAttachedPrescriptions(prev => prev.filter((_, i) => i !== index));
   };
 
+  const { toast } = useToast();
+
+  const importSharedCart = async (sharedCartString: string) => {
+    if (!sharedCartString) return;
+    try {
+      const items = sharedCartString.split(',').map(item => {
+        const [id, qtyStr] = item.split(':');
+        return { id, quantity: parseInt(qtyStr) || 1 };
+      });
+
+      const resolvedProducts = await Promise.all(
+        items.map(async (item) => {
+          try {
+            const res = await fetch(`/api/products/${item.id}`);
+            if (!res.ok) return null;
+            const prod = await res.json();
+            return { product: prod, quantity: item.quantity };
+          } catch (e) {
+            return null;
+          }
+        })
+      );
+
+      setCart(prev => {
+        let newCart = [...prev];
+        resolvedProducts.forEach((entry) => {
+          if (entry && entry.product) {
+            const prod = entry.product;
+            const qty = entry.quantity;
+            const existingIdx = newCart.findIndex(i => i.id === prod.id || i.id === prod._id);
+            if (existingIdx > -1) {
+              newCart[existingIdx] = { ...newCart[existingIdx], quantity: newCart[existingIdx].quantity + qty };
+            } else {
+              newCart.push({
+                ...prod,
+                id: prod.id || prod._id,
+                quantity: qty
+              });
+            }
+          }
+        });
+        return newCart;
+      });
+
+      const count = resolvedProducts.filter(Boolean).length;
+      if (count > 0) {
+        toast({
+          title: "Shared Cart Loaded! 🛒",
+          description: `Successfully imported ${count} items.`,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to resolve shared cart items", err);
+    }
+  };
+
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
   const totalPrice = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   return (
     <CartContext.Provider value={{
       cart, addToCart, removeFromCart, updateQuantity, clearCart, getItemQuantity, totalItems, totalPrice, location, setLocation,
-      appliedPromo, applyPromo, activeFees, availablePromos, attachedPrescriptions, setAttachedPrescriptions: setAttachedPrescriptions,
-      addPrescription, removePrescription
+      appliedPromo, applyPromo, activeFees, availablePromos, attachedPrescriptions, setAttachedPrescriptions,
+      addPrescription, removePrescription, importSharedCart
     }}>
       {children}
     </CartContext.Provider>

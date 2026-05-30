@@ -4,7 +4,7 @@
 import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShoppingCart, ArrowRight, Plus, Minus, Ticket, ChevronRight, FileWarning, Camera, ClipboardCheck, Tag, PartyPopper, Sparkles, Zap, Loader2, FileText } from 'lucide-react';
+import { Trash2, ShoppingCart, ArrowRight, Plus, Minus, Ticket, ChevronRight, FileWarning, Camera, ClipboardCheck, Tag, PartyPopper, Sparkles, Zap, Loader2, FileText, Share2, Send, Copy } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -53,6 +53,46 @@ export default function CartPage() {
   const { toast } = useToast();
   const [isPromoDialogOpen, setIsPromoDialogOpen] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+
+  const handleShareCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const serialized = cart.map(item => `${item.id || item._id}:${item.quantity}`).join(',');
+    const shareUrl = `${window.location.origin}/cart?shareCart=${serialized}`;
+    
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({
+        title: 'My SahiMed Shopping Cart 🛒',
+        text: 'I\'m sharing my SahiMed shopping cart with you. Click to load these items:',
+        url: shareUrl,
+      })
+      .catch((error) => console.log('Error sharing cart', error));
+    } else {
+      setIsShareDialogOpen(true);
+    }
+  };
+
+  const handleWhatsAppShare = () => {
+    const serialized = cart.map(item => `${item.id || item._id}:${item.quantity}`).join(',');
+    const shareUrl = `${window.location.origin}/cart?shareCart=${serialized}`;
+    const text = encodeURIComponent(`Check out my SahiMed shopping cart: ${shareUrl}`);
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+    setIsShareDialogOpen(false);
+  };
+
+  const handleCopyLink = () => {
+    if (typeof navigator !== 'undefined') {
+      const serialized = cart.map(item => `${item.id || item._id}:${item.quantity}`).join(',');
+      const shareUrl = `${window.location.origin}/cart?shareCart=${serialized}`;
+      navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Cart Link Copied!",
+        description: "Your shareable cart link has been copied.",
+      });
+    }
+    setIsShareDialogOpen(false);
+  };
+
 
   useEffect(() => {
     if (appliedPromo) {
@@ -384,9 +424,15 @@ export default function CartPage() {
                       </div>
                     )}
                   </div>
-                  <div className="hidden lg:flex">
+                  <div className="hidden lg:flex flex-col gap-3">
                     <Button onClick={handleCheckoutClick} className="w-full rounded-full h-12 sm:h-16 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-xl bg-primary text-white relative z-10 group hover:scale-[1.01] transition-all">
                       Proceed to Checkout <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                    <Button 
+                      onClick={handleShareCart} 
+                      className="w-full rounded-full h-12 sm:h-16 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-primary relative z-10 flex items-center justify-center gap-2 border border-slate-100 hover:border-slate-200 shadow-sm active:scale-95 transition-all"
+                    >
+                      <Share2 className="w-4 h-4" /> Share Shopping Cart
                     </Button>
                   </div>
                 </motion.div>
@@ -520,16 +566,52 @@ export default function CartPage() {
               </div>
             </div>
 
-            <div className="flex-1 max-w-[160px] sm:max-w-xs ml-4">
+            <div className="flex-1 max-w-[200px] sm:max-w-xs ml-4 flex gap-2">
+              <Button
+                onClick={handleShareCart}
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-primary flex items-center justify-center shrink-0 border-none shadow-sm active:scale-95 transition-all"
+                title="Share Shopping Cart"
+              >
+                <Share2 className="w-5 h-5" />
+              </Button>
               <Button 
                 onClick={handleCheckoutClick} 
-                className="w-full rounded-full h-12 sm:h-16 text-[10px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-[0_20px_40px_rgba(0,0,0,0.1)] bg-primary text-white hover:scale-[1.02] active:scale-95 transition-all gap-2 border-none ring-offset-white"
+                className="flex-1 rounded-full h-12 sm:h-16 text-[10px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-[0_20px_40px_rgba(0,0,0,0.1)] bg-primary text-white hover:scale-[1.02] active:scale-95 transition-all gap-2 border-none ring-offset-white"
               >
                 Checkout <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
         )}
+
+        <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+          <DialogContent className="max-w-md w-[94vw] rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white z-[120]">
+            <div className="bg-primary p-8 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
+                <Share2 className="w-20 h-20" />
+              </div>
+              <DialogTitle className="text-xl font-black tracking-tighter uppercase font-outfit">Share Cart</DialogTitle>
+              <DialogDescription className="text-[8px] font-black text-white/60 tracking-[0.2em] mt-2 uppercase">
+                Share your shopping cart with friends or family
+              </DialogDescription>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <Button 
+                onClick={handleWhatsAppShare}
+                className="w-full h-14 rounded-full font-black tracking-[0.2em] text-[10px] bg-[#25D366] text-white hover:bg-[#20ba56] border-none uppercase active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <Send className="w-4 h-4 text-white" /> Share on WhatsApp
+              </Button>
+              <Button 
+                onClick={handleCopyLink}
+                className="w-full h-14 rounded-full font-black tracking-[0.2em] text-[10px] bg-slate-900 text-white hover:bg-slate-800 border-none uppercase active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <Copy className="w-4 h-4 text-white" /> Copy Shareable Link
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </PageTransition>
   );

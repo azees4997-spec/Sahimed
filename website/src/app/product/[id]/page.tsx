@@ -67,6 +67,11 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const price = product.liveData?.sahimed_price || product.price || 0;
   const description = product.description || `Buy ${product.name} at affordable prices on SahiMed. Fast delivery across India.`;
 
+  let ogImage = product.imageUrl || 'https://sahimed.com/og-image.png';
+  if (ogImage.startsWith('/')) {
+    ogImage = `https://sahimed.com${ogImage}`;
+  }
+
   return {
     title: `Buy ${product.name} Online at ₹${price} | SahiMed - Authentic Medicines`,
     description: description,
@@ -76,8 +81,24 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     openGraph: {
       title: `${product.name} | SahiMed`,
       description: description,
-      images: [product.imageUrl || 'https://sahimed.com/og-image.png'],
+      url: `https://sahimed.com/product/${id}`,
+      siteName: 'SahiMed',
+      type: 'website',
+      images: [
+        {
+          url: ogImage,
+          width: 800,
+          height: 600,
+          alt: product.name,
+        }
+      ],
     },
+    twitter: {
+      card: 'summary_large_image',
+      title: `Buy ${product.name} Online at ₹${price} | SahiMed`,
+      description: description,
+      images: [ogImage],
+    }
   };
 }
 

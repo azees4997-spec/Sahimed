@@ -208,36 +208,20 @@ export default function FamilyTab() {
   };
 
   const handleReorderMeds = (meds: any[]) => {
-    // Add all medicines to the active cart context
     if (meds.length === 0) return;
     
-    // We can dispatch cart event or interact with localStorage
     try {
-      const localCart = localStorage.getItem('sahimed_cart');
-      let currentCart: any[] = [];
-      if (localCart) {
-        try { currentCart = JSON.parse(localCart); } catch (e) { currentCart = []; }
-      }
-
       meds.forEach(med => {
-        const exists = currentCart.find(item => item._id === med._id);
-        if (exists) {
-          exists.quantity += 1;
-        } else {
-          currentCart.push({
-            _id: med._id,
-            name: med.name,
-            price: med.price,
-            mrp: med.mrp,
-            imageUrl: med.imageUrl,
-            quantity: 1
-          });
-        }
+        addToCart({
+          id: med._id,
+          name: med.name,
+          price: med.price,
+          mrp: med.mrp,
+          imageUrl: med.imageUrl,
+          prescriptionRequired: med.prescriptionRequired || false
+        } as any, med.quantity || 1);
       });
 
-      localStorage.setItem('sahimed_cart', JSON.stringify(currentCart));
-      // Dispatch storage event to notify Navbar and other client components
-      window.dispatchEvent(new Event('storage'));
       toast({ title: "Cart Updated", description: `Added ${meds.length} items to your shopping cart.` });
       setIsMedsDialogOpen(false);
     } catch (e) {

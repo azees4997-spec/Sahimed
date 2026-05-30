@@ -31,7 +31,10 @@ import {
   Clock,
   ArrowRight,
   Pencil,
-  X
+  X,
+  Share2,
+  Send,
+  Copy
 } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
@@ -166,7 +169,8 @@ const ComparisonCard = ({
   getItemQuantity,
   addToCart,
   showComparison,
-  brandedMrp
+  brandedMrp,
+  onShareClick
 }: {
   product: any,
   label: string,
@@ -174,7 +178,8 @@ const ComparisonCard = ({
   getItemQuantity: (id: string) => number,
   addToCart: (p: any) => void,
   showComparison: boolean,
-  brandedMrp: number
+  brandedMrp: number,
+  onShareClick?: (e: React.MouseEvent) => void
 }) => {
   if (!product) return null;
 
@@ -267,15 +272,29 @@ const ComparisonCard = ({
           </div>
 
           <div className="space-y-0.5 sm:space-y-1">
-            <h3 className="font-extrabold text-[10px] sm:text-lg text-slate-800 leading-tight line-clamp-2 min-h-[1.6rem] sm:min-h-[2.4rem] font-outfit uppercase">
-              {product.name}
-            </h3>
-            <p className="text-[7px] sm:text-[10px] font-black text-slate-500 tracking-widest uppercase">
-              {product.packSize || "N/A"}
-            </p>
-            <p className="text-[7px] sm:text-[10px] font-bold text-slate-400 truncate uppercase tracking-tighter">
-              {product.manufacturer}
-            </p>
+            <div className="flex justify-between items-start gap-4">
+              <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
+                <h3 className="font-extrabold text-[10px] sm:text-lg text-slate-800 leading-tight line-clamp-2 min-h-[1.6rem] sm:min-h-[2.4rem] font-outfit uppercase">
+                  {product.name}
+                </h3>
+                <p className="text-[7px] sm:text-[10px] font-black text-slate-500 tracking-widest uppercase">
+                  {product.packSize || "N/A"}
+                </p>
+                <p className="text-[7px] sm:text-[10px] font-bold text-slate-400 truncate uppercase tracking-tighter">
+                  {product.manufacturer}
+                </p>
+              </div>
+              {!isAlt && onShareClick && (
+                <button
+                  type="button"
+                  onClick={onShareClick}
+                  className="w-10 h-10 rounded-2xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-500 hover:text-primary transition-all active:scale-95 border border-slate-100 shrink-0 shadow-sm"
+                  title="Share product details"
+                >
+                  <Share2 className="w-5 h-5" />
+                </button>
+              )}
+            </div>
 
             <div className="pt-1.5 sm:pt-3 border-t border-dashed mt-1.5 sm:mt-3 space-y-0.5">
               <div className="flex items-baseline gap-1.5 sm:gap-2">
@@ -507,6 +526,39 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
 
   const { data: productData, isLoading: productLoading } = useMongoDBDoc(id);
   const product = productData || initialProduct;
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+
+  const handleShareClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({
+        title: `${product?.name} | SahiMed`,
+        text: `Check out ${product?.name} on SahiMed:`,
+        url: typeof window !== 'undefined' ? window.location.href : '',
+      })
+      .catch((error) => console.log('Error sharing', error));
+    } else {
+      setIsShareDialogOpen(true);
+    }
+  };
+
+  const handleWhatsAppShare = () => {
+    const text = encodeURIComponent(`Check out ${product?.name} on SahiMed: ${typeof window !== 'undefined' ? window.location.href : ''}`);
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+    setIsShareDialogOpen(false);
+  };
+
+  const handleCopyLink = () => {
+    if (typeof navigator !== 'undefined') {
+      navigator.clipboard.writeText(typeof window !== 'undefined' ? window.location.href : '');
+      toast({
+        title: "Link Copied!",
+        description: "Product link copied to clipboard.",
+      });
+    }
+    setIsShareDialogOpen(false);
+  };
+
   const { data: molData } = useMongoDBMolecule(product?.moleculeId);
 
   const isGeneric = product?.isGeneric === true || product?.isGeneric === "true";
@@ -613,6 +665,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                   addToCart={addToCart}
                   showComparison={showComparison}
                   brandedMrp={brandedMrp}
+                  onShareClick={handleShareClick}
                 />
                 <ComparisonCard
                   product={genericItem}
@@ -634,6 +687,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                     addToCart={addToCart}
                     showComparison={showComparison}
                     brandedMrp={brandedMrp}
+                    onShareClick={handleShareClick}
                   />
                 </div>
               </div>
@@ -811,6 +865,35 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
             </Tabs>
           </motion.section>
         </main>
+
+        <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+          <DialogContent className="max-w-md w-[94vw] rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white z-[120]">
+            <div className="bg-primary p-8 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
+                <Share2 className="w-20 h-20" />
+              </div>
+              <DialogTitle className="text-xl font-black tracking-tighter uppercase font-outfit">Share Product</DialogTitle>
+              <DialogDescription className="text-[8px] font-black text-white/60 tracking-[0.2em] mt-2 uppercase">
+                Share {product?.name} with friends or family
+              </DialogDescription>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <Button 
+                onClick={handleWhatsAppShare}
+                className="w-full h-14 rounded-full font-black tracking-[0.2em] text-[10px] bg-[#25D366] text-white hover:bg-[#20ba56] border-none uppercase active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <Send className="w-4 h-4 text-white" /> Share on WhatsApp
+              </Button>
+              <Button 
+                onClick={handleCopyLink}
+                className="w-full h-14 rounded-full font-black tracking-[0.2em] text-[10px] bg-slate-900 text-white hover:bg-slate-800 border-none uppercase active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <Copy className="w-4 h-4 text-white" /> Copy Link
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </PageTransition>
   );
