@@ -87,6 +87,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
             <ul className="space-y-4">
               {[
                 { label: 'Shop All Products', href: '/search' },
+                { label: 'All Medicines', href: '/medicines' },
                 { label: 'Brand Categories', href: '/categories' },
                 { label: 'Prescription Checkout', href: '/prescription' },
                 { label: 'Exclusive Offers', href: '/p/offers' },
