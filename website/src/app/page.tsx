@@ -14,6 +14,8 @@ import HowItWorks from '@/components/home/HowItWorks';
 import SEOContent from '@/components/home/SEOContent';
 import FAQSection from '@/components/home/FAQSection';
 import { Metadata } from 'next';
+import { PRODUCTS, CATEGORIES } from '@/lib/data';
+
 
 export const metadata: Metadata = {
   title: 'Sahimed - Authentic Medicines & Healthcare at Best Prices',
@@ -52,12 +54,18 @@ async function getCategories() {
       .toArray();
     return categories.map(c => ({ ...c, id: c._id.toString() }));
   } catch (err) {
-    console.error("Failed to fetch categories:", err);
-    return [];
+    console.error("Failed to fetch categories from MongoDB, falling back to static data...", err);
+    return CATEGORIES.map((cat, idx) => ({
+      id: `fallback-cat-${idx}`,
+      name: cat.name,
+      imageUrl: cat.imageUrl,
+      description: cat.description
+    }));
   }
 }
 
 async function getProducts(filterType: 'bestSeller' | 'topSelection' | 'all' = 'all') {
+  const limitValue = filterType === 'all' ? 50 : 20;
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
@@ -71,13 +79,19 @@ async function getProducts(filterType: 'bestSeller' | 'topSelection' | 'all' = '
     
     const products = await db.collection('products')
       .find(query)
-      .limit(filterType === 'all' ? 50 : 20)
+      .limit(limitValue)
       .toArray();
     
     return products.map(p => ({ ...p, id: p._id.toString() }));
   } catch (err) {
-    console.error("Failed to fetch products:", err);
-    return [];
+    console.error(`Failed to fetch products (${filterType}) from MongoDB, falling back to static data...`, err);
+    let fallback = PRODUCTS.map((p, idx) => ({ ...p, _id: p.id || `fallback-prod-${idx}`, id: p.id || `fallback-prod-${idx}` }));
+    if (filterType === 'bestSeller') {
+      return fallback.slice(0, 10);
+    } else if (filterType === 'topSelection') {
+      return fallback.slice(0, 10);
+    }
+    return fallback;
   }
 }
 

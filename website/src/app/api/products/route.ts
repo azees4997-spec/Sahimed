@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
+import { getDbAdmin } from '@/lib/firebase-admin';
+import { PRODUCTS } from '@/lib/data';
+
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -286,8 +289,27 @@ export async function GET(request: Request) {
       },
     });
   } catch (err: any) {
-    console.error("[Search API Error]", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("[Search API Error] MongoDB failed, falling back to static PRODUCTS", err);
+    let fallbackProducts = PRODUCTS.map((p, idx) => ({
+      ...p,
+      _id: p.id || `fallback-prod-${idx}`,
+      isFallback: true
+    }));
+    
+    if (category) {
+      fallbackProducts = fallbackProducts.filter(p => p.category?.toLowerCase() === category.toLowerCase());
+    }
+    if (qStr) {
+      const terms = qStr.toLowerCase().split(/\s+/).filter(Boolean);
+      fallbackProducts = fallbackProducts.filter(p => 
+        terms.every(term => 
+          p.name.toLowerCase().includes(term) || 
+          p.saltComposition.toLowerCase().includes(term)
+        )
+      );
+    }
+    
+    return NextResponse.json(fallbackProducts.slice(0, limitValue));
   }
 }
 

@@ -253,6 +253,55 @@ export function MaintenanceTab({ onBack }: { onBack: () => void }) {
           </CardContent>
         </Card>
 
+        {/* MongoDB Connection Reset Section */}
+        <Card className="rounded-[40px] border-none shadow-xl overflow-hidden bg-white">
+          <CardHeader className="p-8 bg-blue-600 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                <RefreshCcw className="w-6 h-6" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-black uppercase font-outfit">MongoDB Reset</CardTitle>
+                <p className="text-[10px] font-black text-white/60 tracking-widest uppercase">Force Reconnect Backend Driver</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-8 space-y-6">
+            <p className="text-sm font-medium text-slate-600 leading-relaxed">
+              If products and categories are not showing due to a database connection timeout or network hiccup, click here to force-reset the MongoDB connection pool in the backend memory.
+            </p>
+            
+            <Button 
+              onClick={async () => {
+                try {
+                  const idToken = await auth.currentUser?.getIdToken();
+                  if (!idToken) throw new Error("Unauthorized");
+                  
+                  const res = await fetch('/api/diagnostics', {
+                    method: 'POST',
+                    headers: { 
+                      'Authorization': `Bearer ${idToken}`,
+                      'Content-Type': 'application/json'
+                    }
+                  });
+                  const data = await res.json();
+                  if (res.ok) {
+                    toast({ title: "Database Reset Complete", description: data.message || "Connection cache cleared successfully." });
+                  } else {
+                    throw new Error(data.error || "Reset failed");
+                  }
+                } catch (err: any) {
+                  toast({ variant: 'destructive', title: "Reset Failed", description: err.message });
+                }
+              }}
+              className="w-full h-16 rounded-full font-black text-[10px] tracking-[0.2em] bg-blue-600 text-white hover:bg-blue-700 uppercase shadow-xl active:scale-95 transition-all gap-3"
+            >
+              <RefreshCcw className="w-5 h-5" />
+              Force MongoDB Reconnect
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Configuration Setup Guide - Shown only on error */}
         {result?.type === 'config_error' ? (
           <Card className="rounded-[40px] border-2 border-rose-100 bg-rose-50/30 overflow-hidden animate-in zoom-in-95 duration-500">

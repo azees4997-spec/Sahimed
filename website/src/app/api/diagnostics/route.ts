@@ -50,3 +50,27 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+export async function POST(req: Request) {
+  try {
+    await verifyAdmin(req);
+    
+    const globalWithMongo = global as typeof globalThis & {
+      _mongoClientPromise?: any;
+    };
+    
+    const wasCached = !!globalWithMongo._mongoClientPromise;
+    if (wasCached) {
+      delete globalWithMongo._mongoClientPromise;
+      console.log("[Diagnostics Reconnect] Cleared global MongoDB connection promise.");
+    }
+    
+    return NextResponse.json({ 
+      success: true, 
+      wasCached,
+      message: "MongoDB connection cache cleared successfully. Next request will trigger a clean reconnect." 
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 401 });
+  }
+}

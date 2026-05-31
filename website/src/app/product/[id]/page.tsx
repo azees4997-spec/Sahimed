@@ -4,6 +4,9 @@ import { notFound } from 'next/navigation';
 import clientPromise from '@/lib/mongodb';
 import ProductDetailClient from './ProductDetailClient';
 import { ObjectId } from 'mongodb';
+import { getDbAdmin } from '@/lib/firebase-admin';
+import { PRODUCTS } from '@/lib/data';
+
 
 interface Product {
   id: string;
@@ -51,7 +54,14 @@ async function getProduct(id: string): Promise<Product | null> {
     }
     return null;
   } catch (error) {
-    console.error('[SSR Product Fetch Error]', error);
+    console.error('[SSR Product Fetch Error] MongoDB failed, falling back to static PRODUCTS search', error);
+    const staticProd = PRODUCTS.find(p => p.id === id);
+    if (staticProd) {
+      return {
+        ...staticProd,
+        _id: staticProd.id
+      } as unknown as Product;
+    }
     return null;
   }
 }
