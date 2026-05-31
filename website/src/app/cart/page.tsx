@@ -255,13 +255,21 @@ export default function CartPage() {
       <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-64 lg:pb-32">
         <Navbar />
         <main className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
-          <motion.h1 
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="text-xl sm:text-4xl font-black text-slate-900 tracking-tighter mb-4 sm:mb-10 font-outfit flex items-baseline gap-2"
-          >
-            Your Cart <span className="text-primary/50 text-[10px] sm:text-xl font-black tracking-widest uppercase bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">{totalItems} Items</span>
-          </motion.h1>
+          <div className="flex flex-row justify-between items-center mb-4 sm:mb-10">
+            <motion.h1 
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              className="text-xl sm:text-4xl font-black text-slate-900 tracking-tighter font-outfit flex items-baseline gap-2"
+            >
+              Your Cart <span className="text-primary/50 text-[10px] sm:text-xl font-black tracking-widest uppercase bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">{totalItems} Items</span>
+            </motion.h1>
+            <Button 
+              onClick={handleShareCart} 
+              className="rounded-full h-10 px-5 text-[10px] font-black tracking-[0.2em] uppercase bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 shadow-sm flex items-center gap-1.5 active:scale-95 transition-all"
+            >
+              <Share2 className="w-3.5 h-3.5 text-primary" /> Share Cart
+            </Button>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-20">
             <motion.div 
               variants={containerVariants}
@@ -428,12 +436,6 @@ export default function CartPage() {
                     <Button onClick={handleCheckoutClick} className="w-full rounded-full h-12 sm:h-16 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-xl bg-primary text-white relative z-10 group hover:scale-[1.01] transition-all">
                       Proceed to Checkout <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
                     </Button>
-                    <Button 
-                      onClick={handleShareCart} 
-                      className="w-full rounded-full h-12 sm:h-16 text-[9px] sm:text-xs font-black tracking-[0.2em] uppercase bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-primary relative z-10 flex items-center justify-center gap-2 border border-slate-100 hover:border-slate-200 shadow-sm active:scale-95 transition-all"
-                    >
-                      <Share2 className="w-4 h-4" /> Share Shopping Cart
-                    </Button>
                   </div>
                 </motion.div>
               </div>
@@ -566,17 +568,10 @@ export default function CartPage() {
               </div>
             </div>
 
-            <div className="flex-1 max-w-[200px] sm:max-w-xs ml-4 flex gap-2">
-              <Button
-                onClick={handleShareCart}
-                className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-primary flex items-center justify-center shrink-0 border-none shadow-sm active:scale-95 transition-all"
-                title="Share Shopping Cart"
-              >
-                <Share2 className="w-5 h-5" />
-              </Button>
+            <div className="flex-1 max-w-[200px] sm:max-w-xs ml-4 flex">
               <Button 
                 onClick={handleCheckoutClick} 
-                className="flex-1 rounded-full h-12 sm:h-16 text-[10px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-[0_20px_40px_rgba(0,0,0,0.1)] bg-primary text-white hover:scale-[1.02] active:scale-95 transition-all gap-2 border-none ring-offset-white"
+                className="w-full rounded-full h-12 sm:h-16 text-[10px] sm:text-xs font-black tracking-[0.2em] uppercase shadow-[0_20px_40px_rgba(0,0,0,0.1)] bg-primary text-white hover:scale-[1.02] active:scale-95 transition-all gap-2 border-none ring-offset-white"
               >
                 Checkout <ChevronRight className="w-4 h-4" />
               </Button>
@@ -585,7 +580,7 @@ export default function CartPage() {
         )}
 
         <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
-          <DialogContent className="max-w-md w-[94vw] rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white z-[120]">
+          <DialogContent className="max-w-md w-[94vw] rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white z-[160]">
             <div className="bg-primary p-8 text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
                 <Share2 className="w-20 h-20" />

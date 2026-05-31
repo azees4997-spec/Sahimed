@@ -185,32 +185,8 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
           </div>
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-6 transition-all duration-700">
             <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mr-2">We Accept</span>
-            <div className="flex items-center gap-5 bg-white px-6 py-3 rounded-2xl border border-[#FFE4E4] shadow-sm">
-              {/* UPI */}
-              <svg viewBox="0 0 100 35" className="h-5 w-auto">
-                {/* U */}
-                <path d="M8.2 8.5l-2.4 6.8c-.2.5-.5.8-1 .8s-.8-.3-.8-.8l1.4-4.1H3.6l-1.4 4.1c0 1.2.9 2.1 2.1 2.1s2.1-.9 2.1-2.1l2.4-6.8h-2.1v.1z" fill="#666"/>
-                {/* P */}
-                <path d="M14.5 8.5h-3.3l-2.4 6.8h1.9v-2.5h1.4c1.2 0 2.1-.6 2.1-2.1s-.6-2.2-2.1-2.2zm-.2 2.2h-1.2V9.6h1.2c.5 0 .8.2.8.7s-.3.6-.8.6z" fill="#666"/>
-                {/* I */}
-                <path d="M18.8 8.5h-1.9l2.4 6.8h1.9l-2.4-6.8z" fill="#666"/>
-                {/* NPCI Fast Forward Icon */}
-                <path d="M32 5l-4.5 11h2.5l4.5-11h-2.5z" fill="#f07e26"/>
-                <path d="M42 5l-4.5 11h2.5l4.5-11h-2.5z" fill="#097939"/>
-              </svg>
-              {/* VISA */}
-              <svg viewBox="0 0 100 31.8" className="h-4 w-auto">
-                <path d="M38.4 4.5h-5.9l-7.4 17.5-3.1-15.6c-.2-1-1-1.9-2-1.9h-9.9v1.2c2.1.5 4 1.5 5.4 3.1(1.4 1.6 2.1 3.5 2.1 5.5v12.7h6.4l9.7-22.5h4.7zm16.5 0h-5l-8.6 22.5h6.4l1.7-4.6h10.3l1 4.6h5.6l-4.5-22.5h-6.9zm-4.3 12.6l3.5-9.3 2 9.3h-5.5zm31.4-12.6l-5.3 15.6-2.2-11.1c-.4-1.9-1.9-4.5-4-4.5h-10v1.2c2 .5 3.9 1.4 5.3 3 1.4 1.6 2.1 3.5 2.1 5.4v13.3h6.4l9.8-22.9h-2.1z" fill="#1a1f71"/>
-                <path d="M20.4 4.5h-9.9v1.2c2.1.5 4 1.5 5.4 3.1 1.4 1.6 2.1 3.5 2.1 5.5v12.7h6.4l4.2-22.5h-8.2z" fill="#f7b600"/>
-              </svg>
-              {/* MASTER */}
-              <div className="flex items-center -space-x-2">
-                <div className="w-4 h-4 rounded-full bg-[#eb001b]" />
-                <div className="w-4 h-4 rounded-full bg-[#f79e1b] opacity-80" />
-              </div>
-              {/* RUPAY */}
-              <div className="text-[10px] font-black italic tracking-tighter text-slate-500 uppercase border-r border-[#FFE4E4] pr-4">RuPay</div>
-              <div className="text-[10px] font-black italic tracking-tighter text-slate-500 uppercase">NetBank</div>
+            <div className="flex items-center gap-5 bg-white px-4 py-2 rounded-2xl border border-[#FFE4E4] shadow-sm">
+              <img src="/images/we-accept.png" alt="We Accept Visa, UPI, MasterCard, Paytm, RuPay" className="h-6 w-auto object-contain" />
             </div>
           </div>
         </div>

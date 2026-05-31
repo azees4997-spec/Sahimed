@@ -242,7 +242,7 @@ export default function FamilyTab() {
               <Plus className="w-3.5 h-3.5" /> Add Profile
             </button>
           </DialogTrigger>
-          <DialogContent className="max-w-md w-[94vw] rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white z-[120]">
+          <DialogContent className="max-w-md w-[94vw] rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white z-[160]">
             <div className="bg-primary p-8 text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
                 <User className="w-20 h-20" />
@@ -255,7 +255,7 @@ export default function FamilyTab() {
               </DialogDescription>
             </div>
             
-            <form onSubmit={handleSave} className="p-6 space-y-5 overflow-y-auto max-h-[70vh]">
+            <form onSubmit={handleSave} className="p-6 pb-12 space-y-5 overflow-y-auto max-h-[70vh]">
               <div className="space-y-1.5">
                 <Label htmlFor="name" className="text-[8px] font-black tracking-[0.2em] text-slate-400 uppercase">Full Name</Label>
                 <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Ramesh Kumar" className="rounded-2xl h-12" required />
@@ -391,7 +391,7 @@ export default function FamilyTab() {
 
       {/* Medications Drawer / Dialog */}
       <Dialog open={isMedsDialogOpen} onOpenChange={setIsMedsDialogOpen}>
-        <DialogContent className="max-w-md w-[94vw] rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white z-[130]">
+        <DialogContent className="max-w-md w-[94vw] rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white z-[160]">
           <div className="bg-primary p-8 text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
               <Heart className="w-20 h-20" />
