@@ -480,6 +480,30 @@ export async function POST(req: Request) {
     }
 
 
+    // Sync to Firestore for user visibility
+    try {
+      const { getDbAdmin } = await import('@/lib/firebase-admin');
+      const dbAdmin = getDbAdmin();
+      
+      const firestoreOrderData = {
+        ...orderData,
+        orderId: nextId,
+        mongoId: result.insertedId.toString(),
+        orderDate: orderData.orderDate,
+        createdAt: orderData.createdAt,
+        updatedAt: orderData.updatedAt,
+        timeline: orderData.timeline.map((t: any) => ({
+          ...t,
+          timestamp: t.timestamp
+        }))
+      };
+      
+      await dbAdmin.doc(`userProfiles/${orderData.userId}/orders/${nextId}`).set(firestoreOrderData);
+      console.log(`[Order Sync] Successfully created Firestore order document userProfiles/${orderData.userId}/orders/${nextId}`);
+    } catch (fsErr: any) {
+      console.error(`[Order Sync Error] Failed to create Firestore order document:`, fsErr.message);
+    }
+
     return NextResponse.json({ success: true, id: result.insertedId, orderId: nextId });
   } catch (err: any) {
     console.error("[Orders API Error]", err);

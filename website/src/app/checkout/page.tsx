@@ -472,13 +472,13 @@ export default function CheckoutPage() {
 
       const mongoOrderId = result.orderId; // The ORD00xx ID
 
-      // 3. Sync to User Profile (Firestore) using the SAME ID
-      const newOrderRef = doc(db, 'userProfiles', user.uid, 'orders', mongoOrderId);
-      setDocumentNonBlocking(newOrderRef, { 
-        ...orderData, 
-        orderId: mongoOrderId,
-        mongoId: result.id 
-      }, { merge: false });
+      // 3. Sync to User Profile (Firestore) - Handled securey on the backend to avoid permission errors
+      // const newOrderRef = doc(db, 'userProfiles', user.uid, 'orders', mongoOrderId);
+      // setDocumentNonBlocking(newOrderRef, { 
+      //   ...orderData, 
+      //   orderId: mongoOrderId,
+      //   mongoId: result.id 
+      // }, { merge: false });
       
       // 4. Success Navigation
       if (paymentMethod === 'Online') {

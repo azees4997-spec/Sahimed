@@ -39,11 +39,18 @@ export async function GET() {
         const link = escapeXml(`${baseUrl}/product/${id}`);
         
         // Image Handling
+        const imageUrlsArray = Array.isArray(product.imageUrls)
+          ? product.imageUrls
+          : (typeof product.imageUrls === 'string' && product.imageUrls.trim() ? [product.imageUrls] : []);
+        const imagesArray = Array.isArray(product.images)
+          ? product.images
+          : (typeof product.images === 'string' && product.images.trim() ? [product.images] : []);
+
         const rawImages = [
-          ...(product.imageUrls || []),
+          ...imageUrlsArray,
           product.imageUrl,
           product.image,
-          ...(product.images || [])
+          ...imagesArray
         ].filter(Boolean);
 
         // Deduplicate URLs using a Set after mapping to absolute URLs
@@ -64,17 +71,30 @@ export async function GET() {
         // Pricing
         const salePrice = Number(product.liveData?.sahimed_price || product.price || 0);
         const mrp = Number(product.liveData?.mrp || product.mrp || salePrice);
-        const priceStr = escapeXml(`${mrp} INR`);
-        const salePriceStr = salePrice < mrp ? `<g:sale_price>${escapeXml(`${salePrice} INR`)}</g:sale_price>` : '';
+        const priceStr = escapeXml(`${mrp.toFixed(2)} INR`);
+        const salePriceStr = salePrice < mrp ? `<g:sale_price>${escapeXml(`${salePrice.toFixed(2)} INR`)}</g:sale_price>` : '';
 
         // Product Identifiers
-        const brand = escapeXml(product.manufacturer || product.marketer_name || product.brand || 'SahiMed');
-        const mpn = escapeXml(product.sku || product.hsnCode || id);
-        const gtin = escapeXml(product.gtin || product.barcode || '');
-        const hasIdentifiers = !!(brand && (mpn || gtin));
+        const brandVal = product.brand || product.manufacturer || product.marketer_name || '';
+        const brand = escapeXml(brandVal || 'SahiMed');
+        
+        const mpnVal = product.sku || product.hsnCode || '';
+        const mpn = escapeXml(mpnVal);
+        
+        const gtinVal = product.gtin || product.barcode || '';
+        const gtin = escapeXml(gtinVal);
+        
+        const hasIdentifiers = !!(brandVal && (mpnVal || gtinVal));
 
         const category = escapeXml(product.category || 'Medications');
-        const inStock = (product.availableQuantity > 0 || product.stock > 0 || product.inStock !== false);
+        
+        // Align stock status checking with details page logic
+        const hasNoStock = (
+          Number(product.availableQuantity ?? 0) <= 0 && 
+          (!product.liveData || Number(product.liveData.stock_quantity ?? 0) <= 0) &&
+          Number(product.stock ?? 0) <= 0
+        );
+        const inStock = !hasNoStock && product.inStock !== false;
 
         items.push(`
     <item>
@@ -88,10 +108,10 @@ export async function GET() {
       <g:price>${priceStr}</g:price>
       ${salePriceStr}
       <g:brand>${brand}</g:brand>
-      <g:mpn>${mpn}</g:mpn>
+      ${mpn ? `<g:mpn>${mpn}</g:mpn>` : ''}
       ${gtin ? `<g:gtin>${gtin}</g:gtin>` : ''}
       <g:identifier_exists>${hasIdentifiers ? 'yes' : 'no'}</g:identifier_exists>
-      <g:google_product_category>Health &amp; Beauty &gt; Health Care &gt; Medications &amp; Treatments</g:google_product_category>
+      <g:google_product_category>2306</g:google_product_category>
       <g:product_type>${category}</g:product_type>
       <g:shipping>
         <g:country>IN</g:country>
