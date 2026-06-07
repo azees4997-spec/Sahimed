@@ -138,9 +138,13 @@ export default function AddressForm({ initialData, onSave, isLoading }: AddressF
 
   return (
     <div className="space-y-6 pb-24 sm:pb-10 px-1">
+      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+        Fields marked with <span className="text-rose-500 font-bold">*</span> are required
+      </div>
+
       {/* Selection Based Tags */}
       <div className="space-y-3">
-        <Label className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase opacity-60 ml-2">Save as</Label>
+        <Label className="text-[10px] font-extrabold tracking-wider text-slate-500 uppercase ml-1">Save address as</Label>
         <div className="flex gap-3">
           {tagOptions.map((opt) => (
             <button
@@ -151,7 +155,7 @@ export default function AddressForm({ initialData, onSave, isLoading }: AddressF
                 "flex-1 h-14 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition-all active:scale-95",
                 formData.tag === opt.value 
                   ? "border-primary bg-primary/5 text-primary shadow-lg shadow-primary/5" 
-                  : "border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200"
+                  : "border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200"
               )}
             >
               <opt.icon className={cn("w-5 h-5", formData.tag === opt.value ? "animate-pulse" : "")} />
@@ -170,7 +174,7 @@ export default function AddressForm({ initialData, onSave, isLoading }: AddressF
               placeholder="E.G. GYM, HOSPITAL, FRIEND'S HOUSE" 
               value={otherTag} 
               onChange={e => setOtherTag(e.target.value)}
-              className="h-12 rounded-xl bg-slate-50 border-none font-bold text-[10px] px-5 uppercase tracking-widest focus:bg-white transition-colors shadow-inner"
+              className="h-12 rounded-xl bg-white border border-slate-200 hover:border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10 text-xs font-semibold px-5 uppercase tracking-widest focus:bg-white transition-all shadow-sm"
             />
           </motion.div>
         )}
@@ -181,7 +185,7 @@ export default function AddressForm({ initialData, onSave, isLoading }: AddressF
         variant="outline" 
         type="button"
         disabled={isLocating}
-        className="h-14 w-full rounded-2xl border-2 border-primary/20 text-primary bg-white hover:bg-primary/5 font-black text-[10px] gap-3 transition-all shadow-xl uppercase tracking-widest relative overflow-hidden"
+        className="h-14 w-full rounded-2xl border-2 border-primary/20 text-primary bg-white hover:bg-primary/5 hover:text-primary hover:border-primary/40 font-bold text-xs gap-3 transition-all shadow-md uppercase tracking-wider relative overflow-hidden"
       >
         {isLocating ? (
           <>
@@ -204,94 +208,94 @@ export default function AddressForm({ initialData, onSave, isLoading }: AddressF
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label className="text-[9px] font-black text-slate-400 ml-2 uppercase opacity-60">Receiver Name *</Label>
+          <Label className="text-[10px] font-extrabold text-slate-600 ml-1 uppercase">Receiver Name <span className="text-rose-500 font-bold">*</span></Label>
           <Input 
             placeholder="FULL NAME" 
             value={formData.patientName} 
             onChange={e => setFormData({...formData, patientName: e.target.value})}
-            className="h-12 rounded-xl bg-slate-50 border-none font-bold text-[10px] px-5 uppercase focus:bg-white transition-colors shadow-inner"
+            className="h-12 rounded-xl bg-white border border-slate-200 hover:border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10 text-xs font-semibold px-5 uppercase focus:bg-white transition-all shadow-sm"
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-[9px] font-black text-slate-400 ml-2 uppercase opacity-60">Mobile Number *</Label>
+          <Label className="text-[10px] font-extrabold text-slate-600 ml-1 uppercase">Mobile Number <span className="text-rose-500 font-bold">*</span></Label>
           <Input 
             placeholder="10-DIGIT MOBILE" 
             value={formData.phoneNumber} 
             maxLength={10}
             onChange={e => setFormData({...formData, phoneNumber: e.target.value.replace(/\D/g, '')})}
-            className="h-12 rounded-xl bg-slate-50 border-none font-bold text-[10px] px-5 uppercase focus:bg-white transition-colors shadow-inner"
+            className="h-12 rounded-xl bg-white border border-slate-200 hover:border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10 text-xs font-semibold px-5 uppercase focus:bg-white transition-all shadow-sm"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label className="text-[9px] font-black text-slate-400 ml-2 uppercase opacity-60">House / Flat No *</Label>
+          <Label className="text-[10px] font-extrabold text-slate-600 ml-1 uppercase">House / Flat No <span className="text-rose-500 font-bold">*</span></Label>
           <Input 
             placeholder="FLAT 101" 
             value={formData.houseNumber} 
             onChange={e => setFormData({...formData, houseNumber: e.target.value})}
-            className="h-12 rounded-xl bg-slate-50 border-none font-bold text-[10px] px-5 uppercase focus:bg-white transition-colors shadow-inner"
+            className="h-12 rounded-xl bg-white border border-slate-200 hover:border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10 text-xs font-semibold px-5 uppercase focus:bg-white transition-all shadow-sm"
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-[9px] font-black text-slate-400 ml-2 uppercase opacity-60">Apartment / Building</Label>
+          <Label className="text-[10px] font-extrabold text-slate-600 ml-1 uppercase">Apartment / Building</Label>
           <Input 
             placeholder="BUILDING NAME" 
             value={formData.apartmentName} 
             onChange={e => setFormData({...formData, apartmentName: e.target.value})}
-            className="h-12 rounded-xl bg-slate-50 border-none font-bold text-[10px] px-5 uppercase focus:bg-white transition-colors shadow-inner"
+            className="h-12 rounded-xl bg-white border border-slate-200 hover:border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10 text-xs font-semibold px-5 uppercase focus:bg-white transition-all shadow-sm"
           />
         </div>
       </div>
 
       <div className="space-y-1">
-        <Label className="text-[9px] font-black text-slate-400 ml-2 uppercase opacity-60">Street / Locality / Area *</Label>
+        <Label className="text-[10px] font-extrabold text-slate-600 ml-1 uppercase">Street / Locality / Area <span className="text-rose-500 font-bold">*</span></Label>
         <Input 
           placeholder="LOCALITY / STREET" 
           value={formData.street} 
           onChange={e => setFormData({...formData, street: e.target.value})}
-          className="h-12 rounded-xl bg-slate-50 border-none font-bold text-[10px] px-5 uppercase focus:bg-white transition-colors shadow-inner"
+          className="h-12 rounded-xl bg-white border border-slate-200 hover:border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10 text-xs font-semibold px-5 uppercase focus:bg-white transition-all shadow-sm"
         />
       </div>
 
       <div className="space-y-1">
-        <Label className="text-[9px] font-black text-slate-400 ml-2 uppercase opacity-60">Landmark</Label>
+        <Label className="text-[10px] font-extrabold text-slate-600 ml-1 uppercase">Landmark</Label>
         <Input 
           placeholder="NEAR BY..." 
           value={formData.landmark} 
           onChange={e => setFormData({...formData, landmark: e.target.value})}
-          className="h-12 rounded-xl bg-slate-50 border-none font-bold text-[10px] px-5 uppercase focus:bg-white transition-colors shadow-inner"
+          className="h-12 rounded-xl bg-white border border-slate-200 hover:border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10 text-xs font-semibold px-5 uppercase focus:bg-white transition-all shadow-sm"
         />
       </div>
 
       <div className="grid grid-cols-3 gap-3">
         <div className="space-y-1">
-          <Label className="text-[9px] font-black text-slate-400 ml-1 uppercase opacity-60">City *</Label>
+          <Label className="text-[10px] font-extrabold text-slate-600 ml-1 uppercase">City <span className="text-rose-500 font-bold">*</span></Label>
           <Input 
             placeholder="CITY" 
             value={formData.city} 
             onChange={e => setFormData({...formData, city: e.target.value})}
-            className="h-12 rounded-xl bg-slate-50 border-none font-bold text-[10px] px-4 uppercase focus:bg-white transition-colors shadow-inner"
+            className="h-12 rounded-xl bg-white border border-slate-200 hover:border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10 text-xs font-semibold px-4 uppercase focus:bg-white transition-all shadow-sm"
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-[9px] font-black text-slate-400 ml-1 uppercase opacity-60">State *</Label>
+          <Label className="text-[10px] font-extrabold text-slate-600 ml-1 uppercase">State <span className="text-rose-500 font-bold">*</span></Label>
           <Input 
             placeholder="STATE" 
             value={formData.state} 
             onChange={e => setFormData({...formData, state: e.target.value})}
-            className="h-12 rounded-xl bg-slate-50 border-none font-bold text-[10px] px-4 uppercase focus:bg-white transition-colors shadow-inner"
+            className="h-12 rounded-xl bg-white border border-slate-200 hover:border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10 text-xs font-semibold px-4 uppercase focus:bg-white transition-all shadow-sm"
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-[9px] font-black text-slate-400 ml-1 uppercase opacity-60">Pincode *</Label>
+          <Label className="text-[10px] font-extrabold text-slate-600 ml-1 uppercase">Pincode <span className="text-rose-500 font-bold">*</span></Label>
           <Input 
             placeholder="6-DIGIT" 
             value={formData.pincode} 
             maxLength={6}
             onChange={e => setFormData({...formData, pincode: e.target.value.replace(/\D/g, '')})}
-            className="h-12 rounded-xl bg-slate-50 border-none font-black text-[10px] px-4 uppercase tracking-widest focus:bg-white transition-colors shadow-inner"
+            className="h-12 rounded-xl bg-white border border-slate-200 hover:border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10 text-xs font-semibold px-4 uppercase tracking-widest focus:bg-white transition-all shadow-sm"
           />
         </div>
       </div>
