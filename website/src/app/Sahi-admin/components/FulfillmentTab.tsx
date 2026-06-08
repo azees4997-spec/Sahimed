@@ -317,7 +317,7 @@ export function FulfillmentTab({ db, isVerified, onBack }: { db: any, isVerified
 *Items:*
 ${itemsStr}
 
-*Amount:* ₹${Number(order.totalAmount).toFixed(2)} (${order.paymentMethod || 'COD'})
+*Amount:* ₹${Number(order.totalAmount).toFixed(2)} (${order.paymentType || order.paymentMethod || 'COD'})
 *Status:* ${order.status}`;
 
     navigator.clipboard.writeText(text);
@@ -539,7 +539,8 @@ ${itemsStr}
                     </p>
                   </td>
                   <td className="px-8 py-6 text-center">
-                    {order.paymentMethod === 'Prepaid' ? (
+                    {((order.paymentType || order.paymentMethod || '').toLowerCase().trim() === 'online' || 
+                      (order.paymentType || order.paymentMethod || '').toLowerCase().trim() === 'prepaid') ? (
                       <Badge className="bg-emerald-100 text-emerald-600 font-black text-[9px] pointer-events-none border-0 shadow-none px-2 h-5">P</Badge>
                     ) : (
                       <Badge className="bg-orange-100 text-orange-600 font-black text-[9px] pointer-events-none border-0 shadow-none px-2 h-5">C</Badge>

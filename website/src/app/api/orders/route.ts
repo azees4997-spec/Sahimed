@@ -7,6 +7,15 @@ function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function getShipwayPaymentMode(order: any) {
+  if (!order) return 'PREPAID';
+  const type = (order.paymentType || order.paymentMethod || '').toLowerCase().trim();
+  if (type === 'cod' || type === 'cash on delivery' || type === 'cashondelivery') {
+    return 'COD';
+  }
+  return 'PREPAID';
+}
+
 export async function GET(req: Request) {
   try {
     let user;
@@ -119,7 +128,18 @@ export async function GET(req: Request) {
     }
 
     if (paymentMethod) {
-      andConditions.push({ paymentMethod: { $regex: new RegExp(`^${paymentMethod}$`, 'i') } });
+      let mappedTypes = [paymentMethod];
+      if (paymentMethod.toLowerCase() === 'cod') {
+        mappedTypes = ['COD', 'Cash on Delivery', 'CashonDelivery'];
+      } else if (paymentMethod.toLowerCase() === 'prepaid' || paymentMethod.toLowerCase() === 'online') {
+        mappedTypes = ['Prepaid', 'Online', 'PREPAID'];
+      }
+      andConditions.push({
+        $or: [
+          { paymentType: { $in: mappedTypes.map(t => new RegExp(`^${escapeRegExp(t)}$`, 'i')) } },
+          { paymentMethod: { $in: mappedTypes.map(t => new RegExp(`^${escapeRegExp(t)}$`, 'i')) } }
+        ]
+      });
     }
 
     // 3. Date Filter
@@ -304,7 +324,7 @@ export async function POST(req: Request) {
     const allowedFields = [
       'userId', 'patientName', 'phoneNumber', 'shippingDetails', 'billingBreakdown', 
       'items', 'totalAmount', 'prescriptionUrls', 'isConsultationRequired', 
-      'fulfillmentPath', 'couponCode', 'discountAmount', 'paymentType', 
+      'fulfillmentPath', 'couponCode', 'discountAmount', 'paymentType', 'paymentMethod',
       'paymentId', 'paytmOrderId', 'signature', 'walletUsed',
       'platform' // [ORDER FIX] Allow platform field so mobile orders are tagged
     ];
@@ -415,7 +435,7 @@ export async function POST(req: Request) {
             phone: orderData.phoneNumber
           },
           totalAmount: Number(orderData.totalAmount),
-          paymentMode: orderData.paymentType === 'Cash on Delivery' ? 'COD' : 'PREPAID'
+          paymentMode: getShipwayPaymentMode(orderData)
         });
 
         if (shipwayRes.success && shipwayRes.data) {
@@ -631,7 +651,7 @@ export async function PUT(req: Request) {
             phone: currentOrder.phoneNumber
           },
           totalAmount: Number(currentOrder.totalAmount),
-          paymentMode: currentOrder.paymentType === 'Cash on Delivery' ? 'COD' : 'PREPAID'
+          paymentMode: getShipwayPaymentMode(currentOrder)
         });
 
         if (pushRes.success && pushRes.data) {
@@ -799,7 +819,7 @@ export async function PUT(req: Request) {
               phone: refreshedOrder.phoneNumber
             },
             totalAmount: Number(refreshedOrder.totalAmount),
-            paymentMode: refreshedOrder.paymentType === 'Cash on Delivery' ? 'COD' : 'PREPAID'
+            paymentMode: getShipwayPaymentMode(refreshedOrder)
           });
           
           shipwayStatus = shipwayRes;
@@ -864,7 +884,7 @@ export async function PUT(req: Request) {
               phone: order.phoneNumber
             },
             totalAmount: Number(order.totalAmount),
-            paymentMode: order.paymentType === 'Cash on Delivery' ? 'COD' : 'PREPAID'
+            paymentMode: getShipwayPaymentMode(order)
           });
           
           if (shipwayRes.success && shipwayRes.data?.awb_number) {
