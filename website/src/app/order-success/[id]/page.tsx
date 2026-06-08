@@ -15,8 +15,7 @@ import {
   PackageCheck
 } from 'lucide-react';
 import Link from 'next/link';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useUser } from '@/firebase';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 import { safeFormat } from '@/lib/safe-date';
@@ -25,15 +24,36 @@ import { cn } from '@/lib/utils';
 export default function OrderSuccessPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const orderId = resolvedParams?.id;
-  const { user } = useUser();
-  const db = useFirestore();
+  const { user, isUserLoading } = useUser();
+  const [order, setOrder] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const orderRef = useMemoFirebase(() => {
-    if (!db || !user || !orderId) return null;
-    return doc(db, 'userProfiles', user.uid, 'orders', orderId);
-  }, [db, user, orderId]);
-
-  const { data: order, isLoading } = useDoc(orderRef);
+  useEffect(() => {
+    const fetchOrderDetails = async () => {
+      if (isUserLoading) return;
+      if (!user || !orderId) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch(`/api/orders?search=${orderId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch order details');
+        const data = await res.json();
+        const ordersArray = Array.isArray(data) ? data : (data.orders || []);
+        const matchedOrder = ordersArray.find((o: any) => o.orderId === orderId);
+        setOrder(matchedOrder || null);
+      } catch (err) {
+        console.error('[OrderSuccess] Fetch error:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchOrderDetails();
+  }, [user, isUserLoading, orderId]);
 
   if (isLoading) {
     return (
