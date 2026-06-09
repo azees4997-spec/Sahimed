@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-export const revalidate = 3600; // Revalidate every hour
+export const revalidate = 10; // Revalidate every 10 seconds for instant updates from admin panel
 import { doc, getDoc, getDocs, collection } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
 import { initializeApp, getApps, initializeApp as initApp } from 'firebase/app';
