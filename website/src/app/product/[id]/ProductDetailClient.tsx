@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -254,7 +255,7 @@ const ComparisonCard = ({
             </Dialog>
 
             {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1.5 px-1.5">
                 {images.map((img: string, idx: number) => (
                   <button
                     key={idx}
@@ -274,9 +275,15 @@ const ComparisonCard = ({
           <div className="space-y-0.5 sm:space-y-1">
             <div className="flex justify-between items-start gap-4">
               <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
-                <h3 className="font-extrabold text-[10px] sm:text-lg text-slate-800 leading-tight line-clamp-2 min-h-[1.6rem] sm:min-h-[2.4rem] font-outfit uppercase">
-                  {product.name}
-                </h3>
+                {isAlt ? (
+                  <h3 className="font-extrabold text-[10px] sm:text-lg text-slate-800 leading-tight line-clamp-2 min-h-[1.6rem] sm:min-h-[2.4rem] font-outfit uppercase">
+                    {product.name}
+                  </h3>
+                ) : (
+                  <h1 className="font-extrabold text-[10px] sm:text-lg text-slate-800 leading-tight line-clamp-2 min-h-[1.6rem] sm:min-h-[2.4rem] font-outfit uppercase">
+                    {product.name}
+                  </h1>
+                )}
                 <p className="text-[7px] sm:text-[10px] font-black text-slate-500 tracking-widest uppercase">
                   {product.packSize || "N/A"}
                 </p>
@@ -614,6 +621,14 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
       <div className="min-h-screen bg-[#F8FAFC] pb-32">
         <Navbar />
         <main className="max-w-[1000px] mx-auto px-2 sm:px-10 py-1 sm:py-6" key={id}>
+          {/* Breadcrumbs for SEO */}
+          <div className="text-[9px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mb-4 px-2 flex items-center gap-1.5 justify-start">
+            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+            <span>/</span>
+            <Link href="/medicines" className="hover:text-primary transition-colors">Medicines</Link>
+            <span>/</span>
+            <span className="text-slate-600 font-black truncate max-w-[150px] sm:max-w-none">{product?.name}</span>
+          </div>
 
           <div className="flex flex-row items-center justify-center mb-1 sm:mb-4 gap-4 px-2">
             {(product?.prescriptionRequired || product?.rxRequired) && (

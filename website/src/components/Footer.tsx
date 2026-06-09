@@ -89,7 +89,6 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
                 { label: 'All Medicines', href: '/medicines' },
                 { label: 'Brand Categories', href: '/categories' },
                 { label: 'Prescription Checkout', href: '/prescription' },
-                { label: 'Exclusive Offers', href: '/p/offers' },
                 { label: 'Browse Blogs', href: '/blog' },
               ].map((link, i) => (
                 <li key={i}>
@@ -180,8 +179,12 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
 
         {/* Bottom bar */}
         <div className="pt-10 border-t border-[#FFE4E4] flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed text-center md:text-left">
             © 2026 Sahimed medical healthcare. <span className="text-slate-300 mx-2">•</span> Pharmacy Standard Protocol
+            <div className="text-slate-400 mt-2 font-medium tracking-normal normal-case text-[11px]">
+              Drug License Nos: <span className="font-bold text-slate-600">KA-B51-286602</span> (Form 20) & <span className="font-bold text-slate-600">KA-B51-286603</span> (Form 21)
+              <span className="mx-2">•</span> All orders verified by a Registered Pharmacist
+            </div>
           </div>
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-6 transition-all duration-700">
             <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mr-2">We Accept</span>

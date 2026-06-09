@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { useCollection, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { SectionHeader } from './SectionHeader';
 import { cn, generateSlug } from '@/lib/utils';
@@ -40,7 +40,7 @@ import { format } from 'date-fns';
 
 export function PagesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const { toast } = useToast();
-  const pagesQuery = query(collection(db, 'pages'), orderBy('lastUpdated', 'desc'));
+  const pagesQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'pages'), orderBy('lastUpdated', 'desc')) : null, [db, isVerified]);
   const { data: pages, isLoading } = useCollection(pagesQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPage, setEditingPage] = useState<any>(null);

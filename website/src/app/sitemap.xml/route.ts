@@ -4,6 +4,7 @@ import { getFirestore, collection as fireCollection, getDocs } from 'firebase/fi
 import { initializeApp, getApps } from 'firebase/app';
 import { firebaseConfig } from '@/firebase/config';
 import { INDIAN_CITIES } from '@/lib/city-data';
+import { INDIAN_STATES } from '@/lib/state-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -155,6 +156,17 @@ export async function GET() {
       urls.push(`
   <url>
     <loc>${escapeXml(`${baseUrl}/delivery/${city.id}`)}</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>`);
+    }
+
+    // 5b. State-specific local SEO delivery pages
+    for (const state of INDIAN_STATES) {
+      urls.push(`
+  <url>
+    <loc>${escapeXml(`${baseUrl}/delivery/state/${state.id}`)}</loc>
     <lastmod>${new Date().toISOString()}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>

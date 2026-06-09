@@ -112,7 +112,7 @@ export default async function RootLayout({
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     },
     ['layout-pages'],
-    { revalidate: 18000, tags: ['pages'] } // 5-hour server-side cache
+    { revalidate: 60, tags: ['pages'] } // 60-second server-side cache for layout footer pages
   );
 
   let initialPages: any[] = [];
@@ -159,6 +159,7 @@ export default async function RootLayout({
     '@id': 'https://sahimed.com',
     url: 'https://sahimed.com',
     telephone: '+91 7349499898',
+    description: 'SahiMed is a licensed online e-pharmacy delivering medicines across India. Drug License Nos: KA-B51-286602 (Form 20) & KA-B51-286603 (Form 21). All orders are verified by a registered pharmacist.',
     address: {
       '@type': 'PostalAddress',
       addressCountry: 'IN',
