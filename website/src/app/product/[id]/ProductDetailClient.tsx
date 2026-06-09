@@ -255,7 +255,7 @@ const ComparisonCard = ({
             </Dialog>
 
             {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1.5 px-1.5">
                 {images.map((img: string, idx: number) => (
                   <button
                     key={idx}
