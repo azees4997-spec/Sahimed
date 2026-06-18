@@ -1,6 +1,7 @@
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
+import { BrandingProvider } from '@/context/BrandingContext';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import MobileCartBar from '@/components/MobileCartBar';
@@ -102,8 +103,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // [COST FIX] Cache pages server-side for 10 minutes.
-  // Without this, every SSR request hit Firestore for the same pages data.
+  // Cache pages server-side for layout footer
   const getCachedPages = unstable_cache(
     async () => {
       const dbAdmin = getDbAdmin();
@@ -112,7 +112,19 @@ export default async function RootLayout({
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     },
     ['layout-pages'],
-    { revalidate: 60, tags: ['pages'] } // 60-second server-side cache for layout footer pages
+    { revalidate: 60, tags: ['pages'] }
+  );
+
+  // Cache logo settings server-side to prevent client-side flickering/SSR mismatch
+  const getCachedLogo = unstable_cache(
+    async () => {
+      const dbAdmin = getDbAdmin();
+      if (!dbAdmin) return null;
+      const doc = await dbAdmin.collection('settings').doc('logo').get();
+      return doc.exists ? doc.data() : null;
+    },
+    ['layout-logo-settings'],
+    { revalidate: 60, tags: ['logo-settings'] }
   );
 
   let initialPages: any[] = [];
@@ -121,6 +133,15 @@ export default async function RootLayout({
   } catch (error) {
     if (!(error instanceof Error && error.message.includes('Project Id'))) {
       console.error('Error fetching pages for layout footer:', error);
+    }
+  }
+
+  let initialLogoSettings: any = null;
+  try {
+    initialLogoSettings = await getCachedLogo();
+  } catch (error) {
+    if (!(error instanceof Error && error.message.includes('Project Id'))) {
+      console.error('Error fetching logo settings for layout:', error);
     }
   }
 
@@ -229,18 +250,20 @@ export default async function RootLayout({
       </head>
       <body className="font-outfit antialiased bg-[#F8FAFC]">
         <FirebaseClientProvider>
-          <CartProvider>
-            <LocationSync />
-            <div className="flex flex-col min-h-screen">
-              <main className="flex-1">
-                {children}
-                <Footer initialPages={initialPages} />
-              </main>
-              <BottomNav />
-              <MobileCartBar />
-            </div>
-            <Toaster />
-          </CartProvider>
+          <BrandingProvider initialLogoSettings={initialLogoSettings}>
+            <CartProvider>
+              <LocationSync />
+              <div className="flex flex-col min-h-screen">
+                <main className="flex-1">
+                  {children}
+                  <Footer initialPages={initialPages} />
+                </main>
+                <BottomNav />
+                <MobileCartBar />
+              </div>
+              <Toaster />
+            </CartProvider>
+          </BrandingProvider>
         </FirebaseClientProvider>
       </body>
     </html>

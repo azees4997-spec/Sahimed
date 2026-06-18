@@ -1,9 +1,6 @@
-"use client"
-
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useBranding } from '@/context/BrandingContext';
 
 interface SahiMedLogoProps {
   className?: string;
@@ -22,9 +19,7 @@ export default function SahiMedLogo({
   variant = 'default',
   placement = 'nav'
 }: SahiMedLogoProps) {
-  const db = useFirestore();
-  const docRef = useMemoFirebase(() => doc(db, 'settings', 'logo'), [db]);
-  const { data: logoSettings, isLoading } = useDoc(docRef);
+  const { logoSettings } = useBranding();
 
   const isWhite = variant === 'white';
   
@@ -38,18 +33,22 @@ export default function SahiMedLogo({
     : logoSettings?.logoUrl;
 
   if (resolvedLogoUrl) {
-    const desktopHeight = (placement === 'footer' ? logoSettings?.footerHeightDesktop : logoSettings?.navHeightDesktop) ?? 44;
-    const mobileHeight = (placement === 'footer' ? logoSettings?.footerHeightMobile : logoSettings?.navHeightMobile) ?? 32;
+    const rawDesktop = (placement === 'footer' ? logoSettings?.footerHeightDesktop : logoSettings?.navHeightDesktop);
+    const rawMobile = (placement === 'footer' ? logoSettings?.footerHeightMobile : logoSettings?.navHeightMobile);
+    
+    // Ensure we have premium heights (minimum 40px for desktop, 28px for mobile) so the logo remains legible and looks premium
+    const desktopHeight = typeof rawDesktop === 'number' && rawDesktop > 0 ? Math.max(40, rawDesktop) : 44;
+    const mobileHeight = typeof rawMobile === 'number' && rawMobile > 0 ? Math.max(28, rawMobile) : 32;
 
     return (
-      <div className={cn("flex items-center select-none bg-transparent", className)}>
+      <div className={cn("flex items-center justify-start select-none bg-transparent h-full min-h-[32px] sm:min-h-[44px] py-1", className)}>
         <img 
           src={resolvedLogoUrl} 
           style={{ 
             '--logo-h-desktop': `${desktopHeight}px`, 
             '--logo-h-mobile': `${mobileHeight}px` 
           } as React.CSSProperties} 
-          className="w-auto object-contain h-[var(--logo-h-mobile)] sm:h-[var(--logo-h-desktop)]" 
+          className="w-auto object-contain h-[var(--logo-h-mobile)] sm:h-[var(--logo-h-desktop)] transition-all duration-300 ease-in-out hover:scale-[1.02] active:scale-[0.98]" 
           alt="SahiMed" 
         />
       </div>
