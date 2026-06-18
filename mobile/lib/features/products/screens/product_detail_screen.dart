@@ -38,6 +38,7 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen>
     with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
+  ProductModel? _productDetails;
   ProductModel? _genericAlt;
   bool _isLoading = true;
   String _edd = '';
@@ -53,11 +54,26 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   @override
   void initState() {
     super.initState();
+    _productDetails = widget.product;
     _tabController = TabController(length: 3, vsync: this);
     _pincodeController = TextEditingController();
+    _fetchProductDetails();
     _fetchGenericAlternative();
     _loadEDD();
     _startTimer();
+  }
+
+  Future<void> _fetchProductDetails() async {
+    try {
+      final details = await _apiService.getProductById(widget.product.id);
+      if (details != null && mounted) {
+        setState(() {
+          _productDetails = details;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching product details: $e');
+    }
   }
 
   void _startTimer() {
@@ -162,7 +178,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final p = widget.product;
+    final p = _productDetails ?? widget.product;
     final isGeneric = p.isGeneric;
     final isBranded = !isGeneric;
     final hasGenericAlt = isBranded && _genericAlt != null;
@@ -247,10 +263,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF0F172A),
-                        letterSpacing: -0.5,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF1E293B),
+                        letterSpacing: -0.2,
                         height: 1.2,
                       ),
                     ),
@@ -721,13 +737,13 @@ class _ComparisonCard extends StatelessWidget {
 
           // Product Name
           Text(
-            product.name.toUpperCase(),
+            product.name,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.outfit(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF1E293B),
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
               height: 1.2,
             ),
           ),

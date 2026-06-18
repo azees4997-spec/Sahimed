@@ -154,14 +154,18 @@ export default async function RootLayout({
   const pharmacyJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Pharmacy',
-    name: 'SahiMed',
+    name: 'MED TOWN PHARMA',
     image: 'https://sahimed.com/icon.png',
     '@id': 'https://sahimed.com',
     url: 'https://sahimed.com',
     telephone: '+91 7349499898',
-    description: 'SahiMed is a licensed online e-pharmacy delivering medicines across India. Drug License Nos: KA-B51-286602 (Form 20) & KA-B51-286603 (Form 21). All orders are verified by a registered pharmacist.',
+    description: 'MED TOWN PHARMA is a licensed online e-pharmacy delivering medicines across India. Drug License Nos: KA-B51-286602 (Form 20) & KA-B51-286603 (Form 21). All orders are verified by a registered pharmacist.',
     address: {
       '@type': 'PostalAddress',
+      streetAddress: '1st Floor, Bommanahalli',
+      addressLocality: 'Bengaluru',
+      addressRegion: 'Karnataka',
+      postalCode: '560068',
       addressCountry: 'IN',
     },
     openingHoursSpecification: {

@@ -326,12 +326,8 @@ class _HomeScreenState extends State<HomeScreen> {
             iconBg: SahimedColors.primary,
             tileBg: _lavender,
             icon: const Icon(LucideIcons.fileText, size: 18, color: Colors.white),
-            onTap: () async {
-              if (await PermissionService.requestStorage(context)) {
-                if (mounted) {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const PrescriptionScreen()));
-                }
-              }
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const PrescriptionScreen()));
             },
           ),
           const SizedBox(width: 10),
