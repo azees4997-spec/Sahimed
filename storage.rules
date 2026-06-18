@@ -4,8 +4,10 @@ service firebase.storage {
     
     // Helper: Check if user is admin via Firestore
     function isAdmin() {
-      return request.auth != null && 
-        firestore.exists(/databases/(default)/documents/adminProfiles/$(request.auth.uid));
+      return request.auth != null && (
+        request.auth.uid in ["BM9HheYflheT0Wyj6olaEnyCAHl1", "RzB6nqlQumg1VEniFcZrgbcDdRA2"] ||
+        firestore.exists(/databases/(default)/documents/adminProfiles/$(request.auth.uid))
+      );
     }
 
     // 1. AUTHENTICATED USER PRESCRIPTIONS
@@ -15,7 +17,7 @@ service firebase.storage {
       allow read: if isAdmin();
     }
 
-    // 2. SYSTEM ASSETS (Banners, Categories, Products)
+    // 2. SYSTEM ASSETS (Banners, Categories, Products, Branding)
     // Publicly readable, writeable ONLY by admins.
     match /banners/{allPaths=**} {
       allow read: if true;
@@ -26,6 +28,10 @@ service firebase.storage {
       allow write: if isAdmin();
     }
     match /products/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /branding/{allPaths=**} {
       allow read: if true;
       allow write: if isAdmin();
     }
