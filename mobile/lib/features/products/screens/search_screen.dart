@@ -334,15 +334,15 @@ class _SearchScreenState extends State<SearchScreen> {
                                   dense: true,
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                                   title: Text(
-                                    name.toUpperCase(),
+                                    name,
                                     style: GoogleFonts.outfit(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFF0F172A),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF1E293B),
                                       height: 1.2,
                                     ),
-                                    maxLines: 3,
-                                    overflow: TextOverflow.visible,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   onTap: () {
                                     HapticFeedback.lightImpact();
@@ -416,22 +416,22 @@ class _SearchScreenState extends State<SearchScreen> {
                                   dense: true,
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                                   title: Text(
-                                    prod.name.toUpperCase(),
+                                    prod.name,
                                     style: GoogleFonts.outfit(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w900,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
                                       color: SahimedColors.primary,
                                       height: 1.2,
                                     ),
-                                    maxLines: 3,
-                                    overflow: TextOverflow.visible,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   subtitle: Text(
                                     '₹${prod.price}',
                                     style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFF1E293B),
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF475569),
                                     ),
                                   ),
                                   onTap: () {
