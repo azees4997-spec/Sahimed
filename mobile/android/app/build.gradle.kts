@@ -80,3 +80,35 @@ dependencies {
     implementation("com.google.firebase:firebase-appcheck-playintegrity")
     implementation("com.google.firebase:firebase-appcheck-debug")
 }
+
+project.afterEvaluate {
+    android.applicationVariants.forEach { variant ->
+        variant.outputs.forEach { output ->
+            val processManifest = output.processManifestProvider.get()
+            processManifest.doLast {
+                val manifestDir = processManifest.manifestOutputDirectory.get().asFile
+                manifestDir.walkTopDown().filter { it.name == "AndroidManifest.xml" }.forEach { file ->
+                    var content = file.readText()
+                    val regexes = listOf(
+                        Regex("""<uses-permission[^>]*android:name="android\.permission\.READ_MEDIA_IMAGES"[^>]*/>"""),
+                        Regex("""<uses-permission[^>]*android:name="android\.permission\.READ_MEDIA_VIDEO"[^>]*/>"""),
+                        Regex("""<uses-permission[^>]*android:name="android\.permission\.READ_MEDIA_VISUAL_USER_SELECTED"[^>]*/>"""),
+                        Regex("""<uses-permission[^>]*android:name="android\.permission\.READ_EXTERNAL_STORAGE"[^>]*/>"""),
+                        Regex("""<uses-permission[^>]*android:name="android\.permission\.WRITE_EXTERNAL_STORAGE"[^>]*/>""")
+                    )
+                    var modified = false
+                    regexes.forEach { regex ->
+                        if (regex.containsMatchIn(content)) {
+                            content = content.replace(regex, "")
+                            modified = true
+                        }
+                    }
+                    if (modified) {
+                        file.writeText(content)
+                        logger.lifecycle("[PlayStoreManifestFix] Successfully stripped restricted permissions from merged manifest: ${file.name}")
+                    }
+                }
+            }
+        }
+    }
+}
