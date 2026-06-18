@@ -1,5 +1,6 @@
 import java.util.Properties
 import java.io.FileInputStream
+import java.io.File
 
 plugins {
     id("com.android.application")
@@ -82,30 +83,34 @@ dependencies {
 }
 
 project.afterEvaluate {
-    android.applicationVariants.forEach { variant ->
-        variant.outputs.forEach { output ->
-            val processManifest = output.processManifestProvider.get()
-            processManifest.doLast {
-                val manifestDir = processManifest.manifestOutputDirectory.get().asFile
-                manifestDir.walkTopDown().filter { it.name == "AndroidManifest.xml" }.forEach { file ->
-                    var content = file.readText()
-                    val regexes = listOf(
-                        Regex("""<uses-permission[^>]*android:name="android\.permission\.READ_MEDIA_IMAGES"[^>]*/>"""),
-                        Regex("""<uses-permission[^>]*android:name="android\.permission\.READ_MEDIA_VIDEO"[^>]*/>"""),
-                        Regex("""<uses-permission[^>]*android:name="android\.permission\.READ_MEDIA_VISUAL_USER_SELECTED"[^>]*/>"""),
-                        Regex("""<uses-permission[^>]*android:name="android\.permission\.READ_EXTERNAL_STORAGE"[^>]*/>"""),
-                        Regex("""<uses-permission[^>]*android:name="android\.permission\.WRITE_EXTERNAL_STORAGE"[^>]*/>""")
-                    )
-                    var modified = false
-                    regexes.forEach { regex ->
-                        if (regex.containsMatchIn(content)) {
-                            content = content.replace(regex, "")
-                            modified = true
+    tasks.forEach { task ->
+        if (task.name.startsWith("process") && task.name.endsWith("Manifest")) {
+            task.doLast {
+                val buildDir = layout.buildDirectory.get().asFile
+                val mergedManifestsDir = File(buildDir, "intermediates/merged_manifest")
+                if (mergedManifestsDir.exists()) {
+                    mergedManifestsDir.walkTopDown().forEach { file: File ->
+                        if (file.name == "AndroidManifest.xml") {
+                            var content = file.readText()
+                            val regexes = listOf(
+                                Regex("""<uses-permission[^>]*android:name="android\.permission\.READ_MEDIA_IMAGES"[^>]*/>"""),
+                                Regex("""<uses-permission[^>]*android:name="android\.permission\.READ_MEDIA_VIDEO"[^>]*/>"""),
+                                Regex("""<uses-permission[^>]*android:name="android\.permission\.READ_MEDIA_VISUAL_USER_SELECTED"[^>]*/>"""),
+                                Regex("""<uses-permission[^>]*android:name="android\.permission\.READ_EXTERNAL_STORAGE"[^>]*/>"""),
+                                Regex("""<uses-permission[^>]*android:name="android\.permission\.WRITE_EXTERNAL_STORAGE"[^>]*/>""")
+                            )
+                            var modified = false
+                            regexes.forEach { regex ->
+                                if (regex.containsMatchIn(content)) {
+                                    content = content.replace(regex, "")
+                                    modified = true
+                                }
+                            }
+                            if (modified) {
+                                file.writeText(content)
+                                logger.lifecycle("[PlayStoreManifestFix] Stripped permissions from: ${file.absolutePath}")
+                            }
                         }
-                    }
-                    if (modified) {
-                        file.writeText(content)
-                        logger.lifecycle("[PlayStoreManifestFix] Successfully stripped restricted permissions from merged manifest: ${file.name}")
                     }
                 }
             }
