@@ -180,9 +180,10 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
         {/* Bottom bar */}
         <div className="pt-10 border-t border-[#FFE4E4] flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed text-center md:text-left">
-            © 2026 MED TOWN PHARMA. <span className="text-slate-300 mx-2">•</span> Address: 1st Floor, Bommanahalli, Bengaluru, Karnataka - 560068
+            © 2026 MED TOWN PHARMA. <span className="text-slate-300 mx-2">•</span> Address: Building No./Flat No.: NO. 03, Road/Street: 4TH MAIN, 1ST STAGE, 4TH BLOCK, Nearby Landmark: OPP TO INDIAN ACADEMY COLLEGE, Locality/Sub Locality: Kalyan Nagar, City/Town/Village: Bengaluru, District: Bengaluru Urban
             <div className="text-slate-400 mt-2 font-medium tracking-normal normal-case text-[11px]">
               Drug License Nos: <span className="font-bold text-slate-600">KA-B51-286602</span> (Form 20) & <span className="font-bold text-slate-600">KA-B51-286603</span> (Form 21)
+              <span className="mx-2">•</span> GSTIN: <span className="font-bold text-slate-600">29GSTINNUMBER123</span>
               <span className="mx-2">•</span> All orders verified by a Registered Pharmacist
             </div>
           </div>

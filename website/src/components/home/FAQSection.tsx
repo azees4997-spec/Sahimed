@@ -54,7 +54,7 @@ export default function FAQSection() {
               onClick={() => setOpenIndex(openIndex === i ? null : i)}
               className="w-full px-3 py-4 sm:px-8 sm:py-7 flex items-center justify-between text-left group gap-2"
             >
-              <span className={`flex-1 min-w-0 text-[11px] sm:text-lg font-bold sm:font-black tracking-tight font-outfit sm:uppercase truncate whitespace-nowrap pr-2 ${openIndex === i ? 'text-primary' : 'text-slate-900'}`}>
+              <span className={`flex-1 text-[13px] sm:text-[17px] font-semibold tracking-tight font-outfit pr-2 ${openIndex === i ? 'text-primary' : 'text-slate-900'}`}>
                 {faq.question}
               </span>
               <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all shrink-0 ${openIndex === i ? 'bg-primary text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'}`}>
@@ -69,7 +69,7 @@ export default function FAQSection() {
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="px-5 pb-5 sm:px-8 sm:pb-8 text-slate-700 text-xs sm:text-base font-bold sm:font-medium leading-relaxed">
+                  <div className="px-5 pb-5 sm:px-8 sm:pb-8 text-slate-600 text-xs sm:text-[15px] font-normal leading-relaxed">
                     {faq.answer}
                   </div>
                 </motion.div>

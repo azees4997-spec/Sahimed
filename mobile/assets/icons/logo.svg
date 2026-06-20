@@ -1,45 +1,29 @@
 <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Mask to cut out a gap in the heart where the cross lies -->
-    <mask id="cross-cutout">
-      <rect x="0" y="0" width="100" height="100" fill="white" />
-      <path
-        d="M 56 38 L 56 62 M 44 50 L 68 50"
-        stroke="black"
-        stroke-width="18"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-    </mask>
+    <!-- Clip path to keep elements inside the capsule shape -->
+    <clipPath id="pill-clip">
+      <rect x="34" y="12" width="32" height="76" rx="16" />
+    </clipPath>
   </defs>
 
-  <!-- Blue Heart with Mask Applied -->
-  <g mask="url(#cross-cutout)">
-    <!-- Heart Left Symmetrical Loop (Meets at bottom tip 50 86) -->
-    <path
-      d="M 50 24 C 28 4, 8 16, 8 46 C 8 70, 24 82, 50 86 C 36 78, 36 62, 42 50"
-      stroke="#1E3A8A"
-      stroke-width="8"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
+  <!-- Rotated Group to match the tilted 3D capsule in the logo -->
+  <g transform="rotate(-35 50 50)">
+    <!-- Pill body with clip path applied -->
+    <g clip-path="url(#pill-clip)">
+      <!-- Top Half (Blue) -->
+      <rect x="0" y="0" width="100" height="50" fill="#2b50bd" />
+      <!-- Bottom Half (Pink/Red) -->
+      <rect x="0" y="50" width="100" height="50" fill="#ff3366" />
+    </g>
 
-    <!-- Heart Right Symmetrical Loop (Meets at bottom tip 50 86) -->
+    <!-- White Heartbeat / Pulse Line through the center dividing line -->
     <path
-      d="M 50 24 C 72 4, 92 16, 92 46 C 92 70, 76 82, 50 86 C 64 78, 64 62, 58 50"
-      stroke="#1E3A8A"
-      stroke-width="8"
+      d="M 36 50 L 44 50 L 47 41 L 50 59 L 53 45 L 55 52 L 58 50 L 64 50"
+      stroke="#ffffff"
+      stroke-width="3.5"
       stroke-linecap="round"
       stroke-linejoin="round"
+      fill="none"
     />
   </g>
-
-  <!-- Green Medical Cross -->
-  <path
-    d="M 56 38 L 56 62 M 44 50 L 68 50"
-    stroke="#15803D"
-    stroke-width="10"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
 </svg>
