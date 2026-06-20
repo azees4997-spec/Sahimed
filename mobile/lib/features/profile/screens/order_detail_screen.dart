@@ -258,7 +258,7 @@ class OrderDetailScreen extends StatelessWidget {
   }
 
   Widget _buildTrackingInfo(String awb, String courier) {
-    final trackingUrl = 'https://sahimed.shipway.in/$awb';
+    final trackingUrl = 'https://track.shipway.com/t/${awb.trim()}';
 
     return Container(
       width: double.infinity,
