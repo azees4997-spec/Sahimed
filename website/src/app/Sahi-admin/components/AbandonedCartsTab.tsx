@@ -12,7 +12,8 @@ import {
   X,
   RefreshCw,
   User,
-  ShoppingBag
+  ShoppingBag,
+  Download
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,6 +57,8 @@ export function AbandonedCartsTab({ onBack }: { db?: any, isVerified?: boolean, 
   const [carts, setCarts] = useState<AbandonedCart[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [selectedCart, setSelectedCart] = useState<AbandonedCart | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
@@ -102,6 +105,60 @@ export function AbandonedCartsTab({ onBack }: { db?: any, isVerified?: boolean, 
       return () => clearTimeout(delayDebounce);
     }
   }, [searchTerm, auth.currentUser]);
+
+  const filteredCarts = carts.filter(cart => {
+    if (!cart.updatedAt) return true;
+    const cartDate = new Date(cart.updatedAt);
+    
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      if (cartDate < start) return false;
+    }
+    
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      if (cartDate > end) return false;
+    }
+    
+    return true;
+  });
+
+  const downloadCSV = () => {
+    if (filteredCarts.length === 0) return;
+    
+    const headers = ["Patient Name", "Email", "Phone Number", "Last Active", "Total Price", "Item Count", "Cart Items Details"];
+    
+    const csvRows = filteredCarts.map(cart => {
+      const name = cart.patientName || 'Anonymous Member';
+      const email = cart.email || '';
+      const phone = cart.phoneNumber || '';
+      const date = formatDate(cart.updatedAt);
+      const total = cart.totalPrice;
+      const count = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+      
+      const itemsDetail = cart.items
+        .map(item => `${item.name} (Qty: ${item.quantity}, Price: ₹${item.price})`)
+        .join(' | ')
+        .replace(/"/g, '""');
+        
+      return `"${name}","${email}","${phone}","${date}","₹${total}","${count}","${itemsDetail}"`;
+    });
+    
+    const csvContent = [headers.join(","), ...csvRows].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Sahimed_AbandonedCarts_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({ title: "Report Exported", description: "Abandoned carts data has been successfully downloaded." });
+  };
 
   const handleDeleteCart = async (userId: string) => {
     setIsDeleting(userId);
@@ -196,24 +253,66 @@ export function AbandonedCartsTab({ onBack }: { db?: any, isVerified?: boolean, 
         onBack={onBack} 
       />
 
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-          <Input 
-            placeholder="Search by name, email, or phone..." 
-            value={searchTerm} 
-            onChange={e => setSearchTerm(e.target.value)} 
-            className="pl-10 rounded-2xl h-12 bg-white border-none font-bold text-xs shadow-sm focus-visible:ring-primary/20" 
-          />
+      <div className="flex flex-col xl:flex-row gap-4 items-center justify-between">
+        <div className="flex flex-col md:flex-row gap-4 w-full xl:w-auto items-center">
+          <div className="relative w-full md:max-w-xs">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <Input 
+              placeholder="Search by name, email, or phone..." 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)} 
+              className="pl-10 rounded-2xl h-12 bg-white border-none font-bold text-xs shadow-sm focus-visible:ring-primary/20" 
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+            <div className="flex items-center">
+              <span className="text-[10px] font-black uppercase text-slate-400 mr-2 shrink-0">From:</span>
+              <Input 
+                type="date" 
+                value={startDate} 
+                onChange={e => setStartDate(e.target.value)} 
+                className="rounded-2xl h-12 bg-white border-none font-bold text-xs shadow-sm focus-visible:ring-primary/20 w-36" 
+              />
+            </div>
+            <div className="flex items-center">
+              <span className="text-[10px] font-black uppercase text-slate-400 mr-2 shrink-0">To:</span>
+              <Input 
+                type="date" 
+                value={endDate} 
+                onChange={e => setEndDate(e.target.value)} 
+                className="rounded-2xl h-12 bg-white border-none font-bold text-xs shadow-sm focus-visible:ring-primary/20 w-36" 
+              />
+            </div>
+            {(startDate || endDate) && (
+              <Button 
+                variant="ghost" 
+                onClick={() => { setStartDate(''); setEndDate(''); }}
+                className="text-[10px] font-black text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-full h-12 px-4 uppercase"
+              >
+                Clear Dates
+              </Button>
+            )}
+          </div>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={() => fetchCarts()} 
-          className="rounded-full h-12 px-6 font-black uppercase text-[10px] tracking-widest bg-white hover:bg-slate-50 border-none shadow-sm gap-2"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          Refresh
-        </Button>
+
+        <div className="flex gap-3 w-full xl:w-auto justify-end">
+          <Button 
+            onClick={downloadCSV} 
+            disabled={filteredCarts.length === 0} 
+            className="rounded-full h-12 px-6 font-black uppercase text-[10px] tracking-widest bg-primary text-white hover:scale-105 transition-all shadow-lg active:scale-95 disabled:opacity-50 gap-2 border-2 border-white"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => fetchCarts()} 
+            className="rounded-full h-12 px-6 font-black uppercase text-[10px] tracking-widest bg-white hover:bg-slate-50 border-none shadow-sm gap-2"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
@@ -241,7 +340,7 @@ export function AbandonedCartsTab({ onBack }: { db?: any, isVerified?: boolean, 
                     <td className="px-10 py-6 text-right"><div className="flex justify-end gap-2"><div className="w-8 h-8 bg-slate-50 animate-pulse rounded-full" /></div></td>
                   </tr>
                 ))
-              ) : carts.length === 0 ? (
+              ) : filteredCarts.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-10 py-16 text-center text-slate-400 font-bold text-sm">
                     <div className="flex flex-col items-center justify-center gap-3">
@@ -253,7 +352,7 @@ export function AbandonedCartsTab({ onBack }: { db?: any, isVerified?: boolean, 
                   </td>
                 </tr>
               ) : (
-                carts.map(cart => (
+                filteredCarts.map(cart => (
                   <tr key={cart.userId} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-10 py-6 font-black text-sm text-slate-800 flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xs font-black">
