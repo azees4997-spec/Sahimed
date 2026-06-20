@@ -45,28 +45,28 @@ export function BrandingTab({ db, isVerified, onBack }: { db: any, isVerified: b
   // Form State
   const [logoUrl, setLogoUrl] = useState('');
   const [whiteLogoUrl, setWhiteLogoUrl] = useState('');
-  const [navHeightDesktop, setNavHeightDesktop] = useState(44);
-  const [navHeightMobile, setNavHeightMobile] = useState(32);
-  const [footerHeightDesktop, setFooterHeightDesktop] = useState(44);
-  const [footerHeightMobile, setFooterHeightMobile] = useState(32);
+  const [navHeightDesktop, setNavHeightDesktop] = useState(176);
+  const [navHeightMobile, setNavHeightMobile] = useState(128);
+  const [footerHeightDesktop, setFooterHeightDesktop] = useState(176);
+  const [footerHeightMobile, setFooterHeightMobile] = useState(128);
 
   // Populate from DB
   useEffect(() => {
     if (logoSettings) {
       setLogoUrl(logoSettings.logoUrl || '');
       setWhiteLogoUrl(logoSettings.whiteLogoUrl || '');
-      setNavHeightDesktop(logoSettings.navHeightDesktop ?? 44);
-      setNavHeightMobile(logoSettings.navHeightMobile ?? 32);
-      setFooterHeightDesktop(logoSettings.footerHeightDesktop ?? 44);
-      setFooterHeightMobile(logoSettings.footerHeightMobile ?? 32);
+      setNavHeightDesktop(logoSettings.navHeightDesktop ?? 176);
+      setNavHeightMobile(logoSettings.navHeightMobile ?? 128);
+      setFooterHeightDesktop(logoSettings.footerHeightDesktop ?? 176);
+      setFooterHeightMobile(logoSettings.footerHeightMobile ?? 128);
     } else if (!isSettingsLoading) {
       // Set to defaults if no doc exists
       setLogoUrl('');
       setWhiteLogoUrl('');
-      setNavHeightDesktop(44);
-      setNavHeightMobile(32);
-      setFooterHeightDesktop(44);
-      setFooterHeightMobile(32);
+      setNavHeightDesktop(176);
+      setNavHeightMobile(128);
+      setFooterHeightDesktop(176);
+      setFooterHeightMobile(128);
     }
   }, [logoSettings, isSettingsLoading]);
 
@@ -170,10 +170,10 @@ export function BrandingTab({ db, isVerified, onBack }: { db: any, isVerified: b
         await deleteDocumentNonBlocking(logoSettingsRef);
         setLogoUrl('');
         setWhiteLogoUrl('');
-        setNavHeightDesktop(44);
-        setNavHeightMobile(32);
-        setFooterHeightDesktop(44);
-        setFooterHeightMobile(32);
+        setNavHeightDesktop(176);
+        setNavHeightMobile(128);
+        setFooterHeightDesktop(176);
+        setFooterHeightMobile(128);
         toast({ 
           title: 'Branding Restored', 
           description: 'Reverted to native vector SahiMed logo.' 

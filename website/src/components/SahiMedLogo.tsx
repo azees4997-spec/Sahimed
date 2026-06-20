@@ -31,8 +31,8 @@ export default function SahiMedLogo({
   const rawMobile = (placement === 'footer' ? logoSettings?.footerHeightMobile : logoSettings?.navHeightMobile);
   
   // Ensure we have reasonable heights (minimum 30px for desktop, 20px for mobile) so the logo remains legible
-  const desktopHeight = typeof rawDesktop === 'number' && rawDesktop > 0 ? Math.max(30, rawDesktop) : 132;
-  const mobileHeight = typeof rawMobile === 'number' && rawMobile > 0 ? Math.max(20, rawMobile) : 96;
+  const desktopHeight = typeof rawDesktop === 'number' && rawDesktop > 0 ? Math.max(30, rawDesktop) : 176;
+  const mobileHeight = typeof rawMobile === 'number' && rawMobile > 0 ? Math.max(20, rawMobile) : 128;
 
   return (
     <div className={cn("flex items-center justify-start select-none bg-transparent h-full py-1", className)}>
