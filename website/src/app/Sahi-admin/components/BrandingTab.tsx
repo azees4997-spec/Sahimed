@@ -389,14 +389,14 @@ export function BrandingTab({ db, isVerified, onBack }: { db: any, isVerified: b
                   <input 
                     type="range" 
                     min="20" 
-                    max="120" 
+                    max="360" 
                     value={navHeightDesktop}
                     onChange={(e) => setNavHeightDesktop(Number(e.target.value))}
                     className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary" 
                   />
                   <div className="flex justify-between text-[8px] font-bold text-slate-400 uppercase tracking-widest">
                     <span>Min: 20px</span>
-                    <span>Max: 120px</span>
+                    <span>Max: 360px</span>
                   </div>
                 </div>
 
@@ -409,14 +409,14 @@ export function BrandingTab({ db, isVerified, onBack }: { db: any, isVerified: b
                   <input 
                     type="range" 
                     min="15" 
-                    max="80" 
+                    max="240" 
                     value={navHeightMobile}
                     onChange={(e) => setNavHeightMobile(Number(e.target.value))}
                     className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary" 
                   />
                   <div className="flex justify-between text-[8px] font-bold text-slate-400 uppercase tracking-widest">
                     <span>Min: 15px</span>
-                    <span>Max: 80px</span>
+                    <span>Max: 240px</span>
                   </div>
                 </div>
               </div>
@@ -436,14 +436,14 @@ export function BrandingTab({ db, isVerified, onBack }: { db: any, isVerified: b
                   <input 
                     type="range" 
                     min="20" 
-                    max="120" 
+                    max="360" 
                     value={footerHeightDesktop}
                     onChange={(e) => setFooterHeightDesktop(Number(e.target.value))}
                     className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary" 
                   />
                   <div className="flex justify-between text-[8px] font-bold text-slate-400 uppercase tracking-widest">
                     <span>Min: 20px</span>
-                    <span>Max: 120px</span>
+                    <span>Max: 360px</span>
                   </div>
                 </div>
 
@@ -456,14 +456,14 @@ export function BrandingTab({ db, isVerified, onBack }: { db: any, isVerified: b
                   <input 
                     type="range" 
                     min="15" 
-                    max="80" 
+                    max="240" 
                     value={footerHeightMobile}
                     onChange={(e) => setFooterHeightMobile(Number(e.target.value))}
                     className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary" 
                   />
                   <div className="flex justify-between text-[8px] font-bold text-slate-400 uppercase tracking-widest">
                     <span>Min: 15px</span>
-                    <span>Max: 80px</span>
+                    <span>Max: 240px</span>
                   </div>
                 </div>
               </div>
