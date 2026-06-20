@@ -37,12 +37,16 @@ export default function SahiMedLogo({
     ? (logoSettings?.whiteLogoUrl || logoSettings?.logoUrl) 
     : logoSettings?.logoUrl;
 
-  if (resolvedLogoUrl) {
-    const desktopHeight = (placement === 'footer' ? logoSettings?.footerHeightDesktop : logoSettings?.navHeightDesktop) ?? 44;
-    const mobileHeight = (placement === 'footer' ? logoSettings?.footerHeightMobile : logoSettings?.navHeightMobile) ?? 32;
+  const rawDesktop = (placement === 'footer' ? logoSettings?.footerHeightDesktop : logoSettings?.navHeightDesktop);
+  const rawMobile = (placement === 'footer' ? logoSettings?.footerHeightMobile : logoSettings?.navHeightMobile);
+  
+  // Ensure we have reasonable heights (minimum 30px for desktop, 20px for mobile) so the logo remains legible
+  const desktopHeight = typeof rawDesktop === 'number' && rawDesktop > 0 ? Math.max(30, rawDesktop) : 44;
+  const mobileHeight = typeof rawMobile === 'number' && rawMobile > 0 ? Math.max(20, rawMobile) : 32;
 
+  if (resolvedLogoUrl) {
     return (
-      <div className={cn("flex items-center select-none bg-transparent", className)}>
+      <div className={cn("flex items-center justify-start select-none bg-transparent h-full py-1", className)}>
         <img 
           src={resolvedLogoUrl} 
           style={{ 
@@ -57,13 +61,19 @@ export default function SahiMedLogo({
   }
 
   return (
-    <div className={cn("flex items-center select-none bg-transparent", className)}>
+    <div 
+      className={cn("flex items-center select-none bg-transparent h-full py-1", className)}
+      style={{
+        '--logo-h-desktop': `${desktopHeight}px`,
+        '--logo-h-mobile': `${mobileHeight}px`
+      } as React.CSSProperties}
+    >
       {/* Native Vector SVG Logo Icon */}
       <svg
         viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className={cn("w-8 h-8 sm:w-11 sm:h-11 shrink-0", iconClassName)}
+        className={cn("shrink-0 h-[var(--logo-h-mobile)] w-[var(--logo-h-mobile)] sm:h-[var(--logo-h-desktop)] sm:w-[var(--logo-h-desktop)] transition-all duration-300 ease-in-out hover:scale-[1.02] active:scale-[0.98]", iconClassName)}
       >
         <defs>
           {/* Mask to cut out a gap in the heart where the cross lies */}
@@ -116,23 +126,44 @@ export default function SahiMedLogo({
           <div className="flex items-center leading-none">
             {/* "Sahi" */}
             <span 
-              className="font-extrabold text-lg sm:text-2xl tracking-tight font-outfit"
-              style={{ color: blueColor }}
+              className="font-extrabold tracking-tight font-outfit"
+              style={{ 
+                color: blueColor,
+                fontSize: 'calc(var(--logo-h-mobile) * 0.55)',
+                lineHeight: 1
+              }}
+              // Scale desktop font size cleanly via custom Tailwind/CSS logic or media classes if necessary,
+              // but style attribute with var() references is fully reactive.
             >
-              Sahi
+              <span className="hidden sm:inline" style={{ fontSize: 'calc(var(--logo-h-desktop) * 0.55)' }}>Sahi</span>
+              <span className="inline sm:hidden">Sahi</span>
             </span>
             {/* "Med" */}
             <span 
-              className="font-extrabold text-lg sm:text-2xl tracking-tight font-outfit"
-              style={{ color: greenColor }}
+              className="font-extrabold tracking-tight font-outfit"
+              style={{ 
+                color: greenColor,
+                fontSize: 'calc(var(--logo-h-mobile) * 0.55)',
+                lineHeight: 1
+              }}
             >
-              Med
+              <span className="hidden sm:inline" style={{ fontSize: 'calc(var(--logo-h-desktop) * 0.55)' }}>Med</span>
+              <span className="inline sm:hidden">Med</span>
             </span>
           </div>
           {/* Tagline */}
-          <div className="text-[6px] sm:text-[8px] font-black tracking-[0.08em] mt-0.5 font-outfit">
-            <span style={{ color: blueColor }}>Sahi Dawai </span>
-            <span style={{ color: greenColor }}>Sahi Daam Pe</span>
+          <div 
+            className="font-black tracking-[0.08em] mt-0.5 font-outfit"
+            style={{ fontSize: 'calc(var(--logo-h-mobile) * 0.18)' }}
+          >
+            <span className="hidden sm:inline" style={{ fontSize: 'calc(var(--logo-h-desktop) * 0.18)' }}>
+              <span style={{ color: blueColor }}>Sahi Dawai </span>
+              <span style={{ color: greenColor }}>Sahi Daam Pe</span>
+            </span>
+            <span className="inline sm:hidden">
+              <span style={{ color: blueColor }}>Sahi Dawai </span>
+              <span style={{ color: greenColor }}>Sahi Daam Pe</span>
+            </span>
           </div>
         </div>
       )}
