@@ -12,6 +12,7 @@ import {
   Settings, 
   Smartphone, 
   Download, 
+  Play,
   ShieldCheck,
   SmartphoneNfc,
   Loader2,
@@ -464,26 +465,31 @@ export default function ProfilePage() {
                      className="space-y-8 sticky top-32"
                    >
                       <h2 className="text-[9px] font-black tracking-[0.4em] text-slate-400 ml-4 uppercase">SahiMed App</h2>
-                      <div 
-                        onClick={handleInstallClick}
-                        className="bg-primary p-8 rounded-[40px] border border-white/20 flex flex-col items-center text-center gap-6 cursor-pointer hover:shadow-primary/30 transition-all group shadow-2xl relative overflow-hidden"
+                      <a 
+                        href="https://play.google.com/store/apps/details?id=com.sahimed.app"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block group"
                       >
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-12 -mt-12" />
-                        <div className="w-12 h-12 bg-white rounded-[16px] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500 relative z-10">
-                          <Smartphone className="w-6 h-6 text-primary" />
+                        <div 
+                          className="bg-primary p-8 rounded-[40px] border border-white/20 flex flex-col items-center text-center gap-6 cursor-pointer hover:shadow-primary/30 transition-all shadow-2xl relative overflow-hidden"
+                        >
+                          <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-12 -mt-12" />
+                          <div className="w-12 h-12 bg-white rounded-[16px] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500 relative z-10">
+                            <Smartphone className="w-6 h-6 text-primary" />
+                          </div>
+                          <div className="relative z-10">
+                            <h3 className="text-lg font-black text-white tracking-tight font-outfit uppercase leading-none">Get SahiMed App</h3>
+                            <p className="text-[8px] text-white/50 font-black mt-3 max-w-[180px] leading-relaxed tracking-widest uppercase italic">Install from the Google Play Store.</p>
+                          </div>
+                          <Button className="w-full rounded-full h-14 font-black text-[9px] tracking-[0.2em] gap-3 shadow-xl bg-white text-primary hover:bg-slate-50 uppercase active:scale-95 transition-all relative z-10">
+                            <Play className="w-3.5 h-3.5 fill-current" /> Get it on Google Play
+                          </Button>
+                          <div className="flex items-center gap-2 opacity-35 relative z-10">
+                             <span className="text-[7.5px] font-black text-white tracking-[0.3em] uppercase">Google Play Store</span>
+                          </div>
                         </div>
-                        <div className="relative z-10">
-                          <h3 className="text-lg font-black text-white tracking-tight font-outfit uppercase leading-none">Download SahiMed App</h3>
-                          <p className="text-[8px] text-white/50 font-black mt-3 max-w-[180px] leading-relaxed tracking-widest uppercase italic">Install for premium healthcare logistics.</p>
-                        </div>
-                        <Button className="w-full rounded-full h-14 font-black text-[9px] tracking-[0.2em] gap-3 shadow-xl bg-white text-primary hover:bg-slate-50 uppercase active:scale-95 transition-all relative z-10">
-                          <Download className="w-4 h-4" /> Download Now
-                        </Button>
-                        <div className="flex items-center gap-2 opacity-30 relative z-10">
-                           <Zap className="w-3 h-3 text-white" />
-                           <span className="text-[7px] font-black text-white tracking-[0.3em] uppercase">PWA Optimized</span>
-                        </div>
-                      </div>
+                      </a>
                       
                       <div className="bg-white/40 backdrop-blur-md p-8 rounded-[40px] border border-white text-center shadow-xl">
                           <div className="flex items-center justify-center gap-3 py-2 text-slate-400">
