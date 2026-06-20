@@ -162,10 +162,10 @@ export default async function RootLayout({
     description: 'MED TOWN PHARMA is a licensed online e-pharmacy delivering medicines across India. Drug License Nos: KA-B51-286602 (Form 20) & KA-B51-286603 (Form 21). All orders are verified by a registered pharmacist.',
     address: {
       '@type': 'PostalAddress',
-      streetAddress: '1st Floor, Bommanahalli',
+      streetAddress: 'NO. 03, 4TH MAIN, 1ST STAGE, 4TH BLOCK, Kalyan Nagar, OPP TO INDIAN ACADEMY COLLEGE',
       addressLocality: 'Bengaluru',
       addressRegion: 'Karnataka',
-      postalCode: '560068',
+      postalCode: '560043',
       addressCountry: 'IN',
     },
     openingHoursSpecification: {
