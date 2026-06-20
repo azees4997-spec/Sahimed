@@ -816,7 +816,7 @@ ${itemsStr}
                         >
                           <Settings className="w-3.5 h-3.5" />
                         </button>
-                        <a href={`https://track.shipway.com/t/${selectedOrder.shipping.awb}`} target="_blank" rel="noopener noreferrer" className="text-[10px] bg-white border border-blue-200 text-blue-700 hover:bg-blue-600 hover:text-white transition-all px-4 py-2 rounded-full font-black flex items-center gap-2 cursor-pointer shadow-sm">
+                        <a href={`https://track.shipway.com/t/${String(selectedOrder.shipping.awb).trim()}`} target="_blank" rel="noopener noreferrer" className="text-[10px] bg-white border border-blue-200 text-blue-700 hover:bg-blue-600 hover:text-white transition-all px-4 py-2 rounded-full font-black flex items-center gap-2 cursor-pointer shadow-sm">
                           TRACK AWB: {selectedOrder.shipping.awb} <ExternalLink className="w-3 h-3" />
                         </a>
                       </div>
@@ -849,8 +849,8 @@ ${itemsStr}
                               await updateOrderStatus(selectedOrder._id, selectedOrder.status, { 
                                 shipping: { 
                                   ...selectedOrder.shipping, 
-                                  awb: tempLogistics.awb, 
-                                  courier: tempLogistics.courier 
+                                  awb: tempLogistics.awb?.trim(), 
+                                  courier: tempLogistics.courier?.trim() 
                                 } 
                               });
                               setIsEditingLogistics(false);
