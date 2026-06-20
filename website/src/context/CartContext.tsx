@@ -2,9 +2,9 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { Product, CartItem, Fee, PromoCode } from '@/types';
 
 interface CartContextType {
@@ -40,6 +40,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [availablePromos, setAvailablePromos] = useState<PromoCode[]>([]);
   
   const db = useFirestore();
+  const { user } = useUser();
 
   // Fetch dynamic fees and promos with explicit pattern to avoid onSnapshot bugs in Firebase 11
   useEffect(() => {
@@ -235,6 +236,60 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
   const totalPrice = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+  // Synchronize cart state to MongoDB (for abandoned cart tracking)
+  useEffect(() => {
+    const syncCart = async () => {
+      if (!user) return;
+      
+      try {
+        if (cart.length > 0) {
+          // Resolve additional profile metrics from Firestore to ensure admin has full details
+          let patientName = user.displayName || '';
+          let phoneNumber = user.phoneNumber || '';
+          
+          if (db && (!patientName || !phoneNumber)) {
+            try {
+              const docRef = doc(db, 'users', user.uid);
+              const docSnap = await getDoc(docRef);
+              if (docSnap.exists()) {
+                const data = docSnap.data();
+                patientName = patientName || data.name || data.fullName || '';
+                phoneNumber = phoneNumber || data.phone || data.phoneNumber || '';
+              }
+            } catch (e) {
+              // ignore fetch failure for profile details
+            }
+          }
+
+          await fetch('/api/cart/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.uid,
+              email: user.email,
+              phoneNumber: phoneNumber,
+              patientName: patientName || 'Anonymous Patient',
+              items: cart,
+              totalPrice: totalPrice
+            })
+          });
+        } else {
+          // If cart is cleared, delete the active abandoned cart document
+          await fetch('/api/cart/sync', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.uid })
+          });
+        }
+      } catch (err) {
+        console.warn('[Cart Sync] Error synchronizing abandoned cart data', err);
+      }
+    };
+
+    const timer = setTimeout(syncCart, 2000);
+    return () => clearTimeout(timer);
+  }, [cart, user, db, totalPrice]);
 
   return (
     <CartContext.Provider value={{

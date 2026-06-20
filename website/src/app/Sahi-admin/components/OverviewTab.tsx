@@ -18,7 +18,8 @@ import {
   LineChart,
   Database,
   Zap,
-  Sparkles
+  Sparkles,
+  ShoppingCart
 } from 'lucide-react';
 import { Card, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ export function OverviewTab({ setTab, role }: { setTab: (t: AdminTab) => void, r
   const allStats = [
     { label: 'Prescriptions', icon: FileText, desc: 'Process uploaded Rx', tab: 'enquiries', color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Orders', icon: ShoppingBag, desc: 'Manage fulfillment', tab: 'fulfillment', color: 'text-sky-500', bg: 'bg-sky-50' },
+    { label: 'Abandoned Carts', icon: ShoppingCart, desc: 'Track pending checkouts', tab: 'abandonedCarts', color: 'text-pink-500', bg: 'bg-pink-50' },
     { label: 'Marketing', icon: Rocket, desc: 'SEO Blogs', tab: 'marketing', color: 'text-rose-600', bg: 'bg-rose-50' },
     { label: 'Coupons', icon: Ticket, desc: 'Manage discounts', tab: 'promocodes', color: 'text-purple-500', bg: 'bg-purple-50' },
     { label: 'Fees', icon: Receipt, desc: 'Delivery & packing', tab: 'fees', color: 'text-orange-500', bg: 'bg-orange-50' },

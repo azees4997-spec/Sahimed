@@ -56,6 +56,7 @@ import { InventoryTab } from './components/InventoryTab';
 import { MarketingTab } from './components/MarketingTab';
 import { OrderNotification } from './components/OrderNotification';
 import { BrandingTab } from './components/BrandingTab';
+import { AbandonedCartsTab } from './components/AbandonedCartsTab';
 
 const MASTER_UIDS = ["BM9HheYflheT0Wyj6olaEnyCAHl1", "RzB6nqlQumg1VEniFcZrgbcDdRA2"];
 
@@ -385,6 +386,7 @@ function AdminConsoleContent() {
               {activeTab === 'overview' && <OverviewTab setTab={handleTabChange} role={userRole} />}
               {(permissions.orders_view || userRole === 'admin') && activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {(permissions.orders_view || userRole === 'admin') && activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.orders_view || userRole === 'admin') && activeTab === 'abandonedCarts' && <AbandonedCartsTab onBack={() => handleTabChange('overview')} />}
               {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'promocodes' && <PromoCodesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'fees' && <FeesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'categories' && <CategoriesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
