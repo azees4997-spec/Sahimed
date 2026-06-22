@@ -45,28 +45,28 @@ export function BrandingTab({ db, isVerified, onBack }: { db: any, isVerified: b
   // Form State
   const [logoUrl, setLogoUrl] = useState('');
   const [whiteLogoUrl, setWhiteLogoUrl] = useState('');
-  const [navHeightDesktop, setNavHeightDesktop] = useState(176);
-  const [navHeightMobile, setNavHeightMobile] = useState(128);
-  const [footerHeightDesktop, setFooterHeightDesktop] = useState(176);
-  const [footerHeightMobile, setFooterHeightMobile] = useState(128);
+  const [navHeightDesktop, setNavHeightDesktop] = useState(80);
+  const [navHeightMobile, setNavHeightMobile] = useState(60);
+  const [footerHeightDesktop, setFooterHeightDesktop] = useState(80);
+  const [footerHeightMobile, setFooterHeightMobile] = useState(60);
 
   // Populate from DB
   useEffect(() => {
     if (logoSettings) {
       setLogoUrl(logoSettings.logoUrl || '');
       setWhiteLogoUrl(logoSettings.whiteLogoUrl || '');
-      setNavHeightDesktop(logoSettings.navHeightDesktop ?? 176);
-      setNavHeightMobile(logoSettings.navHeightMobile ?? 128);
-      setFooterHeightDesktop(logoSettings.footerHeightDesktop ?? 176);
-      setFooterHeightMobile(logoSettings.footerHeightMobile ?? 128);
+      setNavHeightDesktop(logoSettings.navHeightDesktop ?? 80);
+      setNavHeightMobile(logoSettings.navHeightMobile ?? 60);
+      setFooterHeightDesktop(logoSettings.footerHeightDesktop ?? 80);
+      setFooterHeightMobile(logoSettings.footerHeightMobile ?? 60);
     } else if (!isSettingsLoading) {
       // Set to defaults if no doc exists
       setLogoUrl('');
       setWhiteLogoUrl('');
-      setNavHeightDesktop(176);
-      setNavHeightMobile(128);
-      setFooterHeightDesktop(176);
-      setFooterHeightMobile(128);
+      setNavHeightDesktop(80);
+      setNavHeightMobile(60);
+      setFooterHeightDesktop(80);
+      setFooterHeightMobile(60);
     }
   }, [logoSettings, isSettingsLoading]);
 
