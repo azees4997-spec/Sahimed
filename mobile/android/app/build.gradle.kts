@@ -87,9 +87,9 @@ project.afterEvaluate {
         if (task.name.startsWith("process") && task.name.endsWith("Manifest")) {
             task.doLast {
                 val buildDir = layout.buildDirectory.get().asFile
-                val mergedManifestsDir = File(buildDir, "intermediates/merged_manifest")
-                if (mergedManifestsDir.exists()) {
-                    mergedManifestsDir.walkTopDown().forEach { file: File ->
+                val intermediatesDir = File(buildDir, "intermediates")
+                if (intermediatesDir.exists()) {
+                    intermediatesDir.walkTopDown().forEach { file: File ->
                         if (file.name == "AndroidManifest.xml") {
                             var content = file.readText()
                             val regexes = listOf(
