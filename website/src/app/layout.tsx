@@ -253,8 +253,8 @@ export default async function RootLayout({
           <BrandingProvider initialLogoSettings={initialLogoSettings}>
             <CartProvider>
               <LocationSync />
-              <div className="flex flex-col min-h-screen">
-                <main className="flex-1">
+              <div className="flex flex-col min-h-screen overflow-x-hidden max-w-full relative">
+                <main className="flex-1 overflow-x-hidden max-w-full relative">
                   {children}
                   <Footer initialPages={initialPages} />
                 </main>
