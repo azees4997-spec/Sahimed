@@ -26,13 +26,13 @@ export default function SahiMedLogo({
     ? (logoSettings?.whiteLogoUrl || logoSettings?.logoUrl) 
     : logoSettings?.logoUrl;
 
-  // Filter out the old logo URL from Firestore if it points to the old asset, so we default to the new local PNGs
-  const customLogoUrl = rawLogoUrl && !rawLogoUrl.includes('logo_1774883395013.png') 
+  // Filter out any Firestore logo URL that contains the old logo ID (logo_1774883395013)
+  const customLogoUrl = rawLogoUrl && !rawLogoUrl.includes('logo_1774883395013') 
     ? rawLogoUrl 
     : null;
 
-  // Fallback to the local high-fidelity PNG logos we just generated using Microsoft Edge
-  const resolvedLogoUrl = customLogoUrl || (isWhite ? '/sahimed_logo_white.png' : '/sahimed_logo_transparent.png');
+  // Fallback to the local high-fidelity PNG logos with cache-busting query to bypass browser cache
+  const resolvedLogoUrl = customLogoUrl || (isWhite ? '/sahimed_logo_white.png?v=3' : '/sahimed_logo_transparent.png?v=3');
 
   const rawDesktop = (placement === 'footer' ? logoSettings?.footerHeightDesktop : logoSettings?.navHeightDesktop);
   const rawMobile = (placement === 'footer' ? logoSettings?.footerHeightMobile : logoSettings?.navHeightMobile);
