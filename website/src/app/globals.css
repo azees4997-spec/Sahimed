@@ -10,17 +10,17 @@
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 221 83% 53%;
+    --primary: 179 100% 31%; /* Teal/Cyan brand color (#009F9C) */
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
+    --secondary: 179 20% 96.5%; /* Soft secondary background with teal tint */
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215 25% 25%;
-    --accent: 346 84% 61%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 14 100% 58%; /* Orange/Coral brand color (#FF5C2B) */
+    --accent-foreground: 0 0% 100%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 53%;
+    --ring: 179 100% 31%;
     --radius: 1.5rem;
 
     /* Docly/SahiMed Color System - Precise Alignment */

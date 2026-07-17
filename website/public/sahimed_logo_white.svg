@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 120" width="100%" height="100%">
+  <!-- Icon (Heart + ECG) -->
+  <g transform="translate(10, 10)">
+    <mask id="ecg-gap-white">
+      <rect x="0" y="0" width="120" height="100" fill="white" />
+      <rect x="0" y="41" width="120" height="18" fill="black" />
+    </mask>
+    
+    <!-- Heart Outline (White) -->
+    <path 
+      d="M 60 92 C 57.5 92 15 58 15 34 C 15 18 27.5 5 44 5 C 51.5 5 57 8 60 11 C 63 8 68.5 5 76 5 C 92.5 5 105 18 105 34 C 105 58 62.5 92 60 92 Z" 
+      fill="none" 
+      stroke="white" 
+      stroke-width="12" 
+      stroke-linecap="round" 
+      stroke-linejoin="round"
+      mask="url(#ecg-gap-white)"
+    />
+    
+    <!-- Heartbeat Line (White) -->
+    <path 
+      d="M 5 50 L 32 50 L 40 50 L 45 42 L 50 62 L 56 12 L 64 88 L 72 38 L 78 50 L 86 50 L 115 50" 
+      fill="none" 
+      stroke="white" 
+      stroke-width="10" 
+      stroke-linecap="round" 
+      stroke-linejoin="round"
+    />
+  </g>
+  
+  <!-- Text "SahiMed" (White) -->
+  <text 
+    x="145" 
+    y="76" 
+    font-family="'Outfit', 'Poppins', sans-serif" 
+    font-size="64" 
+    font-weight="600" 
+    letter-spacing="-0.03em"
+    fill="white"
+  >Sahi<tspan font-weight="900" fill="white">Med</tspan></text>
+</svg>
