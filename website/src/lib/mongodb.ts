@@ -2,11 +2,12 @@ import { MongoClient } from 'mongodb';
 
 const uri = process.env.MONGODB_URI;
 const options = {
-  serverSelectionTimeoutMS: 10000,
+  serverSelectionTimeoutMS: 5000,
   connectTimeoutMS: 10000,
   maxPoolSize: 10,
-  socketTimeoutMS: 30000,
+  socketTimeoutMS: 45000,
   heartbeatFrequencyMS: 10000,
+  maxIdleTimeMS: 270000, // Close idle connections after 4.5 minutes to prevent stale/dropped sockets
   retryWrites: true,
 };
 
