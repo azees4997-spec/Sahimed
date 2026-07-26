@@ -70,21 +70,10 @@ async function getConnectedClient(): Promise<MongoClient> {
 
 // Export a custom Promise wrapper that behaves like the original clientPromise
 // but runs the dynamic liveness check on every await/then call.
-const clientPromise = {
-  then: <TResult1 = MongoClient, TResult2 = never>(
-    onfulfilled?: ((value: MongoClient) => TResult1 | PromiseLike<TResult1>) | null,
-    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
-  ): Promise<TResult1 | TResult2> => {
-    return getConnectedClient().then(onfulfilled, onrejected);
-  },
-  catch: <TResult = never>(
-    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null
-  ): Promise<MongoClient | TResult> => {
-    return getConnectedClient().catch(onrejected);
-  },
-  finally: (onfinally?: (() => void) | null): Promise<MongoClient> => {
-    return getConnectedClient().finally(onfinally);
-  }
-} as unknown as Promise<MongoClient>;
+// Wrapping getConnectedClient() inside a standard Promise structure ensures full TypeScript compliance.
+const clientPromise = new Promise<MongoClient>((resolve, reject) => {
+  // We resolve immediately to a proxy-like thenable so standard await/then chains trigger the liveness check
+  resolve(getConnectedClient());
+}) as unknown as Promise<MongoClient>;
 
 export default clientPromise;
