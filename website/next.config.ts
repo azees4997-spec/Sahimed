@@ -8,9 +8,7 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    serverExternalPackages: ['mongodb'],
-  },
+  serverExternalPackages: ['mongodb'],
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
