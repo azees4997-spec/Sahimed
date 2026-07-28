@@ -1,12 +1,9 @@
-import React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import clientPromise from '@/lib/mongodb';
-import ProductDetailClient from './ProductDetailClient';
+import ProductDetailClient from '@/app/product/[id]/ProductDetailClient';
 import { ObjectId } from 'mongodb';
-import { getDbAdmin } from '@/lib/firebase-admin';
 import { PRODUCTS } from '@/lib/data';
-
 
 interface Product {
   id: string;
@@ -24,57 +21,81 @@ interface Product {
   stock?: number;
   inStock?: boolean;
   prescriptionRequired?: boolean;
+  imageUrls?: string[];
+  hsnCode?: string;
+  sku?: string;
 }
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
 }
 
-async function getProduct(id: string): Promise<Product | null> {
+async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const collection = db.collection('products');
+    const collection = db.collection('Product Master');
 
-    let query: any = { _id: id as any };
-    const product = await collection.findOne(query);
-    
-    if (product) {
-      return { ...product, id: product._id.toString() } as unknown as Product;
+    // Decode url slug component
+    const decodedSlug = decodeURIComponent(slug);
+    const slugQuery = decodedSlug.startsWith('/') ? decodedSlug : `/${decodedSlug}`;
+
+    // Try finding by url_slug first
+    let product = await collection.findOne({
+      $or: [
+        { 'seo.url_slug': slugQuery },
+        { 'seo.url_slug': decodedSlug }
+      ]
+    });
+
+    // Fallback: If not found, try matching by direct ID or product_id/sku
+    if (!product) {
+      let idQuery: any = { _id: decodedSlug as any };
+      product = await collection.findOne(idQuery);
+
+      if (!product && decodedSlug.length === 24) {
+        try {
+          product = await collection.findOne({ _id: new ObjectId(decodedSlug) });
+        } catch (e) {}
+      }
+
+      if (!product) {
+        product = await collection.findOne({ product_id: decodedSlug });
+      }
     }
 
-    if (id.length === 24) {
-      try {
-        const obId = new ObjectId(id);
-        const obProduct = await collection.findOne({ _id: obId });
-        if (obProduct) {
-          return { ...obProduct, id: obProduct._id.toString() } as unknown as Product;
-        }
-      } catch (e) {}
+    if (product) {
+      // Normalize to legacy structure expected by ProductDetailClient
+      return {
+        ...product,
+        id: product._id.toString(),
+        name: product.product_name,
+        description: product.medical_info?.introduction,
+        imageUrl: product.images?.[0] || '',
+        imageUrls: product.images || [],
+        manufacturer: product.taxonomy?.marketer_name,
+        price: product.packaging?.mrp,
+        mrp: product.packaging?.mrp,
+        sku: product.product_id,
+        prescriptionRequired: product.safety_warnings?.is_rx_required
+      } as unknown as Product;
     }
     return null;
   } catch (error) {
-    console.error('[SSR Product Fetch Error] MongoDB failed, falling back to static PRODUCTS search', error);
-    const staticProd = PRODUCTS.find(p => p.id === id);
-    if (staticProd) {
-      return {
-        ...staticProd,
-        _id: staticProd.id
-      } as unknown as Product;
-    }
+    console.error('[SSR Product Fetch Error] MongoDB query failed', error);
     return null;
   }
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { id } = await params;
-  const product = await getProduct(id);
+  const product = await getProductBySlug(id);
 
   if (!product) {
     return { title: 'Product Not Found | SahiMed' };
   }
 
-  const price = product.liveData?.sahimed_price || product.price || 0;
+  const price = product.price || 0;
   const description = product.description || `Buy ${product.name} at affordable prices on SahiMed. Fast delivery across India.`;
 
   let ogImage = product.imageUrl || 'https://sahimed.com/og-image.png';
@@ -114,12 +135,12 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
-  const product = await getProduct(id);
+  const product = await getProductBySlug(id);
 
   if (!product) notFound();
 
-  const price = product.liveData?.sahimed_price || product.price || 0;
-  const inStock = (product.stock ?? 0) > 0 || product.inStock !== false;
+  const price = product.price || 0;
+  const inStock = true; // Salable items from Product Master are in stock
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -128,10 +149,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
     image: (product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : (product.imageUrl || 'https://sahimed.com/medical_login_illustration.png')),
     description: product.description || `Buy ${product.name} online at SahiMed. Genuine quality, lowest prices.`,
     sku: product.sku || id,
-    mpn: product.hsnCode || product.sku || id,
+    mpn: product.sku || id,
     brand: {
       '@type': 'Brand',
-      name: product.manufacturer || product.brand || 'SahiMed',
+      name: product.manufacturer || 'SahiMed',
     },
     offers: {
       '@type': 'Offer',
@@ -167,7 +188,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ProductDetailClient initialProduct={product} id={id} />
+      <ProductDetailClient initialProduct={product} id={product.id} />
     </>
   );
 }
