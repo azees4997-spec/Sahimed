@@ -663,7 +663,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
 
           <div className="mb-8 sm:mb-16 px-1 relative">
             {showComparison ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-12 items-stretch relative">
+              <div className="grid grid-cols-1 md:grid-cols-8 gap-3 sm:gap-12 items-stretch relative">
                 {/* Removed 100% match floating badge */}
 
                 <ComparisonCard
