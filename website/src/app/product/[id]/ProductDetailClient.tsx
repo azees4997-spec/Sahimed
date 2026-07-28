@@ -21,31 +21,19 @@ import {
   Minus,
   Plus,
   TrendingDown,
-  Maximize2,
-  Loader2,
   MapPin,
   Clock,
   ArrowRight,
   Share2,
-  Send,
-  Copy,
   ChevronDown,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Truck
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-  DialogDescription
-} from "@/components/ui/dialog";
 import { useMongoDBDoc, useMongoDBMolecule, useMongoDBCollection } from '@/hooks/use-mongodb';
-import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -62,7 +50,6 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
   const [isServiceable, setIsServiceable] = useState<boolean | null>(true);
   const [isEditingPincode, setIsEditingPincode] = useState(false);
   const [timeLeft, setTimeLeft] = useState('');
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const { data: productData, isLoading: productLoading } = useMongoDBDoc(id);
@@ -110,7 +97,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
       if (data.edd) {
         const parts = data.edd.split('-');
         const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const formatted = `${months[date.getMonth()]} ${date.getDate().toString().padStart(2, '0')}`;
         setEdd(`${formatted}`);
         setZone(data.zone || 'India');
@@ -197,7 +184,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
         <div className="max-w-[1200px] mx-auto px-4 py-8 space-y-8">
           
           {/* SEO Breadcrumbs */}
-          <div className="text-xs font-semibold text-slate-400 flex items-center gap-2 uppercase tracking-wider">
+          <div className="text-xs font-semibold text-slate-400 flex items-center gap-2 tracking-wider">
             <Link href="/" className="hover:text-primary transition-colors">Home</Link>
             <span>/</span>
             <Link href="/medicines" className="hover:text-primary transition-colors">Medicines</Link>
@@ -220,8 +207,8 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                 />
                 
                 {savingsPct > 0 && (
-                  <span className="absolute top-4 left-4 bg-emerald-500 text-white font-black text-xs px-3 py-1.5 rounded-full shadow-lg">
-                    {savingsPct}% OFF
+                  <span className="absolute top-4 left-4 bg-emerald-500 text-white font-bold text-xs px-3 py-1.5 rounded-full shadow-lg">
+                    {savingsPct}% Off
                   </span>
                 )}
               </div>
@@ -254,20 +241,20 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     {product?.prescriptionRequired && (
-                      <Badge className="bg-rose-500 text-white border-none rounded-md font-black text-[9px] px-2.5 py-1 tracking-widest uppercase">
+                      <Badge className="bg-rose-500 text-white border-none rounded-md font-bold text-[9px] px-2.5 py-1 tracking-widest uppercase">
                         Rx Required
                       </Badge>
                     )}
-                    <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
+                    <span className="text-[10px] font-bold text-slate-400 tracking-wider bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
                       {product?.medicine_type || 'Ethical'}
                     </span>
                   </div>
                   
-                  <h1 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight uppercase tracking-tight pt-1">
+                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight tracking-tight pt-1">
                     {product?.product_name || product?.name}
                   </h1>
 
-                  <p className="text-xs font-bold text-slate-400 uppercase">
+                  <p className="text-xs font-semibold text-slate-400">
                     By <span className="text-primary underline cursor-pointer">{product?.taxonomy?.marketer_name || product?.manufacturer || 'Unknown Manufacturer'}</span>
                   </p>
                 </div>
@@ -276,19 +263,19 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
 
                 {/* Pricing Block */}
                 <div className="flex items-baseline gap-3">
-                  <span className="text-3xl font-black text-slate-900 font-outfit">₹{currentPrice}</span>
+                  <span className="text-3xl font-bold text-slate-900 font-outfit">₹{currentPrice}</span>
                   {currentMrp > currentPrice && (
                     <>
-                      <span className="text-sm font-bold text-slate-400 line-through">MRP ₹{currentMrp}</span>
-                      <span className="text-xs font-black text-emerald-600 uppercase tracking-wider">
-                        SAVE ₹{Math.max(0, currentMrp - currentPrice).toFixed(1)}
+                      <span className="text-sm font-medium text-slate-455 line-through">MRP ₹{currentMrp}</span>
+                      <span className="text-xs font-bold text-emerald-600 tracking-wider">
+                        Save ₹{Math.max(0, currentMrp - currentPrice).toFixed(1)}
                       </span>
                     </>
                   )}
                 </div>
 
-                <p className="text-[10px] font-black text-slate-450 uppercase tracking-widest leading-none">
-                  Pack Size: {product?.packaging_detail || product?.packSize || '10 tablets'}
+                <p className="text-[10px] font-semibold text-slate-400 tracking-wider">
+                  Pack Size: {product?.packaging_detail || product?.packSize || '10 Tablets'}
                 </p>
 
                 {/* ATC Action */}
@@ -302,8 +289,8 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                       >
                         <Minus className="w-4 h-4 text-slate-600" />
                       </Button>
-                      <span className="text-xs font-black text-slate-800 flex-[1.5] text-center">
-                        {qty} IN CART
+                      <span className="text-xs font-bold text-slate-800 flex-[1.5] text-center">
+                        {qty} In Cart
                       </span>
                       <Button
                         variant="ghost"
@@ -316,7 +303,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                   ) : (
                     <Button
                       onClick={() => addToCart({ ...product, id: product?._id || product?.id, price: currentPrice, mrp: currentMrp })}
-                      className="w-full max-w-[280px] h-12 rounded-full font-black text-xs tracking-widest bg-primary text-white hover:bg-primary/95 shadow-md shadow-primary/10 uppercase"
+                      className="w-full max-w-[280px] h-12 rounded-full font-bold text-xs tracking-wider bg-primary text-white hover:bg-primary/95 shadow-md shadow-primary/10 uppercase"
                     >
                       Add to Cart <ShoppingCart className="w-4 h-4 ml-2" />
                     </Button>
@@ -331,13 +318,13 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                   <div className="flex items-center gap-3">
                     <MapPin className="w-5 h-5 text-primary" />
                     <div>
-                      <h4 className="text-[9px] font-black text-slate-400 tracking-wider uppercase mb-0.5">Delivering to</h4>
-                      <p className="text-sm font-black text-slate-900 tracking-widest">{activePincode}</p>
+                      <h4 className="text-[9px] font-bold text-slate-400 tracking-wider uppercase mb-0.5">Delivering to</h4>
+                      <p className="text-sm font-bold text-slate-900 tracking-widest">{activePincode}</p>
                     </div>
                   </div>
                   <button 
                     onClick={() => setIsEditingPincode(!isEditingPincode)}
-                    className="text-xs font-black text-primary uppercase tracking-widest hover:underline"
+                    className="text-xs font-semibold text-primary tracking-wider hover:underline"
                   >
                     {isEditingPincode ? "Cancel" : "Change"}
                   </button>
@@ -350,7 +337,7 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                       value={activePincode}
                       onChange={handlePincodeChange}
                       placeholder="Enter 6-digit Pincode"
-                      className="flex-1 bg-slate-50 border border-slate-150 rounded-xl px-4 py-2 text-xs font-bold focus:bg-white outline-none"
+                      className="flex-1 bg-slate-50 border border-slate-150 rounded-xl px-4 py-2 text-xs font-semibold focus:bg-white outline-none"
                     />
                     <Button onClick={onCheckPincode} className="h-10 px-4 rounded-xl bg-primary text-white hover:bg-primary/95 text-xs font-bold uppercase">
                       Check
@@ -361,14 +348,14 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                 {isServiceable ? (
                   <div className="flex items-center gap-3 bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100/30">
                     <Truck className="w-4 h-4 text-emerald-600" />
-                    <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
+                    <p className="text-xs font-semibold text-emerald-800 tracking-wide">
                       {edd ? `Express delivery by ${edd}` : 'Available in your area'}
                     </p>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 bg-rose-50/50 p-3 rounded-2xl border border-rose-100/30">
                     <AlertTriangle className="w-4 h-4 text-rose-600" />
-                    <p className="text-xs font-bold text-rose-800 uppercase tracking-wide">Delivery unavailable to this pincode</p>
+                    <p className="text-xs font-semibold text-rose-800 tracking-wide">Delivery unavailable to this pincode</p>
                   </div>
                 )}
               </div>
@@ -382,17 +369,17 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
               
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="space-y-1">
-                  <span className="bg-emerald-500 text-white text-[9px] font-black tracking-widest px-3 py-1 rounded-full uppercase">
+                  <span className="bg-emerald-500 text-white text-[9px] font-bold tracking-widest px-3 py-1 rounded-full uppercase">
                     Smart savings match
                   </span>
-                  <h3 className="text-lg sm:text-xl font-black text-slate-800 uppercase tracking-tight pt-1">
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight pt-1">
                     Save {compareSavingsPct}% with Sahi Recommended Solution
                   </h3>
                 </div>
                 
                 <div className="bg-white border border-emerald-500/20 rounded-2xl px-4 py-2 flex items-center gap-2">
-                  <TrendingDown className="w-5 h-5 text-emerald-600 animate-bounce" />
-                  <span className="text-xs font-black text-emerald-600 uppercase">Save ₹{Math.max(0, currentMrp - altPrice).toFixed(0)} per pack</span>
+                  <TrendingDown className="w-5 h-5 text-emerald-600" />
+                  <span className="text-xs font-bold text-emerald-600">Save ₹{Math.max(0, currentMrp - altPrice).toFixed(0)} per pack</span>
                 </div>
               </div>
 
@@ -401,42 +388,42 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                 
                 {/* Current Branded View */}
                 <Card className="rounded-3xl p-5 border border-slate-100 bg-white space-y-4">
-                  <Badge className="bg-slate-100 text-slate-500 hover:bg-slate-100/80 border-none font-bold text-[9px] px-2.5 py-0.5 uppercase">
+                  <Badge className="bg-slate-100 text-slate-500 hover:bg-slate-100/80 border-none font-semibold text-[9px] px-2.5 py-0.5 uppercase">
                     Currently Viewing (Branded)
                   </Badge>
                   <div>
-                    <h4 className="text-sm font-black text-slate-850 uppercase">{product?.product_name || product?.name}</h4>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase pt-0.5">{product?.taxonomy?.marketer_name}</p>
+                    <h4 className="text-sm font-semibold text-slate-850">{product?.product_name || product?.name}</h4>
+                    <p className="text-[10px] font-semibold text-slate-400 pt-0.5">{product?.taxonomy?.marketer_name}</p>
                   </div>
                   <div className="border-t border-slate-50" />
                   <div className="flex justify-between items-baseline">
-                    <span className="text-2xl font-black text-slate-800">₹{currentPrice}</span>
-                    <span className="text-xs font-bold text-slate-400">MRP ₹{currentMrp}</span>
+                    <span className="text-2xl font-bold text-slate-800">₹{currentPrice}</span>
+                    <span className="text-xs font-semibold text-slate-400">MRP ₹{currentMrp}</span>
                   </div>
                 </Card>
 
                 {/* Generic Recommended View */}
                 <Card className="rounded-3xl p-5 border-2 border-emerald-500 bg-white shadow-lg space-y-4 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 bg-emerald-500 text-white font-black text-[9px] px-3 py-1.5 rounded-bl-2xl uppercase">
+                  <div className="absolute top-0 right-0 bg-emerald-500 text-white font-bold text-[9px] px-3 py-1.5 rounded-bl-2xl uppercase">
                     {compareSavingsPct}% cheaper
                   </div>
-                  <Badge className="bg-emerald-500 text-white border-none font-bold text-[9px] px-2.5 py-0.5 uppercase">
+                  <Badge className="bg-emerald-500 text-white border-none font-semibold text-[9px] px-2.5 py-0.5 uppercase">
                     Sahi Recommended (Generic)
                   </Badge>
                   <div>
-                    <h4 className="text-sm font-black text-slate-850 uppercase">{genericAlt?.product_name || genericAlt?.name}</h4>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase pt-0.5">{genericAlt?.taxonomy?.marketer_name || 'Generic Alternative'}</p>
+                    <h4 className="text-sm font-semibold text-slate-850">{genericAlt?.product_name || genericAlt?.name}</h4>
+                    <p className="text-[10px] font-semibold text-slate-450 pt-0.5">{genericAlt?.taxonomy?.marketer_name || 'Generic Alternative'}</p>
                   </div>
                   <div className="border-t border-slate-50" />
                   <div className="flex justify-between items-center">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-black text-emerald-600">₹{altPrice}</span>
-                      {altMrp > altPrice && <span className="text-xs font-bold text-slate-450 line-through">MRP ₹{altMrp}</span>}
+                      <span className="text-2xl font-bold text-emerald-600">₹{altPrice}</span>
+                      {altMrp > altPrice && <span className="text-xs font-semibold text-slate-455 line-through">MRP ₹{altMrp}</span>}
                     </div>
                     
                     <Button
                       onClick={() => addToCart({ ...genericAlt, id: genericAlt._id || genericAlt.id, price: altPrice, mrp: altMrp })}
-                      className="h-10 px-5 rounded-full bg-emerald-500 text-white hover:bg-emerald-600 text-xs font-black uppercase tracking-wider active:scale-95"
+                      className="h-10 px-5 rounded-full bg-emerald-500 text-white hover:bg-emerald-600 text-xs font-semibold tracking-wider active:scale-95"
                     >
                       Add match
                     </Button>
@@ -452,58 +439,58 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
           <div className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-100 shadow-sm space-y-10">
             
             <div className="border-b border-slate-100 pb-6">
-              <h3 className="text-xl font-black text-slate-800 tracking-tight uppercase">Medical & Safety Guide</h3>
+              <h3 className="text-xl font-bold text-slate-800 tracking-tight uppercase">Medical & Safety Guide</h3>
             </div>
 
             {/* Overview */}
             <div className="space-y-3">
-              <h4 className="text-xs font-black uppercase text-primary tracking-widest">Introduction & Uses</h4>
-              <p className="text-sm font-medium text-slate-650 leading-relaxed uppercase tracking-tight">
+              <h4 className="text-xs font-bold uppercase text-primary tracking-widest">Introduction & Uses</h4>
+              <p className="text-sm font-medium text-slate-600 leading-relaxed tracking-tight">
                 {product?.description || product?.introduction || "No detailed medical overview is listed for this item yet."}
               </p>
             </div>
 
             {/* Specifications Grid */}
             <div className="space-y-4">
-              <h4 className="text-xs font-black uppercase text-primary tracking-widest">Specifications & Composition</h4>
+              <h4 className="text-xs font-bold uppercase text-primary tracking-widest">Specifications & Composition</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
                 <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl flex flex-col justify-between">
-                  <div className="flex items-center gap-2 mb-2 text-slate-600">
+                  <div className="flex items-center gap-2 mb-2 text-slate-550">
                     <Info className="w-4 h-4" />
-                    <span className="text-xs font-black uppercase">Active Salt Molecule</span>
+                    <span className="text-xs font-bold uppercase tracking-wider">Active Salt Molecule</span>
                   </div>
-                  <p className="text-xs font-bold text-slate-800 uppercase leading-normal">
+                  <p className="text-xs font-semibold text-slate-800 leading-normal">
                     {molData?.molecule || molData?.name || product?.saltComposition || product?.composition || "Information coming soon"}
                   </p>
                 </div>
 
                 <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl flex flex-col justify-between">
-                  <div className="flex items-center gap-2 mb-2 text-slate-600">
+                  <div className="flex items-center gap-2 mb-2 text-slate-550">
                     <Stethoscope className="w-4 h-4" />
-                    <span className="text-xs font-black uppercase">Directions for usage</span>
+                    <span className="text-xs font-bold uppercase tracking-wider">Directions for usage</span>
                   </div>
-                  <p className="text-xs font-bold text-slate-800 uppercase leading-normal">
+                  <p className="text-xs font-semibold text-slate-800 leading-normal">
                     {product?.howToUse || "Follow exact instructions provided by your medical practitioner."}
                   </p>
                 </div>
 
                 <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl flex flex-col justify-between">
-                  <div className="flex items-center gap-2 mb-2 text-slate-600">
+                  <div className="flex items-center gap-2 mb-2 text-slate-550">
                     <Package className="w-4 h-4" />
-                    <span className="text-xs font-black uppercase">Storage instructions</span>
+                    <span className="text-xs font-bold uppercase tracking-wider">Storage instructions</span>
                   </div>
-                  <p className="text-xs font-bold text-slate-800 uppercase leading-normal">
+                  <p className="text-xs font-semibold text-slate-800 leading-normal">
                     {product?.storage_instructions || "Store in cool dry place away from moisture and direct sunlight."}
                   </p>
                 </div>
 
                 <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl flex flex-col justify-between">
-                  <div className="flex items-center gap-2 mb-2 text-slate-600">
+                  <div className="flex items-center gap-2 mb-2 text-slate-550">
                     <AlertCircle className="w-4 h-4" />
-                    <span className="text-xs font-black uppercase">Country of origin</span>
+                    <span className="text-xs font-bold uppercase tracking-wider">Country of origin</span>
                   </div>
-                  <p className="text-xs font-bold text-slate-800 uppercase leading-normal">
+                  <p className="text-xs font-semibold text-slate-800 leading-normal">
                     {product?.country_of_origin || "India"}
                   </p>
                 </div>
@@ -514,14 +501,14 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
             {/* Warnings Cards */}
             {product?.safety_warnings && (
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary tracking-widest">Warnings & Precautions</h4>
+                <h4 className="text-xs font-bold uppercase text-primary tracking-widest">Warnings & Precautions</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {product.safety_warnings.pregnancy && (
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex gap-3">
                       <Baby className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
                       <div>
-                        <h5 className="text-[10px] font-black text-slate-800 uppercase mb-0.5">Pregnancy Warnings</h5>
-                        <p className="text-[9px] font-bold text-slate-550 uppercase leading-relaxed">{product.safety_warnings.pregnancy}</p>
+                        <h5 className="text-[10px] font-bold text-slate-800 uppercase mb-0.5">Pregnancy Warnings</h5>
+                        <p className="text-[9px] font-semibold text-slate-600 leading-relaxed">{product.safety_warnings.pregnancy}</p>
                       </div>
                     </div>
                   )}
@@ -529,8 +516,8 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex gap-3">
                       <Milk className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
                       <div>
-                        <h5 className="text-[10px] font-black text-slate-800 uppercase mb-0.5">Lactation Warnings</h5>
-                        <p className="text-[9px] font-bold text-slate-550 uppercase leading-relaxed">{product.safety_warnings.lactation}</p>
+                        <h5 className="text-[10px] font-bold text-slate-800 uppercase mb-0.5">Lactation Warnings</h5>
+                        <p className="text-[9px] font-semibold text-slate-600 leading-relaxed">{product.safety_warnings.lactation}</p>
                       </div>
                     </div>
                   )}
@@ -538,8 +525,8 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex gap-3">
                       <Car className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                       <div>
-                        <h5 className="text-[10px] font-black text-slate-800 uppercase mb-0.5">Driving Precautions</h5>
-                        <p className="text-[9px] font-bold text-slate-550 uppercase leading-relaxed">{product.safety_warnings.driving}</p>
+                        <h5 className="text-[10px] font-bold text-slate-800 uppercase mb-0.5">Driving Precautions</h5>
+                        <p className="text-[9px] font-semibold text-slate-600 leading-relaxed">{product.safety_warnings.driving}</p>
                       </div>
                     </div>
                   )}
@@ -547,8 +534,8 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex gap-3">
                       <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                       <div>
-                        <h5 className="text-[10px] font-black text-slate-800 uppercase mb-0.5">Kidney Interaction</h5>
-                        <p className="text-[9px] font-bold text-slate-550 uppercase leading-relaxed">{product.safety_warnings.kidney}</p>
+                        <h5 className="text-[10px] font-bold text-slate-800 uppercase mb-0.5">Kidney Interaction</h5>
+                        <p className="text-[9px] font-semibold text-slate-600 leading-relaxed">{product.safety_warnings.kidney}</p>
                       </div>
                     </div>
                   )}
@@ -556,8 +543,8 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex gap-3">
                       <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
                       <div>
-                        <h5 className="text-[10px] font-black text-slate-800 uppercase mb-0.5">Liver Interaction</h5>
-                        <p className="text-[9px] font-bold text-slate-550 uppercase leading-relaxed">{product.safety_warnings.liver}</p>
+                        <h5 className="text-[10px] font-bold text-slate-800 uppercase mb-0.5">Liver Interaction</h5>
+                        <p className="text-[9px] font-semibold text-slate-600 leading-relaxed">{product.safety_warnings.liver}</p>
                       </div>
                     </div>
                   )}
@@ -567,23 +554,23 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
 
             {/* Collapsible FAQ Details */}
             <div className="space-y-4">
-              <h4 className="text-xs font-black uppercase text-primary tracking-widest">Frequently Asked Questions</h4>
+              <h4 className="text-xs font-bold uppercase text-primary tracking-widest">Frequently Asked Questions</h4>
               <div className="space-y-3">
                 <details className="group border border-slate-100 rounded-2xl bg-slate-50/40 p-4 cursor-pointer [&_summary::-webkit-details-marker]:hidden">
-                  <summary className="flex items-center justify-between font-black text-xs text-slate-700 uppercase">
+                  <summary className="flex items-center justify-between font-bold text-xs text-slate-700 uppercase">
                     <span>What if I miss a dose of this medication?</span>
                     <span className="transition-transform group-open:rotate-180"><ChevronDown className="w-4 h-4" /></span>
                   </summary>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase mt-2 leading-relaxed">
+                  <p className="text-[10px] font-semibold text-slate-500 mt-2 leading-relaxed">
                     {product?.if_miss || "Take it as soon as you remember, unless it is close to your next scheduled dose."}
                   </p>
                 </details>
                 <details className="group border border-slate-100 rounded-2xl bg-slate-50/40 p-4 cursor-pointer [&_summary::-webkit-details-marker]:hidden">
-                  <summary className="flex items-center justify-between font-black text-xs text-slate-700 uppercase">
+                  <summary className="flex items-center justify-between font-bold text-xs text-slate-700 uppercase">
                     <span>Can I combine this with alcohol?</span>
                     <span className="transition-transform group-open:rotate-180"><ChevronDown className="w-4 h-4" /></span>
                   </summary>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase mt-2 leading-relaxed">
+                  <p className="text-[10px] font-semibold text-slate-500 mt-2 leading-relaxed">
                     {product?.safety_warnings?.alcohol || "Combining this medication with alcohol may trigger adverse side effects. Always consult a healthcare professional first."}
                   </p>
                 </details>
