@@ -15,33 +15,25 @@ import {
   ShieldAlert,
   Stethoscope,
   ClipboardList,
-  Dna,
   AlertTriangle,
   Package,
   ShoppingCart,
   Minus,
   Plus,
-  Zap,
   TrendingDown,
   Maximize2,
   Loader2,
-  TrendingUp,
-  FlaskConical,
-  Truck,
   MapPin,
   Clock,
   ArrowRight,
-  Pencil,
-  X,
   Share2,
   Send,
   Copy,
+  ChevronDown,
   CheckCircle,
-  ChevronDown
+  AlertCircle
 } from 'lucide-react';
-
 import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -53,457 +45,95 @@ import { useMongoDBDoc, useMongoDBMolecule, useMongoDBCollection } from '@/hooks
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
-import {
-  scaleInVariant,
-  fadeInVariant
-} from '@/lib/animations';
-import RibbonBadge from '@/components/RibbonBadge';
-
-// --- SUB-COMPONENTS ---
-
-function ExpandableInfoTile({
-  icon: Icon,
-  title,
-  text,
-  color,
-  iconColor = "text-primary",
-  titleColor = "text-slate-800"
-}: {
-  icon: any,
-  title: string,
-  text: string,
-  color: string,
-  iconColor?: string,
-  titleColor?: string
-}) {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <motion.div
-          layout
-          className={cn(
-            "p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-white space-y-2 sm:space-y-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98] z-10",
-            color
-          )}
-        >
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", iconColor)} />
-            <h3 className={cn("text-[10px] sm:text-lg font-black tracking-tighter font-outfit uppercase", titleColor)}>
-              {title}
-            </h3>
-          </div>
-          <p className="text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase tracking-tight line-clamp-3">
-            {text}
-          </p>
-        </motion.div>
-      </DialogTrigger>
-      <DialogContent className="max-w-[90vw] sm:max-w-2xl rounded-[32px] sm:rounded-[48px] p-8 sm:p-12 border-none shadow-3xl">
-        <div className="space-y-6 sm:space-y-8">
-           <div className="flex items-center gap-4">
-              <div className={cn("w-12 h-12 sm:w-16 sm:h-16 rounded-[16px] sm:rounded-[24px] flex items-center justify-center shadow-sm border border-slate-50", color.replace('bg-', 'text-'))}>
-                <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
-              </div>
-              <DialogTitle className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight font-outfit uppercase">
-                {title}
-              </DialogTitle>
-           </div>
-           <div className="bg-slate-50/80 p-6 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-slate-100">
-             <DialogDescription className="text-xs sm:text-base font-bold text-slate-600 leading-relaxed uppercase tracking-wide">
-               {text}
-             </DialogDescription>
-           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function InteractionCard({ item }: { item: any }) {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <motion.div
-          layout
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={cn(
-            "p-4 sm:p-8 rounded-[24px] sm:rounded-[32px] flex flex-col gap-3 sm:gap-5 border border-white shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98] z-10",
-            item.color
-          )}
-        >
-          <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[12px] sm:rounded-[16px] flex items-center justify-center text-primary shrink-0 shadow-sm border border-slate-50">
-            <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-          <div className="flex flex-col gap-0.5 sm:gap-1">
-            <h4 className="text-[7px] sm:text-[9px] font-black tracking-[0.2em] text-slate-500/60 uppercase">{item.title}</h4>
-            <p className="text-[9px] sm:text-[11px] font-black text-slate-800 leading-tight uppercase tracking-tight line-clamp-2">
-              {item.text || "CONSULT DOCTOR"}
-            </p>
-          </div>
-        </motion.div>
-      </DialogTrigger>
-      <DialogContent className="max-w-[90vw] sm:max-w-2xl rounded-[32px] sm:rounded-[48px] p-8 sm:p-12 border-none shadow-3xl">
-        <div className="space-y-6 sm:space-y-8">
-           <div className="flex items-center gap-4">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[16px] sm:rounded-[24px] bg-slate-50 flex items-center justify-center shadow-sm border border-slate-100">
-                <item.icon className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
-              </div>
-              <DialogTitle className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight font-outfit uppercase">
-                {item.title}
-              </DialogTitle>
-           </div>
-           <div className="bg-slate-50/80 p-6 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-slate-100">
-             <DialogDescription className="text-xs sm:text-base font-bold text-slate-600 leading-relaxed uppercase tracking-wide">
-               {item.text || "NO INFORMATION AVAILABLE FOR THIS INTERACTION. PLEASE CONSULT A REGISTERED MEDICAL PRACTITIONER FOR GUIDANCE."}
-             </DialogDescription>
-           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-const ComparisonCard = ({
-  product,
-  label,
-  isAlt = false,
-  getItemQuantity,
-  addToCart,
-  showComparison,
-  brandedMrp,
-  onShareClick
-}: {
-  product: any,
-  label: string,
-  isAlt?: boolean,
-  getItemQuantity: (id: string) => number,
-  addToCart: (p: any) => void,
-  showComparison: boolean,
-  brandedMrp: number,
-  onShareClick?: (e: React.MouseEvent) => void
-}) => {
-  if (!product) return null;
-
-  const { updateQuantity } = useCart();
-  const qty = getItemQuantity(product.id || product._id);
-  const pPriceRaw = product.liveData?.sahimed_price || product.price || 0;
-  const pMrpRaw = product.liveData?.mrp || product.mrp || (Number(pPriceRaw) + 20);
-
-  const pPrice = Number(pPriceRaw) || 0;
-  const pMrp = Number(pMrpRaw) || (pPrice + 20);
-
-  let displaySavingsAmt = Math.max(0, pMrp - pPrice);
-  let displaySavingsPct = pMrp > 0 ? Math.round((displaySavingsAmt / pMrp) * 100) : 0;
-
-  if (isAlt && showComparison) {
-    displaySavingsAmt = Math.max(0, brandedMrp - pPrice);
-    displaySavingsPct = brandedMrp > 0 ? Math.round((displaySavingsAmt / brandedMrp) * 100) : 0;
-  }
-
-  const unitMatch = String(product.packSize || '').match(/(\d+)/);
-  const unitCount = (unitMatch && parseInt(unitMatch[1]) > 0) ? parseInt(unitMatch[1]) : 1;
-  const unitPrice = pPrice / unitCount;
-
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const images = (product.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0)
-    ? product.imageUrls
-    : (product.imageUrl ? [product.imageUrl] : [`https://picsum.photos/seed/${product.id || 'err'}/300/300`]);
-
-  const currentImage = images[currentImageIndex] || images[0];
-
-  return (
-    <motion.div variants={scaleInVariant} className="h-full">
-      <Card className={cn(
-        "h-full rounded-[24px] sm:rounded-[48px] p-3 sm:p-10 flex flex-col justify-between border shadow-sm relative overflow-hidden transition-all duration-700",
-        isAlt ? "bg-lavender ring-2 ring-lavender-text/10 border-lavender-text/20" : "bg-white border-slate-100"
-      )}>
-        <div className="space-y-3 sm:space-y-6">
-          <div className="flex items-center justify-between">
-            {isAlt ? (
-              <div className="bg-white border border-lavender-text/20 rounded-lg px-3 py-1.5 flex items-center gap-2">
-                 <Package className="w-3.5 h-3.5 text-lavender-text" />
-                 <span className="text-[9px] font-black text-lavender-text tracking-widest uppercase">SUBSTITUTE</span>
-              </div>
-            ) : (
-              <Badge className="rounded-full font-black text-[7px] sm:text-[9px] px-2 py-0.5 uppercase tracking-widest bg-slate-100 text-slate-400 border-none">{label}</Badge>
-            )}
-            <RibbonBadge
-              savingsPct={displaySavingsPct}
-              variant={isAlt ? 'accent' : 'primary'}
-              className="right-2 sm:right-6"
-              size="md"
-            />
-          </div>
-
-          <div className="space-y-3">
-            <Dialog>
-              <DialogTrigger asChild>
-                <div className="relative aspect-[3/2] w-full bg-white rounded-[20px] sm:rounded-[32px] flex items-center justify-center overflow-hidden border border-slate-50 shadow-inner group/img cursor-zoom-in">
-                  <Image src={currentImage} alt={product.name} fill className="object-contain p-2 sm:p-4 transition-transform duration-700 group-hover/img:scale-110" />
-                  <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
-                    <Maximize2 className="w-4 h-4 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
-                  </div>
-                </div>
-              </DialogTrigger>
-              <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-transparent shadow-none">
-                <DialogTitle className="sr-only">{product.name}</DialogTitle>
-                <DialogDescription className="sr-only">Visual representation of {product.name}</DialogDescription>
-                <div className="relative aspect-square w-full bg-white rounded-[40px] overflow-hidden p-8 flex items-center justify-center shadow-3xl border border-white/20">
-                  <Image src={currentImage} alt={product.name} fill className="object-contain p-10" />
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1.5 px-1.5">
-                {images.map((img: string, idx: number) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentImageIndex(idx)}
-                    className={cn(
-                      "relative w-10 h-10 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-2 transition-all shrink-0 bg-white",
-                      currentImageIndex === idx ? "border-primary shadow-md scale-105" : "border-slate-100 hover:border-slate-200"
-                    )}
-                  >
-                    <Image src={img} alt={`Preview ${idx + 1}`} fill className="object-contain p-1" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-0.5 sm:space-y-1">
-            <div className="flex justify-between items-start gap-4">
-              <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
-                {isAlt ? (
-                  <h3 className="font-extrabold text-[10px] sm:text-lg text-slate-800 leading-tight line-clamp-2 min-h-[1.6rem] sm:min-h-[2.4rem] font-outfit uppercase">
-                    {product.name}
-                  </h3>
-                ) : (
-                  <h1 className="font-extrabold text-[10px] sm:text-lg text-slate-800 leading-tight line-clamp-2 min-h-[1.6rem] sm:min-h-[2.4rem] font-outfit uppercase">
-                    {product.name}
-                  </h1>
-                )}
-                <p className="text-[7px] sm:text-[10px] font-black text-slate-500 tracking-widest uppercase">
-                  {product.packSize || "N/A"}
-                </p>
-                <p className="text-[7px] sm:text-[10px] font-bold text-slate-400 truncate uppercase tracking-tighter">
-                  {product.manufacturer}
-                </p>
-              </div>
-              {!isAlt && onShareClick && (
-                <button
-                  type="button"
-                  onClick={onShareClick}
-                  className="w-10 h-10 rounded-2xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-500 hover:text-primary transition-all active:scale-95 border border-slate-100 shrink-0 shadow-sm"
-                  title="Share product details"
-                >
-                  <Share2 className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-
-            <div className="pt-1.5 sm:pt-3 border-t border-dashed mt-1.5 sm:mt-3 space-y-0.5">
-              <div className="flex items-baseline gap-1.5 sm:gap-2">
-                <p className="text-lg sm:text-4xl font-black tracking-tighter text-primary font-outfit">
-                  ₹{Number(pPrice).toFixed(0)}
-                </p>
-                {pMrp > pPrice && (
-                  <div className="flex flex-col">
-                    <span className="text-[8px] sm:text-sm text-slate-400 line-through font-bold opacity-80 decoration-1">₹{Number(pMrp).toFixed(0)}</span>
-                    <span className="text-[7px] sm:text-[10px] font-black text-emerald-600 uppercase bg-emerald-50 px-1 py-0.5 rounded-md">SAVE ₹{Number(pMrp - pPrice).toFixed(0)}</span>
-                  </div>
-                )}
-              </div>
-              <p className="text-[8px] font-bold text-slate-350 tracking-tight uppercase">
-                ₹{unitPrice.toFixed(2)} / unit
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-2 sm:mt-4">
-          {((Number(product.availableQuantity) <= 0 && (!product.liveData || Number(product.liveData.stock_quantity) <= 0))) ? (
-            <Button
-              onClick={async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                try {
-                  const res = await fetch('/api/inventory/alerts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                      productId: product.id || product._id,
-                      platform: 'web',
-                      pincode: localStorage.getItem('activePincode') || 'Unknown'
-                    })
-                  });
-                  if (res.ok) {
-                    toast({ title: "Notification Set", description: "We'll alert you when this is back!" });
-                  }
-                } catch (e) {
-                  toast({ variant: 'destructive', title: "Error", description: "Failed to set alert." });
-                }
-              }}
-              className="w-full h-8 sm:h-14 bg-[#FFF1F2] text-[#E11D48] font-black text-[8px] sm:text-[12px] tracking-widest uppercase rounded-full flex items-center justify-center gap-1 border border-[#FFE4E6] hover:bg-[#FFE4E6] transition-all active:scale-95 shadow-md shadow-[#E11D48]/5"
-            >
-              NOTIFY ME
-            </Button>
-          ) : qty > 0 ? (
-            <div className="flex items-center gap-2 w-full h-8 sm:h-14 bg-slate-100 rounded-full border border-slate-200 p-1 shadow-inner">
-              <Button
-                variant="ghost"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateQuantity(product._id || product.id, -1); }}
-                className="h-full flex-1 rounded-full flex items-center justify-center bg-white hover:bg-slate-50 text-slate-800 shadow-sm border border-slate-150 transition-all hover:scale-105 active:scale-95 py-0"
-              >
-                <Minus className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-slate-600 stroke-[3px]" />
-              </Button>
-              <span className="text-[10px] sm:text-sm font-black text-slate-800 flex-[1.5] text-center font-outfit select-none">
-                {qty} IN CART
-              </span>
-              <Button
-                variant="ghost"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateQuantity(product._id || product.id, 1); }}
-                className="h-full flex-1 rounded-full flex items-center justify-center bg-white hover:bg-slate-50 text-slate-800 shadow-sm border border-slate-150 transition-all hover:scale-105 active:scale-95 py-0"
-              >
-                <Plus className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-slate-600 stroke-[3px]" />
-              </Button>
-            </div>
-          ) : (
-            <Button
-              onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })}
-              className={cn(
-                "w-full h-8 sm:h-14 rounded-full font-black text-[8px] sm:text-[12px] tracking-[0.1em] sm:tracking-[0.15em] uppercase gap-1.5 sm:gap-2 shadow-md sm:shadow-lg active:scale-[0.98] transition-all border-none",
-                isAlt ? "bg-sahi-green-text text-white hover:bg-sahi-green-text/90" : "bg-primary text-white hover:bg-primary/90"
-              )}
-            >
-              ADD TO CART <ShoppingCart className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
-            </Button>
-          )}
-        </div>
-      </Card>
-    </motion.div>
-  );
-};
-
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-
-// --- MAIN COMPONENT ---
 
 export default function ProductDetailClient({ initialProduct, id }: { initialProduct: any, id: string }) {
   const { toast } = useToast();
   const { user } = useUser();
   const db_fs = useFirestore();
   const { addToCart, getItemQuantity } = useCart();
+  
   const [edd, setEdd] = useState<string>('');
   const [activePincode, setActivePincode] = useState<string>('560068');
   const [zone, setZone] = useState<string>('');
   const [isServiceable, setIsServiceable] = useState<boolean | null>(true);
+  const [isEditingPincode, setIsEditingPincode] = useState(false);
+  const [timeLeft, setTimeLeft] = useState('');
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  const { data: productData, isLoading: productLoading } = useMongoDBDoc(id);
+  const product = productData || initialProduct;
+  const { data: molData } = useMongoDBMolecule(product?.moleculeId);
+
+  // Sync Pincode
   useEffect(() => {
     const loadPincode = async () => {
-      // 1. Try local storage first
-      const stored = typeof window !== 'undefined' ? (localStorage.getItem('activePincode')) : null;
-      
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('activePincode') : null;
       if (stored && stored.length === 6) {
         setActivePincode(stored);
         fetchEdd(stored);
         return;
       }
-
-      // 2. Try logged in user profile
       if (user) {
         try {
-          const profileRef = doc(db_fs, 'userProfiles', user.uid);
-          const snap = await getDoc(profileRef);
+          const snap = await getDoc(doc(db_fs, 'userProfiles', user.uid));
           if (snap.exists()) {
-            const data = snap.data();
-            if (data.pincode && data.pincode.length === 6) {
-              setActivePincode(data.pincode);
-              localStorage.setItem('activePincode', data.pincode);
-              fetchEdd(data.pincode);
+            const val = snap.data().pincode;
+            if (val && val.length === 6) {
+              setActivePincode(val);
+              localStorage.setItem('activePincode', val);
+              fetchEdd(val);
               return;
             }
           }
-        } catch (e) {
-          console.warn("Failed to fetch user profile pincode", e);
-        }
+        } catch (e) {}
       }
-
-      // 3. Fallback to default
       setActivePincode('560068');
       fetchEdd('560068');
     };
-
     loadPincode();
   }, [user, db_fs]);
 
+  // EDD Logistics
   const fetchEdd = async (pin: string) => {
-    if (!pin || pin.length !== 6) return;
-    
     try {
       const res = await fetch('/api/logistics/shipway/serviceability', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ toPincode: pin })
       });
-      
       const data = await res.json();
-      
       if (data.edd) {
-        // Parse date string (YYYY-MM-DD) carefully to avoid timezone shifts
         const parts = data.edd.split('-');
         const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
         const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
-        const formattedDate = `${months[date.getMonth()]} ${date.getDate().toString().padStart(2, '0')}`;
-        const dayName = days[date.getDay()];
-        
-        setEdd(`${formattedDate} ${dayName}`);
+        const formatted = `${months[date.getMonth()]} ${date.getDate().toString().padStart(2, '0')}`;
+        setEdd(`${formatted}`);
         setZone(data.zone || 'India');
         setIsServiceable(true);
       } else {
-        setEdd('');
-        setZone('');
         setIsServiceable(false);
-        if (data.error) {
-          toast({
-            variant: 'destructive',
-            title: "Serviceability Check",
-            description: "This area might not be serviceable currently."
-          });
-        }
       }
     } catch (e) {
-      console.error("Failed to fetch EDD", e);
       setIsServiceable(false);
-      toast({
-        variant: 'destructive',
-        title: "Connection Error",
-        description: "Failed to reach delivery servers."
-      });
     }
   };
 
-  const [isEditingPincode, setIsEditingPincode] = useState(false);
-  const [timeLeft, setTimeLeft] = useState('');
-
+  // Express Shipping Countdown
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
       const cutoff = new Date();
       cutoff.setHours(14, 0, 0, 0);
-
       let diff = cutoff.getTime() - now.getTime();
       if (diff < 0) {
         cutoff.setDate(cutoff.getDate() + 1);
         diff = cutoff.getTime() - now.getTime();
       }
-
       const h = Math.floor(diff / (1000 * 60 * 60));
       const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const s = Math.floor((diff % (1000 * 60)) / 1000);
@@ -515,416 +145,433 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
   const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, '').slice(0, 6);
     setActivePincode(val);
-    if (val.length === 6) {
-      localStorage.setItem('activePincode', val);
-    }
+    if (val.length === 6) localStorage.setItem('activePincode', val);
   };
 
   const onCheckPincode = () => {
     if (activePincode.length === 6) {
       fetchEdd(activePincode);
       setIsEditingPincode(false);
-    } else {
-      toast({
-        variant: 'destructive',
-        title: "Invalid Pincode",
-        description: "Please enter a valid 6-digit pincode."
-      });
     }
   };
 
-  const { data: productData, isLoading: productLoading } = useMongoDBDoc(id);
-  const product = productData || initialProduct;
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-
-  const handleShareClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      navigator.share({
-        title: `${product?.name} | SahiMed`,
-        text: `Check out ${product?.name} on SahiMed:`,
-        url: typeof window !== 'undefined' ? window.location.href : '',
-      })
-      .catch((error) => console.log('Error sharing', error));
-    } else {
-      setIsShareDialogOpen(true);
-    }
-  };
-
-  const handleWhatsAppShare = () => {
-    const text = encodeURIComponent(`Check out ${product?.name} on SahiMed: ${typeof window !== 'undefined' ? window.location.href : ''}`);
-    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
-    setIsShareDialogOpen(false);
-  };
-
-  const handleCopyLink = () => {
-    if (typeof navigator !== 'undefined') {
-      navigator.clipboard.writeText(typeof window !== 'undefined' ? window.location.href : '');
-      toast({
-        title: "Link Copied!",
-        description: "Product link copied to clipboard.",
-      });
-    }
-    setIsShareDialogOpen(false);
-  };
-
-  const { data: molData } = useMongoDBMolecule(product?.moleculeId);
-
+  // Alternative Comparison Setup
   const isGeneric = product?.isGeneric === true || product?.isGeneric === "true";
-  const isBranded = !isGeneric;
-
   const { data: genericAlternatives } = useMongoDBCollection({
-    moleculeId: isBranded ? product?.moleculeId : undefined,
+    moleculeId: !isGeneric ? product?.moleculeId : undefined,
     isGeneric: true,
     limit: 10
   });
 
-  const genericAlt = isBranded ? genericAlternatives?.find((a: any) =>
-    (a.isGeneric === true || a.isGeneric === "true") &&
-    String(a.id || a._id) !== String(product?.id || product?._id)
+  const genericAlt = !isGeneric ? genericAlternatives?.find((a: any) =>
+    (a.isGeneric === true || a.isGeneric === "true") && String(a._id || a.id) !== String(product?._id || product?.id)
   ) : null;
 
-  const hasGenericAlt = !!genericAlt;
-  const showComparison = isBranded && hasGenericAlt;
+  const showComparison = !isGeneric && !!genericAlt;
 
-  const brandedItem = product;
-  const genericItem = genericAlt;
+  // Price points
+  const currentPrice = Number(product?.liveData?.sahimed_price || product?.price || 0);
+  const currentMrp = Number(product?.liveData?.mrp || product?.mrp || (currentPrice + 20));
+  const altPrice = genericAlt ? Number(genericAlt.liveData?.sahimed_price || genericAlt.price || 0) : 0;
+  const altMrp = genericAlt ? Number(genericAlt.liveData?.mrp || genericAlt.mrp || (altPrice + 20)) : 0;
 
-  const pPriceRaw = product?.liveData?.sahimed_price || product?.price || 0;
-  const pMrpRaw = product?.liveData?.mrp || product?.mrp || (Number(pPriceRaw) + 20);
+  const savingsPct = currentMrp > 0 ? Math.round(((currentMrp - currentPrice) / currentMrp) * 100) : 0;
+  const compareSavingsPct = currentMrp > 0 && altPrice > 0 ? Math.round(((currentMrp - altPrice) / currentMrp) * 100) : 0;
 
-  const brandedPrice = Number(pPriceRaw) || 0;
-  const brandedMrp = Number(pMrpRaw) || (brandedPrice + 20);
+  const images = product?.images && product.images.length > 0 ? product.images : ['/images/medicine_placeholder.png'];
+  const qty = getItemQuantity(product?._id || product?.id);
 
-  const genPriceRaw = genericAlt ? (genericAlt.liveData?.sahimed_price || genericAlt.price || 0) : 0;
-  const genericPrice = Number(genPriceRaw) || 0;
-
-  const switchSavingsAmt = Math.max(0, brandedMrp - genericPrice);
-
-  if (!product && productLoading) {
+  if (productLoading && !product) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC]">
-        <Navbar />
-        <main className="max-w-7xl mx-auto px-4 py-12">
-          <div className="space-y-8">
-            <Skeleton className="h-[300px] rounded-[40px]" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Skeleton className="h-[200px] rounded-[32px]" />
-              <Skeleton className="h-[200px] rounded-[32px]" />
-            </div>
-          </div>
-        </main>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[#F8FAFC] pb-32">
+      <div className="min-h-screen bg-[#F4F7F6] pb-24 font-outfit">
         <Navbar />
-        <main className="max-w-[1280px] mx-auto px-4 sm:px-12 py-6 sm:py-10" key={id}>
-          {/* Breadcrumbs for SEO */}
-          <div className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mb-6 px-2 flex items-center gap-1.5 justify-start">
+
+        <div className="max-w-[1200px] mx-auto px-4 py-8 space-y-8">
+          
+          {/* SEO Breadcrumbs */}
+          <div className="text-xs font-semibold text-slate-400 flex items-center gap-2 uppercase tracking-wider">
             <Link href="/" className="hover:text-primary transition-colors">Home</Link>
             <span>/</span>
             <Link href="/medicines" className="hover:text-primary transition-colors">Medicines</Link>
             <span>/</span>
-            <span className="text-slate-600 font-black truncate max-w-[150px] sm:max-w-none">{product?.name}</span>
+            <span className="text-slate-900 font-bold">{product?.product_name || product?.name}</span>
           </div>
 
-          <div className="flex flex-col items-start mb-6 px-2">
-            <div className="flex flex-row items-center gap-3 mb-2">
-              {(product?.prescriptionRequired || product?.rxRequired) && (
-                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                  <Badge className="bg-rose-500 text-white border-none rounded-md font-black text-[8px] sm:text-[10px] px-2.5 py-1 tracking-widest shadow-lg shadow-rose-500/25 uppercase shrink-0">
-                    RX REQUIRED
-                  </Badge>
-                </motion.div>
+          {/* Main Hero Container */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            {/* Left Side: Images Swiper & Badges */}
+            <div className="lg:col-span-5 bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+              <div className="relative aspect-square w-full rounded-2xl bg-[#F8FAFC] flex items-center justify-center overflow-hidden border border-slate-50">
+                <Image 
+                  src={images[currentImageIndex] || '/images/medicine_placeholder.png'} 
+                  alt={product?.name || 'product'} 
+                  fill 
+                  className="object-contain p-8"
+                  priority
+                />
+                
+                {savingsPct > 0 && (
+                  <span className="absolute top-4 left-4 bg-emerald-500 text-white font-black text-xs px-3 py-1.5 rounded-full shadow-lg">
+                    {savingsPct}% OFF
+                  </span>
+                )}
+              </div>
+
+              {/* Thumbnails */}
+              {images.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto py-1">
+                  {images.map((img: string, idx: number) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentImageIndex(idx)}
+                      className={cn(
+                        "relative w-16 h-16 rounded-xl border-2 overflow-hidden bg-white p-1 shrink-0 transition-all",
+                        idx === currentImageIndex ? "border-primary" : "border-slate-100 hover:border-slate-300"
+                      )}
+                    >
+                      <Image src={img} alt="thumb" fill className="object-contain" />
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
-            <h2 className="text-[9px] sm:text-[11px] font-black text-slate-400 tracking-[0.2em] uppercase mb-1">Salt Composition</h2>
-            <span className="text-sm md:text-2xl font-black text-slate-800 tracking-tight font-outfit uppercase leading-tight max-w-4xl text-left">
-              {molData?.molecule || molData?.name || product?.saltComposition || product?.composition || product?.salt || product?.molecule || "Information coming soon"}
-            </span>
-          </div>
 
-          {showComparison && switchSavingsAmt > 0 && (
-            <motion.div
-              initial={{ scale: 0.98, opacity: 0, y: -5 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              className="mb-6 px-2"
-            >
-              <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-2 sm:py-3.5 px-6 sm:px-10 rounded-2xl shadow-md flex items-center justify-start gap-3">
-                <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 animate-bounce" />
-                <h2 className="text-[9px] sm:text-[13px] font-black tracking-wider uppercase">
-                  Switch to Recommended option & save ₹{Number(switchSavingsAmt).toFixed(0)} (Same composition)
-                </h2>
-              </div>
-            </motion.div>
-          )}
-
-          <div className="mb-8 sm:mb-16 px-1 relative">
-            {showComparison ? (
-              <div className="grid grid-cols-1 md:grid-cols-8 gap-3 sm:gap-12 items-stretch relative">
-                {/* Removed 100% match floating badge */}
-
-                <ComparisonCard
-                  product={brandedItem}
-                  label="BRANDED VERSION"
-                  getItemQuantity={getItemQuantity}
-                  addToCart={addToCart}
-                  showComparison={showComparison}
-                  brandedMrp={brandedMrp}
-                  onShareClick={handleShareClick}
-                />
-                <ComparisonCard
-                  product={genericItem}
-                  label="SAHI RECOMMENDED"
-                  isAlt
-                  getItemQuantity={getItemQuantity}
-                  addToCart={addToCart}
-                  showComparison={showComparison}
-                  brandedMrp={brandedMrp}
-                />
-              </div>
-            ) : (
-              <div className="flex justify-center">
-                <div className="w-full sm:w-[480px]">
-                  <ComparisonCard
-                    product={product}
-                    label={isBranded ? "Branded" : "Generic Solution"}
-                    getItemQuantity={getItemQuantity}
-                    addToCart={addToCart}
-                    showComparison={showComparison}
-                    brandedMrp={brandedMrp}
-                    onShareClick={handleShareClick}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Delivery Information & Pincode Checker */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 sm:mb-10 px-1"
-          >
-            <div className="bg-white border border-slate-100 rounded-[24px] p-5 shadow-sm space-y-4">
+            {/* Middle & Right: Product Info & Dynamic Action Panel */}
+            <div className="lg:col-span-7 space-y-6">
               
-              {/* Delivering To Panel */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary/8 text-primary rounded-full flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="text-[10px] font-black text-slate-400 tracking-[0.12em] uppercase leading-none mb-1">
-                      DELIVERING TO
-                    </h4>
-                    <p className="text-base font-black text-slate-900 font-outfit uppercase leading-none">
-                      {activePincode}
-                    </p>
-                  </div>
-                </div>
+              {/* Product Info Block */}
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm space-y-4">
                 
-                <button
-                  onClick={() => setIsEditingPincode(!isEditingPincode)}
-                  className="text-primary font-black text-xs uppercase tracking-widest px-4 py-2 hover:bg-primary/5 rounded-full transition-all"
-                >
-                  {isEditingPincode ? "CANCEL" : "CHANGE"}
-                </button>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {product?.prescriptionRequired && (
+                      <Badge className="bg-rose-500 text-white border-none rounded-md font-black text-[9px] px-2.5 py-1 tracking-widest uppercase">
+                        Rx Required
+                      </Badge>
+                    )}
+                    <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
+                      {product?.medicine_type || 'Ethical'}
+                    </span>
+                  </div>
+                  
+                  <h1 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight uppercase tracking-tight pt-1">
+                    {product?.product_name || product?.name}
+                  </h1>
+
+                  <p className="text-xs font-bold text-slate-400 uppercase">
+                    By <span className="text-primary underline cursor-pointer">{product?.taxonomy?.marketer_name || product?.manufacturer || 'Unknown Manufacturer'}</span>
+                  </p>
+                </div>
+
+                <div className="border-t border-slate-50 my-2" />
+
+                {/* Pricing Block */}
+                <div className="flex items-baseline gap-3">
+                  <span className="text-3xl font-black text-slate-900 font-outfit">₹{currentPrice}</span>
+                  {currentMrp > currentPrice && (
+                    <>
+                      <span className="text-sm font-bold text-slate-400 line-through">MRP ₹{currentMrp}</span>
+                      <span className="text-xs font-black text-emerald-600 uppercase tracking-wider">
+                        SAVE ₹{Math.max(0, currentMrp - currentPrice).toFixed(1)}
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                <p className="text-[10px] font-black text-slate-450 uppercase tracking-widest leading-none">
+                  Pack Size: {product?.packaging_detail || product?.packSize || '10 tablets'}
+                </p>
+
+                {/* ATC Action */}
+                <div className="pt-2">
+                  {qty > 0 ? (
+                    <div className="flex items-center gap-2 w-full max-w-[280px] h-12 bg-slate-50 rounded-full border border-slate-150 p-1 shadow-inner">
+                      <Button
+                        variant="ghost"
+                        onClick={() => addToCart({ ...product, id: product?._id || product?.id, price: currentPrice, mrp: currentMrp }, -1)}
+                        className="h-full flex-1 rounded-full flex items-center justify-center bg-white hover:bg-slate-100 text-slate-800 shadow-sm border border-slate-100"
+                      >
+                        <Minus className="w-4 h-4 text-slate-600" />
+                      </Button>
+                      <span className="text-xs font-black text-slate-800 flex-[1.5] text-center">
+                        {qty} IN CART
+                      </span>
+                      <Button
+                        variant="ghost"
+                        onClick={() => addToCart({ ...product, id: product?._id || product?.id, price: currentPrice, mrp: currentMrp }, 1)}
+                        className="h-full flex-1 rounded-full flex items-center justify-center bg-white hover:bg-slate-100 text-slate-800 shadow-sm border border-slate-100"
+                      >
+                        <Plus className="w-4 h-4 text-slate-600" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={() => addToCart({ ...product, id: product?._id || product?.id, price: currentPrice, mrp: currentMrp })}
+                      className="w-full max-w-[280px] h-12 rounded-full font-black text-xs tracking-widest bg-primary text-white hover:bg-primary/95 shadow-md shadow-primary/10 uppercase"
+                    >
+                      Add to Cart <ShoppingCart className="w-4 h-4 ml-2" />
+                    </Button>
+                  )}
+                </div>
+
               </div>
 
-              {/* Inline Edit Input Field */}
-              {isEditingPincode && (
-                <div className="flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-100 rounded-[16px] animate-in fade-in duration-200">
-                  <input
-                    type="text"
-                    maxLength={6}
-                    value={activePincode}
-                    onChange={handlePincodeChange}
-                    placeholder="Enter 6-digit Pincode"
-                    className="bg-transparent border-none outline-none text-sm font-bold tracking-[0.1em] px-3 py-1 flex-1 text-slate-800 placeholder:text-slate-300"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        onCheckPincode();
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={onCheckPincode}
-                    className="w-8 h-8 rounded-full bg-primary hover:bg-primary/95 text-white flex items-center justify-center transition-all active:scale-95 shadow-md shadow-primary/10 shrink-0"
+              {/* Delivery Serviceability Block */}
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <MapPin className="w-5 h-5 text-primary" />
+                    <div>
+                      <h4 className="text-[9px] font-black text-slate-400 tracking-wider uppercase mb-0.5">Delivering to</h4>
+                      <p className="text-sm font-black text-slate-900 tracking-widest">{activePincode}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setIsEditingPincode(!isEditingPincode)}
+                    className="text-xs font-black text-primary uppercase tracking-widest hover:underline"
                   >
-                    <ArrowRight className="w-4 h-4" />
+                    {isEditingPincode ? "Cancel" : "Change"}
                   </button>
                 </div>
-              )}
 
-              {/* Divider */}
-              <div className="border-t border-slate-100/80 my-1" />
-
-              {/* Serviceability Status Banner */}
-              {isServiceable ? (
-                <div className="space-y-4">
-                  <div className="bg-emerald-50/80 border border-emerald-100/50 rounded-[20px] p-4 flex items-center gap-3 shadow-sm w-full">
-                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0 border border-emerald-50">
-                      <Truck className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs sm:text-sm font-black text-emerald-900 tracking-tight uppercase font-outfit mb-0.5">
-                        {edd ? `DELIVERY BY ${edd}` : "CHECK SERVICEABILITY"}
-                      </h3>
-                      <p className="text-[9px] sm:text-[10px] font-bold text-emerald-700/70 uppercase tracking-widest leading-none">
-                        {edd ? (zone ? `EXPRESS SHIPPING TO ${zone.toUpperCase()}` : "Guaranteed express shipping") : "Enter pincode to see delivery date"}
-                      </p>
-                    </div>
+                {isEditingPincode && (
+                  <div className="flex gap-2 animate-in slide-in-from-top-2 duration-300">
+                    <input 
+                      type="text" 
+                      value={activePincode}
+                      onChange={handlePincodeChange}
+                      placeholder="Enter 6-digit Pincode"
+                      className="flex-1 bg-slate-50 border border-slate-150 rounded-xl px-4 py-2 text-xs font-bold focus:bg-white outline-none"
+                    />
+                    <Button onClick={onCheckPincode} className="h-10 px-4 rounded-xl bg-primary text-white hover:bg-primary/95 text-xs font-bold uppercase">
+                      Check
+                    </Button>
                   </div>
+                )}
 
-                  {edd && (
-                    <div className="flex items-center justify-center sm:justify-start">
-                      <div className="flex items-center gap-3 px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100/50 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
-                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-inner">
-                          <Clock className="w-3 h-3 text-emerald-600 animate-pulse" />
-                        </div>
-                        <p className="text-[9px] sm:text-[10px] font-bold text-slate-600 uppercase tracking-wider">
-                          FREE DELIVERY BY <span className="text-emerald-600 font-black">{edd}</span> IF YOU ORDER WITHIN <span className="text-emerald-600 font-black tabular-nums">{timeLeft}</span>
-                        </p>
+                {isServiceable ? (
+                  <div className="flex items-center gap-3 bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100/30">
+                    <Truck className="w-4 h-4 text-emerald-600" />
+                    <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
+                      {edd ? `Express delivery by ${edd}` : 'Available in your area'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 bg-rose-50/50 p-3 rounded-2xl border border-rose-100/30">
+                    <AlertTriangle className="w-4 h-4 text-rose-600" />
+                    <p className="text-xs font-bold text-rose-800 uppercase tracking-wide">Delivery unavailable to this pincode</p>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </div>
+
+          {/* Sahi Comparison Alternative Options (Brand comparison layout) */}
+          {showComparison && genericAlt && (
+            <div className="bg-gradient-to-br from-emerald-55 to-emerald-100/20 border border-emerald-500/20 rounded-[32px] p-6 sm:p-8 space-y-6">
+              
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="space-y-1">
+                  <span className="bg-emerald-500 text-white text-[9px] font-black tracking-widest px-3 py-1 rounded-full uppercase">
+                    Smart savings match
+                  </span>
+                  <h3 className="text-lg sm:text-xl font-black text-slate-800 uppercase tracking-tight pt-1">
+                    Save {compareSavingsPct}% with Sahi Recommended Solution
+                  </h3>
+                </div>
+                
+                <div className="bg-white border border-emerald-500/20 rounded-2xl px-4 py-2 flex items-center gap-2">
+                  <TrendingDown className="w-5 h-5 text-emerald-600 animate-bounce" />
+                  <span className="text-xs font-black text-emerald-600 uppercase">Save ₹{Math.max(0, currentMrp - altPrice).toFixed(0)} per pack</span>
+                </div>
+              </div>
+
+              {/* Grid split cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Current Branded View */}
+                <Card className="rounded-3xl p-5 border border-slate-100 bg-white space-y-4">
+                  <Badge className="bg-slate-100 text-slate-500 hover:bg-slate-100/80 border-none font-bold text-[9px] px-2.5 py-0.5 uppercase">
+                    Currently Viewing (Branded)
+                  </Badge>
+                  <div>
+                    <h4 className="text-sm font-black text-slate-850 uppercase">{product?.product_name || product?.name}</h4>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase pt-0.5">{product?.taxonomy?.marketer_name}</p>
+                  </div>
+                  <div className="border-t border-slate-50" />
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-2xl font-black text-slate-800">₹{currentPrice}</span>
+                    <span className="text-xs font-bold text-slate-400">MRP ₹{currentMrp}</span>
+                  </div>
+                </Card>
+
+                {/* Generic Recommended View */}
+                <Card className="rounded-3xl p-5 border-2 border-emerald-500 bg-white shadow-lg space-y-4 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-emerald-500 text-white font-black text-[9px] px-3 py-1.5 rounded-bl-2xl uppercase">
+                    {compareSavingsPct}% cheaper
+                  </div>
+                  <Badge className="bg-emerald-500 text-white border-none font-bold text-[9px] px-2.5 py-0.5 uppercase">
+                    Sahi Recommended (Generic)
+                  </Badge>
+                  <div>
+                    <h4 className="text-sm font-black text-slate-850 uppercase">{genericAlt?.product_name || genericAlt?.name}</h4>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase pt-0.5">{genericAlt?.taxonomy?.marketer_name || 'Generic Alternative'}</p>
+                  </div>
+                  <div className="border-t border-slate-50" />
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-black text-emerald-600">₹{altPrice}</span>
+                      {altMrp > altPrice && <span className="text-xs font-bold text-slate-450 line-through">MRP ₹{altMrp}</span>}
+                    </div>
+                    
+                    <Button
+                      onClick={() => addToCart({ ...genericAlt, id: genericAlt._id || genericAlt.id, price: altPrice, mrp: altMrp })}
+                      className="h-10 px-5 rounded-full bg-emerald-500 text-white hover:bg-emerald-600 text-xs font-black uppercase tracking-wider active:scale-95"
+                    >
+                      Add match
+                    </Button>
+                  </div>
+                </Card>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* Full Information, safety, FAQ layout */}
+          <div className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-100 shadow-sm space-y-10">
+            
+            <div className="border-b border-slate-100 pb-6">
+              <h3 className="text-xl font-black text-slate-800 tracking-tight uppercase">Medical & Safety Guide</h3>
+            </div>
+
+            {/* Overview */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-black uppercase text-primary tracking-widest">Introduction & Uses</h4>
+              <p className="text-sm font-medium text-slate-650 leading-relaxed uppercase tracking-tight">
+                {product?.description || product?.introduction || "No detailed medical overview is listed for this item yet."}
+              </p>
+            </div>
+
+            {/* Specifications Grid */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-black uppercase text-primary tracking-widest">Specifications & Composition</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl flex flex-col justify-between">
+                  <div className="flex items-center gap-2 mb-2 text-slate-600">
+                    <Info className="w-4 h-4" />
+                    <span className="text-xs font-black uppercase">Active Salt Molecule</span>
+                  </div>
+                  <p className="text-xs font-bold text-slate-800 uppercase leading-normal">
+                    {molData?.molecule || molData?.name || product?.saltComposition || product?.composition || "Information coming soon"}
+                  </p>
+                </div>
+
+                <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl flex flex-col justify-between">
+                  <div className="flex items-center gap-2 mb-2 text-slate-600">
+                    <Stethoscope className="w-4 h-4" />
+                    <span className="text-xs font-black uppercase">Directions for usage</span>
+                  </div>
+                  <p className="text-xs font-bold text-slate-800 uppercase leading-normal">
+                    {product?.howToUse || "Follow exact instructions provided by your medical practitioner."}
+                  </p>
+                </div>
+
+                <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl flex flex-col justify-between">
+                  <div className="flex items-center gap-2 mb-2 text-slate-600">
+                    <Package className="w-4 h-4" />
+                    <span className="text-xs font-black uppercase">Storage instructions</span>
+                  </div>
+                  <p className="text-xs font-bold text-slate-800 uppercase leading-normal">
+                    {product?.storage_instructions || "Store in cool dry place away from moisture and direct sunlight."}
+                  </p>
+                </div>
+
+                <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl flex flex-col justify-between">
+                  <div className="flex items-center gap-2 mb-2 text-slate-600">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="text-xs font-black uppercase">Country of origin</span>
+                  </div>
+                  <p className="text-xs font-bold text-slate-800 uppercase leading-normal">
+                    {product?.country_of_origin || "India"}
+                  </p>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Warnings Cards */}
+            {product?.safety_warnings && (
+              <div className="space-y-4">
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest">Warnings & Precautions</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {product.safety_warnings.pregnancy && (
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex gap-3">
+                      <Baby className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                      <div>
+                        <h5 className="text-[10px] font-black text-slate-800 uppercase mb-0.5">Pregnancy Warnings</h5>
+                        <p className="text-[9px] font-bold text-slate-550 uppercase leading-relaxed">{product.safety_warnings.pregnancy}</p>
+                      </div>
+                    </div>
+                  )}
+                  {product.safety_warnings.lactation && (
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex gap-3">
+                      <Milk className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
+                      <div>
+                        <h5 className="text-[10px] font-black text-slate-800 uppercase mb-0.5">Lactation Warnings</h5>
+                        <p className="text-[9px] font-bold text-slate-550 uppercase leading-relaxed">{product.safety_warnings.lactation}</p>
+                      </div>
+                    </div>
+                  )}
+                  {product.safety_warnings.driving && (
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex gap-3">
+                      <Car className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                      <div>
+                        <h5 className="text-[10px] font-black text-slate-800 uppercase mb-0.5">Driving Precautions</h5>
+                        <p className="text-[9px] font-bold text-slate-550 uppercase leading-relaxed">{product.safety_warnings.driving}</p>
+                      </div>
+                    </div>
+                  )}
+                  {product.safety_warnings.kidney && (
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex gap-3">
+                      <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                      <div>
+                        <h5 className="text-[10px] font-black text-slate-800 uppercase mb-0.5">Kidney Interaction</h5>
+                        <p className="text-[9px] font-bold text-slate-550 uppercase leading-relaxed">{product.safety_warnings.kidney}</p>
+                      </div>
+                    </div>
+                  )}
+                  {product.safety_warnings.liver && (
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex gap-3">
+                      <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+                      <div>
+                        <h5 className="text-[10px] font-black text-slate-800 uppercase mb-0.5">Liver Interaction</h5>
+                        <p className="text-[9px] font-bold text-slate-550 uppercase leading-relaxed">{product.safety_warnings.liver}</p>
                       </div>
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="bg-rose-50 border border-rose-100 rounded-[20px] p-4 flex items-center gap-3 shadow-sm w-full animate-in shake duration-300">
-                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0 border border-rose-50">
-                    <AlertTriangle className="w-5 h-5 text-rose-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-black text-rose-900 tracking-tight uppercase font-outfit mb-0.5">
-                      NOT SERVICEABLE
-                    </h3>
-                    <p className="text-[9px] sm:text-[10px] font-bold text-rose-700/70 uppercase tracking-widest leading-none">
-                      DELIVERY IS NOT AVAILABLE TO THIS PINCODE
-                    </p>
-                  </div>
-                </div>
-              )}
-
-            </div>
-          </motion.div>
-
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-[32px] p-6 sm:p-10 shadow-sm border border-slate-100 overflow-hidden relative z-10 space-y-12"
-          >
-            <div className="border-b pb-6">
-              <h3 className="text-xl font-black text-slate-800 tracking-tight uppercase font-outfit">Product Information & Description</h3>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="text-xs font-black uppercase text-primary tracking-widest">Overview</h4>
-              <p className="text-sm font-medium text-slate-650 leading-relaxed uppercase tracking-tight">
-                {product?.description || product?.introduction || "No description available."}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="text-xs font-black uppercase text-primary tracking-widest">Key Benefits</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <CheckCircle className="w-5 h-5 text-emerald-650 shrink-0 mt-0.5" />
-                  <div>
-                    <h5 className="text-xs font-black text-slate-800 uppercase">Effective action</h5>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase mt-1">Provides fast relief from pain and decreases fever symptoms.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <CheckCircle className="w-5 h-5 text-emerald-650 shrink-0 mt-0.5" />
-                  <div>
-                    <h5 className="text-xs font-black text-slate-855 uppercase">Trusted formulation</h5>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase mt-1">Doctor-trusted active ingredients designed for quick recovery.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="text-xs font-black uppercase text-primary tracking-widest">Safety Information</h4>
-              <div className="bg-slate-50/60 rounded-3xl overflow-hidden border border-slate-100">
-                <table className="w-full text-left text-xs">
-                  <tbody className="divide-y divide-slate-100">
-                    <tr>
-                      <td className="px-6 py-4 font-black text-slate-500 uppercase bg-slate-50/30 w-1/3">Composition</td>
-                      <td className="px-6 py-4 font-bold text-slate-700 uppercase">
-                        {molData?.molecule || molData?.name || product?.saltComposition || product?.composition || "Unavailable"}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 font-black text-slate-500 uppercase bg-slate-50/30">Directions for use</td>
-                      <td className="px-6 py-4 font-bold text-slate-700 uppercase">{product?.howToUse || "Take as directed by doctor."}</td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 font-black text-slate-500 uppercase bg-slate-50/30">Storage instructions</td>
-                      <td className="px-6 py-4 font-bold text-slate-700 uppercase">{product?.storage_instructions || "Store in cool dry place away from sunlight."}</td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 font-black text-slate-500 uppercase bg-slate-50/30">Prescription Status</td>
-                      <td className="px-6 py-4 font-bold text-slate-700 uppercase">
-                        {product?.prescriptionRequired ? "PRESCRIPTION (Rx REQUIRED)" : "OTC (NON-PRESCRIPTION)"}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Safety Warnings Accordions */}
-            {product?.safety_warnings && (
-              <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary tracking-widest">Detailed Warning & Precautions</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {product.safety_warnings.pregnancy && (
-                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                      <h5 className="text-[10px] font-black text-slate-800 uppercase mb-1">Pregnancy Safety</h5>
-                      <p className="text-[9px] font-bold text-slate-500 uppercase leading-relaxed">{product.safety_warnings.pregnancy}</p>
-                    </div>
-                  )}
-                  {product.safety_warnings.lactation && (
-                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                      <h5 className="text-[10px] font-black text-slate-800 uppercase mb-1">Lactation/Breastfeeding</h5>
-                      <p className="text-[9px] font-bold text-slate-500 uppercase leading-relaxed">{product.safety_warnings.lactation}</p>
-                    </div>
-                  )}
-                  {product.safety_warnings.driving && (
-                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                      <h5 className="text-[10px] font-black text-slate-800 uppercase mb-1">Driving Safety</h5>
-                      <p className="text-[9px] font-bold text-slate-500 uppercase leading-relaxed">{product.safety_warnings.driving}</p>
-                    </div>
-                  )}
-                  {product.safety_warnings.kidney && (
-                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                      <h5 className="text-[10px] font-black text-slate-800 uppercase mb-1">Kidney Interaction</h5>
-                      <p className="text-[9px] font-bold text-slate-500 uppercase leading-relaxed">{product.safety_warnings.kidney}</p>
-                    </div>
-                  )}
-                  {product.safety_warnings.liver && (
-                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                      <h5 className="text-[10px] font-black text-slate-800 uppercase mb-1">Liver Interaction</h5>
-                      <p className="text-[9px] font-bold text-slate-500 uppercase leading-relaxed">{product.safety_warnings.liver}</p>
-                    </div>
-                  )}
-                </div>
               </div>
             )}
 
+            {/* Collapsible FAQ Details */}
             <div className="space-y-4">
               <h4 className="text-xs font-black uppercase text-primary tracking-widest">Frequently Asked Questions</h4>
               <div className="space-y-3">
                 <details className="group border border-slate-100 rounded-2xl bg-slate-50/40 p-4 cursor-pointer [&_summary::-webkit-details-marker]:hidden">
                   <summary className="flex items-center justify-between font-black text-xs text-slate-700 uppercase">
-                    <span>What if I miss a dose?</span>
+                    <span>What if I miss a dose of this medication?</span>
                     <span className="transition-transform group-open:rotate-180"><ChevronDown className="w-4 h-4" /></span>
                   </summary>
                   <p className="text-[10px] font-bold text-slate-500 uppercase mt-2 leading-relaxed">
@@ -933,46 +580,19 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                 </details>
                 <details className="group border border-slate-100 rounded-2xl bg-slate-50/40 p-4 cursor-pointer [&_summary::-webkit-details-marker]:hidden">
                   <summary className="flex items-center justify-between font-black text-xs text-slate-700 uppercase">
-                    <span>Is this medicine safe for children?</span>
+                    <span>Can I combine this with alcohol?</span>
                     <span className="transition-transform group-open:rotate-180"><ChevronDown className="w-4 h-4" /></span>
                   </summary>
                   <p className="text-[10px] font-bold text-slate-500 uppercase mt-2 leading-relaxed">
-                    Always consult a pediatrician before administering this medication to children.
+                    {product?.safety_warnings?.alcohol || "Combining this medication with alcohol may trigger adverse side effects. Always consult a healthcare professional first."}
                   </p>
                 </details>
               </div>
             </div>
-          </motion.section>
-        </main>
 
-        <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
-          <DialogContent className="max-w-md w-[94vw] rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white z-[120]">
-            <div className="bg-primary p-8 text-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
-                <Share2 className="w-20 h-20" />
-              </div>
-              <DialogTitle className="text-xl font-black tracking-tighter uppercase font-outfit">Share Product</DialogTitle>
-              <DialogDescription className="text-[8px] font-black text-white/60 tracking-[0.2em] mt-2 uppercase">
-                Share {product?.name} with friends or family
-              </DialogDescription>
-            </div>
-            
-            <div className="p-6 space-y-4">
-              <Button 
-                onClick={handleWhatsAppShare}
-                className="w-full h-14 rounded-full font-black tracking-[0.2em] text-[10px] bg-[#25D366] text-white hover:bg-[#20ba56] border-none uppercase active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <Send className="w-4 h-4 text-white" /> Share on WhatsApp
-              </Button>
-              <Button 
-                onClick={handleCopyLink}
-                className="w-full h-14 rounded-full font-black tracking-[0.2em] text-[10px] bg-slate-900 text-white hover:bg-slate-800 border-none uppercase active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <Copy className="w-4 h-4 text-white" /> Copy Link
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+
+        </div>
       </div>
     </PageTransition>
   );
