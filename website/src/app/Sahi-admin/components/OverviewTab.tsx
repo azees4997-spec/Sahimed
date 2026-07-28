@@ -61,23 +61,20 @@ export function OverviewTab({ setTab, role }: { setTab: (t: AdminTab) => void, r
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5"
     >
       {filteredStats.map(card => (
         <motion.div key={card.label} variants={itemVariants}>
           <Card 
-            className="rounded-[56px] p-10 border-none shadow-xl hover:shadow-3xl transition-all cursor-pointer bg-white/60 backdrop-blur-md group text-center flex flex-col items-center justify-center min-h-[280px] border border-white active:scale-95" 
+            className="rounded-[24px] p-6 border-none shadow-sm hover:shadow-lg transition-all cursor-pointer bg-white/70 backdrop-blur-md group text-center flex flex-col items-center justify-center min-h-[190px] border border-white/20 active:scale-95 duration-300" 
             onClick={() => setTab(card.tab as AdminTab)}
           >
-            <div className={cn("w-20 h-20 rounded-[32px] flex items-center justify-center mb-8 group-hover:scale-110 transition-all duration-500 shadow-inner", card.bg, card.color)}>
-               <card.icon className="w-10 h-10" />
+            <div className={cn("w-12 h-12 rounded-[14px] flex items-center justify-center mb-4 group-hover:scale-105 transition-all duration-300 shadow-sm", card.bg, card.color)}>
+               <card.icon className="w-5 h-5" />
             </div>
             <div className="space-y-1">
-              <CardTitle className="text-base font-black text-slate-900 tracking-tight uppercase font-outfit">{card.label}</CardTitle>
-              <p className="text-[11px] font-black text-slate-800 tracking-[0.2em] uppercase leading-relaxed">{card.desc}</p>
-            </div>
-            <div className="mt-6 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-               <span className="text-[11px] font-black text-primary tracking-widest uppercase flex items-center gap-2">Open Section <ArrowRight className="w-4 h-4" /></span>
+              <CardTitle className="text-xs font-black text-slate-800 tracking-tight uppercase font-outfit">{card.label}</CardTitle>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-relaxed px-1">{card.desc}</p>
             </div>
           </Card>
         </motion.div>
