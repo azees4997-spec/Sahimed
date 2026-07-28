@@ -2,12 +2,22 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
-import { getDbAdmin } from '@/lib/firebase-admin';
 import { PRODUCTS } from '@/lib/data';
-
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+// ============================================================
+// COLLECTION: "Product Master"
+// SCHEMA (nested):
+//   product_id, product_name, molecule_code, medicine_type, salable_status
+//   taxonomy.{ marketer_id, marketer_name, category_id, category_name, sub_category, disease_tags }
+//   packaging.{ package_type, product_form, package_quantity, packaging_detail, mrp }
+//   medical_info.{ composition, primary_use, introduction, benefits, how_to_use, side_effects, ... }
+//   safety_warnings.{ is_rx_required, is_controlled_substance, interactions }
+//   images[] (array of URLs)
+//   seo.{ url_slug, seo_title, seo_description, search_keywords }
+// ============================================================
 
 function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -18,297 +28,193 @@ export async function GET(request: Request) {
   let limitValue = parseInt(searchParams.get('limit') || '50');
   if (isNaN(limitValue) || limitValue < 1) limitValue = 50;
   if (limitValue > 5000) limitValue = 5000;
+
   const category = searchParams.get('category');
   const qStr = searchParams.get('q');
-  const q = qStr ? escapeRegExp(qStr) : null;
-  const moleculeId = searchParams.get('moleculeId');
+  const moleculeCode = searchParams.get('moleculeId') || searchParams.get('molecule_code');
   const isGeneric = searchParams.get('isGeneric');
-  const isBestSeller = searchParams.get('isBestSeller');
-  const isTopSelection = searchParams.get('isTopSelection');
-  const marketerName = searchParams.get('marketerName');   // comma-separated list
-  const dosageForm = searchParams.get('dosageForm');       // comma-separated list
+  const marketerName = searchParams.get('marketerName');
+  const dosageForm = searchParams.get('dosageForm');
   const minPrice = searchParams.get('minPrice');
   const maxPrice = searchParams.get('maxPrice');
+  const showDisabled = searchParams.get('showDisabled') === 'true';
 
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const collection = db.collection('products');
+    const col = db.collection('Product Master');
 
     const query: any = {};
-    
-    // Filter out disabled products by default
-    const showDisabled = searchParams.get('showDisabled') === 'true';
-    if (showDisabled) {
-      try {
-        const admin = await verifyAdmin(request);
-        if (admin) {
-          console.log(`[Products API] Admin detected (${admin.uid}), showing ALL items (including inactive).`);
-          // No isActive filter added = show all
-        } else {
-          query.isActive = { $ne: false };
-        }
-      } catch (authErr) {
-        // If auth fails, fallback to safe view (active only)
-        query.isActive = { $ne: false };
-      }
+
+    // Only show salable products to non-admins
+    if (!showDisabled) {
+      query.salable_status = { $regex: 'Salable', $options: 'i' };
     } else {
-      query.isActive = { $ne: false };
+      try {
+        await verifyAdmin(request);
+        // Admin: show all products (no salable_status filter)
+      } catch {
+        query.salable_status = { $regex: 'Salable', $options: 'i' };
+      }
     }
+
+    // Category filter
     if (category) {
-      query.category = category;
+      query['taxonomy.category_name'] = { $regex: escapeRegExp(category), $options: 'i' };
     }
 
-    // 1. Handle isGeneric (Robust: handles both Boolean and String)
-    if (isGeneric !== null) {
-      const isTrue = isGeneric === 'true';
-      query.isGeneric = { $in: [isTrue, isGeneric] };
-    }
-
-    // 2. Handle isBestSeller (Robust)
-    if (isBestSeller !== null) {
-      const isTrue = isBestSeller === 'true';
-      query.isBestSeller = { $in: [isTrue, isBestSeller] };
-    }
-
-    // 2.5 Handle isTopSelection (Robust)
-    if (isTopSelection !== null) {
-      const isTrue = isTopSelection === 'true';
-      query.isTopSelection = { $in: [isTrue, isTopSelection] };
-    }
-
-    let andConditions: any[] = [];
-
-    // 3. Marketer name multi-select filter (Includes Manufacturer fallback)
+    // Marketer/manufacturer filter
     if (marketerName) {
       const names = marketerName.split(',').map(n => n.trim()).filter(Boolean);
-      const marketerQueries = names.map(n => ({ marketer_name: { $regex: escapeRegExp(n), $options: 'i' } }));
-      const manufacturerQueries = names.map(n => ({ manufacturer: { $regex: escapeRegExp(n), $options: 'i' } }));
-      
-      andConditions.push({ $or: [...marketerQueries, ...manufacturerQueries] });
+      query['taxonomy.marketer_name'] = { $in: names.map(n => new RegExp(escapeRegExp(n), 'i')) };
     }
 
-    // 4. Dosage form multi-select filter
+    // Dosage form filter
     if (dosageForm) {
       const forms = dosageForm.split(',').map(f => f.trim()).filter(Boolean);
-      const dosageQueries = forms.map(f => ({ dosage_form: { $regex: escapeRegExp(f), $options: 'i' } }));
-      
-      andConditions.push({ $or: dosageQueries });
+      query['packaging.product_form'] = { $in: forms.map(f => new RegExp(escapeRegExp(f), 'i')) };
     }
 
-    // 5. Price range filter
+    // Price range filter
     if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice) query.price.$gte = parseFloat(minPrice);
-      if (maxPrice) query.price.$lte = parseFloat(maxPrice);
+      query['packaging.mrp'] = {};
+      if (minPrice) query['packaging.mrp'].$gte = parseFloat(minPrice);
+      if (maxPrice) query['packaging.mrp'].$lte = parseFloat(maxPrice);
     }
 
-    let moleculeOr: any[] = [];
-    if (moleculeId) {
-      let objectIdFromMol: ObjectId | null = null;
-      try {
-        if (moleculeId.length === 24) {
-          objectIdFromMol = new ObjectId(moleculeId);
-        }
-      } catch (e) {}
-
-      moleculeOr = [{ moleculeId: moleculeId }];
-      if (objectIdFromMol) {
-        moleculeOr.push({ moleculeId: objectIdFromMol });
-      }
-
-      try {
-        // AUTO-MAPPING FALLBACK
-        const moleculeQuery = objectIdFromMol 
-          ? { $or: [{ _id: objectIdFromMol }, { _id: moleculeId }] }
-          : { _id: moleculeId };
-
-        const moleculeDoc = await db.collection('molecules').findOne(moleculeQuery as any);
-        
-        if (moleculeDoc && (moleculeDoc.molecule || moleculeDoc.name)) {
-          let saltName = moleculeDoc.molecule || moleculeDoc.name;
-          const baseNameMatch = saltName.split(/[\s(]/)[0];
-          if (baseNameMatch && baseNameMatch.length > 2) {
-             const safeBaseName = escapeRegExp(baseNameMatch);
-             moleculeOr.push({ saltComposition: { $regex: safeBaseName, $options: 'i' } });
-             moleculeOr.push({ salt: { $regex: safeBaseName, $options: 'i' } });
-             moleculeOr.push({ composition: { $regex: safeBaseName, $options: 'i' } });
-          } else {
-             const safeSaltName = escapeRegExp(saltName);
-             moleculeOr.push({ saltComposition: { $regex: safeSaltName, $options: 'i' } });
-             moleculeOr.push({ salt: { $regex: safeSaltName, $options: 'i' } });
-             moleculeOr.push({ composition: { $regex: safeSaltName, $options: 'i' } });
-          }
-        }
-      } catch (e) {
-        console.error("Molecule fallback error:", e);
+    // Generic filter (medicine_type === 'Generic')
+    if (isGeneric !== null && isGeneric !== undefined) {
+      if (isGeneric === 'true') {
+        query.medicine_type = { $regex: 'generic', $options: 'i' };
       }
     }
 
-    let searchOr: any[] = [];
+    // Molecule code filter
+    if (moleculeCode) {
+      query.molecule_code = moleculeCode;
+    }
+
     let terms: string[] = [];
+    let andConditions: any[] = [];
+
+    // Full-text search across product_name and composition
     if (qStr) {
       terms = qStr.replace(/[()]/g, ' ').split(/\s+/).filter(t => t.length > 0);
       if (terms.length > 0) {
-        // Create a match condition for a single field where ALL terms must match
         const makeMatchAll = (fieldName: string) => ({
           $and: terms.map(t => ({ [fieldName]: { $regex: escapeRegExp(t), $options: 'i' } }))
         });
 
-        searchOr = [
-          makeMatchAll('name'),
-          makeMatchAll('saltComposition'),
-          makeMatchAll('salt'),
-          makeMatchAll('composition'),
-          makeMatchAll('molecule')
-        ];
+        andConditions.push({
+          $or: [
+            makeMatchAll('product_name'),
+            makeMatchAll('medical_info.composition'),
+            { product_id: { $regex: escapeRegExp(qStr), $options: 'i' } },
+            { molecule_code: { $regex: escapeRegExp(qStr), $options: 'i' } },
+            { 'taxonomy.marketer_name': { $regex: escapeRegExp(qStr), $options: 'i' } },
+          ]
+        });
       }
-    }
-
-    // Combine filters intelligently
-    if (moleculeOr.length > 0) {
-      andConditions.push({ $or: moleculeOr });
-    }
-    if (searchOr.length > 0) {
-      andConditions.push({ $or: searchOr });
     }
 
     if (andConditions.length > 0) {
-      if (query.$and) {
-        query.$and = [...query.$and, ...andConditions];
-      } else {
-        query.$and = andConditions;
-      }
+      query.$and = andConditions;
     }
 
     const pipeline: any[] = [
       { $match: query },
       {
         $addFields: {
-          searchScore: {
+          // Scoring: exact name match gets highest priority
+          searchScore: qStr ? {
             $cond: [
-              // 1. Highest priority: Name starts with search string
-              { $regexMatch: { input: "$name", regex: `^${escapeRegExp(qStr || '')}`, options: "i" } },
+              { $regexMatch: { input: '$product_name', regex: `^${escapeRegExp(qStr)}`, options: 'i' } },
               10,
               {
                 $cond: [
-                  // 2. Medium priority: Name contains search string
-                  { $regexMatch: { input: "$name", regex: escapeRegExp(qStr || ''), options: "i" } },
+                  { $regexMatch: { input: '$product_name', regex: escapeRegExp(qStr), options: 'i' } },
                   5,
-                  // 3. Low priority: Salt match only
                   1
                 ]
               }
             ]
-          }
+          } : 1
         }
       },
-      { $sort: { searchScore: -1, name: 1 } },
+      { $sort: { searchScore: -1, product_name: 1 } },
       { $limit: limitValue },
-      {
-        $lookup: {
-          from: 'molecules',
-          let: { mId: '$moleculeId' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $or: [
-                    { $eq: ['$_id', '$$mId'] },
-                    { $eq: [{ $toString: '$_id' }, '$$mId'] }
-                  ]
-                }
-              }
-            }
-          ],
-          as: 'moleculeData'
-        }
-      },
-      {
-        $addFields: {
-          moleculeData: { $arrayElemAt: ['$moleculeData', 0] }
-        }
-      }
     ];
 
-    const startTime = Date.now();
-    let products = await collection.aggregate(pipeline).toArray();
-    
-    // FUZZY FALLBACK: If no results found with strict Match All, try Match Any of the terms
-    // This helps with spelling mistakes and partial queries
-    if (products.length === 0 && terms.length > 1) {
-      const fuzzyOr = [
-        { name: { $regex: terms.join('|'), $options: 'i' } },
-        { saltComposition: { $regex: terms.join('|'), $options: 'i' } }
-      ];
-      
-      const fuzzyPipeline = [
-        { $match: { $or: fuzzyOr } },
-        { $sort: { name: 1 } },
-        { $limit: limitValue },
-        {
-          $lookup: {
-            from: 'molecules',
-            let: { mId: '$moleculeId' },
-            pipeline: [
-              { $match: { $expr: { $or: [{ $eq: ['$_id', '$$mId'] }, { $eq: [{ $toString: '$_id' }, '$$mId'] }] } } }
-            ],
-            as: 'moleculeData'
-          }
-        },
-        { $addFields: { moleculeData: { $arrayElemAt: ['$moleculeData', 0] }, isFuzzy: true } }
-      ];
-      products = await collection.aggregate(fuzzyPipeline).toArray();
-    }
-    const duration = Date.now() - startTime;
-    
-    console.log(`[Search API] Aggregation Params: mol=${moleculeId || 'none'}, q=${q || 'none'} | Result: ${products.length} in ${duration}ms`);
+    let products = await col.aggregate(pipeline).toArray();
 
-    // --- AUTOMATIC SEARCH ANALYTICS LOGGING ---
+    // Fuzzy fallback if no results found with strict match
+    if (products.length === 0 && terms.length > 1) {
+      const fuzzyQuery = {
+        ...query,
+        $and: undefined,
+        $or: [
+          { product_name: { $regex: terms.join('|'), $options: 'i' } },
+          { 'medical_info.composition': { $regex: terms.join('|'), $options: 'i' } },
+        ]
+      };
+      delete fuzzyQuery.$and;
+      products = await col
+        .find(fuzzyQuery)
+        .sort({ product_name: 1 })
+        .limit(limitValue)
+        .toArray();
+    }
+
+    // Log search analytics asynchronously
     if (qStr && qStr.length >= 2) {
       try {
-        const analyticsCol = db.collection('searchAnalytics');
-        // We log asynchronously to avoid blocking the response
-        analyticsCol.insertOne({
+        db.collection('searchAnalytics').insertOne({
           keyword: qStr,
           userId: searchParams.get('userId') || null,
           mobile: searchParams.get('mobile') || 'Anonymous',
-          platform: searchParams.get('platform') || (request.headers.get('user-agent')?.includes('Dart') ? 'mobile' : 'web'),
+          platform: request.headers.get('user-agent')?.includes('Dart') ? 'mobile' : 'web',
           resultsCount: products.length,
           timestamp: new Date(),
           autoCaptured: true
-        }).catch(err => console.error("[Analytics Background Error]", err));
-      } catch (e) {
-        console.error("[Search Analytics Auto-Log Failed]", e);
-      }
+        }).catch(err => console.error('[Analytics Background Error]', err));
+      } catch (e) {}
     }
 
-    return NextResponse.json(products, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',
-      },
-    });
-  } catch (err: any) {
-    console.error("[Search API Error] MongoDB failed, falling back to static PRODUCTS", err);
-    let fallbackProducts = PRODUCTS.map((p, idx) => ({
+    // Normalize output to maintain compatibility with frontend
+    const normalized = products.map(p => ({
       ...p,
-      _id: p.id || `fallback-prod-${idx}`,
-      isFallback: true
+      id: p._id?.toString(),
+      // Legacy field aliases for website pages compatibility
+      name: p.product_name,
+      sku: p.product_id,
+      manufacturer: p.taxonomy?.marketer_name,
+      category: p.taxonomy?.category_name,
+      saltComposition: p.medical_info?.composition,
+      price: p.packaging?.mrp,
+      mrp: p.packaging?.mrp,
+      imageUrl: p.images?.[0] || '',
+      prescriptionRequired: p.safety_warnings?.is_rx_required,
+      treatment: p.medical_info?.primary_use,
+      howToUse: p.medical_info?.how_to_use,
+      packSize: p.packaging?.packaging_detail,
+      moleculeId: p.molecule_code,
     }));
-    
-    if (category) {
-      fallbackProducts = fallbackProducts.filter(p => p.category?.toLowerCase() === category.toLowerCase());
-    }
+
+    return NextResponse.json(normalized, {
+      headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' },
+    });
+
+  } catch (err: any) {
+    console.error('[Products API Error]', err);
+    // Fallback to static data
+    let fallbackProducts = PRODUCTS.map((p, idx) => ({
+      ...p, _id: p.id || `fallback-prod-${idx}`, name: p.name, isFallback: true
+    }));
+    if (category) fallbackProducts = fallbackProducts.filter(p => p.category?.toLowerCase() === category.toLowerCase());
     if (qStr) {
-      const terms = qStr.toLowerCase().split(/\s+/).filter(Boolean);
-      fallbackProducts = fallbackProducts.filter(p => 
-        terms.every(term => 
-          p.name.toLowerCase().includes(term) || 
-          p.saltComposition.toLowerCase().includes(term)
-        )
-      );
+      const t = qStr.toLowerCase().split(/\s+/).filter(Boolean);
+      fallbackProducts = fallbackProducts.filter(p => t.every(term => p.name.toLowerCase().includes(term)));
     }
-    
     return NextResponse.json(fallbackProducts.slice(0, limitValue));
   }
 }
@@ -318,33 +224,17 @@ export async function POST(request: Request) {
     await verifyAdmin(request);
     const body = await request.json();
     const client = await clientPromise;
-    const db = client.db("sahimed");
+    const db = client.db('sahimed');
 
-    // Ensure the document has an _id that matches Firestore's ID if provided
-    const docId = body.id || body._id;
     const { id, _id, ...rest } = body;
-    const productData = { 
-      ...rest, 
-      _id: docId as any,
+    const productData = {
+      ...rest,
+      _id: (id || _id) as any,
       createdAt: new Date(),
       updatedAt: new Date()
     };
 
-    // INTELLIGENT MAPPING: Auto-link to molecule if missing
-    if (!productData.moleculeId && productData.saltComposition) {
-      const moleculesCol = db.collection('molecules');
-      const allMolecules = await moleculesCol.find({}).toArray();
-      const match = allMolecules.find(m => 
-        productData.saltComposition.toLowerCase().includes((m.molecule || m.name || "").toLowerCase()) ||
-        (m.molecule || m.name || "").toLowerCase().includes(productData.saltComposition.toLowerCase())
-      );
-      if (match) {
-        productData.moleculeId = match._id || match.id;
-      }
-    }
-
-    const result = await db.collection("products").insertOne(productData);
-    
+    const result = await db.collection('Product Master').insertOne(productData);
     return NextResponse.json({ success: true, insertedId: result.insertedId });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

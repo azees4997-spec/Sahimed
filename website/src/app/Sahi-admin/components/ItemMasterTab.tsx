@@ -488,10 +488,32 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
         isOpen={isExportOpen}
         onClose={() => setIsExportOpen(false)}
         fields={[
-          'name', 'sku', 'manufacturer', 'category', 'hsnCode', 'gstPercentage', 'isGeneric', 'isBestSeller', 'prescriptionRequired', 'packSize', 'imageUrl', 'imageUrl2', 'imageUrl3', 'description', 'treatment', 
-          'safetyAdvice', 'howToUse', 'saltComposition', 'moleculeCode', 'price', 'mrp', 'availableQuantity'
+          'product_id',
+          'product_name',
+          'molecule_code',
+          'medicine_type',
+          'salable_status',
+          'country_of_origin',
+          'taxonomy.marketer_id',
+          'taxonomy.marketer_name',
+          'taxonomy.category_id',
+          'taxonomy.category_name',
+          'taxonomy.sub_category',
+          'packaging.product_form',
+          'packaging.package_type',
+          'packaging.package_quantity',
+          'packaging.packaging_detail',
+          'packaging.mrp',
+          'medical_info.composition',
+          'medical_info.primary_use',
+          'safety_warnings.is_rx_required',
+          'safety_warnings.is_controlled_substance',
+          'images',
+          'seo.url_slug',
+          'seo.seo_title',
+          'seo.seo_description',
         ]}
-        title="Products"
+        title="Product Master"
         onExport={handleExport}
       />
     </div>

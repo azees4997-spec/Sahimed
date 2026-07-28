@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     const db = client.db('sahimed');
     
     const userCount = await db.collection('users').countDocuments();
-    const productCount = await db.collection('products').countDocuments();
+    const productCount = await db.collection('Product Master').countDocuments();
     const orderCount = await db.collection('orders').countDocuments();
     
     return NextResponse.json({
