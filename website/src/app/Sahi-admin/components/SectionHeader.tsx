@@ -3,7 +3,19 @@
 import { ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export function SectionHeader({ title, subtitle, onBack, children }: { title: string, subtitle: string, onBack?: () => void, children?: React.ReactNode }) {
+export function SectionHeader({ title, subtitle, onBack, children, compact }: { title: string, subtitle: string, onBack?: () => void, children?: React.ReactNode, compact?: boolean }) {
+  if (compact) {
+    return (
+      <motion.div 
+        initial={{ y: -10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="flex justify-end gap-4 mb-6"
+      >
+        {children}
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div 
       initial={{ x: -20, opacity: 0 }}
