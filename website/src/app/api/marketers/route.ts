@@ -9,24 +9,27 @@ function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// Collection: "Marketer Master"
+// Fields: Marketer ID, Standardized Marketer Name, Product Count
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const qRaw = searchParams.get('q');
-    let limitValue = parseInt(searchParams.get('limit') || '50');
-    if (isNaN(limitValue) || limitValue < 1) limitValue = 50;
+    let limitValue = parseInt(searchParams.get('limit') || '500');
+    if (isNaN(limitValue) || limitValue < 1) limitValue = 500;
 
     const client = await clientPromise;
     const db = client.db('sahimed');
 
     const query: any = {};
     if (qRaw) {
-      query.name = { $regex: escapeRegExp(qRaw), $options: 'i' };
+      query['Standardized Marketer Name'] = { $regex: escapeRegExp(qRaw), $options: 'i' };
     }
 
-    const marketers = await db.collection('marketers')
+    const marketers = await db.collection('Marketer Master')
       .find(query)
-      .sort({ name: 1 })
+      .sort({ 'Standardized Marketer Name': 1 })
       .limit(limitValue)
       .toArray();
 
@@ -43,8 +46,14 @@ export async function POST(request: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
 
-    const result = await db.collection('marketers').insertOne({
-      name: body.name,
+    // Auto-generate Marketer ID
+    const count = await db.collection('Marketer Master').countDocuments();
+    const marketerId = `MKT${String(count + 1).padStart(5, '0')}`;
+
+    const result = await db.collection('Marketer Master').insertOne({
+      'Marketer ID': body['Marketer ID'] || marketerId,
+      'Standardized Marketer Name': body['Standardized Marketer Name'],
+      'Product Count': body['Product Count'] || '0',
       createdAt: new Date(),
       updatedAt: new Date()
     });

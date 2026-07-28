@@ -20,9 +20,16 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const client = await clientPromise;
     const db = client.db('sahimed');
 
-    await db.collection('marketers').updateOne(
+    await db.collection('Marketer Master').updateOne(
       getQuery(id),
-      { $set: { name: body.name, updatedAt: new Date() } }
+      { 
+        $set: { 
+          'Standardized Marketer Name': body['Standardized Marketer Name'],
+          'Marketer ID': body['Marketer ID'],
+          'Product Count': body['Product Count'],
+          updatedAt: new Date() 
+        } 
+      }
     );
 
     return NextResponse.json({ success: true });
@@ -38,7 +45,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const client = await clientPromise;
     const db = client.db('sahimed');
 
-    await db.collection('marketers').deleteOne(getQuery(id));
+    await db.collection('Marketer Master').deleteOne(getQuery(id));
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

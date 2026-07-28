@@ -4,6 +4,9 @@ import { verifyAdmin } from '@/lib/auth-utils';
 
 export const dynamic = 'force-dynamic';
 
+// Collection: "Marketer Master"
+// Fields: Marketer ID, Standardized Marketer Name, Product Count
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -11,9 +14,12 @@ export async function GET(request: Request) {
     
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const marketers = await db.collection('marketers').find({}).toArray();
+    const marketers = await db.collection('Marketer Master').find({}).toArray();
 
-    const headers = fieldsParam ? fieldsParam.split(',').map(f => f.trim()) : ['name'];
+    const availableFields = ['Marketer ID', 'Standardized Marketer Name', 'Product Count'];
+    const headers = fieldsParam 
+      ? fieldsParam.split(',').map(f => f.trim()).filter(f => availableFields.includes(f))
+      : availableFields;
 
     const csvContent = [
       headers.join(','),
@@ -32,7 +38,7 @@ export async function GET(request: Request) {
     return new Response(csvContent, {
       headers: {
         'Content-Type': 'text/csv',
-        'Content-Disposition': 'attachment; filename=sahimed_marketers_export.csv'
+        'Content-Disposition': 'attachment; filename=sahimed_marketer_master_export.csv'
       }
     });
   } catch (err: any) {
@@ -46,17 +52,24 @@ export async function POST(request: Request) {
     const marketers = await request.json();
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const marketersCol = db.collection('marketers');
+    const col = db.collection('Marketer Master');
 
     const ops = marketers.map((m: any) => ({
       updateOne: {
-        filter: { name: m.name },
-        update: { $set: { name: m.name, updatedAt: new Date() } },
+        filter: { 'Standardized Marketer Name': m['Standardized Marketer Name'] },
+        update: { 
+          $set: { 
+            'Standardized Marketer Name': m['Standardized Marketer Name'],
+            'Marketer ID': m['Marketer ID'] || '',
+            'Product Count': m['Product Count'] || '0',
+            updatedAt: new Date() 
+          } 
+        },
         upsert: true
       }
     }));
 
-    await marketersCol.bulkWrite(ops);
+    await col.bulkWrite(ops);
 
     return NextResponse.json({ success: true, count: marketers.length });
   } catch (err: any) {
