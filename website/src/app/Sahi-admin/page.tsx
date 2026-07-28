@@ -350,7 +350,7 @@ function AdminConsoleContent() {
             <div className="flex items-center gap-3">
               <Link href="/" className="group flex items-center gap-2">
                 <div className="relative w-8 h-8 rounded-lg overflow-hidden group-hover:scale-105 transition-transform duration-300">
-                  <Image src="/icon.png" alt="SahiMed Logo" fill className="object-contain" />
+                  <Image src="/logo.png" alt="SahiMed Logo" fill className="object-contain" />
                 </div>
                 <div className="hidden sm:block">
                   <h1 className="text-sm font-black tracking-tight text-slate-900 uppercase font-outfit leading-none">SahiMed</h1>
