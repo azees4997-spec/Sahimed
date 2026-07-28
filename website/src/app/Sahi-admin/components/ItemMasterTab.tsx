@@ -730,20 +730,8 @@ function ItemForm({ initialData, onSuccess }: { initialData?: any, onSuccess: ()
         </TabsContent>
 
         <TabsContent value="packaging" className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label className="text-[10px] font-black uppercase text-slate-500">Package Type</Label>
-              <Input value={form['packaging.package_type']} onChange={e => setForm({...form, 'packaging.package_type': e.target.value})} placeholder="e.g. Strip / Bottle" className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-[10px] font-black uppercase text-slate-500">Product Form</Label>
-              <Input value={form['packaging.product_form']} onChange={e => setForm({...form, 'packaging.product_form': e.target.value})} placeholder="e.g. Tablet" className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-[10px] font-black uppercase text-slate-500">Package Quantity</Label>
-              <Input type="number" value={form['packaging.package_quantity']} onChange={e => setForm({...form, 'packaging.package_quantity': Number(e.target.value)})} className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
-            </div>
-            <div className="col-span-2 space-y-1">
               <Label className="text-[10px] font-black uppercase text-slate-500">Packaging Detail</Label>
               <Input value={form['packaging.packaging_detail']} onChange={e => setForm({...form, 'packaging.packaging_detail': e.target.value})} placeholder="e.g. strip of 10 tablets" className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
             </div>
