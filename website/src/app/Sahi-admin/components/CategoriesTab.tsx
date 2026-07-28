@@ -31,18 +31,37 @@ import {
 import { generateSlug } from '@/lib/utils';
 import { doc, collection, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { SectionHeader } from './SectionHeader';
+import { ExportFieldsDialog } from './ExportFieldsDialog';
+import { Download } from 'lucide-react';
 
 export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const catsQuery = useMemoFirebase(() => isVerified ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db, isVerified]);
   const { data: categories, isLoading } = useCollection(catsQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const [editingCat, setEditingCat] = useState<any>(null);
   const { user } = useUser();
   const { toast } = useToast();
 
+  const handleExport = (selectedFields: string[]) => {
+    const queryParams = new URLSearchParams({
+      fields: selectedFields.join(',')
+    });
+    window.open(`/api/categories/bulk?${queryParams.toString()}`, '_blank');
+  };
+
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
-      <SectionHeader title="Category architecture" subtitle="Manage therapeutic classification" onBack={onBack}><Button onClick={() => { setEditingCat(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] bg-primary text-white"><Plus className="w-4 h-4" /> Add category</Button></SectionHeader>
+      <SectionHeader title="Category architecture" subtitle="Manage therapeutic classification" onBack={onBack}>
+        <div className="flex gap-3">
+          <Button onClick={() => setIsExportOpen(true)} variant="outline" className="rounded-full h-12 px-6 font-black text-[10px] gap-2 border-slate-200">
+            <Download className="w-3.5 h-3.5" /> Export CSV
+          </Button>
+          <Button onClick={() => { setEditingCat(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[10px] bg-primary text-white">
+            <Plus className="w-4 h-4" /> Add category
+          </Button>
+        </div>
+      </SectionHeader>
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -94,7 +113,7 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
         </div>
       </Card>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden">
+        <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden bg-white">
           <DialogHeader className="bg-primary p-8 text-white space-y-2">
             <DialogTitle className="text-2xl font-black text-white">Category definition</DialogTitle>
             <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest uppercase">
@@ -106,6 +125,13 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
           </div>
         </DialogContent>
       </Dialog>
+      <ExportFieldsDialog
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        fields={['name', 'imageUrl', 'order']}
+        title="Categories"
+        onExport={handleExport}
+      />
     </div>
   );
 }

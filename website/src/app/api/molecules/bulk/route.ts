@@ -5,13 +5,16 @@ import { getDbAdmin } from '@/lib/firebase-admin';
 import * as admin from 'firebase-admin';
 import { generateSlug } from '@/lib/slug';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const fieldsParam = searchParams.get('fields');
+
     const client = await clientPromise;
     const db = client.db('sahimed');
     const molecules = await db.collection('molecules').find({}).toArray();
 
-    const headers = ['molecule', 'masterId', 'form'];
+    const headers = fieldsParam ? fieldsParam.split(',').map(f => f.trim()) : ['molecule', 'masterId', 'form'];
 
     const csvContent = [
       headers.join(','),

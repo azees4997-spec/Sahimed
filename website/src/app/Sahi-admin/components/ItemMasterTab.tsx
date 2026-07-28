@@ -54,11 +54,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMongoDBCollection } from '@/hooks/use-mongodb';
 import { motion } from 'framer-motion';
 import { SectionHeader } from './SectionHeader';
+import { ExportFieldsDialog } from './ExportFieldsDialog';
 
 export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -81,8 +83,11 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
     a.click();
   };
 
-  const handleExport = async () => {
-    window.open('/api/products/bulk', '_blank');
+  const handleExport = (selectedFields: string[]) => {
+    const queryParams = new URLSearchParams({
+      fields: selectedFields.join(',')
+    });
+    window.open(`/api/products/bulk?${queryParams.toString()}`, '_blank');
   };
 
   const [importProgress, setImportProgress] = useState<{ current: number, total: number } | null>(null);
@@ -314,7 +319,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
           <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full h-14 px-8 font-black text-[12px] border-2 gap-3 text-primary border-primary/20 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
             <Upload className="w-4 h-4" /> Bulk Upload
           </Button>
-          <Button onClick={handleExport} variant="outline" className="rounded-full h-14 px-8 font-black text-[12px] border-2 gap-3 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
+          <Button onClick={() => setIsExportOpen(true)} variant="outline" className="rounded-full h-14 px-8 font-black text-[12px] border-2 gap-3 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
             <Download className="w-4 h-4" /> Export Matrix
           </Button>
           <Button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="rounded-full h-14 px-10 font-black text-[12px] bg-primary text-white shadow-2xl shadow-primary/30 uppercase tracking-widest hover:scale-105 transition-all border-4 border-white active:scale-95">
@@ -457,7 +462,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
       </Card>
 
       <Dialog open={isFormOpen} onOpenChange={isFormOpen => setIsFormOpen(isFormOpen)}>
-        <DialogContent className="rounded-[40px] max-w-5xl border-none p-0 overflow-hidden">
+        <DialogContent className="rounded-[40px] max-w-5xl border-none p-0 overflow-hidden bg-white">
           <DialogHeader className="bg-primary p-8 text-white space-y-2">
             <DialogTitle className="text-2xl font-black text-white">Product profile</DialogTitle>
             <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest uppercase">
@@ -466,18 +471,29 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
           </DialogHeader>
           <div className="p-8 max-h-[80vh] overflow-y-auto scrollbar-hide">
             {isFormOpen && (
-        <ItemForm 
-          db={db} 
-          initialData={editingItem} 
-          onSuccess={() => {
-            setIsFormOpen(false);
-            refetch?.();
-          }} 
-        />
-      )}
+              <ItemForm 
+                db={db} 
+                initialData={editingItem} 
+                onSuccess={() => {
+                  setIsFormOpen(false);
+                  refetch?.();
+                }} 
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
+
+      <ExportFieldsDialog
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        fields={[
+          'name', 'sku', 'manufacturer', 'category', 'hsnCode', 'gstPercentage', 'isGeneric', 'isBestSeller', 'prescriptionRequired', 'packSize', 'imageUrl', 'imageUrl2', 'imageUrl3', 'description', 'treatment', 
+          'safetyAdvice', 'howToUse', 'saltComposition', 'moleculeCode', 'price', 'mrp', 'availableQuantity'
+        ]}
+        title="Products"
+        onExport={handleExport}
+      />
     </div>
   );
 }

@@ -1,16 +1,21 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const fieldsParam = searchParams.get('fields');
+    
     const client = await clientPromise;
     const db = client.db('sahimed');
     const products = await db.collection('products').find({}).toArray();
 
-    const headers = [
+    const DEFAULT_HEADERS = [
       'name', 'sku', 'manufacturer', 'category', 'isGeneric', 'isBestSeller', 'prescriptionRequired', 'packSize', 'imageUrl', 'imageUrl2', 'imageUrl3', 'description', 'treatment', 
       'safetyAdvice', 'howToUse', 'saltComposition', 'moleculeCode', 'price', 'mrp', 'availableQuantity'
     ];
+
+    const headers = fieldsParam ? fieldsParam.split(',').map(f => f.trim()) : DEFAULT_HEADERS;
 
     const csvContent = [
       headers.join(','),
@@ -18,7 +23,7 @@ export async function GET() {
         return headers.map(h => {
           let val = '';
           if (h === 'moleculeCode') {
-            val = p.moleculeId || ''; // This should ideally be the masterId, but we'll export what we have
+            val = p.moleculeId || '';
           } else if (h === 'imageUrl2') {
             val = p.imageUrls?.[1] || '';
           } else if (h === 'imageUrl3') {

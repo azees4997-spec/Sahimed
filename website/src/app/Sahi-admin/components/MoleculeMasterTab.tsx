@@ -46,12 +46,14 @@ import {
 } from '@/firebase';
 import { doc, collection, query, orderBy, serverTimestamp, limit } from 'firebase/firestore';
 import { SectionHeader } from './SectionHeader';
+import { ExportFieldsDialog } from './ExportFieldsDialog';
 
 export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const [molecules, setMolecules] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const [editingMol, setEditingMol] = useState<any>(null);
   const { user } = useUser();
   const { toast } = useToast();
@@ -88,8 +90,11 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
     a.click();
   };
 
-  const handleExport = () => {
-    window.open('/api/molecules/bulk', '_blank');
+  const handleExport = (selectedFields: string[]) => {
+    const queryParams = new URLSearchParams({
+      fields: selectedFields.join(',')
+    });
+    window.open(`/api/molecules/bulk?${queryParams.toString()}`, '_blank');
   };
 
   const [importProgress, setImportProgress] = useState<{ current: number, total: number } | null>(null);
@@ -353,9 +358,9 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
            <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full h-12 px-6 font-black text-[12px] border-2 gap-2 text-primary border-primary/20 uppercase tracking-widest hover:bg-white transition-all">
              <Upload className="w-3.5 h-3.5" /> Bulk Import
            </Button>
-           <Button onClick={handleExport} variant="outline" className="rounded-full h-12 px-6 font-black text-[12px] border-2 gap-2 uppercase tracking-widest hover:bg-white transition-all">
-             <Download className="w-3.5 h-3.5" /> Export
-           </Button>
+            <Button onClick={() => setIsExportOpen(true)} variant="outline" className="rounded-full h-12 px-6 font-black text-[12px] border-2 gap-2 uppercase tracking-widest hover:bg-white transition-all">
+              <Download className="w-3.5 h-3.5" /> Export
+            </Button>
            <div className="w-px h-8 bg-slate-200 mx-2" />
            <Button onClick={() => { setEditingMol(null); setIsFormOpen(true); }} className="rounded-full h-12 px-8 font-black text-[12px] bg-primary text-white"><Plus className="w-4 h-4" /> New Ingredient</Button>
         </div>
@@ -481,7 +486,7 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
         </div>
       </Card>
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden">
+        <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden bg-white">
           <DialogHeader className="bg-primary p-8 text-white space-y-2">
             <DialogTitle className="text-2xl font-black text-white">Ingredient Settings</DialogTitle>
             <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest uppercase">
@@ -493,6 +498,13 @@ export function MoleculeMasterTab({ db, isVerified, onBack }: { db: any, isVerif
           </div>
         </DialogContent>
       </Dialog>
+      <ExportFieldsDialog
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        fields={['molecule', 'masterId', 'form']}
+        title="Molecules"
+        onExport={handleExport}
+      />
     </div>
   );
 }
