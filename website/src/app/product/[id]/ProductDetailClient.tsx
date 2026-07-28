@@ -620,9 +620,9 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
     <PageTransition>
       <div className="min-h-screen bg-[#F8FAFC] pb-32">
         <Navbar />
-        <main className="max-w-[1000px] mx-auto px-2 sm:px-10 py-1 sm:py-6" key={id}>
+        <main className="max-w-[1280px] mx-auto px-4 sm:px-12 py-6 sm:py-10" key={id}>
           {/* Breadcrumbs for SEO */}
-          <div className="text-[9px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mb-4 px-2 flex items-center gap-1.5 justify-start">
+          <div className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mb-6 px-2 flex items-center gap-1.5 justify-start">
             <Link href="/" className="hover:text-primary transition-colors">Home</Link>
             <span>/</span>
             <Link href="/medicines" className="hover:text-primary transition-colors">Medicines</Link>
@@ -630,39 +630,32 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
             <span className="text-slate-600 font-black truncate max-w-[150px] sm:max-w-none">{product?.name}</span>
           </div>
 
-          <div className="flex flex-row items-center justify-center mb-1 sm:mb-4 gap-4 px-2">
-            {(product?.prescriptionRequired || product?.rxRequired) && (
-              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                <Badge className="bg-rose-500 text-white border-none rounded-full font-black text-[7px] sm:text-[9px] px-2 py-0.5 sm:py-1 tracking-widest shadow-lg shadow-rose-500/20 uppercase shrink-0">
-                  RX REQUIRED
-                </Badge>
-              </motion.div>
-            )}
-          </div>
-
-          <div className="flex flex-col items-center justify-center mb-2 sm:mb-6 text-center px-2">
-            <motion.div
-              initial={{ y: 5, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="inline-flex flex-col items-center gap-0.5 sm:gap-1"
-            >
-              <h2 className="text-[8px] sm:text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase mb-0">Salt Composition</h2>
-              <span className="text-xs md:text-xl font-black text-slate-900 tracking-tighter font-outfit uppercase leading-tight max-w-2xl px-2 line-clamp-1">
-                {molData?.molecule || molData?.name || product?.saltComposition || product?.composition || product?.salt || product?.molecule || "Information coming soon"}
-              </span>
-            </motion.div>
+          <div className="flex flex-col items-start mb-6 px-2">
+            <div className="flex flex-row items-center gap-3 mb-2">
+              {(product?.prescriptionRequired || product?.rxRequired) && (
+                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                  <Badge className="bg-rose-500 text-white border-none rounded-md font-black text-[8px] sm:text-[10px] px-2.5 py-1 tracking-widest shadow-lg shadow-rose-500/25 uppercase shrink-0">
+                    RX REQUIRED
+                  </Badge>
+                </motion.div>
+              )}
+            </div>
+            <h2 className="text-[9px] sm:text-[11px] font-black text-slate-400 tracking-[0.2em] uppercase mb-1">Salt Composition</h2>
+            <span className="text-sm md:text-2xl font-black text-slate-800 tracking-tight font-outfit uppercase leading-tight max-w-4xl text-left">
+              {molData?.molecule || molData?.name || product?.saltComposition || product?.composition || product?.salt || product?.molecule || "Information coming soon"}
+            </span>
           </div>
 
           {showComparison && switchSavingsAmt > 0 && (
             <motion.div
               initial={{ scale: 0.98, opacity: 0, y: -5 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              className="mb-2 sm:mb-6 px-2"
+              className="mb-6 px-2"
             >
-              <div className="bg-gradient-to-r from-primary to-accent text-white py-1.5 sm:py-2.5 px-4 sm:px-8 rounded-[12px] sm:rounded-[20px] shadow-lg flex items-center justify-center gap-2 text-center">
-                <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-bounce" />
-                <h2 className="text-[8px] sm:text-[11px] font-black tracking-widest uppercase line-clamp-1">
-                  Switch and save ₹{Number(switchSavingsAmt).toFixed(0)} • Same Medicine
+              <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-2 sm:py-3.5 px-6 sm:px-10 rounded-2xl shadow-md flex items-center justify-start gap-3">
+                <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 animate-bounce" />
+                <h2 className="text-[9px] sm:text-[13px] font-black tracking-wider uppercase">
+                  Switch to Recommended option & save ₹{Number(switchSavingsAmt).toFixed(0)} (Same composition)
                 </h2>
               </div>
             </motion.div>
