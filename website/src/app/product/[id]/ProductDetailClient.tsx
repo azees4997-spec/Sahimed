@@ -878,6 +878,45 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
               </div>
             </div>
 
+            {/* Safety Warnings Accordions */}
+            {product?.safety_warnings && (
+              <div className="space-y-4">
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest">Detailed Warning & Precautions</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {product.safety_warnings.pregnancy && (
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <h5 className="text-[10px] font-black text-slate-800 uppercase mb-1">Pregnancy Safety</h5>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase leading-relaxed">{product.safety_warnings.pregnancy}</p>
+                    </div>
+                  )}
+                  {product.safety_warnings.lactation && (
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <h5 className="text-[10px] font-black text-slate-800 uppercase mb-1">Lactation/Breastfeeding</h5>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase leading-relaxed">{product.safety_warnings.lactation}</p>
+                    </div>
+                  )}
+                  {product.safety_warnings.driving && (
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <h5 className="text-[10px] font-black text-slate-800 uppercase mb-1">Driving Safety</h5>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase leading-relaxed">{product.safety_warnings.driving}</p>
+                    </div>
+                  )}
+                  {product.safety_warnings.kidney && (
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <h5 className="text-[10px] font-black text-slate-800 uppercase mb-1">Kidney Interaction</h5>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase leading-relaxed">{product.safety_warnings.kidney}</p>
+                    </div>
+                  )}
+                  {product.safety_warnings.liver && (
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <h5 className="text-[10px] font-black text-slate-800 uppercase mb-1">Liver Interaction</h5>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase leading-relaxed">{product.safety_warnings.liver}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-4">
               <h4 className="text-xs font-black uppercase text-primary tracking-widest">Frequently Asked Questions</h4>
               <div className="space-y-3">
