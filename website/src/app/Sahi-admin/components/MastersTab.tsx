@@ -3,14 +3,15 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, Tag, Users, Dna, ArrowLeft } from 'lucide-react';
+import { Package, Tag, Users, Dna, ArrowLeft, Truck } from 'lucide-react';
 import { ItemMasterTab } from './ItemMasterTab';
 import { CategoriesTab } from './CategoriesTab';
 import { MarketersTab } from './MarketersTab';
 import { MoleculeMasterTab } from './MoleculeMasterTab';
+import { SuppliersTab } from './SuppliersTab';
 
 export function MastersTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
-  const [activeSubTab, setActiveSubTab] = useState<'products' | 'categories' | 'marketers' | 'molecules'>('products');
+  const [activeSubTab, setActiveSubTab] = useState<'products' | 'categories' | 'marketers' | 'molecules' | 'suppliers'>('products');
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
@@ -32,30 +33,36 @@ export function MastersTab({ db, isVerified, onBack }: { db: any, isVerified: bo
         onValueChange={(v: any) => setActiveSubTab(v)} 
         className="space-y-8"
       >
-        <TabsList className="bg-white/80 backdrop-blur-md p-2 rounded-[32px] h-20 shadow-lg border border-white flex gap-2 w-full max-w-2xl">
+        <TabsList className="bg-white/80 backdrop-blur-md p-2 rounded-[32px] h-20 shadow-lg border border-white flex gap-2 w-full max-w-4xl">
           <TabsTrigger 
             value="products"
-            className="flex-1 rounded-[24px] font-black text-xs uppercase tracking-wider gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300"
+            className="flex-1 rounded-[24px] font-black text-[11px] uppercase tracking-wider gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300"
           >
             <Package className="w-4 h-4" /> Products
           </TabsTrigger>
           <TabsTrigger 
             value="categories"
-            className="flex-1 rounded-[24px] font-black text-xs uppercase tracking-wider gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300"
+            className="flex-1 rounded-[24px] font-black text-[11px] uppercase tracking-wider gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300"
           >
             <Tag className="w-4 h-4" /> Categories
           </TabsTrigger>
           <TabsTrigger 
             value="marketers"
-            className="flex-1 rounded-[24px] font-black text-xs uppercase tracking-wider gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300"
+            className="flex-1 rounded-[24px] font-black text-[11px] uppercase tracking-wider gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300"
           >
             <Users className="w-4 h-4" /> Marketers
           </TabsTrigger>
           <TabsTrigger 
             value="molecules"
-            className="flex-1 rounded-[24px] font-black text-xs uppercase tracking-wider gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300"
+            className="flex-1 rounded-[24px] font-black text-[11px] uppercase tracking-wider gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300"
           >
             <Dna className="w-4 h-4" /> Molecules
+          </TabsTrigger>
+          <TabsTrigger 
+            value="suppliers"
+            className="flex-1 rounded-[24px] font-black text-[11px] uppercase tracking-wider gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300"
+          >
+            <Truck className="w-4 h-4" /> Suppliers
           </TabsTrigger>
         </TabsList>
 
@@ -70,6 +77,9 @@ export function MastersTab({ db, isVerified, onBack }: { db: any, isVerified: bo
         </TabsContent>
         <TabsContent value="molecules" className="outline-none">
           <MoleculeMasterTab db={db} isVerified={isVerified} onBack={onBack} />
+        </TabsContent>
+        <TabsContent value="suppliers" className="outline-none">
+          <SuppliersTab db={db} isVerified={isVerified} onBack={onBack} />
         </TabsContent>
       </Tabs>
     </div>
