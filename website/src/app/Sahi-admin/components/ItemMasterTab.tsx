@@ -533,7 +533,11 @@ function ItemForm({ initialData, onSuccess }: { initialData?: any, onSuccess: ()
     'safety_warnings.interactions.driving': initialData?.safety_warnings?.interactions?.driving || 'Unsafe',
     'safety_warnings.interactions.kidney': initialData?.safety_warnings?.interactions?.kidney || 'Consult Doctor',
     'safety_warnings.interactions.liver': initialData?.safety_warnings?.interactions?.liver || 'Unsafe',
-    'safety_warnings.interactions.safety_advise': initialData?.safety_warnings?.interactions?.safety_advise || '',
+    'safety_warnings.interactions.safety_advise': (initialData?.safety_warnings?.interactions?.safety_advise || '')
+      .replace(/<[^>]*>/g, '\n') // Replace HTML tags with newlines
+      .replace(/\|/g, '\n')      // Replace pipe characters with newlines
+      .replace(/\n\s*\n/g, '\n') // Normalize multiple newlines
+      .trim(),
 
     imageUrl: initialData?.images?.[0] || initialData?.imageUrl || '',
     'seo.url_slug': initialData?.seo?.url_slug || '',
