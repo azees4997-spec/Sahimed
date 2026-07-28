@@ -815,62 +815,92 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white rounded-[24px] sm:rounded-[48px] p-4 sm:p-12 shadow-sm border border-slate-100 overflow-hidden relative z-10"
+            className="bg-white rounded-[32px] p-6 sm:p-10 shadow-sm border border-slate-100 overflow-hidden relative z-10 space-y-12"
           >
-            <Tabs defaultValue="medical" className="w-full">
-              <TabsList className="bg-slate-50 p-1 rounded-full h-10 sm:h-14 w-full max-w-[500px] flex mx-auto mb-8 border border-slate-100 shadow-inner">
-                <TabsTrigger value="medical" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Information</TabsTrigger>
-                <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Safety Advice</TabsTrigger>
-                <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Interactions</TabsTrigger>
-              </TabsList>
+            <div className="border-b pb-6">
+              <h3 className="text-xl font-black text-slate-800 tracking-tight uppercase font-outfit">Product Information & Description</h3>
+            </div>
 
-              <TabsContent value="medical" className="space-y-10 focus-visible:outline-none">
-                <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-8">
-                  <ExpandableInfoTile
-                    icon={ClipboardList}
-                    title="Medical Uses"
-                    text={product?.treatment || "Standard medical use."}
-                    color="bg-lavender"
-                  />
-                  <ExpandableInfoTile
-                    icon={Info}
-                    title="Product Info"
-                    text={product?.description || "Medicine details."}
-                    color="bg-sahi-blue"
-                  />
+            <div className="space-y-4">
+              <h4 className="text-xs font-black uppercase text-primary tracking-widest">Overview</h4>
+              <p className="text-sm font-medium text-slate-650 leading-relaxed uppercase tracking-tight">
+                {product?.description || product?.introduction || "No description available."}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-xs font-black uppercase text-primary tracking-widest">Key Benefits</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <CheckCircle className="w-5 h-5 text-emerald-650 shrink-0 mt-0.5" />
+                  <div>
+                    <h5 className="text-xs font-black text-slate-800 uppercase">Effective action</h5>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase mt-1">Provides fast relief from pain and decreases fever symptoms.</p>
+                  </div>
                 </div>
-              </TabsContent>
+                <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <CheckCircle className="w-5 h-5 text-emerald-650 shrink-0 mt-0.5" />
+                  <div>
+                    <h5 className="text-xs font-black text-slate-855 uppercase">Trusted formulation</h5>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase mt-1">Doctor-trusted active ingredients designed for quick recovery.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-              <TabsContent value="safety" className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-8 focus-visible:outline-none">
-                <ExpandableInfoTile
-                  icon={AlertTriangle}
-                  title="Safety Advice"
-                  text={product?.safetyAdvice || "Follow medical guidance."}
-                  color="bg-sahi-pink"
-                  iconColor="text-rose-500"
-                  titleColor="text-rose-600"
-                />
-                <ExpandableInfoTile
-                  icon={Stethoscope}
-                  title="How to Use"
-                  text={product?.howToUse || "Take as directed by your doctor."}
-                  color="bg-sahi-blue"
-                />
-              </TabsContent>
+            <div className="space-y-4">
+              <h4 className="text-xs font-black uppercase text-primary tracking-widest">Safety Information</h4>
+              <div className="bg-slate-50/60 rounded-3xl overflow-hidden border border-slate-100">
+                <table className="w-full text-left text-xs">
+                  <tbody className="divide-y divide-slate-100">
+                    <tr>
+                      <td className="px-6 py-4 font-black text-slate-500 uppercase bg-slate-50/30 w-1/3">Composition</td>
+                      <td className="px-6 py-4 font-bold text-slate-700 uppercase">
+                        {molData?.molecule || molData?.name || product?.saltComposition || product?.composition || "Unavailable"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 font-black text-slate-500 uppercase bg-slate-50/30">Directions for use</td>
+                      <td className="px-6 py-4 font-bold text-slate-700 uppercase">{product?.howToUse || "Take as directed by doctor."}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 font-black text-slate-500 uppercase bg-slate-50/30">Storage instructions</td>
+                      <td className="px-6 py-4 font-bold text-slate-700 uppercase">{product?.storage_instructions || "Store in cool dry place away from sunlight."}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 font-black text-slate-500 uppercase bg-slate-50/30">Prescription Status</td>
+                      <td className="px-6 py-4 font-bold text-slate-700 uppercase">
+                        {product?.prescriptionRequired ? "PRESCRIPTION (Rx REQUIRED)" : "OTC (NON-PRESCRIPTION)"}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-              <TabsContent value="interactions" className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 focus-visible:outline-none">
-                {[
-                  { icon: FlaskConical, title: "Composition", text: product?.saltComposition, color: "bg-lavender" },
-                  { icon: Baby, title: "Pregnancy", text: product?.pregnancyInteraction, color: "bg-sahi-pink" },
-                  { icon: Milk, title: "Lactation", text: product?.lactationInteraction, color: "bg-sahi-blue" },
-                  { icon: Car, title: "Driving", text: product?.drivingInteraction, color: "bg-sahi-green" },
-                  { icon: Package, title: "Renal", text: product?.kidneyInteraction, color: "bg-lavender" },
-                  { icon: ShieldAlert, title: "Hepatic", text: product?.liverInteraction, color: "bg-slate-50" }
-                ].map((item, i) => (
-                  <InteractionCard key={i} item={item} />
-                ))}
-              </TabsContent>
-            </Tabs>
+            <div className="space-y-4">
+              <h4 className="text-xs font-black uppercase text-primary tracking-widest">Frequently Asked Questions</h4>
+              <div className="space-y-3">
+                <details className="group border border-slate-100 rounded-2xl bg-slate-50/40 p-4 cursor-pointer [&_summary::-webkit-details-marker]:hidden">
+                  <summary className="flex items-center justify-between font-black text-xs text-slate-700 uppercase">
+                    <span>What if I miss a dose?</span>
+                    <span className="transition-transform group-open:rotate-180"><ChevronDown className="w-4 h-4" /></span>
+                  </summary>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase mt-2 leading-relaxed">
+                    {product?.if_miss || "Take it as soon as you remember, unless it is close to your next scheduled dose."}
+                  </p>
+                </details>
+                <details className="group border border-slate-100 rounded-2xl bg-slate-50/40 p-4 cursor-pointer [&_summary::-webkit-details-marker]:hidden">
+                  <summary className="flex items-center justify-between font-black text-xs text-slate-700 uppercase">
+                    <span>Is this medicine safe for children?</span>
+                    <span className="transition-transform group-open:rotate-180"><ChevronDown className="w-4 h-4" /></span>
+                  </summary>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase mt-2 leading-relaxed">
+                    Always consult a pediatrician before administering this medication to children.
+                  </p>
+                </details>
+              </div>
+            </div>
           </motion.section>
         </main>
 
