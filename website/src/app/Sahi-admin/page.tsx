@@ -345,31 +345,31 @@ function AdminConsoleContent() {
       <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
         <OrderNotification />
         <header className="bg-white/40 backdrop-blur-2xl border-b border-white shadow-sm">
-          <div className="max-w-[1600px] mx-auto px-8 md:px-12 h-20 flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Link href="/" className="group flex items-center gap-3">
-                <div className="w-11 h-11 bg-primary rounded-xl shadow-md flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                  <Zap className="w-6 h-6 text-white fill-white" />
+          <div className="max-w-[1600px] mx-auto px-6 h-12 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Link href="/" className="group flex items-center gap-2">
+                <div className="relative w-8 h-8 rounded-lg overflow-hidden group-hover:scale-105 transition-transform duration-300">
+                  <Image src="/icon.png" alt="SahiMed Logo" fill className="object-contain" />
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-xl font-black tracking-tighter text-slate-900 uppercase font-outfit leading-none">SahiMed</h1>
-                  <p className="text-[9px] font-black text-slate-500 tracking-[0.4em] uppercase">Admin Dashboard 4.0</p>
+                  <h1 className="text-sm font-black tracking-tight text-slate-900 uppercase font-outfit leading-none">SahiMed</h1>
+                  <p className="text-[7px] font-black text-slate-400 tracking-[0.25em] uppercase">Dashboard</p>
                 </div>
               </Link>
             </div>
 
-            <div className="flex items-center gap-4">
-              <div className="hidden lg:flex flex-col items-end mr-4 border-r border-slate-200 pr-6">
-                 <p className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase">Session Active</p>
-                 <p className="text-xs font-black text-primary uppercase">{user?.email}</p>
+            <div className="flex items-center gap-3">
+              <div className="hidden lg:flex flex-col items-end mr-2 border-r border-slate-200 pr-4">
+                 <p className="text-[7px] font-black text-slate-400 tracking-[0.1em] uppercase">Session Active</p>
+                 <p className="text-[10px] font-black text-primary uppercase">{user?.email}</p>
               </div>
               <Button 
                 onClick={handleLogout}
                 variant="ghost" 
                 size="icon" 
-                className="w-11 h-11 rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-90"
+                className="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-90"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-3.5 h-3.5" />
               </Button>
             </div>
           </div>
