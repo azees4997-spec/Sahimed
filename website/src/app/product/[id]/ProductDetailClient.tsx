@@ -35,7 +35,9 @@ import {
   X,
   Share2,
   Send,
-  Copy
+  Copy,
+  CheckCircle,
+  ChevronDown
 } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';

@@ -372,60 +372,60 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[800px]">
-            <thead className="bg-gray-50 text-[12px] font-black text-gray-900 border-b uppercase tracking-tight">
+            <thead className="bg-gray-50 text-[11px] font-black text-gray-900 border-b uppercase tracking-tight">
               <tr>
-                <th className="px-10 py-8">Product detail</th>
-                <th className="px-10 py-8">Category</th>
-                <th className="px-10 py-8">Marketer / Manufacturer</th>
-                <th className="px-10 py-8 text-right">Manage</th>
+                <th className="px-5 py-3">Product detail</th>
+                <th className="px-5 py-3">Category</th>
+                <th className="px-5 py-3">Marketer / Manufacturer</th>
+                <th className="px-5 py-3 text-right">Manage</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 Array(5).fill(0).map((_, i) => (
                   <tr key={i}>
-                    <td className="px-10 py-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-100 animate-pulse rounded-2xl" />
-                        <div className="space-y-2">
-                          <div className="w-48 h-4 bg-slate-100 animate-pulse rounded-full" />
-                          <div className="w-32 h-2 bg-slate-50 animate-pulse rounded-full" />
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-slate-100 animate-pulse rounded-xl" />
+                        <div className="space-y-1.5">
+                          <div className="w-36 h-3 bg-slate-100 animate-pulse rounded-full" />
+                          <div className="w-24 h-2 bg-slate-50 animate-pulse rounded-full" />
                         </div>
                       </div>
                     </td>
-                    <td className="px-10 py-8"><div className="w-24 h-6 bg-slate-100 animate-pulse rounded-lg" /></td>
-                    <td className="px-10 py-8"><div className="w-32 h-6 bg-slate-100 animate-pulse rounded-lg" /></td>
-                    <td className="px-10 py-8 text-right"><div className="w-10 h-10 bg-slate-50 animate-pulse rounded-xl ml-auto" /></td>
+                    <td className="px-5 py-3"><div className="w-20 h-5 bg-slate-100 animate-pulse rounded-md" /></td>
+                    <td className="px-5 py-3"><div className="w-28 h-5 bg-slate-100 animate-pulse rounded-md" /></td>
+                    <td className="px-5 py-3 text-right"><div className="w-8 h-8 bg-slate-55 animate-pulse rounded-lg ml-auto" /></td>
                   </tr>
                 ))
               ) : medicines?.length === 0 ? (
-                <tr><td colSpan={4} className="p-20 text-center font-bold text-gray-300">No entries found</td></tr>
+                <tr><td colSpan={4} className="p-10 text-center font-bold text-gray-300">No entries found</td></tr>
               ) : medicines?.map(med => (
                 <tr key={med.id} className="hover:bg-gray-50/50">
-                  <td className="px-10 py-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border flex items-center justify-center overflow-hidden">
-                        {med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-6 h-6 text-gray-200" />}
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-50 rounded-xl p-1.5 border flex items-center justify-center overflow-hidden">
+                        {med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-5 h-5 text-gray-200" />}
                       </div>
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
-                          <span className="font-black text-sm">{med.name}</span>
+                          <span className="font-black text-xs">{med.name}</span>
                           {med.salable_status?.toLowerCase().includes('rx') && (
-                            <Badge variant="destructive" className="h-5 text-[9px] px-2 font-black uppercase">Rx Required</Badge>
+                            <Badge variant="destructive" className="h-4 text-[8px] px-1.5 font-black uppercase">Rx</Badge>
                           )}
                         </div>
-                        <span className="text-[11px] text-gray-500 font-bold uppercase">{med.sku}</span>
+                        <span className="text-[10px] text-gray-500 font-bold uppercase">{med.sku}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-10 py-8"><Badge variant="outline" className="font-black text-[11px] border-2">{med.category || '—'}</Badge></td>
-                  <td className="px-10 py-8 font-bold text-sm text-gray-700">{med.manufacturer || '—'}</td>
-                  <td className="px-10 py-8 text-right">
-                     <div className="flex justify-end gap-2">
-                       <Button variant="ghost" size="icon" onClick={() => { setEditingItem(med); setIsFormOpen(true); }}>
-                         <Edit2 className="w-4 h-4 text-gray-400" />
+                  <td className="px-5 py-3"><Badge variant="outline" className="font-black text-[10px] py-0 border-2">{med.category || '—'}</Badge></td>
+                  <td className="px-5 py-3 font-bold text-xs text-gray-700">{med.manufacturer || '—'}</td>
+                  <td className="px-5 py-3 text-right">
+                     <div className="flex justify-end gap-1">
+                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingItem(med); setIsFormOpen(true); }}>
+                         <Edit2 className="w-3.5 h-3.5 text-gray-400" />
                        </Button>
-                       <Button variant="ghost" size="icon" onClick={async () => {
+                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={async () => {
                           if (confirm("Delete this product?")) {
                             try {
                               const docId = med._id || med.id;
@@ -442,7 +442,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                             }
                           }
                        }}>
-                         <Trash2 className="w-4 h-4 text-red-300" />
+                         <Trash2 className="w-3.5 h-3.5 text-red-350" />
                        </Button>
                      </div>
                   </td>
