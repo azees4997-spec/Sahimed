@@ -1,60 +1,70 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
-import { revalidatePath } from 'next/cache';
+import { verifyAdmin } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
-import { getDbAdmin } from '@/lib/firebase-admin';
-import { CATEGORIES } from '@/lib/data';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-// GET all categories
+// Helper to escape regex search query
+function escapeRegExp(string: string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  let limitValue = parseInt(searchParams.get('limit') || '50');
-  if (isNaN(limitValue) || limitValue < 1) limitValue = 50;
-  if (limitValue > 100) limitValue = 100;
+  const qRaw = searchParams.get('q');
+  let limitValue = parseInt(searchParams.get('limit') || '500');
+  if (isNaN(limitValue) || limitValue < 1) limitValue = 500;
 
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
     
-    const categories = await db.collection('categories')
-      .find({})
-      .sort({ name: 1 })
+    const query: any = {};
+    if (qRaw) {
+      query.$or = [
+        { category: { $regex: escapeRegExp(qRaw), $options: 'i' } },
+        { sub_category: { $regex: escapeRegExp(qRaw), $options: 'i' } },
+        { category_id: { $regex: escapeRegExp(qRaw), $options: 'i' } }
+      ];
+    }
+
+    const categories = await db.collection('Category Master')
+      .find(query)
+      .sort({ category: 1 })
       .limit(limitValue)
       .toArray();
 
-    return NextResponse.json(categories.map(c => ({ ...c, id: c._id.toString() })));
+    // Map `_id` to `id` for compatibility
+    return NextResponse.json(categories.map(c => ({
+      ...c,
+      id: c._id?.toString(),
+      // Backward compatibility aliases
+      name: c.category
+    })));
   } catch (err: any) {
-    console.error("[Categories API Error] MongoDB failed, falling back to static CATEGORIES", err);
-    const fallbackCategories = CATEGORIES.map((cat, idx) => ({
-      _id: `fallback-cat-${idx}`,
-      id: `fallback-cat-${idx}`,
-      name: cat.name,
-      imageUrl: cat.imageUrl,
-      description: cat.description,
-      isFallback: true
-    }));
-    return NextResponse.json(fallbackCategories);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
-// POST new category
 export async function POST(request: Request) {
   try {
+    await verifyAdmin(request);
     const body = await request.json();
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const result = await db.collection('categories').insertOne({
-      ...body,
+
+    const result = await db.collection('Category Master').insertOne({
+      category_id: body.category_id,
+      category: body.category,
+      sub_category: body.sub_category,
+      product_count: body.product_count || '0',
+      source_catalog: body.source_catalog || 'OTC',
       createdAt: new Date(),
       updatedAt: new Date()
     });
-    
-    // Invalidate caches
-    revalidatePath('/');
-    revalidatePath('/categories');
-    
+
     return NextResponse.json({ success: true, id: result.insertedId });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

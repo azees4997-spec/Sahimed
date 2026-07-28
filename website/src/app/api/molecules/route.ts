@@ -1,110 +1,49 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
-import { getDbAdmin } from '@/lib/firebase-admin';
-import * as admin from 'firebase-admin';
 import { ObjectId } from 'mongodb';
-import { generateSlug } from '@/lib/slug';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const getQuery = (id: string) => {
-  try {
-    if (id.length === 24) return { _id: new ObjectId(id) };
-  } catch (e) {}
-  return { _id: id as any };
-};
-
+// Helper to escape regex search query
 function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const qRaw = searchParams.get('q');
-    const q = qRaw ? escapeRegExp(qRaw) : null;
-    let limitValue = parseInt(searchParams.get('limit') || '50');
-    if (isNaN(limitValue) || limitValue < 1) limitValue = 50;
-    if (limitValue > 500) limitValue = 500;
+  const { searchParams } = new URL(request.url);
+  const qRaw = searchParams.get('q');
+  let limitValue = parseInt(searchParams.get('limit') || '500');
+  if (isNaN(limitValue) || limitValue < 1) limitValue = 500;
 
+  try {
     const client = await clientPromise;
     const db = client.db('sahimed');
     
-    let query: any = {};
-    const terms = qRaw ? qRaw.replace(/[()]/g, ' ').split(/\s+/).filter(t => t.length > 0) : [];
-    
-    if (terms.length > 0) {
-      // Strict match: ALL terms in the query must be present in the molecule name
-      query = { 
-        $or: [
-          { 
-            $and: terms.map(t => ({ molecule: { $regex: escapeRegExp(t), $options: 'i' } })) 
-          },
-          { masterId: { $regex: qRaw || "", $options: 'i' } }
-        ]
-      };
+    const query: any = {};
+    if (qRaw) {
+      query.$or = [
+        { Composition: { $regex: escapeRegExp(qRaw), $options: 'i' } },
+        { 'Molecule Code': { $regex: escapeRegExp(qRaw), $options: 'i' } }
+      ];
     }
 
-    let molecules = await db.collection('molecules')
-      .aggregate([
-        { $match: query },
-        {
-          $addFields: {
-            isCombination: {
-              $regexMatch: { 
-                input: "$molecule", 
-                regex: /[\+\&]| and /i 
-              }
-            }
-          }
-        },
-        { 
-          $sort: { 
-            isCombination: 1, // false (0) first, then true (1)
-            molecule: 1 
-          } 
-        },
-        { $limit: limitValue }
-      ]).toArray();
+    const molecules = await db.collection('Molecule Master')
+      .find(query)
+      .sort({ Composition: 1 })
+      .limit(limitValue)
+      .toArray();
 
-    // FUZZY FALLBACK: If no results found with strict Match All, try Match Any
-    if (molecules.length === 0 && terms.length > 1) {
-      const fuzzyQuery = { molecule: { $regex: terms.join('|'), $options: 'i' } };
-      molecules = await db.collection('molecules')
-        .aggregate([
-          { $match: fuzzyQuery },
-          { $addFields: { isCombination: { $regexMatch: { input: "$molecule", regex: /[\+\&]| and /i } }, isFuzzy: true } },
-          { $sort: { isCombination: 1, molecule: 1 } },
-          { $limit: limitValue }
-        ]).toArray();
-    }
-
-    // --- AUTOMATIC SEARCH ANALYTICS LOGGING ---
-    if (qRaw && qRaw.length >= 2) {
-      try {
-        const analyticsCol = db.collection('searchAnalytics');
-        analyticsCol.insertOne({
-          keyword: qRaw,
-          userId: searchParams.get('userId') || null,
-          mobile: searchParams.get('mobile') || 'Anonymous',
-          platform: searchParams.get('platform') || (request.headers.get('user-agent')?.includes('Dart') ? 'mobile' : 'web'),
-          resultsCount: molecules.length,
-          timestamp: new Date(),
-          autoCaptured: true,
-          type: 'molecule'
-        }).catch(err => console.error("[Analytics Molecule Background Error]", err));
-      } catch (e) {
-        console.error("[Molecule Search Analytics Auto-Log Failed]", e);
-      }
-    }
-
-    return NextResponse.json(molecules.map(m => ({ ...m, id: m._id.toString() })), {
-      headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60',
-      },
-    });
+    // Map fields for backward compatibility
+    return NextResponse.json(molecules.map(m => ({
+      ...m,
+      id: m._id?.toString(),
+      // Legacy UI mapping aliases
+      molecule: m.Composition,
+      masterId: m['Molecule Code'],
+      form: m['Product Form']
+    })));
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -114,31 +53,18 @@ export async function POST(request: Request) {
   try {
     await verifyAdmin(request);
     const body = await request.json();
-    const { id, _id, ...rest } = body;
     const client = await clientPromise;
     const db = client.db('sahimed');
-    
-    // Use consistent ID generation
-    const finalId = id || _id || generateSlug(`${rest.molecule}-${rest.form}`);
-    
-    const result = await db.collection('molecules').updateOne(
-      { _id: finalId },
-      { $set: { ...rest, _id: finalId, createdAt: new Date(), updatedAt: new Date() } },
-      { upsert: true }
-    );
 
-    // Sync to Firestore
-    try {
-      const firestore = getDbAdmin();
-      await firestore.collection('moleculeMaster').doc(finalId).set({
-        ...rest,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-    } catch (fsErr) {
-      console.error("[Firestore Sync Error]", fsErr);
-    }
+    const result = await db.collection('Molecule Master').insertOne({
+      'Molecule Code': body['Molecule Code'],
+      Composition: body.Composition,
+      'Product Form': body['Product Form'] || '',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
 
-    return NextResponse.json({ success: true, id: finalId });
+    return NextResponse.json({ success: true, id: result.insertedId });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

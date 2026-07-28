@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
-import { getDbAdmin } from '@/lib/firebase-admin';
-import * as admin from 'firebase-admin';
-import { generateSlug } from '@/lib/slug';
+
+export const dynamic = 'force-dynamic';
+
+const MOLECULE_FIELDS = ['Molecule Code', 'Composition', 'Product Form'];
 
 export async function GET(request: Request) {
   try {
@@ -12,9 +13,11 @@ export async function GET(request: Request) {
 
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const molecules = await db.collection('molecules').find({}).toArray();
+    const molecules = await db.collection('Molecule Master').find({}).toArray();
 
-    const headers = fieldsParam ? fieldsParam.split(',').map(f => f.trim()) : ['molecule', 'masterId', 'form'];
+    const headers = fieldsParam 
+      ? fieldsParam.split(',').map(f => f.trim()).filter(f => MOLECULE_FIELDS.includes(f)) 
+      : MOLECULE_FIELDS;
 
     const csvContent = [
       headers.join(','),
@@ -33,10 +36,9 @@ export async function GET(request: Request) {
     return new Response(csvContent, {
       headers: {
         'Content-Type': 'text/csv',
-        'Content-Disposition': 'attachment; filename=sahimed_molecules_export.csv'
+        'Content-Disposition': 'attachment; filename=sahimed_molecule_master_export.csv'
       }
     });
-
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -44,103 +46,31 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    // 1. Authorize the user
-    try {
-      await verifyAdmin(request);
-    } catch (authErr: any) {
-      console.error("[Bulk Auth Error]", authErr.message);
-      return NextResponse.json({ error: "Authorization failed", details: authErr.message }, { status: 401 });
-    }
-
+    await verifyAdmin(request);
     const molecules = await request.json();
-    
-    if (!Array.isArray(molecules)) {
-      return NextResponse.json({ error: "Invalid data format. Expected an array." }, { status: 400 });
-    }
-
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const moleculesCol = db.collection('molecules');
+    const col = db.collection('Molecule Master');
 
-    // 2. Prepare MongoDB Bulk Ops with Validation
-    const ops = molecules.map((m: any, index: number) => {
-      const { id, _id, ...rest } = m;
-      
-      if (!m.molecule || !m.form) {
-        throw new Error(`Row ${index + 1}: 'molecule' and 'form' are mandatory fields.`);
+    const ops = molecules.map((m: any) => ({
+      updateOne: {
+        filter: { 'Molecule Code': m['Molecule Code'] },
+        update: { 
+          $set: { 
+            'Molecule Code': m['Molecule Code'],
+            Composition: m.Composition,
+            'Product Form': m['Product Form'] || '',
+            updatedAt: new Date() 
+          } 
+        },
+        upsert: true
       }
+    }));
 
-      const filterId = id || _id || generateSlug(`${m.molecule}-${m.form}`);
-      
-      return {
-        updateOne: {
-          filter: { _id: filterId },
-          update: { 
-            $set: { 
-              ...rest, 
-              _id: filterId,
-              updatedAt: new Date() 
-            }
-          },
-          upsert: true
-        }
-      };
-    });
+    await col.bulkWrite(ops);
 
-    // 3. Execute MongoDB Bulk
-    let writeErrors: any[] = [];
-    if (ops.length > 0) {
-      try {
-        await moleculesCol.bulkWrite(ops, { ordered: false });
-      } catch (err: any) {
-        if (err.writeErrors) {
-          writeErrors = err.writeErrors.map((e: any) => ({
-            molecule: molecules[e.index]?.molecule || "Unknown",
-            reason: e.errmsg
-          }));
-        } else {
-          throw err;
-        }
-      }
-    }
-
-    // 4. Sync to Firestore using Admin SDK (Batching)
-    try {
-      const firestore = getDbAdmin();
-      const BATCH_SIZE = 400;
-      
-      for (let i = 0; i < molecules.length; i += BATCH_SIZE) {
-        const batch = firestore.batch();
-        const chunk = molecules.slice(i, i + BATCH_SIZE);
-        
-        chunk.forEach((m: any) => {
-          const docId = m.id || m._id || generateSlug(`${m.molecule}-${m.form}`);
-          const docRef = firestore.collection('moleculeMaster').doc(docId);
-          batch.set(docRef, {
-            ...m,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-        });
-        
-        await batch.commit();
-      }
-    } catch (fsErr: any) {
-      console.error("[Firestore Sync Error]", fsErr);
-    }
-
-    return NextResponse.json({ 
-      success: true, 
-      count: molecules.length - writeErrors.length,
-      total: molecules.length,
-      errors: writeErrors,
-      message: `Processed ${molecules.length - writeErrors.length} molecules successfully.`
-    });
+    return NextResponse.json({ success: true, count: molecules.length });
   } catch (err: any) {
-    console.error("[Molecule Bulk Import Error]", err);
-    return NextResponse.json({ 
-      error: "Import failed", 
-      message: err.message,
-      details: err.toString()
-    }, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

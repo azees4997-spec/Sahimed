@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
-import { generateSlug } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
+
+const CATEGORY_FIELDS = ['category_id', 'category', 'sub_category', 'product_count', 'source_catalog'];
 
 export async function GET(request: Request) {
   try {
@@ -12,9 +13,11 @@ export async function GET(request: Request) {
 
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const categories = await db.collection('categories').find({}).toArray();
+    const categories = await db.collection('Category Master').find({}).toArray();
 
-    const headers = fieldsParam ? fieldsParam.split(',').map(f => f.trim()) : ['name', 'imageUrl', 'order'];
+    const headers = fieldsParam 
+      ? fieldsParam.split(',').map(f => f.trim()).filter(f => CATEGORY_FIELDS.includes(f)) 
+      : CATEGORY_FIELDS;
 
     const csvContent = [
       headers.join(','),
@@ -33,9 +36,42 @@ export async function GET(request: Request) {
     return new Response(csvContent, {
       headers: {
         'Content-Type': 'text/csv',
-        'Content-Disposition': 'attachment; filename=sahimed_categories_export.csv'
+        'Content-Disposition': 'attachment; filename=sahimed_category_master_export.csv'
       }
     });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    await verifyAdmin(request);
+    const categories = await request.json();
+    const client = await clientPromise;
+    const db = client.db('sahimed');
+    const col = db.collection('Category Master');
+
+    const ops = categories.map((c: any) => ({
+      updateOne: {
+        filter: { category_id: c.category_id },
+        update: { 
+          $set: { 
+            category_id: c.category_id,
+            category: c.category,
+            sub_category: c.sub_category,
+            product_count: c.product_count || '0',
+            source_catalog: c.source_catalog || 'OTC',
+            updatedAt: new Date() 
+          } 
+        },
+        upsert: true
+      }
+    }));
+
+    await col.bulkWrite(ops);
+
+    return NextResponse.json({ success: true, count: categories.length });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
