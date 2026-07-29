@@ -762,45 +762,183 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
               )}
 
               {/* ── SAFETY ── */}
-              {activeTab === 'safety' && (
-                <div className="space-y-6">
-                  <SectionLabel>Drug & Interaction Warnings</SectionLabel>
-                  {(product?.pregnancyInteraction || product?.safety_warnings?.interactions?.pregnancy) ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <WarningTile label="Pregnancy" value={product?.pregnancyInteraction || product?.safety_warnings?.interactions?.pregnancy} icon={Baby} color="bg-rose-50 border-rose-100 text-rose-800" />
-                      <WarningTile label="Breastfeeding / Lactation" value={product?.lactationInteraction || product?.safety_warnings?.interactions?.lactation} icon={Milk} color="bg-sky-50 border-sky-100 text-sky-800" />
-                      <WarningTile label="Driving & Machinery" value={product?.drivingInteraction || product?.safety_warnings?.interactions?.driving} icon={Car} color="bg-amber-50 border-amber-100 text-amber-800" />
-                      <WarningTile label="Kidney Function" value={product?.kidneyInteraction || product?.safety_warnings?.interactions?.kidney} icon={ShieldAlert} color="bg-orange-50 border-orange-100 text-orange-800" />
-                      <WarningTile label="Liver Function" value={product?.liverInteraction || product?.safety_warnings?.interactions?.liver} icon={AlertTriangle} color="bg-red-50 border-red-100 text-red-800" />
-                      <WarningTile label="Alcohol Interaction" value={product?.alcoholInteraction || product?.safety_warnings?.interactions?.alcohol} icon={AlertCircle} color="bg-purple-50 border-purple-100 text-purple-800" />
+              {activeTab === 'safety' && (() => {
+                // ── Parse severity badge from text ─────────────────────────
+                function getSeverity(text?: string | null): { label: string; cls: string } {
+                  if (!text) return { label: '', cls: '' };
+                  const t = text.toLowerCase();
+                  if (t.includes('unsafe') || t.includes('not recommended') || t.includes('avoid'))
+                    return { label: 'UNSAFE', cls: 'bg-rose-100 text-rose-700' };
+                  if (t.includes('caution') || t.includes('with caution') || t.includes('dose adjustment'))
+                    return { label: 'CAUTION', cls: 'bg-orange-100 text-orange-700' };
+                  if (t.includes('consult') || t.includes('ask your doctor') || t.includes('tell your doctor'))
+                    return { label: 'CONSULT YOUR DOCTOR', cls: 'bg-teal-100 text-teal-700' };
+                  if (t.includes('safe') || t.includes('generally safe') || t.includes('no risk'))
+                    return { label: 'SAFE', cls: 'bg-emerald-100 text-emerald-700' };
+                  return { label: 'INFO', cls: 'bg-slate-100 text-slate-600' };
+                }
+
+                const rows = [
+                  {
+                    key: 'alcohol',
+                    label: 'Alcohol',
+                    value: product?.alcoholInteraction || product?.safety_warnings?.interactions?.alcohol,
+                    svg: (
+                      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+                        <rect x="16" y="4" width="16" height="6" rx="3" fill="#fca5a5" stroke="#f87171" strokeWidth="1.5"/>
+                        <path d="M18 10 L14 40 Q14 44 24 44 Q34 44 34 40 L30 10Z" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
+                        <path d="M20 20 Q24 24 28 20" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+                        <circle cx="24" cy="30" r="3" fill="#fca5a5"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    key: 'pregnancy',
+                    label: 'Pregnancy',
+                    value: product?.pregnancyInteraction || product?.safety_warnings?.interactions?.pregnancy,
+                    svg: (
+                      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+                        <circle cx="24" cy="10" r="6" fill="#fca5a5" stroke="#f87171" strokeWidth="1.5"/>
+                        <ellipse cx="24" cy="32" rx="12" ry="14" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
+                        <ellipse cx="24" cy="34" rx="7" ry="8" fill="#fca5a5" opacity="0.5"/>
+                        <path d="M14 24 Q12 20 16 18" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round"/>
+                        <path d="M34 24 Q36 20 32 18" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    key: 'lactation',
+                    label: 'Breast Feeding',
+                    value: product?.lactationInteraction || product?.safety_warnings?.interactions?.lactation,
+                    svg: (
+                      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+                        <circle cx="24" cy="10" r="6" fill="#fca5a5" stroke="#f87171" strokeWidth="1.5"/>
+                        <path d="M14 22 Q10 30 14 38 Q18 44 24 44 Q32 44 34 36 L36 26 Q30 20 24 20 Q18 20 14 22Z" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
+                        <circle cx="32" cy="28" r="4" fill="#fca5a5" stroke="#f87171" strokeWidth="1"/>
+                        <circle cx="33" cy="27" r="1.5" fill="#f87171"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    key: 'driving',
+                    label: 'Driving',
+                    value: product?.drivingInteraction || product?.safety_warnings?.interactions?.driving,
+                    svg: (
+                      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+                        <circle cx="24" cy="24" r="18" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
+                        <circle cx="24" cy="24" r="10" fill="none" stroke="#f87171" strokeWidth="1.5"/>
+                        <circle cx="24" cy="24" r="3" fill="#f87171"/>
+                        <line x1="24" y1="6" x2="24" y2="14" stroke="#f87171" strokeWidth="2" strokeLinecap="round"/>
+                        <line x1="24" y1="34" x2="24" y2="42" stroke="#f87171" strokeWidth="2" strokeLinecap="round"/>
+                        <line x1="6" y1="24" x2="14" y2="24" stroke="#f87171" strokeWidth="2" strokeLinecap="round"/>
+                        <line x1="34" y1="24" x2="42" y2="24" stroke="#f87171" strokeWidth="2" strokeLinecap="round"/>
+                        <line x1="24" y1="24" x2="18" y2="16" stroke="#f87171" strokeWidth="2.5" strokeLinecap="round"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    key: 'kidney',
+                    label: 'Kidney',
+                    value: product?.kidneyInteraction || product?.safety_warnings?.interactions?.kidney,
+                    svg: (
+                      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+                        <path d="M18 8 C10 8 8 18 10 26 C12 34 16 42 22 42 C26 42 26 36 24 30 C22 24 24 20 28 18 C34 14 36 8 30 6 C26 4 22 8 18 8Z" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
+                        <path d="M30 8 C38 8 40 18 38 26 C36 34 32 42 26 42" stroke="#fca5a5" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    key: 'liver',
+                    label: 'Liver',
+                    value: product?.liverInteraction || product?.safety_warnings?.interactions?.liver,
+                    svg: (
+                      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+                        <path d="M8 20 C8 10 16 6 24 8 C32 6 42 12 40 24 C38 36 30 44 20 40 C12 36 8 30 8 20Z" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
+                        <path d="M16 20 Q20 16 26 20 Q32 24 30 32" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+                        <circle cx="22" cy="26" r="3" fill="#fca5a5"/>
+                      </svg>
+                    ),
+                  },
+                ].filter(r => !!r.value);
+
+                if (rows.length === 0) {
+                  return (
+                    <div className="text-center py-14">
+                      <ShieldCheck className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                      <p className="text-sm text-slate-400 font-medium">No specific interaction warnings listed. Always consult a doctor.</p>
                     </div>
-                  ) : (
-                    <div className="text-center py-10"><ShieldAlert className="w-10 h-10 text-slate-200 mx-auto mb-3" /><p className="text-sm text-slate-400 font-medium">No specific warnings listed. Always consult a doctor.</p></div>
-                  )}
-                  {safetyAdviseClean && (
-                    <div><SectionLabel>Safety Advisory</SectionLabel>
-                      <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex gap-3">
-                        <Info className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
-                        <p className="text-xs font-medium text-slate-600 leading-relaxed whitespace-pre-line">{safetyAdviseClean}</p>
-                      </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-6">
+                    {/* 1mg-style interaction rows */}
+                    <div className="divide-y divide-slate-100">
+                      {rows.map((row, i) => {
+                        const { label: sevLabel, cls: sevCls } = getSeverity(row.value);
+                        return (
+                          <div key={row.key} className="flex items-start gap-5 py-5 first:pt-0 last:pb-0">
+                            {/* Illustrated organ icon */}
+                            <div className="shrink-0 w-11 flex items-center justify-center mt-0.5">
+                              {row.svg}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                <p className="text-sm font-black text-slate-800">{row.label}</p>
+                                {sevLabel && (
+                                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${sevCls}`}>
+                                    {sevLabel}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-500 font-medium leading-relaxed">{row.value}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  )}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className={cn("flex-1 rounded-2xl p-5 flex items-center gap-4 border", product?.prescriptionRequired ? "bg-rose-50 border-rose-100" : "bg-emerald-50 border-emerald-100")}>
-                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", product?.prescriptionRequired ? "bg-rose-100" : "bg-emerald-100")}><ClipboardList className={cn("w-5 h-5", product?.prescriptionRequired ? "text-rose-600" : "text-emerald-600")} /></div>
-                      <div><p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-0.5">Prescription Status</p>
-                        <p className={cn("text-sm font-bold", product?.prescriptionRequired ? "text-rose-700" : "text-emerald-700")}>{product?.prescriptionRequired ? "Prescription required (Rx only)" : "Over-the-counter (OTC)"}</p></div>
-                    </div>
-                    {(product?.isControlledSubstance !== undefined || product?.safety_warnings?.is_controlled_substance !== undefined) && (
-                      <div className={cn("flex-1 rounded-2xl p-5 flex items-center gap-4 border", (product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-100")}>
-                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", (product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "bg-red-100" : "bg-slate-100")}><ShieldAlert className={cn("w-5 h-5", (product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "text-red-600" : "text-slate-400")} /></div>
-                        <div><p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-0.5">Controlled Substance</p>
-                          <p className={cn("text-sm font-bold", (product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "text-red-700" : "text-slate-500")}>{(product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "Scheduled / Controlled substance" : "Not a controlled substance"}</p></div>
+
+                    {/* Safety Advisory block */}
+                    {safetyAdviseClean && (
+                      <div className="pt-2">
+                        <SectionLabel>Safety Advisory</SectionLabel>
+                        <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex gap-3">
+                          <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                          <p className="text-xs font-medium text-slate-500 leading-relaxed whitespace-pre-line">{safetyAdviseClean}</p>
+                        </div>
                       </div>
                     )}
+
+                    {/* Rx + Controlled */}
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                      <div className={cn("flex-1 rounded-2xl p-4 flex items-center gap-4 border", product?.prescriptionRequired ? "bg-rose-50 border-rose-100" : "bg-emerald-50 border-emerald-100")}>
+                        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", product?.prescriptionRequired ? "bg-rose-100" : "bg-emerald-100")}>
+                          <ClipboardList className={cn("w-4 h-4", product?.prescriptionRequired ? "text-rose-600" : "text-emerald-600")} />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Prescription Status</p>
+                          <p className={cn("text-xs font-bold", product?.prescriptionRequired ? "text-rose-700" : "text-emerald-700")}>
+                            {product?.prescriptionRequired ? "Prescription required (Rx only)" : "Over-the-counter (OTC)"}
+                          </p>
+                        </div>
+                      </div>
+                      {(product?.isControlledSubstance !== undefined || product?.safety_warnings?.is_controlled_substance !== undefined) && (
+                        <div className={cn("flex-1 rounded-2xl p-4 flex items-center gap-4 border", (product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-100")}>
+                          <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", (product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "bg-red-100" : "bg-slate-100")}>
+                            <ShieldAlert className={cn("w-4 h-4", (product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "text-red-600" : "text-slate-400")} />
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Controlled Substance</p>
+                            <p className={cn("text-xs font-bold", (product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "text-red-700" : "text-slate-500")}>
+                              {(product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "Scheduled / Controlled substance" : "Not a controlled substance"}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* ── PRODUCT INFO ── */}
               {activeTab === 'info' && (
