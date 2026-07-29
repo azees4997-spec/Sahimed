@@ -515,6 +515,8 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
             <div className="p-6 sm:p-8">
 
               {/* ══ OVERVIEW TAB ════════════════════════════════════════ */}
+              {activeTab === 'overview' && (
+                <div className="space-y-8">
                   {(product?.description || product?.introduction) && (
                     <div>
                       <SectionLabel>Introduction</SectionLabel>
@@ -764,7 +766,6 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                       <InfoRow label="Marketer Name" value={product?.marketerName || product?.taxonomy?.marketer_name} icon={Building2} accent="bg-primary/10 text-primary" />
                       <InfoRow label="Marketer ID" value={product?.marketerId || product?.taxonomy?.marketer_id} icon={Tag} accent="bg-slate-100 text-slate-500" />
                       <InfoRow label="Category" value={product?.categoryName || product?.taxonomy?.category_name} icon={Tag} accent="bg-amber-100 text-amber-600" />
-                      <InfoRow label="Category ID" value={product?.categoryId || product?.taxonomy?.category_id} icon={Tag} accent="bg-amber-50 text-amber-400" />
                       <InfoRow label="Sub-Category" value={product?.subCategory || product?.taxonomy?.sub_category} icon={Tag} accent="bg-amber-50 text-amber-500" />
                     </div>
                   </div>
