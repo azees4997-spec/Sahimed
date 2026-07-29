@@ -190,7 +190,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
   const { toast } = useToast();
   const { user } = useUser();
   const db_fs = useFirestore();
-  const { addToCart, getItemQuantity } = useCart();
+  const { addToCart, getItemQuantity, updateQuantity, removeFromCart } = useCart();
 
   // ── State ────────────────────────────────────────────────────────────────
   const [edd, setEdd] = useState('');
@@ -524,33 +524,20 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 <div className="flex items-center gap-3 flex-wrap pt-1">
                   {qty > 0 ? (
                     <div className="flex items-center h-12 bg-slate-50 rounded-full border border-slate-100 p-1 shadow-inner gap-1">
-                      <Button variant="ghost" onClick={() => addCurrentToCart(-1)} className="h-10 w-10 rounded-full bg-white hover:bg-slate-100 border border-slate-100 shadow-sm">
+                      <Button variant="ghost" onClick={() => updateQuantity(product?._id || product?.id, -1)} className="h-10 w-10 rounded-full bg-white hover:bg-slate-100 border border-slate-100 shadow-sm">
                         <Minus className="w-4 h-4 text-slate-600" />
                       </Button>
                       <span className="min-w-[80px] text-center text-xs font-bold text-slate-800">{qty} in cart</span>
-                      <Button variant="ghost" onClick={() => addCurrentToCart(1)} className="h-10 w-10 rounded-full bg-white hover:bg-slate-100 border border-slate-100 shadow-sm">
+                      <Button variant="ghost" onClick={() => updateQuantity(product?._id || product?.id, 1)} className="h-10 w-10 rounded-full bg-white hover:bg-slate-100 border border-slate-100 shadow-sm">
                         <Plus className="w-4 h-4 text-slate-600" />
                       </Button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <Button onClick={() => addCurrentToCart()}
+                      <Button onClick={() => addCurrentToCart(1)}
                         className="h-12 px-8 rounded-full font-black text-sm bg-gradient-to-r from-primary to-primary/80 text-white hover:opacity-90 shadow-xl shadow-primary/25 uppercase tracking-wider">
                         <ShoppingCart className="w-4 h-4 mr-2" /> Add to Cart
                       </Button>
-                      {/* Qty dropdown 1-20 */}
-                      <div className="relative">
-                        <select
-                          value={selectedQty}
-                          onChange={e => setSelectedQty(Number(e.target.value))}
-                          className="appearance-none h-12 pl-4 pr-8 bg-white border-2 border-slate-100 rounded-full text-xs font-black text-slate-700 focus:outline-none focus:border-primary/40 cursor-pointer hover:border-slate-200 transition-colors"
-                        >
-                          {Array.from({length: 20}, (_, i) => i + 1).map(n => (
-                            <option key={n} value={n}>Qty: {n}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
                     </div>
                   )}
                   <Button variant="outline" size="icon" onClick={() => setIsShareOpen(true)} className="h-12 w-12 rounded-full border-slate-200 hover:bg-slate-50">
@@ -659,9 +646,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
               {activeTab === 'overview' && (
                 <div className="space-y-8">
                   {(product?.composition || molData?.molecule || molData?.name) && (
-                    <div className="flex items-center gap-4 bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl px-5 py-4">
+                    <div className="flex items-center gap-4 bg-[#2f3542] rounded-xl px-5 py-4">
                       {/* DNA double helix SVG */}
-                      <div className="shrink-0 w-12 h-12">
+                      <div className="shrink-0 w-10 h-10">
                         <svg viewBox="0 0 40 60" fill="none" className="w-full h-full">
                           <path d="M8 4 Q20 15 32 4" stroke="#a78bfa" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
                           <path d="M8 14 Q20 25 32 14" stroke="#6ee7b7" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
@@ -692,11 +679,19 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     </div>
                   )}
 
-                  {(product?.description || product?.introduction) && (
-                    <div><SectionLabel>About this Medicine</SectionLabel>
-                      <p className="text-sm font-medium text-slate-600 leading-relaxed">{product.description || product.introduction}</p>
-                    </div>
-                  )}
+                  {(product?.description || product?.introduction) && (() => {
+                    const desc = product.description || product.introduction || '';
+                    const parts = desc.split(/(?<=\.)\s+/).filter(Boolean);
+                    return (
+                      <div><SectionLabel>About this Medicine</SectionLabel>
+                        <div className="space-y-4">
+                          {parts.map((p, i) => (
+                            <p key={i} className="text-sm font-medium text-slate-600 leading-relaxed">{p}</p>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {(product?.treatment || product?.uses) && (
                     <div><SectionLabel>Treatment & Uses</SectionLabel>
@@ -706,43 +701,56 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     </div>
                   )}
 
-                  {(product?.benefits || product?.medical_info?.benefits) && (
-                    <div><SectionLabel>Key Benefits</SectionLabel>
-                      {/* Horizontal flex-wrap, strip HTML entities */}
-                      <div className="flex flex-wrap gap-2">
-                        {stripHtml(product.benefits || product.medical_info?.benefits)
-                          .split(/\n|\|/).filter(b => b.trim().length > 4).map((b: string, i: number) => (
-                          <div key={i} className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-full px-4 py-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <p className="text-xs font-semibold text-emerald-900 whitespace-nowrap">{b.trim()}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Side effects — render as individual pill tags */}
-                  {((product?.sideEffectsArray?.length > 0) || product?.sideEffects) && (
-                    <div><SectionLabel>Possible Side Effects</SectionLabel>
-                      <div className="relative overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 rounded-2xl p-5">
-                        <div className="absolute top-3 right-3 opacity-10"><AlertTriangle className="w-16 h-16 text-amber-500" /></div>
-                        <div className="flex items-center gap-2 mb-3 relative z-10">
-                          <AlertTriangle className="w-4 h-4 text-amber-600" />
-                          <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">Common side effects</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 relative z-10">
-                          {(product.sideEffectsArray?.length > 0
-                            ? product.sideEffectsArray
-                            : product.sideEffects?.split(/\n|\|/).filter(Boolean)
-                          ).map((s: string, i: number) => (
-                            <span key={i} className="bg-white border border-amber-200 text-amber-800 text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-sm">
-                              {s.trim()}
-                            </span>
+                  {(product?.benefits || product?.medical_info?.benefits) && (() => {
+                    const benefitList = stripHtml(product.benefits || product.medical_info?.benefits)
+                      .split(/(?:\n|\||(?<=\.)\s+)/).map(b => b.trim()).filter(b => b.length > 4);
+                    if (!benefitList.length) return null;
+                    return (
+                      <div><SectionLabel>Key Benefits</SectionLabel>
+                        <div className="space-y-3">
+                          {benefitList.map((b, i) => (
+                            <div key={i} className="flex items-start gap-3 bg-emerald-50/70 border border-emerald-100 rounded-xl px-4 py-3">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                              <p className="text-sm font-semibold text-emerald-900 leading-relaxed">{b}</p>
+                            </div>
                           ))}
                         </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
+
+                  {/* Side effects — Warning Box with Chips */}
+                  {((product?.sideEffectsArray?.length > 0) || product?.sideEffects) && (() => {
+                    const effects: string[] = product.sideEffectsArray?.length > 0
+                      ? product.sideEffectsArray
+                      : (product.sideEffects?.split(/\n|\|/).filter(Boolean) || []);
+                    if (!effects.length) return null;
+
+                    return (
+                      <div>
+                        <SectionLabel>Possible Side Effects</SectionLabel>
+                        <div className="relative overflow-hidden bg-[#fffbeb] border border-[#fef3c7] rounded-xl p-5">
+                          {/* Watermark */}
+                          <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
+                            <AlertTriangle className="w-40 h-40" />
+                          </div>
+                          
+                          <div className="flex items-center gap-2 mb-4 relative z-10">
+                            <AlertTriangle className="w-4 h-4 text-amber-600" />
+                            <h4 className="text-xs font-black uppercase tracking-widest text-amber-800">Common Side Effects</h4>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2 relative z-10">
+                            {effects.map((s: string, i: number) => (
+                              <span key={i} className="bg-white border border-amber-200 text-amber-900 text-xs font-bold px-4 py-2 rounded-full shadow-sm">
+                                {s.trim()}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* How It Works — mechanism of action */}
                   {(product?.howItWorks || product?.medical_info?.how_it_works) && (
@@ -758,6 +766,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   )}
 
                   {/* Fact Box — parse "Key :: Value|Key :: Value" */}
+                  {/* Fact Box — parse "Key :: Value|Key :: Value" */}
                   {(product?.factBox || product?.medical_info?.fact_box) && (() => {
                     const raw: string = product.factBox || product.medical_info?.fact_box || '';
                     const pairs = raw.split('|').map(s => s.trim()).filter(Boolean).map(s => {
@@ -767,18 +776,27 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     if (!pairs.length) return null;
                     return (
                       <div><SectionLabel>Quick Facts</SectionLabel>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2">
                           {pairs.map((p, i) => (
-                            <div key={i} className="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
-                              <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wide shrink-0">{p.key}</span>
-                              <span className="text-xs font-semibold text-slate-800 ml-auto text-right">{p.val}</span>
+                            <div key={i} className="flex justify-between items-start gap-4 border-b border-slate-100 py-3 last:border-0">
+                              <span className="text-xs font-bold text-slate-500 w-1/3">{p.key}</span>
+                              <span className="text-xs font-black text-slate-900 w-2/3 text-right">{p.val}</span>
                             </div>
                           ))}
                         </div>
                       </div>
                     );
                   })()}
+
+                  {/* Manufacturer Details */}
+                  {(product?.marketerName || product?.manufacturer || product?.marketerAddress) && (
+                    <div><SectionLabel>Manufacturer Details</SectionLabel>
+                      <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+                        <p className="text-xs font-black text-slate-800 mb-1">{product?.marketerName || product?.manufacturer}</p>
+                        {product?.marketerAddress && <p className="text-xs font-medium text-slate-500">{product.marketerAddress}</p>}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -826,6 +844,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
               {/* ── SAFETY ── */}
               {activeTab === 'safety' && (() => {
                 // ── Parse severity badge from text ─────────────────────────
+                // ── Parse severity badge from text ─────────────────────────
                 function getSeverity(text?: string | null): { label: string; cls: string } {
                   if (!text) return { label: '', cls: '' };
                   const t = text.toLowerCase();
@@ -840,11 +859,19 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   return { label: 'INFO', cls: 'bg-slate-100 text-slate-600' };
                 }
 
+                // Parse missing fields from the raw safetyAdvise blob
+                function extractFromAdvise(key: string) {
+                  if (!safetyAdviseClean) return undefined;
+                  const regex = new RegExp(`(?:-|\\s|^)${key}\\s*:\\s*(.*?)(?=\\n\\s*-|\\n\\s*[A-Z][a-z]+\\s*:|$)`, 'i');
+                  const match = safetyAdviseClean.match(regex);
+                  return match ? match[1].trim() : undefined;
+                }
+
                 const rows = [
                   {
                     key: 'alcohol',
                     label: 'Alcohol',
-                    value: product?.alcoholInteraction || product?.safety_warnings?.interactions?.alcohol,
+                    value: product?.alcoholInteraction || product?.safety_warnings?.interactions?.alcohol || extractFromAdvise('Alcohol'),
                     svg: (
                       <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
                         <rect x="16" y="4" width="16" height="6" rx="3" fill="#fca5a5" stroke="#f87171" strokeWidth="1.5"/>
@@ -857,7 +884,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   {
                     key: 'pregnancy',
                     label: 'Pregnancy',
-                    value: product?.pregnancyInteraction || product?.safety_warnings?.interactions?.pregnancy,
+                    value: product?.pregnancyInteraction || product?.safety_warnings?.interactions?.pregnancy || extractFromAdvise('Pregnancy'),
                     svg: (
                       <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
                         <circle cx="24" cy="10" r="6" fill="#fca5a5" stroke="#f87171" strokeWidth="1.5"/>
@@ -871,7 +898,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   {
                     key: 'lactation',
                     label: 'Breast Feeding',
-                    value: product?.lactationInteraction || product?.safety_warnings?.interactions?.lactation,
+                    value: product?.lactationInteraction || product?.safety_warnings?.interactions?.lactation || extractFromAdvise('Breast feeding') || extractFromAdvise('Lactation'),
                     svg: (
                       <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
                         <circle cx="24" cy="10" r="6" fill="#fca5a5" stroke="#f87171" strokeWidth="1.5"/>
@@ -884,7 +911,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   {
                     key: 'driving',
                     label: 'Driving',
-                    value: product?.drivingInteraction || product?.safety_warnings?.interactions?.driving,
+                    value: product?.drivingInteraction || product?.safety_warnings?.interactions?.driving || extractFromAdvise('Driving'),
                     svg: (
                       <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
                         <circle cx="24" cy="24" r="18" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
@@ -901,7 +928,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   {
                     key: 'kidney',
                     label: 'Kidney',
-                    value: product?.kidneyInteraction || product?.safety_warnings?.interactions?.kidney,
+                    value: product?.kidneyInteraction || product?.safety_warnings?.interactions?.kidney || extractFromAdvise('Kidney'),
                     svg: (
                       <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
                         <path d="M18 8 C10 8 8 18 10 26 C12 34 16 42 22 42 C26 42 26 36 24 30 C22 24 24 20 28 18 C34 14 36 8 30 6 C26 4 22 8 18 8Z" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
@@ -912,7 +939,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   {
                     key: 'liver',
                     label: 'Liver',
-                    value: product?.liverInteraction || product?.safety_warnings?.interactions?.liver,
+                    value: product?.liverInteraction || product?.safety_warnings?.interactions?.liver || extractFromAdvise('Liver'),
                     svg: (
                       <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
                         <path d="M8 20 C8 10 16 6 24 8 C32 6 42 12 40 24 C38 36 30 44 20 40 C12 36 8 30 8 20Z" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
@@ -959,17 +986,6 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                         );
                       })}
                     </div>
-
-                    {/* Safety Advisory block */}
-                    {safetyAdviseClean && (
-                      <div className="pt-2">
-                        <SectionLabel>Safety Advisory</SectionLabel>
-                        <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex gap-3">
-                          <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                          <p className="text-xs font-medium text-slate-500 leading-relaxed whitespace-pre-line">{safetyAdviseClean}</p>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Rx + Controlled */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -1059,29 +1075,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 </div>
               </div>
               <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-                {crossSellProducts.map((item: any) => {
-                  const p = Number(item.price || 0);
-                  const m = Number(item.mrp || p);
-                  const slug = item.seoUrlSlug || item.id;
-                  const disc = m > p ? Math.round(((m - p) / m) * 100) : 0;
-                  return (
-                    <Link key={item.id} href={`/product/${encodeURIComponent(slug?.replace(/^\//, '') || '')}`}
-                      className="bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col shrink-0 w-40 sm:w-44 group">
-                      <div className="relative h-32 bg-slate-50 flex items-center justify-center">
-                        <Image src={item.imageUrl || '/images/medicine_placeholder.png'} alt={item.name || ''} fill className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
-                        {disc > 0 && (
-                          <span className="absolute top-2 left-2 bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{disc}% OFF</span>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <p className="text-[10px] font-bold text-slate-800 line-clamp-2 mb-1">{item.name}</p>
-                        {item.marketerName && <p className="text-[9px] text-slate-400 mb-1">{item.marketerName}</p>}
-                        <p className="text-sm font-black text-slate-900">₹{p}</p>
-                        {m > p && <p className="text-[9px] text-slate-400 line-through">₹{m}</p>}
-                      </div>
-                    </Link>
-                  );
-                })}
+                {crossSellProducts.map((item: any) => (
+                  <ProductMiniCard key={item._id || item.id} item={item} onAdd={addItemToCart} />
+                ))}
               </div>
             </div>
           )}
@@ -1181,25 +1177,28 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
           </div>
         </div>
 
-        {/* Share Dialog */}
-        <Dialog open={isShareOpen} onOpenChange={setIsShareOpen}>
-          <DialogContent className="max-w-sm rounded-3xl border-none p-8 shadow-2xl">
-            <DialogTitle className="text-lg font-bold text-slate-900 mb-1">Share this product</DialogTitle>
-            <DialogDescription className="text-xs text-slate-400 mb-5">{product?.name}</DialogDescription>
-            <div className="space-y-3">
-              <Button className="w-full h-12 rounded-full bg-[#25D366] hover:bg-[#1da851] text-white font-bold text-sm gap-2"
-                onClick={() => { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out ${product?.name} on SahiMed: ${window.location.href}`)}`,'_blank'); setIsShareOpen(false); }}>
-                <Send className="w-4 h-4" /> Share on WhatsApp
-              </Button>
-              <Button className="w-full h-12 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm gap-2"
-                onClick={() => { navigator?.clipboard?.writeText(window.location.href); toast({ title: "Link copied!" }); setIsShareOpen(false); }}>
-                <Copy className="w-4 h-4" /> Copy Link
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
+        <div className="pt-8">
+          <Footer />
+        </div>
       </div>
+
+      <Dialog open={isShareOpen} onOpenChange={setIsShareOpen}>
+        <DialogContent className="max-w-sm rounded-3xl border-none p-8 shadow-2xl">
+          <DialogTitle className="text-lg font-bold text-slate-900 mb-1">Share this product</DialogTitle>
+          <DialogDescription className="text-xs text-slate-400 mb-5">{product?.name}</DialogDescription>
+          <div className="space-y-3">
+            <Button className="w-full h-12 rounded-full bg-[#25D366] hover:bg-[#1da851] text-white font-bold text-sm gap-2"
+              onClick={() => { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out ${product?.name} on SahiMed: ${window.location.href}`)}`,'_blank'); setIsShareOpen(false); }}>
+              <Send className="w-4 h-4" /> Share on WhatsApp
+            </Button>
+            <Button className="w-full h-12 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm gap-2"
+              onClick={() => { navigator?.clipboard?.writeText(window.location.href); toast({ title: "Link copied!" }); setIsShareOpen(false); }}>
+              <Copy className="w-4 h-4" /> Copy Link
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </PageTransition>
   );
 }
