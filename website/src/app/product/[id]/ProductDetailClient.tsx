@@ -472,42 +472,37 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                   </p>
                 </div>
 
-                {/* Pack chips */}
-                {(product?.productForm || product?.packageType || product?.packageQuantity) && (
-                  <div className="flex items-center gap-2 flex-wrap text-[11px]">
-                    {product.productForm && <span className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 text-slate-600 font-semibold px-3 py-1.5 rounded-xl"><Pill className="w-3.5 h-3.5 text-primary" />{product.productForm}</span>}
-                    {product.packageType && <span className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 text-slate-600 font-semibold px-3 py-1.5 rounded-xl"><Package className="w-3.5 h-3.5 text-primary" />{product.packageType}</span>}
-                    {product.packageQuantity && <span className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 text-slate-600 font-semibold px-3 py-1.5 rounded-xl"><Tag className="w-3.5 h-3.5 text-primary" />Qty: {product.packageQuantity}</span>}
-                    {product.countryOfOrigin && <span className="flex items-center gap-1.5 bg-amber-50 border border-amber-100 text-amber-700 font-semibold px-3 py-1.5 rounded-xl"><Globe className="w-3.5 h-3.5" />Made in {product.countryOfOrigin}</span>}
-                  </div>
-                )}
+                {/* Pack chip — show packaging_detail (e.g. "strip of 10 tablets") */}
+                <div className="flex items-center gap-2 flex-wrap text-[11px]">
+                  {(product?.packagingDetail || product?.packaging?.packaging_detail) && (
+                    <span className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 text-slate-600 font-semibold px-3 py-1.5 rounded-xl">
+                      <Package className="w-3.5 h-3.5 text-primary" />
+                      {product.packagingDetail || product.packaging?.packaging_detail}
+                    </span>
+                  )}
+                  {product?.storage_instructions && (
+                    <span className="flex items-center gap-1.5 bg-sky-50 border border-sky-100 text-sky-700 font-semibold px-3 py-1.5 rounded-xl">
+                      {/* Snowflake / temp SVG */}
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="2" x2="12" y2="22"/><path d="M17 7l-5-5-5 5"/><path d="M17 17l-5 5-5-5"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/><path d="M7 7l5 5 5-5"/><path d="M7 17l5-5 5 5"/>
+                      </svg>
+                      {product.storage_instructions}
+                    </span>
+                  )}
+                  {product?.countryOfOrigin && (
+                    <span className="flex items-center gap-1.5 bg-amber-50 border border-amber-100 text-amber-700 font-semibold px-3 py-1.5 rounded-xl">
+                      <Globe className="w-3.5 h-3.5" />Made in {product.countryOfOrigin}
+                    </span>
+                  )}
+                </div>
 
                 <div className="border-t border-slate-50" />
-
-                {/* ── Pack Size / Qty Selector ──────────────────── */}
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Select Quantity</p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {[1, 2, 3, 5, 10].map(n => (
-                      <button key={n} onClick={() => setSelectedQty(n)}
-                        className={cn(
-                          "px-4 py-2 rounded-xl border-2 text-xs font-black transition-all",
-                          selectedQty === n
-                            ? "border-primary bg-primary text-white shadow-md shadow-primary/20"
-                            : "border-slate-100 bg-white text-slate-600 hover:border-primary/30"
-                        )}>
-                        {n} {n === 1 ? 'Strip' : 'Strips'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
                 {/* Pricing */}
                 <div className="flex items-end gap-4 flex-wrap">
                   <div>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">
-                      Total for {selectedQty} {selectedQty === 1 ? 'strip' : 'strips'}
-                    </p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Our Price</p>
                     <p className="text-4xl font-black text-slate-900">₹{currentPrice}</p>
                   </div>
                   {currentMrp > currentPrice && (
@@ -525,23 +520,38 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                   )}
                 </div>
 
-                {/* Add to Cart */}
+                {/* Add to Cart + inline qty dropdown */}
                 <div className="flex items-center gap-3 flex-wrap pt-1">
                   {qty > 0 ? (
-                    <div className="flex items-center h-12 bg-slate-50 rounded-full border border-slate-150 p-1 shadow-inner gap-1">
+                    <div className="flex items-center h-12 bg-slate-50 rounded-full border border-slate-100 p-1 shadow-inner gap-1">
                       <Button variant="ghost" onClick={() => addCurrentToCart(-1)} className="h-10 w-10 rounded-full bg-white hover:bg-slate-100 border border-slate-100 shadow-sm">
                         <Minus className="w-4 h-4 text-slate-600" />
                       </Button>
-                      <span className="min-w-[90px] text-center text-xs font-bold text-slate-800">{qty} in cart</span>
+                      <span className="min-w-[80px] text-center text-xs font-bold text-slate-800">{qty} in cart</span>
                       <Button variant="ghost" onClick={() => addCurrentToCart(1)} className="h-10 w-10 rounded-full bg-white hover:bg-slate-100 border border-slate-100 shadow-sm">
                         <Plus className="w-4 h-4 text-slate-600" />
                       </Button>
                     </div>
                   ) : (
-                    <Button onClick={() => addCurrentToCart()}
-                      className="h-12 px-10 rounded-full font-black text-sm bg-gradient-to-r from-primary to-primary/80 text-white hover:opacity-90 shadow-xl shadow-primary/25 uppercase tracking-wider">
-                      <ShoppingCart className="w-4 h-4 mr-2" /> Add {selectedQty > 1 ? `${selectedQty} strips` : 'to Cart'}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button onClick={() => addCurrentToCart()}
+                        className="h-12 px-8 rounded-full font-black text-sm bg-gradient-to-r from-primary to-primary/80 text-white hover:opacity-90 shadow-xl shadow-primary/25 uppercase tracking-wider">
+                        <ShoppingCart className="w-4 h-4 mr-2" /> Add to Cart
+                      </Button>
+                      {/* Qty dropdown 1-20 */}
+                      <div className="relative">
+                        <select
+                          value={selectedQty}
+                          onChange={e => setSelectedQty(Number(e.target.value))}
+                          className="appearance-none h-12 pl-4 pr-8 bg-white border-2 border-slate-100 rounded-full text-xs font-black text-slate-700 focus:outline-none focus:border-primary/40 cursor-pointer hover:border-slate-200 transition-colors"
+                        >
+                          {Array.from({length: 20}, (_, i) => i + 1).map(n => (
+                            <option key={n} value={n}>Qty: {n}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
+                    </div>
                   )}
                   <Button variant="outline" size="icon" onClick={() => setIsShareOpen(true)} className="h-12 w-12 rounded-full border-slate-200 hover:bg-slate-50">
                     <Share2 className="w-4 h-4 text-slate-500" />
@@ -649,16 +659,34 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
               {activeTab === 'overview' && (
                 <div className="space-y-8">
                   {(product?.composition || molData?.molecule || molData?.name) && (
-                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 p-6 sm:p-8 text-white">
-                      <div className="absolute inset-0 opacity-20"><MoleculeIllustration /></div>
-                      <div className="absolute top-0 right-0 w-48 h-48 opacity-10">
-                        <svg viewBox="0 0 200 200"><defs><pattern id="hexa" x="0" y="0" width="30" height="34" patternUnits="userSpaceOnUse"><polygon points="15,2 28,9 28,26 15,33 2,26 2,9" fill="none" stroke="white" strokeWidth="1"/></pattern></defs><rect width="200" height="200" fill="url(#hexa)"/></svg>
+                    <div className="flex items-center gap-4 bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl px-5 py-4">
+                      {/* DNA double helix SVG */}
+                      <div className="shrink-0 w-12 h-12">
+                        <svg viewBox="0 0 40 60" fill="none" className="w-full h-full">
+                          <path d="M8 4 Q20 15 32 4" stroke="#a78bfa" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                          <path d="M8 14 Q20 25 32 14" stroke="#6ee7b7" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                          <path d="M8 24 Q20 35 32 24" stroke="#a78bfa" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                          <path d="M8 34 Q20 45 32 34" stroke="#6ee7b7" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                          <path d="M8 44 Q20 55 32 44" stroke="#a78bfa" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                          <line x1="8" y1="4" x2="8" y2="44" stroke="#a78bfa" strokeWidth="1.5" strokeDasharray="2 3"/>
+                          <line x1="32" y1="4" x2="32" y2="44" stroke="#6ee7b7" strokeWidth="1.5" strokeDasharray="2 3"/>
+                          <circle cx="8" cy="4" r="2.5" fill="#a78bfa"/>
+                          <circle cx="32" cy="4" r="2.5" fill="#6ee7b7"/>
+                          <circle cx="8" cy="14" r="2" fill="#6ee7b7"/>
+                          <circle cx="32" cy="14" r="2" fill="#a78bfa"/>
+                          <circle cx="8" cy="24" r="2.5" fill="#a78bfa"/>
+                          <circle cx="32" cy="24" r="2.5" fill="#6ee7b7"/>
+                          <circle cx="8" cy="34" r="2" fill="#6ee7b7"/>
+                          <circle cx="32" cy="34" r="2" fill="#a78bfa"/>
+                          <circle cx="8" cy="44" r="2.5" fill="#a78bfa"/>
+                          <circle cx="32" cy="44" r="2.5" fill="#6ee7b7"/>
+                        </svg>
                       </div>
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-3"><FlaskConical className="w-5 h-5 text-violet-200" /><span className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-200">Active Composition</span></div>
-                        <p className="text-xl sm:text-2xl font-black leading-snug mb-2">{product?.composition || molData?.molecule || molData?.name}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Active Composition</p>
+                        <p className="text-sm font-black text-white leading-snug truncate">{product?.composition || molData?.molecule || molData?.name}</p>
                         {(product?.primaryUse || product?.medical_info?.primary_use) && (
-                          <p className="text-sm text-violet-200 font-medium mt-2">Primarily used for: <span className="text-white font-semibold">{product.primaryUse || product.medical_info?.primary_use}</span></p>
+                          <p className="text-[10px] text-slate-400 font-medium mt-1">Used for: <span className="text-emerald-400 font-semibold">{product.primaryUse || product.medical_info?.primary_use}</span></p>
                         )}
                       </div>
                     </div>
@@ -680,13 +708,13 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
 
                   {(product?.benefits || product?.medical_info?.benefits) && (
                     <div><SectionLabel>Key Benefits</SectionLabel>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {(product.benefits || product.medical_info?.benefits).split(/\n|\|/).filter(Boolean).map((b: string, i: number) => (
-                          <div key={i} className="flex items-start gap-3 bg-emerald-50 border border-emerald-100 rounded-2xl p-4">
-                            <div className="w-6 h-6 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                            </div>
-                            <p className="text-xs font-semibold text-emerald-900 leading-snug">{b.trim()}</p>
+                      {/* Horizontal flex-wrap, strip HTML entities */}
+                      <div className="flex flex-wrap gap-2">
+                        {stripHtml(product.benefits || product.medical_info?.benefits)
+                          .split(/\n|\|/).filter(b => b.trim().length > 4).map((b: string, i: number) => (
+                          <div key={i} className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-full px-4 py-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                            <p className="text-xs font-semibold text-emerald-900 whitespace-nowrap">{b.trim()}</p>
                           </div>
                         ))}
                       </div>

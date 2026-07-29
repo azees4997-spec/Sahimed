@@ -101,9 +101,13 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
         manufacturer:       product.taxonomy?.marketer_name,
         marketerName:       product.taxonomy?.marketer_name,
         marketerId:         product.taxonomy?.marketer_id,
+        marketerAddress:    product.taxonomy?.marketer_address,
         categoryName:       product.taxonomy?.category_name,
         categoryId:         product.taxonomy?.category_id,
         subCategory:        product.taxonomy?.sub_category,
+
+        // molecule
+        moleculeId:         product.molecule_id || product.molecule_code,
 
         // safety_warnings sub-document (kept as nested object AND as flat keys)
         // ⚠️  Interactions are stored under safety_warnings.interactions.* (not top-level)
