@@ -145,6 +145,45 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
+  
+  // Mega Ribbon State
+  const [categoriesMap, setCategoriesMap] = useState<Record<string, string[]>>({});
+  const [topCategories, setTopCategories] = useState<string[]>([]);
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/categories?limit=1000')
+      .then(res => res.json())
+      .then(data => {
+        if (!cancelled && Array.isArray(data)) {
+          const catMap: Record<string, Set<string>> = {};
+          data.forEach(item => {
+            if (item.category && item.sub_category) {
+              if (!catMap[item.category]) catMap[item.category] = new Set();
+              catMap[item.category].add(item.sub_category);
+            }
+          });
+          
+          const formattedMap: Record<string, string[]> = {};
+          const counts: {cat: string, count: number}[] = [];
+          Object.keys(catMap).forEach(cat => {
+            const arr = Array.from(catMap[cat]);
+            formattedMap[cat] = arr;
+            counts.push({ cat, count: arr.length });
+          });
+
+          // Sort by number of subcategories, take top 5
+          counts.sort((a, b) => b.count - a.count);
+          const top5 = counts.slice(0, 5).map(c => c.cat);
+          
+          setCategoriesMap(formattedMap);
+          setTopCategories(top5);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
   const [newAddress, setNewAddress] = useState({
     houseNumber: '',
     street: '',
@@ -948,6 +987,61 @@ export default function Navbar() {
                 </motion.div>
               )}
             </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Mega Ribbon (Categories) - Desktop Only */}
+        <div className="hidden lg:block w-full border-t border-slate-100 bg-white/50 backdrop-blur-md relative z-[100]">
+          <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-8 h-12">
+            {topCategories.map(category => (
+              <div 
+                key={category} 
+                className="h-full flex items-center relative group"
+                onMouseEnter={() => setHoveredCategory(category)}
+                onMouseLeave={() => setHoveredCategory(null)}
+              >
+                <button className="text-[11px] font-black uppercase tracking-widest text-slate-500 hover:text-primary transition-colors flex items-center gap-1">
+                  {category}
+                  <ChevronDown className={cn("w-3 h-3 transition-transform", hoveredCategory === category && "rotate-180")} />
+                </button>
+                
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                  {hoveredCategory === category && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full left-1/2 -translate-x-1/2 w-[600px] bg-white/90 backdrop-blur-2xl border border-white shadow-[0_20px_40px_rgb(0,0,0,0.08)] rounded-[24px] p-6 grid grid-cols-2 gap-4 mt-2"
+                    >
+                      {categoriesMap[category].map(sub => (
+                        <Link 
+                          key={sub} 
+                          href={`/search?q=${encodeURIComponent(sub)}`}
+                          onClick={() => setHoveredCategory(null)}
+                          className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group/sub"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center group-hover/sub:bg-primary/10 transition-colors">
+                            <ArrowUpRight className="w-4 h-4 text-primary opacity-50 group-hover/sub:opacity-100 transition-opacity" />
+                          </div>
+                          <span className="text-xs font-bold text-slate-700 group-hover/sub:text-primary transition-colors">{sub}</span>
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+            
+            {/* View All Button */}
+            {topCategories.length > 0 && (
+              <Link href="/search" className="h-full flex items-center">
+                <button className="text-[11px] font-black uppercase tracking-widest text-primary/70 hover:text-primary transition-colors">
+                  View All
+                </button>
+              </Link>
+            )}
           </div>
         </div>
       </nav>

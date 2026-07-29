@@ -162,18 +162,20 @@ export default async function Home() {
       <div className="min-h-screen bg-[#F8FAFC]">
         <Navbar />
         
-        {/* Premium Dark Hero Section */}
-        <section className="relative w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden pb-8 md:pb-16 pt-6 md:pt-12 border-b border-slate-800 shadow-2xl">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full -translate-y-1/3 translate-x-1/3 blur-[100px] pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full translate-y-1/3 -translate-x-1/3 blur-[80px] pointer-events-none" />
+        {/* Premium Light Hero Section */}
+        <section className="relative w-full bg-gradient-to-br from-white via-blue-50/30 to-rose-50/30 overflow-hidden pb-8 md:pb-16 pt-6 md:pt-12 border-b border-slate-100 shadow-sm">
+          {/* Colorful abstract blobs */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full -translate-y-1/3 translate-x-1/3 blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-400/10 rounded-full translate-y-1/3 -translate-x-1/3 blur-[80px] pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-amber-400/10 rounded-full -translate-y-1/2 -translate-x-1/2 blur-[100px] pointer-events-none" />
           
           {/* Floating Molecules / DNA */}
-          <div className="absolute top-10 left-10 opacity-20 -rotate-12 pointer-events-none hidden md:block">
+          <div className="absolute top-10 left-10 opacity-60 -rotate-12 pointer-events-none hidden md:block">
             <svg viewBox="0 0 40 60" fill="none" className="w-24 h-36">
-              <path d="M8 4 Q20 15 32 4" stroke="#a78bfa" strokeWidth="2" fill="none" strokeLinecap="round"/>
-              <path d="M8 14 Q20 25 32 14" stroke="#6ee7b7" strokeWidth="2" fill="none" strokeLinecap="round"/>
-              <path d="M8 24 Q20 35 32 24" stroke="#f472b6" strokeWidth="2" fill="none" strokeLinecap="round"/>
-              <path d="M8 34 Q20 45 32 34" stroke="#38bdf8" strokeWidth="2" fill="none" strokeLinecap="round"/>
+              <path d="M8 4 Q20 15 32 4" stroke="#8b5cf6" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+              <path d="M8 14 Q20 25 32 14" stroke="#10b981" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+              <path d="M8 24 Q20 35 32 24" stroke="#f43f5e" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+              <path d="M8 34 Q20 45 32 34" stroke="#0ea5e9" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
             </svg>
           </div>
           
@@ -183,17 +185,17 @@ export default async function Home() {
               <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12">
                 <div className="flex-1 space-y-5 md:space-y-6 text-center md:text-left w-full">
                   <div className="space-y-3">
-                    <div className="mx-auto md:mx-0 flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/10 w-fit shrink-0 shadow-xl">
-                      <div className="w-4 h-4 rounded-full bg-[#25D366] flex items-center justify-center shrink-0 shadow-lg shadow-[#25D366]/30">
+                    <div className="mx-auto md:mx-0 flex items-center gap-2 px-3 py-1.5 bg-emerald-50 backdrop-blur-md rounded-full border border-emerald-100 w-fit shrink-0 shadow-sm">
+                      <div className="w-4 h-4 rounded-full bg-[#25D366] flex items-center justify-center shrink-0 shadow-sm">
                         <ShieldCheck className="w-2.5 h-2.5 text-white" />
                       </div>
-                      <span className="text-white/90 font-black uppercase tracking-[0.15em] text-[9px] sm:text-[10px]">Verified Authentic</span>
+                      <span className="text-emerald-700 font-black uppercase tracking-[0.15em] text-[9px] sm:text-[10px]">Verified Authentic</span>
                     </div>
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight text-white font-outfit uppercase">
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight text-slate-900 font-outfit uppercase drop-shadow-sm">
                       Genuine Medicines <br/>
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 italic">Delivered Fast</span>
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500 italic">Delivered Fast</span>
                     </h1>
-                    <p className="text-slate-300 font-medium text-sm md:text-base max-w-lg mx-auto md:mx-0 pt-2">
+                    <p className="text-slate-600 font-medium text-sm md:text-base max-w-lg mx-auto md:mx-0 pt-2">
                       Sahi Dawai, Sahi Daam Pe. Experience India's most trusted online pharmacy with expert pharmacist verification.
                     </p>
                   </div>
@@ -204,20 +206,20 @@ export default async function Home() {
                 </div>
  
                 <div className="w-full sm:w-2/3 md:w-1/2 lg:w-1/3 flex justify-center md:justify-end">
-                  <div className="relative w-full aspect-square max-w-[240px] md:max-w-[300px] rounded-[32px] border border-white/20 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden bg-white/5 backdrop-blur-sm p-4 transform rotate-3 hover:rotate-0 transition-transform duration-700">
-                    <div className="relative w-full h-full rounded-[24px] overflow-hidden">
+                  <div className="relative w-full aspect-square max-w-[240px] md:max-w-[300px] rounded-[32px] border border-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden bg-white/40 backdrop-blur-md p-4 transform rotate-3 hover:rotate-0 transition-transform duration-700 group">
+                    <div className="relative w-full h-full rounded-[24px] overflow-hidden shadow-inner">
                       <Image 
                         src="https://images.unsplash.com/photo-1584308666744-24d5e4785b46?q=80&w=2070&auto=format&fit=crop" 
                         alt="Authentic Medicines" 
                         fill
                         priority
-                        className="object-cover object-center" 
+                        className="object-cover object-center group-hover:scale-105 transition-transform duration-700" 
                       />
                     </div>
                     {/* Floating badge */}
-                    <div className="absolute -left-6 top-1/2 -translate-y-1/2 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-3 flex items-center gap-3 border border-white/50 animate-bounce">
+                    <div className="absolute -left-6 top-1/2 -translate-y-1/2 bg-white backdrop-blur-xl rounded-2xl shadow-xl p-3 flex items-center gap-3 border border-slate-100 animate-bounce">
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20"><Package className="w-5 h-5 text-white"/></div>
-                      <div className="pr-2"><p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Express</p><p className="text-xs font-black text-slate-800">Delivery</p></div>
+                      <div className="pr-2"><p className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Express</p><p className="text-xs font-black text-slate-800">Delivery</p></div>
                     </div>
                   </div>
                 </div>
@@ -225,29 +227,30 @@ export default async function Home() {
  
               <div className="grid grid-cols-3 gap-3 md:gap-4 max-w-2xl mx-auto md:mx-0 w-full pt-4">
                 {[
-                  { label: 'Upload Rx', href: '/prescription', color: 'bg-white/10 backdrop-blur-md border-white/20', Icon: FileText, iconColor: 'bg-gradient-to-br from-primary to-primary/80' },
+                  { label: 'Upload Rx', href: '/prescription', color: 'bg-white/80 backdrop-blur-xl border-slate-200/50 hover:border-primary/30', Icon: FileText, iconColor: 'bg-gradient-to-br from-primary to-primary/80 shadow-primary/20', textColor: 'text-slate-700 group-hover:text-primary' },
                   { 
                     label: 'WhatsApp', 
                     href: 'https://wa.me/917349499898', 
-                    color: 'bg-white/10 backdrop-blur-md border-white/20', 
+                    color: 'bg-white/80 backdrop-blur-xl border-slate-200/50 hover:border-[#25D366]/30', 
                     Icon: (props: any) => (
                       <svg viewBox="0 0 24 24" {...props} className={cn("fill-white", props.className)}>
                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                      </svg>
-                    ), 
-                    iconColor: 'bg-[#25D366] shadow-lg shadow-[#25D366]/30' 
-                  },
-                  { label: 'Order on Call', href: 'tel:+917349499898', color: 'bg-white/10 backdrop-blur-md border-white/20', Icon: Phone, iconColor: 'bg-gradient-to-br from-rose-400 to-rose-600 shadow-lg shadow-rose-500/30' }
-                ].map((action, i) => (
-                  <Link key={i} href={action.href} className={cn("group p-3 md:p-4 rounded-[20px] border flex flex-col items-center justify-center text-center gap-2 transition-all hover:bg-white/20 active:scale-95", action.color)}>
-                    <div className={cn("w-9 h-9 md:w-11 md:h-11 flex items-center justify-center rounded-xl", action.iconColor)}>
-                      <action.Icon className="w-4.5 h-4.5 md:w-5 md:h-5 text-white" />
-                    </div>
-                    <span className="font-bold text-[8px] md:text-[10px] tracking-wider text-white uppercase leading-none whitespace-nowrap">{action.label}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
+236:                       </svg>
+237:                     ), 
+238:                     iconColor: 'bg-[#25D366] shadow-lg shadow-[#25D366]/20',
+239:                     textColor: 'text-slate-700 group-hover:text-[#25D366]'
+240:                   },
+241:                   { label: 'Order on Call', href: 'tel:+917349499898', color: 'bg-white/80 backdrop-blur-xl border-slate-200/50 hover:border-rose-400/30', Icon: Phone, iconColor: 'bg-gradient-to-br from-rose-400 to-rose-500 shadow-lg shadow-rose-500/20', textColor: 'text-slate-700 group-hover:text-rose-500' }
+242:                 ].map((action, i) => (
+243:                   <Link key={i} href={action.href} className={cn("group p-3 md:p-4 rounded-[20px] border shadow-sm flex flex-col items-center justify-center text-center gap-2 transition-all hover:bg-white active:scale-95", action.color)}>
+244:                     <div className={cn("w-9 h-9 md:w-11 md:h-11 flex items-center justify-center rounded-xl", action.iconColor)}>
+245:                       <action.Icon className="w-4.5 h-4.5 md:w-5 md:h-5 text-white" />
+246:                     </div>
+247:                     <span className={cn("font-bold text-[8px] md:text-[10px] tracking-wider uppercase leading-none whitespace-nowrap transition-colors", action.textColor)}>{action.label}</span>
+248:                   </Link>
+249:                 ))}
+250:               </div>
+251:             </div>
           </div>
         </section>
  
