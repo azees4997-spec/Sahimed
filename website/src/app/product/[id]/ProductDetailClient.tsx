@@ -9,7 +9,7 @@ import { useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import {
   Info, Baby, Milk, Car, ShieldAlert, Stethoscope, AlertTriangle, Package,
-  ShoppingCart, Minus, Plus, MapPin, ChevronDown, ChevronRight,
+  ShoppingCart, ShoppingBag, Minus, Plus, MapPin, ChevronDown, ChevronRight,
   AlertCircle, Truck, FlaskConical, Tag, Building2, Globe, Pill,
   ClipboardList, Zap, BookOpen, ThumbsUp, Share2, Copy, Send,
   CheckCircle2, Star, ShieldCheck, Clock, HeartPulse, BadgeCheck, Eye, ZoomIn,
@@ -186,7 +186,7 @@ function ProductMiniCard({ item, onAdd }: { item: any; onAdd: (item: any) => voi
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
-export default function ProductDetailClient({ initialProduct, id }: { initialProduct: any; id: string }) {
+export default function ProductDetailClient({ initialProduct, id, crossSellProducts = [] }: { initialProduct: any; id: string; crossSellProducts?: any[] }) {
   const { toast } = useToast();
   const { user } = useUser();
   const db_fs = useFirestore();
@@ -721,17 +721,64 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                     </div>
                   )}
 
-                  {product?.sideEffects && (
+                  {/* Side effects — render as individual pill tags */}
+                  {((product?.sideEffectsArray?.length > 0) || product?.sideEffects) && (
                     <div><SectionLabel>Possible Side Effects</SectionLabel>
                       <div className="relative overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 rounded-2xl p-5">
                         <div className="absolute top-3 right-3 opacity-10"><AlertTriangle className="w-16 h-16 text-amber-500" /></div>
-                        <div className="flex gap-3 relative z-10">
-                          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                          <p className="text-sm font-medium text-amber-900 leading-relaxed">{product.sideEffects}</p>
+                        <div className="flex items-center gap-2 mb-3 relative z-10">
+                          <AlertTriangle className="w-4 h-4 text-amber-600" />
+                          <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">Common side effects</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2 relative z-10">
+                          {(product.sideEffectsArray?.length > 0
+                            ? product.sideEffectsArray
+                            : product.sideEffects?.split(/\n|\|/).filter(Boolean)
+                          ).map((s: string, i: number) => (
+                            <span key={i} className="bg-white border border-amber-200 text-amber-800 text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-sm">
+                              {s.trim()}
+                            </span>
+                          ))}
                         </div>
                       </div>
                     </div>
                   )}
+
+                  {/* How It Works — mechanism of action */}
+                  {(product?.howItWorks || product?.medical_info?.how_it_works) && (
+                    <div><SectionLabel>How it Works</SectionLabel>
+                      <div className="relative overflow-hidden bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 rounded-2xl p-5">
+                        <div className="absolute top-3 right-3 opacity-10"><FlaskConical className="w-16 h-16 text-violet-500" /></div>
+                        <div className="flex gap-3 relative z-10">
+                          <FlaskConical className="w-5 h-5 text-violet-600 shrink-0 mt-0.5" />
+                          <p className="text-sm font-medium text-violet-900 leading-relaxed">{product.howItWorks || product.medical_info?.how_it_works}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fact Box — parse "Key :: Value|Key :: Value" */}
+                  {(product?.factBox || product?.medical_info?.fact_box) && (() => {
+                    const raw: string = product.factBox || product.medical_info?.fact_box || '';
+                    const pairs = raw.split('|').map(s => s.trim()).filter(Boolean).map(s => {
+                      const [k, ...v] = s.split('::');
+                      return { key: k?.trim(), val: v.join('::').trim() };
+                    }).filter(p => p.key && p.val);
+                    if (!pairs.length) return null;
+                    return (
+                      <div><SectionLabel>Quick Facts</SectionLabel>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {pairs.map((p, i) => (
+                            <div key={i} className="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+                              <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wide shrink-0">{p.key}</span>
+                              <span className="text-xs font-semibold text-slate-800 ml-auto text-right">{p.val}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -753,11 +800,26 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                       <div className="bg-teal-50 border border-teal-100 rounded-2xl p-5 flex gap-3"><Package className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" /><p className="text-sm font-medium text-teal-900 leading-relaxed">{product.storage_instructions}</p></div>
                     </div>
                   )}
-                  <div className="space-y-3"><SectionLabel>Common Questions</SectionLabel>
-                    <FaqItem q="What should I do if I miss a dose?" a={product?.ifMiss || product?.if_miss || product?.medical_info?.if_miss || "Take the missed dose as soon as you remember. If the next scheduled dose is close, skip the missed dose. Never double-dose."} />
-                    <FaqItem q="What happens if I overdose?" a="Seek immediate emergency medical attention if you believe you have taken too much of this medication." />
-                    <FaqItem q="Can I stop taking this medicine suddenly?" a="Do not stop the medication without consulting your doctor, as abrupt discontinuation may cause withdrawal symptoms." />
-                  </div>
+                  {/* Dynamic Q&A from DB — all items */}
+                  {((product?.qaList?.length > 0) || product?.medical_info?.q_a?.length > 0) && (
+                    <div className="space-y-3"><SectionLabel>Frequently Asked Questions</SectionLabel>
+                      {(product.qaList || product.medical_info?.q_a || []).map((item: any, i: number) => (
+                        <FaqItem key={i} q={item.question} a={item.answer} />
+                      ))}
+                      {/* Extra fallback clinical FAQs if not already in q_a */}
+                      {!product?.ifMiss && <FaqItem q="What should I do if I miss a dose?" a="Take the missed dose as soon as you remember. If the next dose is close, skip it. Never double-dose." />}
+                      {(product?.ifOverdose || product?.medical_info?.if_overdose) && <FaqItem q="What if I overdose?" a={product.ifOverdose || product.medical_info?.if_overdose} />}
+                      {(product?.stopAdvice || product?.medical_info?.stop_advice) && <FaqItem q="Can I stop this medicine suddenly?" a={product.stopAdvice || product.medical_info?.stop_advice} />}
+                    </div>
+                  )}
+                  {/* If no q_a at all, show minimal fallback */}
+                  {!(product?.qaList?.length > 0) && !(product?.medical_info?.q_a?.length > 0) && (
+                    <div className="space-y-3"><SectionLabel>Common Questions</SectionLabel>
+                      <FaqItem q="What should I do if I miss a dose?" a={product?.ifMiss || product?.medical_info?.if_miss || "Take the missed dose as soon as you remember. If the next scheduled dose is close, skip it. Never double-dose."} />
+                      <FaqItem q="What happens if I overdose?" a={product?.ifOverdose || product?.medical_info?.if_overdose || "Seek immediate emergency medical attention."} />
+                      <FaqItem q="Can I stop taking this medicine suddenly?" a={product?.stopAdvice || product?.medical_info?.stop_advice || "Do not stop without consulting your doctor."} />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -981,6 +1043,45 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
                 {alsoBought.map((item: any) => (
                   <ProductMiniCard key={item._id || item.id} item={item} onAdd={addItemToCart} />
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* ╔══════════════════════════════════════════════╗
+              ║  CROSS-SELL (from product mapping)           ║
+              ╚══════════════════════════════════════════════╝ */}
+          {crossSellProducts.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <ShoppingBag className="w-4 h-4 text-primary" />
+                  <h2 className="text-base font-black text-slate-800">You May Also Need</h2>
+                </div>
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+                {crossSellProducts.map((item: any) => {
+                  const p = Number(item.price || 0);
+                  const m = Number(item.mrp || p);
+                  const slug = item.seoUrlSlug || item.id;
+                  const disc = m > p ? Math.round(((m - p) / m) * 100) : 0;
+                  return (
+                    <Link key={item.id} href={`/product/${encodeURIComponent(slug?.replace(/^\//, '') || '')}`}
+                      className="bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col shrink-0 w-40 sm:w-44 group">
+                      <div className="relative h-32 bg-slate-50 flex items-center justify-center">
+                        <Image src={item.imageUrl || '/images/medicine_placeholder.png'} alt={item.name || ''} fill className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
+                        {disc > 0 && (
+                          <span className="absolute top-2 left-2 bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{disc}% OFF</span>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <p className="text-[10px] font-bold text-slate-800 line-clamp-2 mb-1">{item.name}</p>
+                        {item.marketerName && <p className="text-[9px] text-slate-400 mb-1">{item.marketerName}</p>}
+                        <p className="text-sm font-black text-slate-900">₹{p}</p>
+                        {m > p && <p className="text-[9px] text-slate-400 line-through">₹{m}</p>}
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}

@@ -82,9 +82,22 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
         primaryUse:           product.medical_info?.primary_use,
         benefits:             product.medical_info?.benefits,
         howToUse:             product.medical_info?.how_to_use,
-        sideEffects:          product.medical_info?.side_effects,
+        howItWorks:           product.medical_info?.how_it_works,
+        factBox:              product.medical_info?.fact_box,
+        qaList:               Array.isArray(product.medical_info?.q_a) ? product.medical_info.q_a : [],
+        // side_effects can be string or array — normalise to both
+        sideEffects: Array.isArray(product.medical_info?.side_effects)
+          ? product.medical_info.side_effects.join('\n')
+          : (product.medical_info?.side_effects || ''),
+        sideEffectsArray: Array.isArray(product.medical_info?.side_effects)
+          ? product.medical_info.side_effects
+          : (product.medical_info?.side_effects
+              ? product.medical_info.side_effects.split(/\n|\|/).filter(Boolean)
+              : []),
         composition:          product.medical_info?.composition,
         ifMiss:               product.medical_info?.if_miss,
+        ifOverdose:           product.medical_info?.if_overdose,
+        stopAdvice:           product.medical_info?.stop_advice,
         storageInstructions:  product.medical_info?.storage_instructions,
 
         // packaging sub-document
@@ -137,6 +150,9 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
         seoUrlSlug:         product.seo?.url_slug,
         seoTitle:           product.seo?.title,
         seoDescription:     product.seo?.description,
+
+        // cross-sell IDs (fetched below)
+        crossSellIds:       product.cross_sell_recommendations || [],
       } as unknown as Product;
     }
     return null;
@@ -198,8 +214,33 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   if (!product) notFound();
 
+  // ── Fetch cross-sell products server-side ───────────────────────────────
+  let crossSellProducts: any[] = [];
+  const crossSellIds: string[] = (product as any).crossSellIds || [];
+  if (crossSellIds.length > 0) {
+    try {
+      const client = await clientPromise;
+      const db = client.db('sahimed');
+      const docs = await db.collection('Product Master').find(
+        { product_id: { $in: crossSellIds } },
+        { projection: { product_name: 1, images: 1, packaging: 1, taxonomy: 1, seo: 1, product_id: 1 } }
+      ).limit(10).toArray();
+      crossSellProducts = docs.map(p => ({
+        id: p._id.toString(),
+        name: p.product_name,
+        imageUrl: p.images?.[0] || '',
+        price: p.packaging?.mrp || 0,
+        mrp: p.packaging?.mrp || 0,
+        marketerName: p.taxonomy?.marketer_name || '',
+        seoUrlSlug: p.seo?.url_slug || p.product_id || p._id.toString(),
+      }));
+    } catch (e) {
+      crossSellProducts = [];
+    }
+  }
+
   const price = product.price || 0;
-  const inStock = true; // Salable items from Product Master are in stock
+  const inStock = true;
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -247,7 +288,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ProductDetailClient initialProduct={product} id={product.id} />
+      <ProductDetailClient initialProduct={product} id={product.id} crossSellProducts={crossSellProducts} />
     </>
   );
 }
+
