@@ -153,7 +153,13 @@ export default function ProductDetailClient({ initialProduct, id }: { initialPro
   const [isShareOpen, setIsShareOpen] = useState(false);
 
   const { data: productData } = useMongoDBDoc(id);
-  const product = productData || initialProduct;
+  // ⚠️  Always keep initialProduct (SSR normalized) as the base.
+  //     productData from useMongoDBDoc is the raw DB doc — it doesn't have the
+  //     normalized convenience keys (composition, marketerName, etc.) set in page.tsx.
+  //     We only pull liveData (live pricing) from productData.
+  const product = initialProduct
+    ? { ...initialProduct, liveData: productData?.liveData || initialProduct?.liveData }
+    : productData;
   const { data: molData } = useMongoDBMolecule(product?.moleculeId);
 
   useEffect(() => {
