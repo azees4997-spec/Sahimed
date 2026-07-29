@@ -22,6 +22,7 @@ import PageTransition from '@/components/PageTransition';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import Footer from '@/components/Footer';
 
 // ─── Strip HTML ──────────────────────────────────────────────────────────────
 function stripHtml(raw?: string | null): string {

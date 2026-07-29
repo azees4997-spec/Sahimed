@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Navbar from '@/components/Navbar';
-import { ShieldCheck, Search, FileText, MessageCircle, Phone } from 'lucide-react';
+import { ShieldCheck, Search, FileText, MessageCircle, Phone, Package } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
