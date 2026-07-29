@@ -65,28 +65,74 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
     }
 
     if (product) {
-      // Normalize to legacy structure expected by ProductDetailClient
+      // Pass the ENTIRE raw MongoDB document plus normalised shorthand keys
       return {
+        // ── spread everything from MongoDB ──────────────────────────────
         ...product,
+
+        // ── normalised convenience keys used by legacy helpers ──────────
         id: product._id.toString(),
         name: product.product_name,
-        description: product.medical_info?.introduction,
-        treatment: product.medical_info?.uses,
-        howToUse: product.medical_info?.how_to_use,
-        storage_instructions: product.packaging?.storage,
-        safety_warnings: product.safety_warnings,
-        pregnancyInteraction: product.safety_warnings?.pregnancy,
-        lactationInteraction: product.safety_warnings?.lactation,
-        drivingInteraction: product.safety_warnings?.driving,
-        kidneyInteraction: product.safety_warnings?.kidney,
-        liverInteraction: product.safety_warnings?.liver,
-        imageUrl: product.images?.[0] || '',
-        imageUrls: product.images || [],
-        manufacturer: product.taxonomy?.marketer_name,
-        price: product.packaging?.mrp,
-        mrp: product.packaging?.mrp,
-        sku: product.product_id,
-        prescriptionRequired: product.safety_warnings?.is_rx_required
+
+        // medical_info sub-document
+        description:          product.medical_info?.introduction,
+        introduction:         product.medical_info?.introduction,
+        treatment:            product.medical_info?.uses,
+        uses:                 product.medical_info?.uses,
+        primaryUse:           product.medical_info?.primary_use,
+        benefits:             product.medical_info?.benefits,
+        howToUse:             product.medical_info?.how_to_use,
+        sideEffects:          product.medical_info?.side_effects,
+        composition:          product.medical_info?.composition,
+        ifMiss:               product.medical_info?.if_miss,
+        storageInstructions:  product.medical_info?.storage_instructions,
+
+        // packaging sub-document
+        price:                    product.packaging?.mrp,
+        mrp:                      product.packaging?.mrp,
+        productForm:              product.packaging?.product_form,
+        packageType:              product.packaging?.package_type,
+        packageQuantity:          product.packaging?.package_quantity,
+        packagingDetail:          product.packaging?.packaging_detail,
+        // storage: prefer medical_info.storage_instructions, fall back to packaging.storage
+        storage_instructions:     product.medical_info?.storage_instructions || product.packaging?.storage,
+
+        // taxonomy sub-document
+        manufacturer:       product.taxonomy?.marketer_name,
+        marketerName:       product.taxonomy?.marketer_name,
+        marketerId:         product.taxonomy?.marketer_id,
+        categoryName:       product.taxonomy?.category_name,
+        categoryId:         product.taxonomy?.category_id,
+        subCategory:        product.taxonomy?.sub_category,
+
+        // safety_warnings sub-document (kept as nested object AND as flat keys)
+        // ⚠️  Interactions are stored under safety_warnings.interactions.* (not top-level)
+        safety_warnings:          product.safety_warnings,
+        prescriptionRequired:     product.safety_warnings?.is_rx_required,
+        isControlledSubstance:    product.safety_warnings?.is_controlled_substance,
+        pregnancyInteraction:     product.safety_warnings?.interactions?.pregnancy,
+        lactationInteraction:     product.safety_warnings?.interactions?.lactation,
+        drivingInteraction:       product.safety_warnings?.interactions?.driving,
+        kidneyInteraction:        product.safety_warnings?.interactions?.kidney,
+        liverInteraction:         product.safety_warnings?.interactions?.liver,
+        alcoholInteraction:       product.safety_warnings?.interactions?.alcohol,
+        safetyAdvise:             product.safety_warnings?.interactions?.safety_advise,
+
+        // images
+        imageUrl:   product.images?.[0] || '',
+        imageUrls:  product.images || [],
+
+        // identifiers
+        sku:            product.product_id,
+        moleculeCode:   product.molecule_code,
+        medicineType:   product.medicine_type,
+        salableStatus:  product.salable_status,
+        countryOfOrigin: product.country_of_origin,
+
+        // SEO
+        seoUrlSlug:         product.seo?.url_slug,
+        seoTitle:           product.seo?.title,
+        seoDescription:     product.seo?.description,
       } as unknown as Product;
     }
     return null;
