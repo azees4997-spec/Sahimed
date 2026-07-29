@@ -32,6 +32,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
           sub_category: updateData.sub_category,
           product_count: updateData.product_count,
           source_catalog: updateData.source_catalog,
+          imageUrl: updateData.imageUrl || '',
+          showOnHomepage: updateData.showOnHomepage === true,
           updatedAt: new Date() 
         } 
       }

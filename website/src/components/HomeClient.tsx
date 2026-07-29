@@ -84,11 +84,17 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
 
   // Sort categories by number of items (descending) and take top 5
   const topDynamicCategories = React.useMemo(() => {
+    if (categories && categories.length > 0) {
+      // Map user-selected categories to the rows
+      return categories.map(cat => [cat.name, medicinesByCategory[cat.name] || []]);
+    }
+    
+    // Fallback: Use all dynamically generated categories
     return Object.entries(medicinesByCategory)
       .filter(([cat]) => cat !== 'Other' && cat.trim() !== '')
       .sort((a, b) => b[1].length - a[1].length)
       .slice(0, 6); // Limit to top 6 dynamic rows
-  }, [medicinesByCategory]);
+  }, [medicinesByCategory, categories]);
 
   return (
     <div className="space-y-6 sm:space-y-12 pb-0 sm:pb-32 overflow-x-hidden max-w-full">

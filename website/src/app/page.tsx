@@ -47,12 +47,16 @@ async function getCategories() {
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const categories = await db.collection('categories')
-      .find({})
-      .sort({ name: 1 })
-      .limit(12)
+    const categories = await db.collection('Category Master')
+      .find({ showOnHomepage: true })
+      .sort({ category: 1 })
       .toArray();
-    return categories.map(c => ({ ...c, id: c._id.toString() }));
+    return categories.map(c => ({
+      ...c,
+      id: c._id.toString(),
+      name: c.category, // Map category to name for backwards compatibility
+      imageUrl: c.imageUrl
+    }));
   } catch (err) {
     console.error("Failed to fetch categories from MongoDB, falling back to static data...", err);
     return CATEGORIES.map((cat, idx) => ({

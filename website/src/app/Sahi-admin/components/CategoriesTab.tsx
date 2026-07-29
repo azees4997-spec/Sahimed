@@ -33,8 +33,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { SectionHeader } from './SectionHeader';
 import { ExportFieldsDialog } from './ExportFieldsDialog';
+import { Switch } from '@/components/ui/switch';
 
-const CATEGORY_FIELDS = ['category_id', 'category', 'sub_category', 'product_count', 'source_catalog'];
+const CATEGORY_FIELDS = ['category_id', 'category', 'sub_category', 'product_count', 'source_catalog', 'imageUrl', 'showOnHomepage'];
 
 export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const [categories, setCategories] = useState<any[]>([]);
@@ -104,11 +105,12 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[10px] font-black text-gray-400 border-b tracking-widest uppercase">
               <tr>
+                <th className="px-10 py-8">Image</th>
                 <th className="px-10 py-8">Category ID</th>
                 <th className="px-10 py-8">Category Name</th>
                 <th className="px-10 py-8">Sub-Category</th>
                 <th className="px-10 py-8">Product Count</th>
-                <th className="px-10 py-8">Source Catalog</th>
+                <th className="px-10 py-8">Home</th>
                 <th className="px-10 py-8 text-right">Actions</th>
               </tr>
             </thead>
@@ -116,11 +118,12 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
               {isLoading ? (
                 Array(5).fill(0).map((_, i) => (
                   <tr key={i}>
+                    <td className="px-10 py-8"><div className="w-10 h-10 bg-slate-100 animate-pulse rounded-full" /></td>
                     <td className="px-10 py-8"><div className="w-20 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
                     <td className="px-10 py-8"><div className="w-32 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
                     <td className="px-10 py-8"><div className="w-24 h-4 bg-slate-50 animate-pulse rounded-full" /></td>
                     <td className="px-10 py-8"><div className="w-12 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
-                    <td className="px-10 py-8"><div className="w-16 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className="px-10 py-8"><div className="w-8 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
                     <td className="px-10 py-8 text-right"><div className="w-8 h-8 bg-slate-50 animate-pulse rounded-lg ml-auto" /></td>
                   </tr>
                 ))
@@ -133,6 +136,17 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
               ) : categories.map(cat => (
                 <tr key={cat.id} className="hover:bg-gray-50/50">
                   <td className="px-10 py-8">
+                    {cat.imageUrl ? (
+                      <div className="w-10 h-10 rounded-full border border-slate-100 overflow-hidden bg-white shadow-sm flex items-center justify-center">
+                        <img src={cat.imageUrl} alt={cat.category} className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center">
+                        <span className="text-xs text-slate-300 font-bold">N/A</span>
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-10 py-8">
                     <span className="text-[11px] font-black text-primary bg-primary/10 px-3 py-1 rounded-full">
                       {cat.category_id}
                     </span>
@@ -141,8 +155,8 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
                   <td className="px-10 py-8 font-medium text-xs text-gray-500">{cat.sub_category}</td>
                   <td className="px-10 py-8 font-bold text-gray-500">{cat.product_count || 0}</td>
                   <td className="px-10 py-8">
-                    <Badge variant={cat.source_catalog === 'OTC' ? 'outline' : 'secondary'} className="font-black text-[10px] uppercase">
-                      {cat.source_catalog || 'OTC'}
+                    <Badge variant={cat.showOnHomepage ? 'default' : 'outline'} className={cat.showOnHomepage ? 'bg-[#25D366] text-white font-black text-[10px] uppercase' : 'font-black text-[10px] uppercase'}>
+                      {cat.showOnHomepage ? 'Yes' : 'No'}
                     </Badge>
                   </td>
                   <td className="px-10 py-8 text-right">
@@ -206,7 +220,9 @@ function CategoryForm({ initialData, onSuccess }: { initialData?: any, onSuccess
     category: initialData?.category || '',
     sub_category: initialData?.sub_category || '',
     product_count: initialData?.product_count || '0',
-    source_catalog: initialData?.source_catalog || 'OTC'
+    source_catalog: initialData?.source_catalog || 'OTC',
+    imageUrl: initialData?.imageUrl || '',
+    showOnHomepage: initialData?.showOnHomepage || false
   });
   const { user } = useUser();
   const { toast } = useToast();
@@ -253,22 +269,18 @@ function CategoryForm({ initialData, onSuccess }: { initialData?: any, onSuccess
         <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Sub-Category</Label>
         <Input value={form.sub_category} onChange={e => setForm({...form, sub_category: e.target.value})} placeholder="e.g. NSAIDs (General Pain)" className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
       </div>
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Image URL</Label>
+        <Input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} placeholder="https://..." className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
+      </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Product Count</Label>
           <Input value={form.product_count} onChange={e => setForm({...form, product_count: e.target.value})} placeholder="0" className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
         </div>
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Source Catalog</Label>
-          <Select value={form.source_catalog} onValueChange={(v) => setForm({...form, source_catalog: v})}>
-            <SelectTrigger className="rounded-2xl h-12 bg-gray-50 border-none font-bold">
-              <SelectValue placeholder="Catalog Type" />
-            </SelectTrigger>
-            <SelectContent className="rounded-2xl z-[150]">
-              <SelectItem value="OTC" className="font-bold">OTC</SelectItem>
-              <SelectItem value="Rx" className="font-bold">Rx</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-4 bg-gray-50 rounded-2xl h-12 px-4 justify-between mt-6">
+          <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Show on Homepage</Label>
+          <Switch checked={form.showOnHomepage} onCheckedChange={v => setForm({...form, showOnHomepage: v})} />
         </div>
       </div>
       <Button type="submit" className="w-full h-14 rounded-full font-black bg-primary text-white mt-2">Save Category</Button>

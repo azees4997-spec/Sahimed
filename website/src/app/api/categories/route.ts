@@ -59,8 +59,10 @@ export async function POST(request: Request) {
       category_id: body.category_id,
       category: body.category,
       sub_category: body.sub_category,
-      product_count: body.product_count || '0',
-      source_catalog: body.source_catalog || 'OTC',
+      product_count: body.product_count,
+      source_catalog: body.source_catalog,
+      imageUrl: body.imageUrl || '',
+      showOnHomepage: body.showOnHomepage === true,
       createdAt: new Date(),
       updatedAt: new Date()
     });
