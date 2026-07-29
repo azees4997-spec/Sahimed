@@ -55,7 +55,7 @@ export default function TrustSection() {
 
         {/* Horizontal Slider Container */}
         <div className="relative group">
-            <div className="flex flex-nowrap overflow-x-auto gap-3 sm:gap-6 pb-12 pt-4 px-4 -mx-4 scrollbar-hide snap-x snap-mandatory cursor-grab active:cursor-grabbing">
+            <div className="flex flex-nowrap overflow-x-auto gap-4 sm:gap-8 pb-16 pt-8 px-4 -mx-4 scrollbar-hide snap-x snap-mandatory cursor-grab active:cursor-grabbing">
             {[...REVIEWS, ...REVIEWS].map((review, i) => (
               <motion.div 
                 key={i}
@@ -63,25 +63,30 @@ export default function TrustSection() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: (i % 3) * 0.1, duration: 0.8 }}
-                className="min-w-[145px] sm:min-w-[400px] bg-white rounded-[20px] sm:rounded-[40px] p-3.5 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/50 relative group snap-center hover:-translate-y-2 transition-transform duration-500"
+                className="min-w-[280px] sm:min-w-[420px] bg-white/70 backdrop-blur-xl rounded-[24px] sm:rounded-[40px] p-6 sm:p-10 border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative group/card snap-center hover:-translate-y-2 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:bg-white transition-all duration-500"
               >
+                {/* Decorative Quote Icon */}
+                <div className="absolute top-6 right-6 text-primary/5 opacity-50 group-hover/card:opacity-100 group-hover/card:text-primary/10 group-hover/card:scale-110 transition-all duration-500">
+                  <Quote className="w-12 h-12 sm:w-16 sm:h-16" />
+                </div>
+                
                 <div className="space-y-4 sm:space-y-6 relative z-10">
-                  <div className="flex gap-0.5 sm:gap-1">
+                  <div className="flex gap-1">
                     {[...Array(review.rating)].map((_, i) => (
-                      <Star key={i} className="w-2.5 h-2.5 sm:w-4 sm:h-4 fill-[#FACC15] text-[#FACC15]" />
+                      <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-[#FACC15] text-[#FACC15] drop-shadow-sm" />
                     ))}
                   </div>
 
-                  <p className="text-slate-700 text-[10px] sm:text-lg leading-relaxed font-bold sm:font-medium italic min-h-[80px] sm:min-h-[120px]">
+                  <p className="text-slate-700 text-sm sm:text-lg leading-relaxed font-medium italic min-h-[100px] sm:min-h-[120px]">
                     "{review.text}"
                   </p>
 
-                  <div className="pt-4 sm:pt-6 border-t border-slate-50">
-                    <h4 className="text-slate-900 font-black uppercase text-[9px] sm:text-sm tracking-tight flex items-center gap-1 sm:gap-2">
+                  <div className="pt-4 sm:pt-6 border-t border-slate-200/60">
+                    <h4 className="text-slate-900 font-black uppercase text-xs sm:text-sm tracking-tight flex items-center gap-1 sm:gap-2">
                       {review.name}
-                      <CheckCircle2 className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-blue-500" />
+                      <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500" />
                     </h4>
-                    <p className="text-slate-600 font-black text-[7px] sm:text-[10px] uppercase tracking-widest mt-1">{review.location} • {review.date}</p>
+                    <p className="text-slate-500 font-bold text-[9px] sm:text-[10px] uppercase tracking-widest mt-1.5">{review.location} • {review.date}</p>
                   </div>
                 </div>
               </motion.div>

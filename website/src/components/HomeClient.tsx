@@ -70,6 +70,26 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
     });
   }, [api]);
 
+  // Group medicines by category dynamically
+  const medicinesByCategory = React.useMemo(() => {
+    if (!medicines || medicines.length === 0) return {};
+    
+    return medicines.reduce((acc: Record<string, any[]>, product: any) => {
+      const cat = product.categoryName || 'Other';
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(product);
+      return acc;
+    }, {});
+  }, [medicines]);
+
+  // Sort categories by number of items (descending) and take top 5
+  const topDynamicCategories = React.useMemo(() => {
+    return Object.entries(medicinesByCategory)
+      .filter(([cat]) => cat !== 'Other' && cat.trim() !== '')
+      .sort((a, b) => b[1].length - a[1].length)
+      .slice(0, 6); // Limit to top 6 dynamic rows
+  }, [medicinesByCategory]);
+
   return (
     <div className="space-y-6 sm:space-y-12 pb-0 sm:pb-32 overflow-x-hidden max-w-full">
 
@@ -140,30 +160,30 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         </section>
       )}
  
-      <section className="space-y-3 sm:space-y-5 max-w-full">
+      <section className="space-y-3 sm:space-y-5 max-w-full relative">
         <div className="flex items-center justify-between px-1 sm:px-2">
-          <h2 className="text-base sm:text-lg font-black text-primary tracking-tighter uppercase font-outfit">Top Categories</h2>
-          <Link href="/categories" className="text-[8px] sm:text-[10px] font-black tracking-widest text-primary uppercase flex items-center gap-1">Explore All <ChevronRight className="w-3 h-3" /></Link>
+          <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tighter uppercase font-outfit">Explore By Category</h2>
+          <Link href="/categories" className="text-[8px] sm:text-[10px] font-black tracking-widest text-primary uppercase flex items-center gap-1 hover:underline">See All <ChevronRight className="w-3 h-3" /></Link>
         </div>
-        <div className="grid grid-cols-3 sm:flex sm:overflow-x-auto sm:scrollbar-hide gap-3 sm:gap-6 pb-2 sm:pb-4 px-1 sm:px-2 max-w-full">
+        <div className="grid grid-cols-3 sm:flex sm:overflow-x-auto sm:scrollbar-hide gap-3 sm:gap-4 pb-2 sm:pb-4 px-1 sm:px-2 max-w-full">
           {categories.slice(0, 12).map((cat: any, i: number) => (
-            <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-1.5 sm:gap-2 group/cat shrink-0 sm:w-24">
+            <Link key={i} href={`/search?c=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center group/cat shrink-0 sm:w-28 bg-white border border-slate-100 rounded-[20px] p-2 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300">
               <div 
                 className={cn(
-                  "w-20 h-20 sm:w-20 sm:h-20 rounded-full flex items-center justify-center border-4 border-white shadow-xl overflow-hidden p-0 transition-all duration-300 group-hover/cat:-translate-y-1",
-                  i % 4 === 0 ? "bg-lavender" : i % 4 === 1 ? "bg-sahi-pink" : i % 4 === 2 ? "bg-sahi-blue" : "bg-sahi-green"
+                  "w-full aspect-square rounded-[16px] flex items-center justify-center overflow-hidden p-2 transition-all duration-500 group-hover/cat:scale-95",
+                  i % 4 === 0 ? "bg-lavender/50" : i % 4 === 1 ? "bg-sahi-pink/50" : i % 4 === 2 ? "bg-sahi-blue/50" : "bg-sahi-green/50"
                 )}>
                 <Image 
                   src={cat.imageUrl || `https://picsum.photos/seed/${cat.name}/200/200`} 
                   alt={cat.name} 
                   width={120} 
                   height={120} 
-                  className="object-cover w-full h-full transition-transform duration-700 group-hover/cat:scale-110" 
+                  className="object-contain w-full h-full transition-transform duration-700 group-hover/cat:scale-110 drop-shadow-sm" 
                   loading={i < 3 ? undefined : "lazy"}
                   priority={i < 3}
                 />
               </div>
-              <span className="text-[9px] sm:text-[10px] font-black text-slate-700 tracking-tight uppercase text-center line-clamp-1 h-4 px-1">{cat.name}</span>
+              <span className="text-[9px] sm:text-[10px] font-black text-slate-800 tracking-tight uppercase text-center line-clamp-2 h-7 mt-2 leading-tight px-1 group-hover/cat:text-primary transition-colors">{cat.name}</span>
             </Link>
           ))}
         </div>
@@ -208,17 +228,26 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         </section>
       )}
 
-      {/* Featured Items / Medicines section */}
-      <section className="space-y-3 sm:space-y-5 max-w-full">
-        <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tighter uppercase font-outfit px-1 sm:px-2">Featured Medicines</h2>
-        <div className="flex gap-3 sm:gap-5 overflow-x-auto scrollbar-hide pb-4 sm:pb-6 px-1 sm:px-2">
-          {medicines.map((p: any, i: number) => (
-            <div key={p.id} className="min-w-[120px] sm:min-w-[180px]">
-              <ProductCard product={p} priority={i < 1} />
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* Dynamic Category Rows (From DB) */}
+      {topDynamicCategories.map(([categoryName, products], idx) => (
+        <section key={categoryName} className="space-y-3 sm:space-y-5 max-w-full">
+          <div className="flex items-center justify-between px-1 sm:px-2">
+            <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tighter uppercase font-outfit">
+              Top in {categoryName}
+            </h2>
+            <Link href={`/search?c=${encodeURIComponent(categoryName)}`} className="text-[8px] sm:text-[10px] font-black tracking-widest text-primary uppercase flex items-center gap-1 hover:underline">
+              View All <ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div className="flex gap-3 sm:gap-5 overflow-x-auto scrollbar-hide pb-4 sm:pb-6 px-1 sm:px-2">
+            {products.slice(0, 8).map((p: any, i: number) => (
+              <div key={p.id || p._id} className="min-w-[120px] sm:min-w-[180px]">
+                <ProductCard product={p} priority={idx === 0 && i < 2} />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }
