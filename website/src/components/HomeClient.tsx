@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from 'react';
-import { ChevronRight, ShieldCheck, Truck, Star, Zap, BadgeCheck, Award, Clock } from 'lucide-react';
+import { ChevronRight, ShieldCheck, Star, Zap, BadgeCheck, Award, Clock } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -276,23 +276,25 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
       )}
 
       {/* ════════════════════════════════════════════════
-          THE SAHIMED ADVANTAGE  —  beats PlatinumRx's basic icon row
+          THE SAHIMED ADVANTAGE — light, colorful version
           ════════════════════════════════════════════════ */}
       <motion.section
         variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }}
-        className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 sm:p-10"
+        className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary/5 via-white to-violet-50 border border-primary/10 p-5 sm:p-10"
       >
-        {/* Background decorations */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+        {/* Soft decorations */}
+        <div className="absolute top-0 right-0 w-56 h-56 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-violet-200/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10">
           <div className="text-center mb-6 sm:mb-10">
-            <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2">Why Choose Us</p>
-            <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight leading-tight">
-              The <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-violet-400">Sahimed</span> Advantage
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 border border-primary/10 px-3 py-1 rounded-full mb-3">
+              Why Choose Sahimed
+            </span>
+            <h2 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
+              The <span className="text-primary">Sahimed</span> Advantage
             </h2>
-            <p className="text-slate-400 text-xs sm:text-sm mt-1.5 font-medium">What makes us India's most trusted online pharmacy</p>
+            <p className="text-slate-500 text-xs sm:text-sm mt-1.5 font-medium">What makes us India's most trusted online pharmacy</p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
@@ -304,39 +306,37 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col gap-2 hover:bg-white/10 transition-colors duration-300"
+                className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 flex flex-col gap-2 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
               >
                 <div className={cn("w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center", adv.bg)}>
                   <adv.icon className={cn("w-5 h-5 sm:w-6 sm:h-6", adv.color)} />
                 </div>
                 <div>
-                  <p className="text-xl sm:text-2xl font-black text-white leading-none">{adv.val}</p>
-                  <p className="text-xs font-black text-slate-300 mt-0.5 uppercase tracking-wide">{adv.sub}</p>
+                  <p className={cn("text-xl sm:text-2xl font-black leading-none", adv.color)}>{adv.val}</p>
+                  <p className="text-xs font-black text-slate-700 mt-0.5 uppercase tracking-wide">{adv.sub}</p>
                 </div>
                 <p className="text-[10px] sm:text-[11px] text-slate-500 leading-relaxed font-medium hidden sm:block">{adv.desc}</p>
               </motion.div>
             ))}
           </div>
 
-          {/* Certification strip */}
-          <div className="mt-6 pt-5 border-t border-white/10 flex flex-wrap items-center justify-center gap-4 sm:gap-8">
+          {/* Certification pills */}
+          <div className="mt-6 pt-5 border-t border-slate-100 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
             {[
-              { icon: '🔒', label: 'Drug License', sub: 'KA-B51-286602' },
-              { icon: '🌐', label: 'SSL Encrypted', sub: '256-bit Security' },
-              { icon: '🏥', label: 'Licensed Pharmacist', sub: 'On Every Order' },
-              { icon: '⭐', label: 'Google Verified', sub: '4.8★ Rating' },
+              { icon: '🔒', label: 'Drug Lic. KA-B51-286602' },
+              { icon: '🌐', label: '256-bit SSL Encrypted' },
+              { icon: '🏥', label: 'Licensed Pharmacist' },
+              { icon: '⭐', label: 'Google Verified 4.8★' },
             ].map((cert, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className="text-lg">{cert.icon}</span>
-                <div>
-                  <p className="text-[10px] font-black text-white uppercase tracking-wider leading-none">{cert.label}</p>
-                  <p className="text-[9px] text-slate-500 font-medium">{cert.sub}</p>
-                </div>
+              <div key={i} className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-full px-3 py-1.5 shadow-sm">
+                <span className="text-sm">{cert.icon}</span>
+                <p className="text-[10px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap">{cert.label}</p>
               </div>
             ))}
           </div>
         </div>
       </motion.section>
+
 
       {/* ════════════════════════════════════════════════
           TOP SELECTIONS
@@ -368,25 +368,81 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         </motion.section>
       )}
 
-      {/* ── Free Delivery Strip ── */}
+      {/* ── 4 Promise Cards (replaces old dark strip) ── */}
       <motion.section
         variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
-        className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-primary via-teal-500 to-primary shadow-xl shadow-primary/20 px-5 py-4 sm:px-8 sm:py-5 flex items-center gap-4"
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_50%,rgba(255,255,255,0.1),transparent)]" />
-        <div className="flex items-center gap-3 flex-1 relative z-10">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
-            <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-          </div>
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/70">Pan India Delivery</p>
-            <h3 className="text-sm sm:text-lg font-black text-white leading-tight">Free Delivery Above <span className="text-yellow-300">₹499</span></h3>
-          </div>
-        </div>
-        <Link href="/search" className="relative z-10 bg-white text-primary px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-white/90 transition-all active:scale-95 shadow-lg whitespace-nowrap">
-          Shop Now →
-        </Link>
+        {[
+          {
+            icon: '🚚',
+            bg: 'bg-teal-50',
+            border: 'border-teal-100',
+            iconBg: 'bg-teal-100',
+            title: 'Free Delivery',
+            sub: 'On orders above ₹499',
+            badge: '₹0 Delivery',
+            badgeCls: 'bg-teal-100 text-teal-700',
+          },
+          {
+            icon: '✅',
+            bg: 'bg-emerald-50',
+            border: 'border-emerald-100',
+            iconBg: 'bg-emerald-100',
+            title: 'Certified Medicines',
+            sub: 'Licensed pharmacy · Drug Lic. KA-B51',
+            badge: 'Govt Certified',
+            badgeCls: 'bg-emerald-100 text-emerald-700',
+          },
+          {
+            icon: '📅',
+            bg: 'bg-violet-50',
+            border: 'border-violet-100',
+            iconBg: 'bg-violet-100',
+            title: 'Long Expiry',
+            sub: 'Min 6 months expiry on every product',
+            badge: 'Freshness Assured',
+            badgeCls: 'bg-violet-100 text-violet-700',
+          },
+          {
+            icon: '🔒',
+            bg: 'bg-blue-50',
+            border: 'border-blue-100',
+            iconBg: 'bg-blue-100',
+            title: 'Secure Payments',
+            sub: '256-bit SSL · UPI · Cards · COD',
+            badge: '100% Safe',
+            badgeCls: 'bg-blue-100 text-blue-700',
+          },
+        ].map((card, i) => (
+          <motion.div
+            key={i}
+            custom={i}
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className={cn(
+              'flex flex-col gap-3 p-4 sm:p-5 rounded-2xl border hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300',
+              card.bg, card.border
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center text-xl', card.iconBg)}>
+                {card.icon}
+              </div>
+              <span className={cn('text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full', card.badgeCls)}>
+                {card.badge}
+              </span>
+            </div>
+            <div>
+              <p className="text-sm font-black text-slate-900 leading-tight">{card.title}</p>
+              <p className="text-[10px] font-medium text-slate-500 mt-0.5 leading-snug">{card.sub}</p>
+            </div>
+          </motion.div>
+        ))}
       </motion.section>
+
 
       {/* ════════════════════════════════════════════════
           DYNAMIC CATEGORY PRODUCT ROWS

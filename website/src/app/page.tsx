@@ -241,22 +241,22 @@ function HeroSection() {
           <div className="w-full lg:w-[340px] xl:w-[380px] flex flex-col gap-3 shrink-0">
 
             {/* Main savings card */}
-            <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-primary rounded-2xl sm:rounded-3xl p-6 text-white overflow-hidden shadow-2xl shadow-slate-900/30">
+            <div className="relative bg-gradient-to-br from-primary to-teal-600 rounded-2xl sm:rounded-3xl p-6 text-white overflow-hidden shadow-2xl shadow-primary/30">
               {/* Decorative circles */}
-              <div className="absolute -top-8 -right-8 w-32 h-32 bg-primary/30 rounded-full blur-2xl" />
-              <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-violet-500/20 rounded-full blur-xl" />
+              <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+              <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-teal-300/20 rounded-full blur-xl" />
               <div className="absolute top-4 right-4 w-16 h-16 bg-white/5 rounded-full" />
 
               <div className="relative z-10">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50 mb-2">Save on Every Order</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70 mb-2">Save on Every Order</p>
                 <div className="flex items-end gap-2 mb-1">
                   <span className="text-6xl sm:text-7xl font-black leading-none text-white">61</span>
                   <div className="pb-2">
-                    <div className="text-2xl font-black text-primary leading-none">%</div>
+                    <div className="text-2xl font-black text-white/80 leading-none">%</div>
                     <div className="text-sm font-bold text-white/70">OFF</div>
                   </div>
                 </div>
-                <p className="text-xs font-semibold text-white/60 mb-4">on branded generic medicines vs MRP</p>
+                <p className="text-xs font-semibold text-white/70 mb-4">on branded generic medicines vs MRP</p>
 
                 {/* Inline mini stats */}
                 <div className="flex items-center gap-3 mb-4">
@@ -266,16 +266,16 @@ function HeroSection() {
                     { v: '24hr', l: 'Delivery' },
                   ].map((s, i) => (
                     <React.Fragment key={i}>
-                      {i > 0 && <div className="w-px h-5 bg-white/10" />}
+                      {i > 0 && <div className="w-px h-5 bg-white/20" />}
                       <div>
                         <div className="text-sm font-black text-white">{s.v}</div>
-                        <div className="text-[9px] font-semibold text-white/40 uppercase tracking-wider">{s.l}</div>
+                        <div className="text-[9px] font-semibold text-white/60 uppercase tracking-wider">{s.l}</div>
                       </div>
                     </React.Fragment>
                   ))}
                 </div>
 
-                <Link href="/search" className="flex items-center justify-between bg-primary hover:bg-primary/90 text-white px-4 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-primary/40">
+                <Link href="/search" className="flex items-center justify-between bg-white hover:bg-white/95 text-primary px-4 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-primary/20">
                   <span>Shop Now & Save Big</span>
                   <span className="text-lg leading-none">→</span>
                 </Link>
@@ -320,28 +320,43 @@ function HeroSection() {
 // ─── Final CTA (above footer) ─────────────────────────────────────────────────
 function FinalCTA() {
   return (
-    <section className="my-10 sm:my-16 rounded-2xl sm:rounded-3xl overflow-hidden relative bg-gradient-to-br from-primary via-teal-500 to-violet-600 p-8 sm:p-14 text-white text-center shadow-2xl shadow-primary/30">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.1),transparent)]" />
-      {/* Floating circles */}
-      <div className="absolute top-0 left-0 w-40 h-40 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 right-0 w-60 h-60 bg-white/5 rounded-full translate-x-1/3 translate-y-1/3" />
+    <section className="my-10 sm:my-16 rounded-2xl sm:rounded-3xl overflow-hidden relative bg-gradient-to-br from-[#eefbf9] via-white to-[#f0f0ff] border border-primary/15 p-8 sm:p-14 text-center">
+      {/* Soft blobs */}
+      <div className="absolute top-0 right-0 w-56 h-56 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-violet-200/30 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10 space-y-4 sm:space-y-6 max-w-2xl mx-auto">
-        <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-widest">
-          🎉 Limited Time Offer
+        <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-widest text-primary">
+          🎉 Start Saving Today
         </div>
-        <h2 className="text-2xl sm:text-4xl font-black leading-tight tracking-tight">
-          Start Saving on Your<br className="hidden sm:block" /> Medicines Today
+        <h2 className="text-2xl sm:text-4xl font-black leading-tight tracking-tight text-slate-900">
+          Sahi Dawai, <span className="text-primary">Sahi Daam Pe</span><br className="hidden sm:block" /> — For Every Indian Family
         </h2>
-        <p className="text-white/70 text-sm sm:text-base font-medium">
-          Join over 1 Lakh patients who switched to Sahimed for genuine, affordable medicines.
+        <p className="text-slate-500 text-sm sm:text-base font-medium">
+          Join over 1 Lakh patients who switched to Sahimed for genuine, certified, affordable medicines.
         </p>
+
+        {/* Trust pills */}
+        <div className="flex items-center gap-2 justify-center flex-wrap">
+          {[
+            { icon: '✅', text: 'Certified Medicines' },
+            { icon: '📅', text: 'Long Expiry' },
+            { icon: '🔒', text: 'Secure Payment' },
+            { icon: '🚚', text: 'Free Delivery ₹499+' },
+          ].map((t) => (
+            <span key={t.text} className="flex items-center gap-1.5 text-[10px] font-black text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider">
+              {t.icon} {t.text}
+            </span>
+          ))}
+        </div>
+
         <div className="flex items-center gap-3 justify-center flex-wrap pt-2">
-          <Link href="/search" className="bg-white text-primary px-6 py-3 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider hover:bg-white/90 transition-all active:scale-95 shadow-xl shadow-black/20">
+          <Link href="/search" className="bg-primary text-white px-6 py-3.5 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/25">
             Browse Medicines →
           </Link>
-          <Link href="https://wa.me/917349499898" target="_blank" className="border-2 border-white/40 text-white px-6 py-3 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider hover:bg-white/10 transition-all active:scale-95">
-            📱 Order on WhatsApp
+          <Link href="https://wa.me/917349499898" target="_blank" className="border-2 border-[#25D366] text-[#25D366] bg-white px-6 py-3.5 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider hover:bg-[#f0fdf4] transition-all active:scale-95 flex items-center gap-2">
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-[#25D366]"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+            WhatsApp Order
           </Link>
         </div>
       </div>
