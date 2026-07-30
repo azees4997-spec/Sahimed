@@ -282,65 +282,19 @@ function HeroSection() {
               </div>
             </div>
 
-            {/* ── Pharmacist Trust Card ── */}
-            <div className="flex items-center gap-3 bg-white border-2 border-primary/15 rounded-2xl p-3.5 shadow-md hover:shadow-lg transition-shadow">
-              {/* Photo */}
-              <div className="relative shrink-0">
-                <div className="w-14 h-14 rounded-xl overflow-hidden border-2 border-primary/20 bg-primary/5">
-                  <img
-                    src="/pharmacist-hero.jpg"
-                    alt="Sahimed Chief Pharmacist"
-                    className="w-full h-full object-cover object-top"
-                  />
+            {/* ── 3 Trust Mini Cards ── */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { icon: '🏥', val: 'Licensed', sub: 'Pharmacy', border: 'border-emerald-100', bg: 'bg-emerald-50' },
+                { icon: '💊', val: '100%', sub: 'Genuine', border: 'border-blue-100', bg: 'bg-blue-50' },
+                { icon: '🚚', val: 'Free', sub: 'Delivery ₹499+', border: 'border-amber-100', bg: 'bg-amber-50' },
+              ].map((c, i) => (
+                <div key={i} className={cn("rounded-xl border p-2.5 text-center", c.bg, c.border)}>
+                  <div className="text-xl mb-0.5">{c.icon}</div>
+                  <div className="text-[11px] font-black text-slate-800 leading-none">{c.val}</div>
+                  <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">{c.sub}</div>
                 </div>
-                {/* Verified badge */}
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-white shadow">
-                  <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                </div>
-              </div>
-              {/* Text */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1 mb-0.5">
-                  <span className="text-[9px] font-black text-primary uppercase tracking-widest bg-primary/10 px-1.5 py-0.5 rounded-full">✓ Rx Verified</span>
-                </div>
-                <p className="text-xs font-black text-slate-900 leading-tight">Our Chief Pharmacist</p>
-                <p className="text-[10px] font-medium text-slate-500 mt-0.5">B.Pharm · Reg. No. KA-B51-286602</p>
-                <p className="text-[10px] italic text-slate-600 mt-1 leading-snug">"Every order is personally quality-checked before dispatch."</p>
-              </div>
-            </div>
-
-            {/* ── Patient Social Proof ── */}
-            <div className="flex items-center gap-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-100 rounded-2xl p-3.5">
-              {/* Stacked avatars */}
-              <div className="flex -space-x-2.5 shrink-0">
-                {[
-                  { bg: 'bg-rose-200', initials: 'P', label: 'Priya, Chennai' },
-                  { bg: 'bg-blue-200', initials: 'R', label: 'Ramesh, Delhi' },
-                  { bg: 'bg-emerald-200', initials: 'S', label: 'Sunita, Mumbai' },
-                  { bg: 'bg-violet-200', initials: 'K', label: 'Kavya, Bangalore' },
-                ].map((a, i) => (
-                  <div
-                    key={i}
-                    title={a.label}
-                    className={`w-8 h-8 rounded-full border-2 border-white ${a.bg} flex items-center justify-center text-[10px] font-black text-white shadow-sm`}
-                  >
-                    {a.initials}
-                  </div>
-                ))}
-                <div className="w-8 h-8 rounded-full border-2 border-white bg-primary flex items-center justify-center text-[9px] font-black text-white shadow-sm">
-                  +99K
-                </div>
-              </div>
-              {/* Text */}
-              <div>
-                <div className="flex items-center gap-0.5 mb-0.5">
-                  {[1,2,3,4,5].map(s => (
-                    <svg key={s} viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-amber-400"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  ))}
-                </div>
-                <p className="text-[11px] font-black text-slate-800 leading-none">1 Lakh+ Patients</p>
-                <p className="text-[9px] font-medium text-slate-500 mt-0.5">trust Sahimed for their medicines</p>
-              </div>
+              ))}
             </div>
 
             {/* ── Express Delivery ── */}

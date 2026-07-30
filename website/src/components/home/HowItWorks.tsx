@@ -77,7 +77,7 @@ export default function HowItWorks() {
         </motion.div>
 
         {/* Steps */}
-        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 sm:pb-0 sm:grid sm:grid-cols-4 sm:gap-6 px-1">
+        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 sm:pb-0 sm:grid sm:grid-cols-4 sm:gap-6 px-1 pt-2">
           {STEPS.map((step, i) => (
             <motion.div
               key={i}
@@ -89,12 +89,12 @@ export default function HowItWorks() {
             >
               {/* Icon box */}
               <div className="relative mb-4 sm:mb-5">
-                <div className={`w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br ${step.gradient} rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-lg shadow-${step.numBg.replace('bg-', '')}/20 group-hover:scale-105 transition-transform duration-500`}>
+                <div className={`relative w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br ${step.gradient} rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-500 overflow-hidden`}>
                   <step.icon className="w-7 h-7 sm:w-9 sm:h-9 text-white drop-shadow" />
-                </div>
-                {/* Step number badge — colorful, NOT dark */}
-                <div className={`absolute -top-2 -right-2 w-6 h-6 sm:w-7 sm:h-7 ${step.numBg} text-white rounded-full flex items-center justify-center font-black text-[9px] sm:text-[10px] shadow-md border-2 border-white`}>
-                  {step.num}
+                  {/* Step number badge — inside icon box, never clipped */}
+                  <div className="absolute top-1 right-1 w-5 h-5 sm:w-6 sm:h-6 bg-white/25 backdrop-blur-sm text-white rounded-full flex items-center justify-center font-black text-[9px] sm:text-[10px] border border-white/40">
+                    {step.num}
+                  </div>
                 </div>
               </div>
 
