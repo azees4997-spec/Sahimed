@@ -7,6 +7,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import MobileCartBar from '@/components/MobileCartBar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
+import WhatsAppFloat from '@/components/WhatsAppFloat';
 import { Outfit, Poppins } from 'next/font/google';
 import LocationSync from '@/components/LocationSync';
 import { unstable_cache } from 'next/cache';
@@ -258,6 +259,7 @@ export default async function RootLayout({
                   {children}
                   <Footer initialPages={initialPages} />
                 </main>
+                <WhatsAppFloat />
                 <BottomNav />
                 <MobileCartBar />
               </div>

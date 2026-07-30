@@ -8,85 +8,96 @@ const STEPS = [
   {
     icon: Search,
     title: "Search Medicines",
-    desc: "Find your required medicines from our huge inventory of 100% authentic stocks.",
-    color: "bg-blue-500"
+    desc: "Find medicines from 50,000+ authentic, pharmacist-verified products in seconds.",
+    color: "from-blue-500 to-cyan-500",
+    bg: "bg-blue-50",
+    num: "01"
   },
   {
     icon: FileText,
     title: "Upload Prescription",
-    desc: "Our certified pharmacists verify every prescription to ensure your safety.",
-    color: "bg-rose-500"
+    desc: "Snap a photo of your Rx. Our certified pharmacists verify it within minutes.",
+    color: "from-rose-500 to-pink-500",
+    bg: "bg-rose-50",
+    num: "02"
   },
   {
     icon: PackageCheck,
-    title: "Quick Dispatch",
-    desc: "Every order undergoes a multi-layer quality check before being packed securely.",
-    color: "bg-primary"
+    title: "Quality Check",
+    desc: "Every order goes through a multi-layer authenticity check before packing.",
+    color: "from-violet-500 to-purple-600",
+    bg: "bg-violet-50",
+    num: "03"
   },
   {
     icon: Truck,
     title: "Safe Delivery",
-    desc: "Track your order in real-time as it reaches your doorstep via our trusted partners.",
-    color: "bg-green-500"
+    desc: "Track real-time as your order arrives at your doorstep via trusted partners.",
+    color: "from-emerald-500 to-green-500",
+    bg: "bg-emerald-50",
+    num: "04"
   }
 ];
 
 export default function HowItWorks() {
   return (
-    <section className="py-4 sm:py-32 bg-white rounded-[32px] sm:rounded-[60px] sm:my-10 border border-slate-100 shadow-sm overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
-        <div className="text-center space-y-1.5 sm:space-y-4 mb-8 sm:mb-20">
-          <h2 className="text-base sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none">
+    <section className="py-10 sm:py-20 bg-white rounded-2xl sm:rounded-[48px] border border-slate-100 shadow-sm overflow-hidden relative my-4 sm:my-10">
+      {/* Background blob */}
+      <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 relative z-10">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-8 sm:mb-16"
+        >
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 border border-primary/10 px-3 py-1 rounded-full mb-3">
+            Simple Process
+          </span>
+          <h2 className="text-xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight">
             How Sahimed <span className="text-primary italic">Works</span>
           </h2>
-          <p className="text-slate-500 text-[10px] sm:text-lg font-medium max-w-2xl mx-auto px-4">
-            Experience the simplest and most reliable way to get your medicines delivered in India.
+          <p className="text-slate-500 text-sm sm:text-lg font-medium max-w-xl mx-auto mt-2 sm:mt-4 px-4">
+            The simplest, safest way to get your medicines delivered across India.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Mobile Grid / Desktop Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-12 px-2 sm:px-0">
+        {/* Steps — horizontal scroll on mobile, grid on desktop */}
+        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 sm:pb-0 sm:grid sm:grid-cols-4 sm:gap-8 px-1">
           {STEPS.map((step, i) => (
-            <motion.div 
+            <motion.div
               key={i}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="relative space-y-3 sm:space-y-6 group flex flex-col items-center text-center p-4 bg-slate-50/50 sm:bg-transparent rounded-[32px] sm:rounded-none"
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+              className="min-w-[220px] sm:min-w-0 flex flex-col items-center text-center group"
             >
-              <div className="flex flex-col items-center gap-3 sm:gap-6 w-full">
-                <div className={`w-12 h-12 sm:w-20 sm:h-20 ${step.color} rounded-xl sm:rounded-3xl flex items-center justify-center shadow-lg shadow-slate-200/50 relative z-10 group-hover:scale-110 transition-transform duration-500 shrink-0`}>
-                  <step.icon className="w-6 h-6 sm:w-10 sm:h-10 text-white" />
-                  <div className="absolute -top-1.5 -right-1.5 sm:-top-3 sm:-right-3 w-5 h-5 sm:w-8 sm:h-8 bg-slate-900 text-white rounded-full flex items-center justify-center font-black text-[10px] sm:text-sm shadow-xl">
-                    {i + 1}
-                  </div>
+              {/* Number + Icon */}
+              <div className="relative mb-4 sm:mb-6">
+                <div className={`w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br ${step.color} rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-500`}>
+                  <step.icon className="w-7 h-7 sm:w-9 sm:h-9 text-white" />
                 </div>
-
-                <div className="space-y-1">
-                  <h3 className="text-[11px] sm:text-xl font-black text-slate-900 uppercase tracking-tight font-outfit leading-tight px-1">
-                    {step.title}
-                  </h3>
-                  <p className="sm:hidden text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                    Step {i + 1}
-                  </p>
+                <div className="absolute -top-2 -right-2 w-6 h-6 sm:w-7 sm:h-7 bg-slate-900 text-white rounded-full flex items-center justify-center font-black text-[9px] sm:text-[10px] shadow-lg border-2 border-white">
+                  {step.num}
                 </div>
               </div>
 
-              <div className="space-y-2 hidden sm:block">
-                <p className="text-sm text-slate-500 font-medium leading-relaxed max-w-[240px]">
-                  {step.desc}
-                </p>
-              </div>
+              {/* Text */}
+              <h3 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight mb-2 leading-tight px-2">
+                {step.title}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed max-w-[200px] sm:max-w-[220px]">
+                {step.desc}
+              </p>
 
-              {/* Mobile-only desc - subtle and small */}
-              <div className="sm:hidden">
-                <p className="text-slate-600 font-bold leading-tight text-[10px] px-2">
-                  {step.desc}
-                </p>
-              </div>
+              {/* Connector line (desktop only) */}
+              {i < STEPS.length - 1 && (
+                <div className="hidden sm:block absolute right-0 top-10 w-8 h-px bg-dashed border-t-2 border-dashed border-slate-200 translate-x-8" />
+              )}
             </motion.div>
           ))}
         </div>

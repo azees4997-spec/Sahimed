@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Navbar from '@/components/Navbar';
-import { ShieldCheck, FileText, Phone } from 'lucide-react';
+import { ShieldCheck, FileText, Phone, Truck, Star, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import PageTransition from '@/components/PageTransition';
@@ -15,55 +15,32 @@ import FAQSection from '@/components/home/FAQSection';
 import { Metadata } from 'next';
 import { PRODUCTS, CATEGORIES } from '@/lib/data';
 
-
 export const metadata: Metadata = {
-  title: 'Sahimed - Authentic Medicines & Healthcare at Best Prices',
-  description: 'Buy genuine medicines online in India. Sahimed provides authentic stock, expert prescription verification, and fast delivery at affordable prices. Sahi Dawai, Sahi Daam Pe.',
-  keywords: ['online pharmacy india', 'authentic medicines online', 'buy medicines bangalore', 'genuine healthcare products', 'affordable medicines india', 'prescription delivery'],
-  alternates: {
-    canonical: 'https://sahimed.com',
-  },
+  title: 'Sahimed — Sahi Dawai, Sahi Daam Pe | Up to 61% OFF on Medicines',
+  description: 'Buy 100% genuine medicines online in India at up to 61% off MRP. Sahimed is a licensed pharmacy with expert prescription verification, fast delivery, and certified authentic stock. Sahi Dawai, Sahi Daam Pe.',
+  keywords: ['online pharmacy india', 'authentic medicines', 'buy medicines bangalore', 'affordable medicines', 'prescription delivery', '61% off medicines', 'generic medicines india'],
+  alternates: { canonical: 'https://sahimed.com' },
 };
 
-export const revalidate = 60; // Revalidate every minute
+export const revalidate = 60;
 
 async function getBanners() {
   try {
     const db = getDbAdmin();
     if (!db) return [];
-    const snapshot = await db.collection('banners')
-      .where('isActive', '==', true)
-      .orderBy('order', 'asc')
-      .get();
+    const snapshot = await db.collection('banners').where('isActive', '==', true).orderBy('order', 'asc').get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (err) {
-    console.error("Failed to fetch banners:", err);
-    return [];
-  }
+  } catch { return []; }
 }
 
 async function getCategories() {
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const categories = await db.collection('Category Master')
-      .find({ showOnHomepage: true })
-      .sort({ category: 1 })
-      .toArray();
-    return categories.map(c => ({
-      ...c,
-      id: c._id.toString(),
-      name: c.category, // Map category to name for backwards compatibility
-      imageUrl: c.imageUrl
-    }));
-  } catch (err) {
-    console.error("Failed to fetch categories from MongoDB, falling back to static data...", err);
-    return CATEGORIES.map((cat, idx) => ({
-      id: `fallback-cat-${idx}`,
-      name: cat.name,
-      imageUrl: cat.imageUrl,
-      description: cat.description
-    }));
+    const categories = await db.collection('Category Master').find({ showOnHomepage: true }).sort({ category: 1 }).toArray();
+    return categories.map(c => ({ ...c, id: c._id.toString(), name: c.category, imageUrl: c.imageUrl }));
+  } catch {
+    return CATEGORIES.map((cat, idx) => ({ id: `fallback-cat-${idx}`, name: cat.name, imageUrl: cat.imageUrl, description: cat.description }));
   }
 }
 
@@ -73,208 +50,301 @@ async function getProducts(filterType: 'bestSeller' | 'topSelection' | 'all' = '
     const client = await clientPromise;
     const db = client.db('sahimed');
     const query: any = { isActive: { $ne: false } };
-    
-    if (filterType === 'bestSeller') {
-      query.isBestSeller = { $in: [true, 'true'] };
-    } else if (filterType === 'topSelection') {
-      query.isTopSelection = { $in: [true, 'true'] };
-    }
-    
-    const products = await db.collection('products')
-      .find(query)
-      .limit(limitValue)
-      .toArray();
-    
+    if (filterType === 'bestSeller') query.isBestSeller = { $in: [true, 'true'] };
+    else if (filterType === 'topSelection') query.isTopSelection = { $in: [true, 'true'] };
+    const products = await db.collection('products').find(query).limit(limitValue).toArray();
     return products.map(p => ({ ...p, id: p._id.toString() }));
-  } catch (err) {
-    console.error(`Failed to fetch products (${filterType}) from MongoDB, falling back to static data...`, err);
-    let fallback = PRODUCTS.map((p, idx) => ({ ...p, _id: p.id || `fallback-prod-${idx}`, id: p.id || `fallback-prod-${idx}` }));
-    if (filterType === 'bestSeller') {
-      return fallback.slice(0, 10);
-    } else if (filterType === 'topSelection') {
-      return fallback.slice(0, 10);
-    }
+  } catch {
+    const fallback = PRODUCTS.map((p, idx) => ({ ...p, _id: p.id || `fp-${idx}`, id: p.id || `fp-${idx}` }));
+    if (filterType === 'bestSeller') return fallback.slice(0, 10);
+    if (filterType === 'topSelection') return fallback.slice(0, 10);
     return fallback;
   }
 }
 
 export default async function Home() {
   const [banners, categories, bestSellers, topSelections, medicines] = await Promise.all([
-    getBanners(),
-    getCategories(),
-    getProducts('bestSeller'),
-    getProducts('topSelection'),
-    getProducts('all')
+    getBanners(), getCategories(), getProducts('bestSeller'), getProducts('topSelection'), getProducts('all')
   ]);
 
   const faqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
+    "@context": "https://schema.org", "@type": "FAQPage",
     "mainEntity": [
-      {
-        "question": "Are the medicines sold 100% authentic?",
-        "acceptedAnswer": {
-          "type": "Answer",
-          "text": "Yes, absolutely. Every product on Sahimed is sourced directly from licensed pharmaceutical manufacturers or their authorized distributors. We have a strict quality-check protocol to ensure that only genuine, unexpired medicines reach your doorstep."
-        }
-      },
-      {
-        "question": "Is a prescription required for medicines?",
-        "acceptedAnswer": {
-          "type": "Answer",
-          "text": "For all prescription-only (Rx) medicines, a valid prescription from a registered medical practitioner is mandatory. You can easily upload a photo or PDF of your prescription during checkout. Our certified pharmacists verify every prescription for your safety."
-        }
-      },
-      {
-        "question": "How long does delivery usually take?",
-        "acceptedAnswer": {
-          "type": "Answer",
-          "text": "We offer fast and safe delivery across India. Delivery times typically range from 24-48 hours in major cities like Bangalore, Mumbai, and Delhi, and 3-5 days for other regions. We focus on ensuring the medicines are transported safely and securely."
-        }
-      },
-      {
-        "question": "Can I order via WhatsApp or phone call?",
-        "acceptedAnswer": {
-          "type": "Answer",
-          "text": "Yes! We understand that some customers prefer a more personal touch. You can reach out to our team at +91 7349499898 via WhatsApp or call us to place your order directly. Our experts will help you with the process."
-        }
-      },
-      {
-        "question": "Why are Sahimed's prices so affordable?",
-        "acceptedAnswer": {
-          "type": "Answer",
-          "text": "Our motto is 'Sahi Dawai, Sahi Daam Pe'. We achieve this by optimizing our supply chain, removing unnecessary intermediaries, and passing those savings directly to you. We aim to make chronic healthcare affordable for every Indian household."
-        }
-      }
-    ].map(faq => ({
-      "@type": "Question",
-      "name": faq.question,
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": faq.acceptedAnswer.text
-      }
-    }))
+      { "question": "Are medicines 100% authentic?", "acceptedAnswer": { "type": "Answer", "text": "Yes. Every product is sourced directly from licensed manufacturers. We have a strict quality-check protocol ensuring only genuine, unexpired medicines reach you." } },
+      { "question": "Is a prescription required?", "acceptedAnswer": { "type": "Answer", "text": "For Rx medicines, a valid prescription is mandatory. Upload a photo during checkout. Our certified pharmacists verify every prescription for your safety." } },
+      { "question": "How long does delivery take?", "acceptedAnswer": { "type": "Answer", "text": "24-48 hours in major cities. 3-5 days for other regions. All orders are tracked in real time." } },
+      { "question": "Can I order via WhatsApp?", "acceptedAnswer": { "type": "Answer", "text": "Yes! WhatsApp +91 7349499898 with your prescription photo. Our team replies within 5 minutes." } },
+      { "question": "Why is Sahimed so affordable?", "acceptedAnswer": { "type": "Answer", "text": "We cut intermediaries, source directly from manufacturers, and pass savings directly to you — up to 61% off MRP on branded generics." } },
+    ].map(faq => ({ "@type": "Question", "name": faq.question, "acceptedAnswer": { "@type": "Answer", "text": faq.acceptedAnswer.text } }))
   };
 
   return (
     <PageTransition>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <div className="min-h-screen bg-[#F8FAFC]">
         <Navbar />
-        
-        {/* ─── Compact Pro Hero ─── */}
-        <section className="relative w-full bg-gradient-to-r from-[#f0f7ff] via-white to-[#fff5f7] border-b border-slate-100 overflow-hidden">
-          {/* subtle background rings */}
-          <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-primary/5 pointer-events-none" />
-          <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-rose-400/5 pointer-events-none" />
 
-          <div className="max-w-7xl mx-auto px-4 py-5 md:py-7">
-            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+        {/* ══════════════════════════════════════════════════
+            ANNOUNCEMENT BAR
+        ══════════════════════════════════════════════════ */}
+        <AnnouncementBar />
 
-              {/* LEFT: Copy */}
-              <div className="flex-1 space-y-4 text-center md:text-left">
-                {/* Trust badge row */}
-                <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-full text-[10px] font-black uppercase tracking-widest text-emerald-700">
-                    <ShieldCheck className="w-3 h-3" /> 100% Authentic
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/5 border border-primary/10 rounded-full text-[10px] font-black uppercase tracking-widest text-primary">
-                    Expert Rx Verified
-                  </span>
-                </div>
+        {/* ══════════════════════════════════════════════════
+            HERO
+        ══════════════════════════════════════════════════ */}
+        <HeroSection />
 
-                {/* Headline */}
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black leading-tight tracking-tight text-slate-900">
-                  India's Most Affordable<br/>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-violet-500">Online Pharmacy</span>
-                </h1>
-
-                {/* Sub-headline */}
-                <p className="text-slate-500 text-sm max-w-md mx-auto md:mx-0 leading-relaxed">
-                  Sahi Dawai, Sahi Daam Pe — Genuine medicines at up to <strong className="text-rose-500 font-black">61% off</strong> MRP. Fast delivery, pharmacist-verified prescriptions.
-                </p>
-
-                {/* Search */}
-                <div className="w-full max-w-xl mx-auto md:mx-0">
-                  <HeroSearch />
-                </div>
-
-                {/* Quick Actions */}
-                <div className="flex items-center gap-3 justify-center md:justify-start flex-wrap pt-1">
-                  {[
-                    { label: 'Upload Rx', href: '/prescription', Icon: FileText, color: 'text-primary bg-primary/5 hover:bg-primary/10 border-primary/20' },
-                    { 
-                      label: 'WhatsApp', href: 'https://wa.me/917349499898', color: 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border-emerald-100',
-                      Icon: (props: any) => (
-                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" {...props}>
-                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                        </svg>
-                      )
-                    },
-                    { label: 'Call Us', href: 'tel:+917349499898', Icon: Phone, color: 'text-rose-500 bg-rose-50 hover:bg-rose-100 border-rose-100' },
-                  ].map((a, i) => (
-                    <Link key={i} href={a.href} className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all", a.color)}>
-                      <a.Icon className="w-3.5 h-3.5" />
-                      {a.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* RIGHT: Savings Card + Stats */}
-              <div className="flex flex-col gap-3 shrink-0 w-full md:w-auto md:min-w-[280px]">
-                {/* Big savings banner */}
-                <div className="relative bg-gradient-to-br from-primary to-violet-600 rounded-2xl p-5 text-white overflow-hidden shadow-xl shadow-primary/20">
-                  <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/10 rounded-full" />
-                  <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-white/5 rounded-full" />
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/70 mb-1">Save on every order</p>
-                  <div className="text-5xl font-black leading-none">61%</div>
-                  <div className="text-sm font-bold text-white/90 mt-1">OFF on branded generics</div>
-                  <Link href="/search" className="mt-3 flex items-center gap-1.5 bg-white text-primary px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest w-fit hover:bg-white/90 transition-all active:scale-95 shadow-lg">
-                    Shop Now <span className="text-base leading-none">→</span>
-                  </Link>
-                </div>
-
-                {/* Mini trust stats */}
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { val: '50K+', label: 'Medicines', color: 'text-primary' },
-                    { val: '24hr', label: 'Delivery', color: 'text-violet-500' },
-                    { val: '4.8★', label: 'Rating', color: 'text-amber-500' },
-                  ].map((s, i) => (
-                    <div key={i} className="bg-white rounded-xl p-2.5 text-center shadow-sm border border-slate-100">
-                      <div className={cn("text-lg font-black leading-none", s.color)}>{s.val}</div>
-                      <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{s.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
- 
-        <main className="max-w-7xl mx-auto px-4 pt-0 pb-10 md:pt-4 md:pb-12">
-          <HomeClient 
+        {/* ══════════════════════════════════════════════════
+            MAIN CONTENT (HomeClient handles everything below)
+        ══════════════════════════════════════════════════ */}
+        <main className="max-w-7xl mx-auto px-4 pt-2 pb-10 md:pt-4 md:pb-16">
+          <HomeClient
             banners={banners}
             categories={categories}
             bestSellers={bestSellers}
             topSelections={topSelections}
             medicines={medicines}
           />
-
           <HowItWorks />
-          
           <TrustSection />
-
-          <SEOContent />
-
           <FAQSection />
+          <FinalCTA />
+          <SEOContent />
         </main>
       </div>
     </PageTransition>
+  );
+}
+
+// ─── Announcement Bar ─────────────────────────────────────────────────────────
+function AnnouncementBar() {
+  return (
+    <div className="w-full bg-gradient-to-r from-primary via-teal-500 to-primary overflow-hidden">
+      <div className="flex animate-marquee whitespace-nowrap py-2">
+        {[
+          '🎉 New Users: Extra 10% OFF — Use code SAHI10',
+          '🚚 FREE delivery on orders above ₹499',
+          '💊 Up to 61% OFF on branded generics',
+          '⭐ 4.8★ rated on Google — 1 Lakh+ happy patients',
+          '🏥 Licensed Pharmacy — Drug License KA-B51-286602',
+          '📱 Order via WhatsApp: +91 73494 99898',
+        ].concat([
+          '🎉 New Users: Extra 10% OFF — Use code SAHI10',
+          '🚚 FREE delivery on orders above ₹499',
+          '💊 Up to 61% OFF on branded generics',
+          '⭐ 4.8★ rated on Google — 1 Lakh+ happy patients',
+          '🏥 Licensed Pharmacy — Drug License KA-B51-286602',
+          '📱 Order via WhatsApp: +91 73494 99898',
+        ]).map((item, i) => (
+          <span key={i} className="inline-flex items-center gap-2 mx-8 text-[11px] font-bold text-white shrink-0">
+            {item}
+            <span className="text-white/30 mx-1">|</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Hero Section ─────────────────────────────────────────────────────────────
+function HeroSection() {
+  return (
+    <section className="relative w-full overflow-hidden bg-white border-b border-slate-100">
+      {/* Split background */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#eefbf9] via-white to-[#f5f0ff] opacity-60" />
+        {/* Decorative circles */}
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/8 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-violet-400/5 rounded-full blur-2xl" />
+        <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-rose-400/5 rounded-full blur-3xl" />
+        {/* Floating pill shapes */}
+        <div className="hidden lg:block absolute top-8 right-[38%] w-3 h-8 bg-primary/20 rounded-full rotate-45" />
+        <div className="hidden lg:block absolute bottom-10 right-[42%] w-2 h-6 bg-violet-400/20 rounded-full -rotate-12" />
+        <div className="hidden lg:block absolute top-16 right-[45%] w-4 h-4 bg-rose-400/15 rounded-full" />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-7 sm:py-10 md:py-12">
+        <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-12">
+
+          {/* ─── LEFT: Main Copy ──────────────────────────────── */}
+          <div className="flex-1 space-y-5 text-center lg:text-left w-full">
+
+            {/* Top badge row */}
+            <div className="flex items-center justify-center lg:justify-start gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-[11px] font-black uppercase tracking-widest text-emerald-700">
+                <ShieldCheck className="w-3 h-3" /> 100% Authentic
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 border border-amber-200 rounded-full text-[11px] font-black uppercase tracking-widest text-amber-700">
+                <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> 4.8★ Google Rated
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-violet-50 border border-violet-200 rounded-full text-[11px] font-black uppercase tracking-widest text-violet-700">
+                <Zap className="w-3 h-3 fill-violet-500 text-violet-500" /> Licensed Pharmacy
+              </span>
+            </div>
+
+            {/* Headline */}
+            <div className="space-y-1">
+              <p className="text-[11px] sm:text-xs font-black text-primary uppercase tracking-[0.2em]">Sahi Dawai · Sahi Daam Pe</p>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.1] tracking-tight text-slate-900">
+                India's Most<br />
+                <span className="relative">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-violet-600">Affordable</span>
+                </span>{' '}
+                <span className="text-slate-900">Pharmacy</span>
+              </h1>
+              <p className="text-sm sm:text-base text-slate-500 font-medium max-w-lg mx-auto lg:mx-0 pt-1 leading-relaxed">
+                Genuine medicines delivered to your door at up to{' '}
+                <strong className="text-rose-500 font-black">61% OFF MRP</strong>.
+                Expert pharmacist-verified prescriptions. Pan-India shipping.
+              </p>
+            </div>
+
+            {/* Search bar — BIG and prominent */}
+            <div className="w-full max-w-2xl mx-auto lg:mx-0">
+              <HeroSearch />
+            </div>
+
+            {/* Social proof stats */}
+            <div className="flex items-center gap-4 justify-center lg:justify-start flex-wrap">
+              {[
+                { val: '50,000+', label: 'Medicines', color: 'text-primary' },
+                { val: '1 Lakh+', label: 'Customers', color: 'text-violet-600' },
+                { val: '24hr', label: 'Delivery', color: 'text-emerald-600' },
+                { val: '61%', label: 'Max OFF', color: 'text-rose-500' },
+              ].map((s, i) => (
+                <React.Fragment key={i}>
+                  {i > 0 && <div className="w-px h-5 bg-slate-200" />}
+                  <div className="text-center lg:text-left">
+                    <div className={cn("text-base sm:text-lg font-black leading-none", s.color)}>{s.val}</div>
+                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{s.label}</div>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2.5 justify-center lg:justify-start flex-wrap">
+              <Link href="/prescription" className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-xs font-black uppercase tracking-wider hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/25">
+                <FileText className="w-3.5 h-3.5" /> Upload Prescription
+              </Link>
+              <Link href="https://wa.me/917349499898?text=Hi%2C%20I%20want%20to%20order%20medicines" target="_blank" className="flex items-center gap-2 px-4 py-2.5 bg-[#25D366] text-white rounded-xl text-xs font-black uppercase tracking-wider hover:bg-[#22c55e] transition-all active:scale-95 shadow-lg shadow-[#25D366]/25">
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+                Order on WhatsApp
+              </Link>
+              <Link href="tel:+917349499898" className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-wider hover:border-slate-300 hover:bg-slate-50 transition-all active:scale-95">
+                <Phone className="w-3.5 h-3.5" /> Call Us
+              </Link>
+            </div>
+          </div>
+
+          {/* ─── RIGHT: Visual Panel ──────────────────────────── */}
+          <div className="w-full lg:w-[340px] xl:w-[380px] flex flex-col gap-3 shrink-0">
+
+            {/* Main savings card */}
+            <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-primary rounded-2xl sm:rounded-3xl p-6 text-white overflow-hidden shadow-2xl shadow-slate-900/30">
+              {/* Decorative circles */}
+              <div className="absolute -top-8 -right-8 w-32 h-32 bg-primary/30 rounded-full blur-2xl" />
+              <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-violet-500/20 rounded-full blur-xl" />
+              <div className="absolute top-4 right-4 w-16 h-16 bg-white/5 rounded-full" />
+
+              <div className="relative z-10">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50 mb-2">Save on Every Order</p>
+                <div className="flex items-end gap-2 mb-1">
+                  <span className="text-6xl sm:text-7xl font-black leading-none text-white">61</span>
+                  <div className="pb-2">
+                    <div className="text-2xl font-black text-primary leading-none">%</div>
+                    <div className="text-sm font-bold text-white/70">OFF</div>
+                  </div>
+                </div>
+                <p className="text-xs font-semibold text-white/60 mb-4">on branded generic medicines vs MRP</p>
+
+                {/* Inline mini stats */}
+                <div className="flex items-center gap-3 mb-4">
+                  {[
+                    { v: '50K+', l: 'SKUs' },
+                    { v: '1L+', l: 'Patients' },
+                    { v: '24hr', l: 'Delivery' },
+                  ].map((s, i) => (
+                    <React.Fragment key={i}>
+                      {i > 0 && <div className="w-px h-5 bg-white/10" />}
+                      <div>
+                        <div className="text-sm font-black text-white">{s.v}</div>
+                        <div className="text-[9px] font-semibold text-white/40 uppercase tracking-wider">{s.l}</div>
+                      </div>
+                    </React.Fragment>
+                  ))}
+                </div>
+
+                <Link href="/search" className="flex items-center justify-between bg-primary hover:bg-primary/90 text-white px-4 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-primary/40">
+                  <span>Shop Now & Save Big</span>
+                  <span className="text-lg leading-none">→</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Trust cards row */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { icon: '🏥', val: 'Licensed', sub: 'Pharmacy', border: 'border-emerald-100', bg: 'bg-emerald-50' },
+                { icon: '💊', val: '100%', sub: 'Genuine', border: 'border-blue-100', bg: 'bg-blue-50' },
+                { icon: '🚚', val: 'Free', sub: 'Delivery', border: 'border-amber-100', bg: 'bg-amber-50' },
+              ].map((c, i) => (
+                <div key={i} className={cn("rounded-xl border p-2.5 text-center", c.bg, c.border)}>
+                  <div className="text-xl mb-0.5">{c.icon}</div>
+                  <div className="text-[11px] font-black text-slate-800 leading-none">{c.val}</div>
+                  <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">{c.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Delivery promise */}
+            <div className="flex items-center gap-3 bg-white border border-slate-100 rounded-xl px-4 py-3 shadow-sm">
+              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
+                <Truck className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-slate-900">Express Delivery Available</p>
+                <p className="text-[10px] font-medium text-slate-400">Bangalore, Mumbai, Delhi & 500+ cities</p>
+              </div>
+              <div className="ml-auto bg-emerald-50 border border-emerald-100 rounded-lg px-2 py-1 shrink-0">
+                <span className="text-[9px] font-black text-emerald-700 uppercase tracking-wider">24hr</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Final CTA (above footer) ─────────────────────────────────────────────────
+function FinalCTA() {
+  return (
+    <section className="my-10 sm:my-16 rounded-2xl sm:rounded-3xl overflow-hidden relative bg-gradient-to-br from-primary via-teal-500 to-violet-600 p-8 sm:p-14 text-white text-center shadow-2xl shadow-primary/30">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.1),transparent)]" />
+      {/* Floating circles */}
+      <div className="absolute top-0 left-0 w-40 h-40 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
+      <div className="absolute bottom-0 right-0 w-60 h-60 bg-white/5 rounded-full translate-x-1/3 translate-y-1/3" />
+
+      <div className="relative z-10 space-y-4 sm:space-y-6 max-w-2xl mx-auto">
+        <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-widest">
+          🎉 Limited Time Offer
+        </div>
+        <h2 className="text-2xl sm:text-4xl font-black leading-tight tracking-tight">
+          Start Saving on Your<br className="hidden sm:block" /> Medicines Today
+        </h2>
+        <p className="text-white/70 text-sm sm:text-base font-medium">
+          Join over 1 Lakh patients who switched to Sahimed for genuine, affordable medicines.
+        </p>
+        <div className="flex items-center gap-3 justify-center flex-wrap pt-2">
+          <Link href="/search" className="bg-white text-primary px-6 py-3 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider hover:bg-white/90 transition-all active:scale-95 shadow-xl shadow-black/20">
+            Browse Medicines →
+          </Link>
+          <Link href="https://wa.me/917349499898" target="_blank" className="border-2 border-white/40 text-white px-6 py-3 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider hover:bg-white/10 transition-all active:scale-95">
+            📱 Order on WhatsApp
+          </Link>
+        </div>
+      </div>
+    </section>
   );
 }

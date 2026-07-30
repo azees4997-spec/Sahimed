@@ -6,7 +6,7 @@ import Image from 'next/image';
 
 export default function SEOContent() {
   return (
-    <section className="py-8 sm:py-32 max-w-7xl mx-auto px-4 sm:px-6">
+    <section className="py-10 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6">
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 sm:gap-12 items-start lg:items-center">
         
         {/* Text Content Area - Col Span 7 on Desktop */}
@@ -18,15 +18,15 @@ export default function SEOContent() {
                   <Star key={s} className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />
                 ))}
               </div>
-              <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-green-700">Google Verified Pharmacy</span>
+              <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-green-700">Google Verified Pharmacy</span>
             </div>
             
-            <h2 className="text-base sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-[0.95]">
+            <h2 className="text-2xl sm:text-5xl font-black tracking-tight text-slate-900 font-outfit uppercase leading-[1.05]">
               SahiMed: India's Trusted <br className="hidden sm:block"/>
               <span className="text-primary italic">Digital Pharmacy Partner</span>
             </h2>
-            <p className="text-[10px] sm:text-xl text-slate-900 font-bold sm:font-medium leading-relaxed max-w-2xl">
-              At SahiMed, we believe that healthcare should be accessible, affordable, and most importantly—authentic. In a world of rising medical costs and uncertainty, we stand as a beacon of trust for millions of Indian families.
+            <p className="text-sm sm:text-lg text-slate-600 font-medium leading-relaxed max-w-2xl">
+              At Sahimed, we believe healthcare should be accessible, affordable, and authentic. We stand as a beacon of trust for millions of Indian families — with real medicines, real savings, real care.
             </p>
           </div>
 
@@ -41,8 +41,8 @@ export default function SEOContent() {
                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
                   <item.icon className="w-5 h-5 text-primary" />
                 </div>
-                <h3 className="font-black text-slate-900 uppercase text-[10px] sm:text-sm tracking-tight">{item.title}</h3>
-                <p className="text-[10px] sm:text-xs text-slate-500 font-medium leading-normal">{item.desc}</p>
+                <h3 className="font-black text-slate-900 uppercase text-xs sm:text-sm tracking-tight">{item.title}</h3>
+                <p className="text-xs sm:text-[13px] text-slate-500 font-medium leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -58,8 +58,8 @@ export default function SEOContent() {
                   <div className="h-px w-6 bg-primary" />
                   <span className="text-[8px] font-black uppercase tracking-[0.2em] text-primary">Why Choose Us</span>
                 </div>
-                <h3 className="text-base sm:text-4xl font-black uppercase tracking-tighter font-outfit leading-none">
-                  Why Millions <br className="hidden sm:block"/> of Indians <br className="hidden sm:block"/> Choose Sahimed
+                <h3 className="text-xl sm:text-3xl font-black uppercase tracking-tight font-outfit leading-tight">
+                  Why Millions of Indians<br className="hidden sm:block"/> Choose Sahimed
                 </h3>
               </div>
               
@@ -74,15 +74,15 @@ export default function SEOContent() {
                     <div className="mt-1 w-5 h-5 bg-primary/20 rounded-full flex items-center justify-center shrink-0 group-hover/item:bg-primary transition-colors">
                       <CheckCircle2 className="w-3 h-3 text-primary group-hover/item:text-white" />
                     </div>
-                    <p className="text-slate-300 group-hover/item:text-white font-medium leading-snug transition-colors text-sm sm:text-base">{point}</p>
+                    <p className="text-slate-300 group-hover/item:text-white font-medium leading-snug transition-colors text-sm">{point}</p>
                   </div>
                 ))}
               </div>
               
               <div className="pt-8 border-t border-white/10 flex items-center">
                 <div>
-                  <p className="text-3xl sm:text-5xl font-black text-primary font-outfit tracking-tighter">100%</p>
-                  <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-slate-500">Genuine Stock</p>
+                  <p className="text-4xl sm:text-5xl font-black text-primary font-outfit tracking-tighter">100%</p>
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-500">Genuine Stock</p>
                 </div>
               </div>
 

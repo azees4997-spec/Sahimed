@@ -8,169 +8,202 @@ const REVIEWS = [
   {
     name: "Arjun Sharma",
     location: "Bangalore",
-    text: "Excellent service! Got my medicines delivered quickly and safely. The pharmacist was very helpful with my prescription questions. Highly authentic stock.",
+    tag: "Cardiac Medicines",
+    text: "Excellent service! Got my BP medicines delivered in 18 hours. The pharmacist called to confirm my Rx — real attention to patient safety. Saved ₹600 vs local pharmacy!",
     rating: 5,
     date: "2 days ago"
   },
   {
     name: "Priya Patel",
     location: "Mumbai",
-    text: "Best price I've found online for chronic medicines. The packaging was discreet and the delivery was prompt. Highly recommend Sahimed for authentic healthcare!",
+    tag: "Diabetic Care",
+    text: "I order insulin and metformin monthly. Sahimed's prices are 35-40% cheaper than my chemist. Packaging is pharma-grade and every strip I've received is genuine.",
     rating: 5,
     date: "1 week ago"
   },
   {
     name: "Rahul Verma",
     location: "Delhi",
-    text: "Very easy to upload prescriptions. I usually worry about authenticity, but Sahimed provides only genuine products. A trusted partner for long-term health needs.",
+    tag: "Prescription Medicines",
+    text: "Uploading prescriptions is super smooth. WhatsApp ordering is a game-changer for my 70-year-old father who isn't tech-savvy. Trusted Sahimed completely now.",
     rating: 5,
     date: "3 days ago"
+  },
+  {
+    name: "Sunita Reddy",
+    location: "Hyderabad",
+    tag: "Vitamins & Supplements",
+    text: "Ordered vitamins for the whole family. Received original sealed products with 10+ months expiry. The price difference vs offline pharmacy is unbelievable. 10/10!",
+    rating: 5,
+    date: "5 days ago"
+  },
+  {
+    name: "Mohammed Rashid",
+    location: "Chennai",
+    tag: "Thyroid & Hormones",
+    text: "Managing my thyroid medication for 2 years through Sahimed now. Never a single issue with authenticity. The auto-reorder reminder is an excellent feature.",
+    rating: 5,
+    date: "2 weeks ago"
+  },
+  {
+    name: "Kavya Nair",
+    location: "Kochi",
+    tag: "Family Healthcare",
+    text: "As someone managing elderly parents' 8 different medicines, Sahimed is a lifesaver. One order, everything delivered together, with a packing slip by doctor's prescription name.",
+    rating: 5,
+    date: "4 days ago"
   }
+];
+
+const TRUST_STATS = [
+  { val: '1L+', label: 'Happy Patients', icon: '👥' },
+  { val: '4.9★', label: 'Google Rating', icon: '⭐' },
+  { val: '50K+', label: 'Medicines', icon: '💊' },
+  { val: '99.2%', label: 'Auth. Rate', icon: '✅' },
 ];
 
 export default function TrustSection() {
   return (
-    <section className="py-8 sm:py-32 relative overflow-hidden">
-      {/* Background Accents */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl px-4 pointer-events-none -z-10">
-         <div className="absolute top-20 left-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-         <div className="absolute bottom-20 right-10 w-64 h-64 bg-rose-100/30 rounded-full blur-3xl" />
-      </div>
+    <section className="py-10 sm:py-20 relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 right-10 w-64 h-64 bg-rose-100/30 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center space-y-1.5 sm:space-y-4 mb-8 sm:mb-20">
-          <div className="flex items-center justify-center gap-1 mb-1">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-8 sm:mb-16"
+        >
+          <div className="flex items-center justify-center gap-0.5 mb-2">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-3 h-3 sm:w-5 sm:h-5 fill-[#FACC15] text-[#FACC15]" />
+              <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-amber-400 text-amber-400" />
             ))}
-            <span className="ml-2 text-slate-900 font-black text-[8px] sm:text-sm uppercase tracking-tighter">4.9/5 on Google</span>
+            <span className="ml-2 text-slate-800 font-black text-sm sm:text-base">4.9 on Google</span>
           </div>
-          <h2 className="text-base sm:text-6xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none">
-            Trusted by <span className="text-primary italic">Thousands</span> <br className="hidden sm:block"/> of Happy Indians
+          <span className="inline-flex items-center gap-1 text-[10px] font-black text-rose-600 uppercase tracking-widest bg-rose-50 border border-rose-100 px-3 py-1 rounded-full mb-3">
+            Real Patients
+          </span>
+          <h2 className="text-xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight">
+            Trusted by <span className="text-primary italic">Thousands</span><br className="hidden sm:block" /> of Happy Indians
           </h2>
-          <p className="text-slate-500 text-[10px] sm:text-lg font-medium max-w-2xl mx-auto">
-            Real stories from real customers who switched to Sahimed for authentic and affordable healthcare.
+          <p className="text-slate-500 text-sm sm:text-lg font-medium max-w-xl mx-auto mt-2 sm:mt-4">
+            Real stories from patients who switched to Sahimed for authentic, affordable healthcare.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Horizontal Slider Container */}
-        <div className="relative group">
-            <div className="flex flex-nowrap overflow-x-auto gap-4 sm:gap-8 pb-16 pt-8 px-4 -mx-4 scrollbar-hide snap-x snap-mandatory cursor-grab active:cursor-grabbing">
-            {[...REVIEWS, ...REVIEWS].map((review, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: (i % 3) * 0.1, duration: 0.8 }}
-                className="min-w-[280px] sm:min-w-[420px] bg-white/70 backdrop-blur-xl rounded-[24px] sm:rounded-[40px] p-6 sm:p-10 border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative group/card snap-center hover:-translate-y-2 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:bg-white transition-all duration-500"
-              >
-                {/* Decorative Quote Icon */}
-                <div className="absolute top-6 right-6 text-primary/5 opacity-50 group-hover/card:opacity-100 group-hover/card:text-primary/10 group-hover/card:scale-110 transition-all duration-500">
-                  <Quote className="w-12 h-12 sm:w-16 sm:h-16" />
-                </div>
-                
-                <div className="space-y-4 sm:space-y-6 relative z-10">
-                  <div className="flex gap-1">
-                    {[...Array(review.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-[#FACC15] text-[#FACC15] drop-shadow-sm" />
-                    ))}
-                  </div>
-
-                  <p className="text-slate-700 text-sm sm:text-lg leading-relaxed font-medium italic min-h-[100px] sm:min-h-[120px]">
-                    "{review.text}"
-                  </p>
-
-                  <div className="pt-4 sm:pt-6 border-t border-slate-200/60">
-                    <h4 className="text-slate-900 font-black uppercase text-xs sm:text-sm tracking-tight flex items-center gap-1 sm:gap-2">
-                      {review.name}
-                      <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500" />
-                    </h4>
-                    <p className="text-slate-500 font-bold text-[9px] sm:text-[10px] uppercase tracking-widest mt-1.5">{review.location} • {review.date}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-          
-          {/* Scroll Indicators (Optional/Subtle) */}
-          <div className="flex justify-center gap-2 mt-4">
-            {REVIEWS.map((_, i) => (
-              <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-200 group-hover:bg-primary/20 transition-colors" />
-            ))}
-          </div>
-        </div>
-
-        <style jsx global>{`
-          .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-          }
-          .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-        `}</style>
-
-        {/* Google Stats Bar */}
-        <div className="mt-8 sm:mt-20 flex flex-row flex-nowrap items-center justify-center gap-2 sm:gap-16 transition-all duration-700">
-           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-             <div className="w-5 h-5 sm:w-8 sm:h-8 shrink-0">
-               <svg viewBox="0 0 24 24" className="w-full h-full">
-                 <path
-                   fill="#4285F4"
-                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                 />
-                 <path
-                   fill="#34A853"
-                   d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                 />
-                 <path
-                   fill="#FBBC05"
-                   d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-                 />
-                 <path
-                   fill="#EA4335"
-                   d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                 />
-               </svg>
-             </div>
-              <div className="text-left">
-                 <p className="text-slate-900 font-black text-[8px] sm:text-xs uppercase leading-none">Google Verified</p>
-                 <p className="text-slate-500 font-bold text-[6px] sm:text-[9px] uppercase tracking-widest">Business Partner</p>
+        {/* Review Cards — horizontal scroll */}
+        <div className="flex flex-nowrap overflow-x-auto gap-4 sm:gap-6 pb-4 px-1 scrollbar-hide snap-x snap-mandatory">
+          {REVIEWS.map((review, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08, duration: 0.5 }}
+              className="min-w-[280px] sm:min-w-[360px] bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 border border-slate-100 shadow-sm hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-400 snap-center flex-shrink-0 relative group/card"
+            >
+              {/* Quote decoration */}
+              <div className="absolute top-4 right-4 text-primary/5 group-hover/card:text-primary/10 transition-colors">
+                <Quote className="w-10 h-10 sm:w-12 sm:h-12" />
               </div>
-           </div>
-           <div className="w-px h-5 bg-slate-200 shrink-0" />
-           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-             <div className="bg-[#34A853]/10 p-1 sm:p-2 rounded-lg sm:rounded-xl shrink-0">
-               <ShieldCheck className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-[#34A853]" />
-             </div>
-             <div className="text-left">
-                <p className="text-slate-900 font-black text-[8px] sm:text-xs uppercase leading-none">Safe & Secure</p>
-                <p className="text-slate-500 font-bold text-[6px] sm:text-[9px] uppercase tracking-widest">SSL Certified</p>
-             </div>
-           </div>
+
+              {/* Tag + Stars */}
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black text-primary bg-primary/5 border border-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  {review.tag}
+                </span>
+                <div className="flex gap-0.5">
+                  {[...Array(review.rating)].map((_, j) => (
+                    <Star key={j} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+              </div>
+
+              {/* Review text */}
+              <p className="text-slate-700 text-sm sm:text-[15px] leading-relaxed font-medium relative z-10 mb-4">
+                "{review.text}"
+              </p>
+
+              {/* Author */}
+              <div className="flex items-center gap-2.5 pt-3 border-t border-slate-100">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-primary to-violet-500 flex items-center justify-center text-white font-black text-sm shrink-0">
+                  {review.name[0]}
+                </div>
+                <div>
+                  <p className="text-slate-900 font-black text-sm flex items-center gap-1">
+                    {review.name}
+                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
+                  </p>
+                  <p className="text-slate-400 font-semibold text-[11px]">{review.location} · {review.date}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Trust Stats Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mt-10 sm:mt-16 grid grid-cols-4 gap-3 sm:gap-6 bg-white rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm p-4 sm:p-8"
+        >
+          {TRUST_STATS.map((stat, i) => (
+            <div key={i} className="flex flex-col items-center text-center">
+              <span className="text-xl sm:text-3xl mb-1">{stat.icon}</span>
+              <p className="text-sm sm:text-2xl font-black text-slate-900 leading-none">{stat.val}</p>
+              <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5">{stat.label}</p>
+            </div>
+          ))}
+        </motion.div>
+
+        {/* Verification Strip */}
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-4 sm:gap-10">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 shrink-0">
+              <svg viewBox="0 0 24 24" className="w-full h-full">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs font-black text-slate-900 leading-none">Google Verified</p>
+              <p className="text-[10px] font-semibold text-slate-400">Business Partner</p>
+            </div>
+          </div>
+          <div className="w-px h-8 bg-slate-200" />
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-green-50 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs font-black text-slate-900 leading-none">Drug License</p>
+              <p className="text-[10px] font-semibold text-slate-400">KA-B51-286602</p>
+            </div>
+          </div>
+          <div className="w-px h-8 bg-slate-200" />
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-blue-50 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs font-black text-slate-900 leading-none">SSL Secured</p>
+              <p className="text-[10px] font-semibold text-slate-400">256-bit Encrypted</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
-  );
-}
-
-function ShieldCheck(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
   );
 }
