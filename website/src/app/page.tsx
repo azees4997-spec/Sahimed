@@ -87,10 +87,7 @@ export default async function Home() {
         <Navbar />
         <MegaCategoryRibbon />
 
-        {/* ══════════════════════════════════════════════════
-            ANNOUNCEMENT BAR
-        ══════════════════════════════════════════════════ */}
-        <AnnouncementBar />
+
 
 
 

@@ -145,61 +145,62 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         </div>
       </div>
 
-      {/* ── Mega Banner Carousel — Branded Generics (100vw Full-Bleed Edge-to-Edge) ── */}
+      {/* ── PlatinumRx-Style Seamless Hero Banner (100vw Full-Bleed Edge-to-Edge) ── */}
       <motion.section 
         variants={fadeUp} initial="hidden" animate="visible" 
-        className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden my-4"
+        className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden my-2 sm:my-4"
       >
-        <div className="relative w-full min-h-[340px] sm:min-h-[400px] lg:min-h-[440px] bg-gradient-to-r from-[#eefbf9] via-[#f0fdfa] to-[#eef2ff] border-y border-teal-100/60 overflow-hidden flex items-center shadow-sm">
-          {/* Subtle background glow */}
-          <div className="absolute -top-24 -left-24 w-96 h-96 bg-teal-400/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+        <div className="relative w-full min-h-[380px] sm:min-h-[440px] lg:min-h-[480px] bg-[#eefbf9] overflow-hidden flex items-center">
+          {/* Decorative soft glow */}
+          <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-teal-200/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl" />
 
-          <div className="relative z-10 w-full max-w-full px-6 sm:px-12 lg:px-16 py-8 sm:py-12 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 py-8 sm:py-12 flex flex-col md:flex-row items-center justify-between gap-8 sm:gap-12">
             
-            {/* Left Column: Text & 3 Exact Checkmark Bullets */}
-            <div className="space-y-5 text-center md:text-left max-w-2xl">
+            {/* Left Column: Bold PlatinumRx Style Typography & Checkmarks */}
+            <div className="space-y-6 text-center md:text-left max-w-2xl">
               
-              {/* Main Headline */}
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
-                Switch to Branded <span className="text-primary font-black">Generics</span>
-              </h2>
+              {/* Headline */}
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.08]">
+                Switch to Branded <br />
+                <span className="text-primary font-black">Generics</span>
+              </h1>
 
-              {/* 3 User-Requested Green Checkmark Points */}
-              <div className="space-y-3 pt-1">
-                <div className="flex items-center justify-center md:justify-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-emerald-500/25">
+              {/* 3 Green Checkmark Bullets */}
+              <div className="space-y-3.5 pt-2">
+                <div className="flex items-center justify-center md:justify-start gap-3.5">
+                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
                     ✓
                   </div>
-                  <span className="text-base sm:text-xl font-bold text-slate-800 tracking-tight">
-                    Trusted by thousand of customers
+                  <span className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight">
+                    Trusted by 10L+ users
                   </span>
                 </div>
 
-                <div className="flex items-center justify-center md:justify-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-emerald-500/25">
+                <div className="flex items-center justify-center md:justify-start gap-3.5">
+                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
                     ✓
                   </div>
-                  <span className="text-base sm:text-xl font-bold text-slate-800 tracking-tight">
-                    WHO FDA Certified
+                  <span className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight">
+                    Save upto 60%
                   </span>
                 </div>
 
-                <div className="flex items-center justify-center md:justify-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-emerald-500/25">
+                <div className="flex items-center justify-center md:justify-start gap-3.5">
+                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
                     ✓
                   </div>
-                  <span className="text-base sm:text-xl font-bold text-slate-800 tracking-tight">
-                    Save upto 60% on MRP
+                  <span className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight">
+                    Doctor Approved
                   </span>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-center md:justify-start gap-3.5 pt-3 flex-wrap">
+              <div className="flex items-center justify-center md:justify-start gap-4 pt-4 flex-wrap">
                 <Link 
                   href="/search" 
-                  className="px-8 py-4 bg-primary hover:bg-primary/90 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-primary/30 hover:scale-105 transition-all duration-200 flex items-center gap-2"
+                  className="px-8 py-4 bg-primary hover:bg-primary/90 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-primary/25 hover:scale-105 transition-all duration-200 flex items-center gap-2"
                 >
                   Browse Generics Now <ChevronRight className="w-4 h-4" />
                 </Link>
@@ -212,25 +213,15 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
               </div>
             </div>
 
-            {/* Right Column: Professional Doctor Brand Ambassador (Seamless Framed Badge) */}
-            <div className="relative shrink-0 w-72 sm:w-80 md:w-[380px] lg:w-[420px] aspect-square flex items-center justify-center">
-              <div className="relative w-full h-full rounded-3xl bg-white/70 backdrop-blur-md border border-white/80 p-3 shadow-xl overflow-hidden group">
-                <Image 
-                  src="/images/doctor_cutout_clean.jpg" 
-                  alt="SahiMed Certified Doctor Brand Ambassador" 
-                  fill 
-                  className="object-cover object-top rounded-2xl transition-transform duration-500 group-hover:scale-105"
-                  priority
-                />
-                <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md border border-slate-100 p-3 rounded-2xl shadow-lg text-center">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-primary block">
-                    👨‍⚕️ Registered Pharmacist Verification
-                  </span>
-                  <span className="text-[9px] text-slate-500 font-semibold block">
-                    Drug License #KA-B51-286602
-                  </span>
-                </div>
-              </div>
+            {/* Right Column: Seamless Person Cutout Standing Directly on Background (NO Box, NO Frame!) */}
+            <div className="relative shrink-0 w-72 sm:w-86 md:w-[420px] lg:w-[480px] h-[340px] sm:h-[400px] lg:h-[450px] flex items-end justify-center">
+              <Image 
+                src="/images/doctor_transparent_cutout.jpg" 
+                alt="SahiMed Certified Doctor Brand Ambassador" 
+                fill 
+                className="object-contain object-bottom mix-blend-multiply drop-shadow-lg"
+                priority
+              />
             </div>
           </div>
         </div>
