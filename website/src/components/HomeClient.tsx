@@ -132,29 +132,13 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
   return (
     <div className="space-y-8 sm:space-y-14 pb-0 sm:pb-16 overflow-x-hidden max-w-full">
 
-      {/* ── Trust Ticker ── */}
-      <div className="w-full overflow-hidden bg-primary/5 border-y border-primary/10 py-2.5">
-        <div className="flex animate-marquee whitespace-nowrap">
-          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-            <span key={i} className="inline-flex items-center gap-1.5 mx-6 text-[11px] font-bold text-slate-600 shrink-0">
-              <span className="text-sm">{item.icon}</span>
-              {item.text}
-              <span className="mx-3 text-primary/30">·</span>
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* ── PlatinumRx-Style Seamless Hero Banner (100vw Full-Bleed Edge-to-Edge) ── */}
+      {/* ── PlatinumRx-Style 100% Seamless Hero Banner (100vw Full-Bleed Edge-to-Edge) ── */}
       <motion.section 
         variants={fadeUp} initial="hidden" animate="visible" 
-        className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden my-2 sm:my-4"
+        className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden my-0"
       >
-        <div className="relative w-full min-h-[380px] sm:min-h-[440px] lg:min-h-[480px] bg-[#eefbf9] overflow-hidden flex items-center">
-          {/* Decorative soft glow */}
-          <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-teal-200/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl" />
-
+        <div className="relative w-full min-h-[380px] sm:min-h-[440px] lg:min-h-[480px] bg-[#fdebeb] overflow-hidden flex items-center">
+          
           <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 py-8 sm:py-12 flex flex-col md:flex-row items-center justify-between gap-8 sm:gap-12">
             
             {/* Left Column: Bold PlatinumRx Style Typography & Checkmarks */}
@@ -163,7 +147,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
               {/* Headline */}
               <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.08]">
                 Switch to Branded <br />
-                <span className="text-primary font-black">Generics</span>
+                <span className="text-[#f43f5e] font-black">Generics</span>
               </h1>
 
               {/* 3 Green Checkmark Bullets */}
@@ -213,13 +197,13 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
               </div>
             </div>
 
-            {/* Right Column: Seamless Person Cutout Standing Directly on Background (NO Box, NO Frame!) */}
-            <div className="relative shrink-0 w-72 sm:w-86 md:w-[420px] lg:w-[480px] h-[340px] sm:h-[400px] lg:h-[450px] flex items-end justify-center">
+            {/* Right Column: 100% Seamless Person Image matching bg-[#fdebeb] */}
+            <div className="relative shrink-0 w-72 sm:w-86 md:w-[460px] lg:w-[540px] h-[340px] sm:h-[400px] lg:h-[460px] flex items-end justify-center">
               <Image 
-                src="/images/doctor_transparent_cutout.jpg" 
+                src="/images/hero_generics_ambassador.jpg" 
                 alt="SahiMed Certified Doctor Brand Ambassador" 
                 fill 
-                className="object-contain object-bottom mix-blend-multiply drop-shadow-lg"
+                className="object-cover object-center"
                 priority
               />
             </div>
