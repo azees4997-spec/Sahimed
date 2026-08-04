@@ -83,9 +83,8 @@ export default async function Home() {
   return (
     <PageTransition>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen bg-slate-50/50 flex flex-col font-sans">
         <Navbar />
-        <MegaCategoryRibbon />
 
         {/* ══════════════════════════════════════════════════
             FULL-BLEED HERO — lives outside padded main
@@ -113,16 +112,16 @@ export default async function Home() {
                   <span style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Generics</span>
                 </h1>
 
-                <p className="text-[10px] sm:text-xs md:text-sm text-slate-500 font-medium leading-snug line-clamp-2 sm:line-clamp-none">
+                <p className="hidden sm:block text-xs md:text-sm text-slate-500 font-medium leading-relaxed">
                   Same formula as branded drugs — certified quality, verified by pharmacists, delivered fast.
                 </p>
 
-                {/* 3 Checkmark Bullets */}
+                {/* 3 Green Checkmark Bullets */}
                 <div className="space-y-1 sm:space-y-2">
                   {[
-                    { text: 'Trusted by thousands of customers', color: '#059669', bg: 'rgba(5,150,105,0.12)' },
-                    { text: 'WHO & FDA Certified', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
+                    { text: 'Trusted by 10L+ customers', color: '#059669', bg: 'rgba(5,150,105,0.12)' },
                     { text: 'Save upto 60% on MRP', color: '#db2777', bg: 'rgba(219,39,119,0.12)' },
+                    { text: 'WHO & FDA Doctor Approved', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
                   ].map((b, i) => (
                     <div key={i} className="flex items-center justify-start gap-1.5">
                       <div className="w-3.5 h-3.5 sm:w-5.5 sm:h-5.5 rounded-full flex items-center justify-center font-black text-[8px] sm:text-[11px] shrink-0"
@@ -135,41 +134,41 @@ export default async function Home() {
                   ))}
                 </div>
 
-                {/* Buttons */}
-                <div className="flex items-center justify-start gap-1.5 sm:gap-3 flex-wrap pt-0.5">
+                {/* Desktop Buttons */}
+                <div className="hidden sm:flex items-center justify-start gap-3 flex-wrap pt-0.5">
                   <Link
                     href="/search"
-                    className="px-3 sm:px-6 py-1.5 sm:py-2.5 text-white font-black text-[9.5px] sm:text-xs uppercase tracking-wider rounded-lg sm:rounded-xl hover:scale-105 transition-all duration-200 flex items-center gap-1 shadow-md"
-                    style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)', boxShadow: '0 4px 14px rgba(124,58,237,0.3)' }}
+                    className="px-6 py-2.5 text-white font-black text-xs uppercase tracking-wider rounded-xl hover:scale-105 transition-all duration-200 flex items-center gap-1.5 shadow-lg"
+                    style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)', boxShadow: '0 6px 20px rgba(124,58,237,0.3)' }}
                   >
                     Shop Now →
                   </Link>
                   <Link
                     href="/prescription"
-                    className="px-3 sm:px-6 py-1.5 sm:py-2.5 bg-white hover:bg-slate-50 border border-purple-200 text-slate-800 font-black text-[9.5px] sm:text-xs uppercase tracking-wider rounded-lg sm:rounded-xl shadow-sm transition-all"
+                    className="px-6 py-2.5 bg-white hover:bg-slate-50 border border-purple-200 text-slate-800 font-black text-xs uppercase tracking-wider rounded-xl shadow-sm transition-all"
                   >
                     Upload Rx
                   </Link>
                 </div>
 
-                {/* Mini stats */}
-                <div className="flex items-center justify-start gap-2.5 sm:gap-4 pt-0.5">
+                {/* Desktop Mini stats */}
+                <div className="hidden sm:flex items-center justify-start gap-4 pt-0.5">
                   {[
                     { val: '10K+', label: 'Customers' },
                     { val: '4.8★', label: 'Rating' },
                     { val: '60%', label: 'Max Savings' },
                   ].map((s, i) => (
                     <div key={i} className="flex items-center gap-1">
-                      <p className="text-[10.5px] sm:text-sm md:text-base font-black" style={{ color: '#7c3aed' }}>{s.val}</p>
-                      <p className="text-[8.5px] sm:text-[10px] text-slate-500 font-medium">{s.label}</p>
-                      {i < 2 && <div className="w-px h-2.5 sm:h-3 bg-slate-200 ml-0.5 sm:ml-1" />}
+                      <p className="text-sm md:text-base font-black" style={{ color: '#7c3aed' }}>{s.val}</p>
+                      <p className="text-[10px] text-slate-500 font-medium">{s.label}</p>
+                      {i < 2 && <div className="w-px h-3.5 bg-slate-200 ml-1.5" />}
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Right: Larger Doctor Cutout PNG (Shifted further right -mr-2, h-[270px] mobile / 380px desktop) */}
-              <div className="relative shrink-0 w-48 sm:w-72 md:w-[380px] lg:w-[420px] h-[270px] sm:h-[330px] lg:h-[380px] flex items-end justify-center -mr-2 sm:mr-0 self-end">
+              <div className="relative shrink-0 w-44 sm:w-72 md:w-[380px] lg:w-[420px] h-[260px] sm:h-[330px] lg:h-[380px] flex items-end justify-center -mr-2 sm:mr-0 self-end">
                 {/* Clean transparent PNG cutout — sits directly flush on the bottom line */}
                 <img
                   src="/images/doctor_transparent.png"
@@ -193,6 +192,21 @@ export default async function Home() {
                   </div>
                 </div>
               </div>
+          </div>
+
+          {/* Embedded Mobile Search Bar — Exactly matches Truemeds prominent bottom search pill */}
+          <div className="block sm:hidden px-3 pt-2 pb-3.5 relative z-20">
+            <Link href="/search" className="block w-full">
+              <div className="w-full bg-white rounded-full px-4 py-2.5 shadow-lg border border-pink-200/80 flex items-center justify-between text-slate-400 text-xs font-medium">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Search className="w-4 h-4 text-pink-500 shrink-0" />
+                  <span className="text-slate-400 font-medium truncate">Search your Medicines, brands, salts...</span>
+                </div>
+                <span className="text-[9px] font-black text-white px-2.5 py-1 rounded-full shrink-0 ml-1" style={{ background: 'linear-gradient(135deg, #009F9C, #059669)' }}>
+                  SEARCH
+                </span>
+              </div>
+            </Link>
           </div>
 
           {/* Trust ticker */}

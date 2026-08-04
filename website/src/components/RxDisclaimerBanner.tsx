@@ -10,7 +10,7 @@ export default function RxDisclaimerBanner() {
   if (dismissed) return null;
 
   return (
-    <div className="w-full bg-emerald-900 text-white text-[11px] font-medium py-1.5 px-4 flex items-center justify-between gap-3 border-b border-emerald-800 relative z-30">
+    <div className="hidden sm:flex w-full bg-emerald-900 text-white text-[11px] font-medium py-1.5 px-4 items-center justify-between gap-3 border-b border-emerald-800 relative z-30">
       <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 flex-wrap text-center sm:text-left">
         <span className="inline-flex items-center gap-1 font-bold bg-emerald-800 text-emerald-100 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider shrink-0">
           <ShieldAlert className="w-3 h-3 text-emerald-300" />

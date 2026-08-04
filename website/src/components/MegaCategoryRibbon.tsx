@@ -76,7 +76,7 @@ export default function MegaCategoryRibbon() {
   const [activeCategory, setActiveCategory] = React.useState<string | null>(null);
 
   return (
-    <div className="w-full bg-white border-b border-slate-100 shadow-sm relative z-30">
+    <div className="hidden sm:block w-full bg-white border-b border-slate-100 shadow-sm relative z-30">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between lg:justify-center gap-1.5 sm:gap-3 lg:gap-6 overflow-x-auto scrollbar-hide py-2">
           {MEGA_CATEGORIES.map((cat) => {
