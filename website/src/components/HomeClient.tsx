@@ -161,21 +161,21 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
           </Link>
         </div>
 
-        {/* ── Featured 8 Category Cards ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-5">
+        {/* ── Featured 8 Category Cards — Sleek 8-Col Compact Desktop Grid ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 sm:gap-3.5">
           {featuredCats.map((cat: any, i: number) => {
             const style = getCategoryStyle(cat.name || '');
             const imgSrc = (cat.imageUrl && !cat.imageUrl.includes('picsum')) ? cat.imageUrl : style.image;
             // Per-category pastel accent colors for card footer
             const cardAccents = [
-              { bg: 'rgba(124,58,237,0.1)', color: '#7c3aed', glow: 'rgba(124,58,237,0.15)' },
-              { bg: 'rgba(219,39,119,0.1)', color: '#db2777', glow: 'rgba(219,39,119,0.15)' },
-              { bg: 'rgba(5,150,105,0.1)', color: '#059669', glow: 'rgba(5,150,105,0.15)' },
-              { bg: 'rgba(217,119,6,0.1)', color: '#d97706', glow: 'rgba(217,119,6,0.15)' },
-              { bg: 'rgba(59,130,246,0.1)', color: '#3b82f6', glow: 'rgba(59,130,246,0.15)' },
-              { bg: 'rgba(239,68,68,0.1)', color: '#ef4444', glow: 'rgba(239,68,68,0.15)' },
-              { bg: 'rgba(20,184,166,0.1)', color: '#14b8a6', glow: 'rgba(20,184,166,0.15)' },
-              { bg: 'rgba(168,85,247,0.1)', color: '#a855f7', glow: 'rgba(168,85,247,0.15)' },
+              { bg: 'rgba(124,58,237,0.08)', color: '#7c3aed', glow: 'rgba(124,58,237,0.12)' },
+              { bg: 'rgba(219,39,119,0.08)', color: '#db2777', glow: 'rgba(219,39,119,0.12)' },
+              { bg: 'rgba(5,150,105,0.08)', color: '#059669', glow: 'rgba(5,150,105,0.12)' },
+              { bg: 'rgba(217,119,6,0.08)', color: '#d97706', glow: 'rgba(217,119,6,0.12)' },
+              { bg: 'rgba(59,130,246,0.08)', color: '#3b82f6', glow: 'rgba(59,130,246,0.12)' },
+              { bg: 'rgba(239,68,68,0.08)', color: '#ef4444', glow: 'rgba(239,68,68,0.12)' },
+              { bg: 'rgba(20,184,166,0.08)', color: '#14b8a6', glow: 'rgba(20,184,166,0.12)' },
+              { bg: 'rgba(168,85,247,0.08)', color: '#a855f7', glow: 'rgba(168,85,247,0.12)' },
             ];
             const accent = cardAccents[i % cardAccents.length];
 
@@ -183,22 +183,22 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
               <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
                 <Link
                   href={`/search?c=${encodeURIComponent(cat.name)}`}
-                  className="group relative flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl transition-all duration-500 hover:-translate-y-2 bg-white"
-                  style={{ border: `1.5px solid ${accent.color}30`, boxShadow: `0 4px 20px ${accent.glow}` }}
+                  className="group relative flex flex-col overflow-hidden rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-1 bg-white shadow-sm hover:shadow-md"
+                  style={{ border: `1px solid ${accent.color}25` }}
                 >
-                  {/* Category Image Header */}
-                  <div className="relative w-full aspect-[4/3] overflow-hidden bg-slate-50">
+                  {/* Category Image Header — Compact height */}
+                  <div className="relative w-full h-24 sm:h-28 lg:h-32 overflow-hidden bg-slate-50">
                     <Image
                       src={imgSrc}
                       alt={cat.name}
                       fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                       priority={i < 4}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-900/10 to-transparent opacity-70 group-hover:opacity-40 transition-opacity" />
 
                     {/* Discount badge */}
-                    <div className="absolute top-2.5 left-2.5 text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md"
+                    <div className="absolute top-1.5 left-1.5 text-white text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-sm backdrop-blur-md"
                       style={{ background: `linear-gradient(135deg, ${accent.color}, ${accent.color}cc)` }}
                     >
                       UP TO 61% OFF
@@ -206,18 +206,18 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
                   </div>
 
                   {/* Name and Action */}
-                  <div className="p-3 sm:p-4 flex items-center justify-between transition-all duration-300"
+                  <div className="p-2 sm:p-2.5 flex items-center justify-between transition-all duration-300"
                     style={{ background: `${accent.bg}` }}
                   >
-                    <div>
-                      <h3 className="text-xs sm:text-sm font-black uppercase tracking-tight leading-tight line-clamp-1" style={{ color: accent.color }}>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-[11px] sm:text-xs font-black uppercase tracking-tight leading-tight truncate" style={{ color: accent.color }}>
                         {cat.name}
                       </h3>
-                      <p className="text-[9px] font-medium text-slate-400 mt-0.5">
-                        Pharmacist Verified
+                      <p className="text-[8.5px] font-medium text-slate-400 mt-0.5 truncate hidden sm:block">
+                        Verified Stock
                       </p>
                     </div>
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center font-black text-xs shadow-sm shrink-0 ml-2"
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white flex items-center justify-center font-black text-[10px] shadow-sm shrink-0 ml-1"
                       style={{ color: accent.color }}
                     >
                       →
