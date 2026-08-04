@@ -92,15 +92,12 @@ export default async function Home() {
         ══════════════════════════════════════════════════ */}
         <AnnouncementBar />
 
-        {/* ══════════════════════════════════════════════════
-            HERO
-        ══════════════════════════════════════════════════ */}
-        <HeroSection />
+
 
         {/* ══════════════════════════════════════════════════
             MAIN CONTENT (HomeClient handles everything below)
         ══════════════════════════════════════════════════ */}
-        <main className="w-full px-4 sm:px-8 lg:px-12 pt-2 pb-10 md:pt-4 md:pb-16">
+        <main className="w-full px-4 sm:px-6 lg:px-8 pt-2 pb-10 md:pt-4 md:pb-16">
           <HomeClient
             banners={banners}
             categories={categories}

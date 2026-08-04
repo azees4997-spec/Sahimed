@@ -77,7 +77,7 @@ export default function MegaCategoryRibbon() {
 
   return (
     <div className="w-full bg-white border-b border-slate-100 shadow-sm relative z-30">
-      <div className="w-full px-4 sm:px-8 lg:px-12">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-1 overflow-x-auto scrollbar-hide py-2">
           
           {/* Quick Pill Badge */}

@@ -467,7 +467,7 @@ export default function Navbar() {
               : "bg-white/80 backdrop-blur-md border-b border-slate-100/50 py-2 sm:py-4"
         )}
       >
-        <div className="w-full px-4 sm:px-8 lg:px-12">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           {/* Main Container */}
           <div className={cn(
             "flex justify-between items-center transition-all duration-500",
