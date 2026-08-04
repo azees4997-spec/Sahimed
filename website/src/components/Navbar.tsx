@@ -478,13 +478,142 @@ export default function Navbar() {
               <SahiMedLogo placement="nav" />
             </Link>
 
-            {/* Desktop Navigation Links */}
-            <div className="hidden lg:flex items-center gap-4 ml-4">
-              {headerPages?.map((page: any) => (
-                <Link key={page.id} href={`/p/${page.id}`} className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors">
-                  {page.title}
-                </Link>
-              ))}
+            {/* ── MIDDLE SEARCH BAR (Desktop & Tablet) ── */}
+            <div className="flex-1 max-w-xl mx-4 sm:mx-8 relative hidden md:block" ref={searchRef}>
+              <form onSubmit={handleSearch} className="relative">
+                <div className="relative group">
+                  <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search medicines, brands, salts..."
+                    className="w-full pl-11 pr-24 h-11 text-xs font-bold bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white rounded-full transition-all outline-none text-slate-900"
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      if (e.target.value.length >= 1) setShowSuggestions(true);
+                    }}
+                    onFocus={() => search.length >= 1 && setShowSuggestions(true)}
+                  />
+                  <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                    {isSearching ? (
+                      <div className="mr-3">
+                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      </div>
+                    ) : (
+                      <Button 
+                        type="submit"
+                        className="h-9 px-5 rounded-full bg-primary text-white font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-sm"
+                      >
+                        Search
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </form>
+
+              {/* Autocomplete Suggestions Dropdown */}
+              <AnimatePresence>
+                {showSuggestions && suggestions.length > 0 && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                    className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] overflow-hidden z-[110] border border-slate-100 shadow-2xl"
+                  >
+                    <div className="max-h-[500px] overflow-y-auto scrollbar-hide grid grid-cols-1 sm:grid-cols-12 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 bg-white">
+                      {/* Suggestions list */}
+                      <div className="sm:col-span-5 bg-slate-50/30">
+                        <div className="px-5 py-3 border-b border-slate-100/50">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <div className="w-1 h-1 rounded-full bg-primary" /> Suggestions
+                          </span>
+                        </div>
+                        <div className="divide-y divide-slate-100/50">
+                          {suggestions.map((item) => (
+                            <div 
+                              key={item.id}
+                              onClick={() => handleSuggestionClick(item)}
+                              className="w-full px-5 py-3 flex items-center gap-3 hover:bg-white transition-all group cursor-pointer"
+                            >
+                              <SearchIcon className="w-3.5 h-3.5 text-slate-300 group-hover:text-primary transition-colors" />
+                              <div className="flex-1 min-w-0 flex items-center gap-2">
+                                <span className="font-extrabold text-[12px] text-slate-700 truncate group-hover:text-slate-900 transition-colors uppercase">
+                                  {item.term}
+                                </span>
+                                <Badge variant="secondary" className="text-[8px] bg-slate-100 text-slate-400 font-bold border-none uppercase h-4 px-1">
+                                  {item.type === 'Salt' ? 'Molecule' : 'Brand'}
+                                </Badge>
+                              </div>
+                              <ArrowUpRight className="w-3.5 h-3.5 text-slate-200 group-hover:text-primary transition-all opacity-0 group-hover:opacity-100" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Instant Top Matches */}
+                      <div className="sm:col-span-7 bg-white">
+                        <div className="px-5 py-3 border-b border-slate-100/50 flex items-center justify-between">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <div className="w-1 h-1 rounded-full bg-emerald-500" /> Top Matches
+                          </span>
+                        </div>
+                        <div className="divide-y divide-slate-100/50 max-h-[380px] overflow-y-auto">
+                          {displayedSuggestions.filter(s => s.type === 'Brand').length > 0 ? (
+                            displayedSuggestions.filter(s => s.type === 'Brand').map((item) => (
+                              <div 
+                                key={`prod-${item.id}`}
+                                className="w-full px-5 py-3.5 flex items-center gap-4 hover:bg-slate-50/50 transition-all group"
+                              >
+                                <div className="relative w-12 h-12 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
+                                  <Image 
+                                    src={(item as any).imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
+                                    alt={item.term} 
+                                    fill 
+                                    className="object-contain p-1" 
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0 flex items-center justify-between gap-3">
+                                  <div className="flex-1 min-w-0 cursor-pointer" onClick={() => router.push(`/product/${(item as any).product?.id}`)}>
+                                    <p className="font-extrabold text-[13px] text-slate-800 line-clamp-1 group-hover:text-primary transition-colors">
+                                      {item.term}
+                                    </p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      {(item as any).price > 0 && (
+                                        <span className="text-[13px] font-black text-slate-900">₹{(item as any).price}</span>
+                                      )}
+                                      <span className="text-[8px] font-black text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
+                                        60% OFF
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <Button 
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      addToCart((item as any).product);
+                                      toast({ title: "Added to Basket" });
+                                    }}
+                                    variant="outline"
+                                    className="h-8 px-4 rounded-xl border-primary/20 text-primary hover:bg-primary hover:text-white font-black text-[9px] uppercase tracking-widest shadow-sm transition-all"
+                                  >
+                                    Add +
+                                  </Button>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-12 text-center space-y-2 opacity-40">
+                               <Package className="w-6 h-6 text-slate-300 mx-auto" />
+                               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Search for products</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Right Section: Location, Search (Mobile Trigger), & Cart */}
@@ -735,11 +864,11 @@ export default function Navbar() {
                 </Popover>
               )}
 
-              {/* Mobile Search Overlay Trigger */}
+              {/* Mobile Search Overlay Trigger (Mobile Only) */}
               <button 
                 onClick={() => setIsSearchOverlayOpen(true)}
                 className={cn(
-                  "flex items-center justify-center p-2 rounded-full border transition-all h-9 w-9",
+                  "flex md:hidden items-center justify-center p-2 rounded-full border transition-all h-9 w-9",
                   scrolled 
                     ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
                     : isHome 
