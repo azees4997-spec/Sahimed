@@ -96,10 +96,10 @@ export default async function Home() {
           <div className="absolute -bottom-12 -right-8 w-80 h-80 rounded-full opacity-30 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #6ee7b7, #34d399)' }} />
           <div className="absolute top-8 right-1/3 w-40 h-40 rounded-full opacity-20 blur-2xl pointer-events-none" style={{ background: 'radial-gradient(circle, #fda4af, #fb7185)' }} />
 
-          <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 pt-3 sm:pt-6 pb-0 flex flex-row items-center justify-between gap-3 sm:gap-6 md:gap-8">
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 pt-4 sm:pt-8 pb-0 flex flex-row items-center justify-between gap-3 sm:gap-6 md:gap-8">
 
               {/* Left: Wording (Side-by-side on Mobile & Desktop) */}
-              <div className="flex-1 min-w-0 space-y-2 sm:space-y-3.5 text-left pb-3 sm:pb-6">
+              <div className="flex-1 min-w-0 space-y-2.5 sm:space-y-3.5 text-left pb-4 sm:pb-6">
                 {/* Label pill */}
                 <span className="inline-flex items-center gap-1.5 text-[9px] sm:text-[10.5px] font-black uppercase tracking-widest px-2.5 sm:px-3.5 py-0.5 sm:py-1 rounded-full border shadow-sm"
                   style={{ background: 'rgba(167,139,250,0.15)', borderColor: 'rgba(167,139,250,0.4)', color: '#7c3aed' }}
@@ -168,8 +168,8 @@ export default async function Home() {
                 </div>
               </div>
 
-              {/* Right: Doctor Cutout PNG (Side-by-side on Mobile & Desktop, bottom flush) */}
-              <div className="relative shrink-0 w-36 sm:w-60 md:w-[320px] lg:w-[360px] h-[190px] sm:h-[260px] lg:h-[320px] flex items-end justify-center self-end">
+              {/* Right: Doctor Cutout PNG (Taller height: 250px mobile / 380px desktop, bottom flush) */}
+              <div className="relative shrink-0 w-44 sm:w-72 md:w-[380px] lg:w-[420px] h-[250px] sm:h-[330px] lg:h-[380px] flex items-end justify-center self-end">
                 {/* Clean transparent PNG cutout — sits directly flush on the bottom line */}
                 <img
                   src="/images/doctor_transparent.png"
@@ -177,19 +177,19 @@ export default async function Home() {
                   className="relative z-10 w-full h-full object-contain object-bottom pointer-events-none"
                 />
                 {/* Badge: savings */}
-                <div className="absolute top-1 left-0 sm:-left-3 z-20 flex items-center gap-1.5 bg-white/95 rounded-2xl px-2 sm:px-3 py-1 sm:py-1.5 shadow-md border border-pink-100/80">
-                  <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-xl flex items-center justify-center text-xs sm:text-sm shrink-0" style={{ background: 'linear-gradient(135deg,#fdf2f8,#fce7f3)' }}>💊</div>
+                <div className="absolute top-2 left-0 sm:-left-3 z-20 flex items-center gap-1.5 bg-white/95 backdrop-blur-md rounded-2xl px-2.5 sm:px-3.5 py-1 sm:py-1.5 shadow-md border border-pink-100/80">
+                  <div className="w-5.5 h-5.5 sm:w-7.5 sm:h-7.5 rounded-xl flex items-center justify-center text-xs sm:text-sm shrink-0" style={{ background: 'linear-gradient(135deg,#fdf2f8,#fce7f3)' }}>💊</div>
                   <div>
-                    <p className="text-[7px] sm:text-[8px] font-bold text-slate-400 uppercase tracking-wider">Save upto</p>
-                    <p className="text-[9.5px] sm:text-[11px] font-black" style={{ color: '#db2777' }}>60% OFF</p>
+                    <p className="text-[7.5px] sm:text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">Save upto</p>
+                    <p className="text-[10px] sm:text-xs font-black" style={{ color: '#db2777' }}>60% OFF</p>
                   </div>
                 </div>
                 {/* Badge: certified */}
-                <div className="absolute bottom-3 right-0 sm:-right-3 z-20 flex items-center gap-1.5 bg-white/95 rounded-2xl px-2 sm:px-3 py-1 sm:py-1.5 shadow-md border border-purple-100/80">
-                  <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-xl flex items-center justify-center text-xs sm:text-sm shrink-0" style={{ background: 'linear-gradient(135deg,#f5f3ff,#ede9fe)' }}>🏅</div>
+                <div className="absolute bottom-4 right-0 sm:-right-3 z-20 flex items-center gap-1.5 bg-white/95 backdrop-blur-md rounded-2xl px-2.5 sm:px-3.5 py-1 sm:py-1.5 shadow-md border border-purple-100/80">
+                  <div className="w-5.5 h-5.5 sm:w-7.5 sm:h-7.5 rounded-xl flex items-center justify-center text-xs sm:text-sm shrink-0" style={{ background: 'linear-gradient(135deg,#f5f3ff,#ede9fe)' }}>🏅</div>
                   <div>
-                    <p className="text-[7px] sm:text-[8px] font-bold text-slate-400 uppercase tracking-wider">Certified</p>
-                    <p className="text-[9.5px] sm:text-[11px] font-black" style={{ color: '#7c3aed' }}>WHO & FDA</p>
+                    <p className="text-[7.5px] sm:text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">Certified</p>
+                    <p className="text-[10px] sm:text-xs font-black" style={{ color: '#7c3aed' }}>WHO & FDA</p>
                   </div>
                 </div>
               </div>
