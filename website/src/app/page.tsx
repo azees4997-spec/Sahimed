@@ -96,80 +96,80 @@ export default async function Home() {
           <div className="absolute -bottom-12 -right-8 w-80 h-80 rounded-full opacity-30 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #6ee7b7, #34d399)' }} />
           <div className="absolute top-8 right-1/3 w-40 h-40 rounded-full opacity-20 blur-2xl pointer-events-none" style={{ background: 'radial-gradient(circle, #fda4af, #fb7185)' }} />
 
-          <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 pt-4 sm:pt-6 pb-0 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8">
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 pt-3 sm:pt-6 pb-0 flex flex-row items-center justify-between gap-3 sm:gap-6 md:gap-8">
 
-              {/* Left: Wording (Compact & Sleek) */}
-              <div className="space-y-3 text-center md:text-left max-w-xl pb-4 sm:pb-6">
+              {/* Left: Wording (Side-by-side on Mobile & Desktop) */}
+              <div className="flex-1 min-w-0 space-y-2 sm:space-y-3.5 text-left pb-3 sm:pb-6">
                 {/* Label pill */}
-                <span className="inline-flex items-center gap-2 text-[10.5px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full border shadow-sm"
+                <span className="inline-flex items-center gap-1.5 text-[9px] sm:text-[10.5px] font-black uppercase tracking-widest px-2.5 sm:px-3.5 py-0.5 sm:py-1 rounded-full border shadow-sm"
                   style={{ background: 'rgba(167,139,250,0.15)', borderColor: 'rgba(167,139,250,0.4)', color: '#7c3aed' }}
                 >
                   🏥 India&apos;s Trusted Pharmacy
                 </span>
 
                 {/* Headline */}
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.08] text-slate-900">
+                <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-[1.1] text-slate-900">
                   Switch to Branded{' '}
                   <span style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Generics</span>
                 </h1>
 
-                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+                <p className="text-[11px] sm:text-xs md:text-sm text-slate-500 font-medium leading-snug line-clamp-2 sm:line-clamp-none">
                   Same formula as branded drugs — certified quality, verified by pharmacists, delivered fast.
                 </p>
 
                 {/* 3 Checkmark Bullets */}
-                <div className="space-y-2">
+                <div className="space-y-1.5 sm:space-y-2">
                   {[
                     { text: 'Trusted by thousands of customers', color: '#059669', bg: 'rgba(5,150,105,0.12)' },
                     { text: 'WHO & FDA Certified', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
                     { text: 'Save upto 60% on MRP', color: '#db2777', bg: 'rgba(219,39,119,0.12)' },
                   ].map((b, i) => (
-                    <div key={i} className="flex items-center justify-center md:justify-start gap-2.5">
-                      <div className="w-5.5 h-5.5 rounded-full flex items-center justify-center font-black text-[11px] shrink-0"
+                    <div key={i} className="flex items-center justify-start gap-2">
+                      <div className="w-4 h-4 sm:w-5.5 sm:h-5.5 rounded-full flex items-center justify-center font-black text-[9px] sm:text-[11px] shrink-0"
                         style={{ background: b.bg, color: b.color, border: `1.5px solid ${b.color}40` }}
                       >
                         ✓
                       </div>
-                      <span className="text-xs sm:text-sm font-bold text-slate-800">{b.text}</span>
+                      <span className="text-[10.5px] sm:text-xs md:text-sm font-bold text-slate-800 truncate">{b.text}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* Buttons */}
-                <div className="flex items-center justify-center md:justify-start gap-3 flex-wrap pt-0.5">
+                <div className="flex items-center justify-start gap-2 sm:gap-3 flex-wrap pt-0.5">
                   <Link
                     href="/search"
-                    className="px-6 py-2.5 text-white font-black text-xs uppercase tracking-wider rounded-xl hover:scale-105 transition-all duration-200 flex items-center gap-1.5 shadow-lg"
+                    className="px-3.5 sm:px-6 py-1.5 sm:py-2.5 text-white font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-xl hover:scale-105 transition-all duration-200 flex items-center gap-1 shadow-lg"
                     style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)', boxShadow: '0 6px 20px rgba(124,58,237,0.3)' }}
                   >
                     Shop Now →
                   </Link>
                   <Link
                     href="/prescription"
-                    className="px-6 py-2.5 bg-white hover:bg-slate-50 border border-purple-200 text-slate-800 font-black text-xs uppercase tracking-wider rounded-xl shadow-sm transition-all"
+                    className="px-3.5 sm:px-6 py-1.5 sm:py-2.5 bg-white hover:bg-slate-50 border border-purple-200 text-slate-800 font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-xl shadow-sm transition-all"
                   >
                     Upload Rx
                   </Link>
                 </div>
 
                 {/* Mini stats */}
-                <div className="flex items-center justify-center md:justify-start gap-4 pt-0.5">
+                <div className="flex items-center justify-start gap-3 sm:gap-4 pt-0.5">
                   {[
                     { val: '10K+', label: 'Customers' },
                     { val: '4.8★', label: 'Rating' },
                     { val: '60%', label: 'Max Savings' },
                   ].map((s, i) => (
-                    <div key={i} className="flex items-center gap-1.5">
-                      <p className="text-sm sm:text-base font-black" style={{ color: '#7c3aed' }}>{s.val}</p>
-                      <p className="text-[10px] text-slate-500 font-medium">{s.label}</p>
-                      {i < 2 && <div className="w-px h-3.5 bg-slate-200 ml-1.5" />}
+                    <div key={i} className="flex items-center gap-1">
+                      <p className="text-xs sm:text-sm md:text-base font-black" style={{ color: '#7c3aed' }}>{s.val}</p>
+                      <p className="text-[9px] sm:text-[10px] text-slate-500 font-medium">{s.label}</p>
+                      {i < 2 && <div className="w-px h-3 bg-slate-200 ml-1" />}
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Right: Sleek Doctor Cutout PNG (Compact 320px height, bottom flush) */}
-              <div className="relative shrink-0 w-56 sm:w-72 md:w-[320px] lg:w-[360px] h-[230px] sm:h-[290px] lg:h-[320px] flex items-end justify-center md:ml-auto self-end">
+              {/* Right: Doctor Cutout PNG (Side-by-side on Mobile & Desktop, bottom flush) */}
+              <div className="relative shrink-0 w-36 sm:w-60 md:w-[320px] lg:w-[360px] h-[190px] sm:h-[260px] lg:h-[320px] flex items-end justify-center self-end">
                 {/* Clean transparent PNG cutout — sits directly flush on the bottom line */}
                 <img
                   src="/images/doctor_transparent.png"
@@ -177,19 +177,19 @@ export default async function Home() {
                   className="relative z-10 w-full h-full object-contain object-bottom pointer-events-none"
                 />
                 {/* Badge: savings */}
-                <div className="absolute top-2 left-0 sm:-left-3 z-20 flex items-center gap-2 bg-white/95 rounded-2xl px-3 py-1.5 shadow-md border border-pink-100/80">
-                  <div className="w-7 h-7 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: 'linear-gradient(135deg,#fdf2f8,#fce7f3)' }}>💊</div>
+                <div className="absolute top-1 left-0 sm:-left-3 z-20 flex items-center gap-1.5 bg-white/95 rounded-2xl px-2 sm:px-3 py-1 sm:py-1.5 shadow-md border border-pink-100/80">
+                  <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-xl flex items-center justify-center text-xs sm:text-sm shrink-0" style={{ background: 'linear-gradient(135deg,#fdf2f8,#fce7f3)' }}>💊</div>
                   <div>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Save upto</p>
-                    <p className="text-[11px] font-black" style={{ color: '#db2777' }}>60% OFF MRP</p>
+                    <p className="text-[7px] sm:text-[8px] font-bold text-slate-400 uppercase tracking-wider">Save upto</p>
+                    <p className="text-[9.5px] sm:text-[11px] font-black" style={{ color: '#db2777' }}>60% OFF</p>
                   </div>
                 </div>
                 {/* Badge: certified */}
-                <div className="absolute bottom-4 right-0 sm:-right-3 z-20 flex items-center gap-2 bg-white/95 rounded-2xl px-3 py-1.5 shadow-md border border-purple-100/80">
-                  <div className="w-7 h-7 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: 'linear-gradient(135deg,#f5f3ff,#ede9fe)' }}>🏅</div>
+                <div className="absolute bottom-3 right-0 sm:-right-3 z-20 flex items-center gap-1.5 bg-white/95 rounded-2xl px-2 sm:px-3 py-1 sm:py-1.5 shadow-md border border-purple-100/80">
+                  <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-xl flex items-center justify-center text-xs sm:text-sm shrink-0" style={{ background: 'linear-gradient(135deg,#f5f3ff,#ede9fe)' }}>🏅</div>
                   <div>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Certified by</p>
-                    <p className="text-[11px] font-black" style={{ color: '#7c3aed' }}>WHO & FDA</p>
+                    <p className="text-[7px] sm:text-[8px] font-bold text-slate-400 uppercase tracking-wider">Certified</p>
+                    <p className="text-[9.5px] sm:text-[11px] font-black" style={{ color: '#7c3aed' }}>WHO & FDA</p>
                   </div>
                 </div>
               </div>
