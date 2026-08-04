@@ -282,11 +282,40 @@ export default async function ProductPage({ params }: ProductPageProps) {
     },
   };
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://sahimed.com',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Medicines',
+        item: 'https://sahimed.com/search',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: product.name,
+        item: `https://sahimed.com/product/${id}`,
+      },
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <ProductDetailClient initialProduct={product} id={product.id} crossSellProducts={crossSellProducts} />
     </>

@@ -10,6 +10,7 @@ import Footer from '@/components/Footer';
 import WhatsAppFloat from '@/components/WhatsAppFloat';
 import { Outfit, Poppins } from 'next/font/google';
 import LocationSync from '@/components/LocationSync';
+import RxDisclaimerBanner from '@/components/RxDisclaimerBanner';
 import { unstable_cache } from 'next/cache';
 
 import Script from 'next/script';
@@ -255,6 +256,7 @@ export default async function RootLayout({
             <CartProvider>
               <LocationSync />
               <div className="flex flex-col min-h-screen">
+                <RxDisclaimerBanner />
                 <main className="flex-1">
                   {children}
                   <Footer initialPages={initialPages} />
