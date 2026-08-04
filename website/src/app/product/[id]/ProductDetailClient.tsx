@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -8,908 +8,1198 @@ import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Info,
-  Baby,
-  Milk,
-  Car,
-  ShieldAlert,
-  Stethoscope,
-  ClipboardList,
-  Dna,
-  AlertTriangle,
-  Package,
-  ShoppingCart,
-  Minus,
-  Plus,
-  Zap,
-  TrendingDown,
-  Maximize2,
-  Loader2,
-  TrendingUp,
-  FlaskConical,
-  Truck,
-  MapPin,
-  Clock,
-  ArrowRight,
-  Pencil,
-  X,
-  Share2,
-  Send,
-  Copy
+  Info, Baby, Milk, Car, ShieldAlert, Stethoscope, AlertTriangle, Package,
+  ShoppingCart, ShoppingBag, Minus, Plus, MapPin, ChevronDown, ChevronRight,
+  AlertCircle, Truck, FlaskConical, Tag, Building2, Globe, Pill,
+  ClipboardList, Zap, BookOpen, ThumbsUp, Share2, Copy, Send,
+  CheckCircle2, Star, ShieldCheck, Clock, HeartPulse, BadgeCheck, Eye, ZoomIn,
+  ChevronLeft
 } from 'lucide-react';
-
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-  DialogDescription
-} from "@/components/ui/dialog";
-import { useMongoDBDoc, useMongoDBMolecule, useMongoDBCollection } from '@/hooks/use-mongodb';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useMongoDBMolecule, useMongoDBCollection } from '@/hooks/use-mongodb';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
-import {
-  scaleInVariant,
-  fadeInVariant
-} from '@/lib/animations';
-import RibbonBadge from '@/components/RibbonBadge';
-
-// --- SUB-COMPONENTS ---
-
-function ExpandableInfoTile({
-  icon: Icon,
-  title,
-  text,
-  color,
-  iconColor = "text-primary",
-  titleColor = "text-slate-800"
-}: {
-  icon: any,
-  title: string,
-  text: string,
-  color: string,
-  iconColor?: string,
-  titleColor?: string
-}) {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <motion.div
-          layout
-          className={cn(
-            "p-5 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-white space-y-2 sm:space-y-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98] z-10",
-            color
-          )}
-        >
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", iconColor)} />
-            <h3 className={cn("text-[10px] sm:text-lg font-black tracking-tighter font-outfit uppercase", titleColor)}>
-              {title}
-            </h3>
-          </div>
-          <p className="text-[8px] sm:text-[11px] font-black text-slate-500 leading-tight sm:leading-relaxed uppercase tracking-tight line-clamp-3">
-            {text}
-          </p>
-        </motion.div>
-      </DialogTrigger>
-      <DialogContent className="max-w-[90vw] sm:max-w-2xl rounded-[32px] sm:rounded-[48px] p-8 sm:p-12 border-none shadow-3xl">
-        <div className="space-y-6 sm:space-y-8">
-           <div className="flex items-center gap-4">
-              <div className={cn("w-12 h-12 sm:w-16 sm:h-16 rounded-[16px] sm:rounded-[24px] flex items-center justify-center shadow-sm border border-slate-50", color.replace('bg-', 'text-'))}>
-                <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
-              </div>
-              <DialogTitle className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight font-outfit uppercase">
-                {title}
-              </DialogTitle>
-           </div>
-           <div className="bg-slate-50/80 p-6 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-slate-100">
-             <DialogDescription className="text-xs sm:text-base font-bold text-slate-600 leading-relaxed uppercase tracking-wide">
-               {text}
-             </DialogDescription>
-           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function InteractionCard({ item }: { item: any }) {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <motion.div
-          layout
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={cn(
-            "p-4 sm:p-8 rounded-[24px] sm:rounded-[32px] flex flex-col gap-3 sm:gap-5 border border-white shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98] z-10",
-            item.color
-          )}
-        >
-          <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-[12px] sm:rounded-[16px] flex items-center justify-center text-primary shrink-0 shadow-sm border border-slate-50">
-            <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-          <div className="flex flex-col gap-0.5 sm:gap-1">
-            <h4 className="text-[7px] sm:text-[9px] font-black tracking-[0.2em] text-slate-500/60 uppercase">{item.title}</h4>
-            <p className="text-[9px] sm:text-[11px] font-black text-slate-800 leading-tight uppercase tracking-tight line-clamp-2">
-              {item.text || "CONSULT DOCTOR"}
-            </p>
-          </div>
-        </motion.div>
-      </DialogTrigger>
-      <DialogContent className="max-w-[90vw] sm:max-w-2xl rounded-[32px] sm:rounded-[48px] p-8 sm:p-12 border-none shadow-3xl">
-        <div className="space-y-6 sm:space-y-8">
-           <div className="flex items-center gap-4">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[16px] sm:rounded-[24px] bg-slate-50 flex items-center justify-center shadow-sm border border-slate-100">
-                <item.icon className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
-              </div>
-              <DialogTitle className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight font-outfit uppercase">
-                {item.title}
-              </DialogTitle>
-           </div>
-           <div className="bg-slate-50/80 p-6 sm:p-10 rounded-[24px] sm:rounded-[40px] border border-slate-100">
-             <DialogDescription className="text-xs sm:text-base font-bold text-slate-600 leading-relaxed uppercase tracking-wide">
-               {item.text || "NO INFORMATION AVAILABLE FOR THIS INTERACTION. PLEASE CONSULT A REGISTERED MEDICAL PRACTITIONER FOR GUIDANCE."}
-             </DialogDescription>
-           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-const ComparisonCard = ({
-  product,
-  label,
-  isAlt = false,
-  getItemQuantity,
-  addToCart,
-  showComparison,
-  brandedMrp,
-  onShareClick
-}: {
-  product: any,
-  label: string,
-  isAlt?: boolean,
-  getItemQuantity: (id: string) => number,
-  addToCart: (p: any) => void,
-  showComparison: boolean,
-  brandedMrp: number,
-  onShareClick?: (e: React.MouseEvent) => void
-}) => {
-  if (!product) return null;
-
-  const { updateQuantity } = useCart();
-  const qty = getItemQuantity(product.id || product._id);
-  const pPriceRaw = product.liveData?.sahimed_price || product.price || 0;
-  const pMrpRaw = product.liveData?.mrp || product.mrp || (Number(pPriceRaw) + 20);
-
-  const pPrice = Number(pPriceRaw) || 0;
-  const pMrp = Number(pMrpRaw) || (pPrice + 20);
-
-  let displaySavingsAmt = Math.max(0, pMrp - pPrice);
-  let displaySavingsPct = pMrp > 0 ? Math.round((displaySavingsAmt / pMrp) * 100) : 0;
-
-  if (isAlt && showComparison) {
-    displaySavingsAmt = Math.max(0, brandedMrp - pPrice);
-    displaySavingsPct = brandedMrp > 0 ? Math.round((displaySavingsAmt / brandedMrp) * 100) : 0;
-  }
-
-  const unitMatch = String(product.packSize || '').match(/(\d+)/);
-  const unitCount = (unitMatch && parseInt(unitMatch[1]) > 0) ? parseInt(unitMatch[1]) : 1;
-  const unitPrice = pPrice / unitCount;
-
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const images = (product.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0)
-    ? product.imageUrls
-    : (product.imageUrl ? [product.imageUrl] : [`https://picsum.photos/seed/${product.id || 'err'}/300/300`]);
-
-  const currentImage = images[currentImageIndex] || images[0];
-
-  return (
-    <motion.div variants={scaleInVariant} className="h-full">
-      <Card className={cn(
-        "h-full rounded-[24px] sm:rounded-[48px] p-3 sm:p-10 flex flex-col justify-between border shadow-sm relative overflow-hidden transition-all duration-700",
-        isAlt ? "bg-lavender ring-2 ring-lavender-text/10 border-lavender-text/20" : "bg-white border-slate-100"
-      )}>
-        <div className="space-y-3 sm:space-y-6">
-          <div className="flex items-center justify-between">
-            {isAlt ? (
-              <div className="bg-white border border-lavender-text/20 rounded-lg px-3 py-1.5 flex items-center gap-2">
-                 <Package className="w-3.5 h-3.5 text-lavender-text" />
-                 <span className="text-[9px] font-black text-lavender-text tracking-widest uppercase">SUBSTITUTE</span>
-              </div>
-            ) : (
-              <Badge className="rounded-full font-black text-[7px] sm:text-[9px] px-2 py-0.5 uppercase tracking-widest bg-slate-100 text-slate-400 border-none">{label}</Badge>
-            )}
-            <RibbonBadge
-              savingsPct={displaySavingsPct}
-              variant={isAlt ? 'accent' : 'primary'}
-              className="right-2 sm:right-6"
-              size="md"
-            />
-          </div>
-
-          <div className="space-y-3">
-            <Dialog>
-              <DialogTrigger asChild>
-                <div className="relative aspect-[3/2] w-full bg-white rounded-[20px] sm:rounded-[32px] flex items-center justify-center overflow-hidden border border-slate-50 shadow-inner group/img cursor-zoom-in">
-                  <Image src={currentImage} alt={product.name} fill className="object-contain p-2 sm:p-4 transition-transform duration-700 group-hover/img:scale-110" />
-                  <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors flex items-center justify-center">
-                    <Maximize2 className="w-4 h-4 text-primary opacity-0 group-hover/img:opacity-100 transition-opacity" />
-                  </div>
-                </div>
-              </DialogTrigger>
-              <DialogContent className="max-w-[95vw] sm:max-w-2xl border-none p-0 bg-transparent shadow-none">
-                <DialogTitle className="sr-only">{product.name}</DialogTitle>
-                <DialogDescription className="sr-only">Visual representation of {product.name}</DialogDescription>
-                <div className="relative aspect-square w-full bg-white rounded-[40px] overflow-hidden p-8 flex items-center justify-center shadow-3xl border border-white/20">
-                  <Image src={currentImage} alt={product.name} fill className="object-contain p-10" />
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1.5 px-1.5">
-                {images.map((img: string, idx: number) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentImageIndex(idx)}
-                    className={cn(
-                      "relative w-10 h-10 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-2 transition-all shrink-0 bg-white",
-                      currentImageIndex === idx ? "border-primary shadow-md scale-105" : "border-slate-100 hover:border-slate-200"
-                    )}
-                  >
-                    <Image src={img} alt={`Preview ${idx + 1}`} fill className="object-contain p-1" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-0.5 sm:space-y-1">
-            <div className="flex justify-between items-start gap-4">
-              <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
-                {isAlt ? (
-                  <h3 className="font-extrabold text-[10px] sm:text-lg text-slate-800 leading-tight line-clamp-2 min-h-[1.6rem] sm:min-h-[2.4rem] font-outfit uppercase">
-                    {product.name}
-                  </h3>
-                ) : (
-                  <h1 className="font-extrabold text-[10px] sm:text-lg text-slate-800 leading-tight line-clamp-2 min-h-[1.6rem] sm:min-h-[2.4rem] font-outfit uppercase">
-                    {product.name}
-                  </h1>
-                )}
-                <p className="text-[7px] sm:text-[10px] font-black text-slate-500 tracking-widest uppercase">
-                  {product.packSize || "N/A"}
-                </p>
-                <p className="text-[7px] sm:text-[10px] font-bold text-slate-400 truncate uppercase tracking-tighter">
-                  {product.manufacturer}
-                </p>
-              </div>
-              {!isAlt && onShareClick && (
-                <button
-                  type="button"
-                  onClick={onShareClick}
-                  className="w-10 h-10 rounded-2xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-500 hover:text-primary transition-all active:scale-95 border border-slate-100 shrink-0 shadow-sm"
-                  title="Share product details"
-                >
-                  <Share2 className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-
-            <div className="pt-1.5 sm:pt-3 border-t border-dashed mt-1.5 sm:mt-3 space-y-0.5">
-              <div className="flex items-baseline gap-1.5 sm:gap-2">
-                <p className="text-lg sm:text-4xl font-black tracking-tighter text-primary font-outfit">
-                  ₹{Number(pPrice).toFixed(0)}
-                </p>
-                {pMrp > pPrice && (
-                  <div className="flex flex-col">
-                    <span className="text-[8px] sm:text-sm text-slate-400 line-through font-bold opacity-80 decoration-1">₹{Number(pMrp).toFixed(0)}</span>
-                    <span className="text-[7px] sm:text-[10px] font-black text-emerald-600 uppercase bg-emerald-50 px-1 py-0.5 rounded-md">SAVE ₹{Number(pMrp - pPrice).toFixed(0)}</span>
-                  </div>
-                )}
-              </div>
-              <p className="text-[8px] font-bold text-slate-350 tracking-tight uppercase">
-                ₹{unitPrice.toFixed(2)} / unit
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-2 sm:mt-4">
-          {((Number(product.availableQuantity) <= 0 && (!product.liveData || Number(product.liveData.stock_quantity) <= 0))) ? (
-            <Button
-              onClick={async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                try {
-                  const res = await fetch('/api/inventory/alerts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                      productId: product.id || product._id,
-                      platform: 'web',
-                      pincode: localStorage.getItem('activePincode') || 'Unknown'
-                    })
-                  });
-                  if (res.ok) {
-                    toast({ title: "Notification Set", description: "We'll alert you when this is back!" });
-                  }
-                } catch (e) {
-                  toast({ variant: 'destructive', title: "Error", description: "Failed to set alert." });
-                }
-              }}
-              className="w-full h-8 sm:h-14 bg-[#FFF1F2] text-[#E11D48] font-black text-[8px] sm:text-[12px] tracking-widest uppercase rounded-full flex items-center justify-center gap-1 border border-[#FFE4E6] hover:bg-[#FFE4E6] transition-all active:scale-95 shadow-md shadow-[#E11D48]/5"
-            >
-              NOTIFY ME
-            </Button>
-          ) : qty > 0 ? (
-            <div className="flex items-center gap-2 w-full h-8 sm:h-14 bg-slate-100 rounded-full border border-slate-200 p-1 shadow-inner">
-              <Button
-                variant="ghost"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateQuantity(product._id || product.id, -1); }}
-                className="h-full flex-1 rounded-full flex items-center justify-center bg-white hover:bg-slate-50 text-slate-800 shadow-sm border border-slate-150 transition-all hover:scale-105 active:scale-95 py-0"
-              >
-                <Minus className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-slate-600 stroke-[3px]" />
-              </Button>
-              <span className="text-[10px] sm:text-sm font-black text-slate-800 flex-[1.5] text-center font-outfit select-none">
-                {qty} IN CART
-              </span>
-              <Button
-                variant="ghost"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateQuantity(product._id || product.id, 1); }}
-                className="h-full flex-1 rounded-full flex items-center justify-center bg-white hover:bg-slate-50 text-slate-800 shadow-sm border border-slate-150 transition-all hover:scale-105 active:scale-95 py-0"
-              >
-                <Plus className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-slate-600 stroke-[3px]" />
-              </Button>
-            </div>
-          ) : (
-            <Button
-              onClick={() => addToCart({ ...product, id: product._id || product.id, price: pPrice, mrp: pMrp })}
-              className={cn(
-                "w-full h-8 sm:h-14 rounded-full font-black text-[8px] sm:text-[12px] tracking-[0.1em] sm:tracking-[0.15em] uppercase gap-1.5 sm:gap-2 shadow-md sm:shadow-lg active:scale-[0.98] transition-all border-none",
-                isAlt ? "bg-sahi-green-text text-white hover:bg-sahi-green-text/90" : "bg-primary text-white hover:bg-primary/90"
-              )}
-            >
-              ADD TO CART <ShoppingCart className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
-            </Button>
-          )}
-        </div>
-      </Card>
-    </motion.div>
-  );
-};
-
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import Footer from '@/components/Footer';
 
-// --- MAIN COMPONENT ---
+// ─── Strip HTML ──────────────────────────────────────────────────────────────
+function stripHtml(raw?: string | null): string {
+  if (!raw) return '';
+  return raw
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]*>/g, '')
+    .replace(/\|/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 
-export default function ProductDetailClient({ initialProduct, id }: { initialProduct: any, id: string }) {
+// ─── Recently Viewed helpers ─────────────────────────────────────────────────
+const RV_KEY = 'sahimed_recently_viewed';
+function saveRecentlyViewed(product: any) {
+  if (typeof window === 'undefined' || !product?.id) return;
+  const existing: any[] = JSON.parse(localStorage.getItem(RV_KEY) || '[]');
+  const filtered = existing.filter((p: any) => p.id !== product.id);
+  const entry = { id: product.id, name: product.name, imageUrl: product.imageUrl, price: product.price, mrp: product.mrp, seoUrlSlug: product.seoUrlSlug };
+  const updated = [entry, ...filtered].slice(0, 10);
+  localStorage.setItem(RV_KEY, JSON.stringify(updated));
+}
+function getRecentlyViewed(currentId: string): any[] {
+  if (typeof window === 'undefined') return [];
+  const items: any[] = JSON.parse(localStorage.getItem(RV_KEY) || '[]');
+  return items.filter((p: any) => p.id !== currentId).slice(0, 6);
+}
+
+// ─── Section Label ────────────────────────────────────────────────────────────
+function SectionLabel({ children, accent }: { children: React.ReactNode; accent?: string }) {
+  return (
+    <div className="flex items-center gap-3 mb-5">
+      <span className={cn("text-[10px] font-black uppercase tracking-[0.2em]", accent || "text-primary")}>{children}</span>
+      <div className="flex-1 h-px bg-gradient-to-r from-primary/20 to-transparent" />
+    </div>
+  );
+}
+
+// ─── Info Row ─────────────────────────────────────────────────────────────────
+function InfoRow({ label, value, icon: Icon, accent }: { label: string; value?: string | null; icon?: any; accent?: string }) {
+  if (!value) return null;
+  return (
+    <div className="flex items-start gap-3 py-3 border-b border-slate-50 last:border-0">
+      {Icon && (
+        <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5", accent || "bg-slate-100 text-slate-500")}>
+          <Icon className="w-3.5 h-3.5" />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">{label}</p>
+        <p className="text-xs font-semibold text-slate-800 leading-snug">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Warning Tile ─────────────────────────────────────────────────────────────
+function WarningTile({ label, value, icon: Icon, color }: { label: string; value?: string | null; icon: any; color: string }) {
+  if (!value) return null;
+  return (
+    <div className={cn("rounded-2xl p-4 flex gap-3 border", color)}>
+      <Icon className="w-5 h-5 shrink-0 mt-0.5 opacity-70" />
+      <div>
+        <p className="text-[9px] font-black uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-[11px] font-semibold leading-relaxed opacity-90">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── FAQ Item ─────────────────────────────────────────────────────────────────
+function FaqItem({ q, a }: { q: string; a?: string | null }) {
+  const [open, setOpen] = useState(false);
+  if (!a) return null;
+  return (
+    <div className="border border-slate-100 rounded-2xl overflow-hidden">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50 transition-colors">
+        <span className="text-xs font-bold text-slate-700 pr-4">{q}</span>
+        <ChevronDown className={cn("w-4 h-4 text-slate-400 shrink-0 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="px-4 pb-4 bg-slate-50/50 border-t border-slate-100">
+          <p className="text-[11px] font-medium text-slate-600 leading-relaxed pt-3">{a}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Trust Badge ─────────────────────────────────────────────────────────────
+function TrustBadge({ icon: Icon, label, sub }: { icon: any; label: string; sub: string }) {
+  return (
+    <div className="flex items-center gap-3 flex-1 min-w-[140px]">
+      <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+        <Icon className="w-4 h-4 text-primary" />
+      </div>
+      <div>
+        <p className="text-[10px] font-black text-slate-800 leading-tight">{label}</p>
+        <p className="text-[9px] text-slate-400 font-medium mt-0.5">{sub}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Molecule Illustration ────────────────────────────────────────────────────
+function MoleculeIllustration() {
+  return (
+    <svg viewBox="0 0 200 120" className="w-full h-full opacity-10" fill="none">
+      <circle cx="100" cy="60" r="12" fill="#10b981" />
+      <circle cx="50" cy="30" r="8" fill="#6366f1" />
+      <circle cx="150" cy="30" r="8" fill="#6366f1" />
+      <circle cx="50" cy="90" r="8" fill="#6366f1" />
+      <circle cx="150" cy="90" r="8" fill="#6366f1" />
+      <circle cx="20" cy="60" r="6" fill="#10b981" />
+      <circle cx="180" cy="60" r="6" fill="#10b981" />
+      <line x1="100" y1="60" x2="50" y2="30" stroke="#10b981" strokeWidth="2" />
+      <line x1="100" y1="60" x2="150" y2="30" stroke="#10b981" strokeWidth="2" />
+      <line x1="100" y1="60" x2="50" y2="90" stroke="#10b981" strokeWidth="2" />
+      <line x1="100" y1="60" x2="150" y2="90" stroke="#10b981" strokeWidth="2" />
+      <line x1="50" y1="30" x2="20" y2="60" stroke="#6366f1" strokeWidth="1.5" />
+      <line x1="50" y1="90" x2="20" y2="60" stroke="#6366f1" strokeWidth="1.5" />
+      <line x1="150" y1="30" x2="180" y2="60" stroke="#6366f1" strokeWidth="1.5" />
+      <line x1="150" y1="90" x2="180" y2="60" stroke="#6366f1" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+// ─── Product Card (People Also Bought / Recently Viewed) ─────────────────────
+function ProductMiniCard({ item, onAdd }: { item: any; onAdd: (item: any) => void }) {
+  const price = Number(item.liveData?.sahimed_price || item.price || item.packaging?.mrp || 0);
+  const mrp = Number(item.liveData?.mrp || item.mrp || item.packaging?.mrp || price);
+  const disc = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
+  const slug = item.seo?.url_slug || item.seoUrlSlug || item._id || item.id;
+  return (
+    <Link href={`/product/${encodeURIComponent(slug?.replace(/^\//, '') || '')}`}
+      className="bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col group shrink-0 w-40 sm:w-44">
+      <div className="relative h-32 bg-slate-50 flex items-center justify-center overflow-hidden">
+        <Image src={item.images?.[0] || item.imageUrl || '/images/medicine_placeholder.png'}
+          alt={item.product_name || item.name || ''} fill className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
+        {disc > 0 && (
+          <div className="absolute top-2 left-2 bg-emerald-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full">{disc}% off</div>
+        )}
+      </div>
+      <div className="p-3 flex flex-col flex-1 gap-2">
+        <p className="text-[10px] font-bold text-slate-800 leading-snug line-clamp-2">{item.product_name || item.name}</p>
+        <p className="text-[9px] text-slate-400 font-medium truncate">{item.taxonomy?.marketer_name || item.manufacturer || ''}</p>
+        <div className="flex items-center justify-between mt-auto pt-1">
+          <div>
+            <p className="text-sm font-black text-slate-900">₹{price}</p>
+            {mrp > price && <p className="text-[9px] text-slate-400 line-through">₹{mrp}</p>}
+          </div>
+          <button onClick={e => { e.preventDefault(); onAdd(item); }}
+            className="w-7 h-7 bg-primary rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20">
+            <Plus className="w-3.5 h-3.5 text-white" />
+          </button>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════════
+export default function ProductDetailClient({ initialProduct, id, crossSellProducts = [] }: { initialProduct: any; id: string; crossSellProducts?: any[] }) {
   const { toast } = useToast();
   const { user } = useUser();
   const db_fs = useFirestore();
-  const { addToCart, getItemQuantity } = useCart();
-  const [edd, setEdd] = useState<string>('');
-  const [activePincode, setActivePincode] = useState<string>('560068');
-  const [zone, setZone] = useState<string>('');
+  const { addToCart, getItemQuantity, updateQuantity, removeFromCart } = useCart();
+
+  // ── State ────────────────────────────────────────────────────────────────
+  const [edd, setEdd] = useState('');
+  const [activePincode, setActivePincode] = useState('560068');
+  const [zone, setZone] = useState('');
   const [isServiceable, setIsServiceable] = useState<boolean | null>(true);
-
-  useEffect(() => {
-    const loadPincode = async () => {
-      // 1. Try local storage first
-      const stored = typeof window !== 'undefined' ? (localStorage.getItem('activePincode')) : null;
-      
-      if (stored && stored.length === 6) {
-        setActivePincode(stored);
-        fetchEdd(stored);
-        return;
-      }
-
-      // 2. Try logged in user profile
-      if (user) {
-        try {
-          const profileRef = doc(db_fs, 'userProfiles', user.uid);
-          const snap = await getDoc(profileRef);
-          if (snap.exists()) {
-            const data = snap.data();
-            if (data.pincode && data.pincode.length === 6) {
-              setActivePincode(data.pincode);
-              localStorage.setItem('activePincode', data.pincode);
-              fetchEdd(data.pincode);
-              return;
-            }
-          }
-        } catch (e) {
-          console.warn("Failed to fetch user profile pincode", e);
-        }
-      }
-
-      // 3. Fallback to default
-      setActivePincode('560068');
-      fetchEdd('560068');
-    };
-
-    loadPincode();
-  }, [user, db_fs]);
-
-  const fetchEdd = async (pin: string) => {
-    if (!pin || pin.length !== 6) return;
-    
-    try {
-      const res = await fetch('/api/logistics/shipway/serviceability', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ toPincode: pin })
-      });
-      
-      const data = await res.json();
-      
-      if (data.edd) {
-        // Parse date string (YYYY-MM-DD) carefully to avoid timezone shifts
-        const parts = data.edd.split('-');
-        const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
-        const formattedDate = `${months[date.getMonth()]} ${date.getDate().toString().padStart(2, '0')}`;
-        const dayName = days[date.getDay()];
-        
-        setEdd(`${formattedDate} ${dayName}`);
-        setZone(data.zone || 'India');
-        setIsServiceable(true);
-      } else {
-        setEdd('');
-        setZone('');
-        setIsServiceable(false);
-        if (data.error) {
-          toast({
-            variant: 'destructive',
-            title: "Serviceability Check",
-            description: "This area might not be serviceable currently."
-          });
-        }
-      }
-    } catch (e) {
-      console.error("Failed to fetch EDD", e);
-      setIsServiceable(false);
-      toast({
-        variant: 'destructive',
-        title: "Connection Error",
-        description: "Failed to reach delivery servers."
-      });
-    }
-  };
-
   const [isEditingPincode, setIsEditingPincode] = useState(false);
   const [timeLeft, setTimeLeft] = useState('');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<'overview' | 'usage' | 'safety' | 'info'>('overview');
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [selectedQty, setSelectedQty] = useState(1);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const [showStickyBar, setShowStickyBar] = useState(false);
+  const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
+  const heroRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-      const cutoff = new Date();
-      cutoff.setHours(14, 0, 0, 0);
-
-      let diff = cutoff.getTime() - now.getTime();
-      if (diff < 0) {
-        cutoff.setDate(cutoff.getDate() + 1);
-        diff = cutoff.getTime() - now.getTime();
-      }
-
-      const h = Math.floor(diff / (1000 * 60 * 60));
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const s = Math.floor((diff % (1000 * 60)) / 1000);
-      setTimeLeft(`${h}h ${m}m ${s}s`);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
-    setActivePincode(val);
-    if (val.length === 6) {
-      localStorage.setItem('activePincode', val);
-    }
-  };
-
-  const onCheckPincode = () => {
-    if (activePincode.length === 6) {
-      fetchEdd(activePincode);
-      setIsEditingPincode(false);
-    } else {
-      toast({
-        variant: 'destructive',
-        title: "Invalid Pincode",
-        description: "Please enter a valid 6-digit pincode."
-      });
-    }
-  };
-
-  const { data: productData, isLoading: productLoading } = useMongoDBDoc(id);
-  const product = productData || initialProduct;
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-
-  const handleShareClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      navigator.share({
-        title: `${product?.name} | SahiMed`,
-        text: `Check out ${product?.name} on SahiMed:`,
-        url: typeof window !== 'undefined' ? window.location.href : '',
-      })
-      .catch((error) => console.log('Error sharing', error));
-    } else {
-      setIsShareDialogOpen(true);
-    }
-  };
-
-  const handleWhatsAppShare = () => {
-    const text = encodeURIComponent(`Check out ${product?.name} on SahiMed: ${typeof window !== 'undefined' ? window.location.href : ''}`);
-    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
-    setIsShareDialogOpen(false);
-  };
-
-  const handleCopyLink = () => {
-    if (typeof navigator !== 'undefined') {
-      navigator.clipboard.writeText(typeof window !== 'undefined' ? window.location.href : '');
-      toast({
-        title: "Link Copied!",
-        description: "Product link copied to clipboard.",
-      });
-    }
-    setIsShareDialogOpen(false);
-  };
+  // ── Use initialProduct DIRECTLY — never replace with raw DB doc ──────────
+  // SSR normalises all keys. Client hook would return raw MongoDB doc (no
+  // convenience keys). We only fetch live pricing separately if needed.
+  const product = initialProduct;
 
   const { data: molData } = useMongoDBMolecule(product?.moleculeId);
 
-  const isGeneric = product?.isGeneric === true || product?.isGeneric === "true";
-  const isBranded = !isGeneric;
-
-  const { data: genericAlternatives } = useMongoDBCollection({
-    moleculeId: isBranded ? product?.moleculeId : undefined,
-    isGeneric: true,
-    limit: 10
+  // People Also Bought — same category
+  const { data: alsoData } = useMongoDBCollection({
+    q: product?.categoryName || product?.taxonomy?.category_name || '',
+    limit: 12,
   });
+  const alsoBought = (alsoData || []).filter((p: any) =>
+    String(p._id || p.id) !== String(product?._id || product?.id)
+  ).slice(0, 8);
 
-  const genericAlt = isBranded ? genericAlternatives?.find((a: any) =>
-    (a.isGeneric === true || a.isGeneric === "true") &&
-    String(a.id || a._id) !== String(product?.id || product?._id)
-  ) : null;
+  // ── Save to Recently Viewed ──────────────────────────────────────────────
+  useEffect(() => {
+    if (!product) return;
+    saveRecentlyViewed(product);
+    setRecentlyViewed(getRecentlyViewed(product.id || product._id));
+  }, [product]);
 
-  const hasGenericAlt = !!genericAlt;
-  const showComparison = isBranded && hasGenericAlt;
+  // ── Sticky bar on scroll ─────────────────────────────────────────────────
+  useEffect(() => {
+    const onScroll = () => {
+      if (heroRef.current) {
+        const bottom = heroRef.current.getBoundingClientRect().bottom;
+        setShowStickyBar(bottom < 0);
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-  const brandedItem = product;
-  const genericItem = genericAlt;
+  // ── Pincode / EDD ────────────────────────────────────────────────────────
+  useEffect(() => {
+    const load = async () => {
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('activePincode') : null;
+      if (stored && stored.length === 6) { setActivePincode(stored); fetchEdd(stored); return; }
+      if (user) {
+        try {
+          const snap = await getDoc(doc(db_fs, 'userProfiles', user.uid));
+          if (snap.exists()) {
+            const v = snap.data().pincode;
+            if (v?.length === 6) { setActivePincode(v); localStorage.setItem('activePincode', v); fetchEdd(v); return; }
+          }
+        } catch {}
+      }
+      fetchEdd('560068');
+    };
+    load();
+  }, [user, db_fs]);
 
-  const pPriceRaw = product?.liveData?.sahimed_price || product?.price || 0;
-  const pMrpRaw = product?.liveData?.mrp || product?.mrp || (Number(pPriceRaw) + 20);
+  const fetchEdd = async (pin: string) => {
+    try {
+      const res = await fetch('/api/logistics/shipway/serviceability', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toPincode: pin })
+      });
+      const data = await res.json();
+      if (data.edd) {
+        const [y, m, d] = data.edd.split('-');
+        const date = new Date(+y, +m - 1, +d);
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        setEdd(`${months[date.getMonth()]} ${date.getDate()}`);
+        setZone(data.zone || ''); setIsServiceable(true);
+      } else { setIsServiceable(false); }
+    } catch { setIsServiceable(false); }
+  };
 
-  const brandedPrice = Number(pPriceRaw) || 0;
-  const brandedMrp = Number(pMrpRaw) || (brandedPrice + 20);
+  useEffect(() => {
+    const t = setInterval(() => {
+      const now = new Date(), c = new Date(); c.setHours(14, 0, 0, 0);
+      let diff = c.getTime() - now.getTime();
+      if (diff < 0) { c.setDate(c.getDate() + 1); diff = c.getTime() - now.getTime(); }
+      const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${h}h ${m}m ${s}s`);
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
 
-  const genPriceRaw = genericAlt ? (genericAlt.liveData?.sahimed_price || genericAlt.price || 0) : 0;
-  const genericPrice = Number(genPriceRaw) || 0;
+  // ── Generic Alternatives ─────────────────────────────────────────────────
+  const isGeneric = product?.isGeneric === true || product?.isGeneric === "true";
+  const { data: genericAlternatives } = useMongoDBCollection({
+    moleculeId: !isGeneric ? product?.moleculeId : undefined, isGeneric: true, limit: 10
+  });
+  const genericAlt = !isGeneric
+    ? genericAlternatives?.find((a: any) =>
+        (a.isGeneric === true || a.isGeneric === "true") &&
+        String(a._id || a.id) !== String(product?._id || product?.id))
+    : null;
+  const showComparison = !isGeneric && !!genericAlt;
 
-  const switchSavingsAmt = Math.max(0, brandedMrp - genericPrice);
+  // ── Prices ───────────────────────────────────────────────────────────────
+  const unitPrice = Number(product?.liveData?.sahimed_price || product?.price || 0);
+  const unitMrp   = Number(product?.liveData?.mrp || product?.mrp || (unitPrice + 20));
+  const currentPrice = unitPrice * selectedQty;
+  const currentMrp   = unitMrp * selectedQty;
+  const altPrice  = genericAlt ? Number(genericAlt.liveData?.sahimed_price || genericAlt.price || 0) : 0;
+  const altMrp    = genericAlt ? Number(genericAlt.liveData?.mrp || genericAlt.mrp || (altPrice + 20)) : 0;
+  const discountPct = unitMrp > 0 ? Math.round(((unitMrp - unitPrice) / unitMrp) * 100) : 0;
+  const altSavePct  = unitMrp > 0 && altPrice > 0 ? Math.round(((unitMrp - altPrice) / unitMrp) * 100) : 0;
 
-  if (!product && productLoading) {
-    return (
-      <div className="min-h-screen bg-[#F8FAFC]">
-        <Navbar />
-        <main className="max-w-7xl mx-auto px-4 py-12">
-          <div className="space-y-8">
-            <Skeleton className="h-[300px] rounded-[40px]" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Skeleton className="h-[200px] rounded-[32px]" />
-              <Skeleton className="h-[200px] rounded-[32px]" />
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
+  const images = product?.images?.length > 0 ? product.images : ['/images/medicine_placeholder.png'];
+  const qty = getItemQuantity(product?._id || product?.id);
+
+  const addCurrentToCart = (delta = 1) => {
+    const units = delta === 1 ? selectedQty : delta;
+    addToCart({ ...product, id: product?._id || product?.id, price: unitPrice, mrp: unitMrp }, units);
+  };
+  const addItemToCart = (item: any) => {
+    const p = Number(item.liveData?.sahimed_price || item.price || item.packaging?.mrp || 0);
+    const m = Number(item.liveData?.mrp || item.mrp || item.packaging?.mrp || p);
+    addToCart({ ...item, id: item._id || item.id, price: p, mrp: m }, 1);
+    toast({ title: "Added to cart" });
+  };
+
+  // ── Image zoom handler ───────────────────────────────────────────────────
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  }, []);
+
+  const tabs = [
+    { key: 'overview', label: 'Overview', icon: HeartPulse },
+    { key: 'usage',    label: 'How to Use', icon: Stethoscope },
+    { key: 'safety',   label: 'Safety', icon: ShieldCheck },
+    { key: 'info',     label: 'Product Info', icon: Package },
+  ] as const;
+
+  const safetyAdviseClean = stripHtml(product?.safetyAdvise || product?.safety_warnings?.interactions?.safety_advise);
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[#F8FAFC] pb-32">
+      <div className="min-h-screen bg-[#F5F6FA] pb-28 lg:pb-12">
         <Navbar />
-        <main className="max-w-[1000px] mx-auto px-2 sm:px-10 py-1 sm:py-6" key={id}>
-          {/* Breadcrumbs for SEO */}
-          <div className="text-[9px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mb-4 px-2 flex items-center gap-1.5 justify-start">
+
+        {/* ── Trust Strip ─────────────────────────────────────────── */}
+        <div className="bg-white border-b border-slate-100">
+          <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-3">
+            <div className="flex items-center gap-6 overflow-x-auto no-scrollbar">
+              <TrustBadge icon={ShieldCheck} label="100% Genuine Medicines" sub="Licensed & verified sources" />
+              <div className="w-px h-8 bg-slate-100 shrink-0" />
+              <TrustBadge icon={Truck} label="Express Delivery" sub="Same day dispatch" />
+              <div className="w-px h-8 bg-slate-100 shrink-0" />
+              <TrustBadge icon={Star} label="Trusted by 50,000+" sub="Happy patients across India" />
+              <div className="w-px h-8 bg-slate-100 shrink-0" />
+              <TrustBadge icon={Clock} label="24/7 Pharmacist Support" sub="Always here to help" />
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-6 space-y-5">
+
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
             <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-            <span>/</span>
-            <Link href="/medicines" className="hover:text-primary transition-colors">Medicines</Link>
-            <span>/</span>
-            <span className="text-slate-600 font-black truncate max-w-[150px] sm:max-w-none">{product?.name}</span>
-          </div>
-
-          <div className="flex flex-row items-center justify-center mb-1 sm:mb-4 gap-4 px-2">
-            {(product?.prescriptionRequired || product?.rxRequired) && (
-              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                <Badge className="bg-rose-500 text-white border-none rounded-full font-black text-[7px] sm:text-[9px] px-2 py-0.5 sm:py-1 tracking-widest shadow-lg shadow-rose-500/20 uppercase shrink-0">
-                  RX REQUIRED
-                </Badge>
-              </motion.div>
+            <ChevronRight className="w-3 h-3" />
+            {product?.categoryName && (
+              <><Link href="/medicines" className="hover:text-primary transition-colors">{product.categoryName}</Link><ChevronRight className="w-3 h-3" /></>
             )}
-          </div>
+            <span className="text-slate-600 font-semibold line-clamp-1">{product?.name}</span>
+          </nav>
 
-          <div className="flex flex-col items-center justify-center mb-2 sm:mb-6 text-center px-2">
-            <motion.div
-              initial={{ y: 5, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="inline-flex flex-col items-center gap-0.5 sm:gap-1"
-            >
-              <h2 className="text-[8px] sm:text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase mb-0">Salt Composition</h2>
-              <span className="text-xs md:text-xl font-black text-slate-900 tracking-tighter font-outfit uppercase leading-tight max-w-2xl px-2 line-clamp-1">
-                {molData?.molecule || molData?.name || product?.saltComposition || product?.composition || product?.salt || product?.molecule || "Information coming soon"}
-              </span>
-            </motion.div>
-          </div>
+          {/* ╔══════════════════════════════════════════════╗
+              ║  HERO                                        ║
+              ╚══════════════════════════════════════════════╝ */}
+          <div ref={heroRef} className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
-          {showComparison && switchSavingsAmt > 0 && (
-            <motion.div
-              initial={{ scale: 0.98, opacity: 0, y: -5 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              className="mb-2 sm:mb-6 px-2"
-            >
-              <div className="bg-gradient-to-r from-primary to-accent text-white py-1.5 sm:py-2.5 px-4 sm:px-8 rounded-[12px] sm:rounded-[20px] shadow-lg flex items-center justify-center gap-2 text-center">
-                <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-bounce" />
-                <h2 className="text-[8px] sm:text-[11px] font-black tracking-widest uppercase line-clamp-1">
-                  Switch and save ₹{Number(switchSavingsAmt).toFixed(0)} • Same Medicine
-                </h2>
-              </div>
-            </motion.div>
-          )}
-
-          <div className="mb-8 sm:mb-16 px-1 relative">
-            {showComparison ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-12 items-stretch relative">
-                {/* Removed 100% match floating badge */}
-
-                <ComparisonCard
-                  product={brandedItem}
-                  label="BRANDED VERSION"
-                  getItemQuantity={getItemQuantity}
-                  addToCart={addToCart}
-                  showComparison={showComparison}
-                  brandedMrp={brandedMrp}
-                  onShareClick={handleShareClick}
-                />
-                <ComparisonCard
-                  product={genericItem}
-                  label="SAHI RECOMMENDED"
-                  isAlt
-                  getItemQuantity={getItemQuantity}
-                  addToCart={addToCart}
-                  showComparison={showComparison}
-                  brandedMrp={brandedMrp}
-                />
-              </div>
-            ) : (
-              <div className="flex justify-center">
-                <div className="w-full sm:w-[480px]">
-                  <ComparisonCard
-                    product={product}
-                    label={isBranded ? "Branded" : "Generic Solution"}
-                    getItemQuantity={getItemQuantity}
-                    addToCart={addToCart}
-                    showComparison={showComparison}
-                    brandedMrp={brandedMrp}
-                    onShareClick={handleShareClick}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Delivery Information & Pincode Checker */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 sm:mb-10 px-1"
-          >
-            <div className="bg-white border border-slate-100 rounded-[24px] p-5 shadow-sm space-y-4">
-              
-              {/* Delivering To Panel */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary/8 text-primary rounded-full flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="text-[10px] font-black text-slate-400 tracking-[0.12em] uppercase leading-none mb-1">
-                      DELIVERING TO
-                    </h4>
-                    <p className="text-base font-black text-slate-900 font-outfit uppercase leading-none">
-                      {activePincode}
-                    </p>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => setIsEditingPincode(!isEditingPincode)}
-                  className="text-primary font-black text-xs uppercase tracking-widest px-4 py-2 hover:bg-primary/5 rounded-full transition-all"
+            {/* ── Image Gallery with Zoom ──────────────────── */}
+            <div className="lg:col-span-5">
+              <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                {/* Main image with zoom */}
+                <div
+                  className="relative aspect-square bg-gradient-to-br from-slate-50 via-white to-primary/5 overflow-hidden cursor-zoom-in"
+                  onMouseEnter={() => setIsZoomed(true)}
+                  onMouseLeave={() => setIsZoomed(false)}
+                  onMouseMove={handleMouseMove}
                 >
-                  {isEditingPincode ? "CANCEL" : "CHANGE"}
-                </button>
+                  {/* hex grid bg */}
+                  <div className="absolute inset-0 opacity-[0.03]">
+                    <svg viewBox="0 0 400 400" className="w-full h-full">
+                      <defs><pattern id="hex" x="0" y="0" width="40" height="46" patternUnits="userSpaceOnUse">
+                        <polygon points="20,2 38,11 38,35 20,44 2,35 2,11" fill="none" stroke="#10b981" strokeWidth="1"/>
+                      </pattern></defs>
+                      <rect width="400" height="400" fill="url(#hex)" />
+                    </svg>
+                  </div>
+
+                  {/* Zoomed image */}
+                  <div
+                    className={cn("absolute inset-0 transition-opacity duration-200", isZoomed ? "opacity-100" : "opacity-0")}
+                    style={{ backgroundImage: `url(${images[currentImageIndex]})`, backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`, backgroundSize: '250%', backgroundRepeat: 'no-repeat' }}
+                  />
+                  {/* Normal image */}
+                  <Image src={images[currentImageIndex]} alt={product?.name || 'Medicine'}
+                    fill className={cn("object-contain p-8 relative z-10 transition-opacity duration-200", isZoomed ? "opacity-0" : "opacity-100")} priority />
+
+                  {discountPct > 0 && (
+                    <div className="absolute top-4 left-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg shadow-emerald-200 z-20">
+                      {discountPct}% Off
+                    </div>
+                  )}
+                  {product?.prescriptionRequired && (
+                    <div className="absolute top-4 right-4 bg-rose-500 text-white text-[9px] font-black px-2.5 py-1 rounded-full shadow-sm uppercase tracking-wider z-20">
+                      Rx Required
+                    </div>
+                  )}
+                  {/* Zoom hint */}
+                  <div className="absolute bottom-3 right-3 bg-black/40 text-white text-[9px] font-semibold px-2 py-1 rounded-full flex items-center gap-1 z-20 opacity-60">
+                    <ZoomIn className="w-3 h-3" /> Hover to zoom
+                  </div>
+                </div>
+
+                {images.length > 1 && (
+                  <div className="flex gap-2 p-4 overflow-x-auto border-t border-slate-50">
+                    {images.map((img: string, i: number) => (
+                      <button key={i} onClick={() => setCurrentImageIndex(i)}
+                        className={cn("relative w-14 h-14 rounded-xl border-2 bg-slate-50 overflow-hidden shrink-0 transition-all",
+                          i === currentImageIndex ? "border-primary shadow-sm" : "border-slate-100 hover:border-slate-300")}>
+                        <Image src={img} alt="" fill className="object-contain p-1" />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Inline Edit Input Field */}
-              {isEditingPincode && (
-                <div className="flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-100 rounded-[16px] animate-in fade-in duration-200">
-                  <input
-                    type="text"
-                    maxLength={6}
-                    value={activePincode}
-                    onChange={handlePincodeChange}
-                    placeholder="Enter 6-digit Pincode"
-                    className="bg-transparent border-none outline-none text-sm font-bold tracking-[0.1em] px-3 py-1 flex-1 text-slate-800 placeholder:text-slate-300"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        onCheckPincode();
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={onCheckPincode}
-                    className="w-8 h-8 rounded-full bg-primary hover:bg-primary/95 text-white flex items-center justify-center transition-all active:scale-95 shadow-md shadow-primary/10 shrink-0"
-                  >
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+              {/* ── Authenticity Seal ──────────────────────────── */}
+              <div className="mt-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl p-4 flex items-center gap-4 shadow-md shadow-emerald-100">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                  <BadgeCheck className="w-7 h-7 text-white" />
                 </div>
-              )}
+                <div className="text-white">
+                  <p className="text-xs font-black uppercase tracking-widest mb-0.5">Verified Genuine Product</p>
+                  <p className="text-[10px] text-white/80 font-medium">Sourced directly from licensed distributors · Quality checked by our pharmacists</p>
+                </div>
+              </div>
+            </div>
 
-              {/* Divider */}
-              <div className="border-t border-slate-100/80 my-1" />
+            {/* ── Buy Box ──────────────────────────────────────── */}
+            <div className="lg:col-span-7 space-y-4">
+              <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 sm:p-8 space-y-5">
 
-              {/* Serviceability Status Banner */}
-              {isServiceable ? (
-                <div className="space-y-4">
-                  <div className="bg-emerald-50/80 border border-emerald-100/50 rounded-[20px] p-4 flex items-center gap-3 shadow-sm w-full">
-                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0 border border-emerald-50">
-                      <Truck className="w-5 h-5 text-emerald-600" />
+                {/* Badges */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {product?.medicineType && <Badge className="bg-violet-100 text-violet-700 border-none text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md">{product.medicineType}</Badge>}
+                  {product?.subCategory && <Badge className="bg-sky-100 text-sky-700 border-none text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md">{product.subCategory}</Badge>}
+                  {product?.salableStatus && <Badge className="bg-emerald-100 text-emerald-700 border-none text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md">{product.salableStatus}</Badge>}
+                </div>
+
+                {/* Name */}
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">{product?.name}</h1>
+                  {product?.composition && <p className="mt-1 text-xs text-slate-400 font-medium italic">{product.composition}</p>}
+                  <p className="mt-2 text-sm font-medium text-slate-500">
+                    By <span className="text-primary font-semibold">{product?.marketerName || product?.manufacturer || '—'}</span>
+                    {product?.categoryName && <span className="text-slate-400"> · {product.categoryName}</span>}
+                  </p>
+                </div>
+
+                {/* Pack chip — show packaging_detail (e.g. "strip of 10 tablets") */}
+                <div className="flex items-center gap-2 flex-wrap text-[11px]">
+                  {(product?.packagingDetail || product?.packaging?.packaging_detail) && (
+                    <span className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 text-slate-600 font-semibold px-3 py-1.5 rounded-xl">
+                      <Package className="w-3.5 h-3.5 text-primary" />
+                      {product.packagingDetail || product.packaging?.packaging_detail}
+                    </span>
+                  )}
+                  {product?.storage_instructions && (
+                    <span className="flex items-center gap-1.5 bg-sky-50 border border-sky-100 text-sky-700 font-semibold px-3 py-1.5 rounded-xl">
+                      {/* Snowflake / temp SVG */}
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="2" x2="12" y2="22"/><path d="M17 7l-5-5-5 5"/><path d="M17 17l-5 5-5-5"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/><path d="M7 7l5 5 5-5"/><path d="M7 17l5-5 5 5"/>
+                      </svg>
+                      {product.storage_instructions}
+                    </span>
+                  )}
+                  {product?.countryOfOrigin && (
+                    <span className="flex items-center gap-1.5 bg-amber-50 border border-amber-100 text-amber-700 font-semibold px-3 py-1.5 rounded-xl">
+                      <Globe className="w-3.5 h-3.5" />Made in {product.countryOfOrigin}
+                    </span>
+                  )}
+                </div>
+
+                <div className="border-t border-slate-50" />
+
+                {/* Pricing */}
+                <div className="flex items-end gap-4 flex-wrap">
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Our Price</p>
+                    <p className="text-4xl font-black text-slate-900">₹{currentPrice}</p>
+                  </div>
+                  {currentMrp > currentPrice && (
+                    <div className="pb-1">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">MRP</p>
+                      <p className="text-sm font-medium text-slate-400 line-through">₹{currentMrp}</p>
+                    </div>
+                  )}
+                  {discountPct > 0 && (
+                    <div className="pb-1">
+                      <span className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-black px-3 py-1.5 rounded-xl shadow-sm">
+                        Save {discountPct}% · ₹{(currentMrp - currentPrice).toFixed(0)} off
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Add to Cart + inline qty dropdown */}
+                <div className="flex items-center gap-3 flex-wrap pt-1">
+                  {qty > 0 ? (
+                    <div className="flex items-center h-12 bg-slate-50 rounded-full border border-slate-100 p-1 shadow-inner gap-1">
+                      <Button variant="ghost" onClick={() => updateQuantity(product?._id || product?.id, -1)} className="h-10 w-10 rounded-full bg-white hover:bg-slate-100 border border-slate-100 shadow-sm">
+                        <Minus className="w-4 h-4 text-slate-600" />
+                      </Button>
+                      <span className="min-w-[80px] text-center text-xs font-bold text-slate-800">{qty} in cart</span>
+                      <Button variant="ghost" onClick={() => updateQuantity(product?._id || product?.id, 1)} className="h-10 w-10 rounded-full bg-white hover:bg-slate-100 border border-slate-100 shadow-sm">
+                        <Plus className="w-4 h-4 text-slate-600" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Button onClick={() => addCurrentToCart(1)}
+                        className="h-12 px-8 rounded-full font-black text-sm bg-gradient-to-r from-primary to-primary/80 text-white hover:opacity-90 shadow-xl shadow-primary/25 uppercase tracking-wider">
+                        <ShoppingCart className="w-4 h-4 mr-2" /> Add to Cart
+                      </Button>
+                    </div>
+                  )}
+                  <Button variant="outline" size="icon" onClick={() => setIsShareOpen(true)} className="h-12 w-12 rounded-full border-slate-200 hover:bg-slate-50">
+                    <Share2 className="w-4 h-4 text-slate-500" />
+                  </Button>
+                </div>
+
+              </div>
+
+              {/* Delivery Card */}
+              <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-primary/8 rounded-2xl flex items-center justify-center">
+                      <MapPin className="w-4 h-4 text-primary" />
                     </div>
                     <div>
-                      <h3 className="text-xs sm:text-sm font-black text-emerald-900 tracking-tight uppercase font-outfit mb-0.5">
-                        {edd ? `DELIVERY BY ${edd}` : "CHECK SERVICEABILITY"}
-                      </h3>
-                      <p className="text-[9px] sm:text-[10px] font-bold text-emerald-700/70 uppercase tracking-widest leading-none">
-                        {edd ? (zone ? `EXPRESS SHIPPING TO ${zone.toUpperCase()}` : "Guaranteed express shipping") : "Enter pincode to see delivery date"}
-                      </p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Delivering to</p>
+                      <p className="text-sm font-black text-slate-900 tracking-wider mt-0.5">{activePincode}</p>
                     </div>
                   </div>
+                  <button onClick={() => setIsEditingPincode(!isEditingPincode)} className="text-xs font-black text-primary hover:underline uppercase tracking-wide">
+                    {isEditingPincode ? 'Cancel' : 'Change'}
+                  </button>
+                </div>
+                {isEditingPincode && (
+                  <div className="flex gap-2">
+                    <input type="text" value={activePincode}
+                      onChange={e => setActivePincode(e.target.value.replace(/\D/, '').slice(0, 6))}
+                      placeholder="Enter 6-digit pincode"
+                      className="flex-1 bg-slate-50 border border-slate-150 rounded-xl px-4 py-2 text-xs font-semibold focus:bg-white outline-none focus:ring-2 focus:ring-primary/20" />
+                    <Button onClick={() => { fetchEdd(activePincode); setIsEditingPincode(false); }} className="h-10 px-5 rounded-xl bg-primary text-white text-xs font-black">Check</Button>
+                  </div>
+                )}
+                {isServiceable ? (
+                  <div className="space-y-2">
+                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-3 flex items-center gap-3">
+                      <Truck className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <div>
+                        <p className="text-xs font-black text-emerald-800">{edd ? `Express delivery by ${edd}` : 'Delivery available'}</p>
+                        {zone && <p className="text-[9px] text-emerald-600 font-semibold mt-0.5">{zone} zone · Free shipping</p>}
+                      </div>
+                    </div>
+                    {edd && timeLeft && <p className="text-[10px] text-slate-500 font-medium px-1">Order within <span className="text-primary font-black">{timeLeft}</span> to get it by {edd}</p>}
+                  </div>
+                ) : (
+                  <div className="bg-rose-50 border border-rose-100 rounded-2xl p-3 flex items-center gap-3">
+                    <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+                    <p className="text-xs font-semibold text-rose-700">Delivery not available to this pincode</p>
+                  </div>
+                )}
+              </div>
 
-                  {edd && (
-                    <div className="flex items-center justify-center sm:justify-start">
-                      <div className="flex items-center gap-3 px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100/50 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
-                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-inner">
-                          <Clock className="w-3 h-3 text-emerald-600 animate-pulse" />
+            </div>
+          </div>
+
+          {/* Generic Comparison */}
+          {showComparison && genericAlt && (
+            <div className="bg-gradient-to-br from-emerald-50 via-white to-teal-50 border border-emerald-200 rounded-3xl p-6 sm:p-8">
+              <div className="flex items-center gap-2 mb-4">
+                <Zap className="w-4 h-4 text-emerald-600" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Smart Switch · Same Composition</span>
+              </div>
+              <p className="text-base font-bold text-slate-800 mb-6">Switch to Sahi Recommended and save <span className="text-emerald-600 font-black">₹{(unitMrp - altPrice).toFixed(0)} per pack</span></p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-2xl p-5 border border-slate-100 space-y-3">
+                  <Badge className="bg-slate-100 text-slate-500 border-none text-[9px] font-black px-2.5 py-0.5 uppercase">Current (Branded)</Badge>
+                  <div><p className="text-sm font-semibold text-slate-800">{product?.name}</p><p className="text-[10px] text-slate-400 mt-0.5">{product?.marketerName}</p></div>
+                  <div className="flex justify-between items-center pt-1"><span className="text-2xl font-black text-slate-700">₹{unitPrice}</span><span className="text-[10px] text-slate-400 line-through">MRP ₹{unitMrp}</span></div>
+                </div>
+                <div className="bg-white rounded-2xl p-5 border-2 border-emerald-400 relative overflow-hidden space-y-3">
+                  <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-black px-3 py-1 rounded-bl-2xl uppercase">{altSavePct}% cheaper</div>
+                  <Badge className="bg-emerald-500 text-white border-none text-[9px] font-black px-2.5 py-0.5 uppercase">Sahi Recommended</Badge>
+                  <div><p className="text-sm font-semibold text-slate-800">{genericAlt?.product_name || genericAlt?.name}</p><p className="text-[10px] text-slate-400 mt-0.5">{genericAlt?.taxonomy?.marketer_name || 'Generic'}</p></div>
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="text-2xl font-black text-emerald-600">₹{altPrice}</span>
+                    <Button size="sm" onClick={() => addToCart({ ...genericAlt, id: genericAlt._id || genericAlt.id, price: altPrice, mrp: altMrp })} className="h-9 px-5 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black">Switch & Save</Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ╔══════════════════════════════════════════════╗
+              ║  TABBED PANEL                                ║
+              ╚══════════════════════════════════════════════╝ */}
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="flex border-b border-slate-100 overflow-x-auto">
+              {tabs.map(t => {
+                const Icon = t.icon;
+                return (
+                  <button key={t.key} onClick={() => setActiveTab(t.key)}
+                    className={cn(
+                      "flex-1 min-w-[90px] py-4 px-5 text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex flex-col items-center gap-1.5",
+                      activeTab === t.key ? "text-primary border-b-2 border-primary bg-primary/3" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                    )}>
+                    <Icon className="w-4 h-4" />{t.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="p-6 sm:p-8">
+
+              {/* ── OVERVIEW ── */}
+              {activeTab === 'overview' && (
+                <div className="space-y-8">
+                  {(product?.composition || molData?.molecule || molData?.name) && (
+                    <div className="flex items-center gap-4 bg-[#2f3542] rounded-xl px-5 py-4">
+                      {/* DNA double helix SVG */}
+                      <div className="shrink-0 w-10 h-10">
+                        <svg viewBox="0 0 40 60" fill="none" className="w-full h-full">
+                          <path d="M8 4 Q20 15 32 4" stroke="#a78bfa" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                          <path d="M8 14 Q20 25 32 14" stroke="#6ee7b7" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                          <path d="M8 24 Q20 35 32 24" stroke="#a78bfa" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                          <path d="M8 34 Q20 45 32 34" stroke="#6ee7b7" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                          <path d="M8 44 Q20 55 32 44" stroke="#a78bfa" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                          <line x1="8" y1="4" x2="8" y2="44" stroke="#a78bfa" strokeWidth="1.5" strokeDasharray="2 3"/>
+                          <line x1="32" y1="4" x2="32" y2="44" stroke="#6ee7b7" strokeWidth="1.5" strokeDasharray="2 3"/>
+                          <circle cx="8" cy="4" r="2.5" fill="#a78bfa"/>
+                          <circle cx="32" cy="4" r="2.5" fill="#6ee7b7"/>
+                          <circle cx="8" cy="14" r="2" fill="#6ee7b7"/>
+                          <circle cx="32" cy="14" r="2" fill="#a78bfa"/>
+                          <circle cx="8" cy="24" r="2.5" fill="#a78bfa"/>
+                          <circle cx="32" cy="24" r="2.5" fill="#6ee7b7"/>
+                          <circle cx="8" cy="34" r="2" fill="#6ee7b7"/>
+                          <circle cx="32" cy="34" r="2" fill="#a78bfa"/>
+                          <circle cx="8" cy="44" r="2.5" fill="#a78bfa"/>
+                          <circle cx="32" cy="44" r="2.5" fill="#6ee7b7"/>
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Active Composition</p>
+                        <p className="text-sm font-black text-white leading-snug truncate">{product?.composition || molData?.molecule || molData?.name}</p>
+                        {(product?.primaryUse || product?.medical_info?.primary_use) && (
+                          <p className="text-[10px] text-slate-400 font-medium mt-1">Used for: <span className="text-emerald-400 font-semibold">{product.primaryUse || product.medical_info?.primary_use}</span></p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {(product?.description || product?.introduction) && (() => {
+                    const desc = product.description || product.introduction || '';
+                    const parts = desc.split(/(?<=\.)\s+/).filter(Boolean);
+                    return (
+                      <div><SectionLabel>About this Medicine</SectionLabel>
+                        <div className="space-y-4">
+                          {parts.map((p, i) => (
+                            <p key={i} className="text-sm font-medium text-slate-600 leading-relaxed">{p}</p>
+                          ))}
                         </div>
-                        <p className="text-[9px] sm:text-[10px] font-bold text-slate-600 uppercase tracking-wider">
-                          FREE DELIVERY BY <span className="text-emerald-600 font-black">{edd}</span> IF YOU ORDER WITHIN <span className="text-emerald-600 font-black tabular-nums">{timeLeft}</span>
-                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {(product?.treatment || product?.uses) && (
+                    <div><SectionLabel>Treatment & Uses</SectionLabel>
+                      <div className="bg-sky-50 border border-sky-100 rounded-2xl p-5">
+                        <p className="text-sm font-medium text-sky-900 leading-relaxed">{product.treatment || product.uses}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {(product?.benefits || product?.medical_info?.benefits) && (() => {
+                    const benefitList = stripHtml(product.benefits || product.medical_info?.benefits)
+                      .split(/(?:\n|\||(?<=\.)\s+)/).map(b => b.trim()).filter(b => b.length > 4);
+                    if (!benefitList.length) return null;
+                    return (
+                      <div><SectionLabel>Key Benefits</SectionLabel>
+                        <div className="space-y-3">
+                          {benefitList.map((b, i) => (
+                            <div key={i} className="flex items-start gap-3 bg-emerald-50/70 border border-emerald-100 rounded-xl px-4 py-3">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                              <p className="text-sm font-semibold text-emerald-900 leading-relaxed">{b}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Side effects — Warning Box with Chips */}
+                  {((product?.sideEffectsArray?.length > 0) || product?.sideEffects) && (() => {
+                    const effects: string[] = product.sideEffectsArray?.length > 0
+                      ? product.sideEffectsArray
+                      : (product.sideEffects?.split(/\n|\|/).filter(Boolean) || []);
+                    if (!effects.length) return null;
+
+                    return (
+                      <div>
+                        <SectionLabel>Possible Side Effects</SectionLabel>
+                        <div className="relative overflow-hidden bg-[#fffbeb] border border-[#fef3c7] rounded-xl p-5">
+                          {/* Watermark */}
+                          <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
+                            <AlertTriangle className="w-40 h-40" />
+                          </div>
+                          
+                          <div className="flex items-center gap-2 mb-4 relative z-10">
+                            <AlertTriangle className="w-4 h-4 text-amber-600" />
+                            <h4 className="text-xs font-black uppercase tracking-widest text-amber-800">Common Side Effects</h4>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2 relative z-10">
+                            {effects.map((s: string, i: number) => (
+                              <span key={i} className="bg-white border border-amber-200 text-amber-900 text-xs font-bold px-4 py-2 rounded-full shadow-sm">
+                                {s.trim()}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* How It Works — mechanism of action */}
+                  {(product?.howItWorks || product?.medical_info?.how_it_works) && (
+                    <div><SectionLabel>How it Works</SectionLabel>
+                      <div className="relative overflow-hidden bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 rounded-2xl p-5">
+                        <div className="absolute top-3 right-3 opacity-10"><FlaskConical className="w-16 h-16 text-violet-500" /></div>
+                        <div className="flex gap-3 relative z-10">
+                          <FlaskConical className="w-5 h-5 text-violet-600 shrink-0 mt-0.5" />
+                          <p className="text-sm font-medium text-violet-900 leading-relaxed">{product.howItWorks || product.medical_info?.how_it_works}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fact Box — parse "Key :: Value|Key :: Value" */}
+                  {/* Fact Box — parse "Key :: Value|Key :: Value" */}
+                  {(product?.factBox || product?.medical_info?.fact_box) && (() => {
+                    const raw: string = product.factBox || product.medical_info?.fact_box || '';
+                    const pairs = raw.split('|').map(s => s.trim()).filter(Boolean).map(s => {
+                      const [k, ...v] = s.split('::');
+                      return { key: k?.trim(), val: v.join('::').trim() };
+                    }).filter(p => p.key && p.val);
+                    if (!pairs.length) return null;
+                    return (
+                      <div><SectionLabel>Quick Facts</SectionLabel>
+                        <div className="grid grid-cols-1 gap-2">
+                          {pairs.map((p, i) => (
+                            <div key={i} className="flex justify-between items-start gap-4 border-b border-slate-100 py-3 last:border-0">
+                              <span className="text-xs font-bold text-slate-500 w-1/3">{p.key}</span>
+                              <span className="text-xs font-black text-slate-900 w-2/3 text-right">{p.val}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Manufacturer Details */}
+                  {(product?.marketerName || product?.manufacturer || product?.marketerAddress) && (
+                    <div><SectionLabel>Manufacturer Details</SectionLabel>
+                      <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+                        <p className="text-xs font-black text-slate-800 mb-1">{product?.marketerName || product?.manufacturer}</p>
+                        {product?.marketerAddress && <p className="text-xs font-medium text-slate-500">{product.marketerAddress}</p>}
                       </div>
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="bg-rose-50 border border-rose-100 rounded-[20px] p-4 flex items-center gap-3 shadow-sm w-full animate-in shake duration-300">
-                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0 border border-rose-50">
-                    <AlertTriangle className="w-5 h-5 text-rose-600" />
+              )}
+
+              {/* ── HOW TO USE ── */}
+              {activeTab === 'usage' && (
+                <div className="space-y-8">
+                  {product?.howToUse ? (
+                    <div><SectionLabel>Directions for Use</SectionLabel>
+                      <div className="relative overflow-hidden bg-gradient-to-br from-sky-50 to-blue-50 border border-sky-100 rounded-2xl p-6">
+                        <div className="absolute top-3 right-3 opacity-10"><Stethoscope className="w-16 h-16 text-sky-500" /></div>
+                        <div className="flex gap-3 relative z-10"><Stethoscope className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" /><p className="text-sm font-medium text-sky-900 leading-relaxed">{product.howToUse}</p></div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-10"><BookOpen className="w-10 h-10 text-slate-200 mx-auto mb-3" /><p className="text-sm text-slate-400 font-medium">Usage directions not available. Consult your doctor.</p></div>
+                  )}
+                  {product?.storage_instructions && (
+                    <div><SectionLabel>Storage Instructions</SectionLabel>
+                      <div className="bg-teal-50 border border-teal-100 rounded-2xl p-5 flex gap-3"><Package className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" /><p className="text-sm font-medium text-teal-900 leading-relaxed">{product.storage_instructions}</p></div>
+                    </div>
+                  )}
+                  {/* Dynamic Q&A from DB — all items */}
+                  {((product?.qaList?.length > 0) || product?.medical_info?.q_a?.length > 0) && (
+                    <div className="space-y-3"><SectionLabel>Frequently Asked Questions</SectionLabel>
+                      {(product.qaList || product.medical_info?.q_a || []).map((item: any, i: number) => (
+                        <FaqItem key={i} q={item.question} a={item.answer} />
+                      ))}
+                      {/* Extra fallback clinical FAQs if not already in q_a */}
+                      {!product?.ifMiss && <FaqItem q="What should I do if I miss a dose?" a="Take the missed dose as soon as you remember. If the next dose is close, skip it. Never double-dose." />}
+                      {(product?.ifOverdose || product?.medical_info?.if_overdose) && <FaqItem q="What if I overdose?" a={product.ifOverdose || product.medical_info?.if_overdose} />}
+                      {(product?.stopAdvice || product?.medical_info?.stop_advice) && <FaqItem q="Can I stop this medicine suddenly?" a={product.stopAdvice || product.medical_info?.stop_advice} />}
+                    </div>
+                  )}
+                  {/* If no q_a at all, show minimal fallback */}
+                  {!(product?.qaList?.length > 0) && !(product?.medical_info?.q_a?.length > 0) && (
+                    <div className="space-y-3"><SectionLabel>Common Questions</SectionLabel>
+                      <FaqItem q="What should I do if I miss a dose?" a={product?.ifMiss || product?.medical_info?.if_miss || "Take the missed dose as soon as you remember. If the next scheduled dose is close, skip it. Never double-dose."} />
+                      <FaqItem q="What happens if I overdose?" a={product?.ifOverdose || product?.medical_info?.if_overdose || "Seek immediate emergency medical attention."} />
+                      <FaqItem q="Can I stop taking this medicine suddenly?" a={product?.stopAdvice || product?.medical_info?.stop_advice || "Do not stop without consulting your doctor."} />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── SAFETY ── */}
+              {activeTab === 'safety' && (() => {
+                // ── Parse severity badge from text ─────────────────────────
+                // ── Parse severity badge from text ─────────────────────────
+                function getSeverity(text?: string | null): { label: string; cls: string } {
+                  if (!text) return { label: '', cls: '' };
+                  const t = text.toLowerCase();
+                  if (t.includes('unsafe') || t.includes('not recommended') || t.includes('avoid'))
+                    return { label: 'UNSAFE', cls: 'bg-rose-100 text-rose-700' };
+                  if (t.includes('caution') || t.includes('with caution') || t.includes('dose adjustment'))
+                    return { label: 'CAUTION', cls: 'bg-orange-100 text-orange-700' };
+                  if (t.includes('consult') || t.includes('ask your doctor') || t.includes('tell your doctor'))
+                    return { label: 'CONSULT YOUR DOCTOR', cls: 'bg-teal-100 text-teal-700' };
+                  if (t.includes('safe') || t.includes('generally safe') || t.includes('no risk'))
+                    return { label: 'SAFE', cls: 'bg-emerald-100 text-emerald-700' };
+                  return { label: 'INFO', cls: 'bg-slate-100 text-slate-600' };
+                }
+
+                // Parse missing fields from the raw safetyAdvise blob
+                function extractFromAdvise(key: string) {
+                  if (!safetyAdviseClean) return undefined;
+                  const regex = new RegExp(`(?:-|\\s|^)${key}\\s*:\\s*(.*?)(?=\\n\\s*-|\\n\\s*[A-Z][a-z]+\\s*:|$)`, 'i');
+                  const match = safetyAdviseClean.match(regex);
+                  return match ? match[1].trim() : undefined;
+                }
+
+                const rows = [
+                  {
+                    key: 'alcohol',
+                    label: 'Alcohol',
+                    value: product?.alcoholInteraction || product?.safety_warnings?.interactions?.alcohol || extractFromAdvise('Alcohol'),
+                    svg: (
+                      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+                        <rect x="16" y="4" width="16" height="6" rx="3" fill="#fca5a5" stroke="#f87171" strokeWidth="1.5"/>
+                        <path d="M18 10 L14 40 Q14 44 24 44 Q34 44 34 40 L30 10Z" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
+                        <path d="M20 20 Q24 24 28 20" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+                        <circle cx="24" cy="30" r="3" fill="#fca5a5"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    key: 'pregnancy',
+                    label: 'Pregnancy',
+                    value: product?.pregnancyInteraction || product?.safety_warnings?.interactions?.pregnancy || extractFromAdvise('Pregnancy'),
+                    svg: (
+                      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+                        <circle cx="24" cy="10" r="6" fill="#fca5a5" stroke="#f87171" strokeWidth="1.5"/>
+                        <ellipse cx="24" cy="32" rx="12" ry="14" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
+                        <ellipse cx="24" cy="34" rx="7" ry="8" fill="#fca5a5" opacity="0.5"/>
+                        <path d="M14 24 Q12 20 16 18" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round"/>
+                        <path d="M34 24 Q36 20 32 18" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    key: 'lactation',
+                    label: 'Breast Feeding',
+                    value: product?.lactationInteraction || product?.safety_warnings?.interactions?.lactation || extractFromAdvise('Breast feeding') || extractFromAdvise('Lactation'),
+                    svg: (
+                      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+                        <circle cx="24" cy="10" r="6" fill="#fca5a5" stroke="#f87171" strokeWidth="1.5"/>
+                        <path d="M14 22 Q10 30 14 38 Q18 44 24 44 Q32 44 34 36 L36 26 Q30 20 24 20 Q18 20 14 22Z" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
+                        <circle cx="32" cy="28" r="4" fill="#fca5a5" stroke="#f87171" strokeWidth="1"/>
+                        <circle cx="33" cy="27" r="1.5" fill="#f87171"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    key: 'driving',
+                    label: 'Driving',
+                    value: product?.drivingInteraction || product?.safety_warnings?.interactions?.driving || extractFromAdvise('Driving'),
+                    svg: (
+                      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+                        <circle cx="24" cy="24" r="18" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
+                        <circle cx="24" cy="24" r="10" fill="none" stroke="#f87171" strokeWidth="1.5"/>
+                        <circle cx="24" cy="24" r="3" fill="#f87171"/>
+                        <line x1="24" y1="6" x2="24" y2="14" stroke="#f87171" strokeWidth="2" strokeLinecap="round"/>
+                        <line x1="24" y1="34" x2="24" y2="42" stroke="#f87171" strokeWidth="2" strokeLinecap="round"/>
+                        <line x1="6" y1="24" x2="14" y2="24" stroke="#f87171" strokeWidth="2" strokeLinecap="round"/>
+                        <line x1="34" y1="24" x2="42" y2="24" stroke="#f87171" strokeWidth="2" strokeLinecap="round"/>
+                        <line x1="24" y1="24" x2="18" y2="16" stroke="#f87171" strokeWidth="2.5" strokeLinecap="round"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    key: 'kidney',
+                    label: 'Kidney',
+                    value: product?.kidneyInteraction || product?.safety_warnings?.interactions?.kidney || extractFromAdvise('Kidney'),
+                    svg: (
+                      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+                        <path d="M18 8 C10 8 8 18 10 26 C12 34 16 42 22 42 C26 42 26 36 24 30 C22 24 24 20 28 18 C34 14 36 8 30 6 C26 4 22 8 18 8Z" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
+                        <path d="M30 8 C38 8 40 18 38 26 C36 34 32 42 26 42" stroke="#fca5a5" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    key: 'liver',
+                    label: 'Liver',
+                    value: product?.liverInteraction || product?.safety_warnings?.interactions?.liver || extractFromAdvise('Liver'),
+                    svg: (
+                      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+                        <path d="M8 20 C8 10 16 6 24 8 C32 6 42 12 40 24 C38 36 30 44 20 40 C12 36 8 30 8 20Z" fill="#fee2e2" stroke="#f87171" strokeWidth="1.5"/>
+                        <path d="M16 20 Q20 16 26 20 Q32 24 30 32" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+                        <circle cx="22" cy="26" r="3" fill="#fca5a5"/>
+                      </svg>
+                    ),
+                  },
+                ].filter(r => !!r.value);
+
+                if (rows.length === 0) {
+                  return (
+                    <div className="text-center py-14">
+                      <ShieldCheck className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                      <p className="text-sm text-slate-400 font-medium">No specific interaction warnings listed. Always consult a doctor.</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-6">
+                    {/* 1mg-style interaction rows */}
+                    <div className="divide-y divide-slate-100">
+                      {rows.map((row, i) => {
+                        const { label: sevLabel, cls: sevCls } = getSeverity(row.value);
+                        return (
+                          <div key={row.key} className="flex items-start gap-5 py-5 first:pt-0 last:pb-0">
+                            {/* Illustrated organ icon */}
+                            <div className="shrink-0 w-11 flex items-center justify-center mt-0.5">
+                              {row.svg}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                <p className="text-sm font-black text-slate-800">{row.label}</p>
+                                {sevLabel && (
+                                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${sevCls}`}>
+                                    {sevLabel}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-500 font-medium leading-relaxed">{row.value}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Rx + Controlled */}
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                      <div className={cn("flex-1 rounded-2xl p-4 flex items-center gap-4 border", product?.prescriptionRequired ? "bg-rose-50 border-rose-100" : "bg-emerald-50 border-emerald-100")}>
+                        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", product?.prescriptionRequired ? "bg-rose-100" : "bg-emerald-100")}>
+                          <ClipboardList className={cn("w-4 h-4", product?.prescriptionRequired ? "text-rose-600" : "text-emerald-600")} />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Prescription Status</p>
+                          <p className={cn("text-xs font-bold", product?.prescriptionRequired ? "text-rose-700" : "text-emerald-700")}>
+                            {product?.prescriptionRequired ? "Prescription required (Rx only)" : "Over-the-counter (OTC)"}
+                          </p>
+                        </div>
+                      </div>
+                      {(product?.isControlledSubstance !== undefined || product?.safety_warnings?.is_controlled_substance !== undefined) && (
+                        <div className={cn("flex-1 rounded-2xl p-4 flex items-center gap-4 border", (product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-100")}>
+                          <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", (product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "bg-red-100" : "bg-slate-100")}>
+                            <ShieldAlert className={cn("w-4 h-4", (product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "text-red-600" : "text-slate-400")} />
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Controlled Substance</p>
+                            <p className={cn("text-xs font-bold", (product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "text-red-700" : "text-slate-500")}>
+                              {(product?.isControlledSubstance || product?.safety_warnings?.is_controlled_substance) ? "Scheduled / Controlled substance" : "Not a controlled substance"}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-black text-rose-900 tracking-tight uppercase font-outfit mb-0.5">
-                      NOT SERVICEABLE
-                    </h3>
-                    <p className="text-[9px] sm:text-[10px] font-bold text-rose-700/70 uppercase tracking-widest leading-none">
-                      DELIVERY IS NOT AVAILABLE TO THIS PINCODE
-                    </p>
+                );
+              })()}
+
+              {/* ── PRODUCT INFO ── */}
+              {activeTab === 'info' && (
+                <div className="space-y-8">
+                  <div><SectionLabel>Manufacturer & Classification</SectionLabel>
+                    <div className="divide-y divide-slate-50">
+                      <InfoRow label="Marketer Name" value={product?.marketerName || product?.taxonomy?.marketer_name} icon={Building2} accent="bg-primary/10 text-primary" />
+                      <InfoRow label="Category" value={product?.categoryName || product?.taxonomy?.category_name} icon={Tag} accent="bg-amber-100 text-amber-600" />
+                      <InfoRow label="Sub-Category" value={product?.subCategory || product?.taxonomy?.sub_category} icon={Tag} accent="bg-amber-50 text-amber-500" />
+                      <InfoRow label="Medicine Type" value={product?.medicineType || product?.medicine_type} icon={Pill} accent="bg-sky-100 text-sky-600" />
+                      <InfoRow label="Salable Status" value={product?.salableStatus || product?.salable_status} icon={ThumbsUp} accent="bg-emerald-100 text-emerald-600" />
+                      <InfoRow label="Molecule Code" value={product?.moleculeCode || product?.molecule_code} icon={FlaskConical} accent="bg-violet-100 text-violet-600" />
+                    </div>
+                  </div>
+                  <div><SectionLabel>Packaging Details</SectionLabel>
+                    <div className="divide-y divide-slate-50">
+                      <InfoRow label="Product Form" value={product?.productForm || product?.packaging?.product_form} icon={Pill} accent="bg-sky-100 text-sky-600" />
+                      <InfoRow label="Package Type" value={product?.packageType || product?.packaging?.package_type} icon={Package} accent="bg-indigo-100 text-indigo-600" />
+                      <InfoRow label="Package Quantity" value={product?.packageQuantity?.toString() || product?.packaging?.package_quantity?.toString()} icon={Tag} accent="bg-slate-100 text-slate-500" />
+                      <InfoRow label="Storage" value={product?.storage_instructions || product?.packaging?.storage} icon={Package} accent="bg-teal-100 text-teal-600" />
+                      <InfoRow label="Country of Origin" value={product?.countryOfOrigin || product?.country_of_origin} icon={Globe} accent="bg-amber-100 text-amber-600" />
+                    </div>
                   </div>
                 </div>
               )}
 
             </div>
-          </motion.div>
+          </div>
 
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-[24px] sm:rounded-[48px] p-4 sm:p-12 shadow-sm border border-slate-100 overflow-hidden relative z-10"
-          >
-            <Tabs defaultValue="medical" className="w-full">
-              <TabsList className="bg-slate-50 p-1 rounded-full h-10 sm:h-14 w-full max-w-[500px] flex mx-auto mb-8 border border-slate-100 shadow-inner">
-                <TabsTrigger value="medical" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Information</TabsTrigger>
-                <TabsTrigger value="safety" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Safety Advice</TabsTrigger>
-                <TabsTrigger value="interactions" className="flex-1 rounded-full h-full font-black text-[8px] sm:text-[10px] tracking-widest uppercase data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Interactions</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="medical" className="space-y-10 focus-visible:outline-none">
-                <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-8">
-                  <ExpandableInfoTile
-                    icon={ClipboardList}
-                    title="Medical Uses"
-                    text={product?.treatment || "Standard medical use."}
-                    color="bg-lavender"
-                  />
-                  <ExpandableInfoTile
-                    icon={Info}
-                    title="Product Info"
-                    text={product?.description || "Medicine details."}
-                    color="bg-sahi-blue"
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="safety" className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-8 focus-visible:outline-none">
-                <ExpandableInfoTile
-                  icon={AlertTriangle}
-                  title="Safety Advice"
-                  text={product?.safetyAdvice || "Follow medical guidance."}
-                  color="bg-sahi-pink"
-                  iconColor="text-rose-500"
-                  titleColor="text-rose-600"
-                />
-                <ExpandableInfoTile
-                  icon={Stethoscope}
-                  title="How to Use"
-                  text={product?.howToUse || "Take as directed by your doctor."}
-                  color="bg-sahi-blue"
-                />
-              </TabsContent>
-
-              <TabsContent value="interactions" className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 focus-visible:outline-none">
-                {[
-                  { icon: FlaskConical, title: "Composition", text: product?.saltComposition, color: "bg-lavender" },
-                  { icon: Baby, title: "Pregnancy", text: product?.pregnancyInteraction, color: "bg-sahi-pink" },
-                  { icon: Milk, title: "Lactation", text: product?.lactationInteraction, color: "bg-sahi-blue" },
-                  { icon: Car, title: "Driving", text: product?.drivingInteraction, color: "bg-sahi-green" },
-                  { icon: Package, title: "Renal", text: product?.kidneyInteraction, color: "bg-lavender" },
-                  { icon: ShieldAlert, title: "Hepatic", text: product?.liverInteraction, color: "bg-slate-50" }
-                ].map((item, i) => (
-                  <InteractionCard key={i} item={item} />
-                ))}
-              </TabsContent>
-            </Tabs>
-          </motion.section>
-        </main>
-
-        <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
-          <DialogContent className="max-w-md w-[94vw] rounded-[40px] border-none p-0 overflow-hidden shadow-3xl bg-white z-[120]">
-            <div className="bg-primary p-8 text-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
-                <Share2 className="w-20 h-20" />
+          {/* ╔══════════════════════════════════════════════╗
+              ║  PEOPLE ALSO BOUGHT                          ║
+              ╚══════════════════════════════════════════════╝ */}
+          {alsoBought.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-black text-slate-800">People Also Bought</h2>
+                <Link href={`/medicines?category=${encodeURIComponent(product?.categoryName || '')}`} className="text-xs font-black text-primary hover:underline uppercase tracking-wide">View All</Link>
               </div>
-              <DialogTitle className="text-xl font-black tracking-tighter uppercase font-outfit">Share Product</DialogTitle>
-              <DialogDescription className="text-[8px] font-black text-white/60 tracking-[0.2em] mt-2 uppercase">
-                Share {product?.name} with friends or family
-              </DialogDescription>
+              <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+                {alsoBought.map((item: any) => (
+                  <ProductMiniCard key={item._id || item.id} item={item} onAdd={addItemToCart} />
+                ))}
+              </div>
             </div>
-            
-            <div className="p-6 space-y-4">
-              <Button 
-                onClick={handleWhatsAppShare}
-                className="w-full h-14 rounded-full font-black tracking-[0.2em] text-[10px] bg-[#25D366] text-white hover:bg-[#20ba56] border-none uppercase active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <Send className="w-4 h-4 text-white" /> Share on WhatsApp
-              </Button>
-              <Button 
-                onClick={handleCopyLink}
-                className="w-full h-14 rounded-full font-black tracking-[0.2em] text-[10px] bg-slate-900 text-white hover:bg-slate-800 border-none uppercase active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <Copy className="w-4 h-4 text-white" /> Copy Link
-              </Button>
+          )}
+
+          {/* ╔══════════════════════════════════════════════╗
+              ║  CROSS-SELL (from product mapping)           ║
+              ╚══════════════════════════════════════════════╝ */}
+          {crossSellProducts.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <ShoppingBag className="w-4 h-4 text-primary" />
+                  <h2 className="text-base font-black text-slate-800">You May Also Need</h2>
+                </div>
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+                {crossSellProducts.map((item: any) => (
+                  <ProductMiniCard key={item._id || item.id} item={item} onAdd={addItemToCart} />
+                ))}
+              </div>
             </div>
-          </DialogContent>
-        </Dialog>
+          )}
+
+          {/* ╔══════════════════════════════════════════════╗
+              ║  RECENTLY VIEWED                             ║
+              ╚══════════════════════════════════════════════╝ */}
+          {recentlyViewed.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Eye className="w-4 h-4 text-slate-400" />
+                <h2 className="text-base font-black text-slate-800">Recently Viewed</h2>
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+                {recentlyViewed.map((item: any) => {
+                  const p = Number(item.price || 0);
+                  const m = Number(item.mrp || p);
+                  const slug = item.seoUrlSlug || item.id;
+                  return (
+                    <Link key={item.id} href={`/product/${encodeURIComponent(slug?.replace(/^\//, '') || '')}`}
+                      className="bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col shrink-0 w-40 sm:w-44 group">
+                      <div className="relative h-32 bg-slate-50 flex items-center justify-center">
+                        <Image src={item.imageUrl || '/images/medicine_placeholder.png'} alt={item.name || ''} fill className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
+                      </div>
+                      <div className="p-3">
+                        <p className="text-[10px] font-bold text-slate-800 line-clamp-2 mb-1">{item.name}</p>
+                        <p className="text-sm font-black text-slate-900">₹{p}</p>
+                        {m > p && <p className="text-[9px] text-slate-400 line-through">₹{m}</p>}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Marketer Card */}
+          {(product?.marketerName || product?.taxonomy?.marketer_name) && (
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-6 sm:px-8 py-5 flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center"><Building2 className="w-6 h-6 text-white" /></div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/50 mb-1">Manufactured & Marketed By</p>
+                  <p className="text-lg font-black text-white leading-tight">{product?.marketerName || product?.taxonomy?.marketer_name}</p>
+                </div>
+              </div>
+              <div className="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Category</p><p className="text-sm font-bold text-slate-700 mt-1">{product?.categoryName || '—'}</p></div>
+                <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Country of Origin</p><p className="text-sm font-bold text-slate-700 mt-1">{product?.countryOfOrigin || 'India'}</p></div>
+                <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Medicine Type</p><p className="text-sm font-bold text-slate-700 mt-1">{product?.medicineType || '—'}</p></div>
+                {(product?.taxonomy?.marketer_address || product?.marketerAddress) && (
+                  <div className="sm:col-span-3 pt-4 border-t border-slate-50 flex items-start gap-3">
+                    <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+                    <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Registered Address</p>
+                      <p className="text-sm font-medium text-slate-600 leading-relaxed">{product?.taxonomy?.marketer_address || product?.marketerAddress}</p></div>
+                  </div>
+                )}
+                <div className="sm:col-span-3 pt-4 border-t border-slate-50">
+                  <p className="text-[10px] text-slate-400 leading-relaxed"><span className="font-black text-slate-500">Disclaimer: </span>The information provided here is for educational purposes only. Always consult your doctor or pharmacist before starting, stopping, or changing any medication. SahiMed sources all products directly from licensed distributors and manufacturers.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* ╔══════════════════════════════════════════════╗
+            ║  STICKY MOBILE BUY BAR                       ║
+            ╚══════════════════════════════════════════════╝ */}
+        <div className={cn(
+          "fixed bottom-0 left-0 right-0 z-50 lg:hidden transition-all duration-300",
+          showStickyBar ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
+        )}>
+          <div className="bg-white/95 backdrop-blur-xl border-t border-slate-100 shadow-2xl px-4 py-3 safe-bottom">
+            <div className="flex items-center gap-3 max-w-lg mx-auto">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider truncate">{product?.name}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-black text-slate-900">₹{unitPrice * selectedQty}</span>
+                  {unitMrp > unitPrice && <span className="text-xs text-slate-400 line-through">₹{unitMrp * selectedQty}</span>}
+                  {discountPct > 0 && <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{discountPct}% off</span>}
+                </div>
+              </div>
+              {qty > 0 ? (
+                <div className="flex items-center h-11 bg-slate-50 rounded-full border border-slate-100 p-0.5 gap-1">
+                  <button onClick={() => addCurrentToCart(-1)} className="w-9 h-9 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm"><Minus className="w-3.5 h-3.5 text-slate-600" /></button>
+                  <span className="text-xs font-black px-2">{qty}</span>
+                  <button onClick={() => addCurrentToCart(1)} className="w-9 h-9 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm"><Plus className="w-3.5 h-3.5 text-slate-600" /></button>
+                </div>
+              ) : (
+                <Button onClick={() => addCurrentToCart()}
+                  className="h-11 px-7 rounded-full font-black text-xs bg-gradient-to-r from-primary to-primary/80 text-white shadow-lg shadow-primary/25 uppercase tracking-wider whitespace-nowrap">
+                  <ShoppingCart className="w-3.5 h-3.5 mr-1.5" /> Add to Cart
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-8">
+          <Footer />
+        </div>
       </div>
+
+      <Dialog open={isShareOpen} onOpenChange={setIsShareOpen}>
+        <DialogContent className="max-w-sm rounded-3xl border-none p-8 shadow-2xl">
+          <DialogTitle className="text-lg font-bold text-slate-900 mb-1">Share this product</DialogTitle>
+          <DialogDescription className="text-xs text-slate-400 mb-5">{product?.name}</DialogDescription>
+          <div className="space-y-3">
+            <Button className="w-full h-12 rounded-full bg-[#25D366] hover:bg-[#1da851] text-white font-bold text-sm gap-2"
+              onClick={() => { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out ${product?.name} on SahiMed: ${window.location.href}`)}`,'_blank'); setIsShareOpen(false); }}>
+              <Send className="w-4 h-4" /> Share on WhatsApp
+            </Button>
+            <Button className="w-full h-12 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm gap-2"
+              onClick={() => { navigator?.clipboard?.writeText(window.location.href); toast({ title: "Link copied!" }); setIsShareOpen(false); }}>
+              <Copy className="w-4 h-4" /> Copy Link
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </PageTransition>
   );
 }

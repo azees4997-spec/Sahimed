@@ -12,12 +12,11 @@ import {
   Upload, 
   ImageIcon,
   Check,
-  ChevronsUpDown,
   ChevronRight,
   ShieldAlert,
   X
 } from 'lucide-react';
-import { Card, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -40,25 +39,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { 
-  useUser,
-  useMemoFirebase, 
-  useCollection,
-  deleteDocumentNonBlocking,
-  setDocumentNonBlocking
-} from '@/firebase';
-import { doc, collection, query, orderBy, getDoc, serverTimestamp, limit } from 'firebase/firestore';
+import { useUser } from '@/firebase';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMongoDBCollection } from '@/hooks/use-mongodb';
 import { motion } from 'framer-motion';
 import { SectionHeader } from './SectionHeader';
+import { ExportFieldsDialog } from './ExportFieldsDialog';
 
 export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -69,20 +62,27 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
 
   const downloadTemplate = () => {
     const headers = [
-      'name', 'sku', 'manufacturer', 'category', 'hsnCode', 'gstPercentage', 'isGeneric', 'isBestSeller', 'prescriptionRequired', 'packSize', 'imageUrl', 'imageUrl2', 'imageUrl3', 'description', 'treatment', 
-      'safetyAdvice', 'howToUse', 'saltComposition', 'moleculeCode', 'price', 'mrp', 'availableQuantity'
+      'product_id', 'product_name', 'molecule_code', 'medicine_type', 'salable_status', 'country_of_origin',
+      'taxonomy.marketer_id', 'taxonomy.marketer_name', 'taxonomy.category_id', 'taxonomy.category_name', 'taxonomy.sub_category',
+      'packaging.package_type', 'packaging.product_form', 'packaging.package_quantity', 'packaging.packaging_detail', 'packaging.mrp',
+      'medical_info.composition', 'medical_info.primary_use', 'medical_info.introduction',
+      'safety_warnings.is_rx_required', 'seo.url_slug', 'images'
     ];
-    const csv = headers.join(',') + '\n"New Product","SKU001","Manufacturer","Category","3004","12","false","false","false","10 Tablets","","","","Description","Treatment","Advice","How to use","Salt","MM0001","0","0","0"';
+    const csv = headers.join(',') + '\n"DRS207571","Nimsid P 100mg/325mg Tablet","MOL019884","Ethical","Salable (Rx Required)","India","MKT10308","Smile Healthcare","CAT00010","Analgesics","NSAIDs (General Pain)","Strip","Tablet","10","strip of 10 tablets","30","Nimesulide (100mg) + Paracetamol (325mg)","Pain relief","Introduction text here...","true","/buy-nimsid-p-100mg-325mg-tablet-tablet-smile-healthcare","https://..."';
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'product_template.csv';
+    a.download = 'product_master_template.csv';
     a.click();
+    window.URL.revokeObjectURL(url);
   };
 
-  const handleExport = async () => {
-    window.open('/api/products/bulk', '_blank');
+  const handleExport = (selectedFields: string[]) => {
+    const queryParams = new URLSearchParams({
+      fields: selectedFields.join(',')
+    });
+    window.open(`/api/products/bulk?${queryParams.toString()}`, '_blank');
   };
 
   const [importProgress, setImportProgress] = useState<{ current: number, total: number } | null>(null);
@@ -125,9 +125,8 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
           
           if (char === '"') {
             if (inQuotes && nextChar === '"') {
-              // Escaped quote
               current += '"';
-              i++; // Skip next quote
+              i++;
             } else {
               inQuotes = !inQuotes;
             }
@@ -143,14 +142,22 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
         const obj: any = {};
         headers.forEach((h, i) => {
           let val: any = values[i]?.replace(/^"|"$/g, '') || '';
-          if (['isGeneric', 'isBestSeller', 'prescriptionRequired'].includes(h)) {
-            val = val.toLowerCase() === 'true';
-          } else if (['price', 'mrp', 'availableQuantity', 'gstPercentage'].includes(h)) {
-            val = Number(val) || 0;
+          if (h.includes('.')) {
+            const [parent, child] = h.split('.');
+            if (!obj[parent]) obj[parent] = {};
+            if (val === 'true' || val === 'false') val = val === 'true';
+            else if (!isNaN(val) && val !== '') val = Number(val);
+            obj[parent][child] = val;
+          } else {
+            if (h === 'images') {
+              obj.images = [val].filter(Boolean);
+            } else {
+              if (val === 'true' || val === 'false') val = val === 'true';
+              else if (!isNaN(val) && val !== '') val = Number(val);
+              obj[h] = val;
+            }
           }
-          obj[h] = val;
         });
-
         return obj;
       });
 
@@ -175,7 +182,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
           
           const result = await res.json();
           if (!res.ok) {
-            allErrors.push(...(chunk.map(p => ({ item: p.name, reason: result.message || 'Network error' }))));
+            allErrors.push(...(chunk.map(p => ({ item: p.product_name || p.product_id, reason: result.message || 'Network error' }))));
           } else if (result.errors?.length > 0) {
             allErrors.push(...result.errors);
           }
@@ -268,22 +275,13 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                 Processing {importProgress.current} of {importProgress.total} SKUs
               </p>
             </div>
-            <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden p-1 shadow-inner">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full shadow-lg" 
-                initial={{ width: 0 }}
-                animate={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
-                transition={{ duration: 0.5 }}
-              />
-            </div>
-            <p className="text-[12px] font-bold text-slate-500 italic">Establishing data links... Please keep this window open.</p>
           </Card>
         </div>
       )}
 
       {failedList.length > 0 && (
         <div className="fixed bottom-10 right-10 z-[150] w-[350px] animate-in slide-in-from-right-10 duration-500">
-           <Card className="rounded-[32px] shadow-3xl border-none overflow-hidden bg-red-600 text-white">
+            <Card className="rounded-[32px] shadow-3xl border-none overflow-hidden bg-red-600 text-white">
               <div className="p-6 bg-red-700/50 flex items-center justify-between">
                  <h4 className="font-black text-[12px] uppercase tracking-widest flex items-center gap-2">
                     <ShieldAlert className="w-4 h-4" /> Import Rejections
@@ -294,7 +292,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                  <div className="space-y-4 pt-4">
                     {failedList.map((err, i) => (
                        <div key={i} className="space-y-1 pb-4 border-b border-white/20 last:border-none">
-                          <p className="font-black text-[12px] uppercase truncate">{err.item || err.molecule || 'Unknown SKU'}</p>
+                          <p className="font-black text-[12px] uppercase truncate">{err.item || 'Unknown SKU'}</p>
                           <p className="text-[11px] font-medium text-white/80 leading-relaxed">{err.reason}</p>
                        </div>
                     ))}
@@ -304,7 +302,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
         </div>
       )}
 
-      <SectionHeader title="Product Inventory" subtitle="Manage and organize your store products" onBack={onBack}>
+      <SectionHeader title="Product Master" subtitle="Configure catalog item attributes" onBack={onBack}>
         <div className="flex flex-wrap items-center gap-4">
           <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".csv" />
           <Button onClick={downloadTemplate} variant="ghost" className="rounded-full h-14 px-8 font-black text-[12px] text-slate-500 hover:text-primary gap-3 uppercase tracking-widest transition-all">
@@ -314,7 +312,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
           <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full h-14 px-8 font-black text-[12px] border-2 gap-3 text-primary border-primary/20 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
             <Upload className="w-4 h-4" /> Bulk Upload
           </Button>
-          <Button onClick={handleExport} variant="outline" className="rounded-full h-14 px-8 font-black text-[12px] border-2 gap-3 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
+          <Button onClick={() => setIsExportOpen(true)} variant="outline" className="rounded-full h-14 px-8 font-black text-[12px] border-2 gap-3 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
             <Download className="w-4 h-4" /> Export Matrix
           </Button>
           <Button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="rounded-full h-14 px-10 font-black text-[12px] bg-primary text-white shadow-2xl shadow-primary/30 uppercase tracking-widest hover:scale-105 transition-all border-4 border-white active:scale-95">
@@ -324,47 +322,45 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
       </SectionHeader>
 
       <div className="relative group/search" ref={suggestionRef}>
-        <div className="absolute left-8 top-1/2 -translate-y-1/2 text-slate-300 w-6 h-6 group-focus-within/search:text-primary transition-colors">
-          <Search className="w-6 h-6" />
+        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within/search:text-primary transition-colors">
+          <Search className="w-5 h-5" />
         </div>
         <Input 
           placeholder="SEARCH PRODUCT INVENTORY (E.G. D-VENIZ)..." 
           value={searchTerm} 
           onChange={e => setSearchTerm(e.target.value)} 
-          className="h-20 pl-20 rounded-[40px] border-none bg-white shadow-xl font-black text-base tracking-tight placeholder:text-slate-500 focus:ring-4 focus:ring-primary/10 transition-all uppercase" 
+          className="h-14 pl-14 rounded-2xl border bg-slate-50 shadow-sm font-black text-sm tracking-tight placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all uppercase" 
         />
         {isSearching && (
-          <div className="absolute right-8 top-1/2 -translate-y-1/2">
+          <div className="absolute right-6 top-1/2 -translate-y-1/2">
             <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
-              <Loader2 className="w-5 h-5 text-primary" />
+              <Loader2 className="w-4 h-4 text-primary" />
             </motion.div>
           </div>
         )}
 
         {suggestions.length > 0 && (
-          <div className="absolute top-[calc(100%+20px)] left-0 right-0 bg-white/95 backdrop-blur-2xl rounded-[48px] shadow-3xl border border-white overflow-hidden z-[110] animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="px-10 py-5 bg-slate-50/50 border-b border-white">
-              <p className="text-[11px] font-black text-slate-600 tracking-[0.4em] uppercase">Product Matches</p>
+          <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-[110] animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="px-6 py-3 bg-slate-50/50 border-b border-slate-100">
+              <p className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase">Product Matches</p>
             </div>
-            <div className="max-h-[400px] overflow-y-auto no-scrollbar">
+            <div className="max-h-[300px] overflow-y-auto no-scrollbar">
               {suggestions.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => {
-                    setSearchTerm(item.name);
+                    setEditingItem(item);
+                    setIsFormOpen(true);
                     setSuggestions([]);
                   }}
-                  className="w-full px-10 py-6 flex items-center gap-6 hover:bg-primary/5 transition-all text-left group/item border-b border-slate-50 last:border-none active:scale-[0.99]"
+                  className="w-full px-6 py-3 flex items-center gap-4 hover:bg-primary/5 transition-all text-left border-b border-slate-50 last:border-none active:scale-[0.99]"
                 >
-                  <div className="w-14 h-14 bg-white rounded-2xl flex-shrink-0 border border-slate-100 p-2 flex items-center justify-center overflow-hidden shadow-sm group-hover/item:scale-110 transition-transform duration-500">
-                    {item.imageUrl ? <img src={item.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-6 h-6 text-slate-100" />}
+                  <div className="w-10 h-10 bg-white rounded-xl flex-shrink-0 border border-slate-100 p-1 flex items-center justify-center overflow-hidden">
+                    {item.imageUrl ? <img src={item.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-5 h-5 text-slate-200" />}
                   </div>
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <p className="font-black text-lg text-slate-900 truncate tracking-tighter uppercase font-outfit">{item.name}</p>
-                    <p className="text-[11px] font-black text-slate-600 tracking-[0.3em] truncate uppercase">{item.sku} • {item.manufacturer}</p>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-full group-hover/item:bg-primary group-hover/item:text-white transition-all">
-                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover/item:text-white transition-all" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-sm text-slate-800 truncate uppercase">{item.name}</p>
+                    <p className="text-[10px] font-bold text-slate-400 truncate uppercase">{item.sku} • {item.manufacturer}</p>
                   </div>
                 </button>
               ))}
@@ -376,58 +372,61 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
       <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[800px]">
-            <thead className="bg-gray-50 text-[12px] font-black text-gray-900 border-b uppercase tracking-tight">
-              <tr><th className="px-10 py-8">Product detail</th><th className="px-10 py-8">Category</th><th className="px-10 py-8 text-right">Manage</th></tr>
+            <thead className="bg-gray-50 text-[11px] font-black text-gray-900 border-b uppercase tracking-tight">
+              <tr>
+                <th className="px-5 py-3">Product detail</th>
+                <th className="px-5 py-3">Category</th>
+                <th className="px-5 py-3">Marketer / Manufacturer</th>
+                <th className="px-5 py-3 text-right">Manage</th>
+              </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 Array(5).fill(0).map((_, i) => (
                   <tr key={i}>
-                    <td className="px-10 py-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-100 animate-pulse rounded-2xl" />
-                        <div className="space-y-2">
-                          <div className="w-48 h-4 bg-slate-100 animate-pulse rounded-full" />
-                          <div className="w-32 h-2 bg-slate-50 animate-pulse rounded-full" />
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-slate-100 animate-pulse rounded-xl" />
+                        <div className="space-y-1.5">
+                          <div className="w-36 h-3 bg-slate-100 animate-pulse rounded-full" />
+                          <div className="w-24 h-2 bg-slate-50 animate-pulse rounded-full" />
                         </div>
                       </div>
                     </td>
-                    <td className="px-10 py-8">
-                      <div className="w-24 h-6 bg-slate-100 animate-pulse rounded-lg" />
-                    </td>
-                    <td className="px-10 py-8">
-                      <div className="flex justify-end gap-2">
-                        <div className="w-10 h-10 bg-slate-50 animate-pulse rounded-xl" />
-                      </div>
-                    </td>
+                    <td className="px-5 py-3"><div className="w-20 h-5 bg-slate-100 animate-pulse rounded-md" /></td>
+                    <td className="px-5 py-3"><div className="w-28 h-5 bg-slate-100 animate-pulse rounded-md" /></td>
+                    <td className="px-5 py-3 text-right"><div className="w-8 h-8 bg-slate-55 animate-pulse rounded-lg ml-auto" /></td>
                   </tr>
                 ))
-              ) : medicines?.length === 0 ? (<tr><td colSpan={3} className="p-20 text-center font-bold text-gray-300">No entries found</td></tr>) : medicines?.map(med => (
+              ) : medicines?.length === 0 ? (
+                <tr><td colSpan={4} className="p-10 text-center font-bold text-gray-300">No entries found</td></tr>
+              ) : medicines?.map(med => (
                 <tr key={med.id} className="hover:bg-gray-50/50">
-                  <td className="px-10 py-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gray-50 rounded-2xl p-2 border flex items-center justify-center overflow-hidden">
-                        {med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-6 h-6 text-gray-200" />}
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-50 rounded-xl p-1.5 border flex items-center justify-center overflow-hidden">
+                        {med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-5 h-5 text-gray-200" />}
                       </div>
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
-                          <span className="font-black text-base">{med.name}</span>
-                          {med.isActive === false && (
-                            <Badge variant="destructive" className="h-5 text-[10px] px-2 font-black uppercase">Inactive</Badge>
+                          <span className="font-black text-xs">{med.name}</span>
+                          {med.salable_status?.toLowerCase().includes('rx') && (
+                            <Badge variant="destructive" className="h-4 text-[8px] px-1.5 font-black uppercase">Rx</Badge>
                           )}
                         </div>
-                        <span className="text-[11px] text-gray-500 font-bold uppercase">{med.sku} • {med.manufacturer}</span>
+                        <span className="text-[10px] text-gray-500 font-bold uppercase">{med.sku}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-10 py-8"><Badge variant="outline" className="font-black text-[11px] border-2">{med.category}</Badge></td>
-                  <td className="px-10 py-8 text-right">
-                     <div className="flex justify-end gap-2">
-                       <Button variant="ghost" size="icon" onClick={() => { setEditingItem(med); setIsFormOpen(true); }}>
-                         <Edit2 className="w-4 h-4 text-gray-400" />
+                  <td className="px-5 py-3"><Badge variant="outline" className="font-black text-[10px] py-0 border-2">{med.category || '—'}</Badge></td>
+                  <td className="px-5 py-3 font-bold text-xs text-gray-700">{med.manufacturer || '—'}</td>
+                  <td className="px-5 py-3 text-right">
+                     <div className="flex justify-end gap-1">
+                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingItem(med); setIsFormOpen(true); }}>
+                         <Edit2 className="w-3.5 h-3.5 text-gray-400" />
                        </Button>
-                       <Button variant="ghost" size="icon" onClick={async () => {
-                          if (confirm("Delete this product from MongoDB & Firestore?")) {
+                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={async () => {
+                          if (confirm("Delete this product?")) {
                             try {
                               const docId = med._id || med.id;
                               const token = await user?.getIdToken();
@@ -435,9 +434,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                                 method: 'DELETE',
                                 headers: { 'Authorization': `Bearer ${token}` }
                               });
-                              
-                              if (!res.ok) throw new Error('Failed to delete from MongoDB');
-                              
+                              if (!res.ok) throw new Error('Failed to delete');
                               toast({ title: "Product deleted" });
                               refetch?.();
                             } catch (err: any) {
@@ -445,10 +442,10 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                             }
                           }
                        }}>
-                         <Trash2 className="w-4 h-4 text-red-300" />
+                         <Trash2 className="w-3.5 h-3.5 text-red-350" />
                        </Button>
                      </div>
-                   </td>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -456,287 +453,172 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
         </div>
       </Card>
 
-      <Dialog open={isFormOpen} onOpenChange={isFormOpen => setIsFormOpen(isFormOpen)}>
-        <DialogContent className="rounded-[40px] max-w-5xl border-none p-0 overflow-hidden">
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="rounded-[40px] max-w-5xl border-none p-0 overflow-hidden bg-white">
           <DialogHeader className="bg-primary p-8 text-white space-y-2">
-            <DialogTitle className="text-2xl font-black text-white">Product profile</DialogTitle>
+            <DialogTitle className="text-2xl font-black text-white">Product Profile Setup</DialogTitle>
             <DialogDescription className="text-[10px] font-black text-white/60 tracking-widest uppercase">
-              Configure product details and live inventory status
+              Configure Product Master Database parameters
             </DialogDescription>
           </DialogHeader>
           <div className="p-8 max-h-[80vh] overflow-y-auto scrollbar-hide">
             {isFormOpen && (
-        <ItemForm 
-          db={db} 
-          initialData={editingItem} 
-          onSuccess={() => {
-            setIsFormOpen(false);
-            refetch?.();
-          }} 
-        />
-      )}
+              <ItemForm 
+                initialData={editingItem} 
+                onSuccess={() => {
+                  setIsFormOpen(false);
+                  refetch?.();
+                }} 
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
+
+      <ExportFieldsDialog
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        fields={[
+          'product_id', 'product_name', 'molecule_code', 'medicine_type', 'salable_status', 'country_of_origin',
+          'taxonomy.marketer_id', 'taxonomy.marketer_name', 'taxonomy.category_id', 'taxonomy.category_name', 'taxonomy.sub_category',
+          'packaging.product_form', 'packaging.package_type', 'packaging.package_quantity', 'packaging.packaging_detail', 'packaging.mrp',
+          'medical_info.composition', 'medical_info.primary_use', 'safety_warnings.is_rx_required', 'images', 'seo.url_slug'
+        ]}
+        title="Product Master"
+        onExport={handleExport}
+      />
     </div>
   );
 }
 
-const LimitedInput = ({ label, value, onChange, limit, placeholder = "" }: any) => (
-  <div className="space-y-1.5 flex-1">
-    <div className="flex justify-between items-center px-1">
-      <Label className="text-[9px] font-black uppercase text-slate-400">{label}</Label>
-      <span className={cn("text-[8px] font-bold", (value?.length || 0) > limit ? "text-rose-500" : "text-slate-300")}>
-        {value?.length || 0}/{limit}
-      </span>
-    </div>
-    <Input 
-      value={value} 
-      onChange={e => onChange(e.target.value)} 
-      placeholder={placeholder}
-      className={cn("rounded-xl h-11 bg-gray-50 border-none font-black text-[11px] uppercase placeholder:text-slate-200", (value?.length || 0) > limit && "ring-1 ring-rose-500")} 
-    />
-  </div>
-);
-
-const LimitedTextarea = ({ label, value, onChange, limit, placeholder = "" }: any) => (
-  <div className="space-y-1.5 flex-1">
-    <div className="flex justify-between items-center px-1">
-      <Label className="text-[9px] font-black uppercase text-slate-400">{label}</Label>
-      <span className={cn("text-[8px] font-bold", (value?.length || 0) > limit ? "text-rose-500" : "text-slate-300")}>
-        {value?.length || 0}/{limit}
-      </span>
-    </div>
-    <Textarea 
-      value={value} 
-      onChange={e => onChange(e.target.value)} 
-      placeholder={placeholder}
-      className={cn("rounded-[20px] min-h-[80px] bg-gray-50 border-none font-bold text-[11px] p-4 uppercase placeholder:text-slate-200 scrollbar-hide", (value?.length || 0) > limit && "ring-1 ring-rose-500")} 
-    />
-  </div>
-);
-
-function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, onSuccess: () => void }) {
+function ItemForm({ initialData, onSuccess }: { initialData?: any, onSuccess: () => void }) {
   const { user } = useUser();
   const { toast } = useToast();
-  const [molecules, setMolecules] = useState<any[]>([]);
-  const [isMolsLoading, setIsMolsLoading] = useState(false);
-  const [molSearch, setMolSearch] = useState('');
-  const [isMolOpen, setIsMolOpen] = useState(false);
-  const [selectedMoleculeTitle, setSelectedMoleculeTitle] = useState("");
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
-
-  // Fix: Load initial molecule name on mount & Refresh latest data
-  useEffect(() => {
-    const docId = initialData?.id || initialData?._id;
-    if (!docId) return;
-
-    const refreshProduct = async () => {
-       setIsRefreshing(true);
-       try {
-          const res = await fetch(`/api/products/${docId}`, { cache: 'no-store' });
-          if (res.ok) {
-             const data = await res.json();
-             // Merge/Reset form with latest data
-             setForm(prev => ({
-                ...prev,
-                ...data,
-                medicalTabLabel: data.medicalTabLabel || 'Intelligence',
-                safetyTabLabel: data.safetyTabLabel || 'Protocol',
-                matrixTabLabel: data.matrixTabLabel || 'Matrix',
-                // PULL COMPOSITION FROM LEGACY FALLBACKS
-                saltComposition: data.saltComposition || data.composition || data.salt || data.molecule || '',
-                imageUrl2: data.imageUrls?.[1] || '',
-                imageUrl3: data.imageUrls?.[2] || '',
-                id: data.id || data._id?.toString()
-             }));
-
-             // Pull prices/stock from root if available
-             if (data.mrp !== undefined || data.price !== undefined || data.availableQuantity !== undefined) {
-                setLiveData(prev => ({
-                   ...prev,
-                   mrp: data.mrp ?? prev.mrp,
-                   price: data.price ?? prev.price,
-                   availableQuantity: data.availableQuantity ?? prev.availableQuantity
-                }));
-             }
-             
-             // Fetch molecule name if mapped and set as saltComposition if empty
-             if (data.moleculeId) {
-                const fetchMol = async () => {
-                   try {
-                      const mRes = await fetch(`/api/molecules/${data.moleculeId}`, { cache: 'no-store' });
-                      if (mRes.ok) {
-                         const mData = await mRes.json();
-                         const molName = mData.molecule || mData.name;
-                         if (molName) {
-                            setSelectedMoleculeTitle(molName);
-                            setForm(f => ({ ...f, saltComposition: f.saltComposition || molName }));
-                         }
-                      }
-                   } catch (e) { console.error("Error fetching molecule", e); }
-                };
-                fetchMol();
-             }
-          }
-       } catch (e) {
-          console.error("Refresh error:", e);
-       } finally {
-          setIsRefreshing(false);
-       }
-    };
-
-    refreshProduct();
-  }, [initialData?.id, initialData?._id]);
-
-  // Fetch categories for dropdown - separately so it runs in create mode too
-  useEffect(() => {
-    const fetchCats = async () => {
-      try {
-        const res = await fetch('/api/categories');
-        if (res.ok) {
-           const data = await res.json();
-           setCategories(data);
-        }
-      } catch (e) {
-        console.error("Error fetching categories", e);
-      }
-    };
-    fetchCats();
-  }, []);
-
-  useEffect(() => {
-    const fetchMols = async () => {
-      setIsMolsLoading(true);
-      try {
-        const res = await fetch(`/api/molecules?q=${encodeURIComponent(molSearch)}&limit=20`, { cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json();
-          setMolecules(data);
-        }
-      } catch (e) {
-        console.error("Molecule search fail:", e);
-      } finally {
-        setIsMolsLoading(false);
-      }
-    };
-
-    const t = setTimeout(fetchMols, 300);
-    return () => clearTimeout(t);
-  }, [molSearch]);
-
-  const HSN_GST_MAP: Record<string, number> = {
-    '3004': 12, // Medicaments
-    '3002': 5,  // Human blood, vaccines
-    '3003': 12, // Medicaments (unmixed)
-    '3005': 12, // Wadding, gauze, bandages
-    '3006': 12, // Pharmaceutical goods
-    '3304': 18, // Beauty or make-up preparations
-    '2106': 18, // Food preparations (supplements)
-    '3401': 18, // Soap
-  };
+  const [molecules, setMolecules] = useState<any[]>([]);
 
   const [form, setForm] = useState({
-    name: initialData?.name || '',
-    sku: initialData?.sku || '',
-    manufacturer: initialData?.manufacturer || '',
-    category: initialData?.category || '',
-    hsnCode: initialData?.hsnCode || '',
-    gstPercentage: initialData?.gstPercentage || 0,
-    isGeneric: initialData?.isGeneric || false,
-    isBestSeller: initialData?.isBestSeller ?? false,
-    prescriptionRequired: initialData?.prescriptionRequired || false,
-    moleculeId: initialData?.moleculeId || '',
-    packSize: initialData?.packSize || '',
-    description: initialData?.description || '',
-    howToUse: initialData?.howToUse || '',
-    treatment: initialData?.treatment || '',
-    saltComposition: initialData?.saltComposition || '',
-    safetyAdvice: initialData?.safetyAdvice || '',
-    pregnancyInteraction: initialData?.pregnancyInteraction || '',
-    lactationInteraction: initialData?.lactationInteraction || '',
-    drivingInteraction: initialData?.drivingInteraction || '',
-    kidneyInteraction: initialData?.kidneyInteraction || '',
-    liverInteraction: initialData?.liverInteraction || '',
-    medicalTabLabel: initialData?.medicalTabLabel || 'Intelligence',
-    safetyTabLabel: initialData?.safetyTabLabel || 'Protocol',
-    matrixTabLabel: initialData?.matrixTabLabel || 'Matrix',
-    imageUrl: initialData?.imageUrl || '',
-    imageUrl2: initialData?.imageUrls?.[1] || '',
-    imageUrl3: initialData?.imageUrls?.[2] || '',
-    isTopSelection: initialData?.isTopSelection || false,
-    isActive: initialData?.isActive !== false
+    product_id: initialData?.product_id || initialData?.sku || '',
+    product_name: initialData?.product_name || initialData?.name || '',
+    molecule_code: initialData?.molecule_code || initialData?.moleculeId || '',
+    medicine_type: initialData?.medicine_type || (initialData?.isGeneric ? 'Generic' : 'Branded'),
+    salable_status: initialData?.salable_status || 'Salable (Rx Required)',
+    country_of_origin: initialData?.country_of_origin || 'India',
+    
+    'taxonomy.marketer_id': initialData?.taxonomy?.marketer_id || '',
+    'taxonomy.marketer_name': initialData?.taxonomy?.marketer_name || initialData?.manufacturer || '',
+    'taxonomy.category_id': initialData?.taxonomy?.category_id || '',
+    'taxonomy.category_name': initialData?.taxonomy?.category_name || initialData?.category || '',
+    'taxonomy.sub_category': initialData?.taxonomy?.sub_category || '',
+
+    'packaging.package_type': initialData?.packaging?.package_type || 'Strip',
+    'packaging.product_form': initialData?.packaging?.product_form || 'Tablet',
+    'packaging.package_quantity': initialData?.packaging?.package_quantity || 10,
+    'packaging.packaging_detail': initialData?.packaging?.packaging_detail || 'strip of 10 tablets',
+    'packaging.mrp': initialData?.packaging?.mrp || initialData?.mrp || 0,
+
+    'medical_info.composition': initialData?.medical_info?.composition || initialData?.saltComposition || '',
+    'medical_info.primary_use': initialData?.medical_info?.primary_use || initialData?.treatment || '',
+    'medical_info.introduction': initialData?.medical_info?.introduction || initialData?.description || '',
+    'medical_info.benefits': initialData?.medical_info?.benefits || '',
+    'medical_info.how_to_use': initialData?.medical_info?.how_to_use || initialData?.howToUse || '',
+    'medical_info.if_miss': initialData?.medical_info?.if_miss || '',
+    'medical_info.storage_instructions': initialData?.medical_info?.storage_instructions || '',
+    
+    'safety_warnings.is_rx_required': initialData?.safety_warnings?.is_rx_required ?? initialData?.prescriptionRequired ?? true,
+    'safety_warnings.is_controlled_substance': initialData?.safety_warnings?.is_controlled_substance ?? false,
+
+    'safety_warnings.interactions.alcohol': initialData?.safety_warnings?.interactions?.alcohol || 'Caution',
+    'safety_warnings.interactions.pregnancy': initialData?.safety_warnings?.interactions?.pregnancy || 'Unsafe',
+    'safety_warnings.interactions.lactation': initialData?.safety_warnings?.interactions?.lactation || 'Consult Doctor',
+    'safety_warnings.interactions.driving': initialData?.safety_warnings?.interactions?.driving || 'Unsafe',
+    'safety_warnings.interactions.kidney': initialData?.safety_warnings?.interactions?.kidney || 'Consult Doctor',
+    'safety_warnings.interactions.liver': initialData?.safety_warnings?.interactions?.liver || 'Unsafe',
+    'safety_warnings.interactions.safety_advise': (initialData?.safety_warnings?.interactions?.safety_advise || '')
+      .replace(/<[^>]*>/g, '\n') // Replace HTML tags with newlines
+      .replace(/\|/g, '\n')      // Replace pipe characters with newlines
+      .replace(/\n\s*\n/g, '\n') // Normalize multiple newlines
+      .trim(),
+
+    imageUrl: initialData?.images?.[0] || initialData?.imageUrl || '',
+    'seo.url_slug': initialData?.seo?.url_slug || '',
+    'seo.seo_title': initialData?.seo?.seo_title || '',
+    'seo.seo_description': initialData?.seo?.seo_description || '',
   });
 
-  const [liveData, setLiveData] = useState({ price: 0, mrp: 0, availableQuantity: 0 });
-
   useEffect(() => {
-    if (initialData?.sku) {
-      getDoc(doc(db, 'product_live_data', initialData.sku)).then(snap => {
-        if (snap.exists()) {
-          const d = snap.data();
-          setLiveData({ price: d.sahimed_price || 0, mrp: d.mrp || 0, availableQuantity: d.stock_quantity || 0 });
-        }
-      });
-    }
-  }, [initialData, db]);
+    fetch('/api/categories').then(res => res.json()).then(setCategories).catch(console.error);
+    fetch('/api/molecules').then(res => res.json()).then(setMolecules).catch(console.error);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const docId = initialData?.id || initialData?._id || form.sku;
+    const docId = initialData?.id || initialData?._id || form.product_id;
     if (!docId) {
-      toast({ variant: 'destructive', title: "Error", description: "Sku is required for new products" });
+      toast({ variant: 'destructive', title: "Validation Error", description: "Product ID is required" });
       return;
     }
 
-    // MANDATORY VALIDATION WITH SPECIFIC FEEDBACK
-    const missing = [];
-    if (!form.medicalTabLabel) missing.push("Medical Label");
-    if (!form.safetyTabLabel) missing.push("Safety Label");
-    if (!form.matrixTabLabel) missing.push("Matrix Label");
-    if (!form.saltComposition) missing.push("Salt Composition");
-
-    if (missing.length > 0) {
-      toast({ 
-        variant: 'destructive', 
-        title: "Incomplete Profile", 
-        description: `Please fill required fields: ${missing.join(', ')}` 
-      });
-      return;
-    }
-
-    const { imageUrl2, imageUrl3, ...payloadBase } = form;
-
-    const combinedPayload = {
-      ...payloadBase,
-      imageUrls: [form.imageUrl, imageUrl2, imageUrl3].filter(Boolean),
-      mrp: Number(liveData.mrp), 
-      price: Number(liveData.price), 
-      availableQuantity: Number(liveData.availableQuantity),
-      id: docId
+    const payload: any = {
+      product_id: form.product_id,
+      product_name: form.product_name,
+      molecule_code: form.molecule_code,
+      medicine_type: form.medicine_type,
+      salable_status: form.salable_status,
+      country_of_origin: form.country_of_origin,
+      images: [form.imageUrl].filter(Boolean),
+      taxonomy: {
+        marketer_id: form['taxonomy.marketer_id'],
+        marketer_name: form['taxonomy.marketer_name'],
+        category_id: form['taxonomy.category_id'],
+        category_name: form['taxonomy.category_name'],
+        sub_category: form['taxonomy.sub_category'],
+      },
+      packaging: {
+        package_type: form['packaging.package_type'],
+        product_form: form['packaging.product_form'],
+        package_quantity: Number(form['packaging.package_quantity']),
+        packaging_detail: form['packaging.packaging_detail'],
+        mrp: Number(form['packaging.mrp']),
+      },
+      medical_info: {
+        composition: form['medical_info.composition'],
+        primary_use: form['medical_info.primary_use'],
+        introduction: form['medical_info.introduction'],
+        benefits: form['medical_info.benefits'],
+        how_to_use: form['medical_info.how_to_use'],
+        if_miss: form['medical_info.if_miss'],
+        storage_instructions: form['medical_info.storage_instructions'],
+      },
+      safety_warnings: {
+        is_rx_required: form['safety_warnings.is_rx_required'],
+        is_controlled_substance: form['safety_warnings.is_controlled_substance'],
+        interactions: {
+          alcohol: form['safety_warnings.interactions.alcohol'],
+          pregnancy: form['safety_warnings.interactions.pregnancy'],
+          lactation: form['safety_warnings.interactions.lactation'],
+          driving: form['safety_warnings.interactions.driving'],
+          kidney: form['safety_warnings.interactions.kidney'],
+          liver: form['safety_warnings.interactions.liver'],
+          safety_advise: form['safety_warnings.interactions.safety_advise'],
+        }
+      },
+      seo: {
+        url_slug: form['seo.url_slug'],
+        seo_title: form['seo.seo_title'],
+        seo_description: form['seo.seo_description'],
+      }
     };
 
-    // Remove legacy liveData object if it exists in the spread
-    delete (combinedPayload as any).liveData;
-
     try {
-      const method = initialData ? 'PUT' : 'POST';
-      const url = initialData ? `/api/products/${docId}` : '/api/products';
-      
       const token = await user?.getIdToken();
-      const res = await fetch(url, {
-        method,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(combinedPayload)
+      const res = await fetch(initialData ? `/api/products/${docId}` : '/api/products', {
+        method: initialData ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(payload)
       });
-      
-      if (!res.ok) throw new Error('Failed to sync with MongoDB');
-
-      toast({ title: "Product synchronized", description: "Saved to MongoDB Master" });
+      if (!res.ok) throw new Error('Save failed');
+      toast({ title: "Product Master updated" });
       onSuccess();
     } catch (err: any) {
       toast({ variant: 'destructive', title: "Sync failed", description: err.message });
@@ -744,272 +626,216 @@ function ItemForm({ db, initialData, onSuccess }: { db: any, initialData?: any, 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-10">
-      <Tabs defaultValue="basic" className="w-full">
+    <form onSubmit={handleSubmit} className="space-y-8">
+      <Tabs defaultValue="identity">
         <TabsList className="bg-gray-100 p-1 rounded-2xl h-14 w-full flex mb-8">
-          <TabsTrigger value="basic" className="flex-1 rounded-xl font-black text-[10px]">Identity</TabsTrigger>
-          <TabsTrigger value="live" className="flex-1 rounded-xl font-black text-[10px] text-primary">Inventory & Sku</TabsTrigger>
-          <TabsTrigger value="images" className="flex-1 rounded-xl font-black text-[10px]">Media</TabsTrigger>
-          <TabsTrigger value="medical" className="flex-1 rounded-xl font-black text-[10px]">Medical</TabsTrigger>
+          <TabsTrigger value="identity" className="flex-1 font-black text-[10px]">Identity</TabsTrigger>
+          <TabsTrigger value="taxonomy" className="flex-1 font-black text-[10px]">Taxonomy</TabsTrigger>
+          <TabsTrigger value="packaging" className="flex-1 font-black text-[10px]">Packaging</TabsTrigger>
+          <TabsTrigger value="medical" className="flex-1 font-black text-[10px]">Medical</TabsTrigger>
+          <TabsTrigger value="safety" className="flex-1 font-black text-[10px]">Safety</TabsTrigger>
+          <TabsTrigger value="seo" className="flex-1 font-black text-[10px]">SEO & SEO Tags</TabsTrigger>
         </TabsList>
-        <TabsContent value="basic" className="space-y-6">
-          <div className="grid grid-cols-2 gap-6">
-            {initialData?._id && (
-              <div className="col-span-2 space-y-1">
-                <Label className="text-[9px] font-black uppercase text-slate-300">System ID (Auto-generated)</Label>
-                <p className="text-[10px] font-mono font-bold text-slate-400 bg-slate-50 p-3 rounded-xl border border-dashed">{initialData._id}</p>
-              </div>
-            )}
-            <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black">Medicine name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-            <div className="space-y-2"><Label className="text-[10px] font-black">Sku</Label><Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-            <div className="space-y-2"><Label className="text-[10px] font-black">Pack Size</Label><Input value={form.packSize} onChange={e => setForm({...form, packSize: e.target.value})} placeholder="e.g. 10 Tablets" className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-            <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black">Manufacturer</Label><Input value={form.manufacturer} onChange={e => setForm({...form, manufacturer: e.target.value})} className="rounded-2xl h-14 bg-gray-50 border-none font-bold" /></div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black">HSN Code</Label>
-              <Input 
-                value={form.hsnCode} 
-                onChange={e => {
-                  const val = e.target.value;
-                  const prefix = val.substring(0, 4);
-                  const autoGst = HSN_GST_MAP[prefix];
-                  setForm({
-                    ...form, 
-                    hsnCode: val,
-                    ...(autoGst !== undefined ? { gstPercentage: autoGst } : {})
-                  });
-                }} 
-                className="rounded-2xl h-14 bg-gray-50 border-none font-bold" 
-              />
+
+        <TabsContent value="identity" className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Product ID *</Label>
+              <Input value={form.product_id} onChange={e => setForm({...form, product_id: e.target.value})} required className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black">GST (%)</Label>
-              <Input 
-                type="number"
-                value={form.gstPercentage} 
-                onChange={e => setForm({...form, gstPercentage: Number(e.target.value)})} 
-                className="rounded-2xl h-14 bg-gray-50 border-none font-bold" 
-              />
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Product Name *</Label>
+              <Input value={form.product_name} onChange={e => setForm({...form, product_name: e.target.value})} required className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
             </div>
-            <div className="col-span-2 flex items-center space-x-8 pt-4 flex-wrap gap-y-4">
-              <div className="flex items-center space-x-2"><Checkbox id="is-active" checked={form.isActive} onCheckedChange={(c) => setForm({...form, isActive: !!c})} /><Label htmlFor="is-active" className="text-[10px] font-black uppercase text-emerald-600">Active / Live</Label></div>
-              <div className="flex items-center space-x-2"><Checkbox id="is-top-selection" checked={form.isTopSelection} onCheckedChange={(c) => setForm({...form, isTopSelection: !!c})} /><Label htmlFor="is-top-selection" className="text-[10px] font-black uppercase text-blue-600">Top Selection</Label></div>
-              <div className="flex items-center space-x-2"><Checkbox id="rx-req" checked={form.prescriptionRequired} onCheckedChange={(c) => setForm({...form, prescriptionRequired: !!c})} /><Label htmlFor="rx-req" className="text-[10px] font-black text-red-500 uppercase">Rx required</Label></div>
-              <div className="flex items-center space-x-2"><Checkbox id="is-generic" checked={form.isGeneric} onCheckedChange={(c) => setForm({...form, isGeneric: !!c})} /><Label htmlFor="is-generic" className="text-[10px] font-black text-accent uppercase">SahiMed generic</Label></div>
-              <div className="flex items-center space-x-2"><Checkbox id="is-best-seller" checked={form.isBestSeller} onCheckedChange={(c) => setForm({...form, isBestSeller: !!c})} /><Label htmlFor="is-best-seller" className="text-[10px] font-black text-yellow-500 uppercase">Best Seller</Label></div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Molecule Code</Label>
+              <Select value={form.molecule_code} onValueChange={v => setForm({...form, molecule_code: v})}>
+                <SelectTrigger className="rounded-2xl h-12 bg-gray-50 border-none font-bold">
+                  <SelectValue placeholder="Select Molecule Code" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl z-[150]">
+                  {molecules.map(m => (
+                    <SelectItem key={m.id || m._id} value={m['Molecule Code']} className="font-bold">
+                      {m['Molecule Code']} — {m.Composition}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Medicine Type</Label>
+              <Select value={form.medicine_type} onValueChange={v => setForm({...form, medicine_type: v})}>
+                <SelectTrigger className="rounded-2xl h-12 bg-gray-50 border-none font-bold">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl z-[150]">
+                  <SelectItem value="Branded" className="font-bold">Branded</SelectItem>
+                  <SelectItem value="Ethical" className="font-bold">Ethical</SelectItem>
+                  <SelectItem value="Generic" className="font-bold">Generic</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Salable Status</Label>
+              <Input value={form.salable_status} onChange={e => setForm({...form, salable_status: e.target.value})} className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Country of Origin</Label>
+              <Input value={form.country_of_origin} onChange={e => setForm({...form, country_of_origin: e.target.value})} className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
+            </div>
+            <div className="col-span-2 space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Image URL</Label>
+              <Input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} placeholder="https://..." className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
             </div>
           </div>
         </TabsContent>
-        <TabsContent value="live" className="space-y-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 bg-primary/5 p-8 rounded-[32px] border border-primary/10">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black text-primary">Item Code (SKU)</Label>
-              <Input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} className="rounded-2xl h-14 bg-white border-none font-black text-base" />
+
+        <TabsContent value="taxonomy" className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Marketer ID</Label>
+              <Input value={form['taxonomy.marketer_id']} onChange={e => setForm({...form, 'taxonomy.marketer_id': e.target.value})} className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black text-primary">Live price</Label>
-              <Input type="number" value={liveData.price} onChange={e => setLiveData({...liveData, price: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-black text-xl" />
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Marketer Name</Label>
+              <Input value={form['taxonomy.marketer_name']} onChange={e => setForm({...form, 'taxonomy.marketer_name': e.target.value})} className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black">Mrp</Label>
-              <Input type="number" value={liveData.mrp} onChange={e => setLiveData({...liveData, mrp: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-bold" />
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Category Name</Label>
+              <Select value={form['taxonomy.category_name']} onValueChange={v => {
+                const cat = categories.find(c => c.category === v);
+                setForm({
+                  ...form,
+                  'taxonomy.category_name': v,
+                  'taxonomy.category_id': cat?.category_id || ''
+                });
+              }}>
+                <SelectTrigger className="rounded-2xl h-12 bg-gray-50 border-none font-bold">
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl z-[150]">
+                  {categories.map(cat => (
+                    <SelectItem key={cat.id || cat._id} value={cat.category} className="font-bold">
+                      {cat.category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black">Stock</Label>
-              <Input type="number" value={liveData.availableQuantity} onChange={e => setLiveData({...liveData, availableQuantity: Number(e.target.value)})} className="rounded-2xl h-14 bg-white border-none font-bold" />
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Sub-Category</Label>
+              <Input value={form['taxonomy.sub_category']} onChange={e => setForm({...form, 'taxonomy.sub_category': e.target.value})} className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
             </div>
           </div>
         </TabsContent>
-        <TabsContent value="images" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black text-primary">Primary Image URL</Label>
-                <Input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} placeholder="https://..." className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black">Alternate Image 2</Label>
-                <Input value={form.imageUrl2} onChange={e => setForm({...form, imageUrl2: e.target.value})} placeholder="https://..." className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black">Alternate Image 3</Label>
-                <Input value={form.imageUrl3} onChange={e => setForm({...form, imageUrl3: e.target.value})} placeholder="https://..." className="rounded-2xl h-14 bg-gray-50 border-none font-bold" />
-              </div>
-              <p className="text-[9px] font-bold text-gray-400">Add up to 3 public URLs for the product. The first one is the primary display image.</p>
+
+        <TabsContent value="packaging" className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Packaging Detail</Label>
+              <Input value={form['packaging.packaging_detail']} onChange={e => setForm({...form, 'packaging.packaging_detail': e.target.value})} placeholder="e.g. strip of 10 tablets" className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
             </div>
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Previews</Label>
-              <div className="grid grid-cols-1 gap-4">
-                <div className="bg-gray-50 rounded-[32px] border border-dashed aspect-[16/9] flex items-center justify-center p-4">
-                  {form.imageUrl ? <img src={form.imageUrl} alt="1" className="h-full object-contain rounded-xl" /> : <ImageIcon className="w-8 h-8 text-gray-100" />}
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-[28px] border border-dashed aspect-square flex items-center justify-center p-2">
-                    {form.imageUrl2 ? <img src={form.imageUrl2} alt="2" className="h-full object-contain rounded-lg" /> : <ImageIcon className="w-4 h-4 text-gray-100" />}
-                  </div>
-                  <div className="bg-gray-50 rounded-[28px] border border-dashed aspect-square flex items-center justify-center p-2">
-                    {form.imageUrl3 ? <img src={form.imageUrl3} alt="3" className="h-full object-contain rounded-lg" /> : <ImageIcon className="w-4 h-4 text-gray-100" />}
-                  </div>
-                </div>
-              </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">MRP *</Label>
+              <Input type="number" value={form['packaging.mrp']} onChange={e => setForm({...form, 'packaging.mrp': Number(e.target.value)})} className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
             </div>
           </div>
         </TabsContent>
-        <TabsContent value="medical" className="space-y-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            <div className="space-y-8 bg-slate-50/50 p-6 rounded-[32px] border border-slate-100">
-              <div className="flex items-center gap-3 mb-2 px-1">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"><Search className="w-4 h-4 text-primary" /></div>
-                <h3 className="font-black text-xs uppercase tracking-widest text-slate-900 border-none">Molecule mapping</h3>
-              </div>
-              <div className="relative group">
-                <div className="relative">
-                  <div className="absolute left-5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                    <Search className="w-4 h-4 text-slate-400" />
-                  </div>
-                  <Input 
-                    placeholder={selectedMoleculeTitle || "SEARCH PRODUCT REGISTRY..."}
-                    value={molSearch}
-                    onChange={(e) => {
-                      setMolSearch(e.target.value);
-                      if (!isMolOpen) setIsMolOpen(true);
-                    }}
-                    onFocus={() => setIsMolOpen(true)}
-                    className="w-full h-14 rounded-2xl bg-white border border-slate-200 pl-16 pr-10 font-bold text-slate-900 shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-300 uppercase text-[11px]"
-                  />
-                  {selectedMoleculeTitle && (
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        setSelectedMoleculeTitle("");
-                        setForm(f => ({ ...f, moleculeId: "" }));
-                        setMolSearch("");
-                      }}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 hover:bg-slate-100 rounded-lg text-slate-400"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
 
-                {isMolOpen && molSearch.length > 0 && (
-                  <div className="absolute top-[calc(100%+8px)] left-0 right-0 z-[100] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                    <div className="p-2 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-                      <span className="text-[9px] font-black uppercase tracking-tighter text-slate-400 pl-3">Registry Matches ({molecules?.length || 0})</span>
-                      <Button type="button" variant="ghost" className="h-6 w-6 p-0 rounded-lg" onClick={() => setIsMolOpen(false)}><Plus className="w-3 h-3 rotate-45" /></Button>
-                    </div>
-                    <ScrollArea className="h-[320px]">
-                      {isMolsLoading ? (
-                        <div className="flex flex-col items-center justify-center py-12 gap-3">
-                          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                          <span className="text-[10px] font-bold text-slate-300 uppercase">Fetching Registry...</span>
-                        </div>
-                      ) : (
-                        <div className="p-2 space-y-1">
-                          {molecules?.length === 0 ? (
-                            <div className="py-10 px-4 text-center">
-                              <p className="text-[10px] font-black text-slate-300 uppercase">No Match in Registry</p>
-                              <Button type="button" variant="link" className="text-[9px] font-bold text-primary p-0 h-auto mt-2">ADD TO REGISTRY</Button>
-                            </div>
-                          ) : (
-                            molecules?.map((mol) => {
-                              const molId = mol._id || mol.id;
-                              const isSelected = form.moleculeId === mol.masterId || form.moleculeId === molId;
-                              return (
-                                <button
-                                  key={molId}
-                                  type="button"
-                                  onClick={() => {
-                                    setForm({...form, moleculeId: mol.masterId || molId, saltComposition: mol.molecule || mol.name});
-                                    setSelectedMoleculeTitle(mol.molecule || mol.name);
-                                    setIsMolOpen(false);
-                                    setMolSearch('');
-                                  }}
-                                  className={cn(
-                                    "w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-left transition-all group",
-                                    isSelected ? "bg-primary text-white" : "hover:bg-slate-50 text-slate-600"
-                                  )}
-                                >
-                                  <div className={cn(
-                                    "w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px]",
-                                    isSelected ? "bg-white/20 text-white" : "bg-slate-100 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
-                                  )}>
-                                    {mol.form?.[0] || 'M'}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className={cn("font-black text-[11px] uppercase truncate", isSelected ? "text-white" : "text-slate-900")}>
-                                      {mol.molecule || mol.name}
-                                    </p>
-                                    <p className={cn("text-[9px] font-bold uppercase opacity-60", isSelected ? "text-white/80" : "text-slate-400")}>
-                                      {mol.masterId} • {mol.form || 'Active Ingredient'}
-                                    </p>
-                                  </div>
-                                  {isSelected && <Check className="w-4 h-4 text-white" />}
-                                </button>
-                              );
-                            })
-                          )}
-                        </div>
-                      )}
-                    </ScrollArea>
-                  </div>
-                )}
-              </div>
+        <TabsContent value="medical" className="space-y-4">
+          <div className="space-y-1">
+            <Label className="text-[10px] font-black uppercase text-slate-500">Composition / Salt formulation *</Label>
+            <Input value={form['medical_info.composition']} onChange={e => setForm({...form, 'medical_info.composition': e.target.value})} className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Primary Medical Use</Label>
+              <Input value={form['medical_info.primary_use']} onChange={e => setForm({...form, 'medical_info.primary_use': e.target.value})} className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
             </div>
-
-            <div className="space-y-6 bg-lavender/30 p-6 rounded-[32px] border border-white">
-               <div className="flex gap-4">
-                  <div className="flex-1 space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Category Architecture</Label>
-                    <Select value={form.category} onValueChange={(v) => setForm({...form, category: v})}>
-                      <SelectTrigger className="rounded-2xl h-14 bg-white border-none font-bold">
-                        <SelectValue placeholder="Select Category" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl z-[150]">
-                        {categories.map(cat => (
-                          <SelectItem key={cat.id || cat._id} value={cat.name} className="font-bold uppercase text-[11px]">
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-               </div>
-               <div className="flex gap-4">
-                  <LimitedInput label="Medical Header (Required)" value={form.medicalTabLabel} onChange={(v: string) => setForm({...form, medicalTabLabel: v})} limit={20} placeholder="e.g. MEDICAL INFO" required />
-               </div>
-               <div className="space-y-4">
-                  <LimitedTextarea label="Medical Indication" value={form.treatment} onChange={(v: string) => setForm({...form, treatment: v})} limit={150} placeholder="Enter medical usage..." />
-                  <LimitedTextarea label="Pharmacology" value={form.description} onChange={(v: string) => setForm({...form, description: v})} limit={150} placeholder="Enter medical formulation details..." />
-               </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Storage Instructions</Label>
+              <Input value={form['medical_info.storage_instructions']} onChange={e => setForm({...form, 'medical_info.storage_instructions': e.target.value})} className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
             </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px] font-black uppercase text-slate-500">Introduction Details</Label>
+            <Textarea value={form['medical_info.introduction']} onChange={e => setForm({...form, 'medical_info.introduction': e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px] font-black uppercase text-slate-500">Benefits & Pharmacology Info</Label>
+            <Textarea value={form['medical_info.benefits']} onChange={e => setForm({...form, 'medical_info.benefits': e.target.value})} className="rounded-2xl min-h-[100px] bg-gray-50 border-none font-bold" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px] font-black uppercase text-slate-500">How to use</Label>
+            <Textarea value={form['medical_info.how_to_use']} onChange={e => setForm({...form, 'medical_info.how_to_use': e.target.value})} className="rounded-2xl min-h-[80px] bg-gray-50 border-none font-bold" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px] font-black uppercase text-slate-500">If Missed Dose</Label>
+            <Textarea value={form['medical_info.if_miss']} onChange={e => setForm({...form, 'medical_info.if_miss': e.target.value})} className="rounded-2xl min-h-[80px] bg-gray-50 border-none font-bold" />
+          </div>
+        </TabsContent>
 
-            <div className="space-y-6 bg-sahi-pink/10 p-6 rounded-[32px] border border-white">
-               <div className="flex gap-4">
-                  <LimitedInput label="Protocol Header (Required)" value={form.safetyTabLabel} onChange={(v: string) => setForm({...form, safetyTabLabel: v})} limit={20} placeholder="e.g. PROTOCOL" required />
-               </div>
-               <div className="space-y-4">
-                  <LimitedTextarea label="Protocol Caution" value={form.safetyAdvice} onChange={(v: string) => setForm({...form, safetyAdvice: v})} limit={150} placeholder="Enter safety advice..." />
-                  <LimitedTextarea label="Usage Gateway" value={form.howToUse} onChange={(v: string) => setForm({...form, howToUse: v})} limit={150} placeholder="Enter how to use info..." />
-               </div>
+        <TabsContent value="safety" className="space-y-4">
+          <div className="flex gap-8 border-b pb-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox id="rx-required" checked={form['safety_warnings.is_rx_required']} onCheckedChange={c => setForm({...form, 'safety_warnings.is_rx_required': !!c})} />
+              <Label htmlFor="rx-required" className="text-[10px] font-black uppercase text-red-500">Prescription Required</Label>
             </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="controlled-sub" checked={form['safety_warnings.is_controlled_substance']} onCheckedChange={c => setForm({...form, 'safety_warnings.is_controlled_substance': !!c})} />
+              <Label htmlFor="controlled-sub" className="text-[10px] font-black uppercase text-amber-500">Controlled Substance</Label>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <Label className="text-[9px] font-black text-slate-500">Alcohol Interaction</Label>
+              <Input value={form['safety_warnings.interactions.alcohol']} onChange={e => setForm({...form, 'safety_warnings.interactions.alcohol': e.target.value})} className="rounded-2xl h-11 bg-gray-50 border-none font-bold text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[9px] font-black text-slate-500">Pregnancy Interaction</Label>
+              <Input value={form['safety_warnings.interactions.pregnancy']} onChange={e => setForm({...form, 'safety_warnings.interactions.pregnancy': e.target.value})} className="rounded-2xl h-11 bg-gray-50 border-none font-bold text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[9px] font-black text-slate-500">Lactation Interaction</Label>
+              <Input value={form['safety_warnings.interactions.lactation']} onChange={e => setForm({...form, 'safety_warnings.interactions.lactation': e.target.value})} className="rounded-2xl h-11 bg-gray-50 border-none font-bold text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[9px] font-black text-slate-500">Driving Interaction</Label>
+              <Input value={form['safety_warnings.interactions.driving']} onChange={e => setForm({...form, 'safety_warnings.interactions.driving': e.target.value})} className="rounded-2xl h-11 bg-gray-50 border-none font-bold text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[9px] font-black text-slate-500">Kidney Interaction</Label>
+              <Input value={form['safety_warnings.interactions.kidney']} onChange={e => setForm({...form, 'safety_warnings.interactions.kidney': e.target.value})} className="rounded-2xl h-11 bg-gray-50 border-none font-bold text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[9px] font-black text-slate-500">Liver Interaction</Label>
+              <Input value={form['safety_warnings.interactions.liver']} onChange={e => setForm({...form, 'safety_warnings.interactions.liver': e.target.value})} className="rounded-2xl h-11 bg-gray-50 border-none font-bold text-xs" />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px] font-black uppercase text-slate-500">Safety Advise Detail text</Label>
+            <Textarea value={form['safety_warnings.interactions.safety_advise']} onChange={e => setForm({...form, 'safety_warnings.interactions.safety_advise': e.target.value})} className="rounded-2xl min-h-[80px] bg-gray-50 border-none font-bold" />
+          </div>
+        </TabsContent>
 
-            <div className="space-y-6 bg-sahi-blue/5 p-6 rounded-[32px] border border-white">
-               <div className="flex gap-4">
-                  <LimitedInput label="Matrix Header (Required)" value={form.matrixTabLabel} onChange={(v: string) => setForm({...form, matrixTabLabel: v})} limit={20} placeholder="e.g. MATRIX" required />
-               </div>
-               <div className="grid grid-cols-2 gap-4">
-                  <LimitedInput label="Composition (Required)" value={form.saltComposition} onChange={(v: string) => setForm({...form, saltComposition: v})} limit={50} required />
-                  <LimitedInput label="Pregnancy" value={form.pregnancyInteraction} onChange={(v: string) => setForm({...form, pregnancyInteraction: v})} limit={50} />
-                  <LimitedInput label="Lactation" value={form.lactationInteraction} onChange={(v: string) => setForm({...form, lactationInteraction: v})} limit={50} />
-                  <LimitedInput label="Driving" value={form.drivingInteraction} onChange={(v: string) => setForm({...form, drivingInteraction: v})} limit={50} />
-                  <LimitedInput label="Renal" value={form.kidneyInteraction} onChange={(v: string) => setForm({...form, kidneyInteraction: v})} limit={50} />
-                  <LimitedInput label="Hepatic" value={form.liverInteraction} onChange={(v: string) => setForm({...form, liverInteraction: v})} limit={50} />
-               </div>
+        <TabsContent value="seo" className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">URL Slug</Label>
+              <Input value={form['seo.url_slug']} onChange={e => setForm({...form, 'seo.url_slug': e.target.value})} placeholder="/buy-product-name" className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">SEO Title</Label>
+              <Input value={form['seo.seo_title']} onChange={e => setForm({...form, 'seo.seo_title': e.target.value})} className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">SEO Description</Label>
+              <Textarea value={form['seo.seo_description']} onChange={e => setForm({...form, 'seo.seo_description': e.target.value})} className="rounded-2xl min-h-[80px] bg-gray-50 border-none font-bold" />
             </div>
           </div>
         </TabsContent>
       </Tabs>
-      <Button type="submit" className="w-full h-20 rounded-[32px] font-black tracking-widest bg-primary text-white shadow-2xl">Save profile</Button>
+      <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white">Save Product Profile</Button>
     </form>
   );
 }

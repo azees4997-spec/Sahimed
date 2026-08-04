@@ -22,13 +22,20 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     
     const { _id, id, ...updateData } = body;
 
-    await db.collection('Molecule Master').updateOne(
+    await db.collection('Supplier Master').updateOne(
       getQuery(params.id), 
       { 
         $set: { 
-          'Molecule Code': updateData['Molecule Code'],
-          Composition: updateData.Composition,
-          'Product Form': updateData['Product Form'],
+          supplier_code: updateData.supplier_code,
+          supplier_name: updateData.supplier_name,
+          compliance_details: {
+            gstin: updateData.compliance_details?.gstin || '',
+            drug_license_number: updateData.compliance_details?.drug_license_number || ''
+          },
+          financials: {
+            credit_days: Number(updateData.financials?.credit_days || 0),
+            is_active: updateData.financials?.is_active ?? true
+          },
           updatedAt: new Date() 
         } 
       }
@@ -45,7 +52,8 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     await verifyAdmin(request);
     const client = await clientPromise;
     const db = client.db('sahimed');
-    await db.collection('Molecule Master').deleteOne(getQuery(params.id));
+    
+    await db.collection('Supplier Master').deleteOne(getQuery(params.id));
     
     return NextResponse.json({ success: true });
   } catch (err: any) {

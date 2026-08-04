@@ -7,19 +7,18 @@ export async function GET() {
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const collection = db.collection('products');
+    const collection = db.collection('Product Master');
 
-    const activeQuery = { isActive: { $ne: false } };
-    const [marketerNames, manufacturerNames, dosageForms] = await Promise.all([
-      collection.distinct('marketer_name', { ...activeQuery, marketer_name: { $exists: true, $ne: null, $ne: '' } }),
-      collection.distinct('manufacturer', { ...activeQuery, manufacturer: { $exists: true, $ne: null, $ne: '' } }),
-      collection.distinct('dosage_form', { ...activeQuery, dosage_form: { $exists: true, $ne: null, $ne: '' } }),
+    // Fetch distinct marketer names and dosage forms using the actual nested schema paths
+    const [marketerNames, dosageForms] = await Promise.all([
+      collection.distinct('taxonomy.marketer_name', { 'taxonomy.marketer_name': { $exists: true, $ne: null, $ne: '' } }),
+      collection.distinct('packaging.product_form', { 'packaging.product_form': { $exists: true, $ne: null, $ne: '' } }),
     ]);
 
-    const marketers = Array.from(new Set([...marketerNames, ...manufacturerNames])).filter(Boolean).sort();
+    const marketers = Array.from(new Set(marketerNames)).filter(Boolean).sort();
 
     return NextResponse.json(
-      { marketers, dosageForms },
+      { marketers, dosageForms: dosageForms.filter(Boolean).sort() },
       { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60' } }
     );
   } catch (err: any) {

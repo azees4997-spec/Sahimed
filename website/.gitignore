@@ -39,3 +39,8 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+# AI query history / scratch files (may contain secrets)
+sahimed_queries/
+scratch/
+*.code-workspace

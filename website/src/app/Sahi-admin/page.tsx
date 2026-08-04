@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ShieldCheck, 
@@ -57,6 +58,7 @@ import { MarketingTab } from './components/MarketingTab';
 import { OrderNotification } from './components/OrderNotification';
 import { BrandingTab } from './components/BrandingTab';
 import { AbandonedCartsTab } from './components/AbandonedCartsTab';
+import { MastersTab } from './components/MastersTab';
 
 const MASTER_UIDS = ["BM9HheYflheT0Wyj6olaEnyCAHl1", "RzB6nqlQumg1VEniFcZrgbcDdRA2"];
 
@@ -343,38 +345,38 @@ function AdminConsoleContent() {
     <PageTransition>
       <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-32">
         <OrderNotification />
-        <header className="fixed top-0 left-0 right-0 z-50 bg-white/40 backdrop-blur-2xl border-b border-white shadow-lg">
-          <div className="max-w-[1600px] mx-auto px-8 md:px-12 h-24 flex items-center justify-between">
-            <div className="flex items-center gap-8">
-              <Link href="/" className="group flex items-center gap-4">
-                <div className="w-14 h-14 bg-primary rounded-[20px] shadow-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                  <Zap className="w-8 h-8 text-white fill-white" />
+        <header className="bg-white/40 backdrop-blur-2xl border-b border-white shadow-sm">
+          <div className="max-w-[1600px] mx-auto px-6 h-12 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Link href="/" className="group flex items-center gap-2">
+                <div className="relative w-8 h-8 rounded-lg overflow-hidden group-hover:scale-105 transition-transform duration-300">
+                  <Image src="/logo.png" alt="SahiMed Logo" fill className="object-contain" />
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-2xl font-black tracking-tighter text-slate-900 uppercase font-outfit leading-none">SahiMed</h1>
-                  <p className="text-[10px] font-black text-slate-500 tracking-[0.5em] uppercase">Admin Dashboard 4.0</p>
+                  <h1 className="text-sm font-black tracking-tight text-slate-900 uppercase font-outfit leading-none">SahiMed</h1>
+                  <p className="text-[7px] font-black text-slate-400 tracking-[0.25em] uppercase">Dashboard</p>
                 </div>
               </Link>
             </div>
 
-            <div className="flex items-center gap-6">
-              <div className="hidden lg:flex flex-col items-end mr-6 border-r border-slate-200 pr-8">
-                 <p className="text-[11px] font-black text-slate-500 tracking-[0.3em] uppercase">Session Active</p>
-                 <p className="text-sm font-black text-primary uppercase">{user?.email}</p>
+            <div className="flex items-center gap-3">
+              <div className="hidden lg:flex flex-col items-end mr-2 border-r border-slate-200 pr-4">
+                 <p className="text-[7px] font-black text-slate-400 tracking-[0.1em] uppercase">Session Active</p>
+                 <p className="text-[10px] font-black text-primary uppercase">{user?.email}</p>
               </div>
               <Button 
                 onClick={handleLogout}
                 variant="ghost" 
                 size="icon" 
-                className="w-14 h-14 rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-lg active:scale-90"
+                className="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-90"
               >
-                <LogOut className="w-6 h-6" />
+                <LogOut className="w-3.5 h-3.5" />
               </Button>
             </div>
           </div>
         </header>
 
-        <main className="max-w-[1600px] mx-auto px-8 md:px-12 pt-40 pb-20">
+        <main className="max-w-[1600px] mx-auto px-8 md:px-12 pt-10 pb-20">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -402,6 +404,7 @@ function AdminConsoleContent() {
               {(permissions.staff_manage || userRole === 'admin') && activeTab === 'maintenance' && <MaintenanceTab onBack={() => handleTabChange('overview')} />}
               {activeTab === 'marketing' && <MarketingTab onBack={() => handleTabChange('overview')} />}
               {userRole === 'admin' && activeTab === 'branding' && <BrandingTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {(permissions.inventory_manage || userRole === 'admin') && activeTab === 'masters' && <MastersTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
             </motion.div>
           </AnimatePresence>
         </main>

@@ -1,9 +1,7 @@
-
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
-import { messaging } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -17,40 +15,73 @@ export async function GET(
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const collection = db.collection('products');
+    const col = db.collection('Product Master');
 
-    const query: any = {
-      $or: [
-        { _id: id as any },
-      ]
-    };
+    // Try matching by ObjectId, product_id string, or _id string
+    let product = null;
+
+    // Try as ObjectId first
     if (id.length === 24) {
       try {
-        query.$or.push({ _id: new ObjectId(id) });
+        product = await col.findOne({ _id: new ObjectId(id) });
       } catch (e) {}
     }
 
-    const product = await collection.findOne(query);
+    // Try as string _id or product_id
+    if (!product) {
+      product = await col.findOne({
+        $or: [
+          { _id: id as any },
+          { product_id: id },
+          { 'seo.url_slug': { $regex: escapeForSlug(id), $options: 'i' } }
+        ]
+      });
+    }
 
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    if (product.isActive === false) {
+    // Check salable status for non-admin access
+    if (product.salable_status && !product.salable_status.toLowerCase().includes('salable')) {
       try {
-        const admin = await verifyAdmin(request);
-        if (!admin) {
-          return NextResponse.json({ error: 'Product unavailable' }, { status: 403 });
-        }
-      } catch (authErr) {
+        await verifyAdmin(request);
+      } catch {
         return NextResponse.json({ error: 'Product unavailable' }, { status: 403 });
       }
     }
 
-    return NextResponse.json({ ...product, id: product._id.toString() });
+    // Return with legacy field aliases for backward compatibility
+    const normalized = {
+      ...product,
+      id: product._id?.toString(),
+      name: product.product_name,
+      sku: product.product_id,
+      manufacturer: product.taxonomy?.marketer_name,
+      category: product.taxonomy?.category_name,
+      saltComposition: product.medical_info?.composition,
+      price: product.packaging?.mrp,
+      mrp: product.packaging?.mrp,
+      imageUrl: product.images?.[0] || '',
+      imageUrls: product.images || [],
+      prescriptionRequired: product.safety_warnings?.is_rx_required,
+      treatment: product.medical_info?.primary_use,
+      howToUse: product.medical_info?.how_to_use,
+      packSize: product.packaging?.packaging_detail,
+      moleculeId: product.molecule_code,
+      description: product.medical_info?.introduction,
+      safetyAdvice: product.safety_warnings?.interactions?.safety_advise,
+      sideEffects: product.medical_info?.side_effects || [],
+    };
+
+    return NextResponse.json(normalized);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
+}
+
+function escapeForSlug(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export async function PUT(
@@ -62,123 +93,26 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
     const client = await clientPromise;
-    const db = client.db("sahimed");
-    
-    // Remove _id and id from body if it exists to avoid MongoDB error on update
-    let { _id, id: _bodyId, liveData, ...updateData } = body;
+    const db = client.db('sahimed');
 
-    // Build the query to handle both string and ObjectId
-    const query: any = {
-      $or: [
-        { _id: id as any },
-      ]
-    };
+    const { _id, id: _bodyId, ...updateData } = body;
+
+    const query: any = { $or: [{ _id: id as any }, { product_id: id }] };
     if (id.length === 24) {
-      try {
-        query.$or.push({ _id: new ObjectId(id) });
-      } catch (e) { /* silent fail if not a valid ObjectId */ }
+      try { query.$or.push({ _id: new ObjectId(id) }); } catch (e) {}
     }
 
-    // INTELLIGENT MAPPING: Auto-link to molecule if missing
-    if (!updateData.moleculeId && updateData.saltComposition) {
-      const moleculesCol = db.collection('molecules');
-      const allMolecules = await moleculesCol.find({}).toArray();
-      const match = allMolecules.find(m => 
-        updateData.saltComposition.toLowerCase().includes((m.molecule || m.name || "").toLowerCase()) ||
-        (m.molecule || m.name || "").toLowerCase().includes(updateData.saltComposition.toLowerCase())
-      );
-      if (match) {
-        updateData.moleculeId = match._id || match.id;
-      }
-    }
-
-    // 1. Fetch current product to check old stock
-    const currentProduct = await db.collection("products").findOne(query);
-    const oldStock = Number(currentProduct?.availableQuantity || 0);
-    const newStock = updateData.availableQuantity !== undefined 
-      ? Number(updateData.availableQuantity) 
-      : oldStock;
-
-    const result = await db.collection("products").updateOne(
+    const result = await db.collection('Product Master').updateOne(
       query,
-      { 
-        $set: { ...updateData, updatedAt: new Date() },
-        $unset: { liveData: "", id: "", imageUrl2: "", imageUrl3: "" }
-      }
+      { $set: { ...updateData, updatedAt: new Date() } }
     );
 
     if (result.matchedCount === 0) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // 2. TRIGGER NOTIFICATIONS: If stock went from 0 to >0
-    if (oldStock === 0 && newStock > 0) {
-      console.log(`[BackInStock] Product ${id} replenished. Triggering notifications...`);
-      
-      // Find pending requests for this product
-      const requests = await db.collection('inventoryRequests').find({ 
-        productId: id, 
-        status: 'pending' 
-      }).toArray();
-
-      if (requests.length > 0) {
-        const productName = currentProduct?.name || "A product you were watching";
-
-        // Send notifications (async background loop)
-        const notifyUsers = async () => {
-          for (const req of requests) {
-            try {
-              let fcmToken = null;
-              if (req.userId) {
-                const userDoc = await db.collection('users').findOne({ uid: req.userId });
-                fcmToken = userDoc?.fcmToken;
-              }
-
-              if (fcmToken) {
-                try {
-                  await messaging.send({
-                    token: fcmToken,
-                    notification: {
-                      title: 'Back in Stock! 💊',
-                      body: `${productName} is now available at Sahimed. Order now before it runs out!`,
-                    },
-                    data: {
-                      type: 'stock_update',
-                      productId: id.toString(),
-                    },
-                    android: {
-                      priority: 'high',
-                      notification: {
-                        channelId: 'stock_alerts'
-                      }
-                    }
-                  });
-                  console.log(`[BackInStock] Notified user: ${req.userId} via FCM`);
-                } catch (fcmErr: any) {
-                  console.error(`[BackInStock] FCM Send Error for ${req.userId}:`, fcmErr.message);
-                }
-              } else {
-                console.log(`[BackInStock] No FCM token for user: ${req.userPhone || req.userId}`);
-              }
-              
-              // Mark as notified regardless of FCM success (to avoid spamming on next update if FCM fails)
-              await db.collection('inventoryRequests').updateOne(
-                { _id: req._id },
-                { $set: { status: 'notified', notifiedAt: new Date() } }
-              );
-            } catch (notifyErr) {
-              console.error(`[BackInStock] Failed to process notification request ${req._id}`, notifyErr);
-            }
-          }
-        };
-        // Fire and forget (don't block the API response)
-        notifyUsers();
-      }
-    }
-
     return NextResponse.json({ success: true, modifiedCount: result.modifiedCount });
   } catch (err: any) {
-    console.error('[API PUT Error]', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -191,20 +125,14 @@ export async function DELETE(
     await verifyAdmin(request);
     const { id } = await params;
     const client = await clientPromise;
-    const db = client.db("sahimed");
+    const db = client.db('sahimed');
 
-    const query: any = {
-      $or: [
-        { _id: id as any },
-      ]
-    };
+    const query: any = { $or: [{ _id: id as any }, { product_id: id }] };
     if (id.length === 24) {
-      try {
-        query.$or.push({ _id: new ObjectId(id) });
-      } catch (e) { /* silent fail */ }
+      try { query.$or.push({ _id: new ObjectId(id) }); } catch (e) {}
     }
 
-    const result = await db.collection("products").deleteOne(query);
+    const result = await db.collection('Product Master').deleteOne(query);
 
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
@@ -212,7 +140,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error('[API DELETE Error]', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

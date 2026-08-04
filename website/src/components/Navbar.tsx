@@ -145,6 +145,45 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
+  
+  // Mega Ribbon State
+  const [categoriesMap, setCategoriesMap] = useState<Record<string, string[]>>({});
+  const [topCategories, setTopCategories] = useState<string[]>([]);
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/categories?limit=1000')
+      .then(res => res.json())
+      .then(data => {
+        if (!cancelled && Array.isArray(data)) {
+          const catMap: Record<string, Set<string>> = {};
+          data.forEach(item => {
+            if (item.category && item.sub_category) {
+              if (!catMap[item.category]) catMap[item.category] = new Set();
+              catMap[item.category].add(item.sub_category);
+            }
+          });
+          
+          const formattedMap: Record<string, string[]> = {};
+          const counts: {cat: string, count: number}[] = [];
+          Object.keys(catMap).forEach(cat => {
+            const arr = Array.from(catMap[cat]);
+            formattedMap[cat] = arr;
+            counts.push({ cat, count: arr.length });
+          });
+
+          // Sort by number of subcategories, take top 8
+          counts.sort((a, b) => b.count - a.count);
+          const top8 = counts.slice(0, 8).map(c => c.cat);
+          
+          setCategoriesMap(formattedMap);
+          setTopCategories(top8);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
   const [newAddress, setNewAddress] = useState({
     houseNumber: '',
     street: '',
@@ -948,6 +987,92 @@ export default function Navbar() {
                 </motion.div>
               )}
             </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Mega Ribbon (Categories) - Desktop Only */}
+        <div className="hidden lg:block w-full border-t border-slate-100 bg-white shadow-sm relative z-[100]">
+          <div className="max-w-7xl mx-auto px-4 flex items-center gap-1 h-11">
+            {/* All Medicines Button */}
+            <Link href="/search" className="flex items-center gap-1.5 px-3 h-full text-[10px] font-black uppercase tracking-widest text-white bg-primary hover:bg-primary/90 transition-colors rounded-sm">
+              <span className="grid grid-cols-2 gap-0.5 w-3.5 h-3.5 shrink-0">
+                {[0,1,2,3].map(i => <span key={i} className="bg-white/80 rounded-[1px]" />)}
+              </span>
+              All
+            </Link>
+            
+            <div className="w-px h-5 bg-slate-200 mx-1" />
+
+            {topCategories.map(category => (
+              <div 
+                key={category} 
+                className="h-full flex items-center relative group"
+                onMouseEnter={() => setHoveredCategory(category)}
+                onMouseLeave={() => setHoveredCategory(null)}
+              >
+                <button className="text-[10px] font-black uppercase tracking-wider text-slate-600 hover:text-primary transition-colors flex items-center gap-1 px-2.5 h-full border-b-2 border-transparent hover:border-primary/60 whitespace-nowrap">
+                  {category.length > 14 ? category.slice(0, 14) + '…' : category}
+                  <ChevronDown className={cn("w-3 h-3 transition-transform shrink-0", hoveredCategory === category && "rotate-180 text-primary")} />
+                </button>
+                
+                {/* Mega Dropdown */}
+                <AnimatePresence>
+                  {hoveredCategory === category && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 6 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute top-full left-0 min-w-[240px] bg-white border border-slate-100 shadow-xl rounded-b-2xl rounded-tr-2xl p-3 mt-0 z-[200]"
+                    >
+                      {/* Category Header */}
+                      <div className="px-3 pb-2 mb-1 border-b border-slate-100">
+                        <Link 
+                          href={`/search?c=${encodeURIComponent(category)}`}
+                          onClick={() => setHoveredCategory(null)}
+                          className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline"
+                        >
+                          {category} →
+                        </Link>
+                      </div>
+                      <div className="space-y-0.5">
+                        {categoriesMap[category].slice(0, 5).map(sub => (
+                          <Link 
+                            key={sub} 
+                            href={`/search?q=${encodeURIComponent(sub)}`}
+                            onClick={() => setHoveredCategory(null)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-primary/5 transition-colors group/sub"
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary/30 group-hover/sub:bg-primary transition-colors" />
+                            <span className="text-[11px] font-semibold text-slate-600 group-hover/sub:text-primary transition-colors">{sub}</span>
+                          </Link>
+                        ))}
+                        {categoriesMap[category].length > 5 && (
+                          <Link 
+                            href={`/search?c=${encodeURIComponent(category)}`}
+                            onClick={() => setHoveredCategory(null)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-50 transition-colors"
+                          >
+                            <span className="text-[10px] font-black text-primary uppercase tracking-wider">+{categoriesMap[category].length - 5} more →</span>
+                          </Link>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+            
+            {/* Divider + Offers link */}
+            {topCategories.length > 0 && (
+              <>
+                <div className="w-px h-5 bg-slate-200 mx-1 ml-auto" />
+                <Link href="/search" className="text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-700 transition-colors px-2 flex items-center gap-1 whitespace-nowrap">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Up to 61% OFF
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>

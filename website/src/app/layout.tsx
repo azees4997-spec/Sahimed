@@ -7,8 +7,10 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import MobileCartBar from '@/components/MobileCartBar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
+import WhatsAppFloat from '@/components/WhatsAppFloat';
 import { Outfit, Poppins } from 'next/font/google';
 import LocationSync from '@/components/LocationSync';
+import RxDisclaimerBanner from '@/components/RxDisclaimerBanner';
 import { unstable_cache } from 'next/cache';
 
 import Script from 'next/script';
@@ -254,10 +256,12 @@ export default async function RootLayout({
             <CartProvider>
               <LocationSync />
               <div className="flex flex-col min-h-screen overflow-x-hidden max-w-full relative">
+                <RxDisclaimerBanner />
                 <main className="flex-1 overflow-x-hidden max-w-full relative">
                   {children}
                   <Footer initialPages={initialPages} />
                 </main>
+                <WhatsAppFloat />
                 <BottomNav />
                 <MobileCartBar />
               </div>

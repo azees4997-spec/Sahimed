@@ -4,7 +4,7 @@ import { verifyAdmin } from '@/lib/auth-utils';
 
 export const dynamic = 'force-dynamic';
 
-const MOLECULE_FIELDS = ['Molecule Code', 'Composition', 'Product Form'];
+const CATEGORY_FIELDS = ['category_id', 'category', 'sub_category', 'product_count', 'source_catalog'];
 
 export async function GET(request: Request) {
   try {
@@ -13,17 +13,17 @@ export async function GET(request: Request) {
 
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const molecules = await db.collection('Molecule Master').find({}).toArray();
+    const categories = await db.collection('Category Master').find({}).toArray();
 
     const headers = fieldsParam 
-      ? fieldsParam.split(',').map(f => f.trim()).filter(f => MOLECULE_FIELDS.includes(f)) 
-      : MOLECULE_FIELDS;
+      ? fieldsParam.split(',').map(f => f.trim()).filter(f => CATEGORY_FIELDS.includes(f)) 
+      : CATEGORY_FIELDS;
 
     const csvContent = [
       headers.join(','),
-      ...molecules.map(m => {
+      ...categories.map(c => {
         return headers.map(h => {
-          let val = m[h] ?? '';
+          let val = c[h] ?? '';
           if (typeof val === 'string') {
             val = val.replace(/"/g, '""');
             if (val.includes(',') || val.includes('\n')) val = `"${val}"`;
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     return new Response(csvContent, {
       headers: {
         'Content-Type': 'text/csv',
-        'Content-Disposition': 'attachment; filename=sahimed_molecule_master_export.csv'
+        'Content-Disposition': 'attachment; filename=sahimed_category_master_export.csv'
       }
     });
   } catch (err: any) {
@@ -47,19 +47,21 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     await verifyAdmin(request);
-    const molecules = await request.json();
+    const categories = await request.json();
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const col = db.collection('Molecule Master');
+    const col = db.collection('Category Master');
 
-    const ops = molecules.map((m: any) => ({
+    const ops = categories.map((c: any) => ({
       updateOne: {
-        filter: { 'Molecule Code': m['Molecule Code'] },
+        filter: { category_id: c.category_id },
         update: { 
           $set: { 
-            'Molecule Code': m['Molecule Code'],
-            Composition: m.Composition,
-            'Product Form': m['Product Form'] || '',
+            category_id: c.category_id,
+            category: c.category,
+            sub_category: c.sub_category,
+            product_count: c.product_count || '0',
+            source_catalog: c.source_catalog || 'OTC',
             updatedAt: new Date() 
           } 
         },
@@ -69,7 +71,7 @@ export async function POST(request: Request) {
 
     await col.bulkWrite(ops);
 
-    return NextResponse.json({ success: true, count: molecules.length });
+    return NextResponse.json({ success: true, count: categories.length });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

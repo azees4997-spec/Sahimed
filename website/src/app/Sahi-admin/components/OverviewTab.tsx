@@ -36,11 +36,9 @@ export function OverviewTab({ setTab, role }: { setTab: (t: AdminTab) => void, r
     { label: 'Coupons', icon: Ticket, desc: 'Manage discounts', tab: 'promocodes', color: 'text-purple-500', bg: 'bg-purple-50' },
     { label: 'Fees', icon: Receipt, desc: 'Delivery & packing', tab: 'fees', color: 'text-orange-500', bg: 'bg-orange-50' },
     { label: 'Banners', icon: ImageIcon, desc: 'Home promotions', tab: 'banners', color: 'text-amber-500', bg: 'bg-amber-50' },
-    { label: 'Categories', icon: Tag, desc: 'Manage shop sections', tab: 'categories', color: 'text-rose-500', bg: 'bg-rose-50' },
     { label: 'Customers', icon: Users, desc: 'Manage registrations', tab: 'customers', color: 'text-indigo-500', bg: 'bg-indigo-50' },
     { label: 'Alerts', icon: Megaphone, desc: 'App notifications', tab: 'stockAlerts', color: 'text-red-500', bg: 'bg-red-50' },
-    { label: 'Inventory', icon: Package, desc: 'Products & stock', tab: 'itemMaster', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Molecules', icon: Dna, desc: 'Generic salt database', tab: 'moleculeMaster', color: 'text-teal-500', bg: 'bg-teal-50' },
+    { label: 'Masters', icon: Database, desc: 'Products, Categories, Marketers, Molecules', tab: 'masters', color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { label: 'Analytics', icon: LineChart, desc: 'Search insights', tab: 'searchAnalytics', color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Pages', icon: FileCode, desc: 'Website content', tab: 'pages', color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
     { label: 'Inventory Update', icon: Zap, desc: 'Quick Price & Stock', tab: 'inventory', color: 'text-emerald-500', bg: 'bg-emerald-50' },
@@ -63,23 +61,20 @@ export function OverviewTab({ setTab, role }: { setTab: (t: AdminTab) => void, r
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5"
     >
       {filteredStats.map(card => (
         <motion.div key={card.label} variants={itemVariants}>
           <Card 
-            className="rounded-[56px] p-10 border-none shadow-xl hover:shadow-3xl transition-all cursor-pointer bg-white/60 backdrop-blur-md group text-center flex flex-col items-center justify-center min-h-[280px] border border-white active:scale-95" 
+            className="rounded-[24px] p-6 border-none shadow-sm hover:shadow-lg transition-all cursor-pointer bg-white/70 backdrop-blur-md group text-center flex flex-col items-center justify-center min-h-[190px] border border-white/20 active:scale-95 duration-300" 
             onClick={() => setTab(card.tab as AdminTab)}
           >
-            <div className={cn("w-20 h-20 rounded-[32px] flex items-center justify-center mb-8 group-hover:scale-110 transition-all duration-500 shadow-inner", card.bg, card.color)}>
-               <card.icon className="w-10 h-10" />
+            <div className={cn("w-12 h-12 rounded-[14px] flex items-center justify-center mb-4 group-hover:scale-105 transition-all duration-300 shadow-sm", card.bg, card.color)}>
+               <card.icon className="w-5 h-5" />
             </div>
             <div className="space-y-1">
-              <CardTitle className="text-base font-black text-slate-900 tracking-tight uppercase font-outfit">{card.label}</CardTitle>
-              <p className="text-[11px] font-black text-slate-800 tracking-[0.2em] uppercase leading-relaxed">{card.desc}</p>
-            </div>
-            <div className="mt-6 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-               <span className="text-[11px] font-black text-primary tracking-widest uppercase flex items-center gap-2">Open Section <ArrowRight className="w-4 h-4" /></span>
+              <CardTitle className="text-xs font-black text-slate-800 tracking-tight uppercase font-outfit">{card.label}</CardTitle>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-relaxed px-1">{card.desc}</p>
             </div>
           </Card>
         </motion.div>

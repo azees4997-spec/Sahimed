@@ -6,7 +6,6 @@ import { ObjectId } from 'mongodb';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// Helper to escape regex search query
 function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -14,8 +13,8 @@ function escapeRegExp(string: string) {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const qRaw = searchParams.get('q');
-  let limitValue = parseInt(searchParams.get('limit') || '500');
-  if (isNaN(limitValue) || limitValue < 1) limitValue = 500;
+  let limitValue = parseInt(searchParams.get('limit') || '100');
+  if (isNaN(limitValue) || limitValue < 1) limitValue = 100;
 
   try {
     const client = await clientPromise;
@@ -24,24 +23,21 @@ export async function GET(request: Request) {
     const query: any = {};
     if (qRaw) {
       query.$or = [
-        { category: { $regex: escapeRegExp(qRaw), $options: 'i' } },
-        { sub_category: { $regex: escapeRegExp(qRaw), $options: 'i' } },
-        { category_id: { $regex: escapeRegExp(qRaw), $options: 'i' } }
+        { supplier_name: { $regex: escapeRegExp(qRaw), $options: 'i' } },
+        { supplier_code: { $regex: escapeRegExp(qRaw), $options: 'i' } },
+        { 'compliance_details.gstin': { $regex: escapeRegExp(qRaw), $options: 'i' } }
       ];
     }
 
-    const categories = await db.collection('Category Master')
+    const suppliers = await db.collection('Supplier Master')
       .find(query)
-      .sort({ category: 1 })
+      .sort({ supplier_name: 1 })
       .limit(limitValue)
       .toArray();
 
-    // Map `_id` to `id` for compatibility
-    return NextResponse.json(categories.map(c => ({
-      ...c,
-      id: c._id?.toString(),
-      // Backward compatibility aliases
-      name: c.category
+    return NextResponse.json(suppliers.map(s => ({
+      ...s,
+      id: s._id?.toString()
     })));
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -55,14 +51,17 @@ export async function POST(request: Request) {
     const client = await clientPromise;
     const db = client.db('sahimed');
 
-    const result = await db.collection('Category Master').insertOne({
-      category_id: body.category_id,
-      category: body.category,
-      sub_category: body.sub_category,
-      product_count: body.product_count,
-      source_catalog: body.source_catalog,
-      imageUrl: body.imageUrl || '',
-      showOnHomepage: body.showOnHomepage === true,
+    const result = await db.collection('Supplier Master').insertOne({
+      supplier_code: body.supplier_code,
+      supplier_name: body.supplier_name,
+      compliance_details: {
+        gstin: body.compliance_details?.gstin || '',
+        drug_license_number: body.compliance_details?.drug_license_number || ''
+      },
+      financials: {
+        credit_days: Number(body.financials?.credit_days || 0),
+        is_active: body.financials?.is_active ?? true
+      },
       createdAt: new Date(),
       updatedAt: new Date()
     });
