@@ -132,81 +132,167 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
   return (
     <div className="space-y-8 sm:space-y-14 pb-0 sm:pb-16 overflow-x-hidden max-w-full">
 
-      {/* ── PlatinumRx-Style 100% Seamless Hero Banner (100vw Full-Bleed Edge-to-Edge) ── */}
-      <motion.section 
-        variants={fadeUp} initial="hidden" animate="visible" 
+      {/* ══════════════════════════════════════════════════════
+          PREMIUM PASTEL HERO — Full-Bleed Edge-to-Edge
+          ══════════════════════════════════════════════════════ */}
+      <motion.section
+        variants={fadeUp} initial="hidden" animate="visible"
         className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden my-0"
       >
-        <div className="relative w-full min-h-[380px] sm:min-h-[440px] lg:min-h-[480px] bg-[#fdebeb] overflow-hidden flex items-center">
-          
-          <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 py-8 sm:py-12 flex flex-col md:flex-row items-center justify-between gap-8 sm:gap-12">
-            
-            {/* Left Column: Bold PlatinumRx Style Typography & Checkmarks */}
+        {/* Hero Background: soft lavender-peach gradient */}
+        <div className="relative w-full min-h-[400px] sm:min-h-[460px] lg:min-h-[500px] overflow-hidden flex items-center"
+          style={{ background: 'linear-gradient(135deg, #fdf6ff 0%, #fff0f7 35%, #f0fffe 70%, #fffbeb 100%)' }}
+        >
+          {/* Decorative blobs */}
+          <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full opacity-40 pointer-events-none blur-3xl" style={{ background: 'radial-gradient(circle, #d8b4fe, #a78bfa)' }} />
+          <div className="absolute -bottom-16 -right-10 w-80 h-80 rounded-full opacity-30 pointer-events-none blur-3xl" style={{ background: 'radial-gradient(circle, #6ee7b7, #34d399)' }} />
+          <div className="absolute top-10 right-1/3 w-40 h-40 rounded-full opacity-20 pointer-events-none blur-2xl" style={{ background: 'radial-gradient(circle, #fda4af, #fb7185)' }} />
+
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 py-10 sm:py-14 flex flex-col md:flex-row items-center justify-between gap-8 sm:gap-12">
+
+            {/* ── Left: Typography + Bullets + CTAs ── */}
             <div className="space-y-6 text-center md:text-left max-w-2xl">
-              
-              {/* Headline */}
-              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.08]">
-                Switch to Branded <br />
-                <span className="text-[#f43f5e] font-black">Generics</span>
+
+              {/* Label pill */}
+              <span className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border shadow-sm"
+                style={{ background: 'rgba(167,139,250,0.15)', borderColor: 'rgba(167,139,250,0.4)', color: '#7c3aed' }}
+              >
+                🏥 India&apos;s Trusted Pharmacy
+              </span>
+
+              {/* Headline with gradient text */}
+              <h1 className="text-4xl sm:text-6xl lg:text-[4.5rem] font-black tracking-tight leading-[1.06]">
+                <span className="text-slate-900">Switch to</span><br />
+                <span className="text-slate-900">Branded </span>
+                <span style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777, #f43f5e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  Generics
+                </span>
               </h1>
 
-              {/* 3 Green Checkmark Bullets */}
-              <div className="space-y-3.5 pt-2">
-                <div className="flex items-center justify-center md:justify-start gap-3.5">
-                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
-                    ✓
-                  </div>
-                  <span className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight">
-                    Trusted by 10L+ users
-                  </span>
-                </div>
+              {/* Subheadline */}
+              <p className="text-sm sm:text-base text-slate-500 font-medium max-w-md">
+                Same formula as branded drugs — certified quality, verified by pharmacists, delivered to your door.
+              </p>
 
-                <div className="flex items-center justify-center md:justify-start gap-3.5">
-                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
-                    ✓
+              {/* 3 Premium Checkmark Bullets */}
+              <div className="space-y-3 pt-1">
+                {[
+                  { text: 'Trusted by thousands of customers', color: '#059669', bg: 'rgba(5,150,105,0.12)' },
+                  { text: 'WHO & FDA Certified', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
+                  { text: 'Save upto 60% on MRP', color: '#db2777', bg: 'rgba(219,39,119,0.12)' },
+                ].map((b, i) => (
+                  <div key={i} className="flex items-center justify-center md:justify-start gap-3">
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center font-black text-sm shrink-0 shadow-md"
+                      style={{ background: b.bg, color: b.color, border: `1.5px solid ${b.color}30` }}
+                    >
+                      ✓
+                    </div>
+                    <span className="text-base sm:text-lg font-bold text-slate-800">{b.text}</span>
                   </div>
-                  <span className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight">
-                    Save upto 60%
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-center md:justify-start gap-3.5">
-                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
-                    ✓
-                  </div>
-                  <span className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight">
-                    Doctor Approved
-                  </span>
-                </div>
+                ))}
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-center md:justify-start gap-4 pt-4 flex-wrap">
-                <Link 
-                  href="/search" 
-                  className="px-8 py-4 bg-primary hover:bg-primary/90 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-primary/25 hover:scale-105 transition-all duration-200 flex items-center gap-2"
+              <div className="flex items-center justify-center md:justify-start gap-3 pt-2 flex-wrap">
+                <Link
+                  href="/search"
+                  className="px-7 py-3.5 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-2"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)', boxShadow: '0 8px 24px rgba(124,58,237,0.35)' }}
                 >
-                  Browse Generics Now <ChevronRight className="w-4 h-4" />
+                  Shop Now <ChevronRight className="w-4 h-4" />
                 </Link>
-                <Link 
-                  href="/prescription" 
-                  className="px-8 py-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl shadow-sm transition-all"
+                <Link
+                  href="/prescription"
+                  className="px-7 py-3.5 bg-white/80 backdrop-blur-sm hover:bg-white border border-purple-200 text-slate-800 font-black text-sm uppercase tracking-wider rounded-2xl shadow-sm transition-all"
                 >
-                  Upload Prescription
+                  Upload Rx
                 </Link>
+              </div>
+
+              {/* Tiny trust stats row */}
+              <div className="flex items-center justify-center md:justify-start gap-4 pt-1 flex-wrap">
+                {[
+                  { val: '10K+', label: 'Customers' },
+                  { val: '4.8★', label: 'Rating' },
+                  { val: '60%', label: 'Max Savings' },
+                ].map((s, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <p className="text-lg font-black" style={{ color: '#7c3aed' }}>{s.val}</p>
+                    <p className="text-xs text-slate-500 font-medium">{s.label}</p>
+                    {i < 2 && <div className="w-px h-4 bg-slate-200 ml-1" />}
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Right Column: 100% Seamless Person Image matching bg-[#fdebeb] */}
-            <div className="relative shrink-0 w-72 sm:w-86 md:w-[460px] lg:w-[540px] h-[340px] sm:h-[400px] lg:h-[460px] flex items-end justify-center">
-              <Image 
-                src="/images/hero_generics_ambassador.jpg" 
-                alt="SahiMed Certified Doctor Brand Ambassador" 
-                fill 
+            {/* ── Right: Hero Image with floating badges ── */}
+            <div className="relative shrink-0 w-72 sm:w-80 md:w-[420px] lg:w-[500px] h-[360px] sm:h-[420px] lg:h-[470px] flex items-end justify-center">
+              {/* Soft glow ring behind image */}
+              <div className="absolute inset-8 rounded-full blur-2xl opacity-30 pointer-events-none"
+                style={{ background: 'radial-gradient(circle, #a78bfa 0%, #f9a8d4 50%, #6ee7b7 100%)' }}
+              />
+              <Image
+                src="/images/hero_generics_ambassador.jpg"
+                alt="SahiMed Certified Doctor Brand Ambassador"
+                fill
                 className="object-cover object-center"
                 priority
               />
+
+              {/* Floating badge: Savings */}
+              <div className="absolute top-4 left-0 sm:-left-4 flex items-center gap-2 bg-white/90 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-xl border border-pink-100">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: 'linear-gradient(135deg,#fdf2f8,#fce7f3)' }}>💊</div>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Save upto</p>
+                  <p className="text-base font-black" style={{ color: '#db2777' }}>60% OFF</p>
+                </div>
+              </div>
+
+              {/* Floating badge: Certification */}
+              <div className="absolute bottom-10 right-0 sm:-right-4 flex items-center gap-2 bg-white/90 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-xl border border-purple-100">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: 'linear-gradient(135deg,#f5f3ff,#ede9fe)' }}>🏅</div>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Certified</p>
+                  <p className="text-sm font-black" style={{ color: '#7c3aed' }}>WHO & FDA</p>
+                </div>
+              </div>
             </div>
+          </div>
+        </div>
+
+        {/* ── Pastel Trust Ticker Strip ── */}
+        <div className="w-full overflow-hidden py-3 border-y"
+          style={{ background: 'linear-gradient(90deg, #f5f3ff, #fdf2f8, #ecfdf5, #fffbeb, #f5f3ff)', borderColor: 'rgba(167,139,250,0.2)' }}
+        >
+          <div className="flex gap-0 animate-marquee w-max">
+            {[
+              ...[
+                { icon: '✅', text: 'Trusted by Thousands' },
+                { icon: '🏅', text: 'WHO & FDA Certified' },
+                { icon: '💊', text: 'Save upto 60% on MRP' },
+                { icon: '🚚', text: 'Free Delivery ₹499+' },
+                { icon: '🏥', text: 'Licensed Pharmacy KA-B51' },
+                { icon: '⭐', text: '4.8 Star Rating' },
+                { icon: '📦', text: '50,000+ Medicines' },
+                { icon: '⚡', text: '24hr Express Delivery' },
+              ],
+              ...[
+                { icon: '✅', text: 'Trusted by Thousands' },
+                { icon: '🏅', text: 'WHO & FDA Certified' },
+                { icon: '💊', text: 'Save upto 60% on MRP' },
+                { icon: '🚚', text: 'Free Delivery ₹499+' },
+                { icon: '🏥', text: 'Licensed Pharmacy KA-B51' },
+                { icon: '⭐', text: '4.8 Star Rating' },
+                { icon: '📦', text: '50,000+ Medicines' },
+                { icon: '⚡', text: '24hr Express Delivery' },
+              ],
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 mx-6 shrink-0">
+                <span className="text-sm">{item.icon}</span>
+                <span className="text-[11px] font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap">{item.text}</span>
+                <span className="text-slate-300 mx-1">·</span>
+              </div>
+            ))}
           </div>
         </div>
       </motion.section>
@@ -218,19 +304,25 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }}
         className="space-y-4"
       >
+
         {/* Section Header */}
         <div className="flex items-end justify-between px-1">
           <div>
-            <span className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 px-2.5 py-1 rounded-full">
-              Explore Healthcare
+            <span className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm mb-2"
+              style={{ background: 'rgba(124,58,237,0.1)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.2)' }}
+            >
+              💊 Explore Healthcare
             </span>
-            <h2 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none mt-2">
-              Top Medical <span className="text-primary">Categories</span>
+            <h2 className="text-xl sm:text-3xl font-black tracking-tight leading-none text-slate-900">
+              Top Medical{' '}
+              <span style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Categories</span>
             </h2>
             <p className="text-xs text-slate-500 font-medium mt-1">Sahi Dawai, Sahi Daam Pe — Genuine stock up to 61% OFF</p>
           </div>
-          <Link href="/search" className="text-[11px] font-black text-primary uppercase tracking-wider flex items-center gap-0.5 hover:underline bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10">
-            View All Categories <ChevronRight className="w-3.5 h-3.5" />
+          <Link href="/search" className="text-[11px] font-black uppercase tracking-wider flex items-center gap-0.5 hover:underline px-3 py-1.5 rounded-full border"
+            style={{ color: '#7c3aed', background: 'rgba(124,58,237,0.08)', borderColor: 'rgba(124,58,237,0.2)' }}
+          >
+            View All <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
@@ -239,12 +331,25 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
           {featuredCats.map((cat: any, i: number) => {
             const style = getCategoryStyle(cat.name || '');
             const imgSrc = (cat.imageUrl && !cat.imageUrl.includes('picsum')) ? cat.imageUrl : style.image;
+            // Per-category pastel accent colors for card footer
+            const cardAccents = [
+              { bg: 'rgba(124,58,237,0.1)', color: '#7c3aed', glow: 'rgba(124,58,237,0.15)' },
+              { bg: 'rgba(219,39,119,0.1)', color: '#db2777', glow: 'rgba(219,39,119,0.15)' },
+              { bg: 'rgba(5,150,105,0.1)', color: '#059669', glow: 'rgba(5,150,105,0.15)' },
+              { bg: 'rgba(217,119,6,0.1)', color: '#d97706', glow: 'rgba(217,119,6,0.15)' },
+              { bg: 'rgba(59,130,246,0.1)', color: '#3b82f6', glow: 'rgba(59,130,246,0.15)' },
+              { bg: 'rgba(239,68,68,0.1)', color: '#ef4444', glow: 'rgba(239,68,68,0.15)' },
+              { bg: 'rgba(20,184,166,0.1)', color: '#14b8a6', glow: 'rgba(20,184,166,0.15)' },
+              { bg: 'rgba(168,85,247,0.1)', color: '#a855f7', glow: 'rgba(168,85,247,0.15)' },
+            ];
+            const accent = cardAccents[i % cardAccents.length];
 
             return (
               <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
                 <Link
                   href={`/search?c=${encodeURIComponent(cat.name)}`}
-                  className="group relative flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-100 shadow-md hover:shadow-2xl hover:shadow-primary/15 transition-all duration-500 hover:-translate-y-1.5 bg-white"
+                  className="group relative flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl transition-all duration-500 hover:-translate-y-2 bg-white"
+                  style={{ border: `1.5px solid ${accent.color}30`, boxShadow: `0 4px 20px ${accent.glow}` }}
                 >
                   {/* Category Image Header */}
                   <div className="relative w-full aspect-[4/3] overflow-hidden bg-slate-50">
@@ -255,25 +360,31 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
                       className="object-cover transition-transform duration-700 group-hover:scale-110"
                       priority={i < 4}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
-                    
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity" />
+
                     {/* Discount badge */}
-                    <div className="absolute top-2.5 left-2.5 bg-rose-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-md">
+                    <div className="absolute top-2.5 left-2.5 text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md"
+                      style={{ background: `linear-gradient(135deg, ${accent.color}, ${accent.color}cc)` }}
+                    >
                       UP TO 61% OFF
                     </div>
                   </div>
 
                   {/* Name and Action */}
-                  <div className="p-3 sm:p-4 bg-white flex items-center justify-between border-t border-slate-100 group-hover:bg-primary transition-colors duration-300">
+                  <div className="p-3 sm:p-4 flex items-center justify-between transition-all duration-300"
+                    style={{ background: `${accent.bg}` }}
+                  >
                     <div>
-                      <h3 className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-tight leading-tight group-hover:text-white transition-colors line-clamp-1">
+                      <h3 className="text-xs sm:text-sm font-black uppercase tracking-tight leading-tight line-clamp-1" style={{ color: accent.color }}>
                         {cat.name}
                       </h3>
-                      <p className="text-[9px] font-medium text-slate-400 group-hover:text-white/80 transition-colors mt-0.5">
+                      <p className="text-[9px] font-medium text-slate-400 mt-0.5">
                         Pharmacist Verified
                       </p>
                     </div>
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 group-hover:bg-white text-primary group-hover:text-primary flex items-center justify-center font-black text-xs transition-colors shrink-0 ml-2">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center font-black text-xs shadow-sm shrink-0 ml-2"
+                      style={{ color: accent.color }}
+                    >
                       →
                     </div>
                   </div>
@@ -337,45 +448,52 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         </motion.section>
       )}
 
-      {/* ════════════════════════════════════════════════
-          THE SAHIMED ADVANTAGE — light, colorful version
-          ════════════════════════════════════════════════ */}
+      {/* ══════════════════════════════════════════════════════
+          THE SAHIMED ADVANTAGE — Premium Pastel Cards
+          ══════════════════════════════════════════════════════ */}
       <motion.section
         variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }}
-        className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary/5 via-white to-violet-50 border border-primary/10 p-5 sm:p-10"
+        className="relative overflow-hidden rounded-3xl p-6 sm:p-10"
+        style={{ background: 'linear-gradient(135deg, #fdf6ff 0%, #fff0f7 50%, #f0fffe 100%)', border: '1px solid rgba(167,139,250,0.2)' }}
       >
-        {/* Soft decorations */}
-        <div className="absolute top-0 right-0 w-56 h-56 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-40 h-40 bg-violet-200/20 rounded-full blur-3xl pointer-events-none" />
+        {/* Blobs */}
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-30 pointer-events-none" style={{ background: 'radial-gradient(circle, #d8b4fe, #a78bfa)' }} />
+        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, #6ee7b7, #34d399)' }} />
 
         <div className="relative z-10">
-          <div className="text-center mb-6 sm:mb-10">
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 border border-primary/10 px-3 py-1 rounded-full mb-3">
-              Why Choose Sahimed
+          <div className="text-center mb-7 sm:mb-10">
+            <span className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-3 shadow-sm"
+              style={{ background: 'rgba(124,58,237,0.1)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.2)' }}
+            >
+              ✨ Why Choose SahiMed
             </span>
-            <h2 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
-              The <span className="text-primary">Sahimed</span> Advantage
+            <h2 className="text-xl sm:text-3xl font-black tracking-tight leading-tight text-slate-900">
+              The <span style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>SahiMed</span> Advantage
             </h2>
-            <p className="text-slate-500 text-xs sm:text-sm mt-1.5 font-medium">What makes us India's most trusted online pharmacy</p>
+            <p className="text-slate-500 text-xs sm:text-sm mt-2 font-medium">What makes us India&apos;s most trusted online pharmacy</p>
           </div>
 
+          {/* Pastel advantage cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
-            {ADVANTAGES.map((adv, i) => (
+            {[
+              { icon: BadgeCheck, val: '100%', sub: 'Genuine Medicines', desc: 'Sourced from licensed manufacturers', emoji: '💊', bg: 'linear-gradient(135deg,#ecfdf5,#d1fae5)', border: '#6ee7b7', color: '#059669' },
+              { icon: Award, val: '61%', sub: 'Max Savings', desc: 'Highest discounts on branded generics', emoji: '🏷️', bg: 'linear-gradient(135deg,#f5f3ff,#ede9fe)', border: '#a78bfa', color: '#7c3aed' },
+              { icon: Clock, val: '24hr', sub: 'Express Delivery', desc: 'Fastest medicine delivery in India', emoji: '🚚', bg: 'linear-gradient(135deg,#fff0f7,#fce7f3)', border: '#f9a8d4', color: '#db2777' },
+              { icon: ShieldCheck, val: 'Licensed', sub: 'Rx Pharmacy', desc: 'Drug License No. KA-B51-286602', emoji: '🔒', bg: 'linear-gradient(135deg,#fffbeb,#fef9c3)', border: '#fde68a', color: '#d97706' },
+            ].map((adv, i) => (
               <motion.div
-                key={i}
-                custom={i}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 flex flex-col gap-2 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+                key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
+                className="rounded-2xl p-4 sm:p-5 flex flex-col gap-3 hover:-translate-y-1.5 transition-all duration-300 cursor-default"
+                style={{ background: adv.bg, border: `1.5px solid ${adv.border}60`, boxShadow: `0 4px 20px ${adv.border}30` }}
               >
-                <div className={cn("w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center", adv.bg)}>
-                  <adv.icon className={cn("w-5 h-5 sm:w-6 sm:h-6", adv.color)} />
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm text-xl">
+                    {adv.emoji}
+                  </div>
                 </div>
                 <div>
-                  <p className={cn("text-xl sm:text-2xl font-black leading-none", adv.color)}>{adv.val}</p>
-                  <p className="text-xs font-black text-slate-700 mt-0.5 uppercase tracking-wide">{adv.sub}</p>
+                  <p className="text-xl sm:text-2xl font-black leading-none" style={{ color: adv.color }}>{adv.val}</p>
+                  <p className="text-xs font-black text-slate-700 mt-1 uppercase tracking-wide">{adv.sub}</p>
                 </div>
                 <p className="text-[10px] sm:text-[11px] text-slate-500 leading-relaxed font-medium hidden sm:block">{adv.desc}</p>
               </motion.div>
@@ -383,16 +501,16 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
           </div>
 
           {/* Certification pills */}
-          <div className="mt-6 pt-5 border-t border-slate-100 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+          <div className="mt-6 pt-5 border-t border-white/60 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
             {[
-              { icon: '🔒', label: 'Drug Lic. KA-B51-286602' },
-              { icon: '🌐', label: '256-bit SSL Encrypted' },
-              { icon: '🏥', label: 'Licensed Pharmacist' },
-              { icon: '⭐', label: 'Google Verified 4.8★' },
+              { icon: '🔒', label: 'Drug Lic. KA-B51-286602', color: '#d97706' },
+              { icon: '🌐', label: '256-bit SSL Encrypted', color: '#059669' },
+              { icon: '🏥', label: 'Licensed Pharmacist', color: '#7c3aed' },
+              { icon: '⭐', label: 'Google Verified 4.8★', color: '#db2777' },
             ].map((cert, i) => (
-              <div key={i} className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-full px-3 py-1.5 shadow-sm">
+              <div key={i} className="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-sm" style={{ border: `1px solid ${cert.color}30` }}>
                 <span className="text-sm">{cert.icon}</span>
-                <p className="text-[10px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap">{cert.label}</p>
+                <p className="text-[10px] font-black uppercase tracking-wider whitespace-nowrap" style={{ color: cert.color }}>{cert.label}</p>
               </div>
             ))}
           </div>
@@ -430,7 +548,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         </motion.section>
       )}
 
-      {/* ── 4 Promise Cards (replaces old dark strip) ── */}
+      {/* ── 4 Premium Pastel Promise Cards ── */}
       <motion.section
         variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
         className="grid grid-cols-2 sm:grid-cols-4 gap-3"
@@ -438,62 +556,53 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         {[
           {
             icon: '🚚',
-            bg: 'bg-teal-50',
-            border: 'border-teal-100',
-            iconBg: 'bg-teal-100',
+            bg: 'linear-gradient(135deg,#ecfdf5,#d1fae5)',
+            border: '#6ee7b7',
+            color: '#059669',
             title: 'Free Delivery',
             sub: 'On orders above ₹499',
             badge: '₹0 Delivery',
-            badgeCls: 'bg-teal-100 text-teal-700',
           },
           {
-            icon: '✅',
-            bg: 'bg-emerald-50',
-            border: 'border-emerald-100',
-            iconBg: 'bg-emerald-100',
+            icon: '🏅',
+            bg: 'linear-gradient(135deg,#f5f3ff,#ede9fe)',
+            border: '#a78bfa',
+            color: '#7c3aed',
             title: 'Certified Medicines',
             sub: 'Licensed pharmacy · Drug Lic. KA-B51',
             badge: 'Govt Certified',
-            badgeCls: 'bg-emerald-100 text-emerald-700',
           },
           {
-            icon: '📅',
-            bg: 'bg-violet-50',
-            border: 'border-violet-100',
-            iconBg: 'bg-violet-100',
+            icon: '📦',
+            bg: 'linear-gradient(135deg,#fff0f7,#fce7f3)',
+            border: '#f9a8d4',
+            color: '#db2777',
             title: 'Long Expiry',
             sub: 'Min 6 months expiry on every product',
-            badge: 'Freshness Assured',
-            badgeCls: 'bg-violet-100 text-violet-700',
+            badge: 'Fresh Stock',
           },
           {
             icon: '🔒',
-            bg: 'bg-blue-50',
-            border: 'border-blue-100',
-            iconBg: 'bg-blue-100',
+            bg: 'linear-gradient(135deg,#fffbeb,#fef9c3)',
+            border: '#fde68a',
+            color: '#d97706',
             title: 'Secure Payments',
             sub: '256-bit SSL · UPI · Cards · COD',
             badge: '100% Safe',
-            badgeCls: 'bg-blue-100 text-blue-700',
           },
         ].map((card, i) => (
           <motion.div
-            key={i}
-            custom={i}
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className={cn(
-              'flex flex-col gap-3 p-4 sm:p-5 rounded-2xl border hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300',
-              card.bg, card.border
-            )}
+            key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
+            className="flex flex-col gap-3 p-4 sm:p-5 rounded-2xl hover:-translate-y-1 transition-all duration-300 cursor-default"
+            style={{ background: card.bg, border: `1.5px solid ${card.border}60`, boxShadow: `0 4px 20px ${card.border}30` }}
           >
             <div className="flex items-center justify-between">
-              <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center text-xl', card.iconBg)}>
+              <div className="w-10 h-10 rounded-xl bg-white/60 backdrop-blur-sm flex items-center justify-center text-xl shadow-sm">
                 {card.icon}
               </div>
-              <span className={cn('text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full', card.badgeCls)}>
+              <span className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-white/70"
+                style={{ color: card.color }}
+              >
                 {card.badge}
               </span>
             </div>
