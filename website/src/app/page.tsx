@@ -100,7 +100,7 @@ export default async function Home() {
         {/* ══════════════════════════════════════════════════
             MAIN CONTENT (HomeClient handles everything below)
         ══════════════════════════════════════════════════ */}
-        <main className="max-w-7xl mx-auto px-4 pt-2 pb-10 md:pt-4 md:pb-16">
+        <main className="w-full px-4 sm:px-8 lg:px-12 pt-2 pb-10 md:pt-4 md:pb-16">
           <HomeClient
             banners={banners}
             categories={categories}
@@ -166,7 +166,7 @@ function HeroSection() {
         <div className="hidden lg:block absolute top-16 right-[45%] w-4 h-4 bg-rose-400/15 rounded-full" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-7 sm:py-10 md:py-12">
+      <div className="relative z-10 w-full px-4 sm:px-8 lg:px-12 py-7 sm:py-10 md:py-12">
         <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-12">
 
           {/* ─── LEFT: Main Copy ──────────────────────────────── */}
