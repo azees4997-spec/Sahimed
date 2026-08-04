@@ -145,45 +145,152 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         </div>
       </div>
 
-      {/* ── Mega Banner Carousel (Full Bleed Edge-to-Edge) ── */}
-      {displayBanners && displayBanners.length > 0 && (
-        <motion.section 
-          variants={fadeUp} initial="hidden" animate="visible" 
-          className="w-[calc(100%+2rem)] -mx-4 sm:w-[calc(100%+3rem)] sm:-mx-6 lg:w-[calc(100%+4rem)] lg:-mx-8 overflow-hidden"
+      {/* ── Mega Banner Carousel — 100% Code Constructed & 100vw Edge-to-Edge ── */}
+      <motion.section 
+        variants={fadeUp} initial="hidden" animate="visible" 
+        className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden my-4"
+      >
+        <Carousel
+          setApi={setApi}
+          plugins={[plugin.current]}
+          className="w-full relative group"
+          onMouseEnter={plugin.current.stop}
+          onMouseLeave={plugin.current.reset}
         >
-          <Carousel
-            setApi={setApi}
-            plugins={[plugin.current]}
-            className="w-full relative group"
-            onMouseEnter={plugin.current.stop}
-            onMouseLeave={plugin.current.reset}
-          >
-            <CarouselContent>
-              {displayBanners.map((banner: any, index: number) => (
-                <CarouselItem key={index}>
-                  <Link href={banner.link || '/search'} className="block relative w-full aspect-[21/9] sm:aspect-[21/7] rounded-none sm:rounded-3xl overflow-hidden shadow-xl border-y sm:border border-slate-100 group">
-                    <Image src={banner.imageUrl} alt={banner.title || 'Special Pharmacy Offer'} fill className="object-cover transition-transform duration-700 group-hover:scale-105" priority={index === 0} />
-                    {banner.title && (
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent flex flex-col justify-end p-5 sm:p-10">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary text-white rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest w-fit mb-2">
-                          ⚡ Limited Time Savings
+          <CarouselContent className="-ml-0">
+            {/* ── Slide 1: 61% Off Chronic Care ── */}
+            <CarouselItem className="pl-0">
+              <div className="relative w-full min-h-[300px] sm:min-h-[380px] lg:min-h-[420px] bg-gradient-to-r from-[#0f766e] via-[#0d9488] to-[#047857] overflow-hidden flex items-center shadow-2xl">
+                {/* Decorative background shapes */}
+                <div className="absolute -top-24 -left-24 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+                <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl" />
+                <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-teal-300/10 rounded-full blur-2xl" />
+
+                <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-12 w-full py-8 sm:py-12 flex flex-col md:flex-row items-center justify-between gap-8">
+                  {/* Left Column: Text & CTAs */}
+                  <div className="space-y-4 text-center md:text-left max-w-2xl">
+                    <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
+                      <span className="px-3.5 py-1 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-white text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
+                        ⚡ Limited Time Special Offer
+                      </span>
+                      <span className="px-3 py-1 bg-emerald-400/30 text-white rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+                        100% Genuine Generics
+                      </span>
+                    </div>
+
+                    <h2 className="text-white text-2xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight leading-[1.1]">
+                      Up to <span className="text-amber-300 underline decoration-amber-400/50 decoration-wavy">61% OFF</span> Chronic Care Medicines
+                    </h2>
+
+                    <p className="text-white/90 text-xs sm:text-base font-semibold max-w-xl leading-relaxed">
+                      Save thousands on Monthly Diabetes, Cardiac, BP & Cholesterol prescriptions. Directly sourced from WHO-GMP certified manufacturers.
+                    </p>
+
+                    <div className="flex items-center justify-center md:justify-start gap-3 pt-2 flex-wrap">
+                      <Link 
+                        href="/search?c=Chronic%20Care" 
+                        className="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-2"
+                      >
+                        Shop Generics Now <ChevronRight className="w-4 h-4" />
+                      </Link>
+                      <Link 
+                        href="/prescription" 
+                        className="px-6 py-3.5 bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-md text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl transition-all"
+                      >
+                        Upload Prescription
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Right Column: 3D-styled Interactive Offer Box */}
+                  <div className="relative shrink-0 flex items-center justify-center">
+                    <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-full bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-400 p-1 shadow-2xl animate-pulse">
+                      <div className="w-full h-full rounded-full bg-gradient-to-br from-orange-600 to-amber-600 flex flex-col items-center justify-center text-center p-6 border-4 border-amber-300/40">
+                        <span className="text-white/90 text-xs font-black uppercase tracking-widest">Special Offer</span>
+                        <div className="text-6xl sm:text-7xl font-black text-white leading-none my-1 tracking-tighter drop-shadow-md">
+                          61<span className="text-3xl">%</span>
+                        </div>
+                        <span className="text-amber-200 text-sm font-black uppercase tracking-widest">OFF MRP</span>
+                        <span className="text-white/80 text-[10px] font-bold mt-2 bg-black/20 px-3 py-1 rounded-full">
+                          Authentic Generics
                         </span>
-                        <h3 className="text-white text-lg sm:text-4xl font-black uppercase tracking-tight leading-tight">{banner.title}</h3>
-                        {banner.subtitle && <p className="text-white/90 text-xs sm:text-base font-semibold mt-1 max-w-xl">{banner.subtitle}</p>}
                       </div>
-                    )}
-                  </Link>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <div className="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
-              {Array.from({ length: displayBanners.length }).map((_, i) => (
-                <div key={i} className={cn("h-1.5 transition-all duration-300 rounded-full", current === i ? "w-8 bg-white" : "w-1.5 bg-white/40")} />
-              ))}
-            </div>
-          </Carousel>
-        </motion.section>
-      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CarouselItem>
+
+            {/* ── Slide 2: Express Delivery & Pharmacist Verification ── */}
+            <CarouselItem className="pl-0">
+              <div className="relative w-full min-h-[300px] sm:min-h-[380px] lg:min-h-[420px] bg-gradient-to-r from-[#059669] via-[#0f766e] to-[#4338ca] overflow-hidden flex items-center shadow-2xl">
+                <div className="absolute -top-24 -right-24 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl" />
+                <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-300/20 rounded-full blur-3xl" />
+
+                <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-12 w-full py-8 sm:py-12 flex flex-col md:flex-row items-center justify-between gap-8">
+                  <div className="space-y-4 text-center md:text-left max-w-2xl">
+                    <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
+                      <span className="px-3.5 py-1 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-white text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
+                        🏥 Licensed Pharmacy #KA-B51-286602
+                      </span>
+                      <span className="px-3 py-1 bg-emerald-400/30 text-white rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+                        Fast 24-48h Shipping
+                      </span>
+                    </div>
+
+                    <h2 className="text-white text-2xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight leading-[1.1]">
+                      Fast & Reliable <span className="text-emerald-300">Express Delivery</span>
+                    </h2>
+
+                    <p className="text-white/90 text-xs sm:text-base font-semibold max-w-xl leading-relaxed">
+                      Every single order is cross-checked by certified B.Pharm registered pharmacists before dispatch. Safe, tamper-proof temperature-controlled packaging.
+                    </p>
+
+                    <div className="flex items-center justify-center md:justify-start gap-3 pt-2 flex-wrap">
+                      <Link 
+                        href="/prescription" 
+                        className="px-6 py-3.5 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-2"
+                      >
+                        Upload Prescription Now <ChevronRight className="w-4 h-4" />
+                      </Link>
+                      <Link 
+                        href="https://wa.me/917349499898" 
+                        target="_blank"
+                        className="px-6 py-3.5 bg-[#25D366] hover:bg-[#22c55e] text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl transition-all"
+                      >
+                        WhatsApp Order
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Express Delivery Badge */}
+                  <div className="relative shrink-0 flex items-center justify-center">
+                    <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-3xl text-center space-y-3 max-w-xs shadow-2xl">
+                      <div className="w-16 h-16 bg-emerald-400 text-slate-900 rounded-2xl mx-auto flex items-center justify-center text-3xl font-black shadow-lg">
+                        🚚
+                      </div>
+                      <h3 className="text-white font-black text-xl uppercase tracking-tight">Pan-India Express</h3>
+                      <p className="text-white/80 text-xs font-medium">Delivered to 500+ cities across India with real-time SMS & WhatsApp tracking.</p>
+                      <div className="pt-1">
+                        <span className="inline-block px-3 py-1 bg-white text-emerald-800 rounded-full font-black text-[11px] uppercase tracking-wider">
+                          24hr Dispatch
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CarouselItem>
+          </CarouselContent>
+
+          {/* Slider pagination dots */}
+          <div className="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className={cn("h-2 transition-all duration-300 rounded-full cursor-pointer", current === i ? "w-8 bg-white" : "w-2 bg-white/40")} />
+            ))}
+          </div>
+        </Carousel>
+      </motion.section>
 
       {/* ════════════════════════════════════════════════
           SHOP BY CATEGORY  —  Rich HD Medical Cards
