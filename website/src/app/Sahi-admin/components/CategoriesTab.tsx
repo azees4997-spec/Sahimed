@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   Loader2, 
   Plus, 
@@ -8,7 +8,12 @@ import {
   Trash2,
   Download,
   Upload,
-  Search
+  Search,
+  Layers,
+  ListFilter,
+  ChevronDown,
+  ChevronUp,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,13 +27,6 @@ import {
   DialogTitle, 
   DialogDescription 
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { SectionHeader } from './SectionHeader';
@@ -44,6 +42,9 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [editingCat, setEditingCat] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'grouped' | 'all'>('grouped');
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
   const { user } = useUser();
   const { toast } = useToast();
 
@@ -67,6 +68,44 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
     return () => clearTimeout(delay);
   }, [searchQuery]);
 
+  // ─── Group Sub-Categories by Main Category Name ────────────────────────────
+  const groupedCategories = useMemo(() => {
+    const map: Record<string, {
+      categoryName: string;
+      imageUrl: string;
+      showOnHomepage: boolean;
+      totalProductCount: number;
+      items: any[];
+    }> = {};
+
+    categories.forEach(cat => {
+      const name = cat.category || 'Uncategorized';
+      if (!map[name]) {
+        map[name] = {
+          categoryName: name,
+          imageUrl: cat.imageUrl || '',
+          showOnHomepage: cat.showOnHomepage === true,
+          totalProductCount: 0,
+          items: []
+        };
+      }
+      map[name].items.push(cat);
+      map[name].totalProductCount += parseInt(cat.product_count || '0', 10);
+      if (cat.imageUrl && !map[name].imageUrl) {
+        map[name].imageUrl = cat.imageUrl;
+      }
+      if (cat.showOnHomepage) {
+        map[name].showOnHomepage = true;
+      }
+    });
+
+    return Object.values(map).sort((a, b) => a.categoryName.localeCompare(b.categoryName));
+  }, [categories]);
+
+  const toggleGroupExpand = (catName: string) => {
+    setExpandedGroups(prev => ({ ...prev, [catName]: !prev[catName] }));
+  };
+
   const handleExport = (selectedFields: string[]) => {
     const queryParams = new URLSearchParams({
       fields: selectedFields.join(',')
@@ -87,107 +126,235 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
         </div>
       </SectionHeader>
 
-      <div className="flex items-center gap-4 bg-white p-6 rounded-[32px] shadow-sm">
-        <div className="relative flex-1">
+      {/* Filter and View Switcher */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-6 rounded-[32px] shadow-sm">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
           <input 
             type="text" 
-            placeholder="Search categories..." 
+            placeholder="Search categories or sub-categories (e.g. Neurology, Anticonvulsants)..." 
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="w-full h-14 bg-slate-50 rounded-2xl pl-12 pr-6 font-bold text-sm outline-none focus:bg-slate-100/50 focus:ring-2 focus:ring-primary/20 transition-all text-slate-900"
           />
         </div>
+
+        {/* View Mode Toggle */}
+        <div className="flex items-center bg-slate-100 p-1.5 rounded-2xl shrink-0">
+          <button
+            onClick={() => setViewMode('grouped')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+              viewMode === 'grouped'
+                ? 'bg-white text-primary shadow-sm'
+                : 'text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            Grouped by Main Category ({groupedCategories.length})
+          </button>
+          <button
+            onClick={() => setViewMode('all')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+              viewMode === 'all'
+                ? 'bg-white text-primary shadow-sm'
+                : 'text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            <ListFilter className="w-3.5 h-3.5" />
+            All Sub-Categories ({categories.length})
+          </button>
+        </div>
       </div>
 
-      <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 text-[10px] font-black text-gray-400 border-b tracking-widest uppercase">
-              <tr>
-                <th className="px-10 py-8">Image</th>
-                <th className="px-10 py-8">Category ID</th>
-                <th className="px-10 py-8">Category Name</th>
-                <th className="px-10 py-8">Sub-Category</th>
-                <th className="px-10 py-8">Product Count</th>
-                <th className="px-10 py-8">Home</th>
-                <th className="px-10 py-8 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                Array(5).fill(0).map((_, i) => (
-                  <tr key={i}>
-                    <td className="px-10 py-8"><div className="w-10 h-10 bg-slate-100 animate-pulse rounded-full" /></td>
-                    <td className="px-10 py-8"><div className="w-20 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
-                    <td className="px-10 py-8"><div className="w-32 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
-                    <td className="px-10 py-8"><div className="w-24 h-4 bg-slate-50 animate-pulse rounded-full" /></td>
-                    <td className="px-10 py-8"><div className="w-12 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
-                    <td className="px-10 py-8"><div className="w-8 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
-                    <td className="px-10 py-8 text-right"><div className="w-8 h-8 bg-slate-50 animate-pulse rounded-lg ml-auto" /></td>
-                  </tr>
-                ))
-              ) : categories.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-10 py-16 text-center text-slate-400 font-bold uppercase tracking-wider text-sm">
-                    No categories found
-                  </td>
-                </tr>
-              ) : categories.map(cat => (
-                <tr key={cat.id} className="hover:bg-gray-50/50">
-                  <td className="px-10 py-8">
-                    {cat.imageUrl ? (
-                      <div className="w-10 h-10 rounded-full border border-slate-100 overflow-hidden bg-white shadow-sm flex items-center justify-center">
-                        <img src={cat.imageUrl} alt={cat.category} className="w-full h-full object-cover" />
+      {/* VIEW MODE 1: GROUPED BY MAIN CATEGORY */}
+      {viewMode === 'grouped' && (
+        <div className="space-y-4">
+          {isLoading ? (
+            Array(4).fill(0).map((_, i) => (
+              <Card key={i} className="p-6 rounded-[28px] border-none shadow-sm bg-white animate-pulse h-24" />
+            ))
+          ) : groupedCategories.length === 0 ? (
+            <Card className="p-12 rounded-[32px] border-none text-center bg-white text-slate-400 font-bold uppercase tracking-wider text-sm">
+              No main categories found
+            </Card>
+          ) : (
+            groupedCategories.map((group) => {
+              const isExpanded = expandedGroups[group.categoryName];
+
+              return (
+                <Card key={group.categoryName} className="rounded-[32px] overflow-hidden border-none shadow-sm bg-white transition-all">
+                  <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      {/* Image Thumbnail */}
+                      <div className="w-14 h-14 rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-sm flex items-center justify-center shrink-0">
+                        {group.imageUrl ? (
+                          <img src={group.imageUrl} alt={group.categoryName} className="w-full h-full object-cover" />
+                        ) : (
+                          <ImageIcon className="w-6 h-6 text-slate-300" />
+                        )}
                       </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center">
-                        <span className="text-xs text-slate-300 font-bold">N/A</span>
+
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-black text-slate-900">{group.categoryName}</h3>
+                          <Badge variant={group.showOnHomepage ? 'default' : 'outline'} className={group.showOnHomepage ? 'bg-[#25D366] text-white font-black text-[9px] uppercase' : 'font-black text-[9px] uppercase'}>
+                            {group.showOnHomepage ? 'Home Featured' : 'Hidden'}
+                          </Badge>
+                        </div>
+                        <p className="text-xs font-semibold text-slate-500 mt-1">
+                          {group.items.length} Sub-Categories · {group.totalProductCount.toLocaleString()} Total Products
+                        </p>
                       </div>
-                    )}
-                  </td>
-                  <td className="px-10 py-8">
-                    <span className="text-[11px] font-black text-primary bg-primary/10 px-3 py-1 rounded-full">
-                      {cat.category_id}
-                    </span>
-                  </td>
-                  <td className="px-10 py-8 font-black text-sm text-gray-900">{cat.category}</td>
-                  <td className="px-10 py-8 font-medium text-xs text-gray-500">{cat.sub_category}</td>
-                  <td className="px-10 py-8 font-bold text-gray-500">{cat.product_count || 0}</td>
-                  <td className="px-10 py-8">
-                    <Badge variant={cat.showOnHomepage ? 'default' : 'outline'} className={cat.showOnHomepage ? 'bg-[#25D366] text-white font-black text-[10px] uppercase' : 'font-black text-[10px] uppercase'}>
-                      {cat.showOnHomepage ? 'Yes' : 'No'}
-                    </Badge>
-                  </td>
-                  <td className="px-10 py-8 text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => { setEditingCat(cat); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button>
-                      <Button variant="ghost" size="icon" onClick={async () => { 
-                        if(confirm("Delete category?")) {
-                          try {
-                            const token = await user?.getIdToken();
-                            const res = await fetch(`/api/categories/${cat.id || cat._id}`, { 
-                              method: 'DELETE',
-                              headers: { 'Authorization': `Bearer ${token}` }
-                            });
-                            
-                            if (!res.ok) throw new Error('Failed to delete from MongoDB');
-                            
-                            toast({ title: "Category archived" });
-                            fetchCategories(searchQuery);
-                          } catch (err: any) {
-                            toast({ variant: 'destructive', title: "Archive failed", description: err.message });
-                          }
-                        }
-                      }}><Trash2 className="w-4 h-4 text-red-300" /></Button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+                    <div className="flex items-center gap-3 self-end sm:self-auto">
+                      <Button
+                        onClick={() => {
+                          setEditingCat(group.items[0]);
+                          setIsFormOpen(true);
+                        }}
+                        className="rounded-xl h-10 px-4 font-black text-xs bg-primary text-white"
+                      >
+                        <Edit2 className="w-3.5 h-3.5 mr-1.5" /> Edit Category & Image
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => toggleGroupExpand(group.categoryName)}
+                        className="rounded-xl h-10 w-10 text-slate-500"
+                      >
+                        {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Sub-categories Drawer */}
+                  {isExpanded && (
+                    <div className="border-t border-slate-100 p-6 bg-white space-y-3">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        Sub-categories under {group.categoryName}:
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        {group.items.map((subCat) => (
+                          <div key={subCat.id || subCat._id} className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between border border-slate-100">
+                            <div>
+                              <p className="text-xs font-bold text-slate-800">{subCat.sub_category || 'General'}</p>
+                              <p className="text-[10px] font-semibold text-slate-400">{subCat.product_count || 0} products · {subCat.category_id}</p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setEditingCat(subCat);
+                                setIsFormOpen(true);
+                              }}
+                            >
+                              <Edit2 className="w-3.5 h-3.5 text-slate-400" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              );
+            })
+          )}
         </div>
-      </Card>
+      )}
+
+      {/* VIEW MODE 2: FLAT ALL SUB-CATEGORIES TABLE */}
+      {viewMode === 'all' && (
+        <Card className="rounded-[40px] overflow-hidden border-none shadow-sm bg-white">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-gray-50 text-[10px] font-black text-gray-400 border-b tracking-widest uppercase">
+                <tr>
+                  <th className="px-10 py-8">Image</th>
+                  <th className="px-10 py-8">Category ID</th>
+                  <th className="px-10 py-8">Category Name</th>
+                  <th className="px-10 py-8">Sub-Category</th>
+                  <th className="px-10 py-8">Product Count</th>
+                  <th className="px-10 py-8">Home</th>
+                  <th className="px-10 py-8 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {isLoading ? (
+                  Array(5).fill(0).map((_, i) => (
+                    <tr key={i}>
+                      <td className="px-10 py-8"><div className="w-10 h-10 bg-slate-100 animate-pulse rounded-full" /></td>
+                      <td className="px-10 py-8"><div className="w-20 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                      <td className="px-10 py-8"><div className="w-32 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                      <td className="px-10 py-8"><div className="w-24 h-4 bg-slate-50 animate-pulse rounded-full" /></td>
+                      <td className="px-10 py-8"><div className="w-12 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                      <td className="px-10 py-8"><div className="w-8 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                      <td className="px-10 py-8 text-right"><div className="w-8 h-8 bg-slate-50 animate-pulse rounded-lg ml-auto" /></td>
+                    </tr>
+                  ))
+                ) : categories.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-10 py-16 text-center text-slate-400 font-bold uppercase tracking-wider text-sm">
+                      No categories found
+                    </td>
+                  </tr>
+                ) : categories.map(cat => (
+                  <tr key={cat.id || cat._id} className="hover:bg-gray-50/50">
+                    <td className="px-10 py-8">
+                      {cat.imageUrl ? (
+                        <div className="w-10 h-10 rounded-full border border-slate-100 overflow-hidden bg-white shadow-sm flex items-center justify-center">
+                          <img src={cat.imageUrl} alt={cat.category} className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center">
+                          <span className="text-xs text-slate-300 font-bold">N/A</span>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-10 py-8">
+                      <span className="text-[11px] font-black text-primary bg-primary/10 px-3 py-1 rounded-full">
+                        {cat.category_id}
+                      </span>
+                    </td>
+                    <td className="px-10 py-8 font-black text-sm text-gray-900">{cat.category}</td>
+                    <td className="px-10 py-8 font-medium text-xs text-gray-500">{cat.sub_category}</td>
+                    <td className="px-10 py-8 font-bold text-gray-500">{cat.product_count || 0}</td>
+                    <td className="px-10 py-8">
+                      <Badge variant={cat.showOnHomepage ? 'default' : 'outline'} className={cat.showOnHomepage ? 'bg-[#25D366] text-white font-black text-[10px] uppercase' : 'font-black text-[10px] uppercase'}>
+                        {cat.showOnHomepage ? 'Yes' : 'No'}
+                      </Badge>
+                    </td>
+                    <td className="px-10 py-8 text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => { setEditingCat(cat); setIsFormOpen(true); }}><Edit2 className="w-4 h-4 text-gray-400" /></Button>
+                        <Button variant="ghost" size="icon" onClick={async () => { 
+                          if(confirm("Delete category?")) {
+                            try {
+                              const token = await user?.getIdToken();
+                              const res = await fetch(`/api/categories/${cat.id || cat._id}`, { 
+                                method: 'DELETE',
+                                headers: { 'Authorization': `Bearer ${token}` }
+                              });
+                              
+                              if (!res.ok) throw new Error('Failed to delete from MongoDB');
+                              
+                              toast({ title: "Category archived" });
+                              fetchCategories(searchQuery);
+                            } catch (err: any) {
+                              toast({ variant: 'destructive', title: "Archive failed", description: err.message });
+                            }
+                          }
+                        }}><Trash2 className="w-4 h-4 text-red-300" /></Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
       
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="rounded-[40px] max-w-lg border-none p-0 overflow-hidden bg-white">
@@ -222,7 +389,8 @@ function CategoryForm({ initialData, onSuccess }: { initialData?: any, onSuccess
     product_count: initialData?.product_count || '0',
     source_catalog: initialData?.source_catalog || 'OTC',
     imageUrl: initialData?.imageUrl || '',
-    showOnHomepage: initialData?.showOnHomepage || false
+    showOnHomepage: initialData?.showOnHomepage || false,
+    applyToAllSubcategories: true
   });
   const { user } = useUser();
   const { toast } = useToast();
@@ -247,8 +415,13 @@ function CategoryForm({ initialData, onSuccess }: { initialData?: any, onSuccess
       });
 
       if (!res.ok) throw new Error('Failed to sync with MongoDB');
-      
-      toast({ title: "Category synchronized" });
+      const resData = await res.json();
+
+      if (resData.appliedToAll) {
+        toast({ title: "Category synchronized", description: `Updated Image & Homepage settings for all sub-categories of ${form.category}` });
+      } else {
+        toast({ title: "Category synchronized" });
+      }
       onSuccess();
     } catch (err: any) {
       toast({ variant: 'destructive', title: "Sync failed", description: err.message });
@@ -271,7 +444,7 @@ function CategoryForm({ initialData, onSuccess }: { initialData?: any, onSuccess
       </div>
       <div className="space-y-2">
         <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Image URL</Label>
-        <Input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} placeholder="https://..." className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
+        <Input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} placeholder="https://... or /images/cat_neuro.jpg" className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -283,6 +456,16 @@ function CategoryForm({ initialData, onSuccess }: { initialData?: any, onSuccess
           <Switch checked={form.showOnHomepage} onCheckedChange={v => setForm({...form, showOnHomepage: v})} />
         </div>
       </div>
+
+      {/* Bulk Apply Switch */}
+      <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 rounded-2xl p-4 justify-between">
+        <div>
+          <p className="text-xs font-black text-primary">Apply to all sub-categories of {form.category || 'this category'}?</p>
+          <p className="text-[10px] font-medium text-slate-500">Updates Image URL & Homepage toggle across all sub-categories at once.</p>
+        </div>
+        <Switch checked={form.applyToAllSubcategories} onCheckedChange={v => setForm({...form, applyToAllSubcategories: v})} />
+      </div>
+
       <Button type="submit" className="w-full h-14 rounded-full font-black bg-primary text-white mt-2">Save Category</Button>
     </form>
   );

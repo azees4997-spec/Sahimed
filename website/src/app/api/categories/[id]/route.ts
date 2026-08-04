@@ -21,25 +21,40 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const db = client.db('sahimed');
     
     // Remove _id and id if present
-    const { _id, id, ...updateData } = body;
+    const { _id, id, applyToAllSubcategories, ...updateData } = body;
 
+    const updatePayload: any = { 
+      category_id: updateData.category_id,
+      category: updateData.category,
+      sub_category: updateData.sub_category,
+      product_count: updateData.product_count,
+      source_catalog: updateData.source_catalog,
+      imageUrl: updateData.imageUrl || '',
+      showOnHomepage: updateData.showOnHomepage === true,
+      updatedAt: new Date() 
+    };
+
+    // Update single document
     await db.collection('Category Master').updateOne(
       getQuery(params.id), 
-      { 
-        $set: { 
-          category_id: updateData.category_id,
-          category: updateData.category,
-          sub_category: updateData.sub_category,
-          product_count: updateData.product_count,
-          source_catalog: updateData.source_catalog,
-          imageUrl: updateData.imageUrl || '',
-          showOnHomepage: updateData.showOnHomepage === true,
-          updatedAt: new Date() 
-        } 
-      }
+      { $set: updatePayload }
     );
     
-    return NextResponse.json({ success: true });
+    // If applyToAllSubcategories is true, apply imageUrl and showOnHomepage to ALL subcategories under this main category name
+    if (applyToAllSubcategories && updateData.category) {
+      await db.collection('Category Master').updateMany(
+        { category: updateData.category },
+        {
+          $set: {
+            imageUrl: updateData.imageUrl || '',
+            showOnHomepage: updateData.showOnHomepage === true,
+            updatedAt: new Date()
+          }
+        }
+      );
+    }
+
+    return NextResponse.json({ success: true, appliedToAll: !!applyToAllSubcategories });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
