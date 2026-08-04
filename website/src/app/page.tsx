@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Navbar from '@/components/Navbar';
-import { ShieldCheck, FileText, Phone, Truck, Star, Zap } from 'lucide-react';
+import { ShieldCheck, FileText, Phone, Truck, Star, Zap, Search } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import PageTransition from '@/components/PageTransition';
