@@ -145,9 +145,12 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         </div>
       </div>
 
-      {/* ── Mega Banner Carousel ── */}
+      {/* ── Mega Banner Carousel (Full Bleed Edge-to-Edge) ── */}
       {displayBanners && displayBanners.length > 0 && (
-        <motion.section variants={fadeUp} initial="hidden" animate="visible" className="w-full">
+        <motion.section 
+          variants={fadeUp} initial="hidden" animate="visible" 
+          className="w-[calc(100%+2rem)] -mx-4 sm:w-[calc(100%+3rem)] sm:-mx-6 lg:w-[calc(100%+4rem)] lg:-mx-8 overflow-hidden"
+        >
           <Carousel
             setApi={setApi}
             plugins={[plugin.current]}
@@ -158,7 +161,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
             <CarouselContent>
               {displayBanners.map((banner: any, index: number) => (
                 <CarouselItem key={index}>
-                  <Link href={banner.link || '/search'} className="block relative w-full aspect-[21/9] sm:aspect-[21/7] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-slate-100 group">
+                  <Link href={banner.link || '/search'} className="block relative w-full aspect-[21/9] sm:aspect-[21/7] rounded-none sm:rounded-3xl overflow-hidden shadow-xl border-y sm:border border-slate-100 group">
                     <Image src={banner.imageUrl} alt={banner.title || 'Special Pharmacy Offer'} fill className="object-cover transition-transform duration-700 group-hover:scale-105" priority={index === 0} />
                     {banner.title && (
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent flex flex-col justify-end p-5 sm:p-10">
