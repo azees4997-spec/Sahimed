@@ -277,7 +277,6 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
             </div>
           )}
         </motion.section>
-      )}
 
       {/* ════════════════════════════════════════════════
           BEST SELLERS
