@@ -23,25 +23,36 @@ interface HomeClientProps {
   medicines: any[];
 }
 
-// ─── Category Style Map ───────────────────────────────────────────────────────
-function getCategoryStyle(name: string): { emoji: string; from: string; to: string; text: string } {
+// ─── Category Style Map with HD Medical Images ────────────────────────────────
+function getCategoryStyle(name: string): { emoji: string; image: string; from: string; to: string; text: string } {
   const l = name.toLowerCase();
-  if (l.includes('cardiac') || l.includes('heart')) return { emoji: '❤️', from: 'from-rose-400', to: 'to-pink-300', text: 'text-rose-700' };
-  if (l.includes('diabet') || l.includes('sugar') || l.includes('insulin')) return { emoji: '🩸', from: 'from-blue-400', to: 'to-cyan-300', text: 'text-blue-700' };
-  if (l.includes('vitamin') || l.includes('supplement') || l.includes('nutrition')) return { emoji: '💊', from: 'from-amber-400', to: 'to-yellow-300', text: 'text-amber-700' };
-  if (l.includes('respi') || l.includes('lung') || l.includes('asthma')) return { emoji: '🫁', from: 'from-sky-400', to: 'to-blue-300', text: 'text-sky-700' };
-  if (l.includes('pain') || l.includes('ortho') || l.includes('joint')) return { emoji: '🩹', from: 'from-orange-400', to: 'to-amber-300', text: 'text-orange-700' };
-  if (l.includes('skin') || l.includes('derma') || l.includes('acne')) return { emoji: '✨', from: 'from-pink-400', to: 'to-rose-300', text: 'text-pink-700' };
-  if (l.includes('gastro') || l.includes('digest') || l.includes('stomach')) return { emoji: '🌿', from: 'from-emerald-400', to: 'to-green-300', text: 'text-emerald-700' };
-  if (l.includes('neuro') || l.includes('brain') || l.includes('sleep')) return { emoji: '🧠', from: 'from-violet-400', to: 'to-purple-300', text: 'text-violet-700' };
-  if (l.includes('eye') || l.includes('ophthal')) return { emoji: '👁️', from: 'from-indigo-400', to: 'to-blue-300', text: 'text-indigo-700' };
-  if (l.includes('dental') || l.includes('oral')) return { emoji: '🦷', from: 'from-teal-400', to: 'to-cyan-300', text: 'text-teal-700' };
-  if (l.includes('immun') || l.includes('infect')) return { emoji: '🛡️', from: 'from-yellow-400', to: 'to-amber-300', text: 'text-yellow-700' };
-  if (l.includes('women') || l.includes('gynae')) return { emoji: '🌸', from: 'from-fuchsia-400', to: 'to-pink-300', text: 'text-fuchsia-700' };
-  if (l.includes('child') || l.includes('paed') || l.includes('baby')) return { emoji: '👶', from: 'from-blue-300', to: 'to-sky-200', text: 'text-blue-700' };
-  if (l.includes('thyroid') || l.includes('hormone')) return { emoji: '⚗️', from: 'from-violet-400', to: 'to-indigo-300', text: 'text-violet-700' };
-  return { emoji: '💊', from: 'from-primary', to: 'to-teal-400', text: 'text-primary' };
+  if (l.includes('cardiac') || l.includes('heart')) return { emoji: '❤️', image: '/images/cat_cardiac.jpg', from: 'from-rose-400', to: 'to-pink-300', text: 'text-rose-700' };
+  if (l.includes('diabet') || l.includes('sugar') || l.includes('insulin')) return { emoji: '🩸', image: '/images/cat_diabetes.jpg', from: 'from-blue-400', to: 'to-cyan-300', text: 'text-blue-700' };
+  if (l.includes('vitamin') || l.includes('supplement') || l.includes('nutrition')) return { emoji: '💊', image: '/images/cat_vitamins.jpg', from: 'from-amber-400', to: 'to-yellow-300', text: 'text-amber-700' };
+  if (l.includes('respi') || l.includes('lung') || l.includes('asthma')) return { emoji: '🫁', image: '/images/cat_respiratory.jpg', from: 'from-sky-400', to: 'to-blue-300', text: 'text-sky-700' };
+  if (l.includes('pain') || l.includes('ortho') || l.includes('joint')) return { emoji: '🩹', image: '/images/cat_pain_ortho.jpg', from: 'from-orange-400', to: 'to-amber-300', text: 'text-orange-700' };
+  if (l.includes('skin') || l.includes('derma') || l.includes('acne')) return { emoji: '✨', image: '/images/cat_skin_derma.jpg', from: 'from-pink-400', to: 'to-rose-300', text: 'text-pink-700' };
+  if (l.includes('gastro') || l.includes('digest') || l.includes('stomach')) return { emoji: '🌿', image: '/images/cat_gastro.jpg', from: 'from-emerald-400', to: 'to-green-300', text: 'text-emerald-700' };
+  if (l.includes('neuro') || l.includes('brain') || l.includes('sleep')) return { emoji: '🧠', image: '/images/cat_neuro.jpg', from: 'from-violet-400', to: 'to-purple-300', text: 'text-violet-700' };
+  if (l.includes('women') || l.includes('gynae')) return { emoji: '🌸', image: '/images/cat_womens.jpg', from: 'from-fuchsia-400', to: 'to-pink-300', text: 'text-fuchsia-700' };
+  return { emoji: '💊', image: '/images/cat_vitamins.jpg', from: 'from-primary', to: 'to-teal-400', text: 'text-primary' };
 }
+
+// Default Mega Banners
+const DEFAULT_BANNERS = [
+  {
+    imageUrl: '/images/mega_banner_1.jpg',
+    title: 'Up to 61% OFF Chronic Care Medicines',
+    subtitle: '100% Genuine Branded Generics Delivered Fast Across India',
+    link: '/search'
+  },
+  {
+    imageUrl: '/images/mega_banner_2.jpg',
+    title: 'Licensed Prescription Pharmacy',
+    subtitle: 'Every Order Verified By Registered Pharmacists',
+    link: '/prescription'
+  }
+];
 
 // ─── Ticker items ─────────────────────────────────────────────────────────────
 const TICKER_ITEMS = [
@@ -83,6 +94,8 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
     api.on("select", () => setCurrent(api.selectedScrollSnap()));
   }, [api]);
 
+  const displayBanners = (banners && banners.length > 0) ? banners : DEFAULT_BANNERS;
+
   const medicinesByCategory = React.useMemo(() => {
     if (!medicines || medicines.length === 0) return {};
     return medicines.reduce((acc: Record<string, any[]>, product: any) => {
@@ -103,9 +116,18 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
       .slice(0, 6);
   }, [medicinesByCategory, categories]);
 
-  // Split categories: first 4 are "featured", rest are in scroll row
-  const featuredCats = categories.slice(0, 4);
-  const moreCats = categories.slice(4, 16);
+  // Featured 8 categories for primary grid
+  const featuredCats = (categories && categories.length > 0) ? categories.slice(0, 8) : [
+    { name: 'Cardiac Care' },
+    { name: 'Diabetes Care' },
+    { name: 'Vitamins & Supplements' },
+    { name: 'Respiratory Care' },
+    { name: 'Pain & Ortho' },
+    { name: 'Skin & Derma' },
+    { name: 'Gastro Care' },
+    { name: 'Women\'s Health' }
+  ];
+  const moreCats = categories.slice(8, 20);
 
   return (
     <div className="space-y-8 sm:space-y-14 pb-0 sm:pb-16 overflow-x-hidden max-w-full">
@@ -123,8 +145,8 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         </div>
       </div>
 
-      {/* ── Banner Carousel ── */}
-      {banners && banners.length > 0 && (
+      {/* ── Mega Banner Carousel ── */}
+      {displayBanners && displayBanners.length > 0 && (
         <motion.section variants={fadeUp} initial="hidden" animate="visible" className="w-full">
           <Carousel
             setApi={setApi}
@@ -134,14 +156,17 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
             onMouseLeave={plugin.current.reset}
           >
             <CarouselContent>
-              {banners.map((banner, index) => (
+              {displayBanners.map((banner: any, index: number) => (
                 <CarouselItem key={index}>
-                  <Link href={banner.link || '/search'} className="block relative w-full aspect-[21/7] sm:aspect-[3/1] rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-slate-100">
-                    <Image src={banner.imageUrl} alt={banner.title || 'Offer'} fill className="object-cover transition-transform duration-700 group-hover:scale-[1.02]" priority={index === 0} />
+                  <Link href={banner.link || '/search'} className="block relative w-full aspect-[21/9] sm:aspect-[21/7] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-slate-100 group">
+                    <Image src={banner.imageUrl} alt={banner.title || 'Special Pharmacy Offer'} fill className="object-cover transition-transform duration-700 group-hover:scale-105" priority={index === 0} />
                     {banner.title && (
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent flex flex-col justify-end p-4 sm:p-8">
-                        <h3 className="text-white text-base sm:text-3xl font-black uppercase tracking-tight leading-tight">{banner.title}</h3>
-                        {banner.subtitle && <p className="text-white/80 text-xs sm:text-sm font-semibold mt-1">{banner.subtitle}</p>}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent flex flex-col justify-end p-5 sm:p-10">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary text-white rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest w-fit mb-2">
+                          ⚡ Limited Time Savings
+                        </span>
+                        <h3 className="text-white text-lg sm:text-4xl font-black uppercase tracking-tight leading-tight">{banner.title}</h3>
+                        {banner.subtitle && <p className="text-white/90 text-xs sm:text-base font-semibold mt-1 max-w-xl">{banner.subtitle}</p>}
                       </div>
                     )}
                   </Link>
@@ -149,7 +174,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
               ))}
             </CarouselContent>
             <div className="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
-              {Array.from({ length: count }).map((_, i) => (
+              {Array.from({ length: displayBanners.length }).map((_, i) => (
                 <div key={i} className={cn("h-1.5 transition-all duration-300 rounded-full", current === i ? "w-8 bg-white" : "w-1.5 bg-white/40")} />
               ))}
             </div>
@@ -158,71 +183,80 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
       )}
 
       {/* ════════════════════════════════════════════════
-          SHOP BY CATEGORY  —  beats PlatinumRx's circles
+          SHOP BY CATEGORY  —  Rich HD Medical Cards
           ════════════════════════════════════════════════ */}
-      {categories.length > 0 && (
-        <motion.section
-          variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }}
-          className="space-y-4"
-        >
-          {/* Section Header */}
-          <div className="flex items-end justify-between px-1">
-            <div>
-              <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Browse</p>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">
-                Shop by <span className="text-primary">Category</span>
-              </h2>
-              <p className="text-xs text-slate-400 font-medium mt-0.5">Save up to 61% on your medicines</p>
-            </div>
-            <Link href="/search" className="text-[11px] font-black text-primary uppercase tracking-wider flex items-center gap-0.5 hover:underline">
-              All Categories <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
+      <motion.section
+        variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }}
+        className="space-y-4"
+      >
+        {/* Section Header */}
+        <div className="flex items-end justify-between px-1">
+          <div>
+            <span className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 px-2.5 py-1 rounded-full">
+              Explore Healthcare
+            </span>
+            <h2 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none mt-2">
+              Top Medical <span className="text-primary">Categories</span>
+            </h2>
+            <p className="text-xs text-slate-500 font-medium mt-1">Sahi Dawai, Sahi Daam Pe — Genuine stock up to 61% OFF</p>
           </div>
+          <Link href="/search" className="text-[11px] font-black text-primary uppercase tracking-wider flex items-center gap-0.5 hover:underline bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10">
+            View All Categories <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
 
-          {/* ── Featured 4 — Large portrait cards ── */}
-          {featuredCats.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {featuredCats.map((cat: any, i: number) => {
-                const style = getCategoryStyle(cat.name || '');
-                const hasImg = cat.imageUrl && !cat.imageUrl.includes('picsum');
-                return (
-                  <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                    <Link
-                      href={`/search?c=${encodeURIComponent(cat.name)}`}
-                      className="group relative flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 hover:-translate-y-1 bg-white"
-                    >
-                      {/* Illustration area */}
-                      <div className={cn("relative w-full aspect-square flex items-center justify-center overflow-hidden bg-gradient-to-br", style.from, style.to, "opacity-20")} />
-                      <div className={cn("absolute inset-0 bg-gradient-to-br opacity-15", style.from, style.to)} />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        {hasImg ? (
-                          <Image
-                            src={cat.imageUrl}
-                            alt={cat.name}
-                            width={160}
-                            height={160}
-                            className="w-4/5 h-4/5 object-contain drop-shadow-lg transition-transform duration-500 group-hover:scale-110"
-                            priority={i < 4}
-                          />
-                        ) : (
-                          <span className="text-5xl sm:text-6xl select-none transition-transform duration-500 group-hover:scale-110 drop-shadow-md">{style.emoji}</span>
-                        )}
-                      </div>
+        {/* ── Featured 8 Category Cards ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-5">
+          {featuredCats.map((cat: any, i: number) => {
+            const style = getCategoryStyle(cat.name || '');
+            const imgSrc = (cat.imageUrl && !cat.imageUrl.includes('picsum')) ? cat.imageUrl : style.image;
 
-                      {/* Name strip */}
-                      <div className="relative z-10 px-3 py-2.5 sm:px-4 sm:py-3 bg-white border-t border-slate-100 flex items-center justify-between group-hover:bg-primary group-hover:border-primary transition-colors duration-300">
-                        <span className="text-[11px] sm:text-xs font-black text-slate-800 uppercase tracking-tight leading-tight group-hover:text-white transition-colors line-clamp-1">{cat.name}</span>
-                        <span className="text-[10px] font-black text-primary group-hover:text-white transition-colors shrink-0 ml-1">→</span>
-                      </div>
-                    </Link>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
+            return (
+              <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+                <Link
+                  href={`/search?c=${encodeURIComponent(cat.name)}`}
+                  className="group relative flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-100 shadow-md hover:shadow-2xl hover:shadow-primary/15 transition-all duration-500 hover:-translate-y-1.5 bg-white"
+                >
+                  {/* Category Image Header */}
+                  <div className="relative w-full aspect-[4/3] overflow-hidden bg-slate-50">
+                    <Image
+                      src={imgSrc}
+                      alt={cat.name}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                      priority={i < 4}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                    
+                    {/* Discount badge */}
+                    <div className="absolute top-2.5 left-2.5 bg-rose-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-md">
+                      UP TO 61% OFF
+                    </div>
+                  </div>
 
-          {/* ── More categories — horizontal pill scroll ── */}
-          {moreCats.length > 0 && (
+                  {/* Name and Action */}
+                  <div className="p-3 sm:p-4 bg-white flex items-center justify-between border-t border-slate-100 group-hover:bg-primary transition-colors duration-300">
+                    <div>
+                      <h3 className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-tight leading-tight group-hover:text-white transition-colors line-clamp-1">
+                        {cat.name}
+                      </h3>
+                      <p className="text-[9px] font-medium text-slate-400 group-hover:text-white/80 transition-colors mt-0.5">
+                        Pharmacist Verified
+                      </p>
+                    </div>
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 group-hover:bg-white text-primary group-hover:text-primary flex items-center justify-center font-black text-xs transition-colors shrink-0 ml-2">
+                      →
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* ── More categories — horizontal pill scroll ── */}
+        {moreCats.length > 0 && (
+
             <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-1 px-1">
               {moreCats.map((cat: any, i: number) => {
                 const style = getCategoryStyle(cat.name || '');

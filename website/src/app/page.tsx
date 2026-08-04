@@ -62,6 +62,8 @@ async function getProducts(filterType: 'bestSeller' | 'topSelection' | 'all' = '
   }
 }
 
+import MegaCategoryRibbon from '@/components/MegaCategoryRibbon';
+
 export default async function Home() {
   const [banners, categories, bestSellers, topSelections, medicines] = await Promise.all([
     getBanners(), getCategories(), getProducts('bestSeller'), getProducts('topSelection'), getProducts('all')
@@ -83,6 +85,7 @@ export default async function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <div className="min-h-screen bg-[#F8FAFC]">
         <Navbar />
+        <MegaCategoryRibbon />
 
         {/* ══════════════════════════════════════════════════
             ANNOUNCEMENT BAR
