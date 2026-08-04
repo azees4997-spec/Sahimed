@@ -460,7 +460,7 @@ export default function Navbar() {
       <nav 
         className={cn(
           "sticky top-0 z-[100] transition-all duration-300 w-full bg-white border-b border-slate-100 shadow-sm",
-          scrolled ? "py-1.5 sm:py-2" : "py-2.5 sm:py-3.5"
+          scrolled ? "py-1 sm:py-1.5" : "py-1.5 sm:py-2.5"
         )}
       >
         <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -471,15 +471,15 @@ export default function Navbar() {
               <SahiMedLogo placement="nav" />
             </Link>
 
-            {/* ── MIDDLE SEARCH BAR (Wider & Premium Attractive Styling) ── */}
-            <div className="flex-1 max-w-2xl xl:max-w-3xl mx-4 sm:mx-8 relative hidden md:block" ref={searchRef}>
+            {/* ── MIDDLE SEARCH BAR (Clean, Compact & Perfectly Aligned) ── */}
+            <div className="flex-1 max-w-xl lg:max-w-2xl xl:max-w-3xl mx-3 sm:mx-6 relative hidden md:block" ref={searchRef}>
               <form onSubmit={handleSearch} className="relative">
                 <div className="relative group">
-                  <SearchIcon className="absolute left-4.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-4.5 h-4.5 z-10" />
+                  <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-4 h-4 z-10" />
                   <input
                     type="text"
                     placeholder="Search medicines, brands, salts..."
-                    className="w-full pl-12 pr-28 h-12 text-xs sm:text-sm font-semibold bg-slate-50/80 hover:bg-slate-50 focus:bg-white border-2 border-slate-200/90 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-full transition-all outline-none text-slate-900 shadow-sm hover:shadow-md placeholder:text-slate-400"
+                    className="w-full pl-11 pr-24 h-11 text-xs font-semibold bg-slate-50/90 hover:bg-slate-100/70 focus:bg-white border border-slate-200/90 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-full transition-all outline-none text-slate-900 shadow-sm placeholder:text-slate-400"
                     value={search}
                     onChange={(e) => {
                       setSearch(e.target.value);
@@ -487,18 +487,18 @@ export default function Navbar() {
                     }}
                     onFocus={() => search.length >= 1 && setShowSuggestions(true)}
                   />
-                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2 z-10">
+                  <div className="absolute right-1 top-1/2 -translate-y-1/2 z-10">
                     {isSearching ? (
                       <div className="mr-3">
-                        <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
                       </div>
                     ) : (
                       <Button 
                         type="submit"
-                        className="h-9 px-6 rounded-full text-white font-black text-xs uppercase tracking-wider hover:scale-105 active:scale-95 transition-all shadow-md flex items-center gap-1.5"
+                        className="h-9 px-5 rounded-full text-white font-black text-[11px] uppercase tracking-wider hover:scale-105 active:scale-95 transition-all shadow-sm flex items-center gap-1"
                         style={{
                           background: 'linear-gradient(135deg, #009F9C 0%, #059669 100%)',
-                          boxShadow: '0 3px 12px rgba(0, 159, 156, 0.35)'
+                          boxShadow: '0 2px 10px rgba(0, 159, 156, 0.3)'
                         }}
                       >
                         <span>Search</span>

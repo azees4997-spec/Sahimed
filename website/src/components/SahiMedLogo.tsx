@@ -37,8 +37,8 @@ export default function SahiMedLogo({
   const rawDesktop = (placement === 'footer' ? logoSettings?.footerHeightDesktop : logoSettings?.navHeightDesktop);
   const rawMobile = (placement === 'footer' ? logoSettings?.footerHeightMobile : logoSettings?.navHeightMobile);
   
-  const desktopHeight = typeof rawDesktop === 'number' && rawDesktop > 0 ? Math.max(30, rawDesktop) : 80;
-  const mobileHeight = typeof rawMobile === 'number' && rawMobile > 0 ? Math.max(20, rawMobile) : 60;
+  const desktopHeight = typeof rawDesktop === 'number' && rawDesktop > 0 ? Math.min(52, Math.max(28, rawDesktop)) : (placement === 'footer' ? 60 : 44);
+  const mobileHeight = typeof rawMobile === 'number' && rawMobile > 0 ? Math.min(40, Math.max(20, rawMobile)) : (placement === 'footer' ? 44 : 32);
 
   return (
     <div className={cn("flex items-center justify-start select-none bg-transparent h-full py-1", className)}>
