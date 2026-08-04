@@ -212,15 +212,25 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
               </div>
             </div>
 
-            {/* Right Column: Doctor / Brand Ambassador Photo */}
-            <div className="relative shrink-0 w-72 sm:w-80 md:w-[420px] lg:w-[480px] aspect-[4/3] flex items-end justify-center">
-              <Image 
-                src="/images/hero_generics_ambassador.jpg" 
-                alt="SahiMed Certified Doctor Brand Ambassador" 
-                fill 
-                className="object-contain object-bottom drop-shadow-xl"
-                priority
-              />
+            {/* Right Column: Professional Doctor Brand Ambassador (Seamless Framed Badge) */}
+            <div className="relative shrink-0 w-72 sm:w-80 md:w-[380px] lg:w-[420px] aspect-square flex items-center justify-center">
+              <div className="relative w-full h-full rounded-3xl bg-white/70 backdrop-blur-md border border-white/80 p-3 shadow-xl overflow-hidden group">
+                <Image 
+                  src="/images/doctor_cutout_clean.jpg" 
+                  alt="SahiMed Certified Doctor Brand Ambassador" 
+                  fill 
+                  className="object-cover object-top rounded-2xl transition-transform duration-500 group-hover:scale-105"
+                  priority
+                />
+                <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md border border-slate-100 p-3 rounded-2xl shadow-lg text-center">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-primary block">
+                    👨‍⚕️ Registered Pharmacist Verification
+                  </span>
+                  <span className="text-[9px] text-slate-500 font-semibold block">
+                    Drug License #KA-B51-286602
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
