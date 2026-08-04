@@ -194,19 +194,9 @@ export default async function Home() {
               </div>
           </div>
 
-          {/* Embedded Mobile Search Bar — Exactly matches Truemeds prominent bottom search pill */}
+          {/* Embedded Mobile Search Bar — Fires instant mobile search overlay */}
           <div className="block sm:hidden px-3 pt-2 pb-3.5 relative z-20">
-            <Link href="/search" className="block w-full">
-              <div className="w-full bg-white rounded-full px-4 py-2.5 shadow-lg border border-pink-200/80 flex items-center justify-between text-slate-400 text-xs font-medium">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Search className="w-4 h-4 text-pink-500 shrink-0" />
-                  <span className="text-slate-400 font-medium truncate">Search your Medicines, brands, salts...</span>
-                </div>
-                <span className="text-[9px] font-black text-white px-2.5 py-1 rounded-full shrink-0 ml-1" style={{ background: 'linear-gradient(135deg, #009F9C, #059669)' }}>
-                  SEARCH
-                </span>
-              </div>
-            </Link>
+            <HeroSearch />
           </div>
 
           {/* Trust ticker */}

@@ -1,58 +1,33 @@
 "use client"
 
-import { Search, Mic } from 'lucide-react';
-import { useState } from 'react';
-
-const POPULAR = ['Metformin', 'Amlodipine', 'Vitamin D3', 'Azithromycin', 'Omeprazole'];
+import { Search } from 'lucide-react';
 
 export default function HeroSearch() {
-  const [hovered, setHovered] = useState(false);
-
   const handleOpen = () => {
-    window.dispatchEvent(new CustomEvent('open-mobile-search'));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('open-mobile-search'));
+    }
   };
 
   return (
-    <div className="w-full space-y-2.5">
-      {/* Main Search Bar */}
+    <div className="w-full">
       <button
         onClick={handleOpen}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        className="group w-full flex items-center gap-0 bg-white rounded-2xl border-2 border-slate-200 hover:border-primary/40 focus:border-primary shadow-lg shadow-slate-200/60 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 overflow-hidden"
-        aria-label="Search medicines"
+        type="button"
+        className="w-full bg-white hover:bg-slate-50 rounded-full px-4 py-2.5 shadow-lg border border-pink-200/80 flex items-center justify-between text-slate-400 text-xs font-medium transition-all duration-200 active:scale-[0.99] cursor-pointer"
+        aria-label="Open mobile search"
       >
-        {/* Icon */}
-        <div className="pl-4 pr-3 py-4 shrink-0">
-          <Search className={`w-5 h-5 transition-colors duration-300 ${hovered ? 'text-primary' : 'text-slate-400'}`} />
+        <div className="flex items-center gap-2 min-w-0">
+          <Search className="w-4 h-4 text-pink-500 shrink-0" />
+          <span className="text-slate-400 font-medium truncate text-left">Search your Medicines, brands, salts...</span>
         </div>
-
-        {/* Placeholder text */}
-        <div className="flex-1 py-4 text-left">
-          <span className="text-[13px] sm:text-sm text-slate-400 font-medium">
-            Search medicines, brands, salts...
-          </span>
-        </div>
-
-        {/* Search CTA Button */}
-        <div className="m-1.5 bg-primary hover:bg-primary/90 text-white px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-200 shrink-0 shadow-lg shadow-primary/25">
-          Search
-        </div>
+        <span 
+          className="text-[9px] font-black text-white px-3 py-1 rounded-full shrink-0 ml-1 shadow-sm uppercase tracking-wider" 
+          style={{ background: 'linear-gradient(135deg, #009F9C, #059669)' }}
+        >
+          SEARCH
+        </span>
       </button>
-
-      {/* Popular quick pills */}
-      <div className="flex items-center gap-2 flex-wrap px-1">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Popular:</span>
-        {POPULAR.map((term) => (
-          <button
-            key={term}
-            onClick={handleOpen}
-            className="text-[11px] font-semibold text-primary bg-primary/5 hover:bg-primary/10 border border-primary/10 px-2.5 py-1 rounded-full transition-all duration-200 active:scale-95 whitespace-nowrap"
-          >
-            {term}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }
