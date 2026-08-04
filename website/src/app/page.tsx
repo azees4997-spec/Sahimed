@@ -87,14 +87,154 @@ export default async function Home() {
         <Navbar />
         <MegaCategoryRibbon />
 
+        {/* ══════════════════════════════════════════════════
+            FULL-BLEED HERO — lives outside padded main
+        ══════════════════════════════════════════════════ */}
+        <section className="w-full overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #fdf6ff 0%, #fff0f7 35%, #f0fffe 70%, #fffbeb 100%)' }}>
+          {/* Decorative blobs — absolutely positioned inside the section */}
+          <div className="absolute -top-16 -left-16 w-72 h-72 rounded-full opacity-40 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #d8b4fe, #a78bfa)' }} />
+          <div className="absolute -bottom-12 -right-8 w-80 h-80 rounded-full opacity-30 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #6ee7b7, #34d399)' }} />
+          <div className="absolute top-8 right-1/3 w-40 h-40 rounded-full opacity-20 blur-2xl pointer-events-none" style={{ background: 'radial-gradient(circle, #fda4af, #fb7185)' }} />
 
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-10 sm:py-14 flex flex-col md:flex-row items-center justify-between gap-8">
 
+              {/* Left: Text */}
+              <div className="space-y-5 text-center md:text-left max-w-xl">
+                {/* Label pill */}
+                <span className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border shadow-sm"
+                  style={{ background: 'rgba(167,139,250,0.15)', borderColor: 'rgba(167,139,250,0.4)', color: '#7c3aed' }}
+                >
+                  🏥 India&apos;s Trusted Pharmacy
+                </span>
 
+                {/* Headline */}
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.08] text-slate-900">
+                  Switch to Branded{' '}
+                  <span style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Generics</span>
+                </h1>
+
+                <p className="text-sm sm:text-base text-slate-500 font-medium">
+                  Same formula as branded drugs — certified quality, verified by pharmacists, delivered fast.
+                </p>
+
+                {/* 3 Checkmark Bullets */}
+                <div className="space-y-3">
+                  {[
+                    { text: 'Trusted by thousands of customers', color: '#059669', bg: 'rgba(5,150,105,0.12)' },
+                    { text: 'WHO & FDA Certified', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
+                    { text: 'Save upto 60% on MRP', color: '#db2777', bg: 'rgba(219,39,119,0.12)' },
+                  ].map((b, i) => (
+                    <div key={i} className="flex items-center justify-center md:justify-start gap-3">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center font-black text-sm shrink-0"
+                        style={{ background: b.bg, color: b.color, border: `1.5px solid ${b.color}40` }}
+                      >
+                        ✓
+                      </div>
+                      <span className="text-sm sm:text-base font-bold text-slate-800">{b.text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Buttons */}
+                <div className="flex items-center justify-center md:justify-start gap-3 flex-wrap">
+                  <Link
+                    href="/search"
+                    className="px-7 py-3.5 text-white font-black text-sm uppercase tracking-wider rounded-2xl hover:scale-105 transition-all duration-200 flex items-center gap-2 shadow-xl"
+                    style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)', boxShadow: '0 8px 24px rgba(124,58,237,0.3)' }}
+                  >
+                    Shop Now →
+                  </Link>
+                  <Link
+                    href="/prescription"
+                    className="px-7 py-3.5 bg-white hover:bg-slate-50 border border-purple-200 text-slate-800 font-black text-sm uppercase tracking-wider rounded-2xl shadow-sm transition-all"
+                  >
+                    Upload Rx
+                  </Link>
+                </div>
+
+                {/* Mini stats */}
+                <div className="flex items-center justify-center md:justify-start gap-5 pt-1">
+                  {[
+                    { val: '10K+', label: 'Customers' },
+                    { val: '4.8★', label: 'Rating' },
+                    { val: '60%', label: 'Max Savings' },
+                  ].map((s, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <p className="text-lg font-black" style={{ color: '#7c3aed' }}>{s.val}</p>
+                      <p className="text-xs text-slate-500 font-medium">{s.label}</p>
+                      {i < 2 && <div className="w-px h-4 bg-slate-200 ml-2" />}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right: Doctor image — white bg blends into pastel via multiply */}
+              <div className="relative shrink-0 w-64 sm:w-80 md:w-[380px] lg:w-[420px] h-[320px] sm:h-[420px] lg:h-[480px] flex items-end justify-center">
+                {/* Soft glow behind doctor */}
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-3/4 rounded-full blur-3xl opacity-35 pointer-events-none"
+                  style={{ background: 'radial-gradient(ellipse, #c4b5fd 0%, #f9a8d4 60%, transparent 100%)' }}
+                />
+                {/* Doctor image — white bg disappears into gradient via multiply */}
+                <img
+                  src="/images/doctor_cutout_clean.jpg"
+                  alt="SahiMed Certified Doctor"
+                  className="relative z-10 w-full h-full object-contain object-bottom drop-shadow-2xl"
+                  style={{ mixBlendMode: 'multiply' }}
+                />
+                {/* Badge: savings */}
+                <div className="absolute top-6 -left-3 sm:-left-8 z-20 flex items-center gap-2 bg-white rounded-2xl px-3 py-2.5 shadow-2xl border border-pink-100">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: 'linear-gradient(135deg,#fdf2f8,#fce7f3)' }}>💊</div>
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Save upto</p>
+                    <p className="text-sm font-black" style={{ color: '#db2777' }}>60% OFF MRP</p>
+                  </div>
+                </div>
+                {/* Badge: certified */}
+                <div className="absolute bottom-16 -right-3 sm:-right-8 z-20 flex items-center gap-2 bg-white rounded-2xl px-3 py-2.5 shadow-2xl border border-purple-100">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: 'linear-gradient(135deg,#f5f3ff,#ede9fe)' }}>🏅</div>
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Certified by</p>
+                    <p className="text-sm font-black" style={{ color: '#7c3aed' }}>WHO & FDA</p>
+                  </div>
+                </div>
+              </div>
+          </div>
+
+          {/* Trust ticker */}
+          <div className="w-full overflow-hidden py-2.5 border-t" style={{ background: 'rgba(255,255,255,0.6)', borderColor: 'rgba(167,139,250,0.2)' }}>
+            <div className="flex animate-marquee w-max">
+              {[
+                { icon: '✅', text: 'Trusted by Thousands' },
+                { icon: '🏅', text: 'WHO & FDA Certified' },
+                { icon: '💊', text: 'Save upto 60% on MRP' },
+                { icon: '🚚', text: 'Free Delivery ₹499+' },
+                { icon: '🏥', text: 'Licensed Pharmacy KA-B51' },
+                { icon: '⭐', text: '4.8 Star Rating' },
+                { icon: '📦', text: '50,000+ Medicines' },
+                { icon: '⚡', text: '24hr Express Delivery' },
+                { icon: '✅', text: 'Trusted by Thousands' },
+                { icon: '🏅', text: 'WHO & FDA Certified' },
+                { icon: '💊', text: 'Save upto 60% on MRP' },
+                { icon: '🚚', text: 'Free Delivery ₹499+' },
+                { icon: '🏥', text: 'Licensed Pharmacy KA-B51' },
+                { icon: '⭐', text: '4.8 Star Rating' },
+                { icon: '📦', text: '50,000+ Medicines' },
+                { icon: '⚡', text: '24hr Express Delivery' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 mx-5 shrink-0">
+                  <span className="text-sm">{item.icon}</span>
+                  <span className="text-[11px] font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap">{item.text}</span>
+                  <span className="text-slate-300 ml-1">·</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* ══════════════════════════════════════════════════
             MAIN CONTENT (HomeClient handles everything below)
         ══════════════════════════════════════════════════ */}
-        <main className="w-full px-4 sm:px-6 lg:px-8 pt-2 pb-10 md:pt-4 md:pb-16">
+        <main className="w-full px-4 sm:px-6 lg:px-8 pt-6 pb-10 md:pt-8 md:pb-16">
           <HomeClient
             banners={banners}
             categories={categories}
