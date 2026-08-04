@@ -96,10 +96,10 @@ export default async function Home() {
           <div className="absolute -bottom-12 -right-8 w-80 h-80 rounded-full opacity-30 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #6ee7b7, #34d399)' }} />
           <div className="absolute top-8 right-1/3 w-40 h-40 rounded-full opacity-20 blur-2xl pointer-events-none" style={{ background: 'radial-gradient(circle, #fda4af, #fb7185)' }} />
 
-          <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-4 sm:py-6 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8">
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 pt-4 sm:pt-6 pb-0 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8">
 
               {/* Left: Wording (Aligned left) */}
-              <div className="space-y-3.5 text-center md:text-left max-w-xl">
+              <div className="space-y-3.5 text-center md:text-left max-w-xl pb-4 sm:pb-6">
                 {/* Label pill */}
                 <span className="inline-flex items-center gap-2 text-[10.5px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full border shadow-sm"
                   style={{ background: 'rgba(167,139,250,0.15)', borderColor: 'rgba(167,139,250,0.4)', color: '#7c3aed' }}
@@ -168,16 +168,16 @@ export default async function Home() {
                 </div>
               </div>
 
-              {/* Right: Transparent Doctor Cutout PNG (No box, aligned right, height reduced) */}
-              <div className="relative shrink-0 w-52 sm:w-64 md:w-[300px] lg:w-[340px] h-[220px] sm:h-[270px] lg:h-[300px] flex items-end justify-center md:ml-auto">
-                {/* Clean transparent PNG cutout — blends 100% naturally onto banner background */}
+              {/* Right: Doctor Cutout PNG sitting flush at bottom border line */}
+              <div className="relative shrink-0 w-52 sm:w-64 md:w-[310px] lg:w-[350px] h-[230px] sm:h-[280px] lg:h-[310px] flex items-end justify-center md:ml-auto self-end">
+                {/* Clean transparent PNG cutout — sits directly flush on the bottom line */}
                 <img
                   src="/images/doctor_transparent.png"
                   alt="SahiMed Certified Doctor"
                   className="relative z-10 w-full h-full object-contain object-bottom pointer-events-none"
                 />
                 {/* Badge: savings */}
-                <div className="absolute top-1 left-0 sm:-left-3 z-20 flex items-center gap-2 bg-white/95 rounded-2xl px-3 py-1.5 shadow-md border border-pink-100/80">
+                <div className="absolute top-2 left-0 sm:-left-3 z-20 flex items-center gap-2 bg-white/95 rounded-2xl px-3 py-1.5 shadow-md border border-pink-100/80">
                   <div className="w-7 h-7 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: 'linear-gradient(135deg,#fdf2f8,#fce7f3)' }}>💊</div>
                   <div>
                     <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Save upto</p>
@@ -185,7 +185,7 @@ export default async function Home() {
                   </div>
                 </div>
                 {/* Badge: certified */}
-                <div className="absolute bottom-6 right-0 sm:-right-3 z-20 flex items-center gap-2 bg-white/95 rounded-2xl px-3 py-1.5 shadow-md border border-purple-100/80">
+                <div className="absolute bottom-4 right-0 sm:-right-3 z-20 flex items-center gap-2 bg-white/95 rounded-2xl px-3 py-1.5 shadow-md border border-purple-100/80">
                   <div className="w-7 h-7 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: 'linear-gradient(135deg,#f5f3ff,#ede9fe)' }}>🏅</div>
                   <div>
                     <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Certified by</p>
