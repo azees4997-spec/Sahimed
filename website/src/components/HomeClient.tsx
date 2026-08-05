@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from 'react';
-import { ChevronRight, ShieldCheck, Star, Zap, BadgeCheck, Award, Clock } from 'lucide-react';
+import { ChevronRight, ShieldCheck, Star, Zap, BadgeCheck, Award, Clock, Package, Truck } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -295,26 +295,33 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
           {/* Pastel advantage cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
             {[
-              { icon: BadgeCheck, val: '100%', sub: 'Genuine Medicines', desc: 'Sourced from licensed manufacturers', emoji: '💊', bg: 'linear-gradient(135deg,#ecfdf5,#d1fae5)', border: '#6ee7b7', color: '#059669' },
-              { icon: Award, val: '61%', sub: 'Max Savings', desc: 'Highest discounts on branded generics', emoji: '🏷️', bg: 'linear-gradient(135deg,#f5f3ff,#ede9fe)', border: '#a78bfa', color: '#7c3aed' },
-              { icon: Clock, val: '24hr', sub: 'Express Delivery', desc: 'Fastest medicine delivery in India', emoji: '🚚', bg: 'linear-gradient(135deg,#fff0f7,#fce7f3)', border: '#f9a8d4', color: '#db2777' },
-              { icon: ShieldCheck, val: 'Licensed', sub: 'Rx Pharmacy', desc: 'Drug License No. KA-B51-286602', emoji: '🔒', bg: 'linear-gradient(135deg,#fffbeb,#fef9c3)', border: '#fde68a', color: '#d97706' },
+              { icon: BadgeCheck, val: '100%', sub: 'Genuine Medicines', desc: 'Sourced from licensed manufacturers', emoji: '💊', tag: null, bg: 'linear-gradient(135deg,#ecfdf5,#d1fae5)', border: '#6ee7b7', color: '#059669' },
+              { icon: Award, val: '61%', sub: 'Max Savings', desc: 'Highest discounts on branded generics', emoji: '🏷️', tag: null, bg: 'linear-gradient(135deg,#f5f3ff,#ede9fe)', border: '#a78bfa', color: '#7c3aed' },
+              { icon: Package, val: 'Long Expiry', sub: 'Min 6 months expiry on every product', desc: 'Fresh batch inventory guaranteed', emoji: '📦', tag: 'FRESH STOCK', bg: 'linear-gradient(135deg,#fff0f7,#fce7f3)', border: '#f9a8d4', color: '#db2777' },
+              { icon: Truck, val: 'Free Delivery', sub: 'On orders above ₹499', desc: 'Zero delivery fee across all cities', emoji: '🚚', tag: '₹0 DELIVERY', bg: 'linear-gradient(135deg,#ecfdf5,#d1fae5)', border: '#6ee7b7', color: '#059669' },
             ].map((adv, i) => (
               <motion.div
                 key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
-                className="rounded-2xl p-4 sm:p-5 flex flex-col gap-3 hover:-translate-y-1.5 transition-all duration-300 cursor-default"
+                className="rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3 hover:-translate-y-1.5 transition-all duration-300 cursor-default relative overflow-hidden"
                 style={{ background: adv.bg, border: `1.5px solid ${adv.border}60`, boxShadow: `0 4px 20px ${adv.border}30` }}
               >
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm text-xl">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-xs text-xl">
                     {adv.emoji}
                   </div>
+                  {adv.tag && (
+                    <span 
+                      className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/90 shadow-2xs backdrop-blur-sm"
+                      style={{ color: adv.color }}
+                    >
+                      {adv.tag}
+                    </span>
+                  )}
                 </div>
                 <div>
-                  <p className="text-xl sm:text-2xl font-black leading-none" style={{ color: adv.color }}>{adv.val}</p>
-                  <p className="text-xs font-black text-slate-700 mt-1 uppercase tracking-wide">{adv.sub}</p>
+                  <p className="text-lg sm:text-2xl font-black leading-tight text-slate-900">{adv.val}</p>
+                  <p className="text-[11px] sm:text-xs font-bold text-slate-600 mt-1 leading-snug">{adv.sub}</p>
                 </div>
-                <p className="text-[10px] sm:text-[11px] text-slate-500 leading-relaxed font-medium hidden sm:block">{adv.desc}</p>
               </motion.div>
             ))}
           </div>
