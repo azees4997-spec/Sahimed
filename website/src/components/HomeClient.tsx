@@ -268,78 +268,77 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
       )}
 
       {/* ══════════════════════════════════════════════════════
-          THE SAHIMED ADVANTAGE — Premium Pastel Cards
+          CATEGORY BLOCK 2 — Health & Wellness Categories (Clean White Background)
           ══════════════════════════════════════════════════════ */}
       <motion.section
         variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }}
-        className="relative overflow-hidden rounded-3xl p-6 sm:p-10"
-        style={{ background: 'linear-gradient(135deg, #fdf6ff 0%, #fff0f7 50%, #f0fffe 100%)', border: '1px solid rgba(167,139,250,0.2)' }}
+        className="bg-white rounded-3xl p-5 sm:p-7 border border-slate-100 shadow-sm space-y-6"
       >
-        {/* Blobs */}
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-30 pointer-events-none" style={{ background: 'radial-gradient(circle, #d8b4fe, #a78bfa)' }} />
-        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, #6ee7b7, #34d399)' }} />
-
-        <div className="relative z-10">
-          <div className="text-center mb-7 sm:mb-10">
-            <span className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-3 shadow-sm"
-              style={{ background: 'rgba(124,58,237,0.1)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.2)' }}
-            >
-              ✨ Why Choose SahiMed
-            </span>
-            <h2 className="text-xl sm:text-3xl font-black tracking-tight leading-tight text-slate-900">
-              The <span style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>SahiMed</span> Advantage
+        {/* Section Header */}
+        <div className="flex items-end justify-between px-1">
+          <div>
+            <h2 className="text-xl sm:text-3xl font-black tracking-tight leading-none text-slate-900">
+              Wellness & OTC{' '}
+              <span style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Categories</span>
             </h2>
-            <p className="text-slate-500 text-xs sm:text-sm mt-2 font-medium">What makes us India&apos;s most trusted online pharmacy</p>
+            <p className="text-xs text-slate-500 font-medium mt-1">Personal Care, Healthcare Devices & Everyday Essentials</p>
           </div>
+          <Link href="/search?c=OTC" className="text-[11px] font-black uppercase tracking-wider flex items-center gap-0.5 hover:underline px-3.5 py-1.5 rounded-full border transition-all"
+            style={{ color: '#7c3aed', background: 'rgba(124,58,237,0.08)', borderColor: 'rgba(124,58,237,0.2)' }}
+          >
+            View All <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
 
-          {/* Pastel advantage cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
-            {[
-              { icon: BadgeCheck, val: '100%', sub: 'Genuine Medicines', desc: 'Sourced from licensed manufacturers', emoji: '💊', tag: null, bg: 'linear-gradient(135deg,#ecfdf5,#d1fae5)', border: '#6ee7b7', color: '#059669' },
-              { icon: Award, val: '61%', sub: 'Max Savings', desc: 'Highest discounts on branded generics', emoji: '🏷️', tag: null, bg: 'linear-gradient(135deg,#f5f3ff,#ede9fe)', border: '#a78bfa', color: '#7c3aed' },
-              { icon: Package, val: 'Long Expiry', sub: 'Min 6 months expiry on every product', desc: 'Fresh batch inventory guaranteed', emoji: '📦', tag: 'FRESH STOCK', bg: 'linear-gradient(135deg,#fff0f7,#fce7f3)', border: '#f9a8d4', color: '#db2777' },
-              { icon: Truck, val: 'Free Delivery', sub: 'On orders above ₹499', desc: 'Zero delivery fee across all cities', emoji: '🚚', tag: '₹0 DELIVERY', bg: 'linear-gradient(135deg,#ecfdf5,#d1fae5)', border: '#6ee7b7', color: '#059669' },
-            ].map((adv, i) => (
-              <motion.div
-                key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
-                className="rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3 hover:-translate-y-1.5 transition-all duration-300 cursor-default relative overflow-hidden"
-                style={{ background: adv.bg, border: `1.5px solid ${adv.border}60`, boxShadow: `0 4px 20px ${adv.border}30` }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-xs text-xl">
-                    {adv.emoji}
+        {/* ── Category 2 Grid — Compact Circular Avatar Icons ── */}
+        <div className="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
+          {[
+            { name: 'Personal Care', emoji: '✨', bg: 'rgba(124,58,237,0.06)', color: '#7c3aed', border: 'rgba(124,58,237,0.2)' },
+            { name: 'Baby Care', emoji: '👶', bg: 'rgba(219,39,119,0.06)', color: '#db2777', border: 'rgba(219,39,119,0.2)' },
+            { name: 'Health Devices', emoji: '🩺', bg: 'rgba(5,150,105,0.06)', color: '#059669', border: 'rgba(5,150,105,0.2)' },
+            { name: 'Ayurveda', emoji: '🌿', bg: 'rgba(217,119,6,0.06)', color: '#d97706', border: 'rgba(217,119,6,0.2)' },
+            { name: 'Fitness & Protein', emoji: '🏋️‍♂️', bg: 'rgba(59,130,246,0.06)', color: '#3b82f6', border: 'rgba(59,130,246,0.2)' },
+            { name: 'Eye & Ear Care', emoji: '👁️', bg: 'rgba(239,68,68,0.06)', color: '#ef4444', border: 'rgba(239,68,68,0.2)' },
+            { name: 'First Aid', emoji: '🩹', bg: 'rgba(20,184,166,0.06)', color: '#14b8a6', border: 'rgba(20,184,166,0.2)' },
+            { name: 'Diabetes Devices', emoji: '🩸', bg: 'rgba(168,85,247,0.06)', color: '#a855f7', border: 'rgba(168,85,247,0.2)' },
+          ].map((cat: any, i: number) => {
+            const style = getCategoryStyle(cat.name || '');
+            const imgSrc = style.image;
+
+            return (
+              <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+                <Link
+                  href={`/search?c=${encodeURIComponent(cat.name)}`}
+                  className="group flex flex-col items-center text-center p-1 transition-transform duration-200 hover:-translate-y-1"
+                >
+                  {/* Small Round Circular Image Container */}
+                  <div className="relative w-14 h-14 sm:w-16 sm:h-16 lg:w-18 lg:h-18 rounded-full overflow-hidden p-0.5 shadow-xs border border-slate-200/80 group-hover:scale-105 group-hover:shadow-md transition-all duration-300 bg-white shrink-0"
+                    style={{ boxShadow: `0 3px 10px ${cat.color}18` }}
+                  >
+                    <div className="relative w-full h-full rounded-full overflow-hidden bg-slate-50 flex items-center justify-center">
+                      <Image
+                        src={imgSrc}
+                        alt={cat.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
                   </div>
-                  {adv.tag && (
-                    <span 
-                      className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/90 shadow-2xs backdrop-blur-sm"
-                      style={{ color: adv.color }}
-                    >
-                      {adv.tag}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <p className="text-lg sm:text-2xl font-black leading-tight text-slate-900">{adv.val}</p>
-                  <p className="text-[11px] sm:text-xs font-bold text-slate-600 mt-1 leading-snug">{adv.sub}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
 
-          {/* Certification pills */}
-          <div className="mt-6 pt-5 border-t border-white/60 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-            {[
-              { icon: '🔒', label: 'Drug Lic. KA-B51-286602', color: '#d97706' },
-              { icon: '🌐', label: '256-bit SSL Encrypted', color: '#059669' },
-              { icon: '🏥', label: 'Licensed Pharmacist', color: '#7c3aed' },
-              { icon: '⭐', label: 'Google Verified 4.8★', color: '#db2777' },
-            ].map((cert, i) => (
-              <div key={i} className="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-sm" style={{ border: `1px solid ${cert.color}30` }}>
-                <span className="text-sm">{cert.icon}</span>
-                <p className="text-[10px] font-black uppercase tracking-wider whitespace-nowrap" style={{ color: cert.color }}>{cert.label}</p>
-              </div>
-            ))}
-          </div>
+                  {/* Name & Tag */}
+                  <h3 className="text-[11px] sm:text-xs font-black tracking-tight text-slate-800 group-hover:text-primary transition-colors line-clamp-1 mt-1.5">
+                    {cat.name}
+                  </h3>
+                  <span 
+                    className="inline-block text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full mt-0.5"
+                    style={{ background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}
+                  >
+                    UP TO 50% OFF
+                  </span>
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
       </motion.section>
 
