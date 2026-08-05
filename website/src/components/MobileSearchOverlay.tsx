@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, X, ArrowLeft, Loader2, ShoppingCart, ArrowUpRight } from 'lucide-react';
+import { Search, X, ArrowLeft, Loader2, ShoppingCart, ArrowUpRight, HeartPulse, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,14 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
   const [categories, setCategories] = useState<any[]>([]);
   const [mostSearchedMeds, setMostSearchedMeds] = useState<any[]>([]);
   const [mostSearchedSalts, setMostSearchedSalts] = useState<any[]>([]);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('sahimed_recent_searches');
+      if (saved) setRecentSearches(JSON.parse(saved).slice(0, 5));
+    } catch (e) {}
+  }, []);
 
   useEffect(() => {
     fetch('/api/categories?limit=9')
@@ -178,48 +186,53 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
       className="fixed inset-0 z-[200] bg-white flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center gap-2 p-4 border-b border-slate-100">
-        <button onClick={onClose} className="p-2 -ml-2 text-slate-500">
-          <ArrowLeft className="w-6 h-6" />
+      <div className="flex items-center gap-2 p-3 sm:p-4 border-b border-slate-100 bg-white">
+        <button onClick={onClose} className="p-2 -ml-1 text-slate-500 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-colors">
+          <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1 relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-          <Input
-            ref={inputRef}
-            type="text"
-            placeholder="Search by medicine or salt..."
-            className="w-full pl-10 pr-24 h-11 bg-slate-50 border-none focus:ring-2 focus:ring-primary/20 rounded-xl font-bold text-sm"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && search.trim()) {
-                logSearch(search.trim());
-                router.push(`/search?q=${encodeURIComponent(search.trim())}`);
-                onClose();
-              }
-            }}
-          />
-          <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
-            {search && (
-              <button 
-                onClick={() => setSearch('')}
-                className="p-2 text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-            {search.trim() && (
-              <button 
-                onClick={() => {
+          <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-teal-400 via-emerald-500 to-cyan-500 opacity-20 group-focus-within:opacity-100 blur-[3px] transition-all duration-300" />
+          <div className="relative flex items-center bg-slate-50 group-focus-within:bg-white rounded-2xl border border-slate-200 group-focus-within:border-teal-500 overflow-hidden shadow-xs">
+            <div className="pl-3 pr-1 flex items-center gap-1 shrink-0">
+              <HeartPulse className="w-4 h-4 text-teal-600 animate-pulse" />
+            </div>
+            <Input
+              ref={inputRef}
+              type="text"
+              placeholder="Search medicines, brands, salts..."
+              className="w-full border-none focus-visible:ring-0 h-11 bg-transparent font-bold text-sm text-slate-900 placeholder:text-slate-400 placeholder:font-normal"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && search.trim()) {
                   logSearch(search.trim());
                   router.push(`/search?q=${encodeURIComponent(search.trim())}`);
                   onClose();
-                }}
-                className="h-9 px-4 bg-primary text-white rounded-lg flex items-center justify-center shadow-lg shadow-primary/20 text-[9px] font-black tracking-widest uppercase"
-              >
-                SEARCH
-              </button>
-            )}
+                }
+              }}
+            />
+            <div className="pr-1 flex items-center gap-1 shrink-0">
+              {search && (
+                <button 
+                  onClick={() => setSearch('')}
+                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+              {search.trim() && (
+                <button 
+                  onClick={() => {
+                    logSearch(search.trim());
+                    router.push(`/search?q=${encodeURIComponent(search.trim())}`);
+                    onClose();
+                  }}
+                  className="h-8 px-3.5 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl flex items-center justify-center shadow-md text-[10px] font-black tracking-widest uppercase"
+                >
+                  SEARCH
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -343,7 +356,43 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
     )}
 
         {!search && (
-          <div className="p-6 space-y-10 pb-20">
+          <div className="p-5 space-y-8 pb-20">
+            {/* Recent Searches */}
+            {recentSearches.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-1.5">
+                    <History className="w-3.5 h-3.5 text-teal-600" /> Recent Searches
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setRecentSearches([]);
+                      localStorage.removeItem('sahimed_recent_searches');
+                    }}
+                    className="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-rose-500"
+                  >
+                    Clear
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {recentSearches.map((term, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setSearch(term);
+                        router.push(`/search?q=${encodeURIComponent(term)}`);
+                        onClose();
+                      }}
+                      className="px-3.5 py-1.5 bg-white border border-slate-200 rounded-full text-[11px] font-bold text-slate-700 hover:border-teal-500 hover:text-teal-700 transition-all flex items-center gap-1.5 shadow-2xs"
+                    >
+                      <History className="w-3 h-3 text-slate-400" />
+                      <span>{term}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Categories Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">

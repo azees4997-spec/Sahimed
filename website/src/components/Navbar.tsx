@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link';
-import { Search as SearchIcon, MapPin, ChevronDown, LocateFixed, Loader2, ShoppingCart, Package, ArrowUpRight, ChevronUp, User, ChevronRight, Wallet, Plus, LogOut } from 'lucide-react';
+import { Search as SearchIcon, MapPin, ChevronDown, LocateFixed, Loader2, ShoppingCart, Package, ArrowUpRight, ChevronUp, User, ChevronRight, Wallet, Plus, LogOut, HeartPulse, Sparkles, History, TrendingUp, X, Command } from 'lucide-react';
 
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -145,6 +145,88 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
+
+  // Search UX Enhancements (Heart of SahiMed)
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const SEARCH_PLACEHOLDERS = [
+    "Search 'Dolo 650' or Paracetamol...",
+    "Search medicines, brands, salts...",
+    "Search 'Augmentin 625 Duo'...",
+    "Search generic salts & save up to 70%...",
+    "Search 'Metformin 500mg'...",
+    "Search 'Vitamin C & Zinc'..."
+  ];
+
+  const TRENDING_SEARCHES = [
+    { term: 'Dolo 650', type: 'Medicine', icon: '🔥' },
+    { term: 'Paracetamol', type: 'Generic Salt', icon: '💊' },
+    { term: 'Multivitamins', type: 'Supplement', icon: '🛡️' },
+    { term: 'Amoxicillin', type: 'Antibiotic', icon: '⚡' },
+    { term: 'Metformin', type: 'Diabetes', icon: '🩸' },
+    { term: 'Omeprazole', type: 'Antacid', icon: '🩺' }
+  ];
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('sahimed_recent_searches');
+      if (saved) setRecentSearches(JSON.parse(saved).slice(0, 5));
+    } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % SEARCH_PLACEHOLDERS.length);
+    }, 3200);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setShowSuggestions(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const addRecentSearch = (term: string) => {
+    if (!term || !term.trim()) return;
+    const clean = term.trim();
+    setRecentSearches(prev => {
+      const filtered = prev.filter(item => item.toLowerCase() !== clean.toLowerCase());
+      const updated = [clean, ...filtered].slice(0, 5);
+      try {
+        localStorage.setItem('sahimed_recent_searches', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
+  const removeRecentSearch = (term: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRecentSearches(prev => {
+      const updated = prev.filter(item => item.toLowerCase() !== term.toLowerCase());
+      try {
+        localStorage.setItem('sahimed_recent_searches', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
+  const clearAllRecent = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRecentSearches([]);
+    try {
+      localStorage.removeItem('sahimed_recent_searches');
+    } catch (e) {}
+  };
   
   // Mega Ribbon State
   const [categoriesMap, setCategoriesMap] = useState<Record<string, string[]>>({});
@@ -261,6 +343,7 @@ export default function Navbar() {
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (search.trim().length >= 1) {
+      addRecentSearch(search.trim());
       logSearch(search.trim());
       router.push(`/search?q=${encodeURIComponent(search.trim())}`);
       setShowSuggestions(false);
@@ -268,6 +351,7 @@ export default function Navbar() {
   };
 
   const handleSuggestionClick = (item: any) => {
+    addRecentSearch(item.term);
     logSearch(item.term);
     if (item.type === 'Salt') {
       // For Salts/Molecules, go to search results. If we have a moleculeId, use it and drop the 'q' to avoid conflicts.
@@ -471,46 +555,110 @@ export default function Navbar() {
               <SahiMedLogo placement="nav" />
             </Link>
 
-            {/* ── MIDDLE SEARCH BAR (Clean, Compact & Perfectly Aligned) ── */}
+            {/* ── MIDDLE SEARCH BAR (Heart of SahiMed - Modern, Glowing & Interactive) ── */}
             <div className="flex-1 max-w-xl lg:max-w-2xl xl:max-w-3xl mx-3 sm:mx-6 relative hidden md:block" ref={searchRef}>
               <form onSubmit={handleSearch} className="relative">
-                <div className="relative group">
-                  <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-4 h-4 z-10" />
-                  <input
-                    type="text"
-                    placeholder="Search medicines, brands, salts..."
-                    className="w-full pl-11 pr-24 h-11 text-xs font-semibold bg-slate-50/90 hover:bg-slate-100/70 focus:bg-white border border-slate-200/90 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-full transition-all outline-none text-slate-900 shadow-sm placeholder:text-slate-400"
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      if (e.target.value.length >= 1) setShowSuggestions(true);
-                    }}
-                    onFocus={() => search.length >= 1 && setShowSuggestions(true)}
-                  />
-                  <div className="absolute right-1 top-1/2 -translate-y-1/2 z-10">
-                    {isSearching ? (
-                      <div className="mr-3">
-                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <div className="relative group transition-all duration-300">
+                  {/* Ambient Glow Aura */}
+                  <div className={cn(
+                    "absolute -inset-0.5 rounded-full bg-gradient-to-r from-teal-400 via-emerald-500 to-cyan-500 opacity-25 group-hover:opacity-60 transition-all duration-500 blur-[3px]",
+                    isFocused ? "opacity-100 blur-[5px]" : ""
+                  )} />
+
+                  <div className="relative flex items-center bg-white rounded-full border border-slate-200 group-focus-within:border-teal-500 shadow-sm group-hover:shadow-md transition-all duration-300 overflow-hidden">
+                    {/* Left Icon with Heartbeat Pulse */}
+                    <div className="pl-4 pr-1.5 flex items-center gap-1.5 shrink-0 select-none">
+                      <div className="relative flex items-center justify-center">
+                        <HeartPulse className="w-4 h-4 text-teal-600 animate-pulse" />
+                        <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                       </div>
-                    ) : (
-                      <Button 
-                        type="submit"
-                        className="h-9 px-5 rounded-full text-white font-black text-[11px] uppercase tracking-wider hover:scale-105 active:scale-95 transition-all shadow-sm flex items-center gap-1"
-                        style={{
-                          background: 'linear-gradient(135deg, #009F9C 0%, #059669 100%)',
-                          boxShadow: '0 2px 10px rgba(0, 159, 156, 0.3)'
+                    </div>
+
+                    {/* Input Field + Rotating Placeholder */}
+                    <div className="relative flex-1 h-11 flex items-center overflow-hidden">
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={search}
+                        onChange={(e) => {
+                          setSearch(e.target.value);
+                          setShowSuggestions(true);
                         }}
-                      >
-                        <span>Search</span>
-                      </Button>
-                    )}
+                        onFocus={() => {
+                          setIsFocused(true);
+                          setShowSuggestions(true);
+                        }}
+                        onBlur={() => setIsFocused(false)}
+                        className="w-full h-full bg-transparent pl-1.5 pr-2 text-xs sm:text-sm font-semibold text-slate-900 outline-none placeholder-transparent z-10"
+                      />
+
+                      {/* Rotating Animated Placeholder when search is empty */}
+                      {!search && (
+                        <div className="absolute left-1.5 inset-y-0 flex items-center pointer-events-none z-0 overflow-hidden pr-2">
+                          <AnimatePresence mode="wait">
+                            <motion.span
+                              key={placeholderIndex}
+                              initial={{ y: 10, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              exit={{ y: -10, opacity: 0 }}
+                              transition={{ duration: 0.3, ease: "easeOut" }}
+                              className="text-xs sm:text-sm font-medium text-slate-400 truncate flex items-center gap-1.5"
+                            >
+                              <span>{SEARCH_PLACEHOLDERS[placeholderIndex]}</span>
+                            </motion.span>
+                          </AnimatePresence>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Controls Right */}
+                    <div className="flex items-center gap-2 pr-1 shrink-0 z-10">
+                      {search && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSearch('');
+                            inputRef.current?.focus();
+                          }}
+                          className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
+                          title="Clear search"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+
+                      {!search && (
+                        <div className="hidden xl:flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[10px] font-bold text-slate-400 select-none">
+                          <Command className="w-2.5 h-2.5" />
+                          <span>K</span>
+                        </div>
+                      )}
+
+                      {isSearching ? (
+                        <div className="px-4 py-2">
+                          <Loader2 className="w-4 h-4 animate-spin text-teal-600" />
+                        </div>
+                      ) : (
+                        <Button 
+                          type="submit"
+                          className="h-9 px-5 rounded-full text-white font-black text-[11px] uppercase tracking-wider transition-all duration-300 shadow-md hover:shadow-teal-500/25 hover:scale-[1.03] active:scale-95 flex items-center gap-1.5 group/btn"
+                          style={{
+                            background: 'linear-gradient(135deg, #009F9C 0%, #059669 100%)',
+                            boxShadow: '0 3px 12px rgba(0, 159, 156, 0.35)'
+                          }}
+                        >
+                          <SearchIcon className="w-3.5 h-3.5 group-hover/btn:scale-110 transition-transform" />
+                          <span className="hidden sm:inline">Search</span>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </form>
 
-              {/* Autocomplete Suggestions Dropdown */}
+              {/* Autocomplete & Smart Search Dropdown */}
               <AnimatePresence>
-                {showSuggestions && suggestions.length > 0 && (
+                {showSuggestions && (
                   <motion.div 
                     initial={{ opacity: 0, y: 8, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -518,96 +666,183 @@ export default function Navbar() {
                     transition={{ type: "spring", damping: 25, stiffness: 200 }}
                     className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] overflow-hidden z-[110] border border-slate-100 shadow-2xl"
                   >
-                    <div className="max-h-[500px] overflow-y-auto scrollbar-hide grid grid-cols-1 sm:grid-cols-12 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 bg-white">
-                      {/* Suggestions list */}
-                      <div className="sm:col-span-5 bg-slate-50/30">
-                        <div className="px-5 py-3 border-b border-slate-100/50">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                            <div className="w-1 h-1 rounded-full bg-primary" /> Suggestions
-                          </span>
-                        </div>
-                        <div className="divide-y divide-slate-100/50">
-                          {suggestions.map((item) => (
-                            <div 
-                              key={item.id}
-                              onClick={() => handleSuggestionClick(item)}
-                              className="w-full px-5 py-3 flex items-center gap-3 hover:bg-white transition-all group cursor-pointer"
-                            >
-                              <SearchIcon className="w-3.5 h-3.5 text-slate-300 group-hover:text-primary transition-colors" />
-                              <div className="flex-1 min-w-0 flex items-center gap-2">
-                                <span className="font-extrabold text-[12px] text-slate-700 truncate group-hover:text-slate-900 transition-colors uppercase">
-                                  {item.term}
-                                </span>
-                                <Badge variant="secondary" className="text-[8px] bg-slate-100 text-slate-400 font-bold border-none uppercase h-4 px-1">
-                                  {item.type === 'Salt' ? 'Molecule' : 'Brand'}
-                                </Badge>
-                              </div>
-                              <ArrowUpRight className="w-3.5 h-3.5 text-slate-200 group-hover:text-primary transition-all opacity-0 group-hover:opacity-100" />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Instant Top Matches */}
-                      <div className="sm:col-span-7 bg-white">
-                        <div className="px-5 py-3 border-b border-slate-100/50 flex items-center justify-between">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                            <div className="w-1 h-1 rounded-full bg-emerald-500" /> Top Matches
-                          </span>
-                        </div>
-                        <div className="divide-y divide-slate-100/50 max-h-[380px] overflow-y-auto">
-                          {displayedSuggestions.filter(s => s.type === 'Brand').length > 0 ? (
-                            displayedSuggestions.filter(s => s.type === 'Brand').map((item) => (
-                              <div 
-                                key={`prod-${item.id}`}
-                                className="w-full px-5 py-3.5 flex items-center gap-4 hover:bg-slate-50/50 transition-all group"
+                    {/* CASE 1: INPUT IS EMPTY -> Show Recent Searches & Trending Medicines */}
+                    {!search.trim() ? (
+                      <div className="p-4 sm:p-5 space-y-4 max-h-[460px] overflow-y-auto scrollbar-hide">
+                        {/* Recent Searches */}
+                        {recentSearches.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between px-1">
+                              <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                <History className="w-3.5 h-3.5 text-teal-600" /> Recent Searches
+                              </span>
+                              <button 
+                                onClick={clearAllRecent}
+                                className="text-[10px] font-bold text-slate-400 hover:text-rose-500 transition-colors uppercase tracking-wider"
                               >
-                                <div className="relative w-12 h-12 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
-                                  <Image 
-                                    src={(item as any).imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
-                                    alt={item.term} 
-                                    fill 
-                                    className="object-contain p-1" 
-                                  />
-                                </div>
-                                <div className="flex-1 min-w-0 flex items-center justify-between gap-3">
-                                  <div className="flex-1 min-w-0 cursor-pointer" onClick={() => router.push(`/product/${(item as any).product?.id}`)}>
-                                    <p className="font-extrabold text-[13px] text-slate-800 line-clamp-1 group-hover:text-primary transition-colors">
-                                      {item.term}
-                                    </p>
-                                    <div className="flex items-center gap-2 mt-1">
-                                      {(item as any).price > 0 && (
-                                        <span className="text-[13px] font-black text-slate-900">₹{(item as any).price}</span>
-                                      )}
-                                      <span className="text-[8px] font-black text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
-                                        60% OFF
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <Button 
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      addToCart((item as any).product);
-                                      toast({ title: "Added to Basket" });
-                                    }}
-                                    variant="outline"
-                                    className="h-8 px-4 rounded-xl border-primary/20 text-primary hover:bg-primary hover:text-white font-black text-[9px] uppercase tracking-widest shadow-sm transition-all"
-                                  >
-                                    Add +
-                                  </Button>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="p-12 text-center space-y-2 opacity-40">
-                               <Package className="w-6 h-6 text-slate-300 mx-auto" />
-                               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Search for products</p>
+                                Clear All
+                              </button>
                             </div>
-                          )}
+                            <div className="flex flex-wrap gap-2">
+                              {recentSearches.map((term, idx) => (
+                                <div
+                                  key={idx}
+                                  onClick={() => {
+                                    setSearch(term);
+                                    handleSearch();
+                                  }}
+                                  className="group flex items-center gap-2 px-3 py-1.5 bg-slate-50 hover:bg-teal-50/80 border border-slate-200/80 hover:border-teal-200 rounded-full text-xs font-bold text-slate-700 hover:text-teal-900 cursor-pointer transition-all shadow-2xs"
+                                >
+                                  <History className="w-3 h-3 text-slate-400 group-hover:text-teal-600" />
+                                  <span>{term}</span>
+                                  <span
+                                    onClick={(e) => removeRecentSearch(term, e)}
+                                    className="p-0.5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                                  >
+                                    <X className="w-2.5 h-2.5" />
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Trending Searches */}
+                        <div className="space-y-2">
+                          <div className="px-1">
+                            <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                              <TrendingUp className="w-3.5 h-3.5 text-emerald-600" /> Popular & Trending Searches
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {TRENDING_SEARCHES.map((item, i) => (
+                              <div
+                                key={i}
+                                onClick={() => {
+                                  setSearch(item.term);
+                                  handleSearch();
+                                }}
+                                className="flex items-center justify-between p-2.5 bg-slate-50/80 hover:bg-emerald-50/70 border border-slate-100 hover:border-emerald-200 rounded-2xl cursor-pointer transition-all group"
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="text-sm shrink-0">{item.icon}</span>
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-bold text-slate-800 group-hover:text-emerald-700 truncate">{item.term}</p>
+                                    <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">{item.type}</p>
+                                  </div>
+                                </div>
+                                <ArrowUpRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-emerald-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Generic Savings Tip Banner */}
+                        <div className="p-3 bg-gradient-to-r from-teal-500/10 via-emerald-500/10 to-cyan-500/10 border border-teal-500/20 rounded-2xl flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
+                            💡
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-black text-slate-800 uppercase tracking-tight">Smart Medicine Tip</p>
+                            <p className="text-xs font-medium text-slate-600">
+                              Search by generic chemical/salt name to discover lower-cost alternatives and save up to <span className="font-bold text-teal-700">70% OFF</span>!
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    ) : suggestions.length > 0 ? (
+                      /* CASE 2: INPUT TYPED -> Suggestions List */
+                      <div className="max-h-[500px] overflow-y-auto scrollbar-hide grid grid-cols-1 sm:grid-cols-12 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 bg-white">
+                        {/* Suggestions list */}
+                        <div className="sm:col-span-5 bg-slate-50/30">
+                          <div className="px-5 py-3 border-b border-slate-100/50">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" /> Suggestions
+                            </span>
+                          </div>
+                          <div className="divide-y divide-slate-100/50">
+                            {suggestions.map((item) => (
+                              <div 
+                                key={item.id}
+                                onClick={() => handleSuggestionClick(item)}
+                                className="w-full px-5 py-3 flex items-center gap-3 hover:bg-white transition-all group cursor-pointer"
+                              >
+                                <SearchIcon className="w-3.5 h-3.5 text-slate-300 group-hover:text-teal-600 transition-colors" />
+                                <div className="flex-1 min-w-0 flex items-center gap-2">
+                                  <span className="font-extrabold text-[12px] text-slate-700 truncate group-hover:text-slate-900 transition-colors uppercase">
+                                    {item.term}
+                                  </span>
+                                  <Badge variant="secondary" className="text-[8px] bg-slate-100 text-slate-400 font-bold border-none uppercase h-4 px-1">
+                                    {item.type === 'Salt' ? 'Molecule' : 'Brand'}
+                                  </Badge>
+                                </div>
+                                <ArrowUpRight className="w-3.5 h-3.5 text-slate-200 group-hover:text-teal-600 transition-all opacity-0 group-hover:opacity-100" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Instant Top Matches */}
+                        <div className="sm:col-span-7 bg-white">
+                          <div className="px-5 py-3 border-b border-slate-100/50 flex items-center justify-between">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Top Matches
+                            </span>
+                          </div>
+                          <div className="divide-y divide-slate-100/50 max-h-[380px] overflow-y-auto">
+                            {displayedSuggestions.filter(s => s.type === 'Brand').length > 0 ? (
+                              displayedSuggestions.filter(s => s.type === 'Brand').map((item) => (
+                                <div 
+                                  key={`prod-${item.id}`}
+                                  className="w-full px-5 py-3.5 flex items-center gap-4 hover:bg-slate-50/50 transition-all group"
+                                >
+                                  <div className="relative w-12 h-12 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
+                                    <Image 
+                                      src={(item as any).imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
+                                      alt={item.term} 
+                                      fill 
+                                      className="object-contain p-1" 
+                                    />
+                                  </div>
+                                  <div className="flex-1 min-w-0 flex items-center justify-between gap-3">
+                                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleSuggestionClick(item)}>
+                                      <p className="font-extrabold text-[13px] text-slate-800 line-clamp-1 group-hover:text-teal-600 transition-colors">
+                                        {item.term}
+                                      </p>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        {(item as any).price > 0 && (
+                                          <span className="text-[13px] font-black text-slate-900">₹{(item as any).price}</span>
+                                        )}
+                                        <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
+                                          60% OFF
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <Button 
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        addToCart((item as any).product);
+                                        toast({ title: "Added to Basket" });
+                                      }}
+                                      variant="outline"
+                                      className="h-8 px-4 rounded-xl border-teal-500/20 text-teal-700 hover:bg-teal-600 hover:text-white font-black text-[9px] uppercase tracking-widest shadow-sm transition-all"
+                                    >
+                                      Add +
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="p-12 text-center space-y-2 opacity-40">
+                                 <Package className="w-6 h-6 text-slate-300 mx-auto" />
+                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Search for products</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -927,7 +1162,8 @@ export default function Navbar() {
                       <button 
                         onClick={async () => {
                           const { signOut } = await import('firebase/auth');
-                          const { auth } = await import('@/firebase');
+                          const { initializeFirebase } = await import('@/firebase');
+                          const { auth } = initializeFirebase();
                           await signOut(auth);
                           router.push('/login');
                         }}
