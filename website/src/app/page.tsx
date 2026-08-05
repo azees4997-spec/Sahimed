@@ -171,7 +171,7 @@ export default async function Home() {
               <div className="relative shrink-0 w-44 sm:w-72 md:w-[380px] lg:w-[420px] h-[260px] sm:h-[330px] lg:h-[380px] flex items-end justify-center -mr-2 sm:mr-0 self-end">
                 {/* Clean transparent PNG cutout — sits directly flush on the bottom line */}
                 <img
-                  src="/images/doctor_transparent.png"
+                  src="/images/doctor_hero_transparent.png"
                   alt="SahiMed Certified Doctor"
                   className="relative z-10 w-full h-full object-contain object-bottom pointer-events-none"
                 />
