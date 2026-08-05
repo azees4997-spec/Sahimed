@@ -135,47 +135,45 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
       {/* ════════════════════════════════════════════════
           SHOP BY CATEGORY  —  Rich HD Medical Cards
           ════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════
+          SHOP BY CATEGORY  —  Clean White Section with Round Circular Category Images
+          ════════════════════════════════════════════════ */}
       <motion.section
         variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }}
-        className="space-y-4"
+        className="bg-white rounded-3xl p-5 sm:p-7 border border-slate-100 shadow-sm space-y-6"
       >
-
         {/* Section Header */}
         <div className="flex items-end justify-between px-1">
           <div>
-            <span className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm mb-2"
-              style={{ background: 'rgba(124,58,237,0.1)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.2)' }}
-            >
-              💊 Explore Healthcare
-            </span>
+
             <h2 className="text-xl sm:text-3xl font-black tracking-tight leading-none text-slate-900">
               Top Medical{' '}
               <span style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Categories</span>
             </h2>
             <p className="text-xs text-slate-500 font-medium mt-1">Sahi Dawai, Sahi Daam Pe — Genuine stock up to 61% OFF</p>
           </div>
-          <Link href="/search" className="text-[11px] font-black uppercase tracking-wider flex items-center gap-0.5 hover:underline px-3 py-1.5 rounded-full border"
+          <Link href="/search" className="text-[11px] font-black uppercase tracking-wider flex items-center gap-0.5 hover:underline px-3.5 py-1.5 rounded-full border transition-all"
             style={{ color: '#7c3aed', background: 'rgba(124,58,237,0.08)', borderColor: 'rgba(124,58,237,0.2)' }}
           >
             View All <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        {/* ── Featured 8 Category Cards — Sleek 8-Col Compact Desktop Grid ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 sm:gap-3.5">
+        {/* ── Featured Category Cards — Clean White Cards with Circular Round Images ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
           {featuredCats.map((cat: any, i: number) => {
             const style = getCategoryStyle(cat.name || '');
             const imgSrc = (cat.imageUrl && !cat.imageUrl.includes('picsum')) ? cat.imageUrl : style.image;
-            // Per-category pastel accent colors for card footer
+            
             const cardAccents = [
-              { bg: 'rgba(124,58,237,0.08)', color: '#7c3aed', glow: 'rgba(124,58,237,0.12)' },
-              { bg: 'rgba(219,39,119,0.08)', color: '#db2777', glow: 'rgba(219,39,119,0.12)' },
-              { bg: 'rgba(5,150,105,0.08)', color: '#059669', glow: 'rgba(5,150,105,0.12)' },
-              { bg: 'rgba(217,119,6,0.08)', color: '#d97706', glow: 'rgba(217,119,6,0.12)' },
-              { bg: 'rgba(59,130,246,0.08)', color: '#3b82f6', glow: 'rgba(59,130,246,0.12)' },
-              { bg: 'rgba(239,68,68,0.08)', color: '#ef4444', glow: 'rgba(239,68,68,0.12)' },
-              { bg: 'rgba(20,184,166,0.08)', color: '#14b8a6', glow: 'rgba(20,184,166,0.12)' },
-              { bg: 'rgba(168,85,247,0.08)', color: '#a855f7', glow: 'rgba(168,85,247,0.12)' },
+              { color: '#7c3aed', bg: 'rgba(124,58,237,0.06)', border: 'rgba(124,58,237,0.2)' },
+              { color: '#db2777', bg: 'rgba(219,39,119,0.06)', border: 'rgba(219,39,119,0.2)' },
+              { color: '#059669', bg: 'rgba(5,150,105,0.06)', border: 'rgba(5,150,105,0.2)' },
+              { color: '#d97706', bg: 'rgba(217,119,6,0.06)', border: 'rgba(217,119,6,0.2)' },
+              { color: '#3b82f6', bg: 'rgba(59,130,246,0.06)', border: 'rgba(59,130,246,0.2)' },
+              { color: '#ef4444', bg: 'rgba(239,68,68,0.06)', border: 'rgba(239,68,68,0.2)' },
+              { color: '#14b8a6', bg: 'rgba(20,184,166,0.06)', border: 'rgba(20,184,166,0.2)' },
+              { color: '#a855f7', bg: 'rgba(168,85,247,0.06)', border: 'rgba(168,85,247,0.2)' },
             ];
             const accent = cardAccents[i % cardAccents.length];
 
@@ -183,45 +181,34 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
               <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
                 <Link
                   href={`/search?c=${encodeURIComponent(cat.name)}`}
-                  className="group relative flex flex-col overflow-hidden rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-1 bg-white shadow-sm hover:shadow-md"
-                  style={{ border: `1px solid ${accent.color}25` }}
+                  className="group flex flex-col items-center p-3 sm:p-4 rounded-2xl bg-white hover:bg-slate-50/80 border border-slate-100 hover:border-slate-200 shadow-2xs hover:shadow-md transition-all duration-300 hover:-translate-y-1 text-center"
                 >
-                  {/* Category Image Header — Compact height */}
-                  <div className="relative w-full h-24 sm:h-28 lg:h-32 overflow-hidden bg-slate-50">
-                    <Image
-                      src={imgSrc}
-                      alt={cat.name}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      priority={i < 4}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-900/10 to-transparent opacity-70 group-hover:opacity-40 transition-opacity" />
-
-                    {/* Discount badge */}
-                    <div className="absolute top-1.5 left-1.5 text-white text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-sm backdrop-blur-md"
-                      style={{ background: `linear-gradient(135deg, ${accent.color}, ${accent.color}cc)` }}
-                    >
-                      UP TO 61% OFF
+                  {/* Round Circular Image Container */}
+                  <div className="relative w-16 h-16 sm:w-20 sm:h-20 lg:w-22 lg:h-22 rounded-full overflow-hidden p-1 shadow-sm border border-slate-200/80 group-hover:scale-105 transition-transform duration-300 bg-white"
+                    style={{ boxShadow: `0 4px 14px ${accent.color}20` }}
+                  >
+                    <div className="relative w-full h-full rounded-full overflow-hidden">
+                      <Image
+                        src={imgSrc}
+                        alt={cat.name}
+                        fill
+                        className="object-cover"
+                        priority={i < 4}
+                      />
                     </div>
                   </div>
 
-                  {/* Name and Action */}
-                  <div className="p-2 sm:p-2.5 flex items-center justify-between transition-all duration-300"
-                    style={{ background: `${accent.bg}` }}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-[11px] sm:text-xs font-black uppercase tracking-tight leading-tight truncate" style={{ color: accent.color }}>
-                        {cat.name}
-                      </h3>
-                      <p className="text-[8.5px] font-medium text-slate-400 mt-0.5 truncate hidden sm:block">
-                        Verified Stock
-                      </p>
-                    </div>
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white flex items-center justify-center font-black text-[10px] shadow-sm shrink-0 ml-1"
-                      style={{ color: accent.color }}
+                  {/* Name */}
+                  <div className="mt-2.5 space-y-1 w-full">
+                    <h3 className="text-xs sm:text-[13px] font-black tracking-tight text-slate-800 group-hover:text-primary transition-colors line-clamp-1">
+                      {cat.name}
+                    </h3>
+                    <span 
+                      className="inline-block text-[8.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
+                      style={{ background: accent.bg, color: accent.color, border: `1px solid ${accent.border}` }}
                     >
-                      →
-                    </div>
+                      UP TO 61% OFF
+                    </span>
                   </div>
                 </Link>
               </motion.div>
@@ -231,27 +218,26 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
 
         {/* ── More categories — horizontal pill scroll ── */}
         {moreCats.length > 0 && (
-
-            <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-1 px-1">
-              {moreCats.map((cat: any, i: number) => {
-                const style = getCategoryStyle(cat.name || '');
-                return (
-                  <Link
-                    key={i}
-                    href={`/search?c=${encodeURIComponent(cat.name)}`}
-                    className="group flex items-center gap-2 shrink-0 px-3 py-2 bg-white border border-slate-100 rounded-full hover:border-primary/20 hover:bg-primary/5 hover:shadow-sm transition-all duration-200"
-                  >
-                    <span className="text-base leading-none">{style.emoji}</span>
-                    <span className="text-[11px] font-bold text-slate-700 group-hover:text-primary transition-colors whitespace-nowrap">{cat.name}</span>
-                  </Link>
-                );
-              })}
-              <Link href="/search" className="flex items-center gap-1.5 shrink-0 px-3 py-2 bg-primary text-white border border-primary rounded-full text-[11px] font-black">
-                All <ChevronRight className="w-3 h-3" />
-              </Link>
-            </div>
-          )}
-        </motion.section>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pt-2 pb-1 px-1">
+            {moreCats.map((cat: any, i: number) => {
+              const style = getCategoryStyle(cat.name || '');
+              return (
+                <Link
+                  key={i}
+                  href={`/search?c=${encodeURIComponent(cat.name)}`}
+                  className="group flex items-center gap-2 shrink-0 px-3.5 py-1.5 bg-slate-50 border border-slate-200/80 rounded-full hover:border-primary hover:bg-white hover:shadow-2xs transition-all duration-200"
+                >
+                  <span className="text-sm leading-none">{style.emoji}</span>
+                  <span className="text-xs font-bold text-slate-700 group-hover:text-primary transition-colors whitespace-nowrap">{cat.name}</span>
+                </Link>
+              );
+            })}
+            <Link href="/search" className="flex items-center gap-1.5 shrink-0 px-4 py-1.5 bg-primary text-white border border-primary rounded-full text-xs font-black shadow-2xs">
+              All <ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
+        )}
+      </motion.section>
 
       {/* ════════════════════════════════════════════════
           BEST SELLERS
