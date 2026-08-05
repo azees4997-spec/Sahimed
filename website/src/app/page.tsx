@@ -193,14 +193,7 @@ export default async function Home() {
                   className="relative z-10 w-full h-full object-contain object-bottom pointer-events-none"
                 />
 
-                {/* Badge: certified */}
-                <div className="absolute bottom-4 right-0 sm:-right-3 z-20 flex items-center gap-1 bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl px-2 sm:px-3.5 py-0.5 sm:py-1.5 shadow-md border border-purple-100/80">
-                  <div className="w-4.5 h-4.5 sm:w-7.5 sm:h-7.5 rounded-lg flex items-center justify-center text-[10px] sm:text-sm shrink-0" style={{ background: 'linear-gradient(135deg,#f5f3ff,#ede9fe)' }}>🏅</div>
-                  <div>
-                    <p className="text-[6.5px] sm:text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">Certified</p>
-                    <p className="text-[9px] sm:text-xs font-black" style={{ color: '#7c3aed' }}>WHO & FDA</p>
-                  </div>
-                </div>
+
               </div>
           </div>
 

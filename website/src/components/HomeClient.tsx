@@ -159,8 +159,8 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
           </Link>
         </div>
 
-        {/* ── Featured Category Cards — Clean White Cards with Circular Round Images ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
+        {/* ── Featured Category Items — Pure Circular Icons with No Outer Box Container ── */}
+        <div className="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
           {featuredCats.map((cat: any, i: number) => {
             const style = getCategoryStyle(cat.name || '');
             const imgSrc = (cat.imageUrl && !cat.imageUrl.includes('picsum')) ? cat.imageUrl : style.image;
@@ -181,13 +181,13 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
               <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
                 <Link
                   href={`/search?c=${encodeURIComponent(cat.name)}`}
-                  className="group flex flex-col items-center p-3 sm:p-4 rounded-2xl bg-white hover:bg-slate-50/80 border border-slate-100 hover:border-slate-200 shadow-2xs hover:shadow-md transition-all duration-300 hover:-translate-y-1 text-center"
+                  className="group flex flex-col items-center text-center p-1 transition-transform duration-200 hover:-translate-y-1"
                 >
-                  {/* Round Circular Image Container */}
-                  <div className="relative w-16 h-16 sm:w-20 sm:h-20 lg:w-22 lg:h-22 rounded-full overflow-hidden p-1 shadow-sm border border-slate-200/80 group-hover:scale-105 transition-transform duration-300 bg-white"
-                    style={{ boxShadow: `0 4px 14px ${accent.color}20` }}
+                  {/* Small Round Circular Image Container — No outer card box */}
+                  <div className="relative w-14 h-14 sm:w-16 sm:h-16 lg:w-18 lg:h-18 rounded-full overflow-hidden p-0.5 shadow-xs border border-slate-200/80 group-hover:scale-105 group-hover:shadow-md transition-all duration-300 bg-white shrink-0"
+                    style={{ boxShadow: `0 3px 10px ${accent.color}18` }}
                   >
-                    <div className="relative w-full h-full rounded-full overflow-hidden">
+                    <div className="relative w-full h-full rounded-full overflow-hidden bg-slate-50">
                       <Image
                         src={imgSrc}
                         alt={cat.name}
@@ -198,18 +198,16 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
                     </div>
                   </div>
 
-                  {/* Name */}
-                  <div className="mt-2.5 space-y-1 w-full">
-                    <h3 className="text-xs sm:text-[13px] font-black tracking-tight text-slate-800 group-hover:text-primary transition-colors line-clamp-1">
-                      {cat.name}
-                    </h3>
-                    <span 
-                      className="inline-block text-[8.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
-                      style={{ background: accent.bg, color: accent.color, border: `1px solid ${accent.border}` }}
-                    >
-                      UP TO 61% OFF
-                    </span>
-                  </div>
+                  {/* Category Name & Compact Tag */}
+                  <h3 className="text-[11px] sm:text-xs font-black tracking-tight text-slate-800 group-hover:text-primary transition-colors line-clamp-1 mt-1.5">
+                    {cat.name}
+                  </h3>
+                  <span 
+                    className="inline-block text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full mt-0.5"
+                    style={{ background: accent.bg, color: accent.color, border: `1px solid ${accent.border}` }}
+                  >
+                    UP TO 61% OFF
+                  </span>
                 </Link>
               </motion.div>
             );
