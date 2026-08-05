@@ -10,76 +10,71 @@ const STEPS = [
     icon: Search,
     title: "Search Medicines",
     desc: "Find 50,000+ authentic products",
-    gradient: "from-blue-500 to-cyan-500",
-    num: "01",
+    emoji: "🔍",
+    badge: "STEP 01",
+    bg: "linear-gradient(135deg,#ecfdf5,#d1fae5)",
+    border: "#6ee7b7",
+    color: "#059669",
   },
   {
     icon: FileText,
     title: "Upload Prescription",
     desc: "Fast verification by pharmacists",
-    gradient: "from-purple-500 to-pink-500",
-    num: "02",
+    emoji: "📋",
+    badge: "STEP 02",
+    bg: "linear-gradient(135deg,#f5f3ff,#ede9fe)",
+    border: "#a78bfa",
+    color: "#7c3aed",
   },
   {
     icon: PackageCheck,
     title: "Quality Check",
     desc: "Multi-layer authenticity check",
-    gradient: "from-violet-500 to-indigo-500",
-    num: "03",
+    emoji: "✅",
+    badge: "STEP 03",
+    bg: "linear-gradient(135deg,#fff0f7,#fce7f3)",
+    border: "#f9a8d4",
+    color: "#db2777",
   },
   {
     icon: Truck,
     title: "Safe Delivery",
     desc: "Express doorstep delivery",
-    gradient: "from-emerald-500 to-teal-500",
-    num: "04",
+    emoji: "🚚",
+    badge: "STEP 04",
+    bg: "linear-gradient(135deg,#fffbeb,#fef9c3)",
+    border: "#fde68a",
+    color: "#d97706",
   }
 ];
 
 export default function HowItWorks() {
   return (
-    <section className="py-4 sm:py-6 px-4 bg-white rounded-2xl sm:rounded-3xl border border-slate-100 shadow-2xs relative my-3 sm:my-5">
-      <div className="max-w-7xl mx-auto relative z-10">
-        {/* Compact Header */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4 sm:mb-5 pb-3 border-b border-slate-100">
-          <div>
-            <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight">
-              How SahiMed <span className="text-primary italic">Works</span>
-            </h2>
-            <p className="text-[11px] sm:text-xs text-slate-500 font-medium">Order genuine medicines in 4 simple steps</p>
-          </div>
-          <Link
-            href="/search"
-            className="text-[11px] font-black text-primary uppercase tracking-wider hover:underline flex items-center gap-1 shrink-0"
+    <section className="space-y-3 my-2 sm:my-4">
+      {/* ── 4 Pastel Steps Cards — Matching Free Delivery & Long Expiry Section ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {STEPS.map((card, i) => (
+          <div
+            key={i}
+            className="flex flex-col gap-3 p-4 sm:p-5 rounded-2xl hover:-translate-y-1 transition-all duration-300 cursor-default"
+            style={{ background: card.bg, border: `1.5px solid ${card.border}60`, boxShadow: `0 4px 20px ${card.border}30` }}
           >
-            Start Shopping →
-          </Link>
-        </div>
-
-        {/* Compact Steps Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          {STEPS.map((step, i) => (
-            <div key={i} className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl bg-slate-50/70 border border-slate-100/80">
-              {/* Compact Icon Box */}
-              <div className={`relative w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br ${step.gradient} rounded-xl flex items-center justify-center shadow-xs shrink-0`}>
-                <step.icon className="w-5 h-5 text-white" />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-white text-slate-900 rounded-full flex items-center justify-center font-black text-[8px] shadow-2xs border border-slate-200">
-                  {step.num}
-                </div>
+            <div className="flex items-center justify-between">
+              <div className="w-10 h-10 rounded-xl bg-white/60 backdrop-blur-sm flex items-center justify-center text-xl shadow-sm">
+                {card.emoji}
               </div>
-
-              {/* Text */}
-              <div className="min-w-0 flex-1">
-                <h3 className="text-xs font-black text-slate-800 tracking-tight leading-tight truncate">
-                  {step.title}
-                </h3>
-                <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
-                  {step.desc}
-                </p>
-              </div>
+              <span className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-white/70 shadow-2xs"
+                style={{ color: card.color }}
+              >
+                {card.badge}
+              </span>
             </div>
-          ))}
-        </div>
+            <div>
+              <p className="text-sm font-black text-slate-900 leading-tight">{card.title}</p>
+              <p className="text-[10px] font-medium text-slate-500 mt-0.5 leading-snug">{card.desc}</p>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
