@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Navbar from '@/components/Navbar';
-import { ShieldCheck, FileText, Phone, Truck, Star, Zap, Search } from 'lucide-react';
+import { ShieldCheck, FileText, Phone, Truck, Star, Zap, Search, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import PageTransition from '@/components/PageTransition';
@@ -134,21 +134,38 @@ export default async function Home() {
                   ))}
                 </div>
 
-                {/* Desktop Buttons */}
-                <div className="hidden sm:flex items-center justify-start gap-3 flex-wrap pt-0.5">
-                  <Link
-                    href="/search"
-                    className="px-6 py-2.5 text-white font-black text-xs uppercase tracking-wider rounded-xl hover:scale-105 transition-all duration-200 flex items-center gap-1.5 shadow-lg"
-                    style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)', boxShadow: '0 6px 20px rgba(124,58,237,0.3)' }}
+                {/* Hero CTA Buttons (Call, Upload Rx, WhatsApp) */}
+                <div className="flex items-center justify-start gap-2.5 sm:gap-3 flex-wrap pt-1">
+                  {/* Call Button */}
+                  <a
+                    href="tel:+917349499898"
+                    className="px-4 sm:px-5 py-2 sm:py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95 group/call"
                   >
-                    Shop Now →
-                  </Link>
+                    <Phone className="w-3.5 h-3.5 text-emerald-400 group-hover/call:rotate-12 transition-transform" />
+                    <span>Call</span>
+                  </a>
+
+                  {/* Upload Rx Button */}
                   <Link
                     href="/prescription"
-                    className="px-6 py-2.5 bg-white hover:bg-slate-50 border border-purple-200 text-slate-800 font-black text-xs uppercase tracking-wider rounded-xl shadow-sm transition-all"
+                    className="px-4 sm:px-5 py-2 sm:py-2.5 text-white font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl hover:scale-105 transition-all duration-200 flex items-center gap-1.5 shadow-lg group/upload"
+                    style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)', boxShadow: '0 6px 20px rgba(124,58,237,0.3)' }}
                   >
-                    Upload Rx
+                    <FileText className="w-3.5 h-3.5 group-hover/upload:-translate-y-0.5 transition-transform" />
+                    <span>Upload Rx</span>
                   </Link>
+
+                  {/* WhatsApp Button */}
+                  <a
+                    href="https://wa.me/917349499898?text=Hi%20SahiMed,%20I%20want%20to%20order%20medicines"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 sm:px-5 py-2 sm:py-2.5 text-white font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95 group/wa"
+                    style={{ background: '#25D366', boxShadow: '0 4px 15px rgba(37,211,102,0.3)' }}
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 fill-white text-[#25D366] group-hover/wa:scale-110 transition-transform" />
+                    <span>WhatsApp</span>
+                  </a>
                 </div>
 
                 {/* Desktop Mini stats */}
@@ -175,14 +192,7 @@ export default async function Home() {
                   alt="SahiMed Certified Doctor"
                   className="relative z-10 w-full h-full object-contain object-bottom pointer-events-none"
                 />
-                {/* Badge: savings */}
-                <div className="absolute top-12 sm:top-16 -left-2 sm:-left-5 z-20 flex items-center gap-1 bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl px-2 sm:px-3.5 py-0.5 sm:py-1.5 shadow-md border border-pink-100/80">
-                  <div className="w-4.5 h-4.5 sm:w-7.5 sm:h-7.5 rounded-lg flex items-center justify-center text-[10px] sm:text-sm shrink-0" style={{ background: 'linear-gradient(135deg,#fdf2f8,#fce7f3)' }}>💊</div>
-                  <div>
-                    <p className="text-[6.5px] sm:text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">Save upto</p>
-                    <p className="text-[9px] sm:text-xs font-black" style={{ color: '#db2777' }}>60% OFF</p>
-                  </div>
-                </div>
+
                 {/* Badge: certified */}
                 <div className="absolute bottom-4 right-0 sm:-right-3 z-20 flex items-center gap-1 bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl px-2 sm:px-3.5 py-0.5 sm:py-1.5 shadow-md border border-purple-100/80">
                   <div className="w-4.5 h-4.5 sm:w-7.5 sm:h-7.5 rounded-lg flex items-center justify-center text-[10px] sm:text-sm shrink-0" style={{ background: 'linear-gradient(135deg,#f5f3ff,#ede9fe)' }}>🏅</div>
