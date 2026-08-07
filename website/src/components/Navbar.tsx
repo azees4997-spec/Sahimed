@@ -358,17 +358,28 @@ export default function Navbar() {
   const handleSuggestionClick = (item: any) => {
     addRecentSearch(item.term);
     logSearch(item.term);
-    if (item.type === 'Salt') {
-      // For Salts/Molecules, go to search results. If we have a moleculeId, use it and drop the 'q' to avoid conflicts.
+
+    const isSalt = item.type === 'Salt' || 
+                   item._type === 'molecule' || 
+                   (item.id && (String(item.id).startsWith('mol-') || String(item.id).startsWith('salt-'))) ||
+                   !item.product?.price;
+
+    if (isSalt) {
+      // For Salts/Molecules, ALWAYS route to search page showing all products containing this salt
+      const searchTerm = item.term || item.name || '';
       if (item.moleculeId) {
-        router.push(`/search?moleculeId=${item.moleculeId}`);
+        router.push(`/search?moleculeId=${item.moleculeId}&q=${encodeURIComponent(searchTerm)}`);
       } else {
-        router.push(`/search?q=${encodeURIComponent(item.term)}`);
+        router.push(`/search?q=${encodeURIComponent(searchTerm)}`);
       }
     } else {
-      // For Brands (medicines), go to the product page.
-      const productId = item.product?._id || item.product?.id || item.id.replace('brand-', '').replace('mol-', '').replace('salt-', '');
-      router.push(`/product/${productId}`);
+      // For Brands (actual buyable medicines), route to the product page.
+      const productId = item.product?._id || item.product?.id || (typeof item.id === 'string' ? item.id.replace('brand-', '') : item.id);
+      if (productId && typeof productId === 'string' && !productId.startsWith('mol-') && !productId.startsWith('salt-')) {
+        router.push(`/product/${productId}`);
+      } else {
+        router.push(`/search?q=${encodeURIComponent(item.term || '')}`);
+      }
     }
     setShowSuggestions(false);
   };
@@ -447,7 +458,8 @@ export default function Navbar() {
     const seenBrandTerms = new Set<string>();
 
     rawSuggestions.forEach(p => {
-      const type = p._type || (p.molecule ? 'molecule' : 'medicine');
+      const isMolecule = p._type === 'molecule' || !!p.molecule || (price === 0 && !p.product_id?.startsWith('DRS'));
+      const type = isMolecule ? 'molecule' : 'medicine';
       const id = p._id || p.id;
       const name = (p.name || p.product_name || p.molecule || '').trim();
       const salt = p.saltComposition || p.composition || p.medical_info?.composition || p.liveData?.composition || p.salt || '';
