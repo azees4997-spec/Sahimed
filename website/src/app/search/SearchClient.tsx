@@ -35,8 +35,8 @@ function SearchResults() {
   const [catsLoading, setCatsLoading] = useState(true);
   const [moleculeName, setMoleculeName] = useState<string | null>(null);
 
-  // Advanced filter state
-  const [filterMarketer, setFilterMarketer] = useState<string[]>([]);
+  const initialMarketer = searchParams.get('marketerName') || searchParams.get('marketer');
+  const [filterMarketer, setFilterMarketer] = useState<string[]>(initialMarketer ? initialMarketer.split(',').map(s => s.trim()) : []);
   const [filterDosageForm, setFilterDosageForm] = useState<string[]>([]);
   const [filterMinPrice, setFilterMinPrice] = useState('');
   const [filterMaxPrice, setFilterMaxPrice] = useState('');
