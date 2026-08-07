@@ -223,16 +223,40 @@ export async function GET(request: Request) {
       } catch (e) {}
     }
 
+    let molecules: any[] = [];
+    if (cleanTerm && cleanTerm.length >= 2) {
+      try {
+        molecules = await db.collection('Molecule Master')
+          .find({ Composition: { $regex: cleanEscaped, $options: 'i' } })
+          .limit(5)
+          .toArray();
+      } catch (e) {
+        console.error('[Molecule Master Search Error]', e);
+      }
+    }
+
+    const normalizedMolecules = molecules.map(m => ({
+      _id: m._id?.toString() || m['Molecule Code'],
+      id: m._id?.toString() || m['Molecule Code'],
+      _type: 'molecule',
+      molecule: m.Composition,
+      name: m.Composition,
+      composition: m.Composition,
+      moleculeCode: m['Molecule Code'],
+      productForm: m['Product Form']
+    }));
+
     // Normalize output to maintain compatibility with frontend
-    const normalized = products.map(p => ({
+    const normalizedProducts = products.map(p => ({
       ...p,
       id: p._id?.toString(),
-      // Legacy field aliases for website pages compatibility
+      _type: 'medicine',
       name: p.product_name,
       sku: p.product_id,
       manufacturer: p.taxonomy?.marketer_name,
       category: p.taxonomy?.category_name,
       saltComposition: p.medical_info?.composition,
+      composition: p.medical_info?.composition,
       price: p.packaging?.mrp,
       mrp: p.packaging?.mrp,
       imageUrl: p.images?.[0] || '',
@@ -243,7 +267,9 @@ export async function GET(request: Request) {
       moleculeId: p.molecule_code,
     }));
 
-    return NextResponse.json(normalized, {
+    const finalResults = [...normalizedMolecules, ...normalizedProducts];
+
+    return NextResponse.json(finalResults, {
       headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' },
     });
 

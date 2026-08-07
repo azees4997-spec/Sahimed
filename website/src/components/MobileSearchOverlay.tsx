@@ -159,62 +159,86 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
         {/* Live Search Suggestions Vertical List */}
         {suggestions.length > 0 && !isSearching && (
           <div className="divide-y divide-slate-100">
+            {/* Salt / Molecule Pills at top */}
+            {suggestions.filter(s => s._type === 'molecule' || s.type === 'Salt').length > 0 && (
+              <div className="px-4 py-3 bg-slate-50/70 border-b border-slate-100 space-y-2">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Molecule / Salt Matches</span>
+                <div className="flex flex-wrap gap-2">
+                  {suggestions.filter(s => s._type === 'molecule' || s.type === 'Salt').slice(0, 4).map(item => (
+                    <button
+                      key={item._id || item.id}
+                      onClick={() => handleItemClick(item)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-50 border border-teal-200/80 text-teal-700 active:scale-95 transition-all text-[11px] font-bold"
+                    >
+                      <span>{item.molecule || item.name || item.composition}</span>
+                      <span className="text-[9px] text-teal-500 font-medium">Salt</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Matching Products</span>
-              <span className="text-[9px] font-bold text-teal-600 uppercase">{suggestions.length} items</span>
+              <span className="text-[9px] font-bold text-teal-600 uppercase">
+                {suggestions.filter(s => s._type !== 'molecule' && s.type !== 'Salt').length} items
+              </span>
             </div>
-            {suggestions.map((item) => (
-              <div 
-                key={item._id || item.id}
-                onClick={() => handleItemClick(item)}
-                className="p-3.5 flex items-center gap-3 active:bg-slate-50 transition-colors cursor-pointer"
-              >
-                <div className="relative w-12 h-12 bg-white rounded-xl border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
-                  {item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http') ? (
-                    <Image 
-                      src={item.imageUrl}
-                      alt={item.name}
-                      fill
-                      className="object-contain p-1"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-full bg-slate-50">
-                      <svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-40">
-                        <rect x="8" y="18" width="32" height="12" rx="6" fill="#0d9488"/>
-                        <rect x="8" y="18" width="16" height="12" rx="6" fill="#134e4a"/>
-                      </svg>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-tight truncate leading-tight">
-                    {item.name}
-                  </h4>
-                  {item.saltComposition && (
-                    <p className="text-[10px] font-medium text-slate-500 truncate mt-0.5">{item.saltComposition}</p>
-                  )}
-                  <div className="flex items-center gap-2 mt-1">
-                    {(item.price || item.mrp) && (
-                      <span className="text-xs font-black text-slate-900">₹{item.price || item.mrp}</span>
-                    )}
-                    <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full uppercase">IN STOCK</span>
-                  </div>
-                </div>
-
-                <Button
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addToCart(item);
-                    toast({ title: "Added to Cart" });
-                  }}
-                  className="h-8 px-3 rounded-lg bg-teal-600 text-white font-black text-[9px] uppercase tracking-wider shadow-xs active:scale-95 shrink-0"
+            {suggestions.filter(s => s._type !== 'molecule' && s.type !== 'Salt').map((item) => {
+              const comp = item.saltComposition || item.composition || item.medical_info?.composition || '';
+              return (
+                <div 
+                  key={item._id || item.id}
+                  onClick={() => handleItemClick(item)}
+                  className="p-3.5 flex items-center gap-3 active:bg-slate-50 transition-colors cursor-pointer"
                 >
-                  <Plus className="w-3 h-3 mr-0.5" /> ADD
-                </Button>
-              </div>
-            ))}
+                  <div className="relative w-12 h-12 bg-white rounded-xl border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
+                    {item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http') ? (
+                      <Image 
+                        src={item.imageUrl}
+                        alt={item.name}
+                        fill
+                        className="object-contain p-1"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center w-full h-full bg-slate-50">
+                        <svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-40">
+                          <rect x="8" y="18" width="32" height="12" rx="6" fill="#0d9488"/>
+                          <rect x="8" y="18" width="16" height="12" rx="6" fill="#134e4a"/>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-tight truncate leading-tight">
+                      {item.name}
+                    </h4>
+                    {comp && (
+                      <p className="text-[10px] font-medium text-slate-500 truncate mt-0.5">{comp}</p>
+                    )}
+                    <div className="flex items-center gap-2 mt-1">
+                      {(item.price || item.mrp) && (
+                        <span className="text-xs font-black text-slate-900">₹{item.price || item.mrp}</span>
+                      )}
+                      <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full uppercase">IN STOCK</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart(item);
+                      toast({ title: "Added to Cart" });
+                    }}
+                    className="h-8 px-3 rounded-lg bg-teal-600 text-white font-black text-[9px] uppercase tracking-wider shadow-xs active:scale-95 shrink-0"
+                  >
+                    <Plus className="w-3 h-3 mr-0.5" /> ADD
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         )}
 

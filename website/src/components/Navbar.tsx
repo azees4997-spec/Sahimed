@@ -450,7 +450,7 @@ export default function Navbar() {
       const type = p._type || (p.molecule ? 'molecule' : 'medicine');
       const id = p._id || p.id;
       const name = (p.name || p.product_name || p.molecule || '').trim();
-      const salt = p.saltComposition || p.composition || p.liveData?.composition || p.salt || '';
+      const salt = p.saltComposition || p.composition || p.medical_info?.composition || p.liveData?.composition || p.salt || '';
       const price = p.price || p.mrp || p.packaging?.mrp || 0;
       const imageUrl = p.imageUrl || p.images?.[0] || '';
 
