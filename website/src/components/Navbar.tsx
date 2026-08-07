@@ -378,37 +378,38 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const navSearchCache = useRef<Map<string, any[]>>(new Map());
+
   useEffect(() => {
-    if (search.trim().length < 1) {
+    const term = search.trim();
+    if (term.length < 1) {
       setRawSuggestions([]);
       setIsSearching(false);
       return;
     }
 
+    const lowerTerm = term.toLowerCase();
+    if (navSearchCache.current.has(lowerTerm)) {
+      setRawSuggestions(navSearchCache.current.get(lowerTerm) || []);
+      setIsSearching(false);
+      setShowSuggestions(true);
+      return;
+    }
+
     const fetchSuggestions = async () => {
       setIsSearching(true);
-      const term = search.trim();
-
       try {
         const resMeds = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=10`);
         const mongoMeds = resMeds.ok ? await resMeds.json() : [];
 
-        const resMols = await fetch(`/api/molecules?q=${encodeURIComponent(term)}&limit=10`);
-        const mongoMols = resMols.ok ? await resMols.json() : [];
-
-        const normalizedMeds = mongoMeds.map((m: any) => ({
+        const normalizedMeds = Array.isArray(mongoMeds) ? mongoMeds.map((m: any) => ({
           ...m,
           id: m._id || m.id,
           _type: 'medicine'
-        }));
+        })) : [];
 
-        const normalizedMols = mongoMols.map((m: any) => ({
-          ...m,
-          id: m._id || m.id,
-          _type: 'molecule'
-        }));
-
-        setRawSuggestions([...normalizedMeds, ...normalizedMols]);
+        navSearchCache.current.set(lowerTerm, normalizedMeds);
+        setRawSuggestions(normalizedMeds);
         setShowSuggestions(true);
       } catch (err) {
         console.error("Suggestion fetch failed", err);
@@ -417,7 +418,7 @@ export default function Navbar() {
       }
     };
 
-    const timer = setTimeout(fetchSuggestions, 300);
+    const timer = setTimeout(fetchSuggestions, 120);
     return () => clearTimeout(timer);
   }, [search]);
 
