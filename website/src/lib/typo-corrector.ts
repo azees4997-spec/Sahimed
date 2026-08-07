@@ -65,7 +65,7 @@ const PHARMA_TYPO_MAP: Record<string, string> = {
   'crocn': 'Crocin',
   'crocine': 'Crocin',
   'pand': 'Pan D',
-  'pan-d': 'Pan D',
+  'pandn': 'Pan D',
   'panten': 'Pan',
   'shelcal500': 'Shelcal',
   'shelcl': 'Shelcal',
@@ -94,32 +94,42 @@ export interface CorrectionResult {
 }
 
 /**
- * Corrects medical typos in a user search query
+ * Strips special characters (hyphens, brackets, slashes, pluses, commas, dots) from search queries
+ */
+export function sanitizeSearchQuery(query: string): string {
+  if (!query) return '';
+  // Replace -, (), [], {}, /, \, +, ,, ., ', " with spaces
+  return query.replace(/[-()\[\]\{\}\/\\+.,'"]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Corrects medical typos & strips special punctuation in a user search query
  */
 export function correctMedicalQuery(query: string): CorrectionResult {
   if (!query || typeof query !== 'string') {
     return { originalQuery: '', correctedQuery: '', wasCorrected: false, terms: [] };
   }
 
-  const cleanQuery = query.trim().toLowerCase();
+  // 1. Sanitize punctuation & hyphens
+  const cleanQuery = sanitizeSearchQuery(query).toLowerCase();
   const words = cleanQuery.split(/\s+/).filter(Boolean);
   let wasCorrected = false;
 
   const correctedWords = words.map(w => {
-    // 1. Direct dictionary match
+    // Direct dictionary match
     if (PHARMA_TYPO_MAP[w]) {
       wasCorrected = true;
       return PHARMA_TYPO_MAP[w];
     }
 
-    // 2. Stripped alphanumeric match (e.g. "paracetmol650" -> "Paracetamol")
+    // Stripped alphanumeric match (e.g. "paracetmol650" -> "Paracetamol")
     const stripped = w.replace(/[^a-z0-9]/g, '');
     if (PHARMA_TYPO_MAP[stripped]) {
       wasCorrected = true;
       return PHARMA_TYPO_MAP[stripped];
     }
 
-    // 3. Return original capitalized word
+    // Return original capitalized word
     return w.charAt(0).toUpperCase() + w.slice(1);
   });
 
@@ -128,7 +138,7 @@ export function correctMedicalQuery(query: string): CorrectionResult {
   return {
     originalQuery: query,
     correctedQuery,
-    wasCorrected,
+    wasCorrected: wasCorrected || cleanQuery !== query.trim().toLowerCase(),
     terms: correctedWords
   };
 }
@@ -139,6 +149,5 @@ export function correctMedicalQuery(query: string): CorrectionResult {
 export function buildFuzzyRegex(term: string): string {
   if (!term || term.length < 4) return term;
   const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // Allow optional single character insertion/deletion between consonants
   return escaped.split('').join('[a-z]?');
 }

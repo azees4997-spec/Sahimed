@@ -3,7 +3,7 @@ import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 import { PRODUCTS } from '@/lib/data';
-import { correctMedicalQuery, buildFuzzyRegex } from '@/lib/typo-corrector';
+import { correctMedicalQuery, buildFuzzyRegex, sanitizeSearchQuery } from '@/lib/typo-corrector';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -100,29 +100,32 @@ export async function GET(request: Request) {
     let correctedQueryText = '';
     let wasAutoCorrected = false;
 
-    // Full-text search across product_name and composition with Typo-Correction
+    // Full-text search across product_name and composition with Typo-Correction & Punctuation Stripping (- ( ) / +)
     if (qStr) {
-      const correction = correctMedicalQuery(qStr);
+      const sanitized = sanitizeSearchQuery(qStr);
+      const correction = correctMedicalQuery(sanitized);
       if (correction.wasCorrected) {
         wasAutoCorrected = true;
         correctedQueryText = correction.correctedQuery;
       }
 
-      const effectiveQuery = correction.wasCorrected ? correction.correctedQuery : qStr;
-      terms = effectiveQuery.replace(/[()]/g, ' ').split(/\s+/).filter(t => t.length > 0);
+      const effectiveQuery = correction.wasCorrected ? correction.correctedQuery : (sanitized || qStr);
+      terms = effectiveQuery.split(/\s+/).filter(t => t.length > 0);
 
       if (terms.length > 0) {
         const makeMatchAll = (fieldName: string) => ({
           $and: terms.map(t => ({ [fieldName]: { $regex: escapeRegExp(t), $options: 'i' } }))
         });
 
+        const cleanSearchStr = escapeRegExp(effectiveQuery);
+
         andConditions.push({
           $or: [
             makeMatchAll('product_name'),
             makeMatchAll('medical_info.composition'),
-            { product_id: { $regex: escapeRegExp(effectiveQuery), $options: 'i' } },
-            { molecule_code: { $regex: escapeRegExp(effectiveQuery), $options: 'i' } },
-            { 'taxonomy.marketer_name': { $regex: escapeRegExp(effectiveQuery), $options: 'i' } },
+            { product_id: { $regex: cleanSearchStr, $options: 'i' } },
+            { molecule_code: { $regex: cleanSearchStr, $options: 'i' } },
+            { 'taxonomy.marketer_name': { $regex: cleanSearchStr, $options: 'i' } },
           ]
         });
       }
