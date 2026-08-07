@@ -458,12 +458,12 @@ export default function Navbar() {
     const seenBrandTerms = new Set<string>();
 
     rawSuggestions.forEach(p => {
+      const price = p.price || p.mrp || p.packaging?.mrp || 0;
       const isMolecule = p._type === 'molecule' || !!p.molecule || (price === 0 && !p.product_id?.startsWith('DRS'));
       const type = isMolecule ? 'molecule' : 'medicine';
       const id = p._id || p.id;
       const name = (p.name || p.product_name || p.molecule || '').trim();
       const salt = p.saltComposition || p.composition || p.medical_info?.composition || p.liveData?.composition || p.salt || '';
-      const price = p.price || p.mrp || p.packaging?.mrp || 0;
       const imageUrl = p.imageUrl || p.images?.[0] || '';
 
       if (type === 'molecule') {
