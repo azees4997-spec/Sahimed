@@ -357,18 +357,44 @@ function SearchResults() {
                     key="empty-state"
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="bg-white border border-slate-100 rounded-[56px] p-20 text-center shadow-sm"
+                    className="bg-white border border-slate-100 rounded-[44px] p-8 sm:p-14 text-center shadow-sm"
                   >
-                    <div className="w-20 h-20 bg-slate-50 rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-inner border border-slate-100">
+                    <div className="w-16 h-16 bg-slate-50 rounded-[28px] flex items-center justify-center mx-auto mb-6 shadow-inner border border-slate-100">
                       {rawQ.length > 0 && rawQ.length < 3 ? <Info className="w-8 h-8 text-orange-400" /> : <SearchIcon className="w-8 h-8 text-slate-300" />}
                     </div>
-                    <h3 className="text-2xl font-black mb-3 tracking-tighter font-outfit uppercase">
-                      {rawQ.length > 0 && rawQ.length < 3 ? "Minimum Input Required" : "No medicine matches"}
+                    <h3 className="text-xl sm:text-2xl font-black mb-2 tracking-tight font-outfit uppercase text-slate-900">
+                      {rawQ.length > 0 && rawQ.length < 3 ? "Type 3 or more letters" : `No direct matches for "${rawQ || c || 'selection'}"`}
                     </h3>
-                    <p className="text-slate-400 font-bold mb-10 text-[10px] uppercase tracking-[0.2em] max-w-xs mx-auto opacity-70">
-                      Our database couldn't find matches for your query. Try searching by Salt or Therapeutic category.
+                    <p className="text-slate-500 font-medium mb-8 text-xs max-w-md mx-auto leading-relaxed">
+                      Don't worry! Send your medicine name or prescription photo to our licensed pharmacist, and we will arrange it for you with up to <span className="font-bold text-teal-700">60% OFF</span>!
                     </p>
-                    <Button onClick={() => window.location.href = '/search'} className="rounded-full px-10 h-16 font-black tracking-widest uppercase bg-slate-900 text-white shadow-xl active:scale-95 transition-all">Clear All Filters</Button>
+
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-lg mx-auto">
+                      <a
+                        href="https://wa.me/917349499898?text=Hi%20SahiMed,%20I%20need%20help%20finding%20a%20medicine"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-full sm:w-auto flex-1 h-13 px-6 rounded-2xl bg-[#25D366] text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+                      >
+                        💬 Order via WhatsApp
+                      </a>
+
+                      <Link
+                        href="/prescription"
+                        className="w-full sm:w-auto flex-1 h-13 px-6 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20 active:scale-95 transition-all"
+                      >
+                        📄 Upload Rx Prescription
+                      </Link>
+                    </div>
+
+                    <div className="mt-8 pt-6 border-t border-slate-100">
+                      <button
+                        onClick={() => window.location.href = '/search'}
+                        className="text-[11px] font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors"
+                      >
+                        ← Clear All Filters & View Full Catalog
+                      </button>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
