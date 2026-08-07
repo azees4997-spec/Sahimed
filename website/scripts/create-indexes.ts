@@ -15,8 +15,22 @@
 
 import { MongoClient } from 'mongodb';
 import * as dotenv from 'dotenv';
+import * as path from 'path';
+import * as fs from 'fs';
 
-dotenv.config({ path: '.env.local' });
+// Load from .env.local first, then .env as fallback
+const envLocalPath = path.resolve(process.cwd(), '.env.local');
+const envPath = path.resolve(process.cwd(), '.env');
+
+if (fs.existsSync(envLocalPath)) {
+  dotenv.config({ path: envLocalPath });
+  console.log('📄 Loaded .env.local');
+} else if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+  console.log('📄 Loaded .env');
+} else {
+  dotenv.config();
+}
 
 const MONGODB_URI = process.env.MONGODB_URI!;
 
