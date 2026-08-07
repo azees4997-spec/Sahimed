@@ -768,8 +768,14 @@ export default function Navbar() {
                           </div>
                         </div>
                       </div>
+                    ) : isSearching ? (
+                      /* CASE 2: LOADING STATE */
+                      <div className="p-8 flex items-center justify-center gap-3 text-slate-500">
+                        <Loader2 className="w-5 h-5 animate-spin text-teal-600" />
+                        <span className="text-xs font-bold uppercase tracking-wider">Searching SahiMed catalog for "{search}"...</span>
+                      </div>
                     ) : suggestions.length > 0 ? (
-                      /* CASE 2: INPUT TYPED -> Suggestions List */
+                      /* CASE 3: INPUT TYPED -> Suggestions List */
                       <div className="max-h-[500px] overflow-y-auto scrollbar-hide grid grid-cols-1 sm:grid-cols-12 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 bg-white">
                         {/* Suggestions list */}
                         <div className="sm:col-span-5 bg-slate-50/30">
@@ -832,7 +838,7 @@ export default function Navbar() {
                                           <span className="text-[13px] font-black text-slate-900">₹{(item as any).price}</span>
                                         )}
                                         <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
-                                          60% OFF
+                                          IN STOCK
                                         </span>
                                       </div>
                                     </div>
@@ -860,7 +866,13 @@ export default function Navbar() {
                           </div>
                         </div>
                       </div>
-                    ) : null}
+                    ) : (
+                      /* CASE 4: NO RESULTS FOUND */
+                      <div className="p-8 text-center space-y-2">
+                        <p className="text-xs font-bold text-slate-700 uppercase tracking-tight">No medicines found for "{search}"</p>
+                        <p className="text-[11px] text-slate-400 font-medium">Press Enter or click Search to view full catalog results</p>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
