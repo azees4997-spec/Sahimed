@@ -135,20 +135,33 @@ export async function GET(request: Request) {
       query.$and = andConditions;
     }
 
+    const cleanTerm = (effectiveQuery || qStr || '').trim();
+    const cleanEscaped = escapeRegExp(cleanTerm);
+
     const pipeline: any[] = [
       { $match: query },
       {
         $addFields: {
-          // Scoring: exact name match gets highest priority
-          searchScore: qStr ? {
+          // Scoring hierarchy:
+          // 100: Exact word or word start with space/boundary (e.g. "Dolo ", "Dolo 650", "Dolo Tablet")
+          // 50: Word boundary match anywhere in title (e.g. "Micro Dolo")
+          // 20: Compound word prefix match (e.g. "DOLOKind", "Dolopar")
+          // 10: Substring match anywhere in title or composition
+          searchScore: cleanTerm ? {
             $cond: [
-              { $regexMatch: { input: '$product_name', regex: `^${escapeRegExp(qStr)}`, options: 'i' } },
-              10,
+              { $regexMatch: { input: '$product_name', regex: `^${cleanEscaped}(\\s|\\b|$)`, options: 'i' } },
+              100,
               {
                 $cond: [
-                  { $regexMatch: { input: '$product_name', regex: escapeRegExp(qStr), options: 'i' } },
-                  5,
-                  1
+                  { $regexMatch: { input: '$product_name', regex: `\\b${cleanEscaped}`, options: 'i' } },
+                  50,
+                  {
+                    $cond: [
+                      { $regexMatch: { input: '$product_name', regex: `^${cleanEscaped}`, options: 'i' } },
+                      20,
+                      10
+                    ]
+                  }
                 ]
               }
             ]

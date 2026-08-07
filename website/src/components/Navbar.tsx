@@ -399,7 +399,7 @@ export default function Navbar() {
     const fetchSuggestions = async () => {
       setIsSearching(true);
       try {
-        const resMeds = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=10`);
+        const resMeds = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=20`);
         const mongoMeds = resMeds.ok ? await resMeds.json() : [];
 
         const normalizedMeds = Array.isArray(mongoMeds) ? mongoMeds.map((m: any) => ({
@@ -425,7 +425,7 @@ export default function Navbar() {
   const suggestions = useMemo(() => {
     if (!rawSuggestions.length) return [];
     
-    const term = search.toLowerCase();
+    const term = search.toLowerCase().trim();
     const items: SuggestionItem[] = [];
     const seenCompositionTerms = new Set<string>();
     const seenBrandTerms = new Set<string>();
@@ -478,10 +478,27 @@ export default function Navbar() {
       }
     });
 
+    // Priority Relevance Sorting:
+    // Exact word start (e.g. "Dolo ", "Dolo 650") -> Tier 1
+    // Compound prefix (e.g. "DOLOKind") -> Tier 2
+    const cleanEscaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    items.sort((a, b) => {
+      const nameA = a.term.toLowerCase();
+      const nameB = b.term.toLowerCase();
+
+      const exactA = new RegExp(`^${cleanEscaped}(\\s|\\b|$)`, 'i').test(nameA);
+      const exactB = new RegExp(`^${cleanEscaped}(\\s|\\b|$)`, 'i').test(nameB);
+
+      if (exactA && !exactB) return -1;
+      if (!exactA && exactB) return 1;
+
+      return 0;
+    });
+
     return items;
   }, [rawSuggestions, search]);
 
-  const displayedSuggestions = expanded ? suggestions : suggestions.slice(0, 5);
+  const displayedSuggestions = expanded ? suggestions : suggestions.slice(0, 10);
 
   const handleGeoLocation = () => {
     setIsLocating(true);
