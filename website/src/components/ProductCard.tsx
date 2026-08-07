@@ -32,7 +32,7 @@ function ProductCardComponent({ product, priority = false }: { product: Product,
 
   const safeImageUrl = (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('http'))
     ? product.imageUrl
-    : `https://picsum.photos/seed/${product.id}/300/300`;
+    : null;
 
   return (
     <div 
@@ -47,15 +47,26 @@ function ProductCardComponent({ product, priority = false }: { product: Product,
  
       <Link href={`/product/${product.id}`} className="flex flex-col flex-1 gap-1 sm:gap-1.5 w-full">
         <div className="relative w-full h-20 sm:h-28 bg-slate-50/50 rounded-[14px] sm:rounded-[20px] flex items-center justify-center overflow-hidden group-hover:bg-white border border-transparent group-hover:border-slate-100 transition-all duration-500 p-0.5 sm:p-1 shrink-0 mx-auto">
-          <Image 
-            src={safeImageUrl} 
-            alt={product.name} 
-            fill 
-            sizes="(max-width: 640px) 140px, 240px"
-            loading={priority ? undefined : "lazy"}
-            priority={priority}
-            className="object-contain p-0.5 sm:p-1 transition-transform duration-700 group-hover:scale-105" 
-          />
+          {safeImageUrl ? (
+            <Image 
+              src={safeImageUrl} 
+              alt={product.name} 
+              fill 
+              sizes="(max-width: 640px) 140px, 240px"
+              loading={priority ? undefined : "lazy"}
+              priority={priority}
+              className="object-contain p-0.5 sm:p-1 transition-transform duration-700 group-hover:scale-105" 
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center w-full h-full gap-1">
+              <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-30">
+                <rect x="8" y="18" width="32" height="12" rx="6" fill="#0d9488"/>
+                <rect x="8" y="18" width="16" height="12" rx="6" fill="#134e4a"/>
+                <circle cx="24" cy="24" r="2" fill="white" opacity="0.5"/>
+              </svg>
+              <span className="text-[8px] text-slate-300 font-medium text-center px-1 leading-tight line-clamp-2">{product.name}</span>
+            </div>
+          )}
         </div>
  
           <div className="space-y-0.5 flex-1 px-0.5 min-w-0">

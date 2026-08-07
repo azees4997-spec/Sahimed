@@ -791,95 +791,95 @@ export default function Navbar() {
                         <span className="text-xs font-bold uppercase tracking-wider">Searching SahiMed catalog for "{search}"...</span>
                       </div>
                     ) : suggestions.length > 0 ? (
-                      /* CASE 3: INPUT TYPED -> Suggestions List */
-                      <div className="max-h-[500px] overflow-y-auto scrollbar-hide grid grid-cols-1 sm:grid-cols-12 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 bg-white">
-                        {/* Suggestions list */}
-                        <div className="sm:col-span-5 bg-slate-50/30">
-                          <div className="px-5 py-3 border-b border-slate-100/50">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                              <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" /> Suggestions
-                            </span>
-                          </div>
-                          <div className="divide-y divide-slate-100/50">
-                            {suggestions.map((item) => (
-                              <div 
+                      /* CASE 3: INPUT TYPED -> Single Column Suggestions List */
+                      <div className="max-h-[420px] overflow-y-auto scrollbar-hide bg-white">
+                        {/* Salt / composition chips */}
+                        {suggestions.filter(s => s.type === 'Salt').length > 0 && (
+                          <div className="px-4 pt-3 pb-2.5 flex flex-wrap gap-2 border-b border-slate-100 bg-slate-50/40">
+                            {suggestions.filter(s => s.type === 'Salt').slice(0, 3).map(item => (
+                              <button
                                 key={item.id}
                                 onClick={() => handleSuggestionClick(item)}
-                                className="w-full px-5 py-3 flex items-center gap-3 hover:bg-white transition-all group cursor-pointer"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/5 hover:bg-primary/10 border border-primary/15 transition-all"
                               >
-                                <SearchIcon className="w-3.5 h-3.5 text-slate-300 group-hover:text-teal-600 transition-colors" />
-                                <div className="flex-1 min-w-0 flex items-center gap-2">
-                                  <span className="font-extrabold text-[12px] text-slate-700 truncate group-hover:text-slate-900 transition-colors uppercase">
-                                    {item.term}
-                                  </span>
-                                  <Badge variant="secondary" className="text-[8px] bg-slate-100 text-slate-400 font-bold border-none uppercase h-4 px-1">
-                                    {item.type === 'Salt' ? 'Molecule' : 'Brand'}
-                                  </Badge>
-                                </div>
-                                <ArrowUpRight className="w-3.5 h-3.5 text-slate-200 group-hover:text-teal-600 transition-all opacity-0 group-hover:opacity-100" />
-                              </div>
+                                <span className="text-[11px] font-semibold text-primary">{item.term}</span>
+                                <span className="text-[9px] text-primary/50 font-medium ml-0.5">Salt</span>
+                              </button>
                             ))}
                           </div>
+                        )}
+
+                        {/* Product rows */}
+                        <div className="divide-y divide-slate-100">
+                          {displayedSuggestions.filter(s => s.type === 'Brand').map((item) => {
+                            const product = (item as any).product;
+                            const composition = product?.saltComposition || product?.medical_info?.composition || '';
+                            const mfr = product?.manufacturer || product?.taxonomy?.marketer_name || '';
+                            const price = (item as any).price;
+                            const imageUrl = (item as any).imageUrl || product?.imageUrl;
+                            const safeImg = (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('http')) ? imageUrl : null;
+
+                            return (
+                              <div
+                                key={`prod-${item.id}`}
+                                className="flex items-center gap-3.5 px-4 py-3 hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                                onClick={() => handleSuggestionClick(item)}
+                              >
+                                <div className="w-11 h-11 shrink-0 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden">
+                                  {safeImg ? (
+                                    <Image src={safeImg} alt={item.term} width={44} height={44} className="object-contain p-1" />
+                                  ) : (
+                                    <div className="flex items-center justify-center w-full h-full bg-slate-50">
+                                      <svg width="22" height="22" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-40">
+                                        <rect x="8" y="18" width="32" height="12" rx="6" fill="#0d9488"/>
+                                        <rect x="8" y="18" width="16" height="12" rx="6" fill="#134e4a"/>
+                                      </svg>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-[13px] text-slate-800 truncate group-hover:text-primary transition-colors leading-tight">
+                                    {item.term}
+                                  </p>
+                                  {composition && (
+                                    <p className="text-[11px] text-slate-400 truncate mt-0.5 leading-tight">{composition}</p>
+                                  )}
+                                  {!composition && mfr && (
+                                    <p className="text-[11px] text-slate-400 truncate mt-0.5">{mfr}</p>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-2.5 shrink-0">
+                                  {price > 0 && (
+                                    <span className="text-[13px] font-bold text-slate-800">₹{price}</span>
+                                  )}
+                                  <Button
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      addToCart(product || { id: item.id, name: item.term, price: price || 0 });
+                                      toast({ title: "Added to Basket" });
+                                    }}
+                                    className="h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold text-[11px] shadow-none active:scale-95 transition-all"
+                                  >
+                                    ADD +
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
 
-                        {/* Instant Top Matches */}
-                        <div className="sm:col-span-7 bg-white">
-                          <div className="px-5 py-3 border-b border-slate-100/50 flex items-center justify-between">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Top Matches
-                            </span>
-                          </div>
-                          <div className="divide-y divide-slate-100/50 max-h-[380px] overflow-y-auto">
-                            {displayedSuggestions.filter(s => s.type === 'Brand').length > 0 ? (
-                              displayedSuggestions.filter(s => s.type === 'Brand').map((item) => (
-                                <div 
-                                  key={`prod-${item.id}`}
-                                  className="w-full px-5 py-3.5 flex items-center gap-4 hover:bg-slate-50/50 transition-all group"
-                                >
-                                  <div className="relative w-12 h-12 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
-                                    <Image 
-                                      src={(item as any).imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
-                                      alt={item.term} 
-                                      fill 
-                                      className="object-contain p-1" 
-                                    />
-                                  </div>
-                                  <div className="flex-1 min-w-0 flex items-center justify-between gap-3">
-                                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleSuggestionClick(item)}>
-                                      <p className="font-extrabold text-[13px] text-slate-800 line-clamp-1 group-hover:text-teal-600 transition-colors">
-                                        {item.term}
-                                      </p>
-                                      <div className="flex items-center gap-2 mt-1">
-                                        {(item as any).price > 0 && (
-                                          <span className="text-[13px] font-black text-slate-900">₹{(item as any).price}</span>
-                                        )}
-                                        <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
-                                          IN STOCK
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <Button 
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        addToCart((item as any).product);
-                                        toast({ title: "Added to Basket" });
-                                      }}
-                                      variant="outline"
-                                      className="h-8 px-4 rounded-xl border-teal-500/20 text-teal-700 hover:bg-teal-600 hover:text-white font-black text-[9px] uppercase tracking-widest shadow-sm transition-all"
-                                    >
-                                      Add +
-                                    </Button>
-                                  </div>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="p-12 text-center space-y-2 opacity-40">
-                                 <Package className="w-6 h-6 text-slate-300 mx-auto" />
-                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Search for products</p>
-                              </div>
-                            )}
-                          </div>
+                        {/* See all footer */}
+                        <div
+                          className="px-4 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/60 cursor-pointer hover:bg-slate-100 transition-colors"
+                          onClick={() => { router.push(`/search?q=${encodeURIComponent(search)}`); setShowSuggestions(false); }}
+                        >
+                          <span className="text-[12px] font-medium text-slate-500">
+                            See all results for <span className="text-primary font-semibold">"{search}"</span>
+                          </span>
+                          <ArrowUpRight className="w-4 h-4 text-primary" />
                         </div>
                       </div>
                     ) : (

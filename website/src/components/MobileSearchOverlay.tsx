@@ -170,12 +170,21 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
                 className="p-3.5 flex items-center gap-3 active:bg-slate-50 transition-colors cursor-pointer"
               >
                 <div className="relative w-12 h-12 bg-white rounded-xl border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
-                  <Image 
-                    src={item.imageUrl || `https://picsum.photos/seed/${item._id}/200/200`}
-                    alt={item.name}
-                    fill
-                    className="object-contain p-1"
-                  />
+                  {item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http') ? (
+                    <Image 
+                      src={item.imageUrl}
+                      alt={item.name}
+                      fill
+                      className="object-contain p-1"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full bg-slate-50">
+                      <svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-40">
+                        <rect x="8" y="18" width="32" height="12" rx="6" fill="#0d9488"/>
+                        <rect x="8" y="18" width="16" height="12" rx="6" fill="#134e4a"/>
+                      </svg>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex-1 min-w-0">
