@@ -3,6 +3,7 @@ import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 import { PRODUCTS } from '@/lib/data';
+import { correctMedicalQuery, buildFuzzyRegex } from '@/lib/typo-corrector';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -96,10 +97,20 @@ export async function GET(request: Request) {
 
     let terms: string[] = [];
     let andConditions: any[] = [];
+    let correctedQueryText = '';
+    let wasAutoCorrected = false;
 
-    // Full-text search across product_name and composition
+    // Full-text search across product_name and composition with Typo-Correction
     if (qStr) {
-      terms = qStr.replace(/[()]/g, ' ').split(/\s+/).filter(t => t.length > 0);
+      const correction = correctMedicalQuery(qStr);
+      if (correction.wasCorrected) {
+        wasAutoCorrected = true;
+        correctedQueryText = correction.correctedQuery;
+      }
+
+      const effectiveQuery = correction.wasCorrected ? correction.correctedQuery : qStr;
+      terms = effectiveQuery.replace(/[()]/g, ' ').split(/\s+/).filter(t => t.length > 0);
+
       if (terms.length > 0) {
         const makeMatchAll = (fieldName: string) => ({
           $and: terms.map(t => ({ [fieldName]: { $regex: escapeRegExp(t), $options: 'i' } }))
@@ -109,9 +120,9 @@ export async function GET(request: Request) {
           $or: [
             makeMatchAll('product_name'),
             makeMatchAll('medical_info.composition'),
-            { product_id: { $regex: escapeRegExp(qStr), $options: 'i' } },
-            { molecule_code: { $regex: escapeRegExp(qStr), $options: 'i' } },
-            { 'taxonomy.marketer_name': { $regex: escapeRegExp(qStr), $options: 'i' } },
+            { product_id: { $regex: escapeRegExp(effectiveQuery), $options: 'i' } },
+            { molecule_code: { $regex: escapeRegExp(effectiveQuery), $options: 'i' } },
+            { 'taxonomy.marketer_name': { $regex: escapeRegExp(effectiveQuery), $options: 'i' } },
           ]
         });
       }
@@ -147,15 +158,15 @@ export async function GET(request: Request) {
 
     let products = await col.aggregate(pipeline).toArray();
 
-    // Fuzzy fallback if no results found with strict match
-    if (products.length === 0 && terms.length > 1) {
+    // Typo-tolerant character-distance fuzzy fallback if 0 results found
+    if (products.length === 0 && qStr && terms.length > 0) {
       const fuzzyQuery = {
         ...query,
         $and: undefined,
-        $or: [
-          { product_name: { $regex: terms.join('|'), $options: 'i' } },
-          { 'medical_info.composition': { $regex: terms.join('|'), $options: 'i' } },
-        ]
+        $or: terms.flatMap(t => [
+          { product_name: { $regex: buildFuzzyRegex(t), $options: 'i' } },
+          { 'medical_info.composition': { $regex: buildFuzzyRegex(t), $options: 'i' } },
+        ])
       };
       delete fuzzyQuery.$and;
       products = await col
@@ -163,6 +174,11 @@ export async function GET(request: Request) {
         .sort({ product_name: 1 })
         .limit(limitValue)
         .toArray();
+
+      if (products.length > 0 && !wasAutoCorrected) {
+        wasAutoCorrected = true;
+        correctedQueryText = products[0].product_name;
+      }
     }
 
     // Log search analytics asynchronously

@@ -23,6 +23,7 @@ import {
   springTransition, 
   tapVariant 
 } from '@/lib/animations';
+import { correctMedicalQuery } from '@/lib/typo-corrector';
 
 function SearchResults() {
   const searchParams = useSearchParams();
@@ -298,6 +299,20 @@ function SearchResults() {
                   <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter font-outfit uppercase">
                     {moleculeName ? `${moleculeName}` : rawQ ? `"${rawQ}"` : c ? `${c}` : 'Global Catalog'}
                   </h2>
+                  
+                  {rawQ && correctMedicalQuery(rawQ).wasCorrected && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="inline-flex items-center gap-2 bg-purple-50 border border-purple-200/80 rounded-full px-3.5 py-1 mt-3"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                      <p className="text-xs font-bold text-slate-700">
+                        Showing results for <span className="font-black text-purple-700">"{correctMedicalQuery(rawQ).correctedQuery}"</span> instead of <span className="line-through text-slate-400">"{rawQ}"</span>
+                      </p>
+                    </motion.div>
+                  )}
+
                   <div className="flex items-center gap-3 mt-4">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                     <p className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase">
