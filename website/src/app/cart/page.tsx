@@ -277,6 +277,49 @@ export default function CartPage() {
               animate="show"
               className="lg:col-span-2 space-y-6"
             >
+              {/* Free Shipping Threshold Progress Bar */}
+              {(() => {
+                const threshold = 499;
+                const isFreeDelivery = totalPrice >= threshold;
+                const remaining = Math.max(0, threshold - totalPrice);
+                const progressPct = Math.min(100, Math.round((totalPrice / threshold) * 100));
+
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200/80 rounded-[24px] sm:rounded-[32px] p-4 sm:p-6 shadow-xs"
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base sm:text-lg">{isFreeDelivery ? '🎉' : '🚚'}</span>
+                        <p className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-tight">
+                          {isFreeDelivery ? (
+                            <span className="text-emerald-700 font-extrabold">You Unlocked FREE Delivery!</span>
+                          ) : (
+                            <span>
+                              Add <span className="text-emerald-600 font-black">₹{remaining.toFixed(0)}</span> more for <span className="text-emerald-700 font-extrabold">FREE Delivery</span>
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <span className="text-[10px] sm:text-xs font-black text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        {progressPct}%
+                      </span>
+                    </div>
+
+                    {/* Progress Bar Track */}
+                    <div className="w-full h-3 bg-white border border-emerald-100 rounded-full overflow-hidden p-0.5 shadow-inner">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progressPct}%` }}
+                        transition={{ duration: 0.6, ease: 'easeOut' }}
+                        className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full shadow-xs"
+                      />
+                    </div>
+                  </motion.div>
+                );
+              })()}
               {cart.map((item) => {
                 const safeImageUrl = (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http'))
                   ? item.imageUrl
