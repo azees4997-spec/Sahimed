@@ -149,41 +149,50 @@ export async function GET(request: Request) {
     const cleanTerm = (effectiveQuery || qStr || '').trim();
     const cleanEscaped = escapeRegExp(cleanTerm);
 
-    const pipeline: any[] = [
-      { $match: query },
-      {
-        $addFields: {
-          // Scoring hierarchy:
-          // 100: Exact word or word start with space/boundary (e.g. "Dolo ", "Dolo 650", "Dolo Tablet")
-          // 50: Word boundary match anywhere in title (e.g. "Micro Dolo")
-          // 20: Compound word prefix match (e.g. "DOLOKind", "Dolopar")
-          // 10: Substring match anywhere in title or composition
-          searchScore: cleanTerm ? {
-            $cond: [
-              { $regexMatch: { input: '$product_name', regex: `^${cleanEscaped}(\\s|\\b|$)`, options: 'i' } },
-              100,
-              {
-                $cond: [
-                  { $regexMatch: { input: '$product_name', regex: `\\b${cleanEscaped}`, options: 'i' } },
-                  50,
-                  {
-                    $cond: [
-                      { $regexMatch: { input: '$product_name', regex: `^${cleanEscaped}`, options: 'i' } },
-                      20,
-                      10
-                    ]
-                  }
-                ]
-              }
-            ]
-          } : 1
-        }
-      },
-      { $sort: { searchScore: -1, product_name: 1 } },
-      { $limit: limitValue },
-    ];
+    let products: any[] = [];
+    if (cleanTerm) {
+      // 1. Primary: Fast indexed $text search (~30-80ms)
+      try {
+        products = await col
+          .find({ ...query, $text: { $search: cleanTerm } })
+          .sort({ score: { $meta: "textScore" } })
+          .limit(limitValue)
+          .toArray();
+      } catch (e) {
+        products = [];
+      }
 
-    let products = await col.aggregate(pipeline).toArray();
+      // 2. Fallback / Fill up: Indexed regex prefix & composition search
+      if (products.length < limitValue) {
+        try {
+          const prefixProducts = await col
+            .find({
+              ...query,
+              product_name: { $regex: `^${cleanEscaped}`, $options: 'i' }
+            })
+            .limit(limitValue)
+            .toArray();
+
+          const compositionProducts = await col
+            .find({
+              ...query,
+              'medical_info.composition': { $regex: cleanEscaped, $options: 'i' }
+            })
+            .limit(limitValue)
+            .toArray();
+
+          const existingMap = new Map();
+          products.forEach(p => existingMap.set(p._id.toString(), p));
+          prefixProducts.forEach(p => existingMap.set(p._id.toString(), p));
+          compositionProducts.forEach(p => existingMap.set(p._id.toString(), p));
+          products = Array.from(existingMap.values()).slice(0, limitValue);
+        } catch (e) {
+          console.error('[Indexed Search Fallback Error]', e);
+        }
+      }
+    } else {
+      products = await col.find(query).limit(limitValue).toArray();
+    }
 
     // Typo-tolerant character-distance fuzzy fallback if 0 results found
     if (products.length === 0 && qStr && terms.length > 0) {
