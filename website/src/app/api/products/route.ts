@@ -105,9 +105,34 @@ export async function GET(request: Request) {
       }
     }
 
-    // Molecule code filter
+    // Molecule code filter (handles both MOL... codes and 24-char ObjectId references)
     if (moleculeCode) {
-      query.molecule_code = moleculeCode;
+      if (moleculeCode.startsWith('MOL')) {
+        query.molecule_code = moleculeCode;
+      } else {
+        try {
+          const { ObjectId } = require('mongodb');
+          let molDoc = null;
+          try {
+            molDoc = await db.collection('Molecule Master').findOne({ _id: new ObjectId(moleculeCode) });
+          } catch {
+            molDoc = await db.collection('Molecule Master').findOne({ _id: moleculeCode });
+          }
+          if (molDoc) {
+            const resolvedCode = molDoc['Molecule Code'] || molDoc.molecule_code;
+            const comp = molDoc.Composition;
+            const firstSalts = comp ? comp.split('+')[0].split('(')[0].trim() : '';
+            query.$or = [
+              { molecule_code: resolvedCode },
+              { 'medical_info.composition': { $regex: escapeRegExp(firstSalts || comp), $options: 'i' } }
+            ];
+          } else {
+            query.molecule_code = moleculeCode;
+          }
+        } catch (e) {
+          query.molecule_code = moleculeCode;
+        }
+      }
     }
 
     let terms: string[] = [];
