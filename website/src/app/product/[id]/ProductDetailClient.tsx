@@ -207,6 +207,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [showStickyBar, setShowStickyBar] = useState(false);
+  const [showFullDesc, setShowFullDesc] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
   const heroRef = useRef<HTMLDivElement>(null);
 
@@ -351,9 +352,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
         <Navbar />
 
         {/* ── Trust Strip ─────────────────────────────────────────── */}
-        <div className="bg-white border-b border-slate-100">
+        <div className="bg-white border-b border-slate-100 hidden sm:block">
           <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-3">
-            <div className="flex items-center gap-6 overflow-x-auto no-scrollbar">
+            <div className="flex items-center justify-between gap-6">
               <TrustBadge icon={ShieldCheck} label="100% Genuine Medicines" sub="Licensed & verified sources" />
               <div className="w-px h-8 bg-slate-100 shrink-0" />
               <TrustBadge icon={Truck} label="Express Delivery" sub="Same day dispatch" />
@@ -363,6 +364,15 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
               <TrustBadge icon={Clock} label="24/7 Pharmacist Support" sub="Always here to help" />
             </div>
           </div>
+        </div>
+
+        {/* Mobile Compact Trust Badges Strip */}
+        <div className="sm:hidden bg-white border-b border-slate-100/80 px-4 py-2.5 flex items-center justify-between text-[10px] font-bold text-slate-600">
+          <div className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> 100% Genuine</div>
+          <div className="w-px h-3 bg-slate-200" />
+          <div className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-sky-600" /> Express Shipping</div>
+          <div className="w-px h-3 bg-slate-200" />
+          <div className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-500" /> 4.8★ Rated</div>
         </div>
 
         <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-6 space-y-5">
@@ -683,12 +693,24 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   {(product?.description || product?.introduction) && (() => {
                     const desc = product.description || product.introduction || '';
                     const parts = desc.split(/(?<=\.)\s+/).filter(Boolean);
+                    const isLong = parts.length > 2;
+                    const visibleParts = showFullDesc ? parts : parts.slice(0, 2);
+
                     return (
-                      <div><SectionLabel>About this Medicine</SectionLabel>
-                        <div className="space-y-4">
-                          {parts.map((p, i) => (
-                            <p key={i} className="text-sm font-medium text-slate-600 leading-relaxed">{p}</p>
+                      <div>
+                        <SectionLabel>About this Medicine</SectionLabel>
+                        <div className="space-y-3 bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-xs">
+                          {visibleParts.map((p, i) => (
+                            <p key={i} className="text-xs sm:text-sm font-medium text-slate-600 leading-relaxed">{p}</p>
                           ))}
+                          {isLong && (
+                            <button
+                              onClick={() => setShowFullDesc(!showFullDesc)}
+                              className="mt-2 text-xs font-black text-primary hover:underline flex items-center gap-1 transition-all"
+                            >
+                              {showFullDesc ? 'Show Less ▲' : 'Read Full Description ▾'}
+                            </button>
+                          )}
                         </div>
                       </div>
                     );
@@ -708,11 +730,11 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     if (!benefitList.length) return null;
                     return (
                       <div><SectionLabel>Key Benefits</SectionLabel>
-                        <div className="space-y-3">
+                        <div className="space-y-2 sm:space-y-3">
                           {benefitList.map((b, i) => (
-                            <div key={i} className="flex items-start gap-3 bg-emerald-50/70 border border-emerald-100 rounded-xl px-4 py-3">
+                            <div key={i} className="flex items-start gap-2.5 sm:gap-3 bg-emerald-50/70 border border-emerald-100 rounded-xl px-3.5 sm:px-4 py-2.5 sm:py-3">
                               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                              <p className="text-sm font-semibold text-emerald-900 leading-relaxed">{b}</p>
+                              <p className="text-xs sm:text-sm font-semibold text-emerald-900 leading-relaxed">{b}</p>
                             </div>
                           ))}
                         </div>
@@ -730,20 +752,20 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     return (
                       <div>
                         <SectionLabel>Possible Side Effects</SectionLabel>
-                        <div className="relative overflow-hidden bg-[#fffbeb] border border-[#fef3c7] rounded-xl p-5">
+                        <div className="relative overflow-hidden bg-[#fffbeb] border border-[#fef3c7] rounded-xl p-4 sm:p-5">
                           {/* Watermark */}
                           <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
                             <AlertTriangle className="w-40 h-40" />
                           </div>
                           
-                          <div className="flex items-center gap-2 mb-4 relative z-10">
+                          <div className="flex items-center gap-2 mb-3 relative z-10">
                             <AlertTriangle className="w-4 h-4 text-amber-600" />
                             <h4 className="text-xs font-black uppercase tracking-widest text-amber-800">Common Side Effects</h4>
                           </div>
 
-                          <div className="flex flex-wrap gap-2 relative z-10">
+                          <div className="flex flex-wrap gap-1.5 sm:gap-2 relative z-10">
                             {effects.map((s: string, i: number) => (
-                              <span key={i} className="bg-white border border-amber-200 text-amber-900 text-xs font-bold px-4 py-2 rounded-full shadow-sm">
+                              <span key={i} className="bg-white border border-amber-200 text-amber-900 text-xs font-semibold px-3 py-1.5 rounded-full shadow-xs">
                                 {s.trim()}
                               </span>
                             ))}
@@ -756,32 +778,33 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   {/* How It Works — mechanism of action */}
                   {(product?.howItWorks || product?.medical_info?.how_it_works) && (
                     <div><SectionLabel>How it Works</SectionLabel>
-                      <div className="relative overflow-hidden bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 rounded-2xl p-5">
+                      <div className="relative overflow-hidden bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 rounded-2xl p-4 sm:p-5">
                         <div className="absolute top-3 right-3 opacity-10"><FlaskConical className="w-16 h-16 text-violet-500" /></div>
                         <div className="flex gap-3 relative z-10">
                           <FlaskConical className="w-5 h-5 text-violet-600 shrink-0 mt-0.5" />
-                          <p className="text-sm font-medium text-violet-900 leading-relaxed">{product.howItWorks || product.medical_info?.how_it_works}</p>
+                          <p className="text-xs sm:text-sm font-medium text-violet-900 leading-relaxed">{product.howItWorks || product.medical_info?.how_it_works}</p>
                         </div>
                       </div>
                     </div>
                   )}
 
                   {/* Fact Box — parse "Key :: Value|Key :: Value" */}
-                  {/* Fact Box — parse "Key :: Value|Key :: Value" */}
                   {(product?.factBox || product?.medical_info?.fact_box) && (() => {
                     const raw: string = product.factBox || product.medical_info?.fact_box || '';
                     const pairs = raw.split('|').map(s => s.trim()).filter(Boolean).map(s => {
                       const [k, ...v] = s.split('::');
-                      return { key: k?.trim(), val: v.join('::').trim() };
-                    }).filter(p => p.key && p.val);
+                      let cleanV = (v.join('::') || '').trim();
+                      cleanV = cleanV.replace(/\d+-[A-Za-z0-9\-/\s&]+besomartks/gi, '').replace(/\s+/g, ' ').trim();
+                      return { key: k?.trim(), val: cleanV };
+                    }).filter(p => p.key && p.val && p.val.length > 0);
                     if (!pairs.length) return null;
                     return (
                       <div><SectionLabel>Quick Facts</SectionLabel>
-                        <div className="grid grid-cols-1 gap-2">
+                        <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-5 space-y-1">
                           {pairs.map((p, i) => (
-                            <div key={i} className="flex justify-between items-start gap-4 border-b border-slate-100 py-3 last:border-0">
+                            <div key={i} className="flex justify-between items-start gap-4 border-b border-slate-100/80 py-2.5 last:border-0">
                               <span className="text-xs font-bold text-slate-500 w-1/3">{p.key}</span>
-                              <span className="text-xs font-black text-slate-900 w-2/3 text-right">{p.val}</span>
+                              <span className="text-xs font-extrabold text-slate-900 w-2/3 text-right leading-snug">{p.val}</span>
                             </div>
                           ))}
                         </div>
