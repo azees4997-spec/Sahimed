@@ -389,17 +389,20 @@ export default function Navbar() {
     }
 
     const lowerTerm = term.toLowerCase();
-    if (navSearchCache.current.has(lowerTerm)) {
+    // Only use cache if it has non-empty results (never cache empty — slow first fetch shouldn't poison cache)
+    if (navSearchCache.current.has(lowerTerm) && (navSearchCache.current.get(lowerTerm) || []).length > 0) {
       setRawSuggestions(navSearchCache.current.get(lowerTerm) || []);
       setIsSearching(false);
       setShowSuggestions(true);
       return;
     }
 
+    const controller = new AbortController();
+
     const fetchSuggestions = async () => {
       setIsSearching(true);
       try {
-        const resMeds = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=20`);
+        const resMeds = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=20`, { signal: controller.signal });
         const mongoMeds = resMeds.ok ? await resMeds.json() : [];
 
         const normalizedMeds = Array.isArray(mongoMeds) ? mongoMeds.map((m: any) => ({
@@ -408,18 +411,26 @@ export default function Navbar() {
           _type: 'medicine'
         })) : [];
 
-        navSearchCache.current.set(lowerTerm, normalizedMeds);
+        // Only cache non-empty results so we always retry on empty
+        if (normalizedMeds.length > 0) {
+          navSearchCache.current.set(lowerTerm, normalizedMeds);
+        }
         setRawSuggestions(normalizedMeds);
         setShowSuggestions(true);
-      } catch (err) {
-        console.error("Suggestion fetch failed", err);
+      } catch (err: any) {
+        if (err?.name !== 'AbortError') {
+          console.error("Suggestion fetch failed", err);
+        }
       } finally {
         setIsSearching(false);
       }
     };
 
-    const timer = setTimeout(fetchSuggestions, 120);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(fetchSuggestions, 300);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [search]);
 
   const suggestions = useMemo(() => {
@@ -433,10 +444,10 @@ export default function Navbar() {
     rawSuggestions.forEach(p => {
       const type = p._type || (p.molecule ? 'molecule' : 'medicine');
       const id = p._id || p.id;
-      const name = p.name || p.molecule || '';
+      const name = (p.name || p.product_name || p.molecule || '').trim();
       const salt = p.saltComposition || p.composition || p.liveData?.composition || p.salt || '';
-      const price = p.price || p.liveData?.sahimed_price || 0;
-      const imageUrl = p.imageUrl || `https://picsum.photos/seed/${id}/200/200`;
+      const price = p.price || p.mrp || p.packaging?.mrp || 0;
+      const imageUrl = p.imageUrl || p.images?.[0] || '';
 
       if (type === 'molecule') {
         const compKey = name.toLowerCase().trim();
@@ -450,8 +461,8 @@ export default function Navbar() {
           seenCompositionTerms.add(compKey);
         }
       } else {
-        // Handle Brand Match
-        if (name.toLowerCase().includes(term) && !seenBrandTerms.has(name.toLowerCase())) {
+        // Brand suggestion — TRUST the API relevance, do NOT re-filter
+        if (name && !seenBrandTerms.has(name.toLowerCase())) {
           items.push({ 
             id: `brand-${id}`, 
             term: name, 
