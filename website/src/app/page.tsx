@@ -187,11 +187,15 @@ export default async function Home() {
               {/* Right: Larger Doctor Cutout PNG (Shifted further right -mr-2, h-[270px] mobile / 380px desktop) */}
               <div className="relative shrink-0 w-44 sm:w-72 md:w-[380px] lg:w-[420px] h-[260px] sm:h-[330px] lg:h-[380px] flex items-end justify-center -mr-2 sm:mr-0 self-end">
                 {/* Clean transparent PNG cutout — sits directly flush on the bottom line */}
-                <img
-                  src="/images/doctor_hero_transparent.png"
-                  alt="SahiMed Certified Doctor"
-                  className="relative z-10 w-full h-full object-contain object-bottom pointer-events-none"
-                />
+                <picture className="relative z-10 w-full h-full flex items-end justify-center">
+                  <source srcSet="/images/doctor_hero_transparent.webp" type="image/webp" />
+                  <img
+                    src="/images/doctor_hero_transparent.png"
+                    alt="SahiMed Certified Doctor"
+                    className="w-full h-full object-contain object-bottom pointer-events-none"
+                    loading="eager"
+                  />
+                </picture>
 
 
               </div>
