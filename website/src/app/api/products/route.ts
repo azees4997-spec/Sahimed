@@ -40,7 +40,7 @@ export async function GET(request: Request) {
   if (isNaN(limitValue) || limitValue < 1) limitValue = 50;
   if (limitValue > 5000) limitValue = 5000;
 
-  const category = searchParams.get('category');
+  const category = searchParams.get('category') || searchParams.get('c');
   const qStr = searchParams.get('q');
   const moleculeCode = searchParams.get('moleculeId') || searchParams.get('molecule_code');
   const isGeneric = searchParams.get('isGeneric');
@@ -69,9 +69,14 @@ export async function GET(request: Request) {
       }
     }
 
-    // Category filter
+    // Category filter (handles category name, sub-category, or OTC/Generic medicine_type)
     if (category) {
-      query['taxonomy.category_name'] = { $regex: escapeRegExp(category), $options: 'i' };
+      const catRegex = new RegExp(escapeRegExp(category), 'i');
+      query.$or = [
+        { 'taxonomy.category_name': catRegex },
+        { 'taxonomy.sub_category': catRegex },
+        { medicine_type: catRegex }
+      ];
     }
 
     // Marketer/manufacturer filter
