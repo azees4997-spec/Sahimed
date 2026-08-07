@@ -167,6 +167,8 @@ export async function GET(request: Request) {
             { product_id: { $regex: cleanSearchStr, $options: 'i' } },
             { molecule_code: { $regex: cleanSearchStr, $options: 'i' } },
             { 'taxonomy.marketer_name': { $regex: cleanSearchStr, $options: 'i' } },
+            { 'taxonomy.disease_tags': { $regex: cleanSearchStr, $options: 'i' } },
+            { 'medical_info.primary_use': { $regex: cleanSearchStr, $options: 'i' } },
           ]
         });
       }

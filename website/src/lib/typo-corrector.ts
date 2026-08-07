@@ -102,12 +102,10 @@ export interface CorrectionResult {
 export function sanitizeSearchQuery(query: string): string {
   if (!query) return '';
   return query
-    // Preserve hyphen between alphanumeric (e.g. 5-HTP, B-12, co-amoxiclav)
-    // but remove standalone hyphens, leading/trailing hyphens
+    .replace(/([a-zA-Z])(\d{2,})/g, '$1 $2') // Separate letter-digits: dolo650 -> dolo 650
     .replace(/([a-zA-Z0-9])-([a-zA-Z0-9])/g, '$1-$2')   // keep intra-word hyphens
     .replace(/[()\[\]\{\}\/\\+.,'"|@#$%^&*=<>?!~`]/g, ' ') // strip other punctuation
     .replace(/-/g, ' ')                                    // now strip any remaining standalone hyphens
-    // Restore intra-word hyphens that got split (re-join digit-letter like 5-HTP)
     .replace(/\s+/g, ' ')
     .trim();
 }
