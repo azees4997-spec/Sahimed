@@ -26,6 +26,16 @@ function escapeRegExp(string: string) {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
+
+  // Fast warm-up ping — called on page load to keep function warm
+  if (searchParams.get('ping') === '1') {
+    try {
+      const client = await clientPromise;
+      await client.db('sahimed').command({ ping: 1 });
+    } catch {}
+    return NextResponse.json({ ok: true });
+  }
+
   let limitValue = parseInt(searchParams.get('limit') || '50');
   if (isNaN(limitValue) || limitValue < 1) limitValue = 50;
   if (limitValue > 5000) limitValue = 5000;

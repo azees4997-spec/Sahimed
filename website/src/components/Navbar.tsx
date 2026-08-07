@@ -113,6 +113,11 @@ export default function Navbar() {
     }
   }, []);
 
+  // Warm up the search API on page load to eliminate cold-start latency
+  useEffect(() => {
+    fetch('/api/products?ping=1').catch(() => {});
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     fetch('/api/pages')
@@ -426,7 +431,7 @@ export default function Navbar() {
       }
     };
 
-    const timer = setTimeout(fetchSuggestions, 300);
+    const timer = setTimeout(fetchSuggestions, 180);
     return () => {
       clearTimeout(timer);
       controller.abort();
