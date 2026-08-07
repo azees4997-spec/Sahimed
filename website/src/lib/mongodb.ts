@@ -2,15 +2,14 @@ import { MongoClient } from 'mongodb';
 
 const uri = process.env.MONGODB_URI;
 const options = {
-  serverSelectionTimeoutMS: 3000,
-  connectTimeoutMS: 8000,
+  serverSelectionTimeoutMS: 10000,  // increased — Firebase cold start needs time
+  connectTimeoutMS: 15000,
   maxPoolSize: 10,
-  minPoolSize: 2,
-  socketTimeoutMS: 30000,
+  minPoolSize: 1,
+  socketTimeoutMS: 45000,
   heartbeatFrequencyMS: 10000,
   maxIdleTimeMS: 270000,
   retryWrites: true,
-  compressors: ['zlib' as any],
 };
 
 let client: MongoClient;
