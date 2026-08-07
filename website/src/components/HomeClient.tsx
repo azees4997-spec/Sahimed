@@ -160,7 +160,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         </div>
 
         {/* ── Featured Category Items — Pure Circular Icons with No Outer Box Container ── */}
-        <div className="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
+        <div className="flex sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 overflow-x-auto scrollbar-hide py-1 px-0.5 sm:px-0">
           {featuredCats.map((cat: any, i: number) => {
             const style = getCategoryStyle(cat.name || '');
             const imgSrc = (cat.imageUrl && !cat.imageUrl.includes('picsum')) ? cat.imageUrl : style.image;
@@ -178,10 +178,10 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
             const accent = cardAccents[i % cardAccents.length];
 
             return (
-              <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+              <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="shrink-0 sm:shrink">
                 <Link
                   href={`/search?c=${encodeURIComponent(cat.name)}`}
-                  className="group flex flex-col items-center text-center p-1 transition-transform duration-200 hover:-translate-y-1"
+                  className="group flex flex-col items-center text-center p-1 transition-transform duration-200 hover:-translate-y-1 w-20 sm:w-auto"
                 >
                   {/* Small Round Circular Image Container — No outer card box */}
                   <div className="relative w-14 h-14 sm:w-16 sm:h-16 lg:w-18 lg:h-18 rounded-full overflow-hidden p-0.5 shadow-xs border border-slate-200/80 group-hover:scale-105 group-hover:shadow-md transition-all duration-300 bg-white shrink-0"
@@ -357,7 +357,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         </div>
 
         {/* ── Category 2 Grid — Compact Circular Avatar Icons ── */}
-        <div className="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
+        <div className="flex sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 overflow-x-auto scrollbar-hide py-1 px-0.5 sm:px-0">
           {[
             { name: 'Personal Care', emoji: '✨', bg: 'rgba(124,58,237,0.06)', color: '#7c3aed', border: 'rgba(124,58,237,0.2)' },
             { name: 'Baby Care', emoji: '👶', bg: 'rgba(219,39,119,0.06)', color: '#db2777', border: 'rgba(219,39,119,0.2)' },
@@ -372,10 +372,10 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
             const imgSrc = style.image;
 
             return (
-              <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+              <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="shrink-0 sm:shrink">
                 <Link
                   href={`/search?c=${encodeURIComponent(cat.name)}`}
-                  className="group flex flex-col items-center text-center p-1 transition-transform duration-200 hover:-translate-y-1"
+                  className="group flex flex-col items-center text-center p-1 transition-transform duration-200 hover:-translate-y-1 w-20 sm:w-auto"
                 >
                   {/* Small Round Circular Image Container */}
                   <div className="relative w-14 h-14 sm:w-16 sm:h-16 lg:w-18 lg:h-18 rounded-full overflow-hidden p-0.5 shadow-xs border border-slate-200/80 group-hover:scale-105 group-hover:shadow-md transition-all duration-300 bg-white shrink-0"
