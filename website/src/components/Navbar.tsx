@@ -1273,105 +1273,95 @@ export default function Navbar() {
 
             <AnimatePresence>
               {showSuggestions && suggestions.length > 0 && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.98 }}
                   transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[24px] overflow-hidden z-[110] border border-slate-100 shadow-2xl"
+                  className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl overflow-hidden z-[110] border border-slate-100 shadow-2xl"
                 >
-                  <div className="max-h-[85vh] sm:max-h-[650px] overflow-y-auto scrollbar-hide py-0 grid grid-cols-1 sm:grid-cols-12 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 bg-white">
-                    {/* LEFT COLUMN: SUGGESTIONS (Salts & Short Brands) - 5 columns wide */}
-                    <div className="sm:col-span-5 bg-slate-50/30">
-                      <div className="px-6 py-4 border-b border-slate-100/50">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                          <div className="w-1 h-1 rounded-full bg-primary" /> Suggestions
-                        </span>
-                      </div>
-                      <div className="divide-y divide-slate-100/50">
-                        {suggestions.map((item) => (
-                          <div 
-                            key={item.id}
-                            onClick={() => handleSuggestionClick(item)}
-                            className="w-full px-6 py-4 flex items-center gap-4 hover:bg-white transition-all group cursor-pointer"
-                          >
-                            <SearchIcon className="w-3.5 h-3.5 text-slate-300 group-hover:text-primary transition-colors" />
-                            <div className="flex-1 min-w-0 flex items-center gap-3">
-                              <span className="font-extrabold text-[13px] text-slate-600 truncate group-hover:text-slate-900 transition-colors uppercase">
-                                {item.term}
-                              </span>
-                              <Badge variant="secondary" className="text-[8px] bg-slate-100 text-slate-400 font-bold border-none uppercase h-4 px-1.5">
-                                {item.type === 'Salt' ? 'Molecule' : 'Brand'}
-                              </Badge>
-                            </div>
-                            <ArrowUpRight className="w-3.5 h-3.5 text-slate-200 group-hover:text-primary transition-all opacity-0 group-hover:opacity-100" />
-                          </div>
-                        ))}
-                      </div>
+                  {/* Salt / composition chips */}
+                  {suggestions.filter(s => s.type === 'Salt').length > 0 && (
+                    <div className="px-4 pt-3 pb-2.5 flex flex-wrap gap-2 border-b border-slate-100">
+                      {suggestions.filter(s => s.type === 'Salt').slice(0, 3).map(item => (
+                        <button
+                          key={item.id}
+                          onClick={() => handleSuggestionClick(item)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/5 hover:bg-primary/10 border border-primary/15 transition-all"
+                        >
+                          <span className="text-[11px] font-semibold text-primary">{item.term}</span>
+                          <span className="text-[9px] text-primary/50 font-medium ml-0.5">Salt</span>
+                        </button>
+                      ))}
                     </div>
+                  )}
 
-                    {/* RIGHT COLUMN: PRODUCTS (Detailed Cards) - 7 columns wide */}
-                    <div className="sm:col-span-7 bg-white">
-                      <div className="px-6 py-4 border-b border-slate-100/50 flex items-center justify-between">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                          <div className="w-1 h-1 rounded-full bg-emerald-500" /> Top Matches
-                        </span>
-                        <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Instant Results</span>
-                      </div>
-                      <div className="divide-y divide-slate-100/50 max-h-[500px] overflow-y-auto">
-                        {displayedSuggestions.filter(s => s.type === 'Brand').length > 0 ? (
-                          displayedSuggestions.filter(s => s.type === 'Brand').map((item) => (
-                            <div 
-                              key={`prod-${item.id}`}
-                              className="w-full px-6 py-5 flex items-center gap-5 hover:bg-slate-50/50 transition-all group"
-                            >
-                              <div className="relative w-16 h-16 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-105 transition-transform">
-                                <Image 
-                                  src={(item as any).imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
-                                  alt={item.term} 
-                                  fill 
-                                  className="object-contain p-2" 
-                                />
-                              </div>
-                              <div className="flex-1 min-w-0 flex items-center justify-between gap-4">
-                                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => router.push(`/product/${(item as any).product?.id}`)}>
-                                  <p className="font-extrabold text-[14px] text-slate-800 line-clamp-1 group-hover:text-primary transition-colors">
-                                    {item.term}
-                                  </p>
-                                  <div className="flex items-center gap-3 mt-1.5">
-                                    {(item as any).price > 0 && (
-                                      <span className="text-[15px] font-black text-slate-900">₹{(item as any).price}</span>
-                                    )}
-                                    <span className="text-[9px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">
-                                      20% OFF
-                                    </span>
-                                  </div>
-                                </div>
-                                <Button 
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    addToCart((item as any).product);
-                                    toast({ title: "Added to Basket" });
-                                  }}
-                                  variant="outline"
-                                  className="h-10 px-6 rounded-xl border-primary/20 text-primary hover:bg-primary hover:text-white font-black text-[10px] uppercase tracking-widest shadow-sm active:scale-95 transition-all"
-                                >
-                                  Add +
-                                </Button>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="p-20 text-center space-y-3 opacity-40">
-                             <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
-                               <Package className="w-6 h-6 text-slate-300" />
-                             </div>
-                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Search for products</p>
+                  {/* Product rows */}
+                  <div className="max-h-[400px] overflow-y-auto">
+                    {displayedSuggestions.filter(s => s.type === 'Brand').map((item) => {
+                      const product = (item as any).product;
+                      const composition = product?.saltComposition || product?.medical_info?.composition || '';
+                      const mfr = product?.manufacturer || product?.taxonomy?.marketer_name || '';
+                      const price = (item as any).price;
+                      return (
+                        <div
+                          key={`prod-${item.id}`}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors cursor-pointer group border-b border-slate-50 last:border-b-0"
+                          onClick={() => {
+                            const slug = product?.seo?.url_slug || product?.id;
+                            if (slug) router.push(`/product/${slug}`);
+                            setShowSuggestions(false);
+                            setSearch('');
+                          }}
+                        >
+                          <div className="w-11 h-11 shrink-0 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden">
+                            {(item as any).imageUrl ? (
+                              <Image src={(item as any).imageUrl} alt={item.term} width={44} height={44} className="object-contain p-1" />
+                            ) : (
+                              <Package className="w-5 h-5 text-slate-300" />
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-[13px] text-slate-800 truncate group-hover:text-primary transition-colors leading-tight">
+                              {item.term}
+                            </p>
+                            {composition && (
+                              <p className="text-[11px] text-slate-400 truncate mt-0.5 leading-tight">{composition}</p>
+                            )}
+                            {!composition && mfr && (
+                              <p className="text-[11px] text-slate-400 truncate mt-0.5">{mfr}</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2.5 shrink-0">
+                            {price > 0 && (
+                              <span className="text-[13px] font-bold text-slate-800">₹{price}</span>
+                            )}
+                            <Button
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(product);
+                                toast({ title: "Added to Basket" });
+                              }}
+                              className="h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold text-[11px] shadow-none active:scale-95 transition-all"
+                            >
+                              ADD +
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* See all footer */}
+                  <div
+                    className="px-4 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/60 cursor-pointer hover:bg-slate-100 transition-colors"
+                    onClick={() => { router.push(`/search?q=${encodeURIComponent(search)}`); setShowSuggestions(false); }}
+                  >
+                    <span className="text-[12px] font-medium text-slate-500">
+                      See all results for <span className="text-primary font-semibold">"{search}"</span>
+                    </span>
+                    <ArrowUpRight className="w-4 h-4 text-primary" />
                   </div>
                 </motion.div>
               )}
