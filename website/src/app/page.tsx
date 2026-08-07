@@ -65,8 +65,8 @@ async function getProducts(filterType: 'bestSeller' | 'topSelection' | 'all' = '
 import MegaCategoryRibbon from '@/components/MegaCategoryRibbon';
 
 export default async function Home() {
-  const [banners, categories, bestSellers, topSelections, medicines] = await Promise.all([
-    getBanners(), getCategories(), getProducts('bestSeller'), getProducts('topSelection'), getProducts('all')
+  const [banners, categories] = await Promise.all([
+    getBanners(), getCategories()
   ]);
 
   const faqJsonLd = {
@@ -240,9 +240,9 @@ export default async function Home() {
           <HomeClient
             banners={banners}
             categories={categories}
-            bestSellers={bestSellers}
-            topSelections={topSelections}
-            medicines={medicines}
+            bestSellers={[]}
+            topSelections={[]}
+            medicines={[]}
           />
           <HowItWorks />
           <TrustSection />

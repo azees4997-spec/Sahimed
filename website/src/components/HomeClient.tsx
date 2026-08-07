@@ -237,36 +237,6 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         )}
       </motion.section>
 
-      {/* ════════════════════════════════════════════════
-          BEST SELLERS
-          ════════════════════════════════════════════════ */}
-      {bestSellers && bestSellers.length > 0 && (
-        <motion.section
-          variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }}
-          className="space-y-4"
-        >
-          <div className="flex items-end justify-between px-1">
-            <div>
-              <div className="flex items-center gap-1.5 mb-1">
-                <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Trending Now</p>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">Most Popular Brands</h2>
-            </div>
-            <Link href="/search?sort=popular" className="text-[11px] font-black text-primary uppercase tracking-wider flex items-center gap-0.5 hover:underline">
-              See All <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2 px-1">
-            {bestSellers.slice(0, 8).map((p: any, i: number) => (
-              <motion.div key={p.id} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="min-w-[160px] sm:min-w-[190px]">
-                <ProductCard product={p} priority={i < 4} />
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
-      )}
-
       {/* ── 4 Premium Pastel Promise Cards ── */}
       <motion.section
         variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
@@ -407,73 +377,6 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
           })}
         </div>
       </motion.section>
-
-
-      {/* ════════════════════════════════════════════════
-          TOP SELECTIONS
-          ════════════════════════════════════════════════ */}
-      {topSelections && topSelections.length > 0 && (
-        <motion.section
-          variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }}
-          className="space-y-4"
-        >
-          <div className="flex items-end justify-between px-1">
-            <div>
-              <div className="flex items-center gap-1.5 mb-1">
-                <Zap className="w-3 h-3 text-violet-500 fill-violet-500" />
-                <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest">Hand Picked</p>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">Top Selections</h2>
-            </div>
-            <Link href="/search?sort=top" className="text-[11px] font-black text-primary uppercase tracking-wider flex items-center gap-0.5 hover:underline">
-              See All <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2 px-1">
-            {topSelections.map((p: any, i: number) => (
-              <motion.div key={p.id} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="min-w-[160px] sm:min-w-[190px]">
-                <ProductCard product={p} priority={i < 2} />
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
-      )}
-
-      {/* ════════════════════════════════════════════════
-          DYNAMIC CATEGORY PRODUCT ROWS
-          ════════════════════════════════════════════════ */}
-      {topDynamicCategories.map(([categoryName, products]: any, idx: number) => {
-        if (!(products as any[]).length) return null;
-        const style = getCategoryStyle(categoryName as string);
-        return (
-          <motion.section
-            key={categoryName}
-            variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }}
-            className="space-y-4"
-          >
-            <div className="flex items-end justify-between px-1">
-              <div>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-sm leading-none">{style.emoji}</span>
-                  <p className={cn("text-[10px] font-black uppercase tracking-widest", style.text)}>{categoryName}</p>
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">Top in {categoryName}</h2>
-              </div>
-              <Link href={`/search?c=${encodeURIComponent(categoryName)}`} className="text-[11px] font-black text-primary uppercase tracking-wider flex items-center gap-0.5 hover:underline">
-                View All <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-            <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2 px-1">
-              {(products as any[]).slice(0, 8).map((p: any, i: number) => (
-                <motion.div key={p.id || p._id} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="min-w-[160px] sm:min-w-[190px]">
-                  <ProductCard product={p} priority={idx === 0 && i < 2} />
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-        );
-      })}
-
     </div>
   );
 }
