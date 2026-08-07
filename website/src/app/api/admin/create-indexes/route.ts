@@ -32,6 +32,8 @@ export async function GET(request: Request) {
     };
 
     // ── 1. TEXT index: product_name + composition + disease_tags ─────────────
+    // language:'none' = no stemming, no stop-word removal, numbers preserved
+    // This is critical for medical names like "5-HTP", "B12", "D3", "500mg"
     await safe('search_text_idx', () =>
       col.createIndex(
         {
@@ -42,6 +44,7 @@ export async function GET(request: Request) {
         {
           name: 'search_text_idx',
           weights: { product_name: 10, 'medical_info.composition': 5, 'taxonomy.disease_tags': 2 },
+          default_language: 'none',  // preserve numbers + alphanumeric codes (B12, D3, 5-HTP)
           background: true,
         }
       )

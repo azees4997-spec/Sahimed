@@ -94,12 +94,22 @@ export interface CorrectionResult {
 }
 
 /**
- * Strips special characters (hyphens, brackets, slashes, pluses, commas, dots) from search queries
+ * Strips special characters from search queries but preserves:
+ * - Hyphens BETWEEN alphanumeric chars: "5-HTP", "Vitamin-D3", "B-12" → kept as-is
+ * - Numbers: "500mg", "D3", "B12" → kept as-is
+ * Only strips: standalone punctuation, brackets, slashes, quotes
  */
 export function sanitizeSearchQuery(query: string): string {
   if (!query) return '';
-  // Replace -, (), [], {}, /, \, +, ,, ., ', " with spaces
-  return query.replace(/[-()\[\]\{\}\/\\+.,'"]/g, ' ').replace(/\s+/g, ' ').trim();
+  return query
+    // Preserve hyphen between alphanumeric (e.g. 5-HTP, B-12, co-amoxiclav)
+    // but remove standalone hyphens, leading/trailing hyphens
+    .replace(/([a-zA-Z0-9])-([a-zA-Z0-9])/g, '$1-$2')   // keep intra-word hyphens
+    .replace(/[()\[\]\{\}\/\\+.,'"|@#$%^&*=<>?!~`]/g, ' ') // strip other punctuation
+    .replace(/-/g, ' ')                                    // now strip any remaining standalone hyphens
+    // Restore intra-word hyphens that got split (re-join digit-letter like 5-HTP)
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /**
