@@ -99,6 +99,7 @@ export async function GET(request: Request) {
     let andConditions: any[] = [];
     let correctedQueryText = '';
     let wasAutoCorrected = false;
+    let effectiveQuery = qStr || ''; // declared here so it's in scope for scoring below
 
     // Full-text search across product_name and composition with Typo-Correction & Punctuation Stripping (- ( ) / +)
     if (qStr) {
@@ -109,7 +110,7 @@ export async function GET(request: Request) {
         correctedQueryText = correction.correctedQuery;
       }
 
-      const effectiveQuery = correction.wasCorrected ? correction.correctedQuery : (sanitized || qStr);
+      effectiveQuery = correction.wasCorrected ? correction.correctedQuery : (sanitized || qStr);
       terms = effectiveQuery.split(/\s+/).filter(t => t.length > 0);
 
       if (terms.length > 0) {
