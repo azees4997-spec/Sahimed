@@ -207,7 +207,7 @@ export default async function Home() {
           </div>
 
           {/* Trust ticker */}
-          <div className="w-full overflow-hidden py-2.5 border-t" style={{ background: 'rgba(255,255,255,0.6)', borderColor: 'rgba(167,139,250,0.2)' }}>
+          <div className="w-full max-w-full overflow-hidden py-2.5 border-t border-b border-slate-200/60 bg-white/80 backdrop-blur-sm relative z-20">
             <div className="flex animate-marquee w-max">
               {[
                 { icon: '✅', text: 'Trusted by Thousands' },

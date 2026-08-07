@@ -303,6 +303,13 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         ))}
       </motion.section>
 
+      {/* ── Section Page Breaker ── */}
+      <div className="w-full my-6 flex items-center justify-center gap-2">
+        <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-slate-200 flex-1 max-w-xs" />
+        <div className="w-1.5 h-1.5 rounded-full bg-teal-500/60" />
+        <div className="h-px bg-gradient-to-l from-transparent via-slate-200 to-slate-200 flex-1 max-w-xs" />
+      </div>
+
       {/* ══════════════════════════════════════════════════════
           CATEGORY BLOCK 2 — Health & Wellness Categories (Clean White Background)
           ══════════════════════════════════════════════════════ */}
