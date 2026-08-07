@@ -17,13 +17,36 @@ import {
 import { cn } from '@/lib/utils';
 
 // [COST FIX] Footer no longer holds a Firestore snapshot listener.
-// Pages are fetched once server-side in layout.tsx (with 10-min Next.js cache)
-// and passed down as a prop. Zero real-time Firestore connections per visitor.
+import { useState, useEffect } from 'react';
+
+const DEFAULT_FOOTER_PAGES = [
+  { id: 'about-us', title: 'About Us', placement: 'footer' },
+  { id: 'privacy-policy', title: 'Privacy Policy', placement: 'footer' },
+  { id: 'terms-conditions', title: 'Terms & Conditions', placement: 'footer' },
+  { id: 'shipping-policy', title: 'Shipping Policy', placement: 'footer' },
+  { id: 'refund-policy', title: 'Return & Refund Policy', placement: 'footer' },
+  { id: 'prescription-policy', title: 'Prescription Policy', placement: 'footer' },
+  { id: 'editorial-policy', title: 'Editorial Policy', placement: 'footer' },
+  { id: 'contact-us', title: 'Contact Us', placement: 'footer' },
+];
+
 export default function Footer({ initialPages = [] }: { initialPages?: any[] }) {
   const pathname = usePathname();
+  const [pages, setPages] = useState<any[]>(initialPages.length > 0 ? initialPages : DEFAULT_FOOTER_PAGES);
 
-  const footerPages = initialPages?.filter(
-    (p: any) => (p.placement === 'footer' || p.placement === 'both') && p.id !== 'contact'
+  useEffect(() => {
+    fetch('/api/pages')
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setPages(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const footerPages = pages.filter(
+    (p: any) => (p.placement === 'footer' || p.placement === 'both' || !p.placement) && p.id !== 'contact'
   );
 
   const hideOnPaths = ['/cart', '/checkout', '/Sahi-admin', '/login', '/prescription'];
