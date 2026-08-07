@@ -1,12 +1,6 @@
 # Firebase App Hosting Configuration
-# See https://firebase.google.com/docs/app-hosting/configure
-
 kind: "AppHostingBackend"
 schemaVersion: "v1"
-
-# The directory containing the application code (relative to git root)
-buildSettings:
-  rootDir: "website"
 
 env:
   - variable: MONGODB_URI
