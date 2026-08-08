@@ -60,7 +60,7 @@ export default function CategoriesClient() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-16">
+      <div className="min-h-screen bg-[#F4F7F6] pharma-bg-pattern pb-40 lg:pb-16">
         <Navbar />
         
         <main className="max-w-7xl mx-auto px-6 py-8 md:py-12">
