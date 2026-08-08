@@ -59,6 +59,7 @@ import { OrderNotification } from './components/OrderNotification';
 import { BrandingTab } from './components/BrandingTab';
 import { AbandonedCartsTab } from './components/AbandonedCartsTab';
 import { MastersTab } from './components/MastersTab';
+import { AnalyticsTab } from './components/AnalyticsTab';
 
 const MASTER_UIDS = ["BM9HheYflheT0Wyj6olaEnyCAHl1", "RzB6nqlQumg1VEniFcZrgbcDdRA2"];
 
@@ -386,6 +387,7 @@ function AdminConsoleContent() {
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             >
               {activeTab === 'overview' && <OverviewTab setTab={handleTabChange} role={userRole} />}
+              {activeTab === 'analytics' && <AnalyticsTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {(permissions.orders_view || userRole === 'admin') && activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {(permissions.orders_view || userRole === 'admin') && activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {(permissions.orders_view || userRole === 'admin') && activeTab === 'abandonedCarts' && <AbandonedCartsTab onBack={() => handleTabChange('overview')} />}
