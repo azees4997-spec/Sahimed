@@ -1,17 +1,21 @@
-'use client';
+"use client"
 
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { useCart } from '@/context/CartContext';
 
 export default function WhatsAppFloat() {
   const [visible, setVisible] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const { totalItems } = useCart();
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 1800);
     return () => clearTimeout(timer);
   }, []);
+
+  const hasCartBar = totalItems > 0;
 
   return (
     <AnimatePresence>
@@ -21,7 +25,7 @@ export default function WhatsAppFloat() {
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-          className="fixed bottom-20 sm:bottom-6 right-4 z-[150] flex flex-col items-end gap-2"
+          className={`fixed ${hasCartBar ? 'bottom-40' : 'bottom-24'} sm:bottom-6 right-4 z-[170] flex flex-col items-end gap-2 transition-all duration-300`}
         >
           {/* Tooltip label on hover */}
           <AnimatePresence>
