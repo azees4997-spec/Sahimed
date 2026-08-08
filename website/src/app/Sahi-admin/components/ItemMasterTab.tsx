@@ -659,18 +659,12 @@ function ItemForm({ initialData, onSuccess }: { initialData?: any, onSuccess: ()
             </div>
             <div className="space-y-1">
               <Label className="text-[10px] font-black uppercase text-slate-500">Molecule Code</Label>
-              <Select value={form.molecule_code} onValueChange={v => setForm({...form, molecule_code: v})}>
-                <SelectTrigger className="rounded-2xl h-12 bg-gray-50 border-none font-bold">
-                  <SelectValue placeholder="Select Molecule Code" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl z-[150]">
-                  {molecules.map(m => (
-                    <SelectItem key={m.id || m._id} value={m['Molecule Code']} className="font-bold">
-                      {m['Molecule Code']} — {m.Composition}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                value={form.molecule_code}
+                onChange={e => setForm({...form, molecule_code: e.target.value})}
+                placeholder="e.g. MOL007410"
+                className="rounded-2xl h-12 bg-gray-50 border-none font-bold text-slate-900"
+              />
             </div>
             <div className="space-y-1">
               <Label className="text-[10px] font-black uppercase text-slate-500">Medicine Type</Label>
