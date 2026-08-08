@@ -395,7 +395,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
         </div>
       </SectionHeader>
 
-      <div className="relative group/search" ref={suggestionRef}>
+      <div className="relative group/search">
         <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within/search:text-primary transition-colors">
           <Search className="w-5 h-5" />
         </div>
@@ -403,43 +403,16 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
           placeholder="SEARCH PRODUCT INVENTORY (E.G. D-VENIZ)..." 
           value={searchTerm} 
           onChange={e => setSearchTerm(e.target.value)} 
-          className="h-14 pl-14 rounded-2xl border bg-slate-50 shadow-sm font-black text-sm tracking-tight placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all uppercase" 
+          className="h-14 pl-14 pr-12 rounded-2xl border bg-slate-50 shadow-sm font-black text-sm tracking-tight placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all uppercase" 
         />
-        {isSearching && (
-          <div className="absolute right-6 top-1/2 -translate-y-1/2">
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
-              <Loader2 className="w-4 h-4 text-primary" />
-            </motion.div>
-          </div>
-        )}
-
-        {suggestions.length > 0 && (
-          <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-[110] animate-in fade-in slide-in-from-top-4 duration-300">
-            <div className="px-6 py-3 bg-slate-50/50 border-b border-slate-100">
-              <p className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase">Product Matches</p>
-            </div>
-            <div className="max-h-[300px] overflow-y-auto no-scrollbar">
-              {suggestions.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setEditingItem(item);
-                    setIsFormOpen(true);
-                    setSuggestions([]);
-                  }}
-                  className="w-full px-6 py-3 flex items-center gap-4 hover:bg-primary/5 transition-all text-left border-b border-slate-50 last:border-none active:scale-[0.99]"
-                >
-                  <div className="w-10 h-10 bg-white rounded-xl flex-shrink-0 border border-slate-100 p-1 flex items-center justify-center overflow-hidden">
-                    {item.imageUrl ? <img src={item.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-5 h-5 text-slate-200" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-sm text-slate-800 truncate uppercase">{item.name}</p>
-                    <p className="text-[10px] font-bold text-slate-400 truncate uppercase">{item.sku} • {item.manufacturer}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
+        {searchTerm && (
+          <button
+            onClick={() => setSearchTerm('')}
+            className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100 transition-all"
+            title="Clear search"
+          >
+            <X className="w-4 h-4" />
+          </button>
         )}
       </div>
 
