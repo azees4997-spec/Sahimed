@@ -26,28 +26,28 @@ interface HomeClientProps {
 // ─── Category Style Map with HD Medical Images ────────────────────────────────
 function getCategoryStyle(name: string): { emoji: string; image: string; from: string; to: string; text: string } {
   const l = name.toLowerCase();
-  if (l.includes('cardiac') || l.includes('heart')) return { emoji: '❤️', image: '/images/cat_cardiac.jpg', from: 'from-rose-400', to: 'to-pink-300', text: 'text-rose-700' };
-  if (l.includes('diabet') || l.includes('sugar') || l.includes('insulin')) return { emoji: '🩸', image: '/images/cat_diabetes.jpg', from: 'from-blue-400', to: 'to-cyan-300', text: 'text-blue-700' };
-  if (l.includes('vitamin') || l.includes('supplement') || l.includes('nutrition')) return { emoji: '💊', image: '/images/cat_vitamins.jpg', from: 'from-amber-400', to: 'to-yellow-300', text: 'text-amber-700' };
-  if (l.includes('respi') || l.includes('lung') || l.includes('asthma')) return { emoji: '🫁', image: '/images/cat_respiratory.jpg', from: 'from-sky-400', to: 'to-blue-300', text: 'text-sky-700' };
-  if (l.includes('pain') || l.includes('ortho') || l.includes('joint')) return { emoji: '🩹', image: '/images/cat_pain_ortho.jpg', from: 'from-orange-400', to: 'to-amber-300', text: 'text-orange-700' };
-  if (l.includes('skin') || l.includes('derma') || l.includes('acne')) return { emoji: '✨', image: '/images/cat_skin_derma.jpg', from: 'from-pink-400', to: 'to-rose-300', text: 'text-pink-700' };
-  if (l.includes('gastro') || l.includes('digest') || l.includes('stomach')) return { emoji: '🌿', image: '/images/cat_gastro.jpg', from: 'from-emerald-400', to: 'to-green-300', text: 'text-emerald-700' };
-  if (l.includes('neuro') || l.includes('brain') || l.includes('sleep')) return { emoji: '🧠', image: '/images/cat_neuro.jpg', from: 'from-violet-400', to: 'to-purple-300', text: 'text-violet-700' };
-  if (l.includes('women') || l.includes('gynae')) return { emoji: '🌸', image: '/images/cat_womens.jpg', from: 'from-fuchsia-400', to: 'to-pink-300', text: 'text-fuchsia-700' };
-  return { emoji: '💊', image: '/images/cat_vitamins.jpg', from: 'from-primary', to: 'to-teal-400', text: 'text-primary' };
+  if (l.includes('cardiac') || l.includes('heart')) return { emoji: '❤️', image: '/images/cat_cardiac.webp', from: 'from-rose-400', to: 'to-pink-300', text: 'text-rose-700' };
+  if (l.includes('diabet') || l.includes('sugar') || l.includes('insulin')) return { emoji: '🩸', image: '/images/cat_diabetes.webp', from: 'from-blue-400', to: 'to-cyan-300', text: 'text-blue-700' };
+  if (l.includes('vitamin') || l.includes('supplement') || l.includes('nutrition')) return { emoji: '💊', image: '/images/cat_vitamins.webp', from: 'from-amber-400', to: 'to-yellow-300', text: 'text-amber-700' };
+  if (l.includes('respi') || l.includes('lung') || l.includes('asthma')) return { emoji: '🫁', image: '/images/cat_respiratory.webp', from: 'from-sky-400', to: 'to-blue-300', text: 'text-sky-700' };
+  if (l.includes('pain') || l.includes('ortho') || l.includes('joint')) return { emoji: '🩹', image: '/images/cat_pain_ortho.webp', from: 'from-orange-400', to: 'to-amber-300', text: 'text-orange-700' };
+  if (l.includes('skin') || l.includes('derma') || l.includes('acne')) return { emoji: '✨', image: '/images/cat_skin_derma.webp', from: 'from-pink-400', to: 'to-rose-300', text: 'text-pink-700' };
+  if (l.includes('gastro') || l.includes('digest') || l.includes('stomach')) return { emoji: '🌿', image: '/images/cat_gastro.webp', from: 'from-emerald-400', to: 'to-green-300', text: 'text-emerald-700' };
+  if (l.includes('neuro') || l.includes('brain') || l.includes('sleep')) return { emoji: '🧠', image: '/images/cat_neuro.webp', from: 'from-violet-400', to: 'to-purple-300', text: 'text-violet-700' };
+  if (l.includes('women') || l.includes('gynae')) return { emoji: '🌸', image: '/images/cat_womens.webp', from: 'from-fuchsia-400', to: 'to-pink-300', text: 'text-fuchsia-700' };
+  return { emoji: '💊', image: '/images/cat_vitamins.webp', from: 'from-primary', to: 'to-teal-400', text: 'text-primary' };
 }
 
 // Default Mega Banners
 const DEFAULT_BANNERS = [
   {
-    imageUrl: '/images/mega_banner_1.jpg',
+    imageUrl: '/images/mega_banner_1.webp',
     title: 'Up to 61% OFF Chronic Care Medicines',
     subtitle: '100% Genuine Branded Generics Delivered Fast Across India',
     link: '/search'
   },
   {
-    imageUrl: '/images/mega_banner_2.jpg',
+    imageUrl: '/images/mega_banner_2.webp',
     title: 'Licensed Prescription Pharmacy',
     subtitle: 'Every Order Verified By Registered Pharmacists',
     link: '/prescription'

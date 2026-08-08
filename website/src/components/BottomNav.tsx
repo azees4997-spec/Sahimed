@@ -29,6 +29,7 @@ export default function BottomNav() {
             <Link 
               key={item.path} 
               href={item.path} 
+              aria-label={item.label}
               className={cn(
                 "flex-1 flex flex-col items-center justify-center gap-1.5 transition-all duration-300 relative z-10",
                 isActive ? "text-primary" : "text-slate-400"

@@ -11,15 +11,9 @@ export default function LocationSync() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const hasRedirected = sessionStorage.getItem('sahimed_app_redirected');
-    const isAndroid = /Android/i.test(navigator.userAgent);
-
-    if (isAndroid && !hasRedirected) {
-      sessionStorage.setItem('sahimed_app_redirected', 'true');
-      const currentPath = window.location.pathname + window.location.search;
-      const intentUrl = `intent://sahimed.com${currentPath}#Intent;scheme=https;package=com.sahimed.app;fallback=${encodeURIComponent(window.location.href)};end`;
-      window.location.href = intentUrl;
-    }
+  // App link redirection handled via native Android Digital Asset Links (assetlinks.json)
+  useEffect(() => {
+    // Zero forced redirects to prevent Lighthouse TBT and Best Practices flags
   }, []);
 
   useEffect(() => {
