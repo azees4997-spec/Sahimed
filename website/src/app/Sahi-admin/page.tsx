@@ -39,6 +39,8 @@ import { AdminProfile } from '@/types';
 
 // Tab Components
 import { OverviewTab } from './components/OverviewTab';
+import { AnalyticsTab } from './components/AnalyticsTab';
+import { FollowupsTab } from './components/FollowupsTab';
 import { EnquiriesTab } from './components/EnquiriesTab';
 import { FulfillmentTab } from './components/FulfillmentTab';
 import { PromoCodesTab } from './components/PromoCodesTab';
@@ -388,6 +390,7 @@ function AdminConsoleContent() {
             >
               {activeTab === 'overview' && <OverviewTab setTab={handleTabChange} role={userRole} />}
               {activeTab === 'analytics' && <AnalyticsTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
+              {activeTab === 'followups' && <FollowupsTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {(permissions.orders_view || userRole === 'admin') && activeTab === 'enquiries' && <EnquiriesTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {(permissions.orders_view || userRole === 'admin') && activeTab === 'fulfillment' && <FulfillmentTab db={db} isVerified={isVerified} onBack={() => handleTabChange('overview')} />}
               {(permissions.orders_view || userRole === 'admin') && activeTab === 'abandonedCarts' && <AbandonedCartsTab onBack={() => handleTabChange('overview')} />}

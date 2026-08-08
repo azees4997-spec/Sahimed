@@ -19,7 +19,8 @@ import {
   Database,
   Zap,
   Sparkles,
-  ShoppingCart
+  ShoppingCart,
+  Phone
 } from 'lucide-react';
 import { Card, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ import { containerVariants, itemVariants } from '../constants';
 export function OverviewTab({ setTab, role }: { setTab: (t: AdminTab) => void, role: string }) {
   const allStats = [
     { label: 'Patient Savings', icon: Sparkles, desc: '₹ Saved & Generic Switch Rate', tab: 'analytics', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Patient Follow-ups', icon: Phone, desc: 'Monthly refill calls & price quotes', tab: 'followups', color: 'text-rose-600', bg: 'bg-rose-50' },
     { label: 'Prescriptions', icon: FileText, desc: 'Process uploaded Rx', tab: 'enquiries', color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Orders', icon: ShoppingBag, desc: 'Manage fulfillment', tab: 'fulfillment', color: 'text-sky-500', bg: 'bg-sky-50' },
     { label: 'Abandoned Carts', icon: ShoppingCart, desc: 'Track pending checkouts', tab: 'abandonedCarts', color: 'text-pink-500', bg: 'bg-pink-50' },
