@@ -239,7 +239,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
   }, [medicinesByCategory, categories]);
 
   // Featured 8 categories matching user's exact health domains
-  const featuredCats = (categories && categories.length > 0) ? categories.slice(0, 8) : [
+  const DEFAULT_FEATURED_CATS = React.useMemo(() => [
     { name: 'Mental Well-being' },
     { name: 'Cardiovascular Health' },
     { name: 'Diabetes Care' },
@@ -248,8 +248,26 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
     { name: 'Bone & Joint Strength' },
     { name: 'Skin & Derma' },
     { name: "Women's Health" }
-  ];
-  const moreCats = categories.slice(8, 20);
+  ], []);
+
+  const featuredCats = React.useMemo(() => {
+    if (categories && categories.length >= 8) {
+      return categories.slice(0, 8);
+    }
+    const dbItems = categories || [];
+    const dbNames = new Set(dbItems.map((c: any) => (c.name || '').toLowerCase()));
+    const merged = [...dbItems];
+
+    for (const defCat of DEFAULT_FEATURED_CATS) {
+      if (!dbNames.has(defCat.name.toLowerCase())) {
+        merged.push(defCat);
+      }
+      if (merged.length >= 8) break;
+    }
+    return merged;
+  }, [categories, DEFAULT_FEATURED_CATS]);
+
+  const moreCats = (categories || []).slice(8, 20);
 
   return (
     <div className="space-y-8 sm:space-y-14 pb-0 sm:pb-16 overflow-x-hidden max-w-full">
