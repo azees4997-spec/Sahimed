@@ -45,6 +45,26 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
   const [viewMode, setViewMode] = useState<'grouped' | 'all'>('grouped');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
+  const [viewingCategory, setViewingCategory] = useState<string | null>(null);
+  const [categoryProducts, setCategoryProducts] = useState<any[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+
+  const handleViewCategoryProducts = async (catName: string) => {
+    setViewingCategory(catName);
+    setIsLoadingProducts(true);
+    try {
+      const res = await fetch(`/api/products?q=${encodeURIComponent(catName)}&limit=50`);
+      if (res.ok) {
+        const data = await res.json();
+        setCategoryProducts(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
   const { user } = useUser();
   const { toast } = useToast();
 
