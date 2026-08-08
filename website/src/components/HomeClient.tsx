@@ -23,19 +23,141 @@ interface HomeClientProps {
   medicines: any[];
 }
 
-// ─── Category Style Map with HD Medical Images ────────────────────────────────
-function getCategoryStyle(name: string): { emoji: string; image: string; from: string; to: string; text: string } {
+// ─── Category Style Map with HD Medical Images & Themes ────────────────────────
+function getCategoryStyle(name: string): { 
+  emoji: string; 
+  image: string; 
+  from: string; 
+  to: string; 
+  text: string; 
+  bg: string;
+  border: string;
+  badge: string;
+} {
   const l = name.toLowerCase();
-  if (l.includes('cardiac') || l.includes('heart')) return { emoji: '❤️', image: '/images/cat_cardiac.webp', from: 'from-rose-400', to: 'to-pink-300', text: 'text-rose-700' };
-  if (l.includes('diabet') || l.includes('sugar') || l.includes('insulin')) return { emoji: '🩸', image: '/images/cat_diabetes.webp', from: 'from-blue-400', to: 'to-cyan-300', text: 'text-blue-700' };
-  if (l.includes('vitamin') || l.includes('supplement') || l.includes('nutrition')) return { emoji: '💊', image: '/images/cat_vitamins.webp', from: 'from-amber-400', to: 'to-yellow-300', text: 'text-amber-700' };
-  if (l.includes('respi') || l.includes('lung') || l.includes('asthma')) return { emoji: '🫁', image: '/images/cat_respiratory.webp', from: 'from-sky-400', to: 'to-blue-300', text: 'text-sky-700' };
-  if (l.includes('pain') || l.includes('ortho') || l.includes('joint')) return { emoji: '🩹', image: '/images/cat_pain_ortho.webp', from: 'from-orange-400', to: 'to-amber-300', text: 'text-orange-700' };
-  if (l.includes('skin') || l.includes('derma') || l.includes('acne')) return { emoji: '✨', image: '/images/cat_skin_derma.webp', from: 'from-pink-400', to: 'to-rose-300', text: 'text-pink-700' };
-  if (l.includes('gastro') || l.includes('digest') || l.includes('stomach')) return { emoji: '🌿', image: '/images/cat_gastro.webp', from: 'from-emerald-400', to: 'to-green-300', text: 'text-emerald-700' };
-  if (l.includes('neuro') || l.includes('brain') || l.includes('sleep')) return { emoji: '🧠', image: '/images/cat_neuro.webp', from: 'from-violet-400', to: 'to-purple-300', text: 'text-violet-700' };
-  if (l.includes('women') || l.includes('gynae')) return { emoji: '🌸', image: '/images/cat_womens.webp', from: 'from-fuchsia-400', to: 'to-pink-300', text: 'text-fuchsia-700' };
-  return { emoji: '💊', image: '/images/cat_vitamins.webp', from: 'from-primary', to: 'to-teal-400', text: 'text-primary' };
+
+  // 1. Mental Well-being (Teal: Brain icon & gentle calming waves)
+  if (l.includes('mental') || l.includes('well-being') || l.includes('wellbeing') || l.includes('neuro') || l.includes('brain') || l.includes('sleep') || l.includes('mind')) {
+    return { 
+      emoji: '🧠', 
+      image: '/images/cat_mental_wellbeing.jpg', 
+      from: 'from-teal-400', 
+      to: 'to-cyan-300', 
+      text: 'text-teal-700',
+      bg: 'rgba(13,148,136,0.08)',
+      border: 'rgba(13,148,136,0.25)',
+      badge: 'Mental Well-being'
+    };
+  }
+
+  // 2. Cardiovascular Health (Gentle Blue: Heart icon & pulse line)
+  if (l.includes('cardio') || l.includes('cardiac') || l.includes('heart') || l.includes('pulse') || l.includes('hypertension')) {
+    return { 
+      emoji: '🫀', 
+      image: '/images/cat_cardio_health.jpg', 
+      from: 'from-blue-400', 
+      to: 'to-indigo-300', 
+      text: 'text-blue-700',
+      bg: 'rgba(37,99,235,0.08)',
+      border: 'rgba(37,99,235,0.25)',
+      badge: 'Cardiovascular'
+    };
+  }
+
+  // 3. Diabetes Care (Fresh Green: Glucose structure & test)
+  if (l.includes('diabet') || l.includes('sugar') || l.includes('glucose') || l.includes('insulin')) {
+    return { 
+      emoji: '🩸', 
+      image: '/images/cat_diabetes_care.jpg', 
+      from: 'from-emerald-400', 
+      to: 'to-green-300', 
+      text: 'text-emerald-700',
+      bg: 'rgba(5,150,105,0.08)',
+      border: 'rgba(5,150,105,0.25)',
+      badge: 'Diabetes Care'
+    };
+  }
+
+  // 4. Digestive Wellness (Warm Orange: Healthy digestive tract)
+  if (l.includes('digest') || l.includes('gastro') || l.includes('stomach') || l.includes('gut') || l.includes('acidity') || l.includes('liver')) {
+    return { 
+      emoji: '🌿', 
+      image: '/images/cat_digestive_wellness.jpg', 
+      from: 'from-orange-400', 
+      to: 'to-amber-300', 
+      text: 'text-orange-700',
+      bg: 'rgba(234,88,12,0.08)',
+      border: 'rgba(234,88,12,0.25)',
+      badge: 'Digestive'
+    };
+  }
+
+  // 5. Immune Defense & Allergies (Light Purple: Protective shield)
+  if (l.includes('immune') || l.includes('defense') || l.includes('allerg') || l.includes('immunity') || l.includes('respi') || l.includes('cold')) {
+    return { 
+      emoji: '🛡️', 
+      image: '/images/cat_immune_defense.jpg', 
+      from: 'from-purple-400', 
+      to: 'to-violet-300', 
+      text: 'text-purple-700',
+      bg: 'rgba(124,58,237,0.08)',
+      border: 'rgba(124,58,237,0.25)',
+      badge: 'Immune Defense'
+    };
+  }
+
+  // 6. Bone & Joint Strength (Cheerful Yellow: Knee joint & bones)
+  if (l.includes('bone') || l.includes('joint') || l.includes('ortho') || l.includes('strength') || l.includes('calcium') || l.includes('knee') || l.includes('pain')) {
+    return { 
+      emoji: '🦴', 
+      image: '/images/cat_bone_joint.jpg', 
+      from: 'from-amber-400', 
+      to: 'to-yellow-300', 
+      text: 'text-amber-800',
+      bg: 'rgba(217,119,6,0.08)',
+      border: 'rgba(217,119,6,0.25)',
+      badge: 'Bone & Joint'
+    };
+  }
+
+  // Skin & Derma
+  if (l.includes('skin') || l.includes('derma') || l.includes('acne')) {
+    return { 
+      emoji: '✨', 
+      image: '/images/cat_skin_derma.webp', 
+      from: 'from-pink-400', 
+      to: 'to-rose-300', 
+      text: 'text-pink-700',
+      bg: 'rgba(219,39,119,0.08)',
+      border: 'rgba(219,39,119,0.25)',
+      badge: 'Derma Care'
+    };
+  }
+
+  // Women's Health
+  if (l.includes('women') || l.includes('gynae')) {
+    return { 
+      emoji: '🌸', 
+      image: '/images/cat_womens.webp', 
+      from: 'from-fuchsia-400', 
+      to: 'to-pink-300', 
+      text: 'text-fuchsia-700',
+      bg: 'rgba(192,38,211,0.08)',
+      border: 'rgba(192,38,211,0.25)',
+      badge: 'Women Health'
+    };
+  }
+
+  return { 
+    emoji: '💊', 
+    image: '/images/cat_vitamins.webp', 
+    from: 'from-primary', 
+    to: 'to-teal-400', 
+    text: 'text-primary',
+    bg: 'rgba(0,159,156,0.08)',
+    border: 'rgba(0,159,156,0.25)',
+    badge: 'Upto 61% OFF'
+  };
 }
 
 // Default Mega Banners
@@ -116,15 +238,15 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
       .slice(0, 6);
   }, [medicinesByCategory, categories]);
 
-  // Featured 8 categories for primary grid
+  // Featured 8 categories matching user's exact health domains
   const featuredCats = (categories && categories.length > 0) ? categories.slice(0, 8) : [
-    { name: 'Cardiac Care' },
+    { name: 'Mental Well-being' },
+    { name: 'Cardiovascular Health' },
     { name: 'Diabetes Care' },
-    { name: 'Vitamins & Supplements' },
-    { name: 'Respiratory Care' },
-    { name: 'Pain & Ortho' },
+    { name: 'Digestive Wellness' },
+    { name: 'Immune Defense & Allergies' },
+    { name: 'Bone & Joint Strength' },
     { name: 'Skin & Derma' },
-    { name: 'Gastro Care' },
     { name: "Women's Health" }
   ];
   const moreCats = categories.slice(8, 20);
