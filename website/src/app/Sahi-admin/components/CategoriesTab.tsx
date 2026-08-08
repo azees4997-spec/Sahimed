@@ -104,7 +104,7 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
         map[name] = {
           categoryName: name,
           imageUrl: cat.imageUrl || '',
-          showOnHomepage: cat.showOnHomepage === true,
+          showOnHomepage: false,
           totalProductCount: 0,
           items: []
         };
@@ -114,7 +114,7 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
       if (cat.imageUrl && !map[name].imageUrl) {
         map[name].imageUrl = cat.imageUrl;
       }
-      if (cat.showOnHomepage) {
+      if (cat.showOnHomepage === true || cat.showOnHomepage === 'true') {
         map[name].showOnHomepage = true;
       }
     });
@@ -191,28 +191,36 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
         <div className="space-y-4">
           {isLoading ? (
             Array(4).fill(0).map((_, i) => (
-              <Card key={i} className="p-6 rounded-[28px] border-none shadow-sm bg-white animate-pulse h-24" />
+              <Card key={i} className="p-6 rounded-[32px] border-none shadow-sm animate-pulse flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-slate-100 rounded-full" />
+                  <div className="space-y-2">
+                    <div className="w-32 h-4 bg-slate-100 rounded-full" />
+                    <div className="w-48 h-3 bg-slate-50 rounded-full" />
+                  </div>
+                </div>
+              </Card>
             ))
           ) : groupedCategories.length === 0 ? (
-            <Card className="p-12 rounded-[32px] border-none text-center bg-white text-slate-400 font-bold uppercase tracking-wider text-sm">
+            <Card className="p-12 text-center rounded-[32px] border-none shadow-sm text-slate-400 font-bold uppercase tracking-wider text-sm">
               No main categories found
             </Card>
           ) : (
-            groupedCategories.map((group) => {
+            groupedCategories.map(group => {
               const isExpanded = expandedGroups[group.categoryName];
-
               return (
                 <Card key={group.categoryName} className="rounded-[32px] overflow-hidden border-none shadow-sm bg-white transition-all">
-                  <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                  <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      {/* Image Thumbnail */}
-                      <div className="w-14 h-14 rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-sm flex items-center justify-center shrink-0">
-                        {group.imageUrl ? (
+                      {group.imageUrl ? (
+                        <div className="w-14 h-14 rounded-full border border-slate-100 overflow-hidden bg-white shadow-xs flex items-center justify-center shrink-0">
                           <img src={group.imageUrl} alt={group.categoryName} className="w-full h-full object-cover" />
-                        ) : (
+                        </div>
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
                           <ImageIcon className="w-6 h-6 text-slate-300" />
-                        )}
-                      </div>
+                        </div>
+                      )}
 
                       <div>
                         <div className="flex items-center gap-2">
@@ -237,7 +245,7 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
                       </Button>
                       <Button
                         onClick={() => {
-                          setEditingCat(group.items[0]);
+                          setEditingCat({ ...group.items[0], showOnHomepage: group.showOnHomepage });
                           setIsFormOpen(true);
                         }}
                         className="rounded-xl h-10 px-4 font-black text-xs bg-primary text-white"

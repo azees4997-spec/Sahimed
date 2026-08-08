@@ -286,12 +286,8 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
           </Link>
         </div>
 
-        {/* ── Dynamic Category Icon Cards — Prominent Size & Spacing ── */}
-        <div className={`py-2 px-1 items-center overflow-x-auto scrollbar-hide ${
-          featuredCats.length <= 4 
-            ? 'flex flex-wrap sm:flex-nowrap justify-start sm:justify-around gap-6 sm:gap-12' 
-            : 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 sm:gap-6'
-        }`}>
+        {/* ── Dynamic Category Icon Cards — Generously Sized & Bold ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-8 py-3 px-1 items-center">
           {featuredCats.map((cat: any, i: number) => {
             const style = getCategoryStyle(cat.name || '');
             const rawUrl = (cat.imageUrl || '').replace('googleapis.coms', 'googleapis.com');
@@ -309,20 +305,17 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
               { color: '#a855f7', bg: 'rgba(168,85,247,0.06)', border: 'rgba(168,85,247,0.2)' },
             ];
             const accent = cardAccents[i % cardAccents.length];
-            const isFew = featuredCats.length <= 4;
 
             return (
-              <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="shrink-0 flex justify-center">
+              <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="flex justify-center">
                 <Link
                   href={`/search?c=${encodeURIComponent(cat.name)}`}
-                  className="group flex flex-col items-center text-center p-2 transition-transform duration-300 sm:hover:-translate-y-1.5"
+                  className="group w-full flex flex-col items-center text-center p-4 sm:p-5 rounded-3xl bg-slate-50/60 hover:bg-white border border-slate-100 hover:border-purple-200/80 transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5"
                 >
-                  {/* Prominent Round Circular Image Container */}
+                  {/* Large 128px Circular Image Container */}
                   <div 
-                    className={`relative rounded-full overflow-hidden p-1 shadow-sm border border-slate-200/90 sm:group-hover:scale-105 sm:group-hover:shadow-lg transition-all duration-300 bg-white shrink-0 ${
-                      isFew ? 'w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28' : 'w-16 h-16 sm:w-20 sm:h-20 lg:w-22 lg:h-22'
-                    }`}
-                    style={{ boxShadow: `0 4px 16px ${accent.color}22` }}
+                    className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden p-1 shadow-md border-2 border-white sm:group-hover:scale-105 transition-all duration-300 bg-white shrink-0"
+                    style={{ boxShadow: `0 8px 24px ${accent.color}25` }}
                   >
                     <div className="relative w-full h-full rounded-full overflow-hidden bg-slate-50">
                       <Image
@@ -337,15 +330,11 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
                   </div>
 
                   {/* Category Name & Tag */}
-                  <h3 className={`font-black tracking-tight text-slate-800 group-hover:text-primary transition-colors line-clamp-1 mt-2 ${
-                    isFew ? 'text-xs sm:text-sm lg:text-base' : 'text-[11px] sm:text-xs'
-                  }`}>
+                  <h3 className="font-extrabold tracking-tight text-slate-900 group-hover:text-primary transition-colors text-xs sm:text-sm lg:text-base line-clamp-1 mt-3.5">
                     {cat.name}
                   </h3>
                   <span 
-                    className={`inline-block font-black uppercase tracking-wider rounded-full mt-1 ${
-                      isFew ? 'text-[9px] sm:text-[10px] px-2.5 py-0.5' : 'text-[7.5px] sm:text-[8.5px] px-1.5 py-0.5'
-                    }`}
+                    className="inline-block font-black uppercase tracking-wider rounded-full text-[9px] sm:text-[10px] px-3 py-1 mt-1.5 shadow-2xs"
                     style={{ background: accent.bg, color: accent.color, border: `1px solid ${accent.border}` }}
                   >
                     UP TO 61% OFF
