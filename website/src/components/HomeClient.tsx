@@ -143,24 +143,24 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         className="bg-white rounded-3xl p-5 sm:p-7 border border-slate-100 shadow-sm space-y-6"
       >
         {/* Section Header */}
-        <div className="flex items-end justify-between px-1">
+        <div className="flex items-center justify-between px-1">
           <div>
-
             <h2 className="text-xl sm:text-3xl font-black tracking-tight leading-none text-slate-900">
               Top Medical{' '}
               <span style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Categories</span>
             </h2>
             <p className="text-xs text-slate-500 font-medium mt-1">Sahi Dawai, Sahi Daam Pe — Genuine stock up to 61% OFF</p>
           </div>
-          <Link href="/search" className="text-[11px] font-black uppercase tracking-wider flex items-center gap-0.5 hover:underline px-3.5 py-1.5 rounded-full border transition-all"
-            style={{ color: '#7c3aed', background: 'rgba(124,58,237,0.08)', borderColor: 'rgba(124,58,237,0.2)' }}
+          <Link href="/search" className="text-[11px] font-black uppercase tracking-wider flex items-center gap-1 hover:shadow-md px-4 py-2 rounded-full border transition-all active:scale-95 shadow-xs shrink-0"
+            style={{ color: '#7c3aed', background: 'rgba(124,58,237,0.08)', borderColor: 'rgba(124,58,237,0.25)' }}
           >
-            View All <ChevronRight className="w-3.5 h-3.5" />
+            <span>View All</span>
+            <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        {/* ── Featured Category Items — Pure Circular Icons with No Outer Box Container ── */}
-        <div className="flex sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 overflow-x-auto sm:overflow-visible scrollbar-hide py-1 px-0.5 sm:px-0">
+        {/* ── Featured Category Items + VIEW ALL Pill Button ── */}
+        <div className="flex sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 overflow-x-auto sm:overflow-visible scrollbar-hide py-1 px-0.5 sm:px-0 items-center">
           {featuredCats.map((cat: any, i: number) => {
             const style = getCategoryStyle(cat.name || '');
             const imgSrc = (cat.imageUrl && !cat.imageUrl.includes('picsum')) ? cat.imageUrl : style.image;
@@ -212,6 +212,29 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
               </motion.div>
             );
           })}
+
+          {/* ── Pill-shaped VIEW ALL Button Card (Replaces cramped circular view all) ── */}
+          <motion.div key="view-all-pill" variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="shrink-0 sm:shrink">
+            <Link
+              href="/search"
+              className="group flex flex-col items-center text-center p-1 transition-transform duration-200 sm:hover:-translate-y-1"
+            >
+              <div 
+                className="h-14 sm:h-16 lg:h-18 px-5 rounded-full flex items-center justify-center gap-2 shadow-xs border transition-all duration-300 group-hover:scale-105 group-hover:shadow-md bg-white shrink-0"
+                style={{ borderColor: 'rgba(124,58,237,0.25)', background: 'linear-gradient(135deg, rgba(124,58,237,0.08), rgba(219,39,119,0.08))' }}
+              >
+                <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-purple-700 whitespace-nowrap">
+                  VIEW ALL
+                </span>
+                <div className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider mt-1.5">
+                50+ Categories
+              </span>
+            </Link>
+          </motion.div>
         </div>
 
         {/* ── More categories — horizontal pill scroll ── */}
@@ -230,8 +253,9 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
                 </Link>
               );
             })}
-            <Link href="/search" className="flex items-center gap-1.5 shrink-0 px-4 py-1.5 bg-primary text-white border border-primary rounded-full text-xs font-black shadow-2xs">
-              All <ChevronRight className="w-3 h-3" />
+            <Link href="/search" className="flex items-center gap-1.5 shrink-0 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white border border-purple-600 rounded-full text-xs font-black shadow-xs hover:shadow-md transition-all active:scale-95">
+              <span>View All Categories</span>
+              <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         )}

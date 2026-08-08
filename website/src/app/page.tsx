@@ -240,7 +240,7 @@ export default async function Home() {
         {/* ══════════════════════════════════════════════════
             MAIN CONTENT (HomeClient handles everything below)
         ══════════════════════════════════════════════════ */}
-        <main className="w-full px-4 sm:px-6 lg:px-8 pt-6 pb-10 md:pt-8 md:pb-16">
+        <div className="w-full px-4 sm:px-6 lg:px-8 pt-6 pb-10 md:pt-8 md:pb-16">
           <HomeClient
             banners={banners}
             categories={categories}
@@ -253,7 +253,7 @@ export default async function Home() {
           <FAQSection />
           <FinalCTA />
           <SEOContent />
-        </main>
+        </div>
       </div>
     </PageTransition>
   );
