@@ -181,10 +181,10 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
               <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="shrink-0 sm:shrink">
                 <Link
                   href={`/search?c=${encodeURIComponent(cat.name)}`}
-                  className="group flex flex-col items-center text-center p-1 transition-transform duration-200 hover:-translate-y-1 w-20 sm:w-auto"
+                  className="group flex flex-col items-center text-center p-1 transition-transform duration-200 sm:hover:-translate-y-1 w-20 sm:w-auto"
                 >
                   {/* Small Round Circular Image Container — No outer card box */}
-                  <div className="relative w-14 h-14 sm:w-16 sm:h-16 lg:w-18 lg:h-18 rounded-full overflow-hidden p-0.5 shadow-xs border border-slate-200/80 group-hover:scale-105 group-hover:shadow-md transition-all duration-300 bg-white shrink-0"
+                  <div className="relative w-14 h-14 sm:w-16 sm:h-16 lg:w-18 lg:h-18 rounded-full overflow-hidden p-0.5 shadow-xs border border-slate-200/80 sm:group-hover:scale-105 sm:group-hover:shadow-md transition-all duration-300 bg-white shrink-0"
                     style={{ boxShadow: `0 3px 10px ${accent.color}18` }}
                   >
                     <div className="relative w-full h-full rounded-full overflow-hidden bg-slate-50">

@@ -55,7 +55,7 @@ function ProductCardComponent({ product, priority = false }: { product: Product,
               sizes="(max-width: 640px) 140px, 240px"
               loading={priority ? undefined : "lazy"}
               priority={priority}
-              className="object-contain p-0.5 sm:p-1 transition-transform duration-700 group-hover:scale-105" 
+              className="object-contain p-0.5 sm:p-1 transition-transform duration-700 sm:group-hover:scale-105" 
             />
           ) : (
             <div className="flex flex-col items-center justify-center w-full h-full gap-1">
