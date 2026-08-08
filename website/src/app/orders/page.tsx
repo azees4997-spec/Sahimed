@@ -138,7 +138,7 @@ export default function OrdersPage() {
                 </Button>
               </Link>
               <div className="space-y-1">
-                <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Order History</h1>
+                <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tighter uppercase font-outfit">Order History</h1>
                 <p className="text-[10px] font-black text-slate-400 tracking-[0.4em] uppercase leading-none opacity-60">View & Track Your Orders</p>
               </div>
             </div>

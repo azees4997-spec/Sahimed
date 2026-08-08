@@ -49,7 +49,7 @@ export default async function StatePage({ params }: Props) {
                 <MapPin className="w-4 h-4 text-primary" />
                 <span className="text-xs font-black uppercase tracking-widest text-primary">Statewide Shipping: {state.name}</span>
               </div>
-              <h1 className="text-4xl sm:text-7xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-none">
+              <h1 className="text-2xl sm:text-7xl font-black tracking-tighter text-slate-900 font-outfit uppercase leading-tight">
                 Authentic Medicine Delivery in <span className="text-primary italic">{state.name}</span>
               </h1>
               <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-xl">
