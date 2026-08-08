@@ -251,8 +251,8 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
   ], []);
 
   const featuredCats = React.useMemo(() => {
-    if (categories && categories.length >= 7) {
-      return categories.slice(0, 7);
+    if (categories && categories.length >= 8) {
+      return categories.slice(0, 8);
     }
     const dbItems = categories || [];
     const dbNames = new Set(dbItems.map((c: any) => (c.name || '').toLowerCase()));
@@ -262,12 +262,12 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
       if (!dbNames.has(defCat.name.toLowerCase())) {
         merged.push(defCat);
       }
-      if (merged.length >= 7) break;
+      if (merged.length >= 8) break;
     }
-    return merged.slice(0, 7);
+    return merged.slice(0, 8);
   }, [categories, DEFAULT_FEATURED_CATS]);
 
-  const moreCats = (categories || []).slice(7, 20);
+  const moreCats = (categories || []).slice(8, 20);
 
   return (
     <div className="space-y-8 sm:space-y-14 pb-0 sm:pb-16 overflow-x-hidden max-w-full">
@@ -299,7 +299,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
           </Link>
         </div>
 
-        {/* ── 7 Featured Category Items + 1 VIEW ALL Card = 8 Items in 1 Perfect Row ── */}
+        {/* ── 8 Featured Medical Category Icon Cards ── */}
         <div className="flex sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 overflow-x-auto sm:overflow-visible scrollbar-hide py-1 px-0.5 sm:px-0 items-center">
           {featuredCats.map((cat: any, i: number) => {
             const style = getCategoryStyle(cat.name || '');
@@ -352,34 +352,6 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
               </motion.div>
             );
           })}
-
-          {/* ── 8th Item: Sleek Circular VIEW ALL Card (Fits perfectly in 1 row) ── */}
-          <motion.div key="view-all-circle" variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="shrink-0 sm:shrink">
-            <Link
-              href="/search"
-              className="group flex flex-col items-center text-center p-1 transition-transform duration-200 sm:hover:-translate-y-1 w-20 sm:w-auto"
-            >
-              <div 
-                className="relative w-14 h-14 sm:w-16 sm:h-16 lg:w-18 lg:h-18 rounded-full p-0.5 shadow-md border border-purple-300 sm:group-hover:scale-105 sm:group-hover:shadow-lg transition-all duration-300 flex flex-col items-center justify-center shrink-0"
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }}
-              >
-                <span className="text-[10px] sm:text-xs font-black uppercase text-white tracking-tight leading-none">
-                  VIEW ALL
-                </span>
-                <ChevronRight className="w-3.5 h-3.5 text-white/90 mt-0.5" />
-              </div>
-
-              <h3 className="text-[11px] sm:text-xs font-black tracking-tight text-purple-700 group-hover:text-purple-900 transition-colors line-clamp-1 mt-1.5 uppercase">
-                All Sections
-              </h3>
-              <span 
-                className="inline-block text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full mt-0.5"
-                style={{ background: 'rgba(124,58,237,0.1)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.2)' }}
-              >
-                50+ CATEGORIES
-              </span>
-            </Link>
-          </motion.div>
         </div>
 
         {/* ── More categories — horizontal pill scroll ── */}
