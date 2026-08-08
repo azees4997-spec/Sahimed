@@ -298,11 +298,11 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
   const { data: genericAlternatives } = useMongoDBCollection({
     moleculeId: !isGeneric ? product?.moleculeId : undefined, isGeneric: true, limit: 10
   });
-  const genericAlt = !isGeneric
+  const genericAlt = product?.mappedGeneric || (!isGeneric
     ? genericAlternatives?.find((a: any) =>
         (a.isGeneric === true || a.isGeneric === "true") &&
         String(a._id || a.id) !== String(product?._id || product?.id))
-    : null;
+    : null);
   const showComparison = !isGeneric && !!genericAlt;
 
   // ── Prices ───────────────────────────────────────────────────────────────

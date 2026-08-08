@@ -51,6 +51,36 @@ export async function GET(
       }
     }
 
+    // Look up mapped generic substitute if this product is branded
+    let mappedGeneric = null;
+    const isBranded = !(product.medicine_type || '').toLowerCase().includes('generic') && product.is_generic !== true;
+    
+    if (isBranded && (product.molecule_code || product.medical_info?.composition)) {
+      try {
+        const genQuery: any = {
+          $or: [{ medicine_type: /generic/i }, { is_generic: true }],
+          _id: { $ne: product._id }
+        };
+        if (product.molecule_code) {
+          genQuery.molecule_code = product.molecule_code;
+        } else if (product.medical_info?.composition) {
+          genQuery['medical_info.composition'] = { $regex: product.medical_info.composition.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
+        }
+        const found = await col.findOne(genQuery);
+        if (found) {
+          mappedGeneric = {
+            ...found,
+            id: found._id?.toString(),
+            name: found.product_name,
+            price: found.packaging?.mrp,
+            mrp: found.packaging?.mrp,
+            manufacturer: found.taxonomy?.marketer_name,
+            saltComposition: found.medical_info?.composition
+          };
+        }
+      } catch (e) {}
+    }
+
     // Return with legacy field aliases for backward compatibility
     const normalized = {
       ...product,
@@ -72,6 +102,7 @@ export async function GET(
       description: product.medical_info?.introduction,
       safetyAdvice: product.safety_warnings?.interactions?.safety_advise,
       sideEffects: product.medical_info?.side_effects || [],
+      mappedGeneric: mappedGeneric,
     };
 
     return NextResponse.json(normalized);
