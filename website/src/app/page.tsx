@@ -207,8 +207,8 @@ export default async function Home() {
           </div>
 
           {/* Trust ticker */}
-          <div className="w-full max-w-full overflow-hidden py-2.5 border-t border-b border-slate-200/60 bg-white/80 backdrop-blur-sm relative z-20">
-            <div className="flex animate-marquee w-max">
+          <div className="w-full max-w-full overflow-hidden py-2.5 border-t border-b border-slate-200/60 bg-white/80 backdrop-blur-sm relative z-20 transform-gpu">
+            <div className="flex animate-marquee w-max transform-gpu">
               {[
                 { icon: '✅', text: 'Trusted by Thousands' },
                 { icon: '🏅', text: 'WHO & FDA Certified' },

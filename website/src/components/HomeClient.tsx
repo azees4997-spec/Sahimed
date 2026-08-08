@@ -160,7 +160,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         </div>
 
         {/* ── Featured Category Items — Pure Circular Icons with No Outer Box Container ── */}
-        <div className="flex sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 overflow-x-auto scrollbar-hide py-1 px-0.5 sm:px-0">
+        <div className="flex sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 overflow-x-auto scrollbar-hide overscroll-x-contain touch-pan-x transform-gpu py-1 px-0.5 sm:px-0">
           {featuredCats.map((cat: any, i: number) => {
             const style = getCategoryStyle(cat.name || '');
             const imgSrc = (cat.imageUrl && !cat.imageUrl.includes('picsum')) ? cat.imageUrl : style.image;
@@ -216,7 +216,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
 
         {/* ── More categories — horizontal pill scroll ── */}
         {moreCats.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pt-2 pb-1 px-1">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide overscroll-x-contain touch-pan-x transform-gpu pt-2 pb-1 px-1">
             {moreCats.map((cat: any, i: number) => {
               const style = getCategoryStyle(cat.name || '');
               return (
@@ -334,7 +334,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         </div>
 
         {/* ── Category 2 Grid — Compact Circular Avatar Icons ── */}
-        <div className="flex sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 overflow-x-auto scrollbar-hide py-1 px-0.5 sm:px-0">
+        <div className="flex sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 overflow-x-auto scrollbar-hide overscroll-x-contain touch-pan-x transform-gpu py-1 px-0.5 sm:px-0">
           {[
             { name: 'Personal Care', emoji: '✨', bg: 'rgba(124,58,237,0.06)', color: '#7c3aed', border: 'rgba(124,58,237,0.2)' },
             { name: 'Baby Care', emoji: '👶', bg: 'rgba(219,39,119,0.06)', color: '#db2777', border: 'rgba(219,39,119,0.2)' },
