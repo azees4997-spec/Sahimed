@@ -14,7 +14,8 @@ import {
   Check,
   ChevronRight,
   ShieldAlert,
-  X
+  X,
+  Filter
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,6 +51,9 @@ import { ExportFieldsDialog } from './ExportFieldsDialog';
 export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified: boolean, onBack: () => void }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'branded' | 'generic' | 'linked' | 'unlinked'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [marketerFilter, setMarketerFilter] = useState<string>('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -423,6 +427,70 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
         )}
       </div>
 
+      {/* ── 3 Interactive Catalog Filters ── */}
+      <div className="flex flex-wrap items-center gap-3 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/60 shadow-2xs">
+        <div className="flex items-center gap-1.5 text-slate-500 text-[11px] font-black uppercase tracking-wider pr-1">
+          <Filter className="w-3.5 h-3.5 text-primary" /> Filter Catalog:
+        </div>
+
+        {/* Filter 1: Type & Generic Status */}
+        <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+          <SelectTrigger className="w-[210px] h-10 rounded-xl bg-white border-slate-200 font-bold text-xs shadow-2xs">
+            <SelectValue placeholder="Type & Generic Status" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl font-bold text-xs z-[150]">
+            <SelectItem value="all">All Types & Link Status</SelectItem>
+            <SelectItem value="branded">🏷️ Branded Only</SelectItem>
+            <SelectItem value="generic">💊 Generic Only</SelectItem>
+            <SelectItem value="linked">✓ Generic Mapped Only</SelectItem>
+            <SelectItem value="unlinked">🔗 Unlinked (Needs Link)</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Filter 2: Category */}
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white border-slate-200 font-bold text-xs shadow-2xs">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl font-bold text-xs z-[150]">
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="Analgesics">Analgesics</SelectItem>
+            <SelectItem value="Gastrointestinal">Gastrointestinal</SelectItem>
+            <SelectItem value="Neurology">Neurology</SelectItem>
+            <SelectItem value="Cardiac">Cardiac Care</SelectItem>
+            <SelectItem value="Vitamins">Vitamins & Nutrition</SelectItem>
+            <SelectItem value="Dermatology">Dermatology</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Filter 3: Marketer / Manufacturer */}
+        <Select value={marketerFilter} onValueChange={setMarketerFilter}>
+          <SelectTrigger className="w-[200px] h-10 rounded-xl bg-white border-slate-200 font-bold text-xs shadow-2xs">
+            <SelectValue placeholder="Marketer / Manufacturer" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl font-bold text-xs z-[150]">
+            <SelectItem value="all">All Marketers</SelectItem>
+            <SelectItem value="Capri">Capri Pharmaceuticals</SelectItem>
+            <SelectItem value="Starmed">Starmed Biotech</SelectItem>
+            <SelectItem value="Awan">Awan Remedies</SelectItem>
+            <SelectItem value="Hallmark">Hallmark Formulations</SelectItem>
+            <SelectItem value="Merhaki">Merhaki Foods</SelectItem>
+            <SelectItem value="Kea">Kea Consumer Products</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Reset Filters */}
+        {(statusFilter !== 'all' || categoryFilter !== 'all' || marketerFilter !== 'all') && (
+          <Button
+            onClick={() => { setStatusFilter('all'); setCategoryFilter('all'); setMarketerFilter('all'); }}
+            variant="ghost"
+            className="h-10 text-[11px] font-black text-rose-600 hover:bg-rose-50 rounded-xl uppercase tracking-wider ml-auto"
+          >
+            Reset Filters ✕
+          </Button>
+        )}
+      </div>
+
       <Card className="rounded-[32px] overflow-hidden border border-slate-100 shadow-sm bg-white">
         {!debouncedSearch.trim() ? (
           /* ── Clean Empty State when no query is typed ── */
@@ -483,35 +551,62 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                       <td className={cn("text-right", isErpDensity ? "px-4 py-2" : "px-6 py-4")}><div className="w-8 h-8 bg-slate-100 animate-pulse rounded-lg ml-auto" /></td>
                     </tr>
                   ))
-                ) : medicines?.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-12 text-center">
-                      <p className="font-black text-sm text-slate-700 uppercase">No products match "{debouncedSearch}"</p>
-                      <p className="text-xs text-slate-400 mt-1 font-medium">Check spelling or search by generic chemical composition</p>
-                    </td>
-                  </tr>
-                ) : medicines?.map(med => {
-                  const isGenericMed = (med.medicine_type || '').toLowerCase().includes('generic') || med.is_generic === true;
-                  const isGenericMapped = med.hasGenericMapped === true;
+                ) : (() => {
+                  const filteredMedicines = (medicines || []).filter((med: any) => {
+                    const isGen = (med.medicine_type || '').toLowerCase().includes('generic') || med.is_generic === true;
+                    const isMapped = med.hasGenericMapped === true;
 
-                  return (
-                    <tr key={med.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className={isErpDensity ? "px-4 py-1.5" : "px-6 py-4"}>
-                        <div className="flex items-center gap-2.5">
-                          <div className={cn("bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden shrink-0", isErpDensity ? "w-7 h-7 rounded-md p-0.5" : "w-11 h-11 rounded-xl p-1")}>
-                            {med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className={cn("text-slate-300", isErpDensity ? "w-3.5 h-3.5" : "w-5 h-5")} />}
-                          </div>
-                          <div className="flex flex-col min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <span className={cn("font-extrabold text-slate-900 uppercase truncate", isErpDensity ? "text-[11px]" : "text-xs")}>{med.name}</span>
-                              {med.salable_status?.toLowerCase().includes('rx') && (
-                                <Badge variant="destructive" className="h-3.5 text-[7.5px] px-1 font-black uppercase">Rx</Badge>
-                              )}
+                    if (statusFilter === 'branded' && isGen) return false;
+                    if (statusFilter === 'generic' && !isGen) return false;
+                    if (statusFilter === 'linked' && !isMapped) return false;
+                    if (statusFilter === 'unlinked' && isMapped) return false;
+
+                    if (categoryFilter !== 'all') {
+                      const cat = (med.category || med.taxonomy?.category_name || '').toLowerCase();
+                      if (!cat.includes(categoryFilter.toLowerCase())) return false;
+                    }
+
+                    if (marketerFilter !== 'all') {
+                      const mkt = (med.manufacturer || med.taxonomy?.marketer_name || '').toLowerCase();
+                      if (!mkt.includes(marketerFilter.toLowerCase())) return false;
+                    }
+
+                    return true;
+                  });
+
+                  if (filteredMedicines.length === 0) {
+                    return (
+                      <tr>
+                        <td colSpan={5} className="p-12 text-center">
+                          <p className="font-black text-sm text-slate-700 uppercase">No products match active filters</p>
+                          <p className="text-xs text-slate-400 mt-1 font-medium">Try clearing your search query or clicking "Reset Filters"</p>
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  return filteredMedicines.map(med => {
+                    const isGenericMed = (med.medicine_type || '').toLowerCase().includes('generic') || med.is_generic === true;
+                    const isGenericMapped = med.hasGenericMapped === true;
+
+                    return (
+                      <tr key={med.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className={isErpDensity ? "px-4 py-1.5" : "px-6 py-4"}>
+                          <div className="flex items-center gap-2.5">
+                            <div className={cn("bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden shrink-0", isErpDensity ? "w-7 h-7 rounded-md p-0.5" : "w-11 h-11 rounded-xl p-1")}>
+                              {med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className={cn("text-slate-300", isErpDensity ? "w-3.5 h-3.5" : "w-5 h-5")} />}
                             </div>
-                            <span className="text-[9px] text-slate-400 font-bold uppercase">{med.sku} {med.saltComposition && `• ${med.saltComposition}`}</span>
+                            <div className="flex flex-col min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className={cn("font-extrabold text-slate-900 uppercase truncate", isErpDensity ? "text-[11px]" : "text-xs")}>{med.name}</span>
+                                {med.salable_status?.toLowerCase().includes('rx') && (
+                                  <Badge variant="destructive" className="h-3.5 text-[7.5px] px-1 font-black uppercase">Rx</Badge>
+                                )}
+                              </div>
+                              <span className="text-[9px] text-slate-400 font-bold uppercase">{med.sku} {med.saltComposition && `• ${med.saltComposition}`}</span>
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
                       <td className={isErpDensity ? "px-4 py-1.5" : "px-6 py-4"}>
                         <div className="flex flex-wrap gap-1 items-center">
                           {/* 1-Tap Branded / Generic Toggle Badge */}
