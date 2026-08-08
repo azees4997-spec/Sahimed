@@ -171,23 +171,28 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   const price = product.price || 0;
-  const description = product.description || `Buy ${product.name} at affordable prices on SahiMed. Fast delivery across India.`;
+  const metaTitle = product.seoTitle || (product as any).seo?.title || `Buy ${product.name} Online at ₹${price} | SahiMed`;
+  const metaDescription = product.seoDescription || (product as any).seo?.description || product.description || `Buy ${product.name} at lowest prices on SahiMed. Genuine quality with express delivery across India.`;
 
   let ogImage = product.imageUrl || 'https://sahimed.com/og-image.png';
   if (ogImage.startsWith('/')) {
     ogImage = `https://sahimed.com${ogImage}`;
   }
 
+  const canonicalUrl = product.seoUrlSlug || (product as any).seo?.url_slug 
+    ? `https://sahimed.com${(product.seoUrlSlug || (product as any).seo?.url_slug).startsWith('/') ? (product.seoUrlSlug || (product as any).seo?.url_slug) : '/' + (product.seoUrlSlug || (product as any).seo?.url_slug)}`
+    : `https://sahimed.com/product/${id}`;
+
   return {
-    title: `Buy ${product.name} Online at ₹${price} | SahiMed - Authentic Medicines`,
-    description: description,
+    title: metaTitle,
+    description: metaDescription,
     alternates: {
-      canonical: `https://sahimed.com/product/${id}`,
+      canonical: canonicalUrl,
     },
     openGraph: {
-      title: `${product.name} | SahiMed`,
-      description: description,
-      url: `https://sahimed.com/product/${id}`,
+      title: metaTitle,
+      description: metaDescription,
+      url: canonicalUrl,
       siteName: 'SahiMed',
       type: 'website',
       images: [
@@ -201,8 +206,8 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     },
     twitter: {
       card: 'summary_large_image',
-      title: `Buy ${product.name} Online at ₹${price} | SahiMed`,
-      description: description,
+      title: metaTitle,
+      description: metaDescription,
       images: [ogImage],
     }
   };
@@ -307,11 +312,66 @@ export default async function ProductPage({ params }: ProductPageProps) {
     ],
   };
 
+  // ── Google Drug Medical Schema ──
+  const drugJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Drug',
+    name: product.name,
+    activeIngredient: product.composition || (product as any).saltComposition || 'Active Salts',
+    manufacturer: {
+      '@type': 'Organization',
+      name: product.manufacturer || 'SahiMed Pharmaceuticals',
+    },
+    nonProprietaryName: (product as any).saltComposition || product.composition || product.name,
+    drugClass: product.categoryName || 'Medicines & Wellness',
+    prescriptionStatus: product.prescriptionRequired ? 'https://schema.org/PrescriptionOnly' : 'https://schema.org/OTC',
+  };
+
+  // ── Google FAQ Page Schema for Rich Snippets ──
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: `What is ${product.name} used for?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: product.primaryUse || product.uses || `${product.name} is used for medical treatment as prescribed by registered healthcare professionals.`
+        }
+      },
+      {
+        '@type': 'Question',
+        name: `What is the composition of ${product.name}?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `${product.name} contains ${product.composition || (product as any).saltComposition || 'active pharmaceutical ingredients'}.`
+        }
+      },
+      {
+        '@type': 'Question',
+        name: `Are generic substitutes available for ${product.name} on SahiMed?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `Yes, SahiMed offers Sahi Recommended Generic substitutes with the exact same active salt composition at up to 61% lower prices.`
+        }
+      }
+    ]
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(drugJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <script
         type="application/ld+json"
