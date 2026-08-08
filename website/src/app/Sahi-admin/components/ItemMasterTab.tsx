@@ -80,6 +80,11 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
   const toggleMedicineType = async (med: any) => {
     const isCurrentlyGeneric = (med.medicine_type || '').toLowerCase().includes('generic') || med.is_generic === true;
     const newType = isCurrentlyGeneric ? 'Branded' : 'Generic';
+    
+    // Optimistically update local object properties for instant UI response
+    med.medicine_type = newType;
+    med.is_generic = (newType === 'Generic');
+
     try {
       const docId = med._id || med.id;
       const token = await user?.getIdToken();
@@ -95,6 +100,8 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
       toast({ title: `Updated to ${newType}`, description: `${med.name} marked as ${newType}.` });
       refetch?.();
     } catch (err: any) {
+      med.medicine_type = isCurrentlyGeneric ? 'Generic' : 'Branded';
+      med.is_generic = isCurrentlyGeneric;
       toast({ variant: 'destructive', title: "Update failed", description: err.message });
     }
   };
@@ -485,7 +492,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                   </tr>
                 ) : medicines?.map(med => {
                   const isGenericMed = (med.medicine_type || '').toLowerCase().includes('generic') || med.is_generic === true;
-                  const hasMoleculeCode = Boolean(med.molecule_code || med.moleculeId);
+                  const isGenericMapped = med.hasGenericMapped === true;
 
                   return (
                     <tr key={med.id} className="hover:bg-slate-50/80 transition-colors">
@@ -523,10 +530,10 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                             <span className="text-[8px] opacity-60">⇄</span>
                           </button>
 
-                          {/* Generic Link Status / Link Generic Action */}
-                          {hasMoleculeCode ? (
+                          {/* Generic Link Status / Red Link Generic Action */}
+                          {isGenericMapped ? (
                             <span className="inline-flex items-center gap-1 text-[8px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200/60 uppercase">
-                              <Check className="w-2.5 h-2.5 text-emerald-600" /> Generic Linked ({med.molecule_code || med.moleculeId})
+                              <Check className="w-2.5 h-2.5 text-emerald-600" /> Generic Linked ({med.molecule_code || med.moleculeId || 'Mapped'})
                             </span>
                           ) : (
                             <button
@@ -534,7 +541,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                                 setLinkingItem(med);
                                 setLinkMoleculeCode(med.molecule_code || med.moleculeId || '');
                               }}
-                              className="inline-flex items-center gap-1 text-[8px] font-black text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 px-2 py-0.2 rounded uppercase transition-all active:scale-95 shadow-2xs"
+                              className="inline-flex items-center gap-1 text-[8px] font-black text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-2 py-0.2 rounded uppercase transition-all active:scale-95 shadow-2xs"
                             >
                               Link Generic 🔗
                             </button>

@@ -287,31 +287,60 @@ export async function GET(request: Request) {
       productForm: m['Product Form']
     }));
 
+    // Find all molecule codes that actually have a Generic product mapped in MongoDB
+    const molCodes = products
+      .map(p => p.molecule_code || p.molecule_id)
+      .filter((code): code is string => Boolean(code));
+      
+    let genericMolSet = new Set<string>();
+    if (molCodes.length > 0) {
+      try {
+        const genericDocs = await col.distinct('molecule_code', {
+          molecule_code: { $in: molCodes },
+          $or: [
+            { medicine_type: { $regex: 'generic', $options: 'i' } },
+            { is_generic: true }
+          ]
+        });
+        genericMolSet = new Set(genericDocs.map(c => String(c)));
+      } catch (e) {
+        console.error('[Generic Mapping Lookup Error]', e);
+      }
+    }
+
     // Normalize output to maintain compatibility with frontend
-    const normalizedProducts = products.map(p => ({
-      ...p,
-      id: p._id?.toString(),
-      _type: 'medicine',
-      name: p.product_name,
-      sku: p.product_id,
-      manufacturer: p.taxonomy?.marketer_name,
-      category: p.taxonomy?.category_name,
-      saltComposition: p.medical_info?.composition,
-      composition: p.medical_info?.composition,
-      price: p.packaging?.mrp,
-      mrp: p.packaging?.mrp,
-      imageUrl: p.images?.[0] || '',
-      prescriptionRequired: p.safety_warnings?.is_rx_required,
-      treatment: p.medical_info?.primary_use,
-      howToUse: p.medical_info?.how_to_use,
-      packSize: p.packaging?.packaging_detail,
-      moleculeId: p.molecule_code,
-    }));
+    const normalizedProducts = products.map(p => {
+      const code = p.molecule_code || p.molecule_id;
+      const isGen = (p.medicine_type || '').toLowerCase().includes('generic') || p.is_generic === true;
+      const hasGenericMapped = isGen || (code ? genericMolSet.has(code) : false);
+
+      return {
+        ...p,
+        id: p._id?.toString(),
+        _type: 'medicine',
+        name: p.product_name,
+        sku: p.product_id,
+        manufacturer: p.taxonomy?.marketer_name,
+        category: p.taxonomy?.category_name,
+        saltComposition: p.medical_info?.composition,
+        composition: p.medical_info?.composition,
+        price: p.packaging?.mrp,
+        mrp: p.packaging?.mrp,
+        imageUrl: p.images?.[0] || '',
+        prescriptionRequired: p.safety_warnings?.is_rx_required,
+        treatment: p.medical_info?.primary_use,
+        howToUse: p.medical_info?.how_to_use,
+        packSize: p.packaging?.packaging_detail,
+        moleculeId: code,
+        molecule_code: code,
+        hasGenericMapped: hasGenericMapped,
+      };
+    });
 
     const finalResults = [...normalizedMolecules, ...normalizedProducts];
 
     return NextResponse.json(finalResults, {
-      headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' },
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
     });
 
   } catch (err: any) {
