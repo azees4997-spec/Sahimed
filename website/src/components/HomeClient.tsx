@@ -286,8 +286,12 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
           </Link>
         </div>
 
-        {/* ── 8 Featured Medical Category Icon Cards ── */}
-        <div className="flex sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 overflow-x-auto sm:overflow-visible scrollbar-hide py-1 px-0.5 sm:px-0 items-center">
+        {/* ── Dynamic Category Icon Cards — Prominent Size & Spacing ── */}
+        <div className={`py-2 px-1 items-center overflow-x-auto scrollbar-hide ${
+          featuredCats.length <= 4 
+            ? 'flex flex-wrap sm:flex-nowrap justify-start sm:justify-around gap-6 sm:gap-12' 
+            : 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 sm:gap-6'
+        }`}>
           {featuredCats.map((cat: any, i: number) => {
             const style = getCategoryStyle(cat.name || '');
             const rawUrl = (cat.imageUrl || '').replace('googleapis.coms', 'googleapis.com');
@@ -305,16 +309,20 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
               { color: '#a855f7', bg: 'rgba(168,85,247,0.06)', border: 'rgba(168,85,247,0.2)' },
             ];
             const accent = cardAccents[i % cardAccents.length];
+            const isFew = featuredCats.length <= 4;
 
             return (
-              <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="shrink-0 sm:shrink">
+              <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="shrink-0 flex justify-center">
                 <Link
                   href={`/search?c=${encodeURIComponent(cat.name)}`}
-                  className="group flex flex-col items-center text-center p-1 transition-transform duration-200 sm:hover:-translate-y-1 w-20 sm:w-auto"
+                  className="group flex flex-col items-center text-center p-2 transition-transform duration-300 sm:hover:-translate-y-1.5"
                 >
-                  {/* Small Round Circular Image Container */}
-                  <div className="relative w-14 h-14 sm:w-16 sm:h-16 lg:w-18 lg:h-18 rounded-full overflow-hidden p-0.5 shadow-xs border border-slate-200/80 sm:group-hover:scale-105 sm:group-hover:shadow-md transition-all duration-300 bg-white shrink-0"
-                    style={{ boxShadow: `0 3px 10px ${accent.color}18` }}
+                  {/* Prominent Round Circular Image Container */}
+                  <div 
+                    className={`relative rounded-full overflow-hidden p-1 shadow-sm border border-slate-200/90 sm:group-hover:scale-105 sm:group-hover:shadow-lg transition-all duration-300 bg-white shrink-0 ${
+                      isFew ? 'w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28' : 'w-16 h-16 sm:w-20 sm:h-20 lg:w-22 lg:h-22'
+                    }`}
+                    style={{ boxShadow: `0 4px 16px ${accent.color}22` }}
                   >
                     <div className="relative w-full h-full rounded-full overflow-hidden bg-slate-50">
                       <Image
@@ -328,12 +336,16 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
                     </div>
                   </div>
 
-                  {/* Category Name & Compact Tag */}
-                  <h3 className="text-[11px] sm:text-xs font-black tracking-tight text-slate-800 group-hover:text-primary transition-colors line-clamp-1 mt-1.5">
+                  {/* Category Name & Tag */}
+                  <h3 className={`font-black tracking-tight text-slate-800 group-hover:text-primary transition-colors line-clamp-1 mt-2 ${
+                    isFew ? 'text-xs sm:text-sm lg:text-base' : 'text-[11px] sm:text-xs'
+                  }`}>
                     {cat.name}
                   </h3>
                   <span 
-                    className="inline-block text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full mt-0.5"
+                    className={`inline-block font-black uppercase tracking-wider rounded-full mt-1 ${
+                      isFew ? 'text-[9px] sm:text-[10px] px-2.5 py-0.5' : 'text-[7.5px] sm:text-[8.5px] px-1.5 py-0.5'
+                    }`}
                     style={{ background: accent.bg, color: accent.color, border: `1px solid ${accent.border}` }}
                   >
                     UP TO 61% OFF

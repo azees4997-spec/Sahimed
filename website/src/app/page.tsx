@@ -40,6 +40,18 @@ async function getCategories() {
     let categories = await db.collection('Category Master').find({ showOnHomepage: true }).sort({ category: 1 }).toArray();
     if (!categories || categories.length === 0) {
       categories = await db.collection('Category Master').find({}).limit(12).toArray();
+    } else if (categories.length < 6) {
+      // If user enabled fewer than 6 categories, append other DB categories to fill up to 8
+      const enabledNames = new Set(categories.map(c => (c.category || c.name || '').toLowerCase()));
+      const extraCategories = await db.collection('Category Master').find({}).limit(15).toArray();
+      for (const extra of extraCategories) {
+        const extraName = (extra.category || extra.name || '').toLowerCase();
+        if (extraName && !enabledNames.has(extraName)) {
+          enabledNames.add(extraName);
+          categories.push(extra);
+        }
+        if (categories.length >= 8) break;
+      }
     }
     
     // Deduplicate by category name
