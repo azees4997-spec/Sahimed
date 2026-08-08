@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Phone, 
   MessageSquare, 
@@ -543,11 +543,15 @@ function FollowupForm({ onSuccess }: { onSuccess: () => void }) {
 
         {items.map((it, idx) => (
           <div key={idx} className="flex flex-col sm:flex-row items-center gap-2 bg-white p-3 rounded-2xl border border-slate-200/60 shadow-2xs">
-            <Input 
-              placeholder="Medicine Name (e.g. Dolo 650mg)"
+            <MedicineSearchInput
               value={it.itemName}
-              onChange={e => updateItem(idx, 'itemName', e.target.value)}
-              className="flex-1 h-10 rounded-xl bg-slate-50 border-none font-bold text-xs"
+              onChange={val => updateItem(idx, 'itemName', val)}
+              onSelectProduct={prod => {
+                updateItem(idx, 'itemName', prod.name);
+                if (prod.mrp || prod.price) {
+                  updateItem(idx, 'currentPrice', String(prod.mrp || prod.price));
+                }
+              }}
             />
             <Input 
               placeholder="Qty (e.g. 3 Strips)"
@@ -563,7 +567,7 @@ function FollowupForm({ onSuccess }: { onSuccess: () => void }) {
               className="w-full sm:w-28 h-10 rounded-xl bg-slate-50 border-none font-bold text-xs"
             />
             {items.length > 1 && (
-              <Button type="button" variant="ghost" size="icon" onClick={() => removeItemRow(idx)} className="h-8 w-8 text-rose-500">
+              <Button type="button" variant="ghost" size="icon" onClick={() => removeItemRow(idx)} className="h-8 w-8 text-rose-500 shrink-0">
                 <X className="w-4 h-4" />
               </Button>
             )}
@@ -585,5 +589,104 @@ function FollowupForm({ onSuccess }: { onSuccess: () => void }) {
         Save & Schedule Follow-up Call 📞
       </Button>
     </form>
+  );
+}
+
+function MedicineSearchInput({ 
+  value, 
+  onChange, 
+  onSelectProduct 
+}: { 
+  value: string; 
+  onChange: (val: string) => void; 
+  onSelectProduct: (product: any) => void; 
+}) {
+  const [query, setQuery] = useState(value);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setQuery(value);
+  }, [value]);
+
+  useEffect(() => {
+    if (!query || query.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(`/api/products?q=${encodeURIComponent(query)}&limit=10`);
+        if (res.ok) {
+          const data = await res.json();
+          setSuggestions(data.filter((p: any) => p._type === 'medicine'));
+          setIsOpen(true);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative flex-1 w-full" ref={wrapperRef}>
+      <Input
+        placeholder="Search Medicine (e.g. Dolo 650)..."
+        value={query}
+        onChange={e => {
+          setQuery(e.target.value);
+          onChange(e.target.value);
+        }}
+        className="h-10 rounded-xl bg-slate-50 border-none font-bold text-xs pr-8"
+      />
+      {isLoading && (
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+        </div>
+      )}
+
+      {isOpen && suggestions.length > 0 && (
+        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white rounded-2xl shadow-2xl border border-slate-100 max-h-56 overflow-y-auto z-[300] py-1 animate-in fade-in duration-200">
+          <div className="px-3 py-1 bg-slate-50 border-b border-slate-100 text-[9px] font-black uppercase text-slate-400">
+            Click to Auto-fill Medicine & Price
+          </div>
+          {suggestions.map(p => (
+            <button
+              type="button"
+              key={p.id}
+              onClick={() => {
+                onSelectProduct(p);
+                setQuery(p.name);
+                setIsOpen(false);
+              }}
+              className="w-full px-3 py-2 text-left hover:bg-emerald-50/60 transition-all flex items-center justify-between border-b border-slate-50 last:border-none active:scale-[0.99]"
+            >
+              <div className="min-w-0 pr-2">
+                <p className="font-extrabold text-xs text-slate-800 uppercase truncate">{p.name}</p>
+                <p className="text-[9px] text-slate-400 font-bold uppercase truncate">{p.sku} {p.saltComposition ? `• ${p.saltComposition}` : ''}</p>
+              </div>
+              <span className="text-xs font-black text-emerald-600 font-mono shrink-0">₹{p.mrp || p.price || 0}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
