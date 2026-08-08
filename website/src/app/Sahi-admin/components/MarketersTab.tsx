@@ -43,6 +43,40 @@ export function MarketersTab({ db, isVerified, onBack }: { db: any, isVerified: 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [isErpDensity, setIsErpDensity] = useState(false);
+  const [viewingMarketer, setViewingMarketer] = useState<string | null>(null);
+  const [marketerProducts, setMarketerProducts] = useState<any[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('admin_marketer_erp_density');
+    if (saved === 'true') setIsErpDensity(true);
+  }, []);
+
+  const toggleErpDensity = () => {
+    setIsErpDensity(prev => {
+      const next = !prev;
+      localStorage.setItem('admin_marketer_erp_density', String(next));
+      return next;
+    });
+  };
+
+  const handleViewProducts = async (marketerName: string) => {
+    setViewingMarketer(marketerName);
+    setIsLoadingProducts(true);
+    try {
+      const res = await fetch(`/api/products?marketerName=${encodeURIComponent(marketerName)}&limit=100&showDisabled=true`);
+      if (res.ok) {
+        const data = await res.json();
+        setMarketerProducts(data.filter((p: any) => p._type === 'medicine'));
+      }
+    } catch (e) {
+      console.error('Failed to fetch marketer products', e);
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
   const fetchMarketers = async (q: string = '') => {
     setIsLoading(true);
     try {
@@ -141,7 +175,18 @@ export function MarketersTab({ db, isVerified, onBack }: { db: any, isVerified: 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2">
       <SectionHeader title="Marketer Master" subtitle={`${marketers.length.toLocaleString()} manufacturers • Marketer Master collection`} onBack={onBack}>
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex gap-3 flex-wrap items-center">
+          {/* ERP Compact View Toggle */}
+          <Button 
+            onClick={toggleErpDensity} 
+            variant="outline" 
+            className={`rounded-full h-12 px-6 font-black text-[11px] gap-2 uppercase tracking-wider transition-all ${
+              isErpDensity ? "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 shadow-md" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            {isErpDensity ? '📊 ERP Compact View' : '📑 Standard View'}
+          </Button>
+
           <input type="file" ref={fileInputRef} onChange={handleImport} accept=".csv" className="hidden" />
           <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-full h-12 px-6 font-black text-[10px] gap-2 border-slate-200">
             <Upload className="w-4 h-4" /> Bulk Import
@@ -199,20 +244,20 @@ export function MarketersTab({ db, isVerified, onBack }: { db: any, isVerified: 
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-[10px] font-black text-gray-400 border-b tracking-widest uppercase">
               <tr>
-                <th className="px-8 py-6">Marketer ID</th>
-                <th className="px-8 py-6">Standardized Marketer Name</th>
-                <th className="px-8 py-6 text-center">Product Count</th>
-                <th className="px-8 py-6 text-right">Actions</th>
+                <th className={isErpDensity ? "px-5 py-2.5" : "px-8 py-6"}>Marketer ID</th>
+                <th className={isErpDensity ? "px-5 py-2.5" : "px-8 py-6"}>Standardized Marketer Name</th>
+                <th className={isErpDensity ? "px-5 py-2.5 text-center" : "px-8 py-6 text-center"}>Product Count</th>
+                <th className={isErpDensity ? "px-5 py-2.5 text-right" : "px-8 py-6 text-right"}>Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 Array(8).fill(0).map((_, i) => (
                   <tr key={i}>
-                    <td className="px-8 py-5"><div className="w-20 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
-                    <td className="px-8 py-5"><div className="w-48 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
-                    <td className="px-8 py-5"><div className="w-10 h-4 bg-slate-100 animate-pulse rounded-full mx-auto" /></td>
-                    <td className="px-8 py-5"><div className="w-16 h-8 bg-slate-50 animate-pulse rounded-lg ml-auto" /></td>
+                    <td className={isErpDensity ? "px-5 py-2" : "px-8 py-5"}><div className="w-20 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className={isErpDensity ? "px-5 py-2" : "px-8 py-5"}><div className="w-48 h-4 bg-slate-100 animate-pulse rounded-full" /></td>
+                    <td className={isErpDensity ? "px-5 py-2" : "px-8 py-5"}><div className="w-10 h-4 bg-slate-100 animate-pulse rounded-full mx-auto" /></td>
+                    <td className={isErpDensity ? "px-5 py-2" : "px-8 py-5"}><div className="w-16 h-8 bg-slate-50 animate-pulse rounded-lg ml-auto" /></td>
                   </tr>
                 ))
               ) : marketers.length === 0 ? (
@@ -223,23 +268,44 @@ export function MarketersTab({ db, isVerified, onBack }: { db: any, isVerified: 
                 </tr>
               ) : marketers.map(m => (
                 <tr key={m._id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-8 py-5">
+                  <td className={isErpDensity ? "px-5 py-2" : "px-8 py-5"}>
                     <span className="text-[11px] font-black text-primary bg-primary/10 px-3 py-1 rounded-full">
                       {m['Marketer ID'] || '—'}
                     </span>
                   </td>
-                  <td className="px-8 py-5 font-bold text-sm text-gray-900">{m['Standardized Marketer Name']}</td>
-                  <td className="px-8 py-5 text-center">
-                    <span className="text-[11px] font-black text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-                      {m['Product Count'] || '0'}
-                    </span>
+                  <td className={isErpDensity ? "px-5 py-2" : "px-8 py-5"}>
+                    <div className="flex items-center gap-3">
+                      {m.logoUrl || m.logo_url ? (
+                        <img src={m.logoUrl || m.logo_url} alt="" className="w-8 h-8 rounded-full object-contain bg-slate-50 border p-0.5" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-black text-slate-500">
+                          {m['Standardized Marketer Name']?.substring(0, 2).toUpperCase() || 'MK'}
+                        </div>
+                      )}
+                      <span className={isErpDensity ? "font-bold text-xs text-gray-900" : "font-bold text-sm text-gray-900"}>
+                        {m['Standardized Marketer Name']}
+                      </span>
+                    </div>
                   </td>
-                  <td className="px-8 py-5 text-right">
+                  <td className={isErpDensity ? "px-5 py-2 text-center" : "px-8 py-5 text-center"}>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-[11px] font-black text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                        {m['Product Count'] || '0'}
+                      </span>
+                      <button
+                        onClick={() => handleViewProducts(m['Standardized Marketer Name'])}
+                        className="text-[9px] font-black text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full uppercase tracking-wider transition-all active:scale-95 shadow-2xs"
+                      >
+                        View Products 📦
+                      </button>
+                    </div>
+                  </td>
+                  <td className={isErpDensity ? "px-5 py-2 text-right" : "px-8 py-5 text-right"}>
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="w-9 h-9 rounded-xl" onClick={() => { setEditingMarketer(m); setIsFormOpen(true); }}>
-                        <Edit2 className="w-4 h-4 text-gray-400" />
+                      <Button variant="ghost" size="icon" className={isErpDensity ? "w-7 h-7 rounded-lg" : "w-9 h-9 rounded-xl"} onClick={() => { setEditingMarketer(m); setIsFormOpen(true); }}>
+                        <Edit2 className={isErpDensity ? "w-3 h-3 text-gray-400" : "w-4 h-4 text-gray-400"} />
                       </Button>
-                      <Button variant="ghost" size="icon" className="w-9 h-9 rounded-xl" onClick={async () => {
+                      <Button variant="ghost" size="icon" className={isErpDensity ? "w-7 h-7 rounded-lg" : "w-9 h-9 rounded-xl"} onClick={async () => {
                         if (!confirm('Delete this marketer?')) return;
                         try {
                           const token = await user?.getIdToken();
@@ -253,7 +319,7 @@ export function MarketersTab({ db, isVerified, onBack }: { db: any, isVerified: 
                           toast({ variant: 'destructive', title: 'Delete failed', description: err.message });
                         }
                       }}>
-                        <Trash2 className="w-4 h-4 text-red-300" />
+                        <Trash2 className={isErpDensity ? "w-3 h-3 text-red-300" : "w-4 h-4 text-red-300"} />
                       </Button>
                     </div>
                   </td>
@@ -263,6 +329,51 @@ export function MarketersTab({ db, isVerified, onBack }: { db: any, isVerified: 
           </table>
         </div>
       </Card>
+
+      {/* Linked Products Modal */}
+      <Dialog open={Boolean(viewingMarketer)} onOpenChange={(open) => { if (!open) setViewingMarketer(null); }}>
+        <DialogContent className="rounded-[36px] max-w-3xl border-none p-0 overflow-hidden bg-white shadow-2xl">
+          <DialogHeader className="bg-emerald-600 p-6 text-white space-y-1">
+            <DialogTitle className="text-xl font-black text-white font-outfit uppercase tracking-tight">
+              Products for {viewingMarketer}
+            </DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/70 tracking-widest uppercase">
+              Showing linked items in Product Master
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="p-6 max-h-[500px] overflow-y-auto space-y-3">
+            {isLoadingProducts ? (
+              <div className="py-12 text-center text-slate-400 font-bold text-xs uppercase flex items-center justify-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin text-emerald-600" /> Fetching linked products...
+              </div>
+            ) : marketerProducts.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 font-bold text-xs uppercase">
+                No products found linked to this marketer
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {marketerProducts.map((p) => (
+                  <div key={p.id} className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between gap-4 hover:bg-slate-100/60 transition-all">
+                    <div>
+                      <p className="font-extrabold text-xs text-slate-900 uppercase">{p.name}</p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase">{p.sku} • {p.saltComposition || p.composition || '—'}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase ${
+                        (p.medicine_type || '').toLowerCase().includes('generic') ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {p.medicine_type || 'Branded'}
+                      </span>
+                      <span className="text-xs font-black text-slate-800 font-mono">₹{p.mrp || p.price || 0}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Add/Edit Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
@@ -300,6 +411,7 @@ function MarketerForm({ initialData, onSuccess }: { initialData?: any, onSuccess
   const [marketerId, setMarketerId] = useState(initialData?.['Marketer ID'] || '');
   const [name, setName] = useState(initialData?.['Standardized Marketer Name'] || '');
   const [productCount, setProductCount] = useState(initialData?.['Product Count'] || '0');
+  const [logoUrl, setLogoUrl] = useState(initialData?.logoUrl || initialData?.logo_url || '');
   const { user } = useUser();
   const { toast } = useToast();
 
@@ -311,6 +423,8 @@ function MarketerForm({ initialData, onSuccess }: { initialData?: any, onSuccess
         'Marketer ID': marketerId,
         'Standardized Marketer Name': name,
         'Product Count': productCount,
+        'logoUrl': logoUrl,
+        'logo_url': logoUrl,
       };
       const res = await fetch(
         initialData ? `/api/marketers/${initialData._id}` : '/api/marketers',
@@ -348,6 +462,21 @@ function MarketerForm({ initialData, onSuccess }: { initialData?: any, onSuccess
           placeholder="e.g. Abbott Healthcare"
           className="rounded-2xl h-12 bg-gray-50 border-none font-bold text-sm" 
         />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Marketer Logo Image URL</Label>
+        <Input 
+          value={logoUrl} 
+          onChange={e => setLogoUrl(e.target.value)} 
+          placeholder="https://example.com/logo.png"
+          className="rounded-2xl h-12 bg-gray-50 border-none font-bold text-sm" 
+        />
+        {logoUrl && (
+          <div className="mt-2 p-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-3">
+            <img src={logoUrl} alt="Logo preview" className="w-10 h-10 object-contain rounded-lg border bg-white" />
+            <span className="text-xs font-bold text-slate-600">Logo Preview</span>
+          </div>
+        )}
       </div>
       <div className="space-y-2">
         <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Product Count</Label>

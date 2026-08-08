@@ -149,7 +149,7 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
                 : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            <Layers className="w-3.5 h-3.5" />
+            <Layers className="w-4 h-4" />
             Grouped by Main Category ({groupedCategories.length})
           </button>
           <button
@@ -160,7 +160,7 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
                 : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            <ListFilter className="w-3.5 h-3.5" />
+            <ListFilter className="w-4 h-4" />
             All Sub-Categories ({categories.length})
           </button>
         </div>
@@ -209,6 +209,13 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
 
                     <div className="flex items-center gap-3 self-end sm:self-auto">
                       <Button
+                        onClick={() => handleViewCategoryProducts(group.categoryName)}
+                        variant="outline"
+                        className="rounded-xl h-10 px-4 font-black text-xs border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                      >
+                        View Products 📦
+                      </Button>
+                      <Button
                         onClick={() => {
                           setEditingCat(group.items[0]);
                           setIsFormOpen(true);
@@ -242,16 +249,26 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
                               <p className="text-xs font-bold text-slate-800">{subCat.sub_category || 'General'}</p>
                               <p className="text-[10px] font-semibold text-slate-400">{subCat.product_count || 0} products · {subCat.category_id}</p>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setEditingCat(subCat);
-                                setIsFormOpen(true);
-                              }}
-                            >
-                              <Edit2 className="w-3.5 h-3.5 text-slate-400" />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleViewCategoryProducts(subCat.sub_category || group.categoryName)}
+                                className="text-[9px] font-black text-emerald-700 hover:bg-emerald-50 h-8 px-2 rounded-lg uppercase"
+                              >
+                                View 📦
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setEditingCat(subCat);
+                                  setIsFormOpen(true);
+                                }}
+                              >
+                                <Edit2 className="w-3.5 h-3.5 text-slate-400" />
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -377,6 +394,51 @@ export function CategoriesTab({ db, isVerified, onBack }: { db: any, isVerified:
         title="Category Master"
         onExport={handleExport}
       />
+
+      {/* Linked Products Modal */}
+      <Dialog open={Boolean(viewingCategory)} onOpenChange={(open) => { if (!open) setViewingCategory(null); }}>
+        <DialogContent className="rounded-[36px] max-w-3xl border-none p-0 overflow-hidden bg-white shadow-2xl">
+          <DialogHeader className="bg-emerald-600 p-6 text-white space-y-1">
+            <DialogTitle className="text-xl font-black text-white font-outfit uppercase tracking-tight">
+              Products under {viewingCategory}
+            </DialogTitle>
+            <DialogDescription className="text-[10px] font-black text-white/70 tracking-widest uppercase">
+              Showing linked medicines in Product Master
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="p-6 max-h-[500px] overflow-y-auto space-y-3">
+            {isLoadingProducts ? (
+              <div className="py-12 text-center text-slate-400 font-bold text-xs uppercase flex items-center justify-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin text-emerald-600" /> Fetching category products...
+              </div>
+            ) : categoryProducts.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 font-bold text-xs uppercase">
+                No products found linked to this category
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {categoryProducts.map((p) => (
+                  <div key={p.id} className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between gap-4 hover:bg-slate-100/60 transition-all">
+                    <div>
+                      <p className="font-extrabold text-xs text-slate-900 uppercase">{p.name}</p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase">{p.sku} • {p.saltComposition || p.composition || '—'}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase ${
+                        (p.medicine_type || '').toLowerCase().includes('generic') ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {p.medicine_type || 'Branded'}
+                      </span>
+                      <span className="text-xs font-black text-slate-800 font-mono">₹{p.mrp || p.price || 0}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
