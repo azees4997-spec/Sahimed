@@ -89,6 +89,17 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'www.sahimed.com',
+          },
+        ],
+        destination: 'https://sahimed.com/:path*',
+        permanent: true,
+      },
+      {
         source: '/api/feeds/google%20shopping',
         destination: '/api/feeds/google-shopping',
         permanent: true,

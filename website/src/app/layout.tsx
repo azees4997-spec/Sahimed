@@ -111,7 +111,10 @@ export default async function RootLayout({
       const dbAdmin = getDbAdmin();
       if (!dbAdmin) return [];
       const snapshot = await dbAdmin.collection('pages').orderBy('lastUpdated', 'desc').get();
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return { id: doc.id, title: data.title, placement: data.placement };
+      });
     },
     ['layout-pages'],
     { revalidate: 60, tags: ['pages'] }
