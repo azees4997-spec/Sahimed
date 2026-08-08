@@ -11,12 +11,6 @@ export default function LocationSync() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-  // App link redirection handled via native Android Digital Asset Links (assetlinks.json)
-  useEffect(() => {
-    // Zero forced redirects to prevent Lighthouse TBT and Best Practices flags
-  }, []);
-
-  useEffect(() => {
     const syncLocation = async () => {
       // Check if location is already captured
       const savedLocation = localStorage.getItem('sahimed_location');
