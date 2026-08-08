@@ -56,12 +56,26 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
   const [linkingItem, setLinkingItem] = useState<any>(null);
   const [linkMoleculeCode, setLinkMoleculeCode] = useState('');
   const [isLinking, setIsLinking] = useState(false);
+  const [isErpDensity, setIsErpDensity] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const suggestionRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('admin_erp_density');
+    if (saved === 'true') setIsErpDensity(true);
+  }, []);
+
+  const toggleErpDensity = () => {
+    setIsErpDensity(prev => {
+      const next = !prev;
+      localStorage.setItem('admin_erp_density', String(next));
+      return next;
+    });
+  };
 
   const toggleMedicineType = async (med: any) => {
     const isCurrentlyGeneric = (med.medicine_type || '').toLowerCase().includes('generic') || med.is_generic === true;
@@ -362,6 +376,16 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
           <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full h-14 px-8 font-black text-[12px] border-2 gap-3 text-primary border-primary/20 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
             <Upload className="w-4 h-4" /> Bulk Upload
           </Button>
+          <Button 
+            onClick={toggleErpDensity} 
+            variant="outline" 
+            className={cn(
+              "rounded-full h-14 px-6 font-black text-[12px] border-2 gap-2 uppercase tracking-wider transition-all active:scale-95",
+              isErpDensity ? "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 shadow-md" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+            )}
+          >
+            {isErpDensity ? '📊 ERP Compact View' : '📑 Standard View'}
+          </Button>
           <Button onClick={() => setIsExportOpen(true)} variant="outline" className="rounded-full h-14 px-8 font-black text-[12px] border-2 gap-3 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
             <Download className="w-4 h-4" /> Export Matrix
           </Button>
@@ -451,32 +475,32 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
           /* ── Search Results Table ── */
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[900px]">
-              <thead className="bg-slate-50 text-[11px] font-black text-slate-800 border-b border-slate-100 uppercase tracking-tight">
+              <thead className="bg-slate-50 text-slate-800 border-b border-slate-100 uppercase tracking-tight font-black">
                 <tr>
-                  <th className="px-6 py-4">Product Detail</th>
-                  <th className="px-6 py-4">Type & Generic Status</th>
-                  <th className="px-6 py-4">Category</th>
-                  <th className="px-6 py-4">Marketer / Manufacturer</th>
-                  <th className="px-6 py-4 text-right">Manage</th>
+                  <th className={isErpDensity ? "px-4 py-2.5 text-[10px]" : "px-6 py-4 text-[11px]"}>Product Detail</th>
+                  <th className={isErpDensity ? "px-4 py-2.5 text-[10px]" : "px-6 py-4 text-[11px]"}>Type & Generic Status</th>
+                  <th className={isErpDensity ? "px-4 py-2.5 text-[10px]" : "px-6 py-4 text-[11px]"}>Category</th>
+                  <th className={isErpDensity ? "px-4 py-2.5 text-[10px]" : "px-6 py-4 text-[11px]"}>Marketer / Manufacturer</th>
+                  <th className={cn("text-right", isErpDensity ? "px-4 py-2.5 text-[10px]" : "px-6 py-4 text-[11px]")}>Manage</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {isLoading ? (
                   Array(5).fill(0).map((_, i) => (
                     <tr key={i}>
-                      <td className="px-6 py-4">
+                      <td className={isErpDensity ? "px-4 py-2" : "px-6 py-4"}>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-slate-100 animate-pulse rounded-xl" />
+                          <div className={cn("bg-slate-100 animate-pulse rounded-xl", isErpDensity ? "w-7 h-7" : "w-10 h-10")} />
                           <div className="space-y-1.5">
                             <div className="w-36 h-3 bg-slate-100 animate-pulse rounded-full" />
                             <div className="w-24 h-2 bg-slate-50 animate-pulse rounded-full" />
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4"><div className="w-24 h-5 bg-slate-100 animate-pulse rounded-md" /></td>
-                      <td className="px-6 py-4"><div className="w-20 h-5 bg-slate-100 animate-pulse rounded-md" /></td>
-                      <td className="px-6 py-4"><div className="w-28 h-5 bg-slate-100 animate-pulse rounded-md" /></td>
-                      <td className="px-6 py-4 text-right"><div className="w-8 h-8 bg-slate-100 animate-pulse rounded-lg ml-auto" /></td>
+                      <td className={isErpDensity ? "px-4 py-2" : "px-6 py-4"}><div className="w-24 h-5 bg-slate-100 animate-pulse rounded-md" /></td>
+                      <td className={isErpDensity ? "px-4 py-2" : "px-6 py-4"}><div className="w-20 h-5 bg-slate-100 animate-pulse rounded-md" /></td>
+                      <td className={isErpDensity ? "px-4 py-2" : "px-6 py-4"}><div className="w-28 h-5 bg-slate-100 animate-pulse rounded-md" /></td>
+                      <td className={cn("text-right", isErpDensity ? "px-4 py-2" : "px-6 py-4")}><div className="w-8 h-8 bg-slate-100 animate-pulse rounded-lg ml-auto" /></td>
                     </tr>
                   ))
                 ) : medicines?.length === 0 ? (
@@ -492,30 +516,31 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
 
                   return (
                     <tr key={med.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3.5">
-                          <div className="w-11 h-11 bg-slate-50 rounded-xl p-1 border border-slate-100 flex items-center justify-center overflow-hidden shrink-0">
-                            {med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-5 h-5 text-slate-300" />}
+                      <td className={isErpDensity ? "px-4 py-1.5" : "px-6 py-4"}>
+                        <div className="flex items-center gap-2.5">
+                          <div className={cn("bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden shrink-0", isErpDensity ? "w-7 h-7 rounded-md p-0.5" : "w-11 h-11 rounded-xl p-1")}>
+                            {med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className={cn("text-slate-300", isErpDensity ? "w-3.5 h-3.5" : "w-5 h-5")} />}
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-extrabold text-xs text-slate-900 uppercase truncate">{med.name}</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className={cn("font-extrabold text-slate-900 uppercase truncate", isErpDensity ? "text-[11px]" : "text-xs")}>{med.name}</span>
                               {med.salable_status?.toLowerCase().includes('rx') && (
-                                <Badge variant="destructive" className="h-4 text-[8px] px-1.5 font-black uppercase">Rx</Badge>
+                                <Badge variant="destructive" className="h-3.5 text-[7.5px] px-1 font-black uppercase">Rx</Badge>
                               )}
                             </div>
-                            <span className="text-[10px] text-slate-400 font-bold uppercase">{med.sku} {med.saltComposition && `• ${med.saltComposition}`}</span>
+                            <span className="text-[9px] text-slate-400 font-bold uppercase">{med.sku} {med.saltComposition && `• ${med.saltComposition}`}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1.5 items-start">
+                      <td className={isErpDensity ? "px-4 py-1.5" : "px-6 py-4"}>
+                        <div className="flex flex-wrap gap-1 items-center">
                           {/* 1-Tap Branded / Generic Toggle Badge */}
                           <button
                             onClick={() => toggleMedicineType(med)}
                             title="Click to toggle Branded / Generic"
                             className={cn(
-                              "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all border active:scale-95 flex items-center gap-1 shadow-2xs",
+                              "rounded-full text-[8.5px] font-black uppercase tracking-wider transition-all border active:scale-95 flex items-center gap-1 shadow-2xs",
+                              isErpDensity ? "px-2 py-0.2" : "px-2.5 py-0.5",
                               isGenericMed
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
                                 : "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
@@ -527,7 +552,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
 
                           {/* Generic Link Status / Link Generic Action */}
                           {hasMoleculeCode ? (
-                            <span className="inline-flex items-center gap-1 text-[8.5px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60 uppercase">
+                            <span className="inline-flex items-center gap-1 text-[8px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200/60 uppercase">
                               <Check className="w-2.5 h-2.5 text-emerald-600" /> Generic Linked ({med.molecule_code || med.moleculeId})
                             </span>
                           ) : (
@@ -536,21 +561,21 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                                 setLinkingItem(med);
                                 setLinkMoleculeCode(med.molecule_code || med.moleculeId || '');
                               }}
-                              className="inline-flex items-center gap-1 text-[8.5px] font-black text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 px-2.5 py-0.5 rounded-md uppercase transition-all active:scale-95 shadow-2xs"
+                              className="inline-flex items-center gap-1 text-[8px] font-black text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 px-2 py-0.2 rounded uppercase transition-all active:scale-95 shadow-2xs"
                             >
                               Link Generic 🔗
                             </button>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4"><Badge variant="outline" className="font-black text-[10px] py-0.5 border-slate-200 text-slate-700 uppercase">{med.category || '—'}</Badge></td>
-                      <td className="px-6 py-4 font-bold text-xs text-slate-700">{med.manufacturer || '—'}</td>
-                      <td className="px-6 py-4 text-right">
+                      <td className={isErpDensity ? "px-4 py-1.5" : "px-6 py-4"}><Badge variant="outline" className="font-black text-[9px] py-0 border-slate-200 text-slate-700 uppercase">{med.category || '—'}</Badge></td>
+                      <td className={cn("font-bold text-slate-700 truncate max-w-[150px]", isErpDensity ? "px-4 py-1.5 text-[11px]" : "px-6 py-4 text-xs")}>{med.manufacturer || '—'}</td>
+                      <td className={cn("text-right", isErpDensity ? "px-4 py-1.5" : "px-6 py-4")}>
                          <div className="flex justify-end gap-1">
-                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl hover:bg-slate-100" onClick={() => { setEditingItem(med); setIsFormOpen(true); }}>
-                             <Edit2 className="w-3.5 h-3.5 text-slate-500" />
+                           <Button variant="ghost" size="icon" className={cn("rounded-xl hover:bg-slate-100", isErpDensity ? "h-6 w-6" : "h-8 w-8")} onClick={() => { setEditingItem(med); setIsFormOpen(true); }}>
+                             <Edit2 className={isErpDensity ? "w-3 h-3 text-slate-500" : "w-3.5 h-3.5 text-slate-500"} />
                            </Button>
-                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl hover:bg-rose-50 hover:text-rose-600" onClick={async () => {
+                           <Button variant="ghost" size="icon" className={cn("rounded-xl hover:bg-rose-50 hover:text-rose-600", isErpDensity ? "h-6 w-6" : "h-8 w-8")} onClick={async () => {
                               if (confirm("Delete this product?")) {
                                 try {
                                   const docId = med._id || med.id;
@@ -567,7 +592,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                                 }
                               }
                            }}>
-                             <Trash2 className="w-3.5 h-3.5 text-slate-400 hover:text-rose-600" />
+                             <Trash2 className={isErpDensity ? "w-3 h-3 text-slate-400 hover:text-rose-600" : "w-3.5 h-3.5 text-slate-400 hover:text-rose-600"} />
                            </Button>
                          </div>
                       </td>
