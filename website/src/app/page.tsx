@@ -103,22 +103,19 @@ export default async function Home() {
         <section className="w-full overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #fdf6ff 0%, #fff0f7 35%, #f0fffe 70%, #fffbeb 100%)' }}>
           {/* Decorative blobs — absolutely positioned inside the section */}
           <div className="absolute -top-16 -left-16 w-72 h-72 rounded-full opacity-40 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #d8b4fe, #a78bfa)' }} />
-          <div className="absolute -bottom-12 -right-8 w-80 h-80 rounded-full opacity-30 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #6ee7b7, #34d399)' }} />
-          <div className="absolute top-8 right-1/3 w-40 h-40 rounded-full opacity-20 blur-2xl pointer-events-none" style={{ background: 'radial-gradient(circle, #fda4af, #fb7185)' }} />
+          <div className="absolute -bottom-12 -right-8 w-80 h-80 rounded-full opacity-30 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #6ee7b7          <div className="relative z-10 w-full max-w-7xl mx-auto px-3 sm:px-8 lg:px-12 pt-1 sm:pt-8 pb-0 flex flex-row items-center justify-between gap-1.5 sm:gap-6 md:gap-8">
 
-          <div className="relative z-10 w-full max-w-7xl mx-auto px-3 sm:px-8 lg:px-12 pt-3 sm:pt-8 pb-0 flex flex-row items-center justify-between gap-2 sm:gap-6 md:gap-8">
-
-              {/* Left: Wording (Compact on Mobile) */}
-              <div className="flex-1 min-w-0 space-y-1.5 sm:space-y-3.5 text-left pb-3 sm:pb-6">
-                {/* Label pill */}
-                <span className="inline-flex items-center gap-1 text-[8.5px] sm:text-[10.5px] font-black uppercase tracking-wider px-2 sm:px-3.5 py-0.5 sm:py-1 rounded-full border shadow-sm"
+              {/* Left: Wording (Trimmed & Compact on Mobile) */}
+              <div className="flex-1 min-w-0 space-y-1 sm:space-y-3.5 text-left pb-1 sm:pb-6">
+                {/* Label pill (Hidden on mobile) */}
+                <span className="hidden sm:inline-flex items-center gap-1 text-[8.5px] sm:text-[10.5px] font-black uppercase tracking-wider px-2 sm:px-3.5 py-0.5 sm:py-1 rounded-full border shadow-sm"
                   style={{ background: 'rgba(167,139,250,0.15)', borderColor: 'rgba(167,139,250,0.4)', color: '#7c3aed' }}
                 >
                   🏥 India&apos;s Trusted Pharmacy
                 </span>
 
                 {/* Headline */}
-                <h1 className="text-lg sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-[1.08] text-slate-900">
+                <h1 className="text-base sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-[1.08] text-slate-900">
                   Switch to Branded{' '}
                   <span style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Generics</span>
                 </h1>
@@ -128,41 +125,41 @@ export default async function Home() {
                 </p>
 
                 {/* 3 Green Checkmark Bullets */}
-                <div className="space-y-1 sm:space-y-2">
+                <div className="space-y-0.5 sm:space-y-2">
                   {[
                     { text: 'Trusted by 10L+ customers', color: '#059669', bg: 'rgba(5,150,105,0.12)' },
                     { text: 'Save upto 60% on MRP', color: '#db2777', bg: 'rgba(219,39,119,0.12)' },
                     { text: 'WHO & FDA Doctor Approved', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
                   ].map((b, i) => (
-                    <div key={i} className="flex items-center justify-start gap-1.5">
-                      <div className="w-3.5 h-3.5 sm:w-5.5 sm:h-5.5 rounded-full flex items-center justify-center font-black text-[8px] sm:text-[11px] shrink-0"
+                    <div key={i} className="flex items-center justify-start gap-1">
+                      <div className="w-3 h-3 sm:w-5.5 sm:h-5.5 rounded-full flex items-center justify-center font-black text-[7.5px] sm:text-[11px] shrink-0"
                         style={{ background: b.bg, color: b.color, border: `1.5px solid ${b.color}40` }}
                       >
                         ✓
                       </div>
-                      <span className="text-[9.5px] sm:text-xs md:text-sm font-bold text-slate-800 truncate">{b.text}</span>
+                      <span className="text-[8.5px] sm:text-xs md:text-sm font-bold text-slate-800 truncate">{b.text}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Hero CTA Buttons (Call, Upload Rx, WhatsApp) */}
-                <div className="flex items-center justify-start gap-2.5 sm:gap-3 flex-wrap pt-1">
+                {/* Hero CTA Buttons — Compact on Mobile */}
+                <div className="flex items-center justify-start gap-1.5 sm:gap-3 flex-wrap pt-0.5">
                   {/* Call Button */}
                   <a
                     href="tel:+917349499898"
-                    className="px-4 sm:px-5 py-2 sm:py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95 group/call"
+                    className="px-2.5 sm:px-5 py-1.5 sm:py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-lg sm:rounded-xl shadow-xs transition-all flex items-center gap-1 active:scale-95 group/call"
                   >
-                    <Phone className="w-3.5 h-3.5 text-emerald-400 group-hover/call:rotate-12 transition-transform" />
+                    <Phone className="w-3 h-3 text-emerald-400 group-hover/call:rotate-12 transition-transform" />
                     <span>Call</span>
                   </a>
 
                   {/* Upload Rx Button */}
                   <Link
                     href="/prescription"
-                    className="px-4 sm:px-5 py-2 sm:py-2.5 text-white font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl hover:scale-105 transition-all duration-200 flex items-center gap-1.5 shadow-lg group/upload"
-                    style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)', boxShadow: '0 6px 20px rgba(124,58,237,0.3)' }}
+                    className="px-2.5 sm:px-5 py-1.5 sm:py-2.5 text-white font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-lg sm:rounded-xl hover:scale-105 transition-all duration-200 flex items-center gap-1 shadow-md group/upload"
+                    style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)', boxShadow: '0 4px 12px rgba(124,58,237,0.25)' }}
                   >
-                    <FileText className="w-3.5 h-3.5 group-hover/upload:-translate-y-0.5 transition-transform" />
+                    <FileText className="w-3 h-3 group-hover/upload:-translate-y-0.5 transition-transform" />
                     <span>Upload Rx</span>
                   </Link>
 
@@ -171,10 +168,10 @@ export default async function Home() {
                     href="https://wa.me/917349499898?text=Hi%20SahiMed,%20I%20want%20to%20order%20medicines"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 sm:px-5 py-2 sm:py-2.5 text-white font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95 group/wa"
-                    style={{ background: '#25D366', boxShadow: '0 4px 15px rgba(37,211,102,0.3)' }}
+                    className="px-2.5 sm:px-5 py-1.5 sm:py-2.5 text-white font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-lg sm:rounded-xl shadow-xs transition-all flex items-center gap-1 active:scale-95 group/wa"
+                    style={{ background: '#25D366', boxShadow: '0 3px 10px rgba(37,211,102,0.25)' }}
                   >
-                    <MessageCircle className="w-3.5 h-3.5 fill-white text-[#25D366] group-hover/wa:scale-110 transition-transform" />
+                    <MessageCircle className="w-3 h-3 fill-white text-[#25D366] group-hover/wa:scale-110 transition-transform" />
                     <span>WhatsApp</span>
                   </a>
                 </div>
@@ -195,8 +192,8 @@ export default async function Home() {
                 </div>
               </div>
 
-              {/* Right: Larger Doctor Cutout PNG (Shifted further right -mr-2, h-[270px] mobile / 380px desktop) */}
-              <div className="relative shrink-0 w-44 sm:w-72 md:w-[380px] lg:w-[420px] h-[260px] sm:h-[330px] lg:h-[380px] flex items-end justify-center -mr-2 sm:mr-0 self-end">
+              {/* Right: Compact Doctor Cutout PNG on Mobile (h-[175px] mobile / 380px desktop) */}
+              <div className="relative shrink-0 w-32 sm:w-72 md:w-[380px] lg:w-[420px] h-[175px] sm:h-[330px] lg:h-[380px] flex items-end justify-center -mr-2 sm:mr-0 self-end">
                 {/* Clean transparent PNG cutout — sits directly flush on the bottom line */}
                 <picture className="relative z-10 w-full h-full flex items-end justify-center">
                   <source srcSet="/images/doctor_hero_transparent.webp" type="image/webp" />
@@ -204,6 +201,11 @@ export default async function Home() {
                     src="/images/doctor_hero_transparent.png"
                     alt="SahiMed Certified Doctor"
                     className="w-full h-full object-contain object-bottom pointer-events-none"
+                    loading="eager"
+                  />
+                </picture>
+              </div>
+          </div>              className="w-full h-full object-contain object-bottom pointer-events-none"
                     loading="eager"
                   />
                 </picture>

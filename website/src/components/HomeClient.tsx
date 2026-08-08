@@ -286,8 +286,8 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
           </Link>
         </div>
 
-        {/* ── Dynamic Category Icon Cards — Generously Sized & Bold ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-8 py-3 px-1 items-center">
+        {/* ── Dynamic Category Icon Cards — 3 Columns (3x2 = 6 Items) on Mobile, 4-8 Columns on Desktop ── */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-2 sm:gap-6 py-2 px-0 items-center">
           {featuredCats.map((cat: any, i: number) => {
             const style = getCategoryStyle(cat.name || '');
             const rawUrl = (cat.imageUrl || '').replace('googleapis.coms', 'googleapis.com');
@@ -307,15 +307,23 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
             const accent = cardAccents[i % cardAccents.length];
 
             return (
-              <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="flex justify-center">
+              <motion.div 
+                key={i} 
+                custom={i} 
+                variants={fadeUp} 
+                initial="hidden" 
+                whileInView="visible" 
+                viewport={{ once: true }} 
+                className={`flex justify-center ${i >= 6 ? 'hidden sm:flex' : ''}`}
+              >
                 <Link
                   href={`/search?c=${encodeURIComponent(cat.name)}`}
-                  className="group w-full flex flex-col items-center text-center p-4 sm:p-5 rounded-3xl bg-slate-50/60 hover:bg-white border border-slate-100 hover:border-purple-200/80 transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5"
+                  className="group w-full flex flex-col items-center text-center p-2 sm:p-5 rounded-2xl sm:rounded-3xl bg-slate-50/60 hover:bg-white border border-slate-100 hover:border-purple-200/80 transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5"
                 >
-                  {/* Large 128px Circular Image Container */}
+                  {/* Circular Image Container */}
                   <div 
-                    className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden p-1 shadow-md border-2 border-white sm:group-hover:scale-105 transition-all duration-300 bg-white shrink-0"
-                    style={{ boxShadow: `0 8px 24px ${accent.color}25` }}
+                    className="relative w-16 h-16 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden p-0.5 sm:p-1 shadow-sm border border-slate-200/80 sm:group-hover:scale-105 transition-all duration-300 bg-white shrink-0"
+                    style={{ boxShadow: `0 4px 16px ${accent.color}22` }}
                   >
                     <div className="relative w-full h-full rounded-full overflow-hidden bg-slate-50">
                       <Image
@@ -330,11 +338,11 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
                   </div>
 
                   {/* Category Name & Tag */}
-                  <h3 className="font-extrabold tracking-tight text-slate-900 group-hover:text-primary transition-colors text-xs sm:text-sm lg:text-base line-clamp-1 mt-3.5">
+                  <h3 className="font-extrabold tracking-tight text-slate-900 group-hover:text-primary transition-colors text-[10.5px] sm:text-sm lg:text-base line-clamp-1 mt-1.5 sm:mt-3.5">
                     {cat.name}
                   </h3>
                   <span 
-                    className="inline-block font-black uppercase tracking-wider rounded-full text-[9px] sm:text-[10px] px-3 py-1 mt-1.5 shadow-2xs"
+                    className="inline-block font-black uppercase tracking-wider rounded-full text-[7.5px] sm:text-[10px] px-1.5 sm:px-3 py-0.5 sm:py-1 mt-0.5 sm:mt-1.5 shadow-2xs"
                     style={{ background: accent.bg, color: accent.color, border: `1px solid ${accent.border}` }}
                   >
                     UP TO 61% OFF
