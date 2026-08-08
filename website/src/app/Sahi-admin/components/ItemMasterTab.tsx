@@ -992,7 +992,8 @@ function ItemForm({ initialData, onSuccess }: { initialData?: any, onSuccess: ()
         </TabsContent>
       </Tabs>
       <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white">Save Product Profile</Button>
-      <Dialog open={Boolean(linkingItem)} onOpenChange={(open) => { if (!open) setLinkingItem(null); }}>
+    </form>
+    <Dialog open={Boolean(linkingItem)} onOpenChange={(open) => { if (!open) setLinkingItem(null); }}>
         <DialogContent className="rounded-[32px] sm:max-w-md p-6 bg-white border border-slate-100 shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-black font-outfit uppercase tracking-tight text-slate-900">
