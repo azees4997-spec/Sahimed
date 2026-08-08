@@ -500,7 +500,7 @@ function ItemForm({ initialData, onSuccess }: { initialData?: any, onSuccess: ()
   const [form, setForm] = useState({
     product_id: initialData?.product_id || initialData?.sku || '',
     product_name: initialData?.product_name || initialData?.name || '',
-    molecule_code: initialData?.molecule_code || initialData?.moleculeId || '',
+    molecule_code: initialData?.molecule_code || initialData?.moleculeId || initialData?.['Molecule Code'] || initialData?.molecule_id || '',
     medicine_type: initialData?.medicine_type || (initialData?.isGeneric ? 'Generic' : 'Branded'),
     salable_status: initialData?.salable_status || 'Salable (Rx Required)',
     country_of_origin: initialData?.country_of_origin || 'India',
@@ -548,8 +548,18 @@ function ItemForm({ initialData, onSuccess }: { initialData?: any, onSuccess: ()
 
   useEffect(() => {
     fetch('/api/categories').then(res => res.json()).then(setCategories).catch(console.error);
-    fetch('/api/molecules').then(res => res.json()).then(setMolecules).catch(console.error);
-  }, []);
+    fetch('/api/molecules?limit=1500').then(res => res.json()).then((list: any[]) => {
+      const currentCode = initialData?.molecule_code || initialData?.moleculeId || initialData?.['Molecule Code'] || initialData?.molecule_id || '';
+      if (currentCode && Array.isArray(list) && !list.some(m => (m['Molecule Code'] === currentCode || m.id === currentCode || m._id === currentCode))) {
+        list.unshift({
+          _id: currentCode,
+          'Molecule Code': currentCode,
+          Composition: initialData?.medical_info?.composition || currentCode
+        });
+      }
+      setMolecules(Array.isArray(list) ? list : []);
+    }).catch(console.error);
+  }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
