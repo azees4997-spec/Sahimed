@@ -78,7 +78,7 @@ function ProductCardComponent({ product, priority = false }: { product: Product,
               )}
             </div>
             
-            <h3 className="font-extrabold text-slate-950 text-[11px] sm:text-[13px] leading-tight line-clamp-none min-h-[36px] sm:min-h-[42px] font-outfit uppercase tracking-tight group-hover:text-primary transition-colors">
+            <h3 className="font-extrabold text-slate-950 text-[11px] sm:text-[13px] leading-tight line-clamp-2 min-h-[32px] sm:min-h-[36px] font-outfit uppercase tracking-tight group-hover:text-primary transition-colors">
               {product.name}
             </h3>
 
