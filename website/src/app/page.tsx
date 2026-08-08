@@ -37,10 +37,24 @@ async function getCategories() {
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const categories = await db.collection('Category Master').find({ showOnHomepage: true }).sort({ category: 1 }).toArray();
-    return categories.map(c => ({ ...c, id: c._id.toString(), name: c.category, imageUrl: c.imageUrl }));
+    let categories = await db.collection('Category Master').find({ showOnHomepage: true }).sort({ category: 1 }).toArray();
+    if (!categories || categories.length === 0) {
+      categories = await db.collection('Category Master').find({}).limit(12).toArray();
+    }
+    
+    // Deduplicate by category name
+    const seen = new Set<string>();
+    const unique = [];
+    for (const c of categories) {
+      const catName = c.category || c.name || '';
+      if (catName && !seen.has(catName.toLowerCase())) {
+        seen.add(catName.toLowerCase());
+        unique.push({ ...c, id: c._id.toString(), name: catName, imageUrl: c.imageUrl });
+      }
+    }
+    return unique;
   } catch {
-    return CATEGORIES.map((cat, idx) => ({ id: `fallback-cat-${idx}`, name: cat.name, imageUrl: cat.imageUrl, description: cat.description }));
+    return [];
   }
 }
 

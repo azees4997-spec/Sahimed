@@ -238,7 +238,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
       .slice(0, 6);
   }, [medicinesByCategory, categories]);
 
-  // Deduplicate MongoDB categories by name to prevent duplicate cards
+  // Deduplicate MongoDB categories by name
   const uniqueCategories = React.useMemo(() => {
     const seen = new Set<string>();
     return (categories || []).filter((cat: any) => {
@@ -249,33 +249,12 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
     });
   }, [categories]);
 
-  // Featured 8 categories matching user's exact health domains
-  const DEFAULT_FEATURED_CATS = React.useMemo(() => [
-    { name: 'Mental Well-being' },
-    { name: 'Cardiovascular Health' },
-    { name: 'Diabetes Care' },
-    { name: 'Digestive Wellness' },
-    { name: 'Immune Defense & Allergies' },
-    { name: 'Bone & Joint Strength' },
-    { name: 'Skin & Derma' },
-    { name: "Women's Health" }
-  ], []);
-
+  // Render ONLY categories selected in MongoDB Category Master
   const featuredCats = React.useMemo(() => {
-    const dbItems = uniqueCategories;
-    const dbNames = new Set(dbItems.map((c: any) => (c.name || '').toLowerCase()));
-    const merged = [...dbItems];
+    return uniqueCategories.slice(0, 12);
+  }, [uniqueCategories]);
 
-    for (const defCat of DEFAULT_FEATURED_CATS) {
-      if (!dbNames.has(defCat.name.toLowerCase())) {
-        merged.push(defCat);
-      }
-      if (merged.length >= 8) break;
-    }
-    return merged.slice(0, 8);
-  }, [uniqueCategories, DEFAULT_FEATURED_CATS]);
-
-  const moreCats = (uniqueCategories || []).slice(8, 20);
+  const moreCats = (uniqueCategories || []).slice(12, 30);
 
   return (
     <div className="space-y-8 sm:space-y-14 pb-0 sm:pb-16 overflow-x-hidden max-w-full">
