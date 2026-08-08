@@ -370,9 +370,13 @@ export default function CheckoutPage() {
     }
   };
 
+  const isPlacingOrderRef = useRef(false);
+
   const handlePlaceOrder = async (body?: any) => {
+    if (isPlacingOrderRef.current) return;
     if (!validate()) return;
 
+    isPlacingOrderRef.current = true;
     setLoading(true);
 
     try {
@@ -495,6 +499,7 @@ export default function CheckoutPage() {
         router.push(`/order-success/${mongoOrderId}`);
       }
     } catch (err: any) {
+      isPlacingOrderRef.current = false;
       setLoading(false);
       toast({ variant: 'destructive', title: "Order failed", description: err.message || "Failed to sync order with Sahimed Fulfillment." });
     }

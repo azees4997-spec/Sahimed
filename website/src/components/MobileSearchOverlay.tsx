@@ -68,23 +68,30 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
       return;
     }
 
+    const controller = new AbortController();
+
     const fetchSuggestions = async () => {
       setIsSearching(true);
       try {
-        const res = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=10`);
+        const res = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=10`, { signal: controller.signal });
         const meds = res.ok ? await res.json() : [];
 
         mobileSearchCache.set(lowerTerm, meds);
         setSuggestions(meds);
-      } catch (err) {
-        console.error("Mobile search failed", err);
+      } catch (err: any) {
+        if (err?.name !== 'AbortError') {
+          console.error("Mobile search failed", err);
+        }
       } finally {
         setIsSearching(false);
       }
     };
 
     const timer = setTimeout(fetchSuggestions, 120);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [search]);
 
   const handleItemClick = (item: any) => {
