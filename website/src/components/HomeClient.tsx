@@ -238,6 +238,17 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
       .slice(0, 6);
   }, [medicinesByCategory, categories]);
 
+  // Deduplicate MongoDB categories by name to prevent duplicate cards
+  const uniqueCategories = React.useMemo(() => {
+    const seen = new Set<string>();
+    return (categories || []).filter((cat: any) => {
+      const nameKey = (cat.name || cat.category || '').trim().toLowerCase();
+      if (!nameKey || seen.has(nameKey)) return false;
+      seen.add(nameKey);
+      return true;
+    });
+  }, [categories]);
+
   // Featured 8 categories matching user's exact health domains
   const DEFAULT_FEATURED_CATS = React.useMemo(() => [
     { name: 'Mental Well-being' },
@@ -251,10 +262,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
   ], []);
 
   const featuredCats = React.useMemo(() => {
-    if (categories && categories.length >= 8) {
-      return categories.slice(0, 8);
-    }
-    const dbItems = categories || [];
+    const dbItems = uniqueCategories;
     const dbNames = new Set(dbItems.map((c: any) => (c.name || '').toLowerCase()));
     const merged = [...dbItems];
 
@@ -265,9 +273,9 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
       if (merged.length >= 8) break;
     }
     return merged.slice(0, 8);
-  }, [categories, DEFAULT_FEATURED_CATS]);
+  }, [uniqueCategories, DEFAULT_FEATURED_CATS]);
 
-  const moreCats = (categories || []).slice(8, 20);
+  const moreCats = (uniqueCategories || []).slice(8, 20);
 
   return (
     <div className="space-y-8 sm:space-y-14 pb-0 sm:pb-16 overflow-x-hidden max-w-full">
@@ -303,7 +311,8 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         <div className="flex sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 overflow-x-auto sm:overflow-visible scrollbar-hide py-1 px-0.5 sm:px-0 items-center">
           {featuredCats.map((cat: any, i: number) => {
             const style = getCategoryStyle(cat.name || '');
-            const imgSrc = (cat.imageUrl && !cat.imageUrl.includes('picsum')) ? cat.imageUrl : style.image;
+            const isValidUrl = cat.imageUrl && (cat.imageUrl.startsWith('/') || cat.imageUrl.startsWith('http')) && !cat.imageUrl.includes('picsum') && !cat.imageUrl.includes('Diabetology');
+            const imgSrc = isValidUrl ? cat.imageUrl : style.image;
             
             const cardAccents = [
               { color: '#7c3aed', bg: 'rgba(124,58,237,0.06)', border: 'rgba(124,58,237,0.2)' },
