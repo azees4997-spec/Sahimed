@@ -103,7 +103,10 @@ export default async function Home() {
         <section className="w-full overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #fdf6ff 0%, #fff0f7 35%, #f0fffe 70%, #fffbeb 100%)' }}>
           {/* Decorative blobs — absolutely positioned inside the section */}
           <div className="absolute -top-16 -left-16 w-72 h-72 rounded-full opacity-40 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #d8b4fe, #a78bfa)' }} />
-          <div className="absolute -bottom-12 -right-8 w-80 h-80 rounded-full opacity-30 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #6ee7b7          <div className="relative z-10 w-full max-w-7xl mx-auto px-3 sm:px-8 lg:px-12 pt-1 sm:pt-8 pb-0 flex flex-row items-center justify-between gap-1.5 sm:gap-6 md:gap-8">
+          <div className="absolute -bottom-12 -right-8 w-80 h-80 rounded-full opacity-30 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #6ee7b7, #34d399)' }} />
+          <div className="absolute top-8 right-1/3 w-40 h-40 rounded-full opacity-20 blur-2xl pointer-events-none" style={{ background: 'radial-gradient(circle, #fda4af, #fb7185)' }} />
+
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-3 sm:px-8 lg:px-12 pt-1 sm:pt-8 pb-0 flex flex-row items-center justify-between gap-1.5 sm:gap-6 md:gap-8">
 
               {/* Left: Wording (Trimmed & Compact on Mobile) */}
               <div className="flex-1 min-w-0 space-y-1 sm:space-y-3.5 text-left pb-1 sm:pb-6">
