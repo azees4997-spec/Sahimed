@@ -387,10 +387,91 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
             <span className="text-slate-600 font-semibold line-clamp-1">{product?.name}</span>
           </nav>
 
+          {/* 📱 MOBILE FIRST-FRAME HERO CARD — Product Image, Title, Price & ADD button fit in first frame with 0 scrolling */}
+          <div className="sm:hidden bg-white rounded-2xl border border-slate-100 p-3.5 shadow-sm space-y-3">
+            <div className="flex gap-3.5 items-start">
+              {/* Product Thumbnail */}
+              <div className="relative w-28 h-28 shrink-0 bg-slate-50/80 rounded-xl border border-slate-100 p-1 flex items-center justify-center overflow-hidden">
+                <Image
+                  src={images[currentImageIndex]}
+                  alt={product?.name || 'Medicine'}
+                  fill
+                  className="object-contain p-1"
+                  priority
+                />
+                {discountPct > 0 && (
+                  <span className="absolute top-1 left-1 bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs">
+                    {discountPct}% OFF
+                  </span>
+                )}
+                {product?.prescriptionRequired && (
+                  <span className="absolute bottom-1 right-1 bg-rose-500 text-white text-[7.5px] font-black px-1.5 py-0.5 rounded-full uppercase">
+                    Rx
+                  </span>
+                )}
+              </div>
+
+              {/* Title, Composition & Brand */}
+              <div className="flex-1 min-w-0 space-y-1">
+                <h1 className="text-sm font-extrabold text-slate-900 leading-tight uppercase line-clamp-2">
+                  {product?.name}
+                </h1>
+                {product?.composition && (
+                  <p className="text-[10.5px] text-slate-500 font-medium italic line-clamp-1">
+                    {product.composition}
+                  </p>
+                )}
+                <p className="text-[10.5px] font-bold text-primary truncate">
+                  By {product?.marketerName || product?.manufacturer || 'SahiMed'}
+                </p>
+                {(product?.packagingDetail || product?.packaging?.packaging_detail) && (
+                  <span className="inline-flex items-center gap-1 text-[9.5px] font-semibold bg-slate-50 text-slate-600 px-2 py-0.5 rounded-md border border-slate-100">
+                    <Package className="w-3 h-3 text-primary" />
+                    {product.packagingDetail || product.packaging?.packaging_detail}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Price & Immediate Add To Cart Row */}
+            <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
+              <div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-black text-slate-950 font-outfit">₹{currentPrice}</span>
+                  {currentMrp > currentPrice && (
+                    <span className="text-xs text-slate-400 line-through font-bold">₹{currentMrp}</span>
+                  )}
+                </div>
+                {discountPct > 0 && (
+                  <p className="text-[9.5px] font-bold text-emerald-600">Save ₹{(currentMrp - currentPrice).toFixed(0)}</p>
+                )}
+              </div>
+
+              {qty > 0 ? (
+                <div className="flex items-center h-10 bg-slate-50 rounded-full border border-slate-200 px-1 gap-1">
+                  <Button size="icon" variant="ghost" onClick={() => updateQuantity(product?._id || product?.id, -1)} className="h-8 w-8 rounded-full bg-white text-slate-700 shadow-xs">
+                    <Minus className="w-3.5 h-3.5" />
+                  </Button>
+                  <span className="text-xs font-bold text-slate-800 px-2">{qty}</span>
+                  <Button size="icon" variant="ghost" onClick={() => updateQuantity(product?._id || product?.id, 1)} className="h-8 w-8 rounded-full bg-white text-slate-700 shadow-xs">
+                    <Plus className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => addCurrentToCart(1)}
+                  className="h-10 px-5 rounded-full font-black text-xs bg-primary text-white hover:bg-primary/90 shadow-md uppercase tracking-wider flex-1 max-w-[170px]"
+                >
+                  <ShoppingCart className="w-3.5 h-3.5 mr-1.5" /> Add to Cart
+                </Button>
+              )}
+            </div>
+          </div>
+
           {/* ╔══════════════════════════════════════════════╗
-              ║  HERO                                        ║
+              ║  HERO (DESKTOP & EXPANDED)                   ║
               ╚══════════════════════════════════════════════╝ */}
-          <div ref={heroRef} className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <div ref={heroRef} className="hidden sm:grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
             {/* ── Image Gallery with Zoom ──────────────────── */}
             <div className="lg:col-span-5">
