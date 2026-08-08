@@ -61,7 +61,6 @@ import { OrderNotification } from './components/OrderNotification';
 import { BrandingTab } from './components/BrandingTab';
 import { AbandonedCartsTab } from './components/AbandonedCartsTab';
 import { MastersTab } from './components/MastersTab';
-import { AnalyticsTab } from './components/AnalyticsTab';
 
 const MASTER_UIDS = ["BM9HheYflheT0Wyj6olaEnyCAHl1", "RzB6nqlQumg1VEniFcZrgbcDdRA2"];
 
