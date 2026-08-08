@@ -327,6 +327,30 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
     showDisabled: true
   });
 
+  const filteredMedicines = useMemo(() => {
+    return (medicines || []).filter((med: any) => {
+      const isGen = (med.medicine_type || '').toLowerCase().includes('generic') || med.is_generic === true;
+      const isMapped = med.hasGenericMapped === true;
+
+      if (statusFilter === 'branded' && isGen) return false;
+      if (statusFilter === 'generic' && !isGen) return false;
+      if (statusFilter === 'linked' && !isMapped) return false;
+      if (statusFilter === 'unlinked' && isMapped) return false;
+
+      if (categoryFilter !== 'all') {
+        const cat = (med.category || med.taxonomy?.category_name || '').toLowerCase();
+        if (!cat.includes(categoryFilter.toLowerCase())) return false;
+      }
+
+      if (marketerFilter !== 'all') {
+        const mkt = (med.manufacturer || med.taxonomy?.marketer_name || '').toLowerCase();
+        if (!mkt.includes(marketerFilter.toLowerCase())) return false;
+      }
+
+      return true;
+    });
+  }, [medicines, statusFilter, categoryFilter, marketerFilter]);
+
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-2 relative">
       {importProgress && (
@@ -551,41 +575,15 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                       <td className={cn("text-right", isErpDensity ? "px-4 py-2" : "px-6 py-4")}><div className="w-8 h-8 bg-slate-100 animate-pulse rounded-lg ml-auto" /></td>
                     </tr>
                   ))
-                ) : (() => {
-                  const filteredMedicines = (medicines || []).filter((med: any) => {
-                    const isGen = (med.medicine_type || '').toLowerCase().includes('generic') || med.is_generic === true;
-                    const isMapped = med.hasGenericMapped === true;
-
-                    if (statusFilter === 'branded' && isGen) return false;
-                    if (statusFilter === 'generic' && !isGen) return false;
-                    if (statusFilter === 'linked' && !isMapped) return false;
-                    if (statusFilter === 'unlinked' && isMapped) return false;
-
-                    if (categoryFilter !== 'all') {
-                      const cat = (med.category || med.taxonomy?.category_name || '').toLowerCase();
-                      if (!cat.includes(categoryFilter.toLowerCase())) return false;
-                    }
-
-                    if (marketerFilter !== 'all') {
-                      const mkt = (med.manufacturer || med.taxonomy?.marketer_name || '').toLowerCase();
-                      if (!mkt.includes(marketerFilter.toLowerCase())) return false;
-                    }
-
-                    return true;
-                  });
-
-                  if (filteredMedicines.length === 0) {
-                    return (
-                      <tr>
-                        <td colSpan={5} className="p-12 text-center">
-                          <p className="font-black text-sm text-slate-700 uppercase">No products match active filters</p>
-                          <p className="text-xs text-slate-400 mt-1 font-medium">Try clearing your search query or clicking "Reset Filters"</p>
-                        </td>
-                      </tr>
-                    );
-                  }
-
-                  return filteredMedicines.map(med => {
+                ) : filteredMedicines.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-12 text-center">
+                      <p className="font-black text-sm text-slate-700 uppercase">No products match active filters</p>
+                      <p className="text-xs text-slate-400 mt-1 font-medium">Try clearing your search query or clicking "Reset Filters"</p>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredMedicines.map(med => {
                     const isGenericMed = (med.medicine_type || '').toLowerCase().includes('generic') || med.is_generic === true;
                     const isGenericMapped = med.hasGenericMapped === true;
 
@@ -607,50 +605,50 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                             </div>
                           </div>
                         </td>
-                      <td className={isErpDensity ? "px-4 py-1.5" : "px-6 py-4"}>
-                        <div className="flex flex-wrap gap-1 items-center">
-                          {/* 1-Tap Branded / Generic Toggle Badge */}
-                          <button
-                            onClick={() => toggleMedicineType(med)}
-                            title="Click to toggle Branded / Generic"
-                            className={cn(
-                              "rounded-full text-[8.5px] font-black uppercase tracking-wider transition-all border active:scale-95 flex items-center gap-1 shadow-2xs",
-                              isErpDensity ? "px-2 py-0.2" : "px-2.5 py-0.5",
-                              isGenericMed
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-                                : "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-                            )}
-                          >
-                            {isGenericMed ? '💊 Generic' : '🏷️ Branded'}
-                            <span className="text-[8px] opacity-60">⇄</span>
-                          </button>
-
-                          {/* Generic Link Status / Red Link Generic Action */}
-                          {isGenericMapped ? (
-                            <span className="inline-flex items-center gap-1 text-[8px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200/60 uppercase">
-                              <Check className="w-2.5 h-2.5 text-emerald-600" /> Generic Linked ({med.molecule_code || med.moleculeId || 'Mapped'})
-                            </span>
-                          ) : (
+                        <td className={isErpDensity ? "px-4 py-1.5" : "px-6 py-4"}>
+                          <div className="flex flex-wrap gap-1 items-center">
+                            {/* 1-Tap Branded / Generic Toggle Badge */}
                             <button
-                              onClick={() => {
-                                setLinkingItem(med);
-                                setLinkMoleculeCode(med.molecule_code || med.moleculeId || '');
-                              }}
-                              className="inline-flex items-center gap-1 text-[8px] font-black text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-2 py-0.2 rounded uppercase transition-all active:scale-95 shadow-2xs"
+                              onClick={() => toggleMedicineType(med)}
+                              title="Click to toggle Branded / Generic"
+                              className={cn(
+                                "rounded-full text-[8.5px] font-black uppercase tracking-wider transition-all border active:scale-95 flex items-center gap-1 shadow-2xs",
+                                isErpDensity ? "px-2 py-0.2" : "px-2.5 py-0.5",
+                                isGenericMed
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                                  : "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                              )}
                             >
-                              Link Generic 🔗
+                              {isGenericMed ? '💊 Generic' : '🏷️ Branded'}
+                              <span className="text-[8px] opacity-60">⇄</span>
                             </button>
-                          )}
-                        </div>
-                      </td>
-                      <td className={isErpDensity ? "px-4 py-1.5" : "px-6 py-4"}><Badge variant="outline" className="font-black text-[9px] py-0 border-slate-200 text-slate-700 uppercase">{med.category || '—'}</Badge></td>
-                      <td className={cn("font-bold text-slate-700 truncate max-w-[150px]", isErpDensity ? "px-4 py-1.5 text-[11px]" : "px-6 py-4 text-xs")}>{med.manufacturer || '—'}</td>
-                      <td className={cn("text-right", isErpDensity ? "px-4 py-1.5" : "px-6 py-4")}>
-                         <div className="flex justify-end gap-1">
-                           <Button variant="ghost" size="icon" className={cn("rounded-xl hover:bg-slate-100", isErpDensity ? "h-6 w-6" : "h-8 w-8")} onClick={() => { setEditingItem(med); setIsFormOpen(true); }}>
-                             <Edit2 className={isErpDensity ? "w-3 h-3 text-slate-500" : "w-3.5 h-3.5 text-slate-500"} />
-                           </Button>
-                           <Button variant="ghost" size="icon" className={cn("rounded-xl hover:bg-rose-50 hover:text-rose-600", isErpDensity ? "h-6 w-6" : "h-8 w-8")} onClick={async () => {
+
+                            {/* Generic Link Status / Red Link Generic Action */}
+                            {isGenericMapped ? (
+                              <span className="inline-flex items-center gap-1 text-[8px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200/60 uppercase">
+                                <Check className="w-2.5 h-2.5 text-emerald-600" /> Generic Linked ({med.molecule_code || med.moleculeId || 'Mapped'})
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setLinkingItem(med);
+                                  setLinkMoleculeCode(med.molecule_code || med.moleculeId || '');
+                                }}
+                                className="inline-flex items-center gap-1 text-[8px] font-black text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-2 py-0.2 rounded uppercase transition-all active:scale-95 shadow-2xs"
+                              >
+                                Link Generic 🔗
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                        <td className={isErpDensity ? "px-4 py-1.5" : "px-6 py-4"}><Badge variant="outline" className="font-black text-[9px] py-0 border-slate-200 text-slate-700 uppercase">{med.category || '—'}</Badge></td>
+                        <td className={cn("font-bold text-slate-700 truncate max-w-[150px]", isErpDensity ? "px-4 py-1.5 text-[11px]" : "px-6 py-4 text-xs")}>{med.manufacturer || '—'}</td>
+                        <td className={cn("text-right", isErpDensity ? "px-4 py-1.5" : "px-6 py-4")}>
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" className={cn("rounded-xl hover:bg-slate-100", isErpDensity ? "h-6 w-6" : "h-8 w-8")} onClick={() => { setEditingItem(med); setIsFormOpen(true); }}>
+                              <Edit2 className={isErpDensity ? "w-3 h-3 text-slate-500" : "w-3.5 h-3.5 text-slate-500"} />
+                            </Button>
+                            <Button variant="ghost" size="icon" className={cn("rounded-xl hover:bg-rose-50 hover:text-rose-600", isErpDensity ? "h-6 w-6" : "h-8 w-8")} onClick={async () => {
                               if (confirm("Delete this product?")) {
                                 try {
                                   const docId = med._id || med.id;
@@ -666,14 +664,15 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                                   toast({ variant: 'destructive', title: "Deletion failed", description: err.message });
                                 }
                               }
-                           }}>
-                             <Trash2 className={isErpDensity ? "w-3 h-3 text-slate-400 hover:text-rose-600" : "w-3.5 h-3.5 text-slate-400 hover:text-rose-600"} />
-                           </Button>
-                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                            }}>
+                              <Trash2 className={isErpDensity ? "w-3 h-3 text-slate-400 hover:text-rose-600" : "w-3.5 h-3.5 text-slate-400 hover:text-rose-600"} />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
