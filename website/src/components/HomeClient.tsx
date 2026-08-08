@@ -290,8 +290,9 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
         <div className="flex sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 overflow-x-auto sm:overflow-visible scrollbar-hide py-1 px-0.5 sm:px-0 items-center">
           {featuredCats.map((cat: any, i: number) => {
             const style = getCategoryStyle(cat.name || '');
-            const isValidUrl = cat.imageUrl && (cat.imageUrl.startsWith('/') || cat.imageUrl.startsWith('http')) && !cat.imageUrl.includes('picsum') && !cat.imageUrl.includes('Diabetology');
-            const imgSrc = isValidUrl ? cat.imageUrl : style.image;
+            const rawUrl = (cat.imageUrl || '').replace('googleapis.coms', 'googleapis.com');
+            const isValidUrl = rawUrl && (rawUrl.startsWith('/') || rawUrl.startsWith('http')) && !rawUrl.includes('picsum');
+            const imgSrc = isValidUrl ? rawUrl : style.image;
             
             const cardAccents = [
               { color: '#7c3aed', bg: 'rgba(124,58,237,0.06)', border: 'rgba(124,58,237,0.2)' },
@@ -322,6 +323,7 @@ export default function HomeClient({ banners, categories, bestSellers, topSelect
                         fill
                         className="object-cover"
                         priority={i < 4}
+                        unoptimized
                       />
                     </div>
                   </div>
