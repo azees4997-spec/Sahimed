@@ -53,12 +53,62 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [linkingItem, setLinkingItem] = useState<any>(null);
+  const [linkMoleculeCode, setLinkMoleculeCode] = useState('');
+  const [isLinking, setIsLinking] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const suggestionRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const toggleMedicineType = async (med: any) => {
+    const isCurrentlyGeneric = (med.medicine_type || '').toLowerCase().includes('generic') || med.is_generic === true;
+    const newType = isCurrentlyGeneric ? 'Branded' : 'Generic';
+    try {
+      const docId = med._id || med.id;
+      const token = await user?.getIdToken();
+      const res = await fetch(`/api/products/${docId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ medicine_type: newType, is_generic: newType === 'Generic' })
+      });
+      if (!res.ok) throw new Error('Failed to update type');
+      toast({ title: `Updated to ${newType}`, description: `${med.name} marked as ${newType}.` });
+      refetch?.();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: "Update failed", description: err.message });
+    }
+  };
+
+  const handleSaveLink = async () => {
+    if (!linkingItem || !linkMoleculeCode.trim()) return;
+    setIsLinking(true);
+    try {
+      const docId = linkingItem._id || linkingItem.id;
+      const token = await user?.getIdToken();
+      const res = await fetch(`/api/products/${docId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ molecule_code: linkMoleculeCode.trim() })
+      });
+      if (!res.ok) throw new Error('Failed to update molecule code');
+      toast({ title: "Generic Linked!", description: `Assigned molecule code ${linkMoleculeCode.trim()} to ${linkingItem.name}.` });
+      setLinkingItem(null);
+      refetch?.();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: "Link failed", description: err.message });
+    } finally {
+      setIsLinking(false);
+    }
+  };
 
   const downloadTemplate = () => {
     const headers = [
@@ -400,10 +450,11 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
         ) : (
           /* ── Search Results Table ── */
           <div className="overflow-x-auto">
-            <table className="w-full text-left min-w-[800px]">
+            <table className="w-full text-left min-w-[900px]">
               <thead className="bg-slate-50 text-[11px] font-black text-slate-800 border-b border-slate-100 uppercase tracking-tight">
                 <tr>
                   <th className="px-6 py-4">Product Detail</th>
+                  <th className="px-6 py-4">Type & Generic Status</th>
                   <th className="px-6 py-4">Category</th>
                   <th className="px-6 py-4">Marketer / Manufacturer</th>
                   <th className="px-6 py-4 text-right">Manage</th>
@@ -422,6 +473,7 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                           </div>
                         </div>
                       </td>
+                      <td className="px-6 py-4"><div className="w-24 h-5 bg-slate-100 animate-pulse rounded-md" /></td>
                       <td className="px-6 py-4"><div className="w-20 h-5 bg-slate-100 animate-pulse rounded-md" /></td>
                       <td className="px-6 py-4"><div className="w-28 h-5 bg-slate-100 animate-pulse rounded-md" /></td>
                       <td className="px-6 py-4 text-right"><div className="w-8 h-8 bg-slate-100 animate-pulse rounded-lg ml-auto" /></td>
@@ -429,59 +481,99 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                   ))
                 ) : medicines?.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="p-12 text-center">
+                    <td colSpan={5} className="p-12 text-center">
                       <p className="font-black text-sm text-slate-700 uppercase">No products match "{debouncedSearch}"</p>
                       <p className="text-xs text-slate-400 mt-1 font-medium">Check spelling or search by generic chemical composition</p>
                     </td>
                   </tr>
-                ) : medicines?.map(med => (
-                  <tr key={med.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-11 h-11 bg-slate-50 rounded-xl p-1 border border-slate-100 flex items-center justify-center overflow-hidden shrink-0">
-                          {med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-5 h-5 text-slate-300" />}
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-extrabold text-xs text-slate-900 uppercase truncate">{med.name}</span>
-                            {med.salable_status?.toLowerCase().includes('rx') && (
-                              <Badge variant="destructive" className="h-4 text-[8px] px-1.5 font-black uppercase">Rx</Badge>
-                            )}
+                ) : medicines?.map(med => {
+                  const isGenericMed = (med.medicine_type || '').toLowerCase().includes('generic') || med.is_generic === true;
+                  const hasMoleculeCode = Boolean(med.molecule_code || med.moleculeId);
+
+                  return (
+                    <tr key={med.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 bg-slate-50 rounded-xl p-1 border border-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                            {med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className="w-5 h-5 text-slate-300" />}
                           </div>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase">{med.sku} {med.saltComposition && `• ${med.saltComposition}`}</span>
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-extrabold text-xs text-slate-900 uppercase truncate">{med.name}</span>
+                              {med.salable_status?.toLowerCase().includes('rx') && (
+                                <Badge variant="destructive" className="h-4 text-[8px] px-1.5 font-black uppercase">Rx</Badge>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase">{med.sku} {med.saltComposition && `• ${med.saltComposition}`}</span>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4"><Badge variant="outline" className="font-black text-[10px] py-0.5 border-slate-200 text-slate-700 uppercase">{med.category || '—'}</Badge></td>
-                    <td className="px-6 py-4 font-bold text-xs text-slate-700">{med.manufacturer || '—'}</td>
-                    <td className="px-6 py-4 text-right">
-                       <div className="flex justify-end gap-1">
-                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl hover:bg-slate-100" onClick={() => { setEditingItem(med); setIsFormOpen(true); }}>
-                           <Edit2 className="w-3.5 h-3.5 text-slate-500" />
-                         </Button>
-                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl hover:bg-rose-50 hover:text-rose-600" onClick={async () => {
-                            if (confirm("Delete this product?")) {
-                              try {
-                                const docId = med._id || med.id;
-                                const token = await user?.getIdToken();
-                                const res = await fetch(`/api/products/${docId}`, { 
-                                  method: 'DELETE',
-                                  headers: { 'Authorization': `Bearer ${token}` }
-                                });
-                                if (!res.ok) throw new Error('Failed to delete');
-                                toast({ title: "Product deleted" });
-                                refetch?.();
-                              } catch (err: any) {
-                                toast({ variant: 'destructive', title: "Deletion failed", description: err.message });
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1.5 items-start">
+                          {/* 1-Tap Branded / Generic Toggle Badge */}
+                          <button
+                            onClick={() => toggleMedicineType(med)}
+                            title="Click to toggle Branded / Generic"
+                            className={cn(
+                              "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all border active:scale-95 flex items-center gap-1 shadow-2xs",
+                              isGenericMed
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                                : "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                            )}
+                          >
+                            {isGenericMed ? '💊 Generic' : '🏷️ Branded'}
+                            <span className="text-[8px] opacity-60">⇄</span>
+                          </button>
+
+                          {/* Generic Link Status / Link Generic Action */}
+                          {hasMoleculeCode ? (
+                            <span className="inline-flex items-center gap-1 text-[8.5px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60 uppercase">
+                              <Check className="w-2.5 h-2.5 text-emerald-600" /> Generic Linked ({med.molecule_code || med.moleculeId})
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setLinkingItem(med);
+                                setLinkMoleculeCode(med.molecule_code || med.moleculeId || '');
+                              }}
+                              className="inline-flex items-center gap-1 text-[8.5px] font-black text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 px-2.5 py-0.5 rounded-md uppercase transition-all active:scale-95 shadow-2xs"
+                            >
+                              Link Generic 🔗
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4"><Badge variant="outline" className="font-black text-[10px] py-0.5 border-slate-200 text-slate-700 uppercase">{med.category || '—'}</Badge></td>
+                      <td className="px-6 py-4 font-bold text-xs text-slate-700">{med.manufacturer || '—'}</td>
+                      <td className="px-6 py-4 text-right">
+                         <div className="flex justify-end gap-1">
+                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl hover:bg-slate-100" onClick={() => { setEditingItem(med); setIsFormOpen(true); }}>
+                             <Edit2 className="w-3.5 h-3.5 text-slate-500" />
+                           </Button>
+                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl hover:bg-rose-50 hover:text-rose-600" onClick={async () => {
+                              if (confirm("Delete this product?")) {
+                                try {
+                                  const docId = med._id || med.id;
+                                  const token = await user?.getIdToken();
+                                  const res = await fetch(`/api/products/${docId}`, { 
+                                    method: 'DELETE',
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                  });
+                                  if (!res.ok) throw new Error('Failed to delete');
+                                  toast({ title: "Product deleted" });
+                                  refetch?.();
+                                } catch (err: any) {
+                                  toast({ variant: 'destructive', title: "Deletion failed", description: err.message });
+                                }
                               }
-                            }
-                         }}>
-                           <Trash2 className="w-3.5 h-3.5 text-slate-400 hover:text-rose-600" />
-                         </Button>
-                       </div>
-                    </td>
-                  </tr>
-                ))}
+                           }}>
+                             <Trash2 className="w-3.5 h-3.5 text-slate-400 hover:text-rose-600" />
+                           </Button>
+                         </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -875,6 +967,53 @@ function ItemForm({ initialData, onSuccess }: { initialData?: any, onSuccess: ()
         </TabsContent>
       </Tabs>
       <Button type="submit" className="w-full h-16 rounded-full font-black bg-primary text-white">Save Product Profile</Button>
-    </form>
+      <Dialog open={Boolean(linkingItem)} onOpenChange={(open) => { if (!open) setLinkingItem(null); }}>
+        <DialogContent className="rounded-[32px] sm:max-w-md p-6 bg-white border border-slate-100 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black font-outfit uppercase tracking-tight text-slate-900">
+              Link Generic Substitute
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 font-medium mt-1">
+              Assign or update the Molecule Code for <span className="font-extrabold text-slate-800">{linkingItem?.name}</span> to pair it with its generic equivalent.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+              <p className="text-[10px] font-black uppercase text-slate-400">Current Composition</p>
+              <p className="text-xs font-bold text-slate-800 italic">{linkingItem?.saltComposition || linkingItem?.medical_info?.composition || 'No composition listed'}</p>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500">Molecule Code *</Label>
+              <Input
+                value={linkMoleculeCode}
+                onChange={(e) => setLinkMoleculeCode(e.target.value)}
+                placeholder="e.g. MOL007410"
+                className="rounded-2xl h-12 bg-slate-50 border-none font-bold text-slate-900"
+              />
+              <p className="text-[10px] text-slate-400 font-medium">Both Branded & Generic products sharing this Molecule Code will display in Rule 1 Side-by-Side PDP comparison.</p>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setLinkingItem(null)}
+                className="flex-1 h-12 rounded-full font-bold text-xs border-slate-200"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveLink}
+                disabled={isLinking || !linkMoleculeCode.trim()}
+                className="flex-1 h-12 rounded-full font-black text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-md uppercase tracking-wider"
+              >
+                {isLinking ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Pair & Save 🔗'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
