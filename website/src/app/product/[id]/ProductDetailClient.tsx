@@ -399,22 +399,22 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 </div>
               </div>
 
-              {/* 2. Side-by-Side Dual Product Cards (Symmetrical Image Alignment & Compact Fits-Screen Design) */}
+              {/* 2. Side-by-Side Dual Product Cards (100% Symmetrical Image Alignment & Fits Mobile Screen) */}
               <div className="grid grid-cols-2 gap-2 sm:gap-5 items-stretch">
                 
                 {/* LEFT CARD: Prescribed Product */}
                 <div className="bg-white rounded-2xl sm:rounded-3xl p-2.5 sm:p-5 border sm:border-2 border-slate-200 shadow-md flex flex-col justify-between space-y-2.5 sm:space-y-4">
                   <div>
-                    {/* Header Pill to match right card image height alignment */}
-                    <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                    {/* Header Bar - Identical h-6 for Symmetrical Image Alignment */}
+                    <div className="h-6 flex items-center justify-between mb-2">
                       <span className="bg-slate-100 text-slate-700 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 sm:px-3 py-0.5 rounded-full border border-slate-200">
                         PRESCRIBED
                       </span>
                     </div>
 
                     {/* 1. Symmetrical Image Box Sizing */}
-                    <div className="bg-slate-50/80 rounded-xl sm:rounded-2xl border border-slate-200 p-1 sm:p-2 mb-2 sm:mb-3 flex flex-col items-center">
-                      <div className="relative w-full h-24 sm:h-40 bg-white rounded-lg sm:rounded-xl border border-slate-200/60 p-1 overflow-hidden shadow-2xs flex items-center justify-center">
+                    <div className="bg-slate-50/80 rounded-xl border border-slate-200 p-1.5 mb-2 flex flex-col items-center">
+                      <div className="relative w-full h-28 sm:h-36 bg-white rounded-lg border border-slate-200/60 p-1 overflow-hidden shadow-2xs flex items-center justify-center">
                         <Image
                           src={images[currentImageIndex] || '/images/medicine-placeholder.png'}
                           alt={product?.name || ''}
@@ -423,15 +423,15 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                           priority
                         />
                       </div>
-                      {/* Multi-Image Thumbnail Selector Strip */}
+                      {/* Multi-Image Selector (Only if multiple images exist) */}
                       {images.length > 1 && (
-                        <div className="flex items-center justify-center gap-1 sm:gap-2 mt-1 sm:mt-2 overflow-x-auto max-w-full pb-0.5">
+                        <div className="flex items-center justify-center gap-1 mt-1.5 overflow-x-auto max-w-full pb-0.5">
                           {images.map((img, idx) => (
                             <button
                               key={idx}
                               onClick={() => setCurrentImageIndex(idx)}
-                              className={`relative w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-lg border overflow-hidden shrink-0 transition-all ${
-                                currentImageIndex === idx ? 'border-primary ring-2 ring-primary/20 scale-105' : 'border-slate-200 opacity-60 hover:opacity-100'
+                              className={`relative w-7 h-7 rounded-md border overflow-hidden shrink-0 transition-all ${
+                                currentImageIndex === idx ? 'border-primary ring-2 ring-primary/20 scale-105' : 'border-slate-200 opacity-60'
                               }`}
                             >
                               <Image src={img} alt={`Thumbnail ${idx}`} fill className="object-contain p-0.5 bg-white" />
@@ -441,9 +441,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       )}
                     </div>
 
-                    {/* 2. Vertical Clean Line Items (No Label Overlap) */}
+                    {/* 2. Vertical Line Items */}
                     <div className="space-y-1.5">
-                      <h4 className="text-[11.5px] sm:text-base font-black text-slate-900 uppercase leading-tight line-clamp-2 min-h-[1.8rem]">{product?.name}</h4>
+                      <h4 className="text-[11px] sm:text-base font-black text-slate-900 uppercase leading-tight line-clamp-2 min-h-[1.8rem]">{product?.name}</h4>
                       
                       <div className="pt-1 border-t border-slate-100 space-y-1 text-[10px] sm:text-xs">
                         <div>
@@ -474,36 +474,34 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       </p>
                     </div>
 
-                    {/* Single Add To Cart Button (Clean, No Container Overflow) */}
+                    {/* Left CTA Button (No text overflow) */}
                     <Button
                       onClick={() => addCurrentToCart(1)}
-                      className="w-full h-10 sm:h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-[10.5px] sm:text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-1.5"
+                      className="w-full h-10 sm:h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-[10px] sm:text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center px-1"
                     >
-                      <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                      <ShoppingCart className="w-3.5 h-3.5 mr-1 shrink-0" />
                       <span className="truncate">Add To Cart</span>
                     </Button>
                   </div>
                 </div>
 
-                {/* RIGHT CARD: ✨ SAHI RECOMMENDATION (High Highlighted VIP Winner) */}
+                {/* RIGHT CARD: ✨ SAHI RECOMMENDATION */}
                 <div className="bg-gradient-to-b from-emerald-100/90 via-white to-teal-50/80 rounded-2xl sm:rounded-3xl p-2.5 sm:p-5 border-2 sm:border-4 border-emerald-500 shadow-[0_15px_40px_rgba(16,185,129,0.25)] flex flex-col justify-between space-y-2.5 sm:space-y-4 relative overflow-hidden group">
                   
-                  {/* Floating Gold Best Value Ribbon */}
-                  <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-400 via-amber-500 to-amber-400 text-slate-950 text-[8.5px] sm:text-xs font-black px-2 sm:px-3 py-0.5 sm:py-1 rounded-bl-lg sm:rounded-bl-xl uppercase tracking-widest shadow-md flex items-center gap-0.5 z-20">
-                    👑 BEST VALUE
-                  </div>
-
                   <div>
-                    {/* Header Tag (Exact Symmetrical Match with Left Card) */}
-                    <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                      <span className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 sm:px-3 py-0.5 rounded-full shadow-md flex items-center gap-1 border border-emerald-400">
+                    {/* Header Bar - Identical h-6 for Symmetrical Image Alignment */}
+                    <div className="h-6 flex items-center justify-between mb-2">
+                      <span className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 sm:px-3 py-0.5 rounded-full shadow-md border border-emerald-400">
                         ✨ SAHI RECOMMENDATION
+                      </span>
+                      <span className="bg-amber-400 text-slate-950 text-[8.5px] font-black px-1.5 py-0.5 rounded-md uppercase shadow-2xs">
+                        👑 BEST VALUE
                       </span>
                     </div>
 
                     {/* 1. Symmetrical Image Box Sizing */}
-                    <div className="bg-emerald-50/80 rounded-xl sm:rounded-2xl border border-emerald-200 p-1 sm:p-2 mb-2 sm:mb-3 flex flex-col items-center">
-                      <div className="relative w-full h-24 sm:h-40 bg-white rounded-lg sm:rounded-xl border border-emerald-200/80 p-1.5 overflow-hidden shadow-xs flex items-center justify-center">
+                    <div className="bg-emerald-50/80 rounded-xl border border-emerald-200 p-1.5 mb-2 flex flex-col items-center">
+                      <div className="relative w-full h-28 sm:h-36 bg-white rounded-lg border border-emerald-200/80 p-1 overflow-hidden shadow-xs flex items-center justify-center">
                         <Image
                           src={genericAlt?.imageUrl || genericAlt?.images?.[0] || images[0]}
                           alt={genericAlt?.product_name || genericAlt?.name}
@@ -512,11 +510,11 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                           priority
                         />
                       </div>
-                      {/* Multi-Image Thumbnail Selector Strip */}
-                      {(genericAlt?.images?.length || 0) > 1 && (
-                        <div className="flex items-center justify-center gap-1 sm:gap-2 mt-1 sm:mt-2 overflow-x-auto max-w-full pb-0.5">
+                      {/* Multi-Image Selector (Only if multiple images exist) */}
+                      {(genericAlt?.images && genericAlt.images.length > 1) && (
+                        <div className="flex items-center justify-center gap-1 mt-1.5 overflow-x-auto max-w-full pb-0.5">
                           {genericAlt.images.map((img: string, idx: number) => (
-                            <div key={idx} className="relative w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-lg border border-emerald-300 overflow-hidden shrink-0 bg-white">
+                            <div key={idx} className="relative w-7 h-7 rounded-md border border-emerald-300 overflow-hidden shrink-0 bg-white">
                               <Image src={img} alt={`Generic Thumbnail ${idx}`} fill className="object-contain p-0.5" />
                             </div>
                           ))}
@@ -524,9 +522,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       )}
                     </div>
 
-                    {/* 2. Vertical Clean Line Items (No Label Overlap) */}
+                    {/* 2. Vertical Line Items */}
                     <div className="space-y-1.5">
-                      <h4 className="text-[11.5px] sm:text-base font-black text-slate-900 uppercase leading-tight line-clamp-2 min-h-[1.8rem]">{genericAlt?.product_name || genericAlt?.name}</h4>
+                      <h4 className="text-[11px] sm:text-base font-black text-slate-900 uppercase leading-tight line-clamp-2 min-h-[1.8rem]">{genericAlt?.product_name || genericAlt?.name}</h4>
                       
                       <div className="pt-1 border-t border-emerald-100 space-y-1 text-[10px] sm:text-xs">
                         <div>
@@ -549,7 +547,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   </div>
 
                   <div className="pt-2 border-t border-emerald-200 space-y-2">
-                    {/* Price & Unit Cost + Prominent Discount Percentage */}
+                    {/* Price & Unit Cost + Strikeout Prescribed Benchmark MRP */}
                     <div>
                       <div className="flex flex-wrap items-baseline gap-1 sm:gap-2">
                         <span className="text-lg sm:text-3xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
@@ -563,13 +561,13 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       </p>
                     </div>
 
-                    {/* Single Add To Cart CTA Button (Clean, No Container Overflow) */}
+                    {/* Right CTA Button (Crisp text, No Container Overflow) */}
                     <Button
                       onClick={() => addToCart({ ...genericAlt, id: genericAlt._id || genericAlt.id, price: altPrice, mrp: altMrp })}
-                      className="w-full h-10 sm:h-12 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-[10.5px] sm:text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/30 active:scale-98 transition-all flex items-center justify-center gap-1 sm:gap-1.5 border border-emerald-300"
+                      className="w-full h-10 sm:h-12 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-[10px] sm:text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/30 active:scale-98 transition-all flex items-center justify-center px-1 border border-emerald-300"
                     >
-                      <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                      <span className="truncate">🚀 Switch & Save</span>
+                      <ShoppingCart className="w-3.5 h-3.5 mr-1 shrink-0" />
+                      <span className="truncate">Switch & Save</span>
                     </Button>
                   </div>
                 </div>
