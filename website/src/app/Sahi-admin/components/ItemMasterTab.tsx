@@ -153,6 +153,25 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
     window.URL.revokeObjectURL(url);
   };
 
+  const handleMigrateIsGeneric = async () => {
+    try {
+      const token = await user?.getIdToken();
+      const res = await fetch('/api/admin/migrate-is-generic', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Migration failed');
+      toast({
+        title: "MongoDB Sync Complete! 🎉",
+        description: `Populated is_generic field across MongoDB Product Master collection: ${data.genericProductsUpdated} Generics updated, ${data.brandedProductsUpdated} Branded updated.`
+      });
+      refetch?.();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: "Sync failed", description: err.message });
+    }
+  };
+
   const handleExport = (selectedFields: string[]) => {
     const queryParams = new URLSearchParams({
       fields: selectedFields.join(',')
@@ -420,6 +439,13 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
             )}
           >
             {isErpDensity ? '📊 ERP Compact View' : '📑 Standard View'}
+          </Button>
+          <Button 
+            onClick={handleMigrateIsGeneric} 
+            variant="outline" 
+            className="rounded-full h-14 px-6 font-black text-[12px] border-2 border-emerald-500/30 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 uppercase tracking-wider transition-all active:scale-95 shadow-xs"
+          >
+            ⚡ Sync is_generic DB Field
           </Button>
           <Button onClick={() => setIsExportOpen(true)} variant="outline" className="rounded-full h-14 px-8 font-black text-[12px] border-2 gap-3 uppercase tracking-widest hover:bg-white transition-all active:scale-95">
             <Download className="w-4 h-4" /> Export Matrix
