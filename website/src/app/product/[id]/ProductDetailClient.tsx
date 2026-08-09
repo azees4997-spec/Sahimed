@@ -355,15 +355,15 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
 
         {/* ── Trust Strip ─────────────────────────────────────────── */}
         <div className="bg-white border-b border-slate-100 hidden sm:block">
-          <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-3">
-            <div className="flex items-center justify-between gap-6">
-              <TrustBadge icon={ShieldCheck} label="100% Genuine Medicines" sub="Licensed & verified sources" />
-              <div className="w-px h-8 bg-slate-100 shrink-0" />
+          <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-2.5">
+            <div className="flex items-center justify-between gap-4">
+              <TrustBadge icon={ShieldCheck} label="100% Genuine" sub="Licensed sources" />
+              <div className="w-px h-6 bg-slate-100 shrink-0" />
               <TrustBadge icon={Truck} label="Express Delivery" sub="Same day dispatch" />
-              <div className="w-px h-8 bg-slate-100 shrink-0" />
-              <TrustBadge icon={Star} label="Trusted by 50,000+" sub="Happy patients across India" />
-              <div className="w-px h-8 bg-slate-100 shrink-0" />
-              <TrustBadge icon={Clock} label="24/7 Pharmacist Support" sub="Always here to help" />
+              <div className="w-px h-6 bg-slate-100 shrink-0" />
+              <TrustBadge icon={Star} label="Trusted by 50k+" sub="Happy patients" />
+              <div className="w-px h-6 bg-slate-100 shrink-0" />
+              <TrustBadge icon={Clock} label="24/7 Support" sub="Always here to help" />
             </div>
           </div>
         </div>
@@ -386,26 +386,21 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
           {showComparison && genericAlt && (
             <div className="space-y-4 my-3 animate-in fade-in zoom-in-95 duration-500">
               
-              {/* 1. Small Lightweight Center-Aligned Top Smart Switch Badge */}
-              <div className="bg-emerald-50 rounded-xl px-3 py-2.5 text-emerald-950 shadow-2xs flex flex-col items-center justify-center text-center gap-1 border border-emerald-200/80">
-                <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                  <span className="bg-emerald-600 text-white text-[9.5px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider shrink-0">
-                    ⚡ SAHI SWITCH
+              {/* 1. Green Hero Banner matching user attached screenshot 2 */}
+              <div className="bg-emerald-600 text-white rounded-xl px-3 py-2.5 shadow-md flex items-center justify-center text-center overflow-hidden">
+                <div className="flex items-center justify-center gap-1.5 min-w-0">
+                  <Check className="w-4 h-4 bg-white/20 text-white rounded-full p-0.5 shrink-0" />
+                  <span className="text-[9.5px] sm:text-xs font-black uppercase tracking-tight text-white truncate">
+                    CLINICAL BIO-EQUIVALENCE MATCH · 100% EXACT SALT MATCH
                   </span>
-                  <span className="text-xs font-bold text-emerald-900 leading-tight">
-                    Save ₹{(unitPrice - altPrice).toFixed(0)} ({altSavePct}% OFF) with Exact Generic
-                  </span>
-                </div>
-                <div className="text-[11px] font-extrabold text-emerald-800 pt-0.5">
-                  Active Salt: <span className="underline decoration-emerald-500">{product?.composition || 'Desvenlafaxine (100mg)'}</span>
                 </div>
               </div>
 
-              {/* 2. Side-by-Side Dual Product Cards (100% Symmetrical Image Alignment & Fits Mobile Screen) */}
+              {/* 2. Side-by-Side Dual Product Cards (100% Symmetrical Line Alignment & Fits Mobile Screen) */}
               <div className="grid grid-cols-2 gap-2.5 sm:gap-5 items-stretch">
                 
                 {/* LEFT CARD: Prescribed Product (YOUR BRAND) */}
-                <div className="bg-white rounded-2xl sm:rounded-3xl p-2.5 sm:p-5 border sm:border-2 border-slate-200 shadow-md flex flex-col justify-between space-y-3 sm:space-y-4 min-h-[420px]">
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-2.5 sm:p-5 border sm:border-2 border-slate-200 shadow-md flex flex-col justify-between space-y-3 sm:space-y-4">
                   <div>
                     {/* Header Bar - YOUR BRAND Badge */}
                     <div className="h-6 flex items-center justify-between mb-2">
@@ -445,28 +440,33 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       </div>
                     </div>
 
-                    {/* 2. Vertical Line Items */}
+                    {/* 2. Vertical Line Items with Symmetrical Min-Heights */}
                     <div className="space-y-1.5">
-                      <h4 className="text-[11px] sm:text-base font-black text-slate-900 uppercase leading-tight line-clamp-2 min-h-[1.8rem]">{product?.name}</h4>
+                      <h4 className="text-[11px] sm:text-base font-black text-slate-900 uppercase leading-tight line-clamp-2 min-h-[2.4rem] flex items-center">{product?.name}</h4>
                       
-                      <div className="pt-1 border-t border-slate-100 space-y-1 text-[10px] sm:text-xs">
-                        <div>
+                      <div className="pt-1 border-t border-slate-100 space-y-1.5 text-[10px] sm:text-xs">
+                        <div className="min-h-[2.8rem]">
                           <span className="text-[8.5px] sm:text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block">Salt Composition</span>
                           <span className="text-slate-800 font-extrabold italic leading-tight block line-clamp-2">{product?.composition || 'Active Chemical Salt'}</span>
                         </div>
-                        <div>
+                        <div className="min-h-[2rem]">
                           <span className="text-[8.5px] sm:text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block">Pack Size</span>
                           <span className="text-slate-800 font-bold block">{product?.packagingDetail || 'Strip of 10 tablets'}</span>
                         </div>
-                        <div>
+                        <div className="min-h-[2.4rem]">
                           <span className="text-[8.5px] sm:text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block">Marketer</span>
-                          <span className="text-slate-800 font-bold block leading-tight break-words line-clamp-1">{product?.marketerName || product?.manufacturer || 'Sun Pharma'}</span>
+                          <span className="text-slate-800 font-bold block leading-tight break-words line-clamp-2">{product?.marketerName || product?.manufacturer || 'Sun Pharma'}</span>
+                        </div>
+                        <div className="min-h-[1.8rem]">
+                          <span className="text-[8.5px] sm:text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block">Quality Standard</span>
+                          <span className="text-slate-800 font-bold block text-[10px] sm:text-xs">🛡️ WHO & FDA Approved</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-150 space-y-2">
+                  {/* Perfectly Aligned Pricing Divider Line */}
+                  <div className="pt-2 border-t border-slate-200 space-y-2">
                     {/* Price & Unit Cost + Educational Markup Note */}
                     <div>
                       <div className="flex items-baseline gap-1 sm:gap-2">
@@ -492,20 +492,15 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   </div>
                 </div>
 
-                {/* RIGHT CARD: ✨ SAHI RECOMMENDATION (Top Corner Discount Badge) */}
-                <div className="bg-gradient-to-b from-emerald-100/90 via-white to-teal-50/80 rounded-2xl sm:rounded-3xl p-2.5 sm:p-5 border-2 sm:border-4 border-emerald-500 shadow-[0_15px_40px_rgba(16,185,129,0.25)] flex flex-col justify-between space-y-3 sm:space-y-4 relative overflow-hidden group min-h-[420px]">
+                {/* RIGHT CARD: ✨ SAHI RECOMMENDATION */}
+                <div className="bg-gradient-to-b from-emerald-100/90 via-white to-teal-50/80 rounded-2xl sm:rounded-3xl p-2.5 sm:p-5 border-2 sm:border-4 border-emerald-500 shadow-[0_15px_40px_rgba(16,185,129,0.25)] flex flex-col justify-between space-y-3 sm:space-y-4 relative overflow-hidden group">
                   
                   <div>
-                    {/* Header Bar - Clean SAHI RECOMMENDATION + Top Corner Discount % Badge */}
-                    <div className="h-6 flex items-center justify-between mb-2 gap-1">
+                    {/* Header Bar - Clean SAHI RECOMMENDATION */}
+                    <div className="h-6 flex items-center justify-between mb-2">
                       <span className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[8.5px] sm:text-[10px] font-black uppercase tracking-wider px-2 sm:px-3 py-0.5 rounded-full shadow-md border border-emerald-400 shrink-0">
                         ✨ SAHI RECOMMENDATION
                       </span>
-                      {genericProductDiscountPct > 0 && (
-                        <span className="bg-amber-400 text-slate-950 text-[8.5px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full uppercase shadow-2xs shrink-0">
-                          {genericProductDiscountPct}% OFF
-                        </span>
-                      )}
                     </div>
 
                     {/* 1. Symmetrical Image Box Sizing */}
@@ -533,36 +528,46 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       </div>
                     </div>
 
-                    {/* 2. Vertical Line Items */}
+                    {/* 2. Vertical Line Items with Symmetrical Min-Heights */}
                     <div className="space-y-1.5">
-                      <h4 className="text-[11px] sm:text-base font-black text-slate-900 uppercase leading-tight line-clamp-2 min-h-[1.8rem]">{genericAlt?.product_name || genericAlt?.name}</h4>
+                      <h4 className="text-[11px] sm:text-base font-black text-slate-900 uppercase leading-tight line-clamp-2 min-h-[2.4rem] flex items-center">{genericAlt?.product_name || genericAlt?.name}</h4>
                       
-                      <div className="pt-1 border-t border-emerald-100 space-y-1 text-[10px] sm:text-xs">
-                        <div>
+                      <div className="pt-1 border-t border-emerald-100 space-y-1.5 text-[10px] sm:text-xs">
+                        <div className="min-h-[2.8rem]">
                           <span className="text-[8.5px] sm:text-[9.5px] font-bold text-emerald-700 uppercase tracking-wider block">Salt Composition</span>
                           <span className="text-emerald-950 font-extrabold italic leading-tight block line-clamp-2 flex items-center gap-1">
                             <Check className="w-3 h-3 bg-emerald-600 text-white rounded-full p-0.5 shrink-0 hidden sm:inline-block" />
                             <span>✓ {product?.composition || 'Active Chemical Salt'}</span>
                           </span>
                         </div>
-                        <div>
+                        <div className="min-h-[2rem]">
                           <span className="text-[8.5px] sm:text-[9.5px] font-bold text-emerald-700 uppercase tracking-wider block">Pack Size</span>
                           <span className="text-emerald-950 font-bold block">{genericAlt?.packaging?.packaging_detail || 'Strip of 10 tablets'}</span>
                         </div>
-                        <div>
+                        <div className="min-h-[2.4rem]">
                           <span className="text-[8.5px] sm:text-[9.5px] font-bold text-emerald-700 uppercase tracking-wider block">Marketer</span>
-                          <span className="text-emerald-950 font-bold block leading-tight break-words line-clamp-1">{genericAlt?.taxonomy?.marketer_name || genericAlt?.manufacturer || 'WHO-GMP Lab'}</span>
+                          <span className="text-emerald-950 font-bold block leading-tight break-words line-clamp-2">{genericAlt?.taxonomy?.marketer_name || genericAlt?.manufacturer || 'WHO-GMP Lab'}</span>
+                        </div>
+                        <div className="min-h-[1.8rem]">
+                          <span className="text-[8.5px] sm:text-[9.5px] font-bold text-emerald-700 uppercase tracking-wider block">Quality Standard</span>
+                          <span className="text-emerald-950 font-bold block text-[10px] sm:text-xs">🛡️ WHO & FDA Approved</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
+                  {/* Perfectly Aligned Pricing Divider Line */}
                   <div className="pt-2 border-t border-emerald-200 space-y-2">
-                    {/* Price & Unit Cost + Generic Product's MRP Strikeout + Prescribed Savings */}
+                    {/* Price & Unit Cost + Prominent 100% Visible Mobile Discount % Badge */}
                     <div>
                       <div className="flex flex-wrap items-baseline gap-1 sm:gap-2">
                         <span className="text-lg sm:text-3xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
                         {altMrp > altPrice && <span className="text-[9.5px] sm:text-xs text-slate-400 line-through font-bold">MRP ₹{altMrp}</span>}
+                        {genericProductDiscountPct > 0 && (
+                          <span className="bg-amber-400 text-slate-950 text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase shadow-2xs shrink-0">
+                            {genericProductDiscountPct}% OFF
+                          </span>
+                        )}
                       </div>
                       <p className="text-[9px] sm:text-[11px] text-emerald-900 font-bold mt-0.5">
                         ₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
@@ -586,11 +591,6 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 </div>
               </div>
 
-              {/* 3. Assurance Badges Row */}
-              <div className="grid grid-cols-3 gap-3 text-center bg-white p-5 rounded-3xl border border-slate-200 shadow-md">
-                <div className="flex flex-col items-center space-y-1.5 p-1">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                    <ShieldCheck className="w-6 h-6" />
                   </div>
                   <span className="text-xs font-black uppercase text-slate-900 leading-tight">100% Bio-Equivalent Quality</span>
                   <span className="text-[10px] text-slate-500 font-semibold hidden sm:block">Identical therapeutic action</span>
