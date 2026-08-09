@@ -24,33 +24,36 @@ function createClient(): Promise<MongoClient> {
   return client.connect()
     .then((c) => {
       console.log("[MongoDB Intelligence] Connected successfully.");
-      // Automatically ensure critical performance indexes on Product Master & Category Master
-      const db = c.db('sahimed');
-      db.collection('Product Master').createIndexes([
-        { key: { 'seo.url_slug': 1 } },
-        { key: { product_id: 1 } },
-        { key: { molecule_code: 1 } },
-        { key: { is_generic: 1 } },
-        { key: { isGeneric: 1 } },
-        { key: { product_name: 1 } },
-        { key: { 'taxonomy.category_name': 1 } },
-        { key: { salable_status: 1, 'taxonomy.category_name': 1 } },
-        { key: { salable_status: 1, molecule_code: 1 } },
-        { key: { salable_status: 1, medicine_type: 1 } },
-        { key: { salable_status: 1, product_name: 1 } },
-        { key: { 'packaging.mrp': 1 } },
-        { key: { selling_price: 1 } },
-        { key: { salable_status: 1, selling_price: 1 } }
-      ]).catch((e) => console.warn("[MongoDB Index Warning]", e.message));
-      db.collection('Category Master').createIndexes([
-        { key: { showOnHomepage: 1 } },
-        { key: { category: 1 } }
-      ]).catch((e) => console.warn("[MongoDB Index Warning]", e.message));
+      // Ensure critical performance indexes asynchronously in background without blocking connection return
+      setTimeout(() => {
+        try {
+          const db = c.db('sahimed');
+          db.collection('Product Master').createIndexes([
+            { key: { 'seo.url_slug': 1 } },
+            { key: { product_id: 1 } },
+            { key: { molecule_code: 1 } },
+            { key: { is_generic: 1 } },
+            { key: { isGeneric: 1 } },
+            { key: { product_name: 1 } },
+            { key: { 'taxonomy.category_name': 1 } },
+            { key: { salable_status: 1, 'taxonomy.category_name': 1 } },
+            { key: { salable_status: 1, molecule_code: 1 } },
+            { key: { salable_status: 1, medicine_type: 1 } },
+            { key: { salable_status: 1, product_name: 1 } },
+            { key: { 'packaging.mrp': 1 } },
+            { key: { selling_price: 1 } },
+            { key: { salable_status: 1, selling_price: 1 } }
+          ]).catch((e) => console.warn("[MongoDB Index Warning]", e.message));
+          db.collection('Category Master').createIndexes([
+            { key: { showOnHomepage: 1 } },
+            { key: { category: 1 } }
+          ]).catch((e) => console.warn("[MongoDB Index Warning]", e.message));
+        } catch (e) {}
+      }, 200);
       return c;
     })
     .catch((err) => {
       console.error("[MongoDB Intelligence] CRITICAL connection error:", err);
-      // Clean up global promise if connection fails
       const globalWithMongo = global as any;
       delete globalWithMongo._mongoClientPromise;
       throw err;
@@ -64,7 +67,6 @@ const globalWithMongo = global as typeof globalThis & {
 
 // Main function to retrieve healthy client
 async function getConnectedClient(): Promise<MongoClient> {
-  // If no client promise exists at all, create a new one
   if (!globalWithMongo._mongoClientPromise) {
     globalWithMongo._mongoClientPromise = createClient();
   }
@@ -72,11 +74,9 @@ async function getConnectedClient(): Promise<MongoClient> {
   try {
     const clientInstance = await globalWithMongo._mongoClientPromise;
     
-    // Check if the connection has died/closed due to days of inactivity
-    // topology.isConnected() checks the actual socket state
-    if (!clientInstance.topology || !clientInstance.topology.isConnected()) {
-      console.warn("[MongoDB Intelligence] Cached connection was dead/inactive. Reconnecting...");
-      // Discard the old, dead client and start a fresh connection
+    // Check if topology exists and is connected
+    if (!clientInstance.topology || typeof (clientInstance.topology as any).isConnected !== 'function' || !(clientInstance.topology as any).isConnected()) {
+      console.warn("[MongoDB Intelligence] Cached connection dead/inactive. Reconnecting...");
       delete globalWithMongo._mongoClientPromise;
       globalWithMongo._mongoClientPromise = createClient();
       return await globalWithMongo._mongoClientPromise;
@@ -84,18 +84,24 @@ async function getConnectedClient(): Promise<MongoClient> {
 
     return clientInstance;
   } catch (err) {
-    // If the promise rejected, clear it so next request retries fresh
     delete globalWithMongo._mongoClientPromise;
     throw err;
   }
 }
 
-// Export a custom Promise wrapper that behaves like the original clientPromise
-// but runs the dynamic liveness check on every await/then call.
-// Wrapping getConnectedClient() inside a standard Promise structure ensures full TypeScript compliance.
-const clientPromise = new Promise<MongoClient>((resolve, reject) => {
-  // We resolve immediately to a proxy-like thenable so standard await/then chains trigger the liveness check
-  resolve(getConnectedClient());
-}) as unknown as Promise<MongoClient>;
+// Export a dynamic Thenable Object so every `await clientPromise` triggers liveness check & auto-reconnect
+const clientPromise = {
+  then<TResult1 = MongoClient, TResult2 = never>(
+    onfulfilled?: ((value: MongoClient) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
+  ): Promise<TResult1 | TResult2> {
+    return getConnectedClient().then(onfulfilled, onrejected);
+  },
+  catch<TResult = never>(
+    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null
+  ): Promise<MongoClient | TResult> {
+    return getConnectedClient().catch(onrejected);
+  }
+} as unknown as Promise<MongoClient>;
 
 export default clientPromise;
