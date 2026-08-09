@@ -361,7 +361,11 @@ export async function GET(request: Request) {
     const finalResults = [...normalizedMolecules, ...normalizedProducts];
 
     return NextResponse.json(finalResults, {
-      headers: { 'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600' },
+      headers: { 
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+        'CDN-Cache-Control': 'no-store',
+        'Vercel-CDN-Cache-Control': 'no-store'
+      },
     });
 
   } catch (err: any) {

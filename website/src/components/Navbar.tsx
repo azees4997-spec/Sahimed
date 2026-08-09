@@ -418,7 +418,10 @@ export default function Navbar() {
     const fetchSuggestions = async () => {
       setIsSearching(true);
       try {
-        const resMeds = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=20`, { signal: controller.signal });
+        const resMeds = await fetch(`/api/products?q=${encodeURIComponent(term)}&limit=20`, { 
+          cache: 'no-store',
+          signal: controller.signal 
+        });
         const mongoMeds = resMeds.ok ? await resMeds.json() : [];
 
         const normalizedMeds = Array.isArray(mongoMeds) ? mongoMeds.map((m: any) => ({
