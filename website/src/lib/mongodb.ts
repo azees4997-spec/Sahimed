@@ -24,6 +24,21 @@ function createClient(): Promise<MongoClient> {
   return client.connect()
     .then((c) => {
       console.log("[MongoDB Intelligence] Connected successfully.");
+      // Automatically ensure critical performance indexes on Product Master & Category Master
+      const db = c.db('sahimed');
+      db.collection('Product Master').createIndexes([
+        { key: { 'seo.url_slug': 1 } },
+        { key: { product_id: 1 } },
+        { key: { molecule_code: 1 } },
+        { key: { is_generic: 1 } },
+        { key: { isGeneric: 1 } },
+        { key: { product_name: 1 } },
+        { key: { 'taxonomy.category_name': 1 } }
+      ]).catch((e) => console.warn("[MongoDB Index Warning]", e.message));
+      db.collection('Category Master').createIndexes([
+        { key: { showOnHomepage: 1 } },
+        { key: { category: 1 } }
+      ]).catch((e) => console.warn("[MongoDB Index Warning]", e.message));
       return c;
     })
     .catch((err) => {

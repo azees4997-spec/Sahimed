@@ -32,4 +32,11 @@ class SahimedColors {
   // Text Colors
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF475569);
+
+  // Standard Color Helpers
+  static const Color emerald500 = Color(0xFF10B981);
+  static const Color emerald600 = Color(0xFF059669);
+  static const Color rose500 = Color(0xFFF43F5E);
+  static const Color rose600 = Color(0xFFE11D48);
+  static const Color amber500 = Color(0xFFF59E0B);
 }

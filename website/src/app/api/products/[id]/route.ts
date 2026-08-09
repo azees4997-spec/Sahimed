@@ -3,8 +3,7 @@ import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 300;
 
 export async function GET(
   request: Request,
@@ -110,7 +109,9 @@ export async function GET(
       mappedGeneric: mappedGeneric,
     };
 
-    return NextResponse.json(normalized);
+    return NextResponse.json(normalized, {
+      headers: { 'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600' }
+    });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

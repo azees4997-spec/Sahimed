@@ -428,168 +428,122 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 </div>
               </div>
 
-              {/* 2. Side-by-Side Dual Product Cards (100% Light Theme - Ultra-High Contrast & Clear Buttons) */}
+              {/* 2. Side-by-Side Dual Product Cards (Ultra-Clean, Minimalist, 1-CTA Button Design) */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
                 
-                {/* LEFT CARD: Prescribed Expensive Brand (Crisp Light Card with Rich Specs) */}
-                <div className="bg-white rounded-[32px] p-6 sm:p-8 border-2 border-slate-200 shadow-md flex flex-col justify-between space-y-6 relative overflow-hidden">
+                {/* LEFT CARD: Prescribed Expensive Brand (Ultra-Clean Light Card) */}
+                <div className="bg-white rounded-[32px] p-6 sm:p-7 border-2 border-slate-200 shadow-md flex flex-col justify-between space-y-5">
                   <div>
-                    <div className="flex items-center justify-between mb-5">
-                      <span className="bg-rose-50 text-rose-700 text-[10.5px] font-black uppercase tracking-wider px-4 py-1.5 rounded-full border border-rose-200 flex items-center gap-1.5 shadow-2xs">
-                        ❌ PRESCRIBED EXPENSIVE BRAND
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="bg-slate-100 text-slate-700 text-[10.5px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full border border-slate-200 shadow-2xs">
+                        PRESCRIBED MEDICINE
                       </span>
-                      <span className="text-xs font-extrabold text-slate-400">High Brand Markup</span>
                     </div>
 
-                    {/* Image & Details Box */}
-                    <div className="flex flex-col sm:flex-row items-center gap-5 bg-slate-50 p-5 rounded-2xl border border-slate-150 mb-5">
+                    {/* Product Main Showcase */}
+                    <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-150">
                       <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0 bg-white rounded-2xl border border-slate-200 p-2.5 overflow-hidden shadow-2xs">
-                        <Image src={images[currentImageIndex]} alt={product?.name || ''} fill className="object-contain p-2" priority />
+                        <Image src={images[currentImageIndex]} alt={product?.name || ''} fill className="object-contain p-1.5" priority />
                       </div>
                       <div className="min-w-0 flex-1 space-y-2 text-center sm:text-left">
-                        <h4 className="text-base sm:text-xl font-black text-slate-900 uppercase leading-snug">{product?.name}</h4>
+                        <h4 className="text-base sm:text-lg font-black text-slate-900 uppercase leading-snug">{product?.name}</h4>
                         <p className="text-xs text-slate-500 font-bold italic">{product?.composition || 'Active Chemical Salt'}</p>
-                        <p className="text-xs font-bold text-slate-600">By {product?.marketerName || product?.manufacturer || 'Sun Pharmaceutical Industries Ltd'}</p>
-                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-0.5">
+                        <p className="text-xs font-bold text-slate-600">By {product?.marketerName || product?.manufacturer || 'Sun Pharmaceutical'}</p>
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-1">
                           <span className="inline-block text-[10px] font-bold bg-white text-slate-600 px-3 py-1 rounded-lg border border-slate-200 shadow-2xs">
                             {product?.packagingDetail || 'Strip of 10 tablets'}
                           </span>
-                          <span className="inline-block text-[10px] font-bold bg-rose-50 text-rose-700 px-3 py-1 rounded-lg border border-rose-200">
-                            Rx Prescription
+                          <span className="inline-block text-[10px] font-bold bg-rose-50 text-rose-700 px-2.5 py-1 rounded-lg border border-rose-200">
+                            Rx Required
                           </span>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Rich Spec Breakdown */}
-                    <div className="space-y-2.5 bg-slate-50/90 rounded-2xl p-4 border border-slate-150 text-xs">
-                      <div className="flex justify-between items-center text-slate-600">
-                        <span className="font-semibold text-slate-400">Active Chemical Salt:</span>
-                        <span className="font-extrabold text-slate-800 italic truncate max-w-[180px]">{product?.composition || 'Desvenlafaxine 100mg'}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-slate-600">
-                        <span className="font-semibold text-slate-400">Dosage Form:</span>
-                        <span className="font-bold text-slate-700">Extended Release Tablet</span>
-                      </div>
-                      <div className="flex justify-between items-center text-slate-600">
-                        <span className="font-semibold text-slate-400">Primary Indication:</span>
-                        <span className="font-bold text-slate-700 truncate max-w-[180px]">{product?.treatment || 'Depression & Mood Management'}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-slate-600 pt-1 border-t border-slate-200/60">
-                        <span className="font-semibold text-slate-400">Price Structure:</span>
-                        <span className="font-extrabold text-rose-600 uppercase">Includes Marketing & Ad Markup</span>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <div className="pt-4 border-t border-slate-150 flex items-center justify-between">
+                    <div className="pt-3 border-t border-slate-150 flex items-center justify-between">
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">EXPENSIVE BRAND PRICE</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">PRESCRIBED PRICE</p>
                         <div className="flex items-baseline gap-2">
                           <span className="text-3xl sm:text-4xl font-black text-slate-950 font-outfit">₹{unitPrice}</span>
                           {unitMrp > unitPrice && <span className="text-sm text-slate-400 line-through font-bold">₹{unitMrp}</span>}
                         </div>
-                        <p className="text-[11px] text-slate-500 font-bold">₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / Unit · <span className="text-slate-400">Higher Pocket Expense</span></p>
+                        <p className="text-[11px] text-slate-500 font-bold">₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / Unit</p>
                       </div>
                     </div>
 
-                    {/* Exactly 1 Single Clean CTA Button */}
+                    {/* ONLY 1 CLEAN CTA BUTTON */}
                     <Button
                       onClick={() => addCurrentToCart(1)}
                       className="w-full mt-4 h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      <span>Add Prescribed Medicine (₹{unitPrice})</span>
+                      <span>Add To Cart (₹{unitPrice})</span>
                     </Button>
-
-                    <div className="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-center text-[10.5px] font-extrabold text-slate-500">
-                      🩺 Prescribed Original Formulation
-                    </div>
                   </div>
                 </div>
 
-                {/* RIGHT CARD: ✨ Sahi Recommended 100% Equivalent Generic (MAXIMUM HIGHLIGHTED VIP CARD) */}
-                <div className="bg-gradient-to-b from-emerald-100/80 via-white to-teal-50 rounded-[32px] p-6 sm:p-8 border-4 border-emerald-500 shadow-[0_25px_60px_rgba(16,185,129,0.35)] flex flex-col justify-between space-y-6 relative overflow-hidden group">
+                {/* RIGHT CARD: ✨ SAHI RECOMMENDED GENERIC (MAXIMUM HIGHLIGHTED WINNER CARD) */}
+                <div className="bg-gradient-to-b from-emerald-100/90 via-white to-teal-50/80 rounded-[32px] p-6 sm:p-7 border-4 border-emerald-500 shadow-[0_25px_60px_rgba(16,185,129,0.35)] flex flex-col justify-between space-y-5 relative overflow-hidden group">
                   
                   {/* Floating Gold Best Value Ribbon */}
-                  <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-400 via-amber-500 to-amber-400 text-slate-950 text-xs font-black px-5 py-2 rounded-bl-2xl uppercase tracking-widest shadow-lg border-b-2 border-l-2 border-amber-300 flex items-center gap-1.5 z-20 animate-pulse">
-                    <span>👑</span> RECOMMENDED CHOICE · SAVE {altSavePct}%
+                  <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-400 via-amber-500 to-amber-400 text-slate-950 text-xs font-black px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md border-b border-l border-amber-300 flex items-center gap-1 z-20">
+                    👑 RECOMMENDED CHOICE · SAVE {altSavePct}%
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-between mb-5">
-                      <span className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-black uppercase tracking-wider px-4 py-1.5 rounded-full shadow-lg shadow-emerald-600/30 flex items-center gap-1.5 border border-emerald-400">
-                        ✨ 100% CLINICALLY EQUIVALENT · SAHI RECOMMENDED
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-black uppercase tracking-wider px-4 py-1 rounded-full shadow-md flex items-center gap-1 border border-emerald-400">
+                        ✨ SAHI RECOMMENDED GENERIC
                       </span>
                     </div>
 
-                    {/* Image & Details Box */}
-                    <div className="flex flex-col sm:flex-row items-center gap-5 bg-white p-5 rounded-2xl border-2 border-emerald-300 shadow-md mb-5 relative">
-                      <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0 bg-emerald-50/90 rounded-2xl border border-emerald-200 p-2 overflow-hidden shadow-xs">
-                        <Image src={genericAlt?.imageUrl || genericAlt?.images?.[0] || images[0]} alt={genericAlt?.product_name || genericAlt?.name} fill className="object-contain p-2" priority />
+                    {/* Product Main Showcase */}
+                    <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 sm:p-5 rounded-2xl border-2 border-emerald-300 shadow-md">
+                      <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0 bg-emerald-50 rounded-2xl border border-emerald-200 p-2 overflow-hidden shadow-xs">
+                        <Image src={genericAlt?.imageUrl || genericAlt?.images?.[0] || images[0]} alt={genericAlt?.product_name || genericAlt?.name} fill className="object-contain p-1.5" priority />
                       </div>
                       <div className="min-w-0 flex-1 space-y-2 text-center sm:text-left">
-                        <h4 className="text-base sm:text-xl font-black text-slate-900 uppercase leading-snug">{genericAlt?.product_name || genericAlt?.name}</h4>
+                        <h4 className="text-base sm:text-lg font-black text-slate-900 uppercase leading-snug">{genericAlt?.product_name || genericAlt?.name}</h4>
                         <p className="text-xs text-emerald-700 font-black italic flex items-center justify-center sm:justify-start gap-1 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-                          <Check className="w-4 h-4 bg-emerald-600 text-white rounded-full p-0.5" /> 100% Identical Active Chemical Salt
+                          <Check className="w-4 h-4 bg-emerald-600 text-white rounded-full p-0.5" /> 100% Exact Active Salt Match
                         </p>
-                        <p className="text-xs font-extrabold text-emerald-800 truncate">By {genericAlt?.taxonomy?.marketer_name || genericAlt?.manufacturer || 'Licensed WHO-GMP Quality Manufacturer'}</p>
-                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-0.5">
-                          <span className="inline-block text-[10px] font-bold bg-emerald-100 text-emerald-900 px-3.5 py-1 rounded-lg border border-emerald-200 shadow-2xs">
+                        <p className="text-xs font-extrabold text-emerald-800 truncate">By {genericAlt?.taxonomy?.marketer_name || genericAlt?.manufacturer || 'Licensed WHO-GMP Manufacturer'}</p>
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-1">
+                          <span className="inline-block text-[10px] font-bold bg-emerald-100 text-emerald-900 px-3 py-1 rounded-lg border border-emerald-200 shadow-2xs">
                             {genericAlt?.packaging?.packaging_detail || 'Strip of 10 tablets'}
                           </span>
-                          <span className="inline-block text-[10px] font-black bg-amber-400 text-slate-950 px-3 py-1 rounded-lg shadow-2xs">
+                          <span className="inline-block text-[10px] font-black bg-amber-400 text-slate-950 px-2.5 py-1 rounded-lg shadow-2xs">
                             SAVE ₹{(unitPrice - altPrice).toFixed(0)}
                           </span>
                         </div>
                       </div>
                     </div>
-
-                    {/* Rich Spec Breakdown */}
-                    <div className="space-y-2.5 bg-emerald-50/90 rounded-2xl p-4 border border-emerald-200 text-xs">
-                      <div className="flex justify-between items-center text-emerald-950">
-                        <span className="font-extrabold text-emerald-700">Quality Standard:</span>
-                        <span className="font-black text-emerald-900 uppercase flex items-center gap-1">🛡️ WHO-GMP & US-FDA Certified</span>
-                      </div>
-                      <div className="flex justify-between items-center text-emerald-950">
-                        <span className="font-extrabold text-emerald-700">Therapeutic Action:</span>
-                        <span className="font-black text-emerald-900 uppercase flex items-center gap-1">⚡ 100% Same Efficacy & Speed</span>
-                      </div>
-                      <div className="flex justify-between items-center text-emerald-950">
-                        <span className="font-extrabold text-emerald-700">Unit Cost:</span>
-                        <span className="font-black text-emerald-900">₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / tablet (vs ₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)})</span>
-                      </div>
-                    </div>
                   </div>
 
                   <div>
-                    <div className="pt-4 border-t border-emerald-200 flex items-center justify-between">
+                    <div className="pt-3 border-t border-emerald-200 flex items-center justify-between">
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">SAHI SMART PRICE</p>
                         <div className="flex items-baseline gap-2">
                           <span className="text-4xl sm:text-5xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
                           {unitPrice > altPrice && <span className="text-base text-slate-400 line-through font-bold">₹{unitPrice}</span>}
                         </div>
-                        <p className="text-xs text-emerald-900 font-bold mt-1">
-                          ₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / Unit · <span className="text-emerald-700 font-black underline decoration-emerald-500">YOU SAVE ₹{(unitPrice - altPrice).toFixed(0)} ({altSavePct}% OFF)</span>
+                        <p className="text-xs text-emerald-900 font-bold mt-0.5">
+                          ₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / Unit · <span className="text-emerald-700 font-black">YOU SAVE ₹{(unitPrice - altPrice).toFixed(0)} ({altSavePct}% OFF)</span>
                         </p>
                       </div>
                     </div>
 
-                    {/* Exactly 1 Single High-Converting Primary CTA Button */}
+                    {/* ONLY 1 HIGH-CONVERTING PRIMARY CTA BUTTON */}
                     <Button
                       onClick={() => addToCart({ ...genericAlt, id: genericAlt._id || genericAlt.id, price: altPrice, mrp: altMrp })}
                       className="w-full mt-4 h-15 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-sm sm:text-lg uppercase tracking-wider shadow-2xl shadow-emerald-600/40 active:scale-98 transition-all flex items-center justify-center gap-2 border-2 border-emerald-300 hover:scale-[1.02]"
                     >
                       <ShoppingCart className="w-6 h-6" />
-                      <span>🚀 Switch To Generic & Save ₹{(unitPrice - altPrice).toFixed(0)}</span>
+                      <span>🚀 Switch & Add Generic To Cart (₹{altPrice})</span>
                     </Button>
-
-                    <div className="mt-3 bg-amber-100/90 border border-amber-300 rounded-xl p-3 text-center flex items-center justify-center gap-2 text-xs font-black text-amber-950 shadow-xs">
-                      <span className="text-base">🔥</span>
-                      <span>Over 50,000+ Patients Switched To Generic & Saved On SahiMed</span>
-                    </div>
                   </div>
                 </div>
               </div>
