@@ -57,18 +57,6 @@ export async function GET(request: Request) {
 
     const query: any = {};
 
-    // Only show salable products to non-admins
-    if (!showDisabled) {
-      query.salable_status = { $regex: 'Salable', $options: 'i' };
-    } else {
-      try {
-        await verifyAdmin(request);
-        // Admin: show all products (no salable_status filter)
-      } catch {
-        query.salable_status = { $regex: 'Salable', $options: 'i' };
-      }
-    }
-
     // Build base filter query (without search terms) for Atlas $search $match stage
     const baseFilterQuery = { ...query };
 
