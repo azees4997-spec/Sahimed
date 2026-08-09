@@ -431,25 +431,46 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                         <span className="text-[9.5px] font-bold text-slate-400 block mt-0.5">{product?.packagingDetail || 'Strip format'}</span>
                       </div>
                     </div>
+
+                    {/* Extra Brand Details Box to eliminate empty space */}
+                    <div className="bg-slate-50/80 rounded-2xl p-3 border border-slate-100 space-y-1 text-[10.5px]">
+                      <div className="flex justify-between items-center text-slate-600">
+                        <span className="font-semibold text-slate-400">Salt Formula:</span>
+                        <span className="font-extrabold text-slate-800 italic truncate max-w-[170px]">{product?.composition || 'Active Salt'}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-slate-600">
+                        <span className="font-semibold text-slate-400">Brand Status:</span>
+                        <span className="font-extrabold text-slate-800 uppercase">Original Brand</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                    <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Brand Price</p>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-xl sm:text-2xl font-black text-slate-900 font-outfit">₹{unitPrice}</span>
-                        {unitMrp > unitPrice && <span className="text-xs text-slate-400 line-through font-bold">₹{unitMrp}</span>}
+                  <div>
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Brand Price</p>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-2xl sm:text-3xl font-black text-slate-900 font-outfit">₹{unitPrice}</span>
+                          {unitMrp > unitPrice && <span className="text-xs text-slate-400 line-through font-bold">₹{unitMrp}</span>}
+                        </div>
+                        <p className="text-[9.5px] text-slate-400 font-bold">₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / Unit · <span className="text-slate-500 font-semibold">Standard MRP</span></p>
                       </div>
-                      <p className="text-[9.5px] text-slate-400 font-bold">₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / Unit</p>
                     </div>
 
+                    {/* Matching Full-Width CTA Button */}
                     <Button
-                      variant="outline"
                       onClick={() => addCurrentToCart(1)}
-                      className="h-10 px-4 rounded-xl font-black text-xs border-slate-300 text-slate-700 hover:bg-slate-50"
+                      className="w-full mt-3 h-12 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
                     >
-                      Buy Brand ₹{unitPrice}
+                      <ShoppingCart className="w-4 h-4" />
+                      <span>Buy Prescribed Brand (₹{unitPrice})</span>
                     </Button>
+
+                    {/* Bottom strip matching right card */}
+                    <div className="mt-2.5 bg-slate-100/80 border border-slate-200/80 rounded-xl p-2 text-center flex items-center justify-center gap-1.5 text-[9.5px] font-extrabold text-slate-600">
+                      <span>🩺</span>
+                      <span>Prescribed Original Brand Formulation</span>
+                    </div>
                   </div>
                 </div>
 
@@ -912,78 +933,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
             </div>
           </div>
 
-          {/* Generic Comparison — Side-by-side on ALL mobile phones */}
-          {showComparison && genericAlt && (
-            <div className="bg-gradient-to-br from-emerald-50 via-white to-teal-50 border border-emerald-200/80 rounded-2xl sm:rounded-3xl p-3 sm:p-8 space-y-2.5 sm:space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0" />
-                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-700">Smart Switch · Same Active Salt</span>
-                </div>
-                <span className="text-[9px] sm:text-xs font-black bg-emerald-600 text-white px-2 py-0.5 rounded-full">
-                  SAVE ₹{(unitMrp - altPrice).toFixed(0)} ({altSavePct}% OFF)
-                </span>
-              </div>
-              
-              <p className="text-xs sm:text-base font-bold text-slate-800">
-                Both medicines contain <span className="text-emerald-700 font-extrabold">{product?.composition || 'the same salt'}</span>. Only the brand name is different!
-              </p>
 
-              {/* 2-Column Side-by-Side Grid on ALL Mobile Phones */}
-              <div className="grid grid-cols-2 gap-2 sm:gap-4 items-stretch">
-                {/* Left Card: Branded Medicine */}
-                <div className="bg-white rounded-xl sm:rounded-2xl p-2.5 sm:p-5 border border-slate-200/80 flex flex-col justify-between space-y-2">
-                  <div>
-                    <Badge className="bg-slate-100 text-slate-600 border-none text-[8px] sm:text-[9px] font-black px-2 py-0.5 uppercase mb-1.5">
-                      Branded
-                    </Badge>
-                    <p className="text-xs sm:text-sm font-extrabold text-slate-900 line-clamp-2 uppercase leading-tight">{product?.name}</p>
-                    <p className="text-[9px] sm:text-[10px] text-slate-400 font-semibold truncate mt-0.5">{product?.marketerName || 'Prescribed Brand'}</p>
-                  </div>
-
-                  <div className="pt-1.5 border-t border-slate-100">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">Price</p>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-base sm:text-2xl font-black text-slate-800 font-outfit">₹{unitPrice}</span>
-                      {unitMrp > unitPrice && <span className="text-[9px] text-slate-400 line-through font-semibold">₹{unitMrp}</span>}
-                    </div>
-                    <p className="text-[8.5px] text-slate-400 font-medium mt-1">Higher Brand Cost</p>
-                  </div>
-                </div>
-
-                {/* Right Card: Sahi Recommended Generic */}
-                <div className="bg-white rounded-xl sm:rounded-2xl p-2.5 sm:p-5 border-2 border-emerald-500 relative overflow-hidden flex flex-col justify-between space-y-2 shadow-sm">
-                  <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[7.5px] sm:text-[9px] font-black px-2 py-0.5 rounded-bl-lg uppercase">
-                    {altSavePct}% OFF
-                  </div>
-
-                  <div>
-                    <Badge className="bg-emerald-500 text-white border-none text-[8px] sm:text-[9px] font-black px-2 py-0.5 uppercase mb-1.5">
-                      Recommended
-                    </Badge>
-                    <p className="text-xs sm:text-sm font-extrabold text-slate-900 line-clamp-2 uppercase leading-tight">{genericAlt?.product_name || genericAlt?.name}</p>
-                    <p className="text-[9px] sm:text-[10px] text-emerald-700 font-bold truncate mt-0.5">{genericAlt?.taxonomy?.marketer_name || 'Generic Substitute'}</p>
-                  </div>
-
-                  <div className="pt-1.5 border-t border-emerald-100">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-emerald-600">Sahi Price</p>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-base sm:text-2xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
-                      <span className="text-[8px] font-black text-emerald-600 uppercase">Save ₹{(unitMrp - altPrice).toFixed(0)}</span>
-                    </div>
-
-                    <Button
-                      size="sm"
-                      onClick={() => addToCart({ ...genericAlt, id: genericAlt._id || genericAlt.id, price: altPrice, mrp: altMrp })}
-                      className="w-full mt-2 h-7 sm:h-9 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-[9.5px] sm:text-xs font-black shadow-sm uppercase tracking-wider px-1"
-                    >
-                      Switch & Save
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* ╔══════════════════════════════════════════════╗
               ║  TABBED PANEL                                ║
