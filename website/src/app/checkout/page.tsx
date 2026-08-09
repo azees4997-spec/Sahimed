@@ -100,6 +100,7 @@ export default function CheckoutPage() {
 
   const [isUploading, setIsUploading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const isPlacingOrderRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -369,8 +370,6 @@ export default function CheckoutPage() {
       setIsUploading(false);
     }
   };
-
-  const isPlacingOrderRef = useRef(false);
 
   const handlePlaceOrder = async (body?: any) => {
     if (isPlacingOrderRef.current) return;
