@@ -38,7 +38,9 @@ function createClient(): Promise<MongoClient> {
         { key: { salable_status: 1, molecule_code: 1 } },
         { key: { salable_status: 1, medicine_type: 1 } },
         { key: { salable_status: 1, product_name: 1 } },
-        { key: { 'packaging.mrp': 1 } }
+        { key: { 'packaging.mrp': 1 } },
+        { key: { selling_price: 1 } },
+        { key: { salable_status: 1, selling_price: 1 } }
       ]).catch((e) => console.warn("[MongoDB Index Warning]", e.message));
       db.collection('Category Master').createIndexes([
         { key: { showOnHomepage: 1 } },
