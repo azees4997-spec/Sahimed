@@ -13,7 +13,7 @@ import {
   AlertCircle, Truck, FlaskConical, Tag, Building2, Globe, Pill,
   ClipboardList, Zap, BookOpen, ThumbsUp, Share2, Copy, Send,
   CheckCircle2, Star, ShieldCheck, Clock, HeartPulse, BadgeCheck, Eye, ZoomIn,
-  ChevronLeft
+  ChevronLeft, Check
 } from 'lucide-react';
 import { useMongoDBMolecule, useMongoDBCollection } from '@/hooks/use-mongodb';
 import { cn } from '@/lib/utils';
