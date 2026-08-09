@@ -208,13 +208,6 @@ export default async function Home() {
                   />
                 </picture>
               </div>
-          </div>              className="w-full h-full object-contain object-bottom pointer-events-none"
-                    loading="eager"
-                  />
-                </picture>
-
-
-              </div>
           </div>
 
           {/* Embedded Mobile Search Bar — Fires instant mobile search overlay */}
