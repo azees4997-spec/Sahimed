@@ -397,8 +397,18 @@ export default function Navbar() {
   const navSearchCache = useRef<Map<string, any[]>>(new Map());
 
   useEffect(() => {
+    // Require at least 3 characters before searching (spaces & special chars count toward length)
+    // This prevents wasteful API calls on single/double keystrokes
+    if (search.length < 3) {
+      setRawSuggestions([]);
+      setIsSearching(false);
+      setShowSuggestions(false);
+      return;
+    }
+
     const term = search.trim();
-    if (term.length < 1) {
+    // Even after trimming, still need content
+    if (!term) {
       setRawSuggestions([]);
       setIsSearching(false);
       return;
@@ -445,7 +455,8 @@ export default function Navbar() {
       }
     };
 
-    const timer = setTimeout(fetchSuggestions, 180);
+    // 350ms debounce — waits for user to pause typing before hitting MongoDB
+    const timer = setTimeout(fetchSuggestions, 350);
     return () => {
       clearTimeout(timer);
       controller.abort();

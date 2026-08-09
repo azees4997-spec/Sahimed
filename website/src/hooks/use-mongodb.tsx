@@ -5,8 +5,19 @@ import { useState, useEffect, useCallback } from 'react';
 
 // GLOBAL MEMORY CACHE
 // Reduces API calls by storing results for 2 minutes
-const queryCache: Record<string, { data: any, timestamp: number }> = {};
-const CACHE_TTL = 120 * 1000; // 2 minutes — prevents excessive re-fetching on navigation
+// LRU-style: max 50 entries — oldest evicted to prevent memory growth on long sessions
+const MAX_CACHE_ENTRIES = 50;
+const queryCache: Map<string, { data: any; timestamp: number }> = new Map();
+const CACHE_TTL = 120 * 1000; // 2 minutes
+
+function setCacheEntry(key: string, data: any) {
+  // Evict oldest entries when over limit
+  if (queryCache.size >= MAX_CACHE_ENTRIES) {
+    const oldestKey = queryCache.keys().next().value;
+    if (oldestKey) queryCache.delete(oldestKey);
+  }
+  queryCache.set(key, { data, timestamp: Date.now() });
+}
 
 export function useMongoDBCollection<T = any>(options: { 
   limit?: number; 
@@ -45,7 +56,7 @@ export function useMongoDBCollection<T = any>(options: {
       if (options.showDisabled) params.append('showDisabled', 'true');
 
       const cacheKey = `products_${params.toString()}`;
-      const cached = queryCache[cacheKey];
+      const cached = queryCache.get(cacheKey);
 
       // Return cached if fresh and non-empty
       if (cached && cached.data?.length > 0 && (Date.now() - cached.timestamp < CACHE_TTL) && refreshKey === 0) {
@@ -62,9 +73,9 @@ export function useMongoDBCollection<T = any>(options: {
         
         const normalized = Array.isArray(json) ? json.map((item: any) => ({ ...item, id: item._id || item.id })) : [];
         
-        // Save to cache ONLY if results are non-empty
+        // Save to cache ONLY if results are non-empty (LRU eviction handled inside setCacheEntry)
         if (normalized.length > 0) {
-          queryCache[cacheKey] = { data: normalized, timestamp: Date.now() };
+          setCacheEntry(cacheKey, normalized);
         }
         if (!cancelled) setData(normalized);
       } catch (err: any) {
@@ -99,7 +110,7 @@ export function useMongoDBDoc<T = any>(id: string | null | undefined) {
     }
 
     const cacheKey = `doc_${id}`;
-    const cached = queryCache[cacheKey];
+    const cached = queryCache.get(cacheKey);
 
     if (cached && (Date.now() - cached.timestamp < CACHE_TTL) && refreshKey === 0) {
       setData(cached.data);
@@ -118,7 +129,7 @@ export function useMongoDBDoc<T = any>(id: string | null | undefined) {
         const json = await res.json();
         const normalized = { ...json, id: json._id || json.id };
         
-        queryCache[cacheKey] = { data: normalized, timestamp: Date.now() };
+        setCacheEntry(cacheKey, normalized);
         if (!cancelled) setData(normalized);
       } catch (err: any) {
         if (!cancelled && err.name !== 'AbortError') setError(err);
@@ -152,7 +163,7 @@ export function useMongoDBMolecule<T = any>(id: string | null | undefined) {
     }
 
     const cacheKey = `molecule_${id}`;
-    const cached = queryCache[cacheKey];
+    const cached = queryCache.get(cacheKey);
 
     if (cached && (Date.now() - cached.timestamp < CACHE_TTL) && refreshKey === 0) {
       setData(cached.data);

@@ -6,7 +6,7 @@ import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Filter, Search as SearchIcon, SlidersHorizontal, Info, Loader2, TrendingDown, Zap, ArrowRight, Sparkles, X, ChevronDown } from 'lucide-react';
-import { Suspense, useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
@@ -23,6 +23,31 @@ import {
   springTransition, 
   tapVariant 
 } from '@/lib/animations';
+
+// Lazy card wrapper — only mounts ProductCard when scrolled into view
+// This gives virtualization-like perf without react-window complexity
+function LazyCard({ product }: { product: any }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { rootMargin: '200px' } // start loading 200px before viewport
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="min-h-[200px]">
+      {visible ? <ProductCard product={product} /> : (
+        <div className="w-full h-[200px] rounded-[20px] bg-slate-50 animate-pulse" />
+      )}
+    </div>
+  );
+}
 import { correctMedicalQuery } from '@/lib/typo-corrector';
 
 function SearchResults() {
@@ -346,11 +371,17 @@ function SearchResults() {
                     animate="visible"
                     className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-10"
                   >
-                    {filteredMedicines.map(p => (
-                      <motion.div key={p.id} variants={fadeInVariant}>
-                        <ProductCard product={p} />
-                      </motion.div>
-                    ))}
+                    {filteredMedicines.map((p, index) =>
+                      index < 12 ? (
+                        // First 12 cards: full Framer Motion stagger animation
+                        <motion.div key={p.id} variants={fadeInVariant}>
+                          <ProductCard product={p} priority={index < 4} />
+                        </motion.div>
+                      ) : (
+                        // Cards 13+: no animation, IntersectionObserver lazy mount
+                        <LazyCard key={p.id} product={p} />
+                      )
+                    )}
                   </motion.div>
                 ) : (
                   <motion.div 

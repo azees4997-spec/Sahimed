@@ -30,19 +30,44 @@ const DEFAULT_FOOTER_PAGES = [
   { id: 'contact-us', title: 'Contact Us', placement: 'footer' },
 ];
 
+// Module-level session cache — fetched only ONCE per browser session, not on every page render
+let _footerPagesCache: any[] | null = null;
+let _footerPagesFetching = false;
+let _footerPagesCallbacks: Array<(pages: any[]) => void> = [];
+
+function fetchFooterPages(): Promise<any[]> {
+  // Already cached — return immediately
+  if (_footerPagesCache !== null) return Promise.resolve(_footerPagesCache);
+  // Already in-flight — queue this caller
+  if (_footerPagesFetching) {
+    return new Promise(resolve => { _footerPagesCallbacks.push(resolve); });
+  }
+  _footerPagesFetching = true;
+  return fetch('/api/pages')
+    .then(res => res.ok ? res.json() : [])
+    .then(data => {
+      const pages = Array.isArray(data) && data.length > 0 ? data : DEFAULT_FOOTER_PAGES;
+      _footerPagesCache = pages;
+      _footerPagesFetching = false;
+      _footerPagesCallbacks.forEach(cb => cb(pages));
+      _footerPagesCallbacks = [];
+      return pages;
+    })
+    .catch(() => {
+      _footerPagesFetching = false;
+      return DEFAULT_FOOTER_PAGES;
+    });
+}
+
 export default function Footer({ initialPages = [] }: { initialPages?: any[] }) {
   const pathname = usePathname();
   const [pages, setPages] = useState<any[]>(initialPages.length > 0 ? initialPages : DEFAULT_FOOTER_PAGES);
 
   useEffect(() => {
-    fetch('/api/pages')
-      .then(res => res.ok ? res.json() : [])
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setPages(data);
-        }
-      })
-      .catch(() => {});
+    // Only fetch if not already cached (runs once per session)
+    fetchFooterPages().then(data => {
+      if (Array.isArray(data) && data.length > 0) setPages(data);
+    });
   }, []);
 
   const footerPages = pages.filter(
@@ -98,6 +123,8 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
                 <img
                   src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
                   alt="Get it on Google Play"
+                  width={135}
+                  height={40}
                   className="h-11 w-auto"
                 />
               </Link>
@@ -213,7 +240,7 @@ export default function Footer({ initialPages = [] }: { initialPages?: any[] }) 
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-4">
             <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">We Accept</span>
             <div className="flex items-center gap-5 bg-white/8 px-4 py-2 rounded-2xl border border-white/10">
-              <img src="/images/we-accept.png" alt="We Accept Visa, UPI, MasterCard, Paytm, RuPay" className="h-6 w-auto object-contain opacity-80" />
+              <img src="/images/we-accept.png" alt="We Accept Visa, UPI, MasterCard, Paytm, RuPay" width={240} height={24} className="h-6 w-auto object-contain opacity-80" />
             </div>
           </div>
         </div>
