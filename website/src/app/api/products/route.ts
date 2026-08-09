@@ -137,6 +137,11 @@ export async function GET(request: Request) {
     let wasAutoCorrected = false;
     let effectiveQuery = qStr || ''; // declared here so it's in scope for scoring below
 
+    // cleanTerm: the sanitized/corrected query string (used in B-tree & Atlas searches)
+    // cleanEscaped: regex-escaped version of cleanTerm for safe $regex queries
+    let cleanTerm = '';
+    let cleanEscaped = '';
+
     // Full-text search across product_name and composition with Typo-Correction & Punctuation Stripping (- ( ) / +)
     if (qStr) {
       const sanitized = sanitizeSearchQuery(qStr);
@@ -147,6 +152,9 @@ export async function GET(request: Request) {
       }
 
       effectiveQuery = correction.wasCorrected ? correction.correctedQuery : (sanitized || qStr);
+      // Set cleanTerm and cleanEscaped based on the effective (corrected/sanitized) query
+      cleanTerm = effectiveQuery.trim();
+      cleanEscaped = escapeRegExp(cleanTerm);
       terms = effectiveQuery.split(/\s+/).filter(t => t.length > 0);
 
       if (terms.length > 0) {
