@@ -47,8 +47,8 @@ export function useMongoDBCollection<T = any>(options: {
       const cacheKey = `products_${params.toString()}`;
       const cached = queryCache[cacheKey];
 
-      // Return cached if fresh (refreshKey invalidates cache but doesn't permanently disable it)
-      if (cached && (Date.now() - cached.timestamp < CACHE_TTL) && refreshKey === 0) {
+      // Return cached if fresh and non-empty
+      if (cached && cached.data?.length > 0 && (Date.now() - cached.timestamp < CACHE_TTL) && refreshKey === 0) {
         if (!cancelled) { setData(cached.data); setIsLoading(false); }
         return;
       }
@@ -60,10 +60,12 @@ export function useMongoDBCollection<T = any>(options: {
         
         if (!res.ok) throw new Error(json.error || json.message || 'Failed to fetch products');
         
-        const normalized = json.map((item: any) => ({ ...item, id: item._id || item.id }));
+        const normalized = Array.isArray(json) ? json.map((item: any) => ({ ...item, id: item._id || item.id })) : [];
         
-        // Save to cache (even after a manual refresh, so next navigation benefits)
-        queryCache[cacheKey] = { data: normalized, timestamp: Date.now() };
+        // Save to cache ONLY if results are non-empty
+        if (normalized.length > 0) {
+          queryCache[cacheKey] = { data: normalized, timestamp: Date.now() };
+        }
         if (!cancelled) setData(normalized);
       } catch (err: any) {
         if (!cancelled && err.name !== 'AbortError') setError(err);

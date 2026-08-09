@@ -55,29 +55,53 @@ async function getCategories() {
   }
 }
 
-async function getProducts(filterType: 'bestSeller' | 'topSelection' | 'all' = 'all') {
-  const limitValue = filterType === 'all' ? 50 : 20;
+async function getProducts() {
   try {
     const client = await clientPromise;
     const db = client.db('sahimed');
-    const query: any = { isActive: { $ne: false } };
-    if (filterType === 'bestSeller') query.isBestSeller = { $in: [true, 'true'] };
-    else if (filterType === 'topSelection') query.isTopSelection = { $in: [true, 'true'] };
-    const products = await db.collection('products').find(query).limit(limitValue).toArray();
-    return products.map(p => ({ ...p, id: p._id.toString() }));
-  } catch {
-    const fallback = PRODUCTS.map((p, idx) => ({ ...p, _id: p.id || `fp-${idx}`, id: p.id || `fp-${idx}` }));
-    if (filterType === 'bestSeller') return fallback.slice(0, 10);
-    if (filterType === 'topSelection') return fallback.slice(0, 10);
-    return fallback;
+    const listProjection = {
+      product_id: 1, product_name: 1, molecule_code: 1, medicine_type: 1,
+      is_generic: 1, isGeneric: 1, selling_price: 1, sale_price: 1,
+      'taxonomy.marketer_name': 1, 'taxonomy.category_name': 1, 'medical_info.composition': 1,
+      'packaging.mrp': 1, 'packaging.packaging_detail': 1, images: 1, 'seo.url_slug': 1
+    };
+    const products = await db.collection('Product Master')
+      .find({}, { projection: listProjection })
+      .limit(30)
+      .toArray();
+
+    return products.map(p => {
+      const isGen = (p.medicine_type || '').toLowerCase().includes('generic') || p.is_generic === true || p.isGeneric === true;
+      const sp = p.selling_price ?? p.sale_price ?? p.packaging?.mrp ?? 0;
+      const mrpVal = p.packaging?.mrp ?? sp;
+      return {
+        ...p,
+        id: p._id.toString(),
+        _id: p._id.toString(),
+        name: p.product_name,
+        product_name: p.product_name,
+        selling_price: sp,
+        price: sp,
+        mrp: mrpVal,
+        imageUrl: p.images?.[0] || '',
+        saltComposition: p.medical_info?.composition || '',
+        manufacturer: p.taxonomy?.marketer_name || '',
+        category: p.taxonomy?.category_name || '',
+        is_generic: isGen,
+        isGeneric: isGen
+      };
+    });
+  } catch (e) {
+    console.error('getProducts error:', e);
+    return [];
   }
 }
 
 import MegaCategoryRibbon from '@/components/MegaCategoryRibbon';
 
 export default async function Home() {
-  const [banners, categories] = await Promise.all([
-    getBanners(), getCategories()
+  const [banners, categories, medicines] = await Promise.all([
+    getBanners(), getCategories(), getProducts()
   ]);
 
   const faqJsonLd = {
@@ -253,9 +277,9 @@ export default async function Home() {
           <HomeClient
             banners={banners}
             categories={categories}
-            bestSellers={[]}
-            topSelections={[]}
-            medicines={[]}
+            bestSellers={medicines.slice(0, 10)}
+            topSelections={medicines.slice(10, 20)}
+            medicines={medicines}
           />
           <HowItWorks />
           <TrustSection />
