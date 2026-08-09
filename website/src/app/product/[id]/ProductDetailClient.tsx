@@ -400,7 +400,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
               </div>
 
               {/* 2. Side-by-Side Dual Product Cards (100% Symmetrical Image Alignment & Fits Mobile Screen) */}
-              <div className="grid grid-cols-2 gap-2 sm:gap-5 items-stretch">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-5 items-stretch">
                 
                 {/* LEFT CARD: Prescribed Product */}
                 <div className="bg-white rounded-2xl sm:rounded-3xl p-2.5 sm:p-5 border sm:border-2 border-slate-200 shadow-md flex flex-col justify-between space-y-2.5 sm:space-y-4">
@@ -423,10 +423,10 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                           priority
                         />
                       </div>
-                      {/* Multi-Image Selector (Only if multiple images exist) */}
-                      {images.length > 1 && (
-                        <div className="flex items-center justify-center gap-1 mt-1.5 overflow-x-auto max-w-full pb-0.5">
-                          {images.map((img, idx) => (
+                      {/* Symmetrical Thumbnail Container Strip (Fixed h-8 for both cards) */}
+                      <div className="h-8 flex items-center justify-center gap-1 mt-1.5 overflow-x-auto max-w-full pb-0.5">
+                        {images.length > 1 ? (
+                          images.map((img, idx) => (
                             <button
                               key={idx}
                               onClick={() => setCurrentImageIndex(idx)}
@@ -436,9 +436,11 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                             >
                               <Image src={img} alt={`Thumbnail ${idx}`} fill className="object-contain p-0.5 bg-white" />
                             </button>
-                          ))}
-                        </div>
-                      )}
+                          ))
+                        ) : (
+                          <div className="h-7 w-full" />
+                        )}
+                      </div>
                     </div>
 
                     {/* 2. Vertical Line Items */}
@@ -463,7 +465,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   </div>
 
                   <div className="pt-2 border-t border-slate-150 space-y-2">
-                    {/* Price & Unit Cost */}
+                    {/* Price & Unit Cost + Educational Markup Note */}
                     <div>
                       <div className="flex items-baseline gap-1 sm:gap-2">
                         <span className="text-lg sm:text-3xl font-black text-slate-950 font-outfit">₹{unitPrice}</span>
@@ -471,6 +473,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       </div>
                       <p className="text-[9px] sm:text-[11px] text-slate-500 font-bold mt-0.5">
                         ₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
+                      </p>
+                      <p className="text-[8.5px] sm:text-[9.5px] text-rose-600 font-bold mt-1 leading-tight flex items-center gap-1 bg-rose-50 p-1 rounded border border-rose-200">
+                        <span>⚠️ Includes Brand Marketing & Packaging Markup</span>
                       </p>
                     </div>
 
@@ -510,16 +515,18 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                           priority
                         />
                       </div>
-                      {/* Multi-Image Selector (Only if multiple images exist) */}
-                      {(genericAlt?.images && genericAlt.images.length > 1) && (
-                        <div className="flex items-center justify-center gap-1 mt-1.5 overflow-x-auto max-w-full pb-0.5">
-                          {genericAlt.images.map((img: string, idx: number) => (
+                      {/* Symmetrical Thumbnail Container Strip (Fixed h-8 for both cards) */}
+                      <div className="h-8 flex items-center justify-center gap-1 mt-1.5 overflow-x-auto max-w-full pb-0.5">
+                        {(genericAlt?.images && genericAlt.images.length > 1) ? (
+                          genericAlt.images.map((img: string, idx: number) => (
                             <div key={idx} className="relative w-7 h-7 rounded-md border border-emerald-300 overflow-hidden shrink-0 bg-white">
                               <Image src={img} alt={`Generic Thumbnail ${idx}`} fill className="object-contain p-0.5" />
                             </div>
-                          ))}
-                        </div>
-                      )}
+                          ))
+                        ) : (
+                          <div className="h-7 w-full" />
+                        )}
+                      </div>
                     </div>
 
                     {/* 2. Vertical Line Items */}
@@ -547,7 +554,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   </div>
 
                   <div className="pt-2 border-t border-emerald-200 space-y-2">
-                    {/* Price & Unit Cost + Strikeout Prescribed Benchmark MRP */}
+                    {/* Price & Unit Cost + Strikeout Benchmark Prescribed MRP + Savings */}
                     <div>
                       <div className="flex flex-wrap items-baseline gap-1 sm:gap-2">
                         <span className="text-lg sm:text-3xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
@@ -558,6 +565,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       </div>
                       <p className="text-[9px] sm:text-[11px] text-emerald-900 font-bold mt-0.5">
                         ₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
+                      </p>
+                      <p className="text-[8.5px] sm:text-[9.5px] text-emerald-800 font-black mt-1 leading-tight flex items-center gap-1 bg-emerald-100/90 p-1 rounded border border-emerald-300">
+                        <span>💰 YOU SAVE ₹{(unitPrice - altPrice).toFixed(0)} PER STRIP</span>
                       </p>
                     </div>
 
