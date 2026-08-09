@@ -190,18 +190,29 @@ export async function GET(request: Request) {
 
     let products: any[] = [];
     if (cleanTerm) {
-      // 1. Primary: Fast indexed $text search (~15-40ms)
+      // 1. Primary: Ultra-fast MongoDB Atlas $search stage (~5-15ms, auto typo-tolerant)
       try {
-        products = await col
-          .find({ ...query, $text: { $search: cleanTerm } }, { projection: listProjection })
-          .sort({ score: { $meta: "textScore" } })
-          .limit(limitValue)
-          .toArray();
+        products = await col.aggregate([
+          {
+            $search: {
+              index: 'default',
+              text: {
+                query: cleanTerm,
+                path: ['product_name', 'medical_info.composition'],
+                fuzzy: { maxEdits: 1 }
+              }
+            }
+          },
+          { $match: query },
+          { $limit: limitValue },
+          { $project: listProjection }
+        ]).toArray();
       } catch (e) {
+        console.warn('[Atlas $search fallback to B-tree]', e);
         products = [];
       }
 
-      // 2. Parallel Fallback Fill-Up using Promise.all (~20ms)
+      // 2. Parallel Fallback Fill-Up if Atlas Search returns fewer items
       if (products.length < limitValue) {
         try {
           const [prefixProducts, compositionProducts] = await Promise.all([
