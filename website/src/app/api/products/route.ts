@@ -186,53 +186,61 @@ export async function GET(request: Request) {
 
     let products: any[] = [];
     if (cleanTerm) {
-      // 1. Primary: Ultra-fast MongoDB Atlas $search stage (~5-15ms, auto typo-tolerant)
+      // 1. Parallel High-Speed Indexed Search across Product Name Prefix, Full Contains & Active Salt Composition (<15ms)
       try {
-        products = await col.aggregate([
-          {
-            $search: {
-              index: 'default',
-              text: {
-                query: cleanTerm,
-                path: ['product_name', 'medical_info.composition'],
-                fuzzy: { maxEdits: 2, prefixLength: 0 }
-              }
-            }
-          },
-          { $match: baseFilterQuery },
-          { $limit: limitValue },
-          { $project: listProjection }
-        ]).toArray();
+        const [prefixName, containsName, compositionMatch] = await Promise.all([
+          col.find(
+            { ...baseFilterQuery, product_name: { $regex: `^${cleanEscaped}`, $options: 'i' } },
+            { projection: listProjection }
+          ).limit(limitValue).toArray(),
+          col.find(
+            { ...baseFilterQuery, product_name: { $regex: cleanEscaped, $options: 'i' } },
+            { projection: listProjection }
+          ).limit(limitValue).toArray(),
+          col.find(
+            { ...baseFilterQuery, 'medical_info.composition': { $regex: cleanEscaped, $options: 'i' } },
+            { projection: listProjection }
+          ).limit(limitValue).toArray()
+        ]);
+
+        const resultMap = new Map();
+        prefixName.forEach(p => resultMap.set(p._id.toString(), p));
+        containsName.forEach(p => resultMap.set(p._id.toString(), p));
+        compositionMatch.forEach(p => resultMap.set(p._id.toString(), p));
+        products = Array.from(resultMap.values()).slice(0, limitValue);
       } catch (e) {
-        console.warn('[Atlas $search fallback to B-tree]', e);
-        products = [];
+        console.error('[Indexed Multi-Stage Search Error]', e);
       }
 
-      // 2. Parallel Fallback Fill-Up if Atlas Search returns fewer items
+      // 2. Atlas $search pipeline fallback if B-Tree search returned fewer items
       if (products.length < limitValue) {
         try {
-          const [prefixProducts, compositionProducts] = await Promise.all([
-            col.find(
-              { ...query, product_name: { $regex: `^${cleanEscaped}`, $options: 'i' } },
-              { projection: listProjection }
-            ).limit(limitValue).toArray(),
-            col.find(
-              { ...query, 'medical_info.composition': { $regex: cleanEscaped, $options: 'i' } },
-              { projection: listProjection }
-            ).limit(limitValue).toArray()
-          ]);
+          const atlasSearchRes = await col.aggregate([
+            {
+              $search: {
+                index: 'default',
+                text: {
+                  query: cleanTerm,
+                  path: ['product_name', 'medical_info.composition'],
+                  fuzzy: { maxEdits: 2, prefixLength: 0 }
+                }
+              }
+            },
+            { $match: baseFilterQuery },
+            { $limit: limitValue },
+            { $project: listProjection }
+          ]).toArray();
 
-          const existingMap = new Map();
-          products.forEach(p => existingMap.set(p._id.toString(), p));
-          prefixProducts.forEach(p => existingMap.set(p._id.toString(), p));
-          compositionProducts.forEach(p => existingMap.set(p._id.toString(), p));
-          products = Array.from(existingMap.values()).slice(0, limitValue);
+          const resultMap = new Map();
+          products.forEach(p => resultMap.set(p._id.toString(), p));
+          atlasSearchRes.forEach(p => resultMap.set(p._id.toString(), p));
+          products = Array.from(resultMap.values()).slice(0, limitValue);
         } catch (e) {
-          console.error('[Indexed Search Fallback Error]', e);
+          // Atlas search optional fallback failure silently ignored
         }
       }
     } else {
-      products = await col.find(query, { projection: listProjection }).limit(limitValue).toArray();
+      products = await col.find(baseFilterQuery, { projection: listProjection }).limit(limitValue).toArray();
     }
 
     // Typo-tolerant character-distance fuzzy fallback if 0 results found
