@@ -494,25 +494,17 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       </div>
                     </div>
 
-                    {/* Dual Clear Buttons */}
-                    <div className="space-y-2 mt-4">
-                      <Button
-                        onClick={() => addCurrentToCart(1)}
-                        className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                        <span>Add Prescribed Medicine (₹{unitPrice})</span>
-                      </Button>
-                      <button
-                        onClick={() => addCurrentToCart(1)}
-                        className="w-full py-2 text-xs font-bold text-slate-600 hover:text-slate-900 underline text-center block transition-colors"
-                      >
-                        + Add Prescribed Item To Cart
-                      </button>
-                    </div>
+                    {/* Exactly 1 Single Clean CTA Button */}
+                    <Button
+                      onClick={() => addCurrentToCart(1)}
+                      className="w-full mt-4 h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      <span>Add Prescribed Medicine (₹{unitPrice})</span>
+                    </Button>
 
-                    <div className="mt-2.5 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-center text-[10.5px] font-extrabold text-slate-500">
-                      🩺 Prescribed Original Brand Formulation
+                    <div className="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-center text-[10.5px] font-extrabold text-slate-500">
+                      🩺 Prescribed Original Formulation
                     </div>
                   </div>
                 </div>
@@ -585,22 +577,14 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       </div>
                     </div>
 
-                    {/* Dual High-Converting Clear Buttons */}
-                    <div className="space-y-2.5 mt-4">
-                      <Button
-                        onClick={() => addToCart({ ...genericAlt, id: genericAlt._id || genericAlt.id, price: altPrice, mrp: altMrp })}
-                        className="w-full h-15 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-sm sm:text-lg uppercase tracking-wider shadow-2xl shadow-emerald-600/40 active:scale-98 transition-all flex items-center justify-center gap-2 border-2 border-emerald-300 hover:scale-[1.02]"
-                      >
-                        <ShoppingCart className="w-6 h-6" />
-                        <span>🚀 Switch To Generic & Save ₹{(unitPrice - altPrice).toFixed(0)}</span>
-                      </Button>
-                      <button
-                        onClick={() => addToCart({ ...genericAlt, id: genericAlt._id || genericAlt.id, price: altPrice, mrp: altMrp })}
-                        className="w-full py-2.5 bg-emerald-100/90 hover:bg-emerald-200 text-emerald-900 rounded-xl font-extrabold text-xs text-center block transition-colors border border-emerald-300"
-                      >
-                        🛒 Add Generic Substitute To Cart (₹{altPrice})
-                      </button>
-                    </div>
+                    {/* Exactly 1 Single High-Converting Primary CTA Button */}
+                    <Button
+                      onClick={() => addToCart({ ...genericAlt, id: genericAlt._id || genericAlt.id, price: altPrice, mrp: altMrp })}
+                      className="w-full mt-4 h-15 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-sm sm:text-lg uppercase tracking-wider shadow-2xl shadow-emerald-600/40 active:scale-98 transition-all flex items-center justify-center gap-2 border-2 border-emerald-300 hover:scale-[1.02]"
+                    >
+                      <ShoppingCart className="w-6 h-6" />
+                      <span>🚀 Switch To Generic & Save ₹{(unitPrice - altPrice).toFixed(0)}</span>
+                    </Button>
 
                     <div className="mt-3 bg-amber-100/90 border border-amber-300 rounded-xl p-3 text-center flex items-center justify-center gap-2 text-xs font-black text-amber-950 shadow-xs">
                       <span className="text-base">🔥</span>
