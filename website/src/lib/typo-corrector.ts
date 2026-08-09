@@ -59,7 +59,16 @@ const PHARMA_TYPO_MAP: Record<string, string> = {
   'multivit': 'Multivitamin',
   'multivites': 'Multivitamin',
   
-  // Popular Brands
+  // Popular Brands & Common Misspellings
+  'becos': 'Becosules',
+  'becosiles': 'Becosules',
+  'becosul': 'Becosules',
+  'becosule': 'Becosules',
+  'becosules': 'Becosules',
+  'bcosules': 'Becosules',
+  'becosulez': 'Becosules',
+  'becozinc': 'Becozinc',
+  'becadexamin': 'Becadexamin',
   'dolooo': 'Dolo',
   'dolo650': 'Dolo 650',
   'crocn': 'Crocin',
@@ -69,8 +78,6 @@ const PHARMA_TYPO_MAP: Record<string, string> = {
   'panten': 'Pan',
   'shelcal500': 'Shelcal',
   'shelcl': 'Shelcal',
-  'becosul': 'Becosules',
-  'becosule': 'Becosules',
   'gelusill': 'Gelusil',
   'digene': 'Digene',
   'disprin': 'Disprin',

@@ -195,7 +195,7 @@ export async function GET(request: Request) {
               text: {
                 query: cleanTerm,
                 path: ['product_name', 'medical_info.composition'],
-                fuzzy: { maxEdits: 1 }
+                fuzzy: { maxEdits: 2, prefixLength: 0 }
               }
             }
           },
