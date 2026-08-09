@@ -775,7 +775,8 @@ function ItemForm({ initialData, onSuccess }: { initialData?: any, onSuccess: ()
     product_id: initialData?.product_id || initialData?.sku || '',
     product_name: initialData?.product_name || initialData?.name || '',
     molecule_code: initialData?.molecule_code || initialData?.moleculeId || initialData?.['Molecule Code'] || initialData?.molecule_id || '',
-    medicine_type: initialData?.medicine_type || (initialData?.isGeneric ? 'Generic' : 'Branded'),
+    medicine_type: initialData?.medicine_type || (initialData?.is_generic || initialData?.isGeneric ? 'Generic' : 'Branded'),
+    is_generic: initialData?.is_generic ?? initialData?.isGeneric ?? (initialData?.medicine_type === 'Generic') ?? false,
     salable_status: initialData?.salable_status || 'Salable (Rx Required)',
     country_of_origin: initialData?.country_of_origin || 'India',
     
@@ -847,7 +848,9 @@ function ItemForm({ initialData, onSuccess }: { initialData?: any, onSuccess: ()
       product_id: form.product_id,
       product_name: form.product_name,
       molecule_code: form.molecule_code,
-      medicine_type: form.medicine_type,
+      medicine_type: form.is_generic ? 'Generic' : form.medicine_type,
+      is_generic: form.is_generic,
+      isGeneric: form.is_generic,
       salable_status: form.salable_status,
       country_of_origin: form.country_of_origin,
       images: [form.imageUrl].filter(Boolean),
@@ -942,7 +945,7 @@ function ItemForm({ initialData, onSuccess }: { initialData?: any, onSuccess: ()
             </div>
             <div className="space-y-1">
               <Label className="text-[10px] font-black uppercase text-slate-500">Medicine Type</Label>
-              <Select value={form.medicine_type} onValueChange={v => setForm({...form, medicine_type: v})}>
+              <Select value={form.medicine_type} onValueChange={v => setForm({...form, medicine_type: v, is_generic: v === 'Generic'})}>
                 <SelectTrigger className="rounded-2xl h-12 bg-gray-50 border-none font-bold">
                   <SelectValue />
                 </SelectTrigger>
@@ -953,6 +956,38 @@ function ItemForm({ initialData, onSuccess }: { initialData?: any, onSuccess: ()
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Dedicated Branded Generic Checkbox */}
+            <div className="col-span-2 flex items-center space-x-3 bg-emerald-50/80 p-4 rounded-2xl border border-emerald-200 my-1">
+              <Checkbox 
+                id="is-branded-generic" 
+                checked={form.is_generic} 
+                onCheckedChange={c => {
+                  const checked = !!c;
+                  setForm({
+                    ...form, 
+                    is_generic: checked,
+                    medicine_type: checked ? 'Generic' : (form.medicine_type === 'Generic' ? 'Branded' : form.medicine_type)
+                  });
+                }} 
+              />
+              <div className="flex flex-col cursor-pointer" onClick={() => {
+                const checked = !form.is_generic;
+                setForm({
+                  ...form, 
+                  is_generic: checked,
+                  medicine_type: checked ? 'Generic' : (form.medicine_type === 'Generic' ? 'Branded' : form.medicine_type)
+                });
+              }}>
+                <Label htmlFor="is-branded-generic" className="text-xs font-black uppercase text-emerald-900 cursor-pointer">
+                  ✨ Mark as Branded Generic
+                </Label>
+                <span className="text-[10.5px] text-emerald-700 font-bold">
+                  100% Genuine Branded Generic Medicine (Validates in Product Profile & Storefront for up to 61% savings)
+                </span>
+              </div>
+            </div>
+
             <div className="space-y-1">
               <Label className="text-[10px] font-black uppercase text-slate-500">Salable Status</Label>
               <Input value={form.salable_status} onChange={e => setForm({...form, salable_status: e.target.value})} className="rounded-2xl h-12 bg-gray-50 border-none font-bold" />

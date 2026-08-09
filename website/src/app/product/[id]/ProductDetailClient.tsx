@@ -413,6 +413,11 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
 
               {/* Title, Composition & Brand */}
               <div className="flex-1 min-w-0 space-y-1">
+                {(product?.is_generic === true || product?.isGeneric === true || (product?.medicineType || '').toLowerCase().includes('generic')) && (
+                  <span className="inline-block bg-emerald-600 text-white text-[8.5px] font-black uppercase px-2 py-0.5 rounded-md tracking-wider">
+                    ✨ Branded Generic
+                  </span>
+                )}
                 <h1 className="text-sm font-extrabold text-slate-900 leading-tight uppercase line-clamp-2">
                   {product?.name}
                 </h1>
@@ -549,7 +554,13 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
 
                 {/* Badges */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  {product?.medicineType && <Badge className="bg-violet-100 text-violet-700 border-none text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md">{product.medicineType}</Badge>}
+                  {(product?.is_generic === true || product?.isGeneric === true || (product?.medicineType || '').toLowerCase().includes('generic')) ? (
+                    <Badge className="bg-emerald-600 text-white border-none text-[9.5px] font-black uppercase tracking-wider px-3 py-1 rounded-md shadow-xs flex items-center gap-1">
+                      ✨ 100% Branded Generic (Save 61%)
+                    </Badge>
+                  ) : (
+                    product?.medicineType && <Badge className="bg-violet-100 text-violet-700 border-none text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md">{product.medicineType}</Badge>
+                  )}
                   {product?.subCategory && <Badge className="bg-sky-100 text-sky-700 border-none text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md">{product.subCategory}</Badge>}
                   {product?.salableStatus && <Badge className="bg-emerald-100 text-emerald-700 border-none text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md">{product.salableStatus}</Badge>}
                 </div>
