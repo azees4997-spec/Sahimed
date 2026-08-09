@@ -393,37 +393,21 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
           {showComparison && genericAlt && (
             <div className="space-y-7 my-4 animate-in fade-in zoom-in-95 duration-500">
               
-              {/* 1. Animated Glowing Top Smart Switch Header */}
-              <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-900 p-5 sm:p-7 text-white shadow-2xl border-2 border-emerald-400/40">
-                <div className="absolute -right-16 -top-16 w-56 h-56 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none animate-pulse" />
-                <div className="absolute -left-16 -bottom-16 w-56 h-56 bg-amber-400/15 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-4 text-center sm:text-left">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/30 text-slate-950">
-                      <Zap className="w-7 h-7 fill-slate-950" />
-                    </div>
-                    <div>
-                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
-                        <span className="bg-amber-300 text-slate-950 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-widest shadow-xs">
-                          ⚡ SAHI SMART SWITCH
-                        </span>
-                        <span className="bg-white/20 text-white text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full">
-                          100% DOCTOR APPROVED
-                        </span>
-                      </div>
-                      <h3 className="text-base sm:text-xl font-black uppercase tracking-wide text-white leading-tight">
-                        SAME ACTIVE MEDICINE, EXACT SAME SALT, <span className="text-amber-300 underline decoration-amber-400 decoration-wavy decoration-2 font-black">{altSavePct > 0 ? altSavePct : 49}% LESS COST</span>
-                      </h3>
-                      <p className="text-xs sm:text-sm font-medium text-emerald-100/90 mt-1">
-                        Verified Bio-Equivalent Active Ingredient ({product?.composition || '100% Salt Match'}) · Exact Same Therapeutic Efficacy
-                      </p>
-                    </div>
+              {/* 1. Crisp Professional One-Line Top Smart Switch Banner */}
+              <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 rounded-2xl p-3 sm:p-4 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-2 border border-emerald-400/30">
+                <div className="flex items-center gap-2.5 text-center sm:text-left">
+                  <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                    <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
                   </div>
-
-                  <div className="shrink-0 bg-amber-400 text-slate-950 rounded-2xl p-3 sm:px-6 sm:py-3.5 text-center shadow-xl shadow-amber-400/20 border-2 border-white/80 transform hover:scale-105 transition-transform">
-                    <span className="text-[10px] font-black uppercase tracking-widest block opacity-80">INSTANT POCKET SAVINGS</span>
-                    <span className="text-xl sm:text-2xl font-black font-outfit block">SAVE ₹{(unitPrice - altPrice).toFixed(0)} PER STRIP</span>
+                  <div>
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                      <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-300">
+                        ⚡ SAHI SMART SWITCH · SAVE ₹{(unitPrice - altPrice).toFixed(0)} ({altSavePct}% OFF) WITH EXACT GENERIC
+                      </h3>
+                    </div>
+                    <p className="text-[11px] sm:text-xs font-semibold text-emerald-50 mt-0.5">
+                      Same Active Salt Composition: <span className="font-extrabold text-white underline decoration-amber-400">{product?.composition || '100% Salt Match'}</span>
+                    </p>
                   </div>
                 </div>
               </div>
