@@ -310,10 +310,12 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
   const unitMrp   = Number(product?.liveData?.mrp || product?.mrp || (unitPrice + 20));
   const currentPrice = unitPrice * selectedQty;
   const currentMrp   = unitMrp * selectedQty;
-  const altPrice  = genericAlt ? Number(genericAlt.liveData?.sahimed_price || genericAlt.price || 0) : 0;
-  const altMrp    = genericAlt ? Number(genericAlt.liveData?.mrp || genericAlt.mrp || (altPrice + 20)) : 0;
+  const altPrice  = genericAlt ? Number(genericAlt.liveData?.sahimed_price || genericAlt.selling_price || genericAlt.price || 0) : 0;
+  const altMrp    = genericAlt ? Number(genericAlt.liveData?.mrp || genericAlt.mrp || genericAlt.packaging?.mrp || (unitPrice > 0 ? unitPrice : altPrice)) : 0;
   const discountPct = unitMrp > 0 ? Math.round(((unitMrp - unitPrice) / unitMrp) * 100) : 0;
+  const genericProductDiscountPct = altMrp > 0 && altMrp > altPrice ? Math.round(((altMrp - altPrice) / altMrp) * 100) : (unitPrice > altPrice ? Math.round(((unitPrice - altPrice) / unitPrice) * 100) : 0);
   const altSavePct  = unitMrp > 0 && altPrice > 0 ? Math.round(((unitMrp - altPrice) / unitMrp) * 100) : 0;
+  const switchSavingsAmount = unitPrice > altPrice ? (unitPrice - altPrice) : 0;
 
   const images = product?.images?.length > 0 ? product.images : ['/images/medicine_placeholder.png'];
   const qty = getItemQuantity(product?._id || product?.id);
@@ -554,21 +556,25 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   </div>
 
                   <div className="pt-2 border-t border-emerald-200 space-y-2">
-                    {/* Price & Unit Cost + Strikeout Benchmark Prescribed MRP + Savings */}
+                    {/* Price & Unit Cost + Generic Product's MRP Strikeout + Discount % + Prescribed Savings */}
                     <div>
                       <div className="flex flex-wrap items-baseline gap-1 sm:gap-2">
                         <span className="text-lg sm:text-3xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
-                        {unitPrice > altPrice && <span className="text-[9.5px] sm:text-xs text-slate-400 line-through font-bold">MRP ₹{unitPrice}</span>}
-                        <span className="bg-amber-400 text-slate-950 text-[8.5px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase shadow-2xs">
-                          {altSavePct}% OFF
-                        </span>
+                        {altMrp > altPrice && <span className="text-[9.5px] sm:text-xs text-slate-400 line-through font-bold">MRP ₹{altMrp}</span>}
+                        {genericProductDiscountPct > 0 && (
+                          <span className="bg-amber-400 text-slate-950 text-[8.5px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase shadow-2xs">
+                            {genericProductDiscountPct}% OFF
+                          </span>
+                        )}
                       </div>
                       <p className="text-[9px] sm:text-[11px] text-emerald-900 font-bold mt-0.5">
                         ₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
                       </p>
-                      <p className="text-[8.5px] sm:text-[9.5px] text-emerald-800 font-black mt-1 leading-tight flex items-center gap-1 bg-emerald-100/90 p-1 rounded border border-emerald-300">
-                        <span>💰 YOU SAVE ₹{(unitPrice - altPrice).toFixed(0)} PER STRIP</span>
-                      </p>
+                      {switchSavingsAmount > 0 && (
+                        <p className="text-[8.5px] sm:text-[9.5px] text-emerald-800 font-black mt-1 leading-tight flex items-center gap-1 bg-emerald-100/90 p-1 rounded border border-emerald-300">
+                          <span>💰 YOU SAVE ₹{switchSavingsAmount.toFixed(0)} VS PRESCRIBED BRAND</span>
+                        </p>
+                      )}
                     </div>
 
                     {/* Right CTA Button (Crisp text, No Container Overflow) */}
