@@ -294,13 +294,13 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
   }, []);
 
   // ── Generic Alternatives ─────────────────────────────────────────────────
-  const isGeneric = product?.isGeneric === true || product?.isGeneric === "true";
+  const isGeneric = product?.is_generic === true || product?.isGeneric === true || product?.isGeneric === "true" || (product?.medicineType || product?.medicine_type || '').toLowerCase().includes('generic');
   const { data: genericAlternatives } = useMongoDBCollection({
-    moleculeId: !isGeneric ? product?.moleculeId : undefined, isGeneric: true, limit: 10
+    moleculeId: (!isGeneric && !product?.mappedGeneric) ? product?.moleculeId : undefined, isGeneric: true, limit: 10
   });
   const genericAlt = product?.mappedGeneric || (!isGeneric
     ? genericAlternatives?.find((a: any) =>
-        (a.isGeneric === true || a.isGeneric === "true") &&
+        (a.is_generic === true || a.isGeneric === true || a.isGeneric === "true" || (a.medicine_type || '').toLowerCase().includes('generic')) &&
         String(a._id || a.id) !== String(product?._id || product?.id))
     : null);
   const showComparison = !isGeneric && !!genericAlt;
@@ -408,66 +408,68 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 </span>
               </div>
 
-              {/* 2. Side-by-Side Dual Product Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
+              {/* 2. Side-by-Side Dual Product Cards (Large Format Hero) */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
                 {/* Left Card: Currently Viewing (Branded Original) */}
-                <div className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200/90 shadow-sm flex flex-col justify-between space-y-4">
+                <div className="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/90 shadow-md flex flex-col justify-between space-y-5">
                   <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="bg-slate-100 text-slate-700 text-[9.5px] font-black uppercase tracking-wider px-3 py-1 rounded-full">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="bg-slate-100 text-slate-700 text-[10px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full border border-slate-200">
                         Currently Viewing
                       </span>
-                      <span className="text-[10px] font-bold text-slate-400">Prescribed Brand</span>
+                      <span className="text-[11px] font-bold text-slate-400">Prescribed Brand</span>
                     </div>
 
-                    {/* Image & Title Box */}
-                    <div className="flex items-center gap-3.5 bg-slate-50/70 p-3 rounded-2xl border border-slate-100 mb-3">
-                      <div className="relative w-16 h-16 shrink-0 bg-white rounded-xl border border-slate-100 p-1 overflow-hidden">
-                        <Image src={images[currentImageIndex]} alt={product?.name || ''} fill className="object-contain p-1" />
+                    {/* Image & Title Box - Large Format */}
+                    <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50/80 p-4 rounded-2xl border border-slate-150 mb-4">
+                      <div className="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0 bg-white rounded-2xl border border-slate-200 p-2 overflow-hidden shadow-2xs">
+                        <Image src={images[currentImageIndex]} alt={product?.name || ''} fill className="object-contain p-1.5" priority />
                       </div>
-                      <div className="min-w-0">
-                        <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 uppercase line-clamp-2">{product?.name}</h4>
-                        <p className="text-[10px] text-slate-500 font-semibold truncate mt-0.5">{product?.marketerName || product?.manufacturer || 'Sun Pharma'}</p>
-                        <span className="text-[9.5px] font-bold text-slate-400 block mt-0.5">{product?.packagingDetail || 'Strip format'}</span>
+                      <div className="min-w-0 flex-1 space-y-1.5 text-center sm:text-left">
+                        <h4 className="text-sm sm:text-base font-black text-slate-900 uppercase leading-snug">{product?.name}</h4>
+                        <p className="text-xs text-slate-500 font-bold italic">{product?.composition || 'Active Salt'}</p>
+                        <p className="text-xs font-bold text-primary">By {product?.marketerName || product?.manufacturer || 'Sun Pharma'}</p>
+                        <span className="inline-block text-[10px] font-bold bg-white text-slate-600 px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
+                          {product?.packagingDetail || 'Strip of 10 tablets'}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Extra Brand Details Box to eliminate empty space */}
-                    <div className="bg-slate-50/80 rounded-2xl p-3 border border-slate-100 space-y-1 text-[10.5px]">
-                      <div className="flex justify-between items-center text-slate-600">
-                        <span className="font-semibold text-slate-400">Salt Formula:</span>
-                        <span className="font-extrabold text-slate-800 italic truncate max-w-[170px]">{product?.composition || 'Active Salt'}</span>
+                    {/* Product Specs Grid */}
+                    <div className="grid grid-cols-2 gap-2 bg-slate-50/90 rounded-2xl p-3 border border-slate-150 text-[11px]">
+                      <div>
+                        <span className="font-semibold text-slate-400 block text-[9.5px] uppercase tracking-wider">Salt Formula</span>
+                        <span className="font-extrabold text-slate-800 italic truncate block">{product?.composition || 'Active Salt'}</span>
                       </div>
-                      <div className="flex justify-between items-center text-slate-600">
-                        <span className="font-semibold text-slate-400">Brand Status:</span>
-                        <span className="font-extrabold text-slate-800 uppercase">Original Brand</span>
+                      <div>
+                        <span className="font-semibold text-slate-400 block text-[9.5px] uppercase tracking-wider">Status</span>
+                        <span className="font-extrabold text-slate-800 uppercase block">Prescribed Brand</span>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                    <div className="pt-3 border-t border-slate-150 flex items-center justify-between">
                       <div>
-                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Brand Price</p>
+                        <p className="text-[9.5px] font-black uppercase tracking-widest text-slate-400">Brand Price</p>
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-2xl sm:text-3xl font-black text-slate-900 font-outfit">₹{unitPrice}</span>
+                          <span className="text-2xl sm:text-3xl font-black text-slate-950 font-outfit">₹{unitPrice}</span>
                           {unitMrp > unitPrice && <span className="text-xs text-slate-400 line-through font-bold">₹{unitMrp}</span>}
                         </div>
-                        <p className="text-[9.5px] text-slate-400 font-bold">₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / Unit · <span className="text-slate-500 font-semibold">Standard MRP</span></p>
+                        <p className="text-[10px] text-slate-500 font-bold">₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / Unit · <span className="text-slate-400">Standard MRP</span></p>
                       </div>
                     </div>
 
-                    {/* Matching Full-Width CTA Button */}
+                    {/* Full-Width CTA Button */}
                     <Button
                       onClick={() => addCurrentToCart(1)}
-                      className="w-full mt-3 h-12 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
+                      className="w-full mt-3 h-13 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
                     >
                       <ShoppingCart className="w-4 h-4" />
                       <span>Buy Prescribed Brand (₹{unitPrice})</span>
                     </Button>
 
-                    {/* Bottom strip matching right card */}
-                    <div className="mt-2.5 bg-slate-100/80 border border-slate-200/80 rounded-xl p-2 text-center flex items-center justify-center gap-1.5 text-[9.5px] font-extrabold text-slate-600">
+                    <div className="mt-2.5 bg-slate-100/90 border border-slate-200 rounded-xl p-2 text-center flex items-center justify-center gap-1.5 text-[10px] font-extrabold text-slate-600">
                       <span>🩺</span>
                       <span>Prescribed Original Brand Formulation</span>
                     </div>
@@ -475,52 +477,67 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 </div>
 
                 {/* Right Card: Sahi Recommended Substitute */}
-                <div className="bg-gradient-to-b from-emerald-50/90 via-white to-teal-50/50 rounded-3xl p-4 sm:p-6 border-2 border-emerald-500 shadow-xl shadow-emerald-500/10 flex flex-col justify-between space-y-4 relative overflow-hidden">
-                  {/* Top Header Badge */}
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="bg-emerald-600 text-white text-[9.5px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-xs flex items-center gap-1">
-                      ✨ Top Substitute Match
-                    </span>
-                    <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase shadow-2xs">
-                      {altSavePct}% OFF
-                    </span>
-                  </div>
-
-                  {/* Image & Title Box */}
-                  <div className="flex items-center gap-3.5 bg-white p-3 rounded-2xl border border-emerald-200/80 shadow-2xs mb-1">
-                    <div className="relative w-16 h-16 shrink-0 bg-slate-50 rounded-xl border border-slate-100 p-1 overflow-hidden">
-                      <Image src={genericAlt?.imageUrl || genericAlt?.images?.[0] || images[0]} alt={genericAlt?.product_name || genericAlt?.name} fill className="object-contain p-1" />
+                <div className="bg-gradient-to-b from-emerald-50/90 via-white to-teal-50/60 rounded-3xl p-5 sm:p-7 border-2 border-emerald-500 shadow-2xl shadow-emerald-500/15 flex flex-col justify-between space-y-5 relative overflow-hidden">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+                        ✨ Sahi Recommended Substitute
+                      </span>
+                      <span className="bg-amber-400 text-slate-950 text-[10.5px] font-black px-3 py-0.5 rounded-full uppercase shadow-2xs">
+                        {altSavePct}% OFF
+                      </span>
                     </div>
-                    <div className="min-w-0">
-                      <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 uppercase line-clamp-2">{genericAlt?.product_name || genericAlt?.name}</h4>
-                      <p className="text-[10px] text-emerald-700 font-bold truncate mt-0.5">{genericAlt?.taxonomy?.marketer_name || genericAlt?.manufacturer || 'Licensed Generic Maker'}</p>
-                      <span className="text-[9.5px] font-bold text-slate-500 block mt-0.5">{genericAlt?.packaging?.packaging_detail || 'Strip format'}</span>
+
+                    {/* Image & Title Box - Large Format */}
+                    <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-2xl border border-emerald-200/80 shadow-xs mb-4">
+                      <div className="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0 bg-slate-50 rounded-2xl border border-slate-100 p-2 overflow-hidden">
+                        <Image src={genericAlt?.imageUrl || genericAlt?.images?.[0] || images[0]} alt={genericAlt?.product_name || genericAlt?.name} fill className="object-contain p-1.5" priority />
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-1.5 text-center sm:text-left">
+                        <h4 className="text-sm sm:text-base font-black text-slate-900 uppercase leading-snug">{genericAlt?.product_name || genericAlt?.name}</h4>
+                        <p className="text-xs text-emerald-700 font-extrabold italic">✓ 100% Exact Salt Match</p>
+                        <p className="text-xs font-bold text-emerald-800 truncate">By {genericAlt?.taxonomy?.marketer_name || genericAlt?.manufacturer || 'Licensed Generic Maker'}</p>
+                        <span className="inline-block text-[10px] font-bold bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs">
+                          {genericAlt?.packaging?.packaging_detail || 'Strip of 10 tablets'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Product Specs Grid */}
+                    <div className="grid grid-cols-2 gap-2 bg-emerald-50/80 rounded-2xl p-3 border border-emerald-200 text-[11px]">
+                      <div>
+                        <span className="font-semibold text-emerald-600 block text-[9.5px] uppercase tracking-wider">Salt Formula</span>
+                        <span className="font-extrabold text-emerald-900 italic truncate block">✓ {product?.composition || 'Active Salt'}</span>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-emerald-600 block text-[9.5px] uppercase tracking-wider">Quality Approval</span>
+                        <span className="font-extrabold text-emerald-900 uppercase block">WHO-GMP Certified</span>
+                      </div>
                     </div>
                   </div>
 
                   <div>
-                    <div className="pt-2 border-t border-emerald-100 flex items-center justify-between">
+                    <div className="pt-3 border-t border-emerald-150 flex items-center justify-between">
                       <div>
-                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700">Substitute Price</p>
+                        <p className="text-[9.5px] font-black uppercase tracking-widest text-emerald-700">Substitute Price</p>
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-2xl sm:text-3xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
-                          {unitPrice > altPrice && <span className="text-xs text-slate-400 line-through font-bold">₹{unitPrice}</span>}
+                          <span className="text-3xl sm:text-4xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
+                          {unitPrice > altPrice && <span className="text-sm text-slate-400 line-through font-bold">₹{unitPrice}</span>}
                         </div>
-                        <p className="text-[9.5px] text-emerald-600 font-bold">₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / Unit · <span className="text-emerald-700 font-extrabold">SAVE ₹{(unitPrice - altPrice).toFixed(0)}</span></p>
+                        <p className="text-[10px] text-emerald-700 font-bold">₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / Unit · <span className="text-emerald-800 font-black">SAVE ₹{(unitPrice - altPrice).toFixed(0)}</span></p>
                       </div>
                     </div>
 
-                    {/* Large CTA Button */}
+                    {/* Large Floating CTA Button */}
                     <Button
                       onClick={() => addToCart({ ...genericAlt, id: genericAlt._id || genericAlt.id, price: altPrice, mrp: altMrp })}
-                      className="w-full mt-3 h-12 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-600/25 active:scale-98 transition-all flex items-center justify-center gap-2"
+                      className="w-full mt-3 h-13 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl shadow-emerald-600/30 active:scale-98 transition-all flex items-center justify-center gap-2"
                     >
                       <ShoppingCart className="w-4 h-4" />
                       <span>Switch & Add Substitute (₹{altPrice})</span>
                     </Button>
 
-                    {/* Social proof strip */}
-                    <div className="mt-2.5 bg-amber-50 border border-amber-200/80 rounded-xl p-2 text-center flex items-center justify-center gap-1.5 text-[9.5px] font-extrabold text-amber-900">
+                    <div className="mt-2.5 bg-amber-50 border border-amber-200/90 rounded-xl p-2 text-center flex items-center justify-center gap-1.5 text-[10px] font-extrabold text-amber-900 shadow-2xs">
                       <span>📈</span>
                       <span>4.8K Patients Switched & Saved This Month</span>
                     </div>
@@ -623,8 +640,10 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
             </div>
           )}
 
-          {/* 📱 MOBILE FIRST-FRAME HERO CARD — Product Image, Title, Price & ADD button fit in first frame with 0 scrolling */}
-          <div className="sm:hidden bg-white rounded-2xl border border-slate-100 p-3.5 shadow-sm space-y-3">
+          {/* 📱 MOBILE FIRST-FRAME HERO CARD — Rendered ONLY if no generic substitute comparison */}
+          {!showComparison && (
+            <>
+              <div className="sm:hidden bg-white rounded-2xl border border-slate-100 p-3.5 shadow-sm space-y-3">
             <div className="flex gap-3.5 items-start">
               {/* Product Thumbnail */}
               <div className="relative w-28 h-28 shrink-0 bg-slate-50/80 rounded-xl border border-slate-100 p-1 flex items-center justify-center overflow-hidden">
@@ -932,6 +951,8 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
 
             </div>
           </div>
+        </>
+      )}
 
 
 

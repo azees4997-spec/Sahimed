@@ -65,10 +65,49 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
     }
 
     if (product) {
+      // Server-side fetch generic substitute mapping for 0 layout shift & instant SSR
+      let mappedGeneric: any = null;
+      const molCode = product.molecule_code || product.molecule_id;
+      if (molCode) {
+        try {
+          const genDoc = await collection.findOne({
+            $or: [
+              { molecule_code: molCode },
+              { molecule_id: molCode }
+            ],
+            _id: { $ne: product._id },
+            $and: [
+              {
+                $or: [
+                  { is_generic: true },
+                  { isGeneric: true },
+                  { medicine_type: { $regex: 'generic', $options: 'i' } }
+                ]
+              }
+            ]
+          });
+          if (genDoc) {
+            mappedGeneric = {
+              ...genDoc,
+              id: genDoc._id.toString(),
+              name: genDoc.product_name,
+              product_name: genDoc.product_name,
+              price: genDoc.packaging?.mrp,
+              mrp: genDoc.packaging?.mrp,
+              imageUrl: genDoc.images?.[0] || '',
+            };
+          }
+        } catch (e) {
+          console.error('[SSR Mapped Generic Fetch Error]', e);
+        }
+      }
+
       // Pass the ENTIRE raw MongoDB document plus normalised shorthand keys
       return {
         // ── spread everything from MongoDB ──────────────────────────────
         ...product,
+
+        mappedGeneric: mappedGeneric,
 
         // ── normalised convenience keys used by legacy helpers ──────────
         id: product._id.toString(),
