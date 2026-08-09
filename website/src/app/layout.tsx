@@ -100,53 +100,51 @@ export const viewport: Viewport = {
 
 import { getDbAdmin } from '@/lib/firebase-admin';
 
+// Cache pages server-side for layout footer
+const getCachedPages = unstable_cache(
+  async () => {
+    const dbAdmin = getDbAdmin();
+    if (!dbAdmin) return [];
+    const snapshot = await dbAdmin.collection('pages').orderBy('lastUpdated', 'desc').get();
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return { id: doc.id, title: data.title, placement: data.placement };
+    });
+  },
+  ['layout-pages'],
+  { revalidate: 60, tags: ['pages'] }
+);
+
+// Cache logo settings server-side to prevent client-side flickering/SSR mismatch
+const getCachedLogo = unstable_cache(
+  async () => {
+    const dbAdmin = getDbAdmin();
+    if (!dbAdmin) return null;
+    const doc = await dbAdmin.collection('settings').doc('logo').get();
+    return doc.exists ? doc.data() : null;
+  },
+  ['layout-logo-settings'],
+  { revalidate: 60, tags: ['logo-settings'] }
+);
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Cache pages server-side for layout footer
-  const getCachedPages = unstable_cache(
-    async () => {
-      const dbAdmin = getDbAdmin();
-      if (!dbAdmin) return [];
-      const snapshot = await dbAdmin.collection('pages').orderBy('lastUpdated', 'desc').get();
-      return snapshot.docs.map(doc => {
-        const data = doc.data();
-        return { id: doc.id, title: data.title, placement: data.placement };
-      });
-    },
-    ['layout-pages'],
-    { revalidate: 60, tags: ['pages'] }
-  );
-
-  // Cache logo settings server-side to prevent client-side flickering/SSR mismatch
-  const getCachedLogo = unstable_cache(
-    async () => {
-      const dbAdmin = getDbAdmin();
-      if (!dbAdmin) return null;
-      const doc = await dbAdmin.collection('settings').doc('logo').get();
-      return doc.exists ? doc.data() : null;
-    },
-    ['layout-logo-settings'],
-    { revalidate: 60, tags: ['logo-settings'] }
-  );
-
   let initialPages: any[] = [];
-  try {
-    initialPages = await getCachedPages();
-  } catch (error) {
-    if (!(error instanceof Error && error.message.includes('Project Id'))) {
-      console.error('Error fetching pages for layout footer:', error);
-    }
-  }
-
   let initialLogoSettings: any = null;
+
   try {
-    initialLogoSettings = await getCachedLogo();
+    const [pagesResult, logoResult] = await Promise.all([
+      getCachedPages().catch(e => []),
+      getCachedLogo().catch(e => null)
+    ]);
+    initialPages = pagesResult || [];
+    initialLogoSettings = logoResult || null;
   } catch (error) {
     if (!(error instanceof Error && error.message.includes('Project Id'))) {
-      console.error('Error fetching logo settings for layout:', error);
+      console.error('Error fetching layout data:', error);
     }
   }
 

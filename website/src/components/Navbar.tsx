@@ -424,7 +424,7 @@ export default function Navbar() {
         const normalizedMeds = Array.isArray(mongoMeds) ? mongoMeds.map((m: any) => ({
           ...m,
           id: m._id || m.id,
-          _type: 'medicine'
+          _type: m._type || 'medicine'
         })) : [];
 
         // Only cache non-empty results so we always retry on empty
@@ -823,7 +823,7 @@ export default function Navbar() {
 
                         {/* Product rows */}
                         <div className="divide-y divide-slate-100">
-                          {displayedSuggestions.filter(s => s.type === 'Brand').map((item) => {
+                          {suggestions.filter(s => s.type === 'Brand').slice(0, expanded ? 50 : 10).map((item) => {
                             const product = (item as any).product;
                             const composition = product?.saltComposition || product?.medical_info?.composition || '';
                             const mfr = product?.manufacturer || product?.taxonomy?.marketer_name || '';
