@@ -192,15 +192,15 @@ export async function GET(request: Request) {
           col.find(
             { ...baseFilterQuery, product_name: { $regex: `^${cleanEscaped}`, $options: 'i' } },
             { projection: listProjection }
-          ).limit(limitValue).toArray(),
+          ).maxTimeMS(2500).limit(limitValue).toArray(),
           col.find(
             { ...baseFilterQuery, product_name: { $regex: cleanEscaped, $options: 'i' } },
             { projection: listProjection }
-          ).limit(limitValue).toArray(),
+          ).maxTimeMS(2500).limit(limitValue).toArray(),
           col.find(
             { ...baseFilterQuery, 'medical_info.composition': { $regex: cleanEscaped, $options: 'i' } },
             { projection: listProjection }
-          ).limit(limitValue).toArray()
+          ).maxTimeMS(2500).limit(limitValue).toArray()
         ]);
 
         const resultMap = new Map();
@@ -312,14 +312,17 @@ export async function GET(request: Request) {
     let genericMolSet = new Set<string>();
     if (molCodes.length > 0) {
       try {
-        const genericDocs = await col.distinct('molecule_code', {
-          molecule_code: { $in: molCodes },
-          $or: [
-            { medicine_type: { $regex: 'generic', $options: 'i' } },
-            { is_generic: true }
-          ]
-        });
-        genericMolSet = new Set(genericDocs.map(c => String(c)));
+        const genericDocs = await col.find(
+          {
+            molecule_code: { $in: molCodes },
+            $or: [
+              { medicine_type: { $regex: 'generic', $options: 'i' } },
+              { is_generic: true }
+            ]
+          },
+          { projection: { molecule_code: 1 } }
+        ).maxTimeMS(800).limit(50).toArray();
+        genericMolSet = new Set(genericDocs.map(c => String(c.molecule_code)).filter(Boolean));
       } catch (e) {
         console.error('[Generic Mapping Lookup Error]', e);
       }
