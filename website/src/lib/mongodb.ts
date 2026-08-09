@@ -1,11 +1,19 @@
 import { MongoClient } from 'mongodb';
 
-const DEFAULT_PRIMARY_URI = process.env.MONGODB_URI || "mongodb://azees4997_db_user:99XzB5T3H1B0fNj8@ac-mymgwbv-shard-00-00.qwsbgml.mongodb.net:27017,ac-mymgwbv-shard-00-01.qwsbgml.mongodb.net:27017,ac-mymgwbv-shard-00-02.qwsbgml.mongodb.net:27017/sahimed?ssl=true&authSource=admin";
-const FALLBACK_SEEDLIST_URI = "mongodb://azees4997_db_user:99XzB5T3H1B0fNj8@ac-mymgwbv-shard-00-00.qwsbgml.mongodb.net:27017,ac-mymgwbv-shard-00-01.qwsbgml.mongodb.net:27017,ac-mymgwbv-shard-00-02.qwsbgml.mongodb.net:27017/sahimed?ssl=true&authSource=admin";
+const DIRECT_SEEDLIST_URI = "mongodb://azees4997_db_user:99XzB5T3H1B0fNj8@ac-mymgwbv-shard-00-00.qwsbgml.mongodb.net:27017,ac-mymgwbv-shard-00-01.qwsbgml.mongodb.net:27017,ac-mymgwbv-shard-00-02.qwsbgml.mongodb.net:27017/sahimed?ssl=true&authSource=admin";
+
+// If process.env.MONGODB_URI is missing or contains +srv (which fails DNS SRV lookup on Vercel/AWS Lambda), use direct seedlist
+const getEffectiveUri = () => {
+  const envUri = process.env.MONGODB_URI || "";
+  if (envUri && !envUri.includes('+srv')) {
+    return envUri;
+  }
+  return DIRECT_SEEDLIST_URI;
+};
 
 const options = {
-  serverSelectionTimeoutMS: 10000,
-  connectTimeoutMS: 15000,
+  serverSelectionTimeoutMS: 5000,
+  connectTimeoutMS: 8000,
   maxPoolSize: 10,
   minPoolSize: 1,
   socketTimeoutMS: 45000,
@@ -14,25 +22,24 @@ const options = {
   retryWrites: true,
 };
 
-// Helper to attempt connection with primary URI, falling back to direct seedlist if DNS SRV fails
 async function createClientWithFallback(): Promise<MongoClient> {
-  const targetUri = DEFAULT_PRIMARY_URI;
+  const targetUri = getEffectiveUri();
   try {
     const client = new MongoClient(targetUri, options);
     const c = await client.connect();
-    console.log("[MongoDB Intelligence] Primary connection established successfully.");
+    console.log("[MongoDB Intelligence] Connection established successfully.");
     scheduleIndexes(c);
     return c;
   } catch (err: any) {
     console.warn("[MongoDB Intelligence] Primary URI connection failed:", err.message, "Retrying with direct seedlist fallback...");
     try {
-      const fallbackClient = new MongoClient(FALLBACK_SEEDLIST_URI, options);
+      const fallbackClient = new MongoClient(DIRECT_SEEDLIST_URI, options);
       const c = await fallbackClient.connect();
-      console.log("[MongoDB Intelligence] Fallback seedlist connection established successfully!");
+      console.log("[MongoDB Intelligence] Direct seedlist connection established successfully!");
       scheduleIndexes(c);
       return c;
     } catch (fallbackErr: any) {
-      console.error("[MongoDB Intelligence] CRITICAL: Both primary and fallback connections failed:", fallbackErr.message);
+      console.error("[MongoDB Intelligence] CRITICAL: Connection failed:", fallbackErr.message);
       throw fallbackErr;
     }
   }
