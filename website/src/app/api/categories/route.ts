@@ -3,8 +3,8 @@ import clientPromise from '@/lib/mongodb';
 import { verifyAdmin } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 
-// Cache category data for 5 minutes — categories almost never change
-export const revalidate = 300;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 // Helper to escape regex search query
 function escapeRegExp(string: string) {
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
       // Backward compatibility aliases
       name: c.category
     })), {
-      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' }
+      headers: { 'Cache-Control': 'no-store, max-age=0' }
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

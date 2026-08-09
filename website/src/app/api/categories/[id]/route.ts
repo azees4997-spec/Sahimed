@@ -8,9 +8,20 @@ export const revalidate = 0;
 
 const getQuery = (id: string) => {
   if (/^[0-9a-fA-F]{24}$/.test(id)) {
-    return { _id: new ObjectId(id) };
+    return {
+      $or: [
+        { _id: id as any },
+        { _id: new ObjectId(id) as any },
+        { category_id: id }
+      ]
+    };
   }
-  return { _id: id as any };
+  return {
+    $or: [
+      { _id: id as any },
+      { category_id: id }
+    ]
+  };
 };
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
