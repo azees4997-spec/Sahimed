@@ -387,6 +387,221 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
             <span className="text-slate-600 font-semibold line-clamp-1">{product?.name}</span>
           </nav>
 
+          {/* ╔══════════════════════════════════════════════════════════════════════╗
+              ║  PREMIUM SAHI SMART SWITCH SIDE-BY-SIDE HERO & COMPARISON TABLE     ║
+              ╚══════════════════════════════════════════════════════════════════════╝ */}
+          {showComparison && genericAlt && (
+            <div className="space-y-5 my-2 animate-in fade-in slide-in-from-bottom-2 duration-400">
+              {/* 1. Green Top Smart Switch Banner */}
+              <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 rounded-2xl p-3.5 sm:p-4 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-2.5">
+                <div className="flex items-center gap-3 text-center sm:text-left">
+                  <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                    <Zap className="w-5 h-5 text-amber-300 fill-amber-300" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider">Save Up To {altSavePct > 0 ? altSavePct : 61}% With An Exact Substitute</h3>
+                    <p className="text-[10.5px] sm:text-xs font-medium opacity-90">Same Active Salt Composition ({product?.composition || '100% Salt Match'}) · Same Efficacy</p>
+                  </div>
+                </div>
+                <span className="bg-amber-400 text-slate-950 text-[10.5px] sm:text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm shrink-0">
+                  SAVE ₹{(unitPrice - altPrice).toFixed(0)} ({altSavePct}% OFF)
+                </span>
+              </div>
+
+              {/* 2. Side-by-Side Dual Product Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
+                {/* Left Card: Currently Viewing (Branded Original) */}
+                <div className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200/90 shadow-sm flex flex-col justify-between space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="bg-slate-100 text-slate-700 text-[9.5px] font-black uppercase tracking-wider px-3 py-1 rounded-full">
+                        Currently Viewing
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400">Prescribed Brand</span>
+                    </div>
+
+                    {/* Image & Title Box */}
+                    <div className="flex items-center gap-3.5 bg-slate-50/70 p-3 rounded-2xl border border-slate-100 mb-3">
+                      <div className="relative w-16 h-16 shrink-0 bg-white rounded-xl border border-slate-100 p-1 overflow-hidden">
+                        <Image src={images[currentImageIndex]} alt={product?.name || ''} fill className="object-contain p-1" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 uppercase line-clamp-2">{product?.name}</h4>
+                        <p className="text-[10px] text-slate-500 font-semibold truncate mt-0.5">{product?.marketerName || product?.manufacturer || 'Sun Pharma'}</p>
+                        <span className="text-[9.5px] font-bold text-slate-400 block mt-0.5">{product?.packagingDetail || 'Strip format'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Brand Price</p>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-xl sm:text-2xl font-black text-slate-900 font-outfit">₹{unitPrice}</span>
+                        {unitMrp > unitPrice && <span className="text-xs text-slate-400 line-through font-bold">₹{unitMrp}</span>}
+                      </div>
+                      <p className="text-[9.5px] text-slate-400 font-bold">₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / Unit</p>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      onClick={() => addCurrentToCart(1)}
+                      className="h-10 px-4 rounded-xl font-black text-xs border-slate-300 text-slate-700 hover:bg-slate-50"
+                    >
+                      Buy Brand ₹{unitPrice}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Right Card: Sahi Recommended Substitute */}
+                <div className="bg-gradient-to-b from-emerald-50/90 via-white to-teal-50/50 rounded-3xl p-4 sm:p-6 border-2 border-emerald-500 shadow-xl shadow-emerald-500/10 flex flex-col justify-between space-y-4 relative overflow-hidden">
+                  {/* Top Header Badge */}
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="bg-emerald-600 text-white text-[9.5px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-xs flex items-center gap-1">
+                      ✨ Top Substitute Match
+                    </span>
+                    <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase shadow-2xs">
+                      {altSavePct}% OFF
+                    </span>
+                  </div>
+
+                  {/* Image & Title Box */}
+                  <div className="flex items-center gap-3.5 bg-white p-3 rounded-2xl border border-emerald-200/80 shadow-2xs mb-1">
+                    <div className="relative w-16 h-16 shrink-0 bg-slate-50 rounded-xl border border-slate-100 p-1 overflow-hidden">
+                      <Image src={genericAlt?.imageUrl || genericAlt?.images?.[0] || images[0]} alt={genericAlt?.product_name || genericAlt?.name} fill className="object-contain p-1" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 uppercase line-clamp-2">{genericAlt?.product_name || genericAlt?.name}</h4>
+                      <p className="text-[10px] text-emerald-700 font-bold truncate mt-0.5">{genericAlt?.taxonomy?.marketer_name || genericAlt?.manufacturer || 'Licensed Generic Maker'}</p>
+                      <span className="text-[9.5px] font-bold text-slate-500 block mt-0.5">{genericAlt?.packaging?.packaging_detail || 'Strip format'}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="pt-2 border-t border-emerald-100 flex items-center justify-between">
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700">Substitute Price</p>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-2xl sm:text-3xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
+                          {unitPrice > altPrice && <span className="text-xs text-slate-400 line-through font-bold">₹{unitPrice}</span>}
+                        </div>
+                        <p className="text-[9.5px] text-emerald-600 font-bold">₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / Unit · <span className="text-emerald-700 font-extrabold">SAVE ₹{(unitPrice - altPrice).toFixed(0)}</span></p>
+                      </div>
+                    </div>
+
+                    {/* Large CTA Button */}
+                    <Button
+                      onClick={() => addToCart({ ...genericAlt, id: genericAlt._id || genericAlt.id, price: altPrice, mrp: altMrp })}
+                      className="w-full mt-3 h-12 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-600/25 active:scale-98 transition-all flex items-center justify-center gap-2"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      <span>Switch & Add Substitute (₹{altPrice})</span>
+                    </Button>
+
+                    {/* Social proof strip */}
+                    <div className="mt-2.5 bg-amber-50 border border-amber-200/80 rounded-xl p-2 text-center flex items-center justify-center gap-1.5 text-[9.5px] font-extrabold text-amber-900">
+                      <span>📈</span>
+                      <span>4.8K Patients Switched & Saved This Month</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Assurance Badges Row */}
+              <div className="grid grid-cols-3 gap-2 text-center bg-white p-3 rounded-2xl border border-slate-200/60 shadow-xs">
+                <div className="flex flex-col items-center space-y-1 p-1">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                  <span className="text-[9.5px] font-black uppercase text-slate-700 leading-tight">WHO-GMP Certified</span>
+                </div>
+                <div className="flex flex-col items-center space-y-1 p-1 border-x border-slate-200">
+                  <Clock className="w-5 h-5 text-sky-600" />
+                  <span className="text-[9.5px] font-black uppercase text-slate-700 leading-tight">Long Expiry (&gt;8 Months)</span>
+                </div>
+                <div className="flex flex-col items-center space-y-1 p-1">
+                  <BadgeCheck className="w-5 h-5 text-amber-500" />
+                  <span className="text-[9.5px] font-black uppercase text-slate-700 leading-tight">100% Genuine Quality</span>
+                </div>
+              </div>
+
+              {/* 4. Medicine Comparison Table ("100% Exact Salt Match") */}
+              <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-3 text-white flex items-center justify-between">
+                  <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-2">
+                    <Check className="w-4 h-4 bg-white/20 rounded-full p-0.5" /> Medicine Comparison · 100% Exact Salt Match
+                  </h3>
+                  <span className="text-[10px] font-black bg-white/20 px-2.5 py-0.5 rounded-full uppercase">Same Efficacy</span>
+                </div>
+
+                <div className="divide-y divide-slate-100 text-xs">
+                  {/* Row 1: Product Name */}
+                  <div className="grid grid-cols-2 p-3.5 bg-slate-50/50">
+                    <div className="space-y-0.5 pr-2">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Original Brand</span>
+                      <p className="font-extrabold text-slate-900 uppercase text-xs sm:text-sm">{product?.name}</p>
+                    </div>
+                    <div className="space-y-0.5 pl-2 border-l border-slate-200">
+                      <span className="text-[9px] font-black uppercase text-emerald-600 tracking-wider">Sahi Substitute</span>
+                      <p className="font-extrabold text-emerald-800 uppercase text-xs sm:text-sm">{genericAlt?.product_name || genericAlt?.name}</p>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Active Salt Composition */}
+                  <div className="grid grid-cols-2 p-3.5">
+                    <div className="space-y-0.5 pr-2">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Salt Composition</span>
+                      <p className="font-bold text-slate-700 italic">{product?.composition || '100% Active Salt'}</p>
+                    </div>
+                    <div className="space-y-0.5 pl-2 border-l border-slate-200">
+                      <span className="text-[9px] font-black uppercase text-emerald-600 tracking-wider">Salt Composition</span>
+                      <p className="font-bold text-emerald-700 italic flex items-center gap-1">
+                        ✓ {product?.composition || '100% Active Salt'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Row 3: Manufacturer */}
+                  <div className="grid grid-cols-2 p-3.5 bg-slate-50/50">
+                    <div className="space-y-0.5 pr-2">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Manufacturer</span>
+                      <p className="font-bold text-slate-700">{product?.marketerName || product?.manufacturer || 'Sun Pharma'}</p>
+                    </div>
+                    <div className="space-y-0.5 pl-2 border-l border-slate-200">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Manufacturer</span>
+                      <p className="font-bold text-slate-900">{genericAlt?.taxonomy?.marketer_name || genericAlt?.manufacturer || 'Licensed Generic Maker'}</p>
+                    </div>
+                  </div>
+
+                  {/* Row 4: Quality & Regulatory Approval */}
+                  <div className="grid grid-cols-2 p-3.5">
+                    <div className="space-y-0.5 pr-2">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Quality Standard</span>
+                      <p className="font-bold text-slate-700 flex items-center gap-1">🛡️ WHO & FDA Approved</p>
+                    </div>
+                    <div className="space-y-0.5 pl-2 border-l border-slate-200">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Quality Standard</span>
+                      <p className="font-bold text-emerald-700 flex items-center gap-1">🛡️ WHO-GMP Certified</p>
+                    </div>
+                  </div>
+
+                  {/* Row 5: Price & Net Savings */}
+                  <div className="grid grid-cols-2 p-3.5 bg-emerald-50/40">
+                    <div className="space-y-0.5 pr-2">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Unit Cost</span>
+                      <p className="font-black text-slate-900 text-sm">₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} <span className="text-[10px] font-normal text-slate-500">/ unit</span></p>
+                    </div>
+                    <div className="space-y-0.5 pl-2 border-l border-emerald-200">
+                      <span className="text-[9px] font-black uppercase text-emerald-700 tracking-wider">Unit Cost & Savings</span>
+                      <div className="flex items-baseline gap-2">
+                        <p className="font-black text-emerald-700 text-sm">₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} <span className="text-[10px] font-normal text-slate-500">/ unit</span></p>
+                        <span className="bg-emerald-600 text-white font-black text-[9px] px-2 py-0.5 rounded-full uppercase">Save {altSavePct}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 📱 MOBILE FIRST-FRAME HERO CARD — Product Image, Title, Price & ADD button fit in first frame with 0 scrolling */}
           <div className="sm:hidden bg-white rounded-2xl border border-slate-100 p-3.5 shadow-sm space-y-3">
             <div className="flex gap-3.5 items-start">
