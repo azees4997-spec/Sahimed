@@ -404,13 +404,13 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
               {/* 2. Side-by-Side Dual Product Cards (100% Symmetrical Image Alignment & Fits Mobile Screen) */}
               <div className="grid grid-cols-2 gap-2.5 sm:gap-5 items-stretch">
                 
-                {/* LEFT CARD: Prescribed Product */}
-                <div className="bg-white rounded-2xl sm:rounded-3xl p-2.5 sm:p-5 border sm:border-2 border-slate-200 shadow-md flex flex-col justify-between space-y-2.5 sm:space-y-4">
+                {/* LEFT CARD: Prescribed Product (YOUR BRAND) */}
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-2.5 sm:p-5 border sm:border-2 border-slate-200 shadow-md flex flex-col justify-between space-y-3 sm:space-y-4 min-h-[420px]">
                   <div>
-                    {/* Header Bar - Identical h-6 for Symmetrical Image Alignment */}
+                    {/* Header Bar - YOUR BRAND Badge */}
                     <div className="h-6 flex items-center justify-between mb-2">
-                      <span className="bg-slate-100 text-slate-700 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 sm:px-3 py-0.5 rounded-full border border-slate-200">
-                        PRESCRIBED
+                      <span className="bg-slate-100 text-slate-800 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2.5 sm:px-3 py-0.5 rounded-full border border-slate-300">
+                        YOUR BRAND
                       </span>
                     </div>
 
@@ -492,18 +492,20 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   </div>
                 </div>
 
-                {/* RIGHT CARD: ✨ SAHI RECOMMENDATION */}
-                <div className="bg-gradient-to-b from-emerald-100/90 via-white to-teal-50/80 rounded-2xl sm:rounded-3xl p-2.5 sm:p-5 border-2 sm:border-4 border-emerald-500 shadow-[0_15px_40px_rgba(16,185,129,0.25)] flex flex-col justify-between space-y-2.5 sm:space-y-4 relative overflow-hidden group">
+                {/* RIGHT CARD: ✨ SAHI RECOMMENDATION (Top Corner Discount Badge) */}
+                <div className="bg-gradient-to-b from-emerald-100/90 via-white to-teal-50/80 rounded-2xl sm:rounded-3xl p-2.5 sm:p-5 border-2 sm:border-4 border-emerald-500 shadow-[0_15px_40px_rgba(16,185,129,0.25)] flex flex-col justify-between space-y-3 sm:space-y-4 relative overflow-hidden group min-h-[420px]">
                   
                   <div>
-                    {/* Header Bar - Identical h-6 for Symmetrical Image Alignment */}
-                    <div className="h-6 flex items-center justify-between mb-2">
-                      <span className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 sm:px-3 py-0.5 rounded-full shadow-md border border-emerald-400">
+                    {/* Header Bar - Clean SAHI RECOMMENDATION + Top Corner Discount % Badge */}
+                    <div className="h-6 flex items-center justify-between mb-2 gap-1">
+                      <span className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[8.5px] sm:text-[10px] font-black uppercase tracking-wider px-2 sm:px-3 py-0.5 rounded-full shadow-md border border-emerald-400 shrink-0">
                         ✨ SAHI RECOMMENDATION
                       </span>
-                      <span className="bg-amber-400 text-slate-950 text-[8.5px] font-black px-1.5 py-0.5 rounded-md uppercase shadow-2xs">
-                        👑 BEST VALUE
-                      </span>
+                      {genericProductDiscountPct > 0 && (
+                        <span className="bg-amber-400 text-slate-950 text-[8.5px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full uppercase shadow-2xs shrink-0">
+                          {genericProductDiscountPct}% OFF
+                        </span>
+                      )}
                     </div>
 
                     {/* 1. Symmetrical Image Box Sizing */}
@@ -556,23 +558,18 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   </div>
 
                   <div className="pt-2 border-t border-emerald-200 space-y-2">
-                    {/* Price & Unit Cost + Generic Product's MRP Strikeout + Discount % + Prescribed Savings */}
+                    {/* Price & Unit Cost + Generic Product's MRP Strikeout + Prescribed Savings */}
                     <div>
                       <div className="flex flex-wrap items-baseline gap-1 sm:gap-2">
                         <span className="text-lg sm:text-3xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
                         {altMrp > altPrice && <span className="text-[9.5px] sm:text-xs text-slate-400 line-through font-bold">MRP ₹{altMrp}</span>}
-                        {genericProductDiscountPct > 0 && (
-                          <span className="bg-amber-400 text-slate-950 text-[8.5px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase shadow-2xs">
-                            {genericProductDiscountPct}% OFF
-                          </span>
-                        )}
                       </div>
                       <p className="text-[9px] sm:text-[11px] text-emerald-900 font-bold mt-0.5">
                         ₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
                       </p>
                       {switchSavingsAmount > 0 && (
                         <p className="text-[8.5px] sm:text-[9.5px] text-emerald-800 font-black mt-1 leading-tight flex items-center gap-1 bg-emerald-100/90 p-1 rounded border border-emerald-300">
-                          <span>💰 YOU SAVE ₹{switchSavingsAmount.toFixed(0)} VS PRESCRIBED BRAND</span>
+                          <span>💰 YOU SAVE ₹{switchSavingsAmount.toFixed(0)} VS BRAND</span>
                         </p>
                       )}
                     </div>
