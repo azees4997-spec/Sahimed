@@ -57,17 +57,20 @@ export async function GET(request: Request) {
 
     const query: any = {};
 
-    // Only show salable products to non-admins (exact string match uses B-tree index)
+    // Only show salable products to non-admins
     if (!showDisabled) {
-      query.salable_status = 'Salable';
+      query.salable_status = { $regex: 'Salable', $options: 'i' };
     } else {
       try {
         await verifyAdmin(request);
         // Admin: show all products (no salable_status filter)
       } catch {
-        query.salable_status = 'Salable';
+        query.salable_status = { $regex: 'Salable', $options: 'i' };
       }
     }
+
+    // Build base filter query (without search terms) for Atlas $search $match stage
+    const baseFilterQuery = { ...query };
 
     // Category filter (handles category name, sub-category, or OTC/Generic medicine_type)
     if (category) {
@@ -77,18 +80,21 @@ export async function GET(request: Request) {
         { 'taxonomy.sub_category': catRegex },
         { medicine_type: catRegex }
       ];
+      baseFilterQuery.$or = query.$or;
     }
 
     // Marketer/manufacturer filter
     if (marketerName) {
       const names = marketerName.split(',').map(n => n.trim()).filter(Boolean);
       query['taxonomy.marketer_name'] = { $in: names.map(n => new RegExp(escapeRegExp(n), 'i')) };
+      baseFilterQuery['taxonomy.marketer_name'] = query['taxonomy.marketer_name'];
     }
 
     // Dosage form filter
     if (dosageForm) {
       const forms = dosageForm.split(',').map(f => f.trim()).filter(Boolean);
       query['packaging.product_form'] = { $in: forms.map(f => new RegExp(escapeRegExp(f), 'i')) };
+      baseFilterQuery['packaging.product_form'] = query['packaging.product_form'];
     }
 
     // Price range filter
@@ -96,12 +102,14 @@ export async function GET(request: Request) {
       query['packaging.mrp'] = {};
       if (minPrice) query['packaging.mrp'].$gte = parseFloat(minPrice);
       if (maxPrice) query['packaging.mrp'].$lte = parseFloat(maxPrice);
+      baseFilterQuery['packaging.mrp'] = query['packaging.mrp'];
     }
 
     // Generic filter (medicine_type === 'Generic')
     if (isGeneric !== null && isGeneric !== undefined) {
       if (isGeneric === 'true') {
         query.medicine_type = { $regex: 'generic', $options: 'i' };
+        baseFilterQuery.medicine_type = query.medicine_type;
       }
     }
 
@@ -203,7 +211,7 @@ export async function GET(request: Request) {
               }
             }
           },
-          { $match: query },
+          { $match: baseFilterQuery },
           { $limit: limitValue },
           { $project: listProjection }
         ]).toArray();

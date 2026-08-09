@@ -71,7 +71,7 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
       if (molCode) {
         try {
           const genDoc = await collection.findOne({
-            salable_status: 'Salable',
+            salable_status: { $regex: 'Salable', $options: 'i' },
             $or: [
               { molecule_code: molCode },
               { molecule_id: molCode }
@@ -80,7 +80,7 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
             $or: [
               { is_generic: true },
               { isGeneric: true },
-              { medicine_type: 'Generic' }
+              { medicine_type: { $regex: 'generic', $options: 'i' } }
             ]
           });
           if (genDoc) {
