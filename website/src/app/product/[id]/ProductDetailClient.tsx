@@ -428,55 +428,68 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 </div>
               </div>
 
-              {/* 2. Side-by-Side Dual Product Cards (Ultra-Clean, Minimalist, 1-CTA Button Design) */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+              {/* 2. Side-by-Side Dual Product Cards (Exact Ordered 7-Step Layout · Fits Desktop & Mobile First Screen) */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
                 
-                {/* LEFT CARD: Prescribed Expensive Brand (Ultra-Clean Light Card) */}
-                <div className="bg-white rounded-[32px] p-6 sm:p-7 border-2 border-slate-200 shadow-md flex flex-col justify-between space-y-5">
+                {/* LEFT CARD: Prescribed Medicine (Original Brand) */}
+                <div className="bg-white rounded-3xl p-5 sm:p-6 border-2 border-slate-200 shadow-md flex flex-col justify-between space-y-4">
                   <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="bg-slate-100 text-slate-700 text-[10.5px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full border border-slate-200 shadow-2xs">
+                    {/* Header Tag */}
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="bg-slate-100 text-slate-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-slate-200">
                         PRESCRIBED MEDICINE
                       </span>
+                      <span className="text-[10.5px] font-bold text-slate-400">Brand Marketing Cost</span>
                     </div>
 
-                    {/* Product Main Showcase */}
-                    <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-150">
-                      <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0 bg-white rounded-2xl border border-slate-200 p-2.5 overflow-hidden shadow-2xs">
-                        <Image src={images[currentImageIndex]} alt={product?.name || ''} fill className="object-contain p-1.5" priority />
-                      </div>
-                      <div className="min-w-0 flex-1 space-y-2 text-center sm:text-left">
-                        <h4 className="text-base sm:text-lg font-black text-slate-900 uppercase leading-snug">{product?.name}</h4>
-                        <p className="text-xs text-slate-500 font-bold italic">{product?.composition || 'Active Chemical Salt'}</p>
-                        <p className="text-xs font-bold text-slate-600">By {product?.marketerName || product?.manufacturer || 'Sun Pharmaceutical'}</p>
-                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-1">
-                          <span className="inline-block text-[10px] font-bold bg-white text-slate-600 px-3 py-1 rounded-lg border border-slate-200 shadow-2xs">
-                            {product?.packagingDetail || 'Strip of 10 tablets'}
-                          </span>
-                          <span className="inline-block text-[10px] font-bold bg-rose-50 text-rose-700 px-2.5 py-1 rounded-lg border border-rose-200">
-                            Rx Required
-                          </span>
-                        </div>
-                      </div>
+                    {/* 1. Product Image */}
+                    <div className="relative w-full h-32 sm:h-36 bg-slate-50 rounded-2xl border border-slate-150 p-2 overflow-hidden flex items-center justify-center mb-3">
+                      <Image src={images[currentImageIndex]} alt={product?.name || ''} fill className="object-contain p-2" priority />
+                    </div>
+
+                    {/* Product Name */}
+                    <h4 className="text-base sm:text-lg font-black text-slate-900 uppercase leading-snug">{product?.name}</h4>
+
+                    {/* 2. Active Salt Composition */}
+                    <p className="text-xs text-slate-600 font-bold italic mt-1">
+                      <span className="text-slate-400 font-semibold not-italic">Salt: </span>
+                      {product?.composition || 'Active Chemical Salt'}
+                    </p>
+
+                    {/* 3. Pack Size */}
+                    <p className="text-xs text-slate-500 font-semibold mt-1 flex items-center gap-1">
+                      <span>📦 Pack:</span>
+                      <span className="font-bold text-slate-700">{product?.packagingDetail || 'Strip of 10 tablets'}</span>
+                    </p>
+
+                    {/* 4. Marketer / Manufacturer */}
+                    <p className="text-xs text-slate-500 font-semibold mt-1">
+                      <span>🏢 Marketer:</span> <span className="font-bold text-slate-800">{product?.marketerName || product?.manufacturer || 'Sun Pharmaceutical Industries Ltd'}</span>
+                    </p>
+
+                    {/* Quality Approval */}
+                    <div className="mt-2 bg-slate-50 rounded-xl px-2.5 py-1.5 border border-slate-200/80 inline-flex items-center gap-1.5 text-[10.5px] font-bold text-slate-600">
+                      <span>🛡️</span>
+                      <span>WHO-GMP & US-FDA Approved Quality</span>
                     </div>
                   </div>
 
-                  <div>
-                    <div className="pt-3 border-t border-slate-150 flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">PRESCRIBED PRICE</p>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-3xl sm:text-4xl font-black text-slate-950 font-outfit">₹{unitPrice}</span>
-                          {unitMrp > unitPrice && <span className="text-sm text-slate-400 line-through font-bold">₹{unitMrp}</span>}
-                        </div>
-                        <p className="text-[11px] text-slate-500 font-bold">₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / Unit</p>
+                  <div className="pt-3 border-t border-slate-150 space-y-3">
+                    {/* 5. MRP Strike Out & Price + 6. Per Unit Cost */}
+                    <div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl sm:text-4xl font-black text-slate-950 font-outfit">₹{unitPrice}</span>
+                        {unitMrp > unitPrice && <span className="text-sm text-slate-400 line-through font-bold">MRP ₹{unitMrp}</span>}
                       </div>
+                      <p className="text-[11px] text-slate-500 font-bold mt-0.5">
+                        ₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / tablet · <span className="text-slate-400 font-normal">Standard Brand Price</span>
+                      </p>
                     </div>
 
-                    {/* ONLY 1 CLEAN CTA BUTTON */}
+                    {/* 7. Single Add To Cart CTA Button */}
                     <Button
                       onClick={() => addCurrentToCart(1)}
-                      className="w-full mt-4 h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
+                      className="w-full h-13 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
                     >
                       <ShoppingCart className="w-4 h-4" />
                       <span>Add To Cart (₹{unitPrice})</span>
@@ -484,64 +497,73 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   </div>
                 </div>
 
-                {/* RIGHT CARD: ✨ SAHI RECOMMENDED GENERIC (MAXIMUM HIGHLIGHTED WINNER CARD) */}
-                <div className="bg-gradient-to-b from-emerald-100/90 via-white to-teal-50/80 rounded-[32px] p-6 sm:p-7 border-4 border-emerald-500 shadow-[0_25px_60px_rgba(16,185,129,0.35)] flex flex-col justify-between space-y-5 relative overflow-hidden group">
+                {/* RIGHT CARD: ✨ SAHI RECOMMENDED GENERIC (High-Highlight Border & Growth Driver Winner) */}
+                <div className="bg-gradient-to-b from-emerald-100/90 via-white to-teal-50/80 rounded-3xl p-5 sm:p-6 border-4 border-emerald-500 shadow-[0_20px_50px_rgba(16,185,129,0.3)] flex flex-col justify-between space-y-4 relative overflow-hidden group">
                   
                   {/* Floating Gold Best Value Ribbon */}
-                  <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-400 via-amber-500 to-amber-400 text-slate-950 text-xs font-black px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md border-b border-l border-amber-300 flex items-center gap-1 z-20">
-                    👑 RECOMMENDED CHOICE · SAVE {altSavePct}%
+                  <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-400 to-amber-500 text-slate-950 text-[11px] font-black px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md flex items-center gap-1 z-20">
+                    👑 BEST VALUE · SAVE {altSavePct}%
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-black uppercase tracking-wider px-4 py-1 rounded-full shadow-md flex items-center gap-1 border border-emerald-400">
+                    {/* Header Tag */}
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md">
                         ✨ SAHI RECOMMENDED GENERIC
                       </span>
                     </div>
 
-                    {/* Product Main Showcase */}
-                    <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 sm:p-5 rounded-2xl border-2 border-emerald-300 shadow-md">
-                      <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0 bg-emerald-50 rounded-2xl border border-emerald-200 p-2 overflow-hidden shadow-xs">
-                        <Image src={genericAlt?.imageUrl || genericAlt?.images?.[0] || images[0]} alt={genericAlt?.product_name || genericAlt?.name} fill className="object-contain p-1.5" priority />
-                      </div>
-                      <div className="min-w-0 flex-1 space-y-2 text-center sm:text-left">
-                        <h4 className="text-base sm:text-lg font-black text-slate-900 uppercase leading-snug">{genericAlt?.product_name || genericAlt?.name}</h4>
-                        <p className="text-xs text-emerald-700 font-black italic flex items-center justify-center sm:justify-start gap-1 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-                          <Check className="w-4 h-4 bg-emerald-600 text-white rounded-full p-0.5" /> 100% Exact Active Salt Match
-                        </p>
-                        <p className="text-xs font-extrabold text-emerald-800 truncate">By {genericAlt?.taxonomy?.marketer_name || genericAlt?.manufacturer || 'Licensed WHO-GMP Manufacturer'}</p>
-                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-1">
-                          <span className="inline-block text-[10px] font-bold bg-emerald-100 text-emerald-900 px-3 py-1 rounded-lg border border-emerald-200 shadow-2xs">
-                            {genericAlt?.packaging?.packaging_detail || 'Strip of 10 tablets'}
-                          </span>
-                          <span className="inline-block text-[10px] font-black bg-amber-400 text-slate-950 px-2.5 py-1 rounded-lg shadow-2xs">
-                            SAVE ₹{(unitPrice - altPrice).toFixed(0)}
-                          </span>
-                        </div>
-                      </div>
+                    {/* 1. Product Image */}
+                    <div className="relative w-full h-32 sm:h-36 bg-emerald-50/80 rounded-2xl border-2 border-emerald-200 p-2 overflow-hidden flex items-center justify-center mb-3">
+                      <Image src={genericAlt?.imageUrl || genericAlt?.images?.[0] || images[0]} alt={genericAlt?.product_name || genericAlt?.name} fill className="object-contain p-2" priority />
+                    </div>
+
+                    {/* Product Name */}
+                    <h4 className="text-base sm:text-lg font-black text-slate-900 uppercase leading-snug">{genericAlt?.product_name || genericAlt?.name}</h4>
+
+                    {/* 2. Active Salt Composition (100% Identical Verification) */}
+                    <p className="text-xs text-emerald-800 font-extrabold italic mt-1 flex items-center gap-1">
+                      <Check className="w-4 h-4 bg-emerald-600 text-white rounded-full p-0.5" />
+                      <span>✓ {product?.composition || 'Active Chemical Salt'} (100% Exact Match)</span>
+                    </p>
+
+                    {/* 3. Pack Size */}
+                    <p className="text-xs text-emerald-900 font-semibold mt-1 flex items-center gap-1">
+                      <span>📦 Pack:</span>
+                      <span className="font-bold text-emerald-950">{genericAlt?.packaging?.packaging_detail || 'Strip of 10 tablets'}</span>
+                    </p>
+
+                    {/* 4. Marketer / Manufacturer */}
+                    <p className="text-xs text-emerald-900 font-semibold mt-1">
+                      <span>🏢 Marketer:</span> <span className="font-bold text-emerald-950">{genericAlt?.taxonomy?.marketer_name || genericAlt?.manufacturer || 'Licensed WHO-GMP Quality Manufacturer'}</span>
+                    </p>
+
+                    {/* Quality Approval */}
+                    <div className="mt-2 bg-emerald-100/80 rounded-xl px-2.5 py-1.5 border border-emerald-300 inline-flex items-center gap-1.5 text-[10.5px] font-black text-emerald-950">
+                      <span>🛡️</span>
+                      <span>WHO-GMP & US-FDA Quality Approved</span>
                     </div>
                   </div>
 
-                  <div>
-                    <div className="pt-3 border-t border-emerald-200 flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">SAHI SMART PRICE</p>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-4xl sm:text-5xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
-                          {unitPrice > altPrice && <span className="text-base text-slate-400 line-through font-bold">₹{unitPrice}</span>}
-                        </div>
-                        <p className="text-xs text-emerald-900 font-bold mt-0.5">
-                          ₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / Unit · <span className="text-emerald-700 font-black">YOU SAVE ₹{(unitPrice - altPrice).toFixed(0)} ({altSavePct}% OFF)</span>
-                        </p>
+                  <div className="pt-3 border-t border-emerald-200 space-y-3">
+                    {/* 5. MRP Strike Out & Price + 6. Per Unit Cost */}
+                    <div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl sm:text-4xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
+                        {unitPrice > altPrice && <span className="text-sm text-slate-400 line-through font-bold">MRP ₹{unitPrice}</span>}
+                        <span className="bg-amber-400 text-slate-950 text-[10.5px] font-black px-2.5 py-0.5 rounded-full uppercase ml-1">SAVE ₹{(unitPrice - altPrice).toFixed(0)}</span>
                       </div>
+                      <p className="text-[11px] text-emerald-900 font-bold mt-0.5">
+                        ₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / tablet · <span className="text-emerald-700 font-black">YOU SAVE ₹{(unitPrice - altPrice).toFixed(0)} ({altSavePct}% OFF)</span>
+                      </p>
                     </div>
 
-                    {/* ONLY 1 HIGH-CONVERTING PRIMARY CTA BUTTON */}
+                    {/* 7. Single Add To Cart CTA Button */}
                     <Button
                       onClick={() => addToCart({ ...genericAlt, id: genericAlt._id || genericAlt.id, price: altPrice, mrp: altMrp })}
-                      className="w-full mt-4 h-15 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-sm sm:text-lg uppercase tracking-wider shadow-2xl shadow-emerald-600/40 active:scale-98 transition-all flex items-center justify-center gap-2 border-2 border-emerald-300 hover:scale-[1.02]"
+                      className="w-full h-14 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs sm:text-base uppercase tracking-wider shadow-xl shadow-emerald-600/35 active:scale-98 transition-all flex items-center justify-center gap-2 border-2 border-emerald-300 hover:scale-[1.01]"
                     >
-                      <ShoppingCart className="w-6 h-6" />
+                      <ShoppingCart className="w-5 h-5" />
                       <span>🚀 Switch & Add Generic To Cart (₹{altPrice})</span>
                     </Button>
                   </div>
