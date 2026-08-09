@@ -311,7 +311,7 @@ export async function GET(request: Request) {
     // Normalize output to maintain compatibility with frontend
     const normalizedProducts = products.map(p => {
       const code = p.molecule_code || p.molecule_id;
-      const isGen = (p.medicine_type || '').toLowerCase().includes('generic') || p.is_generic === true;
+      const isGen = (p.medicine_type || '').toLowerCase().includes('generic') || p.is_generic === true || p.isGeneric === true;
       const hasGenericMapped = isGen || (code ? genericMolSet.has(code) : false);
 
       return {
@@ -320,13 +320,16 @@ export async function GET(request: Request) {
         _type: 'medicine',
         name: p.product_name,
         sku: p.product_id,
+        medicine_type: p.medicine_type || (isGen ? 'Generic' : 'Branded'),
+        is_generic: isGen,
+        isGeneric: isGen,
         manufacturer: p.taxonomy?.marketer_name,
         category: p.taxonomy?.category_name,
         saltComposition: p.medical_info?.composition,
         composition: p.medical_info?.composition,
         price: p.packaging?.mrp,
         mrp: p.packaging?.mrp,
-        imageUrl: p.images?.[0] || '',
+        imageUrl: p.images?.[0] || p.imageUrl || '',
         prescriptionRequired: p.safety_warnings?.is_rx_required,
         treatment: p.medical_info?.primary_use,
         howToUse: p.medical_info?.how_to_use,

@@ -592,7 +592,11 @@ export function ItemMasterTab({ db, isVerified, onBack }: { db: any, isVerified:
                         <td className={isErpDensity ? "px-4 py-1.5" : "px-6 py-4"}>
                           <div className="flex items-center gap-2.5">
                             <div className={cn("bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden shrink-0", isErpDensity ? "w-7 h-7 rounded-md p-0.5" : "w-11 h-11 rounded-xl p-1")}>
-                              {med.imageUrl ? <img src={med.imageUrl} alt="" className="w-full h-full object-contain" /> : <Package className={cn("text-slate-300", isErpDensity ? "w-3.5 h-3.5" : "w-5 h-5")} />}
+                              {(() => {
+                                const img = med.images?.[0] || med.imageUrl || '';
+                                const isValid = img && !img.includes('placeholder') && !img.includes('picsum') && !img.includes('hero_generics') && !img.includes('patient-avatars');
+                                return isValid ? <img src={img} alt="" className="w-full h-full object-contain" /> : <Package className={cn("text-slate-300", isErpDensity ? "w-3.5 h-3.5" : "w-5 h-5")} />;
+                              })()}
                             </div>
                             <div className="flex flex-col min-w-0">
                               <div className="flex items-center gap-1.5">

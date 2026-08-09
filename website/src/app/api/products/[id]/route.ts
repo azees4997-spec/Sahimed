@@ -81,18 +81,23 @@ export async function GET(
       } catch (e) {}
     }
 
+    const isGen = (product.medicine_type || '').toLowerCase().includes('generic') || product.is_generic === true || product.isGeneric === true;
+
     // Return with legacy field aliases for backward compatibility
     const normalized = {
       ...product,
       id: product._id?.toString(),
       name: product.product_name,
       sku: product.product_id,
+      medicine_type: product.medicine_type || (isGen ? 'Generic' : 'Branded'),
+      is_generic: isGen,
+      isGeneric: isGen,
       manufacturer: product.taxonomy?.marketer_name,
       category: product.taxonomy?.category_name,
       saltComposition: product.medical_info?.composition,
       price: product.packaging?.mrp,
       mrp: product.packaging?.mrp,
-      imageUrl: product.images?.[0] || '',
+      imageUrl: product.images?.[0] || product.imageUrl || '',
       imageUrls: product.images || [],
       prescriptionRequired: product.safety_warnings?.is_rx_required,
       treatment: product.medical_info?.primary_use,
