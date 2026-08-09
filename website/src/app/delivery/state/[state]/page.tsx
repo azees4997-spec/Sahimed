@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { INDIAN_STATES } from '@/lib/state-data';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { ShieldCheck, Truck, PackageCheck, MapPin, Award, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -182,8 +181,6 @@ export default async function StatePage({ params }: Props) {
           </div>
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 }

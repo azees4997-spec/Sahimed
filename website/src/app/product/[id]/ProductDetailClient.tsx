@@ -22,9 +22,8 @@ import PageTransition from '@/components/PageTransition';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import Footer from '@/components/Footer';
 
-// ─── Strip HTML ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Strip HTML â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function stripHtml(raw?: string | null): string {
   if (!raw) return '';
   return raw
@@ -35,7 +34,7 @@ function stripHtml(raw?: string | null): string {
     .trim();
 }
 
-// ─── Recently Viewed helpers ─────────────────────────────────────────────────
+// â”€â”€â”€ Recently Viewed helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const RV_KEY = 'sahimed_recently_viewed';
 function saveRecentlyViewed(product: any) {
   if (typeof window === 'undefined' || !product?.id) return;
@@ -51,7 +50,7 @@ function getRecentlyViewed(currentId: string): any[] {
   return items.filter((p: any) => p.id !== currentId).slice(0, 6);
 }
 
-// ─── Section Label ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Section Label â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SectionLabel({ children, accent }: { children: React.ReactNode; accent?: string }) {
   return (
     <div className="flex items-center gap-3 mb-5">
@@ -61,7 +60,7 @@ function SectionLabel({ children, accent }: { children: React.ReactNode; accent?
   );
 }
 
-// ─── Info Row ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Info Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function InfoRow({ label, value, icon: Icon, accent }: { label: string; value?: string | null; icon?: any; accent?: string }) {
   if (!value) return null;
   return (
@@ -79,7 +78,7 @@ function InfoRow({ label, value, icon: Icon, accent }: { label: string; value?: 
   );
 }
 
-// ─── Warning Tile ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Warning Tile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function WarningTile({ label, value, icon: Icon, color }: { label: string; value?: string | null; icon: any; color: string }) {
   if (!value) return null;
   return (
@@ -93,7 +92,7 @@ function WarningTile({ label, value, icon: Icon, color }: { label: string; value
   );
 }
 
-// ─── FAQ Item ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ FAQ Item â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function FaqItem({ q, a }: { q: string; a?: string | null }) {
   const [open, setOpen] = useState(false);
   if (!a) return null;
@@ -112,7 +111,7 @@ function FaqItem({ q, a }: { q: string; a?: string | null }) {
   );
 }
 
-// ─── Trust Badge ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Trust Badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function TrustBadge({ icon: Icon, label, sub }: { icon: any; label: string; sub: string }) {
   return (
     <div className="flex items-center gap-3 flex-1 min-w-[140px]">
@@ -127,7 +126,7 @@ function TrustBadge({ icon: Icon, label, sub }: { icon: any; label: string; sub:
   );
 }
 
-// ─── Molecule Illustration ────────────────────────────────────────────────────
+// â”€â”€â”€ Molecule Illustration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function MoleculeIllustration() {
   return (
     <svg viewBox="0 0 200 120" className="w-full h-full opacity-10" fill="none">
@@ -150,7 +149,7 @@ function MoleculeIllustration() {
   );
 }
 
-// ─── Product Card (People Also Bought / Recently Viewed) ─────────────────────
+// â”€â”€â”€ Product Card (People Also Bought / Recently Viewed) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ProductMiniCard({ item, onAdd }: { item: any; onAdd: (item: any) => void }) {
   const price = Number(item.liveData?.sahimed_price || item.price || item.packaging?.mrp || 0);
   const mrp = Number(item.liveData?.mrp || item.mrp || item.packaging?.mrp || price);
@@ -171,8 +170,8 @@ function ProductMiniCard({ item, onAdd }: { item: any; onAdd: (item: any) => voi
         <p className="text-[9px] text-slate-400 font-medium truncate">{item.taxonomy?.marketer_name || item.manufacturer || ''}</p>
         <div className="flex items-center justify-between mt-auto pt-1">
           <div>
-            <p className="text-sm font-black text-slate-900">₹{price}</p>
-            {mrp > price && <p className="text-[9px] text-slate-400 line-through">₹{mrp}</p>}
+            <p className="text-sm font-black text-slate-900">â‚¹{price}</p>
+            {mrp > price && <p className="text-[9px] text-slate-400 line-through">â‚¹{mrp}</p>}
           </div>
           <button onClick={e => { e.preventDefault(); onAdd(item); }}
             className="w-7 h-7 bg-primary rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20">
@@ -184,16 +183,16 @@ function ProductMiniCard({ item, onAdd }: { item: any; onAdd: (item: any) => voi
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export default function ProductDetailClient({ initialProduct, id, crossSellProducts = [] }: { initialProduct: any; id: string; crossSellProducts?: any[] }) {
   const { toast } = useToast();
   const { user } = useUser();
   const db_fs = useFirestore();
   const { addToCart, getItemQuantity, updateQuantity, removeFromCart } = useCart();
 
-  // ── State ────────────────────────────────────────────────────────────────
+  // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [edd, setEdd] = useState('');
   const [activePincode, setActivePincode] = useState('560068');
   const [zone, setZone] = useState('');
@@ -211,14 +210,14 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
   const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
   const heroRef = useRef<HTMLDivElement>(null);
 
-  // ── Use initialProduct DIRECTLY — never replace with raw DB doc ──────────
+  // â”€â”€ Use initialProduct DIRECTLY â€” never replace with raw DB doc â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // SSR normalises all keys. Client hook would return raw MongoDB doc (no
   // convenience keys). We only fetch live pricing separately if needed.
   const product = initialProduct;
 
   const { data: molData } = useMongoDBMolecule(product?.moleculeId);
 
-  // People Also Bought — same category
+  // People Also Bought â€” same category
   const { data: alsoData } = useMongoDBCollection({
     q: product?.categoryName || product?.taxonomy?.category_name || '',
     limit: 12,
@@ -227,14 +226,14 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
     String(p._id || p.id) !== String(product?._id || product?.id)
   ).slice(0, 8);
 
-  // ── Save to Recently Viewed ──────────────────────────────────────────────
+  // â”€â”€ Save to Recently Viewed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!product) return;
     saveRecentlyViewed(product);
     setRecentlyViewed(getRecentlyViewed(product.id || product._id));
   }, [product]);
 
-  // ── Sticky bar on scroll ─────────────────────────────────────────────────
+  // â”€â”€ Sticky bar on scroll â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const onScroll = () => {
       if (heroRef.current) {
@@ -246,7 +245,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // ── Pincode / EDD ────────────────────────────────────────────────────────
+  // â”€â”€ Pincode / EDD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const load = async () => {
       const stored = typeof window !== 'undefined' ? localStorage.getItem('activePincode') : null;
@@ -293,7 +292,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
     return () => clearInterval(t);
   }, []);
 
-  // ── Generic Alternatives ─────────────────────────────────────────────────
+  // â”€â”€ Generic Alternatives â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const isGeneric = product?.is_generic === true || product?.isGeneric === true || product?.isGeneric === "true" || (product?.medicineType || product?.medicine_type || '').toLowerCase().includes('generic');
   const { data: genericAlternatives } = useMongoDBCollection({
     moleculeId: (!isGeneric && !product?.mappedGeneric) ? product?.moleculeId : undefined, isGeneric: true, limit: 10
@@ -305,7 +304,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
     : null);
   const showComparison = !isGeneric && !!genericAlt;
 
-  // ── Prices ───────────────────────────────────────────────────────────────
+  // â”€â”€ Prices â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const unitPrice = Number(product?.liveData?.sahimed_price || product?.price || 0);
   const unitMrp   = Number(product?.liveData?.mrp || product?.mrp || (unitPrice + 20));
   const currentPrice = unitPrice * selectedQty;
@@ -331,7 +330,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
     toast({ title: "Added to cart" });
   };
 
-  // ── Image zoom handler ───────────────────────────────────────────────────
+  // â”€â”€ Image zoom handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -353,7 +352,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
       <div className="min-h-screen bg-[#F5F6FA] pb-28 lg:pb-12">
         <Navbar />
 
-        {/* ── Trust Strip ─────────────────────────────────────────── */}
+        {/* â”€â”€ Trust Strip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="bg-white border-b border-slate-100 hidden sm:block">
           <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-2.5">
             <div className="flex items-center justify-between gap-4">
@@ -370,6 +369,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
 
         <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-6 space-y-5">
 
+          {/* Mobile scroll sentinel for sticky bar — heroRef is desktop-only so we need this */}
+          <div ref={heroRef} className="h-0 w-0" />
+
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
             <Link href="/" className="hover:text-primary transition-colors">Home</Link>
@@ -380,9 +382,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
             <span className="text-slate-600 font-semibold line-clamp-1">{product?.name}</span>
           </nav>
 
-          {/* ╔══════════════════════════════════════════════════════════════════════╗
-              ║  WORLD-CLASS VISUAL SAHI SMART SWITCH HERO COMPARISON               ║
-              ╚══════════════════════════════════════════════════════════════════════╝ */}
+          {/* â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+              â•‘  WORLD-CLASS VISUAL SAHI SMART SWITCH HERO COMPARISON               â•‘
+              â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           {showComparison && genericAlt && (
             <div className="space-y-4 my-3 animate-in fade-in zoom-in-95 duration-500">
               
@@ -391,7 +393,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 <div className="flex items-center justify-center gap-1.5 min-w-0">
                   <Check className="w-4 h-4 bg-white/20 text-white rounded-full p-0.5 shrink-0" />
                   <span className="text-[9.5px] sm:text-xs font-black uppercase tracking-tight text-white truncate">
-                    CLINICAL BIO-EQUIVALENCE MATCH · 100% EXACT SALT MATCH
+                    CLINICAL BIO-EQUIVALENCE MATCH Â· 100% EXACT SALT MATCH
                   </span>
                 </div>
               </div>
@@ -459,7 +461,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                         </div>
                         <div className="min-h-[1.8rem]">
                           <span className="text-[8.5px] sm:text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block">Quality Standard</span>
-                          <span className="text-slate-800 font-bold block text-[10px] sm:text-xs">🛡️ WHO & FDA Approved</span>
+                          <span className="text-slate-800 font-bold block text-[10px] sm:text-xs">ðŸ›¡ï¸ WHO & FDA Approved</span>
                         </div>
                       </div>
                     </div>
@@ -470,14 +472,14 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     {/* Price & Unit Cost + Educational Markup Note */}
                     <div>
                       <div className="flex items-baseline gap-1 sm:gap-2">
-                        <span className="text-lg sm:text-3xl font-black text-slate-950 font-outfit">₹{unitPrice}</span>
-                        {unitMrp > unitPrice && <span className="text-[9.5px] sm:text-xs text-slate-400 line-through font-bold">MRP ₹{unitMrp}</span>}
+                        <span className="text-lg sm:text-3xl font-black text-slate-950 font-outfit">â‚¹{unitPrice}</span>
+                        {unitMrp > unitPrice && <span className="text-[9.5px] sm:text-xs text-slate-400 line-through font-bold">MRP â‚¹{unitMrp}</span>}
                       </div>
                       <p className="text-[9px] sm:text-[11px] text-slate-500 font-bold mt-0.5">
-                        ₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
+                        â‚¹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
                       </p>
                       <p className="text-[8.5px] sm:text-[9.5px] text-rose-600 font-bold mt-1 leading-tight flex items-center gap-1 bg-rose-50 p-1 rounded border border-rose-200">
-                        <span>⚠️ Includes Brand Marketing & Packaging Markup</span>
+                        <span>âš ï¸ Includes Brand Marketing & Packaging Markup</span>
                       </p>
                     </div>
 
@@ -492,14 +494,14 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   </div>
                 </div>
 
-                {/* RIGHT CARD: ✨ SAHI RECOMMENDATION */}
+                {/* RIGHT CARD: âœ¨ SAHI RECOMMENDATION */}
                 <div className="bg-gradient-to-b from-emerald-100/90 via-white to-teal-50/80 rounded-2xl sm:rounded-3xl p-2.5 sm:p-5 border-2 sm:border-4 border-emerald-500 shadow-[0_15px_40px_rgba(16,185,129,0.25)] flex flex-col justify-between space-y-3 sm:space-y-4 relative overflow-hidden group">
                   
                   <div>
                     {/* Header Bar - Clean SAHI RECOMMENDATION */}
                     <div className="h-6 flex items-center justify-between mb-2">
                       <span className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[8.5px] sm:text-[10px] font-black uppercase tracking-wider px-2 sm:px-3 py-0.5 rounded-full shadow-md border border-emerald-400 shrink-0">
-                        ✨ SAHI RECOMMENDATION
+                        âœ¨ SAHI RECOMMENDATION
                       </span>
                     </div>
 
@@ -537,7 +539,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                           <span className="text-[8.5px] sm:text-[9.5px] font-bold text-emerald-700 uppercase tracking-wider block">Salt Composition</span>
                           <span className="text-emerald-950 font-extrabold italic leading-tight block line-clamp-2 flex items-center gap-1">
                             <Check className="w-3 h-3 bg-emerald-600 text-white rounded-full p-0.5 shrink-0 hidden sm:inline-block" />
-                            <span>✓ {product?.composition || 'Active Chemical Salt'}</span>
+                            <span>âœ“ {product?.composition || 'Active Chemical Salt'}</span>
                           </span>
                         </div>
                         <div className="min-h-[2rem]">
@@ -550,7 +552,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                         </div>
                         <div className="min-h-[1.8rem]">
                           <span className="text-[8.5px] sm:text-[9.5px] font-bold text-emerald-700 uppercase tracking-wider block">Quality Standard</span>
-                          <span className="text-emerald-950 font-bold block text-[10px] sm:text-xs">🛡️ WHO & FDA Approved</span>
+                          <span className="text-emerald-950 font-bold block text-[10px] sm:text-xs">ðŸ›¡ï¸ WHO & FDA Approved</span>
                         </div>
                       </div>
                     </div>
@@ -561,8 +563,8 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     {/* Price & Unit Cost + Prominent 100% Visible Mobile Discount % Badge */}
                     <div>
                       <div className="flex flex-wrap items-baseline gap-1 sm:gap-2">
-                        <span className="text-lg sm:text-3xl font-black text-emerald-600 font-outfit">₹{altPrice}</span>
-                        {altMrp > altPrice && <span className="text-[9.5px] sm:text-xs text-slate-400 line-through font-bold">MRP ₹{altMrp}</span>}
+                        <span className="text-lg sm:text-3xl font-black text-emerald-600 font-outfit">â‚¹{altPrice}</span>
+                        {altMrp > altPrice && <span className="text-[9.5px] sm:text-xs text-slate-400 line-through font-bold">MRP â‚¹{altMrp}</span>}
                         {genericProductDiscountPct > 0 && (
                           <span className="bg-amber-400 text-slate-950 text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase shadow-2xs shrink-0">
                             {genericProductDiscountPct}% OFF
@@ -570,11 +572,11 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                         )}
                       </div>
                       <p className="text-[9px] sm:text-[11px] text-emerald-900 font-bold mt-0.5">
-                        ₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
+                        â‚¹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} / tablet
                       </p>
                       {switchSavingsAmount > 0 && (
                         <p className="text-[8.5px] sm:text-[9.5px] text-emerald-800 font-black mt-1 leading-tight flex items-center gap-1 bg-emerald-100/90 p-1 rounded border border-emerald-300">
-                          <span>💰 YOU SAVE ₹{switchSavingsAmount.toFixed(0)} VS BRAND</span>
+                          <span>ðŸ’° YOU SAVE â‚¹{switchSavingsAmount.toFixed(0)} VS BRAND</span>
                         </p>
                       )}
                     </div>
@@ -591,33 +593,36 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 </div>
               </div>
 
+
+              {/* 3. Feature Strip — 3 Quality Trust Icons */}
+              <div className="grid grid-cols-3 gap-1 sm:gap-3 bg-white rounded-2xl border border-slate-100 p-2.5 sm:p-4">
+                <div className="flex flex-col items-center space-y-1.5 p-1">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                    <FlaskConical className="w-6 h-6" />
                   </div>
-                  <span className="text-xs font-black uppercase text-slate-900 leading-tight">100% Bio-Equivalent Quality</span>
-                  <span className="text-[10px] text-slate-500 font-semibold hidden sm:block">Identical therapeutic action</span>
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase text-slate-900 leading-tight text-center">100% Bio-Equivalent</span>
                 </div>
-                <div className="flex flex-col items-center space-y-1.5 p-1 border-x border-slate-200">
+                <div className="flex flex-col items-center space-y-1.5 p-1 border-x border-slate-100">
                   <div className="w-10 h-10 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-600">
-                    <Clock className="w-6 h-6" />
+                    <ShieldCheck className="w-6 h-6" />
                   </div>
-                  <span className="text-xs font-black uppercase text-slate-900 leading-tight">WHO-GMP & US-FDA Certified</span>
-                  <span className="text-[10px] text-slate-500 font-semibold hidden sm:block">Manufactured in approved labs</span>
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase text-slate-900 leading-tight text-center">WHO &amp; FDA Certified</span>
                 </div>
                 <div className="flex flex-col items-center space-y-1.5 p-1">
                   <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
                     <BadgeCheck className="w-6 h-6" />
                   </div>
-                  <span className="text-xs font-black uppercase text-slate-900 leading-tight">Fresh Batch & Long Expiry</span>
-                  <span className="text-[10px] text-slate-500 font-semibold hidden sm:block">Directly from distributor</span>
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase text-slate-900 leading-tight text-center">Fresh &amp; Long Expiry</span>
                 </div>
               </div>
 
+
               {/* 4. Clinical Bio-Equivalence Comparison Table */}
               <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-md">
-                <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 px-6 py-4 text-white flex items-center justify-between">
-                  <h3 className="text-xs sm:text-base font-black uppercase tracking-wider flex items-center gap-2">
-                    <Check className="w-5 h-5 bg-white/20 rounded-full p-0.5" /> Clinical Bio-Equivalence Match · 100% Exact Salt Match
+                <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 px-4 sm:px-6 py-3 sm:py-4 text-white">
+                  <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-2">
+                    <Check className="w-4 h-4 bg-white/20 rounded-full p-0.5 shrink-0" /> Clinical Bio-Equivalence Match · 100% Exact Salt
                   </h3>
-                  <span className="text-xs font-black bg-white/20 px-3.5 py-1 rounded-full uppercase">100% Identical Efficacy</span>
                 </div>
 
                 <div className="divide-y divide-slate-100 text-xs sm:text-sm">
@@ -642,7 +647,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     <div className="space-y-1 pl-3 border-l border-slate-200">
                       <span className="text-[10.5px] font-black uppercase text-emerald-600 tracking-wider">Active Salt Ingredient</span>
                       <p className="font-extrabold text-emerald-700 italic flex items-center gap-1">
-                        ✓ {product?.composition || 'Desvenlafaxine 100mg'} (100% Identical Match)
+                        âœ“ {product?.composition || 'Desvenlafaxine 100mg'} (100% Identical Match)
                       </p>
                     </div>
                   </div>
@@ -663,11 +668,11 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   <div className="grid grid-cols-2 p-4">
                     <div className="space-y-0.5 pr-2">
                       <span className="text-[9.5px] font-black uppercase text-slate-400 tracking-wider">Quality Standard</span>
-                      <p className="font-bold text-slate-700 flex items-center gap-1">🛡️ WHO & FDA Approved Brand</p>
+                      <p className="font-bold text-slate-700 flex items-center gap-1">ðŸ›¡ï¸ WHO & FDA Approved Brand</p>
                     </div>
                     <div className="space-y-0.5 pl-2 border-l border-slate-200">
                       <span className="text-[9.5px] font-black uppercase text-slate-400 tracking-wider">Quality Standard</span>
-                      <p className="font-bold text-emerald-700 flex items-center gap-1">🛡️ WHO-GMP Certified Facilities</p>
+                      <p className="font-bold text-emerald-700 flex items-center gap-1">ðŸ›¡ï¸ WHO-GMP Certified Facilities</p>
                     </div>
                   </div>
 
@@ -675,12 +680,12 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   <div className="grid grid-cols-2 p-4 bg-emerald-50/50">
                     <div className="space-y-0.5 pr-2">
                       <span className="text-[9.5px] font-black uppercase text-slate-400 tracking-wider">Unit Cost</span>
-                      <p className="font-black text-slate-900 text-sm">₹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} <span className="text-[10px] font-normal text-slate-500">/ unit</span></p>
+                      <p className="font-black text-slate-900 text-sm">â‚¹{(unitPrice / (product?.packaging?.package_quantity || 10)).toFixed(1)} <span className="text-[10px] font-normal text-slate-500">/ unit</span></p>
                     </div>
                     <div className="space-y-0.5 pl-2 border-l border-emerald-200">
                       <span className="text-[9.5px] font-black uppercase text-emerald-700 tracking-wider">Unit Cost & Savings</span>
                       <div className="flex items-baseline gap-2">
-                        <p className="font-black text-emerald-700 text-sm">₹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} <span className="text-[10px] font-normal text-slate-500">/ unit</span></p>
+                        <p className="font-black text-emerald-700 text-sm">â‚¹{(altPrice / (genericAlt?.packaging?.package_quantity || 10)).toFixed(1)} <span className="text-[10px] font-normal text-slate-500">/ unit</span></p>
                         <span className="bg-emerald-600 text-white font-black text-[9.5px] px-2.5 py-0.5 rounded-full uppercase">Save {altSavePct}%</span>
                       </div>
                     </div>
@@ -690,7 +695,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
             </div>
           )}
 
-          {/* 📱 MOBILE FIRST-FRAME HERO CARD — Rendered ONLY if no generic substitute comparison */}
+          {/* ðŸ“± MOBILE FIRST-FRAME HERO CARD â€” Rendered ONLY if no generic substitute comparison */}
           {!showComparison && (
             <>
               <div className="sm:hidden bg-white rounded-2xl border border-slate-100 p-3.5 shadow-sm space-y-3">
@@ -720,7 +725,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
               <div className="flex-1 min-w-0 space-y-1">
                 {(product?.is_generic === true || product?.isGeneric === true || (product?.medicineType || '').toLowerCase().includes('generic')) && (
                   <span className="inline-block bg-emerald-600 text-white text-[8.5px] font-black uppercase px-2 py-0.5 rounded-md tracking-wider">
-                    ✨ Branded Generic
+                    âœ¨ Branded Generic
                   </span>
                 )}
                 <h1 className="text-sm font-extrabold text-slate-900 leading-tight uppercase line-clamp-2">
@@ -747,13 +752,13 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
             <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
               <div>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl font-black text-slate-950 font-outfit">₹{currentPrice}</span>
+                  <span className="text-2xl font-black text-slate-950 font-outfit">â‚¹{currentPrice}</span>
                   {currentMrp > currentPrice && (
-                    <span className="text-xs text-slate-400 line-through font-bold">₹{currentMrp}</span>
+                    <span className="text-xs text-slate-400 line-through font-bold">â‚¹{currentMrp}</span>
                   )}
                 </div>
                 {discountPct > 0 && (
-                  <p className="text-[9.5px] font-bold text-emerald-600">Save ₹{(currentMrp - currentPrice).toFixed(0)}</p>
+                  <p className="text-[9.5px] font-bold text-emerald-600">Save â‚¹{(currentMrp - currentPrice).toFixed(0)}</p>
                 )}
               </div>
 
@@ -778,12 +783,12 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
             </div>
           </div>
 
-          {/* ╔══════════════════════════════════════════════╗
-              ║  HERO (DESKTOP & EXPANDED)                   ║
-              ╚══════════════════════════════════════════════╝ */}
+          {/* â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+              â•‘  HERO (DESKTOP & EXPANDED)                   â•‘
+              â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           <div ref={heroRef} className="hidden sm:grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
-            {/* ── Image Gallery with Zoom ──────────────────── */}
+            {/* â”€â”€ Image Gallery with Zoom â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <div className="lg:col-span-5">
               <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 {/* Main image with zoom */}
@@ -841,19 +846,19 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 )}
               </div>
 
-              {/* ── Authenticity Seal ──────────────────────────── */}
+              {/* â”€â”€ Authenticity Seal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
               <div className="mt-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl p-4 flex items-center gap-4 shadow-md shadow-emerald-100">
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
                   <BadgeCheck className="w-7 h-7 text-white" />
                 </div>
                 <div className="text-white">
                   <p className="text-xs font-black uppercase tracking-widest mb-0.5">Verified Genuine Product</p>
-                  <p className="text-[10px] text-white/80 font-medium">Sourced directly from licensed distributors · Quality checked by our pharmacists</p>
+                  <p className="text-[10px] text-white/80 font-medium">Sourced directly from licensed distributors Â· Quality checked by our pharmacists</p>
                 </div>
               </div>
             </div>
 
-            {/* ── Buy Box ──────────────────────────────────────── */}
+            {/* â”€â”€ Buy Box â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <div className="lg:col-span-7 space-y-4">
               <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 sm:p-8 space-y-5">
 
@@ -861,7 +866,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 <div className="flex items-center gap-2 flex-wrap">
                   {(product?.is_generic === true || product?.isGeneric === true || (product?.medicineType || '').toLowerCase().includes('generic')) ? (
                     <Badge className="bg-emerald-600 text-white border-none text-[9.5px] font-black uppercase tracking-wider px-3 py-1 rounded-md shadow-xs flex items-center gap-1">
-                      ✨ 100% Branded Generic (Save 61%)
+                      âœ¨ 100% Branded Generic (Save 61%)
                     </Badge>
                   ) : (
                     product?.medicineType && <Badge className="bg-violet-100 text-violet-700 border-none text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md">{product.medicineType}</Badge>
@@ -875,12 +880,12 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                   <h1 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">{product?.name}</h1>
                   {product?.composition && <p className="mt-1 text-xs text-slate-400 font-medium italic">{product.composition}</p>}
                   <p className="mt-2 text-sm font-medium text-slate-500">
-                    By <span className="text-primary font-semibold">{product?.marketerName || product?.manufacturer || '—'}</span>
-                    {product?.categoryName && <span className="text-slate-400"> · {product.categoryName}</span>}
+                    By <span className="text-primary font-semibold">{product?.marketerName || product?.manufacturer || 'â€”'}</span>
+                    {product?.categoryName && <span className="text-slate-400"> Â· {product.categoryName}</span>}
                   </p>
                 </div>
 
-                {/* Pack chip — show packaging_detail (e.g. "strip of 10 tablets") */}
+                {/* Pack chip â€” show packaging_detail (e.g. "strip of 10 tablets") */}
                 <div className="flex items-center gap-2 flex-wrap text-[11px]">
                   {(product?.packagingDetail || product?.packaging?.packaging_detail) && (
                     <span className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 text-slate-600 font-semibold px-3 py-1.5 rounded-xl">
@@ -911,18 +916,18 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 <div className="flex items-end gap-4 flex-wrap">
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Our Price</p>
-                    <p className="text-4xl font-black text-slate-900">₹{currentPrice}</p>
+                    <p className="text-4xl font-black text-slate-900">â‚¹{currentPrice}</p>
                   </div>
                   {currentMrp > currentPrice && (
                     <div className="pb-1">
                       <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">MRP</p>
-                      <p className="text-sm font-medium text-slate-400 line-through">₹{currentMrp}</p>
+                      <p className="text-sm font-medium text-slate-400 line-through">â‚¹{currentMrp}</p>
                     </div>
                   )}
                   {discountPct > 0 && (
                     <div className="pb-1">
                       <span className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-black px-3 py-1.5 rounded-xl shadow-sm">
-                        Save {discountPct}% · ₹{(currentMrp - currentPrice).toFixed(0)} off
+                        Save {discountPct}% Â· â‚¹{(currentMrp - currentPrice).toFixed(0)} off
                       </span>
                     </div>
                   )}
@@ -986,7 +991,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       <Truck className="w-4 h-4 text-emerald-600 shrink-0" />
                       <div>
                         <p className="text-xs font-black text-emerald-800">{edd ? `Express delivery by ${edd}` : 'Delivery available'}</p>
-                        {zone && <p className="text-[9px] text-emerald-600 font-semibold mt-0.5">{zone} zone · Free shipping</p>}
+                        {zone && <p className="text-[9px] text-emerald-600 font-semibold mt-0.5">{zone} zone Â· Free shipping</p>}
                       </div>
                     </div>
                     {edd && timeLeft && <p className="text-[10px] text-slate-500 font-medium px-1">Order within <span className="text-primary font-black">{timeLeft}</span> to get it by {edd}</p>}
@@ -1006,9 +1011,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
 
 
 
-          {/* ╔══════════════════════════════════════════════╗
-              ║  TABBED PANEL                                ║
-              ╚══════════════════════════════════════════════╝ */}
+          {/* â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+              â•‘  TABBED PANEL                                â•‘
+              â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="flex border-b border-slate-100 overflow-x-auto">
               {tabs.map(t => {
@@ -1027,7 +1032,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
 
             <div className="p-6 sm:p-8">
 
-              {/* ── OVERVIEW ── */}
+              {/* â”€â”€ OVERVIEW â”€â”€ */}
               {activeTab === 'overview' && (
                 <div className="space-y-8">
                   {(product?.composition || molData?.molecule || molData?.name) && (
@@ -1082,7 +1087,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                               onClick={() => setShowFullDesc(!showFullDesc)}
                               className="mt-2 text-xs font-black text-primary hover:underline flex items-center gap-1 transition-all"
                             >
-                              {showFullDesc ? 'Show Less ▲' : 'Read Full Description ▾'}
+                              {showFullDesc ? 'Show Less â–²' : 'Read Full Description â–¾'}
                             </button>
                           )}
                         </div>
@@ -1116,7 +1121,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     );
                   })()}
 
-                  {/* Side effects — Warning Box with Chips */}
+                  {/* Side effects â€” Warning Box with Chips */}
                   {((product?.sideEffectsArray?.length > 0) || product?.sideEffects) && (() => {
                     const effects: string[] = product.sideEffectsArray?.length > 0
                       ? product.sideEffectsArray
@@ -1149,7 +1154,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     );
                   })()}
 
-                  {/* How It Works — mechanism of action */}
+                  {/* How It Works â€” mechanism of action */}
                   {(product?.howItWorks || product?.medical_info?.how_it_works) && (
                     <div><SectionLabel>How it Works</SectionLabel>
                       <div className="relative overflow-hidden bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 rounded-2xl p-4 sm:p-5">
@@ -1162,7 +1167,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                     </div>
                   )}
 
-                  {/* Fact Box — parse "Key :: Value|Key :: Value" */}
+                  {/* Fact Box â€” parse "Key :: Value|Key :: Value" */}
                   {(product?.factBox || product?.medical_info?.fact_box) && (() => {
                     const raw: string = product.factBox || product.medical_info?.fact_box || '';
                     const pairs = raw.split('|').map(s => s.trim()).filter(Boolean).map(s => {
@@ -1198,7 +1203,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 </div>
               )}
 
-              {/* ── HOW TO USE ── */}
+              {/* â”€â”€ HOW TO USE â”€â”€ */}
               {activeTab === 'usage' && (
                 <div className="space-y-8">
                   {product?.howToUse ? (
@@ -1216,7 +1221,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       <div className="bg-teal-50 border border-teal-100 rounded-2xl p-5 flex gap-3"><Package className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" /><p className="text-sm font-medium text-teal-900 leading-relaxed">{product.storage_instructions}</p></div>
                     </div>
                   )}
-                  {/* Dynamic Q&A from DB — all items */}
+                  {/* Dynamic Q&A from DB â€” all items */}
                   {((product?.qaList?.length > 0) || product?.medical_info?.q_a?.length > 0) && (
                     <div className="space-y-3"><SectionLabel>Frequently Asked Questions</SectionLabel>
                       {(product.qaList || product.medical_info?.q_a || []).map((item: any, i: number) => (
@@ -1239,10 +1244,10 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 </div>
               )}
 
-              {/* ── SAFETY ── */}
+              {/* â”€â”€ SAFETY â”€â”€ */}
               {activeTab === 'safety' && (() => {
-                // ── Parse severity badge from text ─────────────────────────
-                // ── Parse severity badge from text ─────────────────────────
+                // â”€â”€ Parse severity badge from text â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // â”€â”€ Parse severity badge from text â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 function getSeverity(text?: string | null): { label: string; cls: string } {
                   if (!text) return { label: '', cls: '' };
                   const t = text.toLowerCase();
@@ -1416,7 +1421,7 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 );
               })()}
 
-              {/* ── PRODUCT INFO ── */}
+              {/* â”€â”€ PRODUCT INFO â”€â”€ */}
               {activeTab === 'info' && (
                 <div className="space-y-8">
                   <div><SectionLabel>Manufacturer & Classification</SectionLabel>
@@ -1444,9 +1449,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
             </div>
           </div>
 
-          {/* ╔══════════════════════════════════════════════╗
-              ║  PEOPLE ALSO BOUGHT                          ║
-              ╚══════════════════════════════════════════════╝ */}
+          {/* â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+              â•‘  PEOPLE ALSO BOUGHT                          â•‘
+              â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           {alsoBought.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -1461,9 +1466,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
             </div>
           )}
 
-          {/* ╔══════════════════════════════════════════════╗
-              ║  CROSS-SELL (from product mapping)           ║
-              ╚══════════════════════════════════════════════╝ */}
+          {/* â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+              â•‘  CROSS-SELL (from product mapping)           â•‘
+              â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           {crossSellProducts.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -1480,9 +1485,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
             </div>
           )}
 
-          {/* ╔══════════════════════════════════════════════╗
-              ║  RECENTLY VIEWED                             ║
-              ╚══════════════════════════════════════════════╝ */}
+          {/* â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+              â•‘  RECENTLY VIEWED                             â•‘
+              â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           {recentlyViewed.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-4">
@@ -1502,8 +1507,8 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                       </div>
                       <div className="p-3">
                         <p className="text-[10px] font-bold text-slate-800 line-clamp-2 mb-1">{item.name}</p>
-                        <p className="text-sm font-black text-slate-900">₹{p}</p>
-                        {m > p && <p className="text-[9px] text-slate-400 line-through">₹{m}</p>}
+                        <p className="text-sm font-black text-slate-900">â‚¹{p}</p>
+                        {m > p && <p className="text-[9px] text-slate-400 line-through">â‚¹{m}</p>}
                       </div>
                     </Link>
                   );
@@ -1523,9 +1528,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
                 </div>
               </div>
               <div className="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Category</p><p className="text-sm font-bold text-slate-700 mt-1">{product?.categoryName || '—'}</p></div>
+                <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Category</p><p className="text-sm font-bold text-slate-700 mt-1">{product?.categoryName || 'â€”'}</p></div>
                 <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Country of Origin</p><p className="text-sm font-bold text-slate-700 mt-1">{product?.countryOfOrigin || 'India'}</p></div>
-                <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Medicine Type</p><p className="text-sm font-bold text-slate-700 mt-1">{product?.medicineType || '—'}</p></div>
+                <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Medicine Type</p><p className="text-sm font-bold text-slate-700 mt-1">{product?.medicineType || 'â€”'}</p></div>
                 {(product?.taxonomy?.marketer_address || product?.marketerAddress) && (
                   <div className="sm:col-span-3 pt-4 border-t border-slate-50 flex items-start gap-3">
                     <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
@@ -1542,9 +1547,9 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
 
         </div>
 
-        {/* ╔══════════════════════════════════════════════╗
-            ║  STICKY MOBILE BUY BAR                       ║
-            ╚══════════════════════════════════════════════╝ */}
+        {/* â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+            â•‘  STICKY MOBILE BUY BAR                       â•‘
+            â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <div className={cn(
           "fixed bottom-0 left-0 right-0 z-50 lg:hidden transition-all duration-300",
           showStickyBar ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
@@ -1554,8 +1559,8 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider truncate">{product?.name}</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-black text-slate-900">₹{unitPrice * selectedQty}</span>
-                  {unitMrp > unitPrice && <span className="text-xs text-slate-400 line-through">₹{unitMrp * selectedQty}</span>}
+                  <span className="text-lg font-black text-slate-900">â‚¹{unitPrice * selectedQty}</span>
+                  {unitMrp > unitPrice && <span className="text-xs text-slate-400 line-through">â‚¹{unitMrp * selectedQty}</span>}
                   {discountPct > 0 && <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{discountPct}% off</span>}
                 </div>
               </div>
@@ -1575,9 +1580,6 @@ export default function ProductDetailClient({ initialProduct, id, crossSellProdu
           </div>
         </div>
 
-        <div className="pt-8">
-          <Footer />
-        </div>
       </div>
 
       <Dialog open={isShareOpen} onOpenChange={setIsShareOpen}>

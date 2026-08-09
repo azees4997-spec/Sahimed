@@ -4,9 +4,9 @@
 import { useState, useEffect, useCallback } from 'react';
 
 // GLOBAL MEMORY CACHE
-// Reduces API calls by storing results for 5 minutes
+// Reduces API calls by storing results for 2 minutes
 const queryCache: Record<string, { data: any, timestamp: number }> = {};
-const CACHE_TTL = 1 * 1000; // 1 second for near real-time updates
+const CACHE_TTL = 120 * 1000; // 2 minutes — prevents excessive re-fetching on navigation
 
 export function useMongoDBCollection<T = any>(options: { 
   limit?: number; 
@@ -27,6 +27,9 @@ export function useMongoDBCollection<T = any>(options: {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+
     const fetchData = async () => {
       const params = new URLSearchParams();
       if (options.limit) params.append('limit', options.limit.toString());
@@ -44,33 +47,33 @@ export function useMongoDBCollection<T = any>(options: {
       const cacheKey = `products_${params.toString()}`;
       const cached = queryCache[cacheKey];
 
-      // Return cached if fresh
+      // Return cached if fresh (refreshKey invalidates cache but doesn't permanently disable it)
       if (cached && (Date.now() - cached.timestamp < CACHE_TTL) && refreshKey === 0) {
-        setData(cached.data);
-        setIsLoading(false);
+        if (!cancelled) { setData(cached.data); setIsLoading(false); }
         return;
       }
 
-      setIsLoading(true);
+      if (!cancelled) setIsLoading(true);
       try {
-        const res = await fetch(`/api/products?${params.toString()}`);
+        const res = await fetch(`/api/products?${params.toString()}`, { signal: controller.signal });
         const json = await res.json();
         
         if (!res.ok) throw new Error(json.error || json.message || 'Failed to fetch products');
         
         const normalized = json.map((item: any) => ({ ...item, id: item._id || item.id }));
         
-        // Save to cache
+        // Save to cache (even after a manual refresh, so next navigation benefits)
         queryCache[cacheKey] = { data: normalized, timestamp: Date.now() };
-        setData(normalized);
+        if (!cancelled) setData(normalized);
       } catch (err: any) {
-        setError(err);
+        if (!cancelled && err.name !== 'AbortError') setError(err);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     fetchData();
+    return () => { cancelled = true; controller.abort(); };
   }, [options.limit, options.category, options.q, options.moleculeId, options.isBestSeller, options.minPrice, options.maxPrice, options.marketerName, options.dosageForm, options.showDisabled, refreshKey]);
 
   const refetch = useCallback(() => {
@@ -102,24 +105,28 @@ export function useMongoDBDoc<T = any>(id: string | null | undefined) {
       return;
     }
 
+    let cancelled = false;
+    const controller = new AbortController();
+
     const fetchData = async () => {
-      setIsLoading(true);
+      if (!cancelled) setIsLoading(true);
       try {
-        const res = await fetch(`/api/products/${id}`);
+        const res = await fetch(`/api/products/${id}`, { signal: controller.signal });
         if (!res.ok) throw new Error(`Failed to fetch product (Status: ${res.status})`);
         const json = await res.json();
         const normalized = { ...json, id: json._id || json.id };
         
         queryCache[cacheKey] = { data: normalized, timestamp: Date.now() };
-        setData(normalized);
+        if (!cancelled) setData(normalized);
       } catch (err: any) {
-        setError(err);
+        if (!cancelled && err.name !== 'AbortError') setError(err);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     fetchData();
+    return () => { cancelled = true; controller.abort(); };
   }, [id, refreshKey]);
 
   const refetch = useCallback(() => {
@@ -151,24 +158,28 @@ export function useMongoDBMolecule<T = any>(id: string | null | undefined) {
       return;
     }
 
+    let cancelled = false;
+    const controller = new AbortController();
+
     const fetchData = async () => {
-      setIsLoading(true);
+      if (!cancelled) setIsLoading(true);
       try {
-        const res = await fetch(`/api/molecules/${id}`);
+        const res = await fetch(`/api/molecules/${id}`, { signal: controller.signal });
         if (!res.ok) throw new Error('Failed to fetch molecule');
         const json = await res.json();
         const normalized = { ...json, id: json._id || json.id };
         
         queryCache[cacheKey] = { data: normalized, timestamp: Date.now() };
-        setData(normalized);
+        if (!cancelled) setData(normalized);
       } catch (err: any) {
-        setError(err);
+        if (!cancelled && err.name !== 'AbortError') setError(err);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     fetchData();
+    return () => { cancelled = true; controller.abort(); };
   }, [id, refreshKey]);
 
   const refetch = useCallback(() => {

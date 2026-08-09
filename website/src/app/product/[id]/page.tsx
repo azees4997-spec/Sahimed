@@ -92,9 +92,12 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
               id: genDoc._id.toString(),
               name: genDoc.product_name,
               product_name: genDoc.product_name,
-              price: genDoc.packaging?.mrp,
+              // Prefer selling_price > sale_price > packaging.mrp
+              selling_price: genDoc.selling_price ?? genDoc.sale_price ?? genDoc.packaging?.mrp,
+              price: genDoc.selling_price ?? genDoc.sale_price ?? genDoc.packaging?.mrp,
               mrp: genDoc.packaging?.mrp,
               imageUrl: genDoc.images?.[0] || '',
+              images: genDoc.images || [],
             };
           }
         } catch (e) {
